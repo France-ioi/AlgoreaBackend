@@ -16,9 +16,8 @@ type Server struct {
 }
 
 // NewServer creates and configures an APIServer serving all application routes.
-func NewServer() (*Server, error) {
+func NewServer(app http.Handler) (*Server, error) {
 	log.Println("Configuring server...")
-	app := InitRouter()
 
 	port := viper.GetString("port")
 

@@ -13,7 +13,10 @@ func init() {
 		Use:   "serve",
 		Short: "start http server",
 		Run: func(cmd *cobra.Command, args []string) {
-			server, err := app.NewServer()
+
+			application := app.InitRouter()
+
+			server, err := app.NewServer(application)
 			if err != nil {
 				log.Fatal(err)
 			}
