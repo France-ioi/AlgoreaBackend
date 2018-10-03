@@ -7,8 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 // Server provides an http.Server.
@@ -21,9 +19,9 @@ func NewServer(app http.Handler) (*Server, error) {
 	log.Println("Configuring server...")
 
 	srv := http.Server{
-		Addr:         ":" + viper.GetString("server.port"),
-		ReadTimeout:  time.Duration(viper.GetInt32("server.read_timeout")) * time.Second,
-		WriteTimeout: time.Duration(viper.GetInt32("server.write_timeout")) * time.Second,
+		Addr:         ":" + Config.GetString("server.port"),
+		ReadTimeout:  time.Duration(Config.GetInt32("server.read_timeout")) * time.Second,
+		WriteTimeout: time.Duration(Config.GetInt32("server.write_timeout")) * time.Second,
 		Handler:      app,
 	}
 

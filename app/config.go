@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config is the application configuration
+var Config *viper.Viper
+
 // ConfigFile defines the file name which will be used to read the configuration
 var ConfigFile = "conf/default.yaml"
 
@@ -20,15 +23,17 @@ var ConfigFile = "conf/default.yaml"
 // 6) default
 func LoadConfig() {
 
+	Config = viper.New()
+
 	loadDefaults()
 
 	// through env variables
-	viper.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
-	viper.AutomaticEnv()          // read in environment variables
+	Config.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
+	Config.AutomaticEnv()          // read in environment variables
 
 	// through the config file
-	viper.SetConfigFile(ConfigFile)
-	if err := viper.ReadInConfig(); err != nil {
+	Config.SetConfigFile(ConfigFile)
+	if err := Config.ReadInConfig(); err != nil {
 		fmt.Println("Cannot read config:", err)
 		os.Exit(1)
 	}
@@ -38,7 +43,7 @@ func LoadConfig() {
 func loadDefaults() {
 
 	// server
-	viper.SetDefault("server.port", 8080)
-	viper.SetDefault("server.read_timeout", 60)  // in seconds
-	viper.SetDefault("server.write_timeout", 60) // in seconds
+	Config.SetDefault("server.port", 8080)
+	Config.SetDefault("server.read_timeout", 60)  // in seconds
+	Config.SetDefault("server.write_timeout", 60) // in seconds
 }
