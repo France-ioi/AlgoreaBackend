@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -19,11 +20,11 @@ type Server struct {
 func NewServer(app http.Handler) (*Server, error) {
 	log.Println("Configuring server...")
 
-	port := viper.GetString("port")
-
 	srv := http.Server{
-		Addr:    ":" + port,
-		Handler: app,
+		Addr:         ":" + viper.GetString("server.port"),
+		ReadTimeout:  time.Duration(viper.GetInt32("server.read_timeout")) * time.Second,
+		WriteTimeout: time.Duration(viper.GetInt32("server.write_timeout")) * time.Second,
+		Handler:      app,
 	}
 
 	return &Server{&srv}, nil

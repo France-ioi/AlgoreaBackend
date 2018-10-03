@@ -20,6 +20,8 @@ var ConfigFile = "conf/default.yaml"
 // 6) default
 func LoadConfig() {
 
+	loadDefaults()
+
 	// through env variables
 	viper.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
 	viper.AutomaticEnv()          // read in environment variables
@@ -31,4 +33,12 @@ func LoadConfig() {
 		os.Exit(1)
 	}
 
+}
+
+func loadDefaults() {
+
+	// server
+	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.read_timeout", 60)  // in seconds
+	viper.SetDefault("server.write_timeout", 60) // in seconds
 }
