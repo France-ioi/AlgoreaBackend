@@ -11,7 +11,7 @@ func TestLoadConfig(t *testing.T) {
 
 	os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
 	app.ConfigFile = "test_config.yaml"
-	app.LoadConfig()
+	app.Config.Load()
 
 	// test config override
 	if app.Config.Server.Port != 1234 {

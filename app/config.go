@@ -13,12 +13,12 @@ type serverConfig struct {
 	WriteTimeout int32
 }
 
-type appConfig struct {
+type rootConfig struct {
 	Server serverConfig
 }
 
 // Config is the application configuration
-var Config appConfig
+var Config rootConfig
 
 // ConfigFile defines the file name which will be used to read the configuration
 var ConfigFile = "conf/default.yaml"
@@ -31,7 +31,7 @@ var ConfigFile = "conf/default.yaml"
 // 4) config file
 // 5) key/value store
 // 6) default
-func LoadConfig() {
+func (config *rootConfig) Load() {
 
 	setDefaults()
 
@@ -46,8 +46,8 @@ func LoadConfig() {
 		os.Exit(1)
 	}
 
-	// map the given config to struct
-	err := viper.Unmarshal(&Config)
+	// map the given config to a static struct
+	err := viper.Unmarshal(&config)
 	if err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
 		os.Exit(1)

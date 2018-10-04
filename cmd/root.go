@@ -22,7 +22,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(app.LoadConfig)
+	cobra.OnInitialize(app.Config.Load)
 
 	// persistent flags will be available for every sub-commands
 	rootCmd.PersistentFlags().StringVar(&app.ConfigFile, "config", app.ConfigFile, "path to config file")
