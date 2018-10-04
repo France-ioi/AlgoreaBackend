@@ -1,2 +1,8 @@
 server:
   port: 8080
+database:
+  user: algorea
+  passwd: a_db_password
+  addr: db
+  dbname: algorea_db
+  allownativepasswords: true

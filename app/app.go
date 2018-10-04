@@ -19,7 +19,7 @@ func New() (*chi.Mux, error) {
 
 	logger := NewLogger()
 
-	_, err := database.DBConn()
+	_, err := database.DBConn(Config.Database)
 	if err != nil {
 		logger.WithField("module", "database").Error(err)
 		return nil, err

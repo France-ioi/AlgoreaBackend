@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 )
 
@@ -13,8 +14,9 @@ type serverConfig struct {
 }
 
 type rootConfig struct {
-	Server  serverConfig
-	Timeout int32
+	Server   serverConfig
+	Database mysql.Config
+	Timeout  int32
 }
 
 // Config is the application configuration

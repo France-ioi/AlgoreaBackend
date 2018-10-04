@@ -1,0 +1,14 @@
+version: '3'
+services:
+  # connect from host using: "mysql -hlocalhost -Dalgorea_db -ualgorea -pa_db_password --protocol=TCP"
+  db:
+    image: mysql:5
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+    - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: a_root_db_password
+      MYSQL_USER: algorea
+      MYSQL_PASSWORD: a_db_password
+      MYSQL_DATABASE: algorea_db
