@@ -2,7 +2,6 @@ package app
 
 import (
 	"log"
-	"os"
 
 	"github.com/spf13/viper"
 )
@@ -31,7 +30,7 @@ var ConfigFile = "conf/default.yaml"
 // 4) config file
 // 5) key/value store
 // 6) default
-func (config *rootConfig) Load() {
+func (config *rootConfig) Load() error {
 
 	setDefaults()
 
@@ -43,15 +42,16 @@ func (config *rootConfig) Load() {
 	viper.SetConfigFile(ConfigFile)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Cannot read config:", err)
-		os.Exit(1)
+		return err
 	}
 
 	// map the given config to a static struct
 	err := viper.Unmarshal(&config)
 	if err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
-		os.Exit(1)
+		return err
 	}
+	return nil
 }
 
 func setDefaults() {
