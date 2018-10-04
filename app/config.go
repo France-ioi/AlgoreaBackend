@@ -13,7 +13,8 @@ type serverConfig struct {
 }
 
 type rootConfig struct {
-	Server serverConfig
+	Server  serverConfig
+	Timeout int32
 }
 
 // Config is the application configuration
@@ -55,6 +56,9 @@ func (config *rootConfig) Load() error {
 }
 
 func setDefaults() {
+
+	// root
+	viper.SetDefault("timeout", 15)
 
 	// server
 	viper.SetDefault("server.port", 8080)

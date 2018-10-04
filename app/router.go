@@ -1,13 +1,13 @@
 package app
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi"
 )
 
 // InitRouter creates, inits and returns the GIN router
-func InitRouter() *gin.Engine {
+func InitRouter() *chi.Mux {
 
-	r := gin.New()
+	r := chi.NewRouter()
 
 	return r
 }

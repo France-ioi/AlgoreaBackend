@@ -1,18 +1,43 @@
 package app
 
 import (
-	"os"
+	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/render"
 )
 
-// InitApplication starts the application and return the router as handler
-func InitApplication() *gin.Engine {
+// New configures application resources and routes.
+func New() (*chi.Mux, error) {
 
-	// load config + handle errors
 	if err := Config.Load(); err != nil {
-		os.Exit(1)
+		return nil, err
 	}
 
-	return InitRouter()
+	logger := NewLogger()
+
+	_, err := database.DBConn()
+	if err != nil {
+		logger.WithField("module", "database").Error(err)
+		return nil, err
+	}
+
+	router := InitRouter()
+
+	// Set up middlewares
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.DefaultCompress)
+	router.Use(middleware.Timeout(time.Duration(Config.Timeout) * time.Second))
+
+	router.Use(NewStructuredLogger(logger))
+	router.Use(render.SetContentType(render.ContentTypeJSON))
+
+	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
+
+	return router, nil
 }
