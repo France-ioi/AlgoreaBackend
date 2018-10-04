@@ -6,3 +6,4 @@ database:
   addr: db
   dbname: algorea_db
   allownativepasswords: true
+  parseTime: true # required for the migration system
