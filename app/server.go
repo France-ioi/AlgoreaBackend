@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,9 +20,9 @@ func NewServer(app http.Handler) (*Server, error) {
 	log.Println("Configuring server...")
 
 	srv := http.Server{
-		Addr:         ":" + Config.GetString("server.port"),
-		ReadTimeout:  time.Duration(Config.GetInt32("server.read_timeout")) * time.Second,
-		WriteTimeout: time.Duration(Config.GetInt32("server.write_timeout")) * time.Second,
+		Addr:         fmt.Sprintf(":%d", Config.Server.Port),
+		ReadTimeout:  time.Duration(Config.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(Config.Server.WriteTimeout) * time.Second,
 		Handler:      app,
 	}
 

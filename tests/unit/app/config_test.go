@@ -4,31 +4,27 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Flaque/filet"
 	"github.com/France-ioi/AlgoreaBackend/app"
 )
 
 func TestLoadConfig(t *testing.T) {
-	defer filet.CleanUp(t)
 
-	filename := "/tmp/test_conf.yaml"
-	filet.File(t, filename, "server:\n  port: 1234")
-	os.Setenv("ALGOREA_SERVER.WRITE_TIMEOUT", "999")
-	app.ConfigFile = filename
+	os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
+	app.ConfigFile = "test_config.yaml"
 	app.LoadConfig()
 
 	// test config override
-	if app.Config.GetInt("server.port") != 1234 {
+	if app.Config.Server.Port != 1234 {
 		t.Error("invalid port from config file.")
 	}
 
 	// test default
-	if app.Config.GetInt("server.read_timeout") != 60 {
+	if app.Config.Server.ReadTimeout != 60 {
 		t.Error("invalid default value")
 	}
 
 	// test env
-	if app.Config.GetInt("server.write_timeout") != 999 {
+	if app.Config.Server.WriteTimeout != 999 {
 		t.Error("invalid env value")
 	}
 
