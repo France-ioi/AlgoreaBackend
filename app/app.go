@@ -3,6 +3,8 @@ package app
 import (
 	"time"
 
+	"github.com/France-ioi/AlgoreaBackend/app/service/api"
+
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 
 	"github.com/go-chi/chi"
@@ -19,15 +21,17 @@ func New() (*chi.Mux, error) {
 
 	logger := NewLogger()
 
-	_, err := database.DBConn(Config.Database)
+	db, err := database.DBConn(Config.Database)
 	if err != nil {
 		logger.WithField("module", "database").Error(err)
 		return nil, err
 	}
 
-	router := InitRouter()
+	apiCtx := api.NewCtx(db)
 
 	// Set up middlewares
+	router := chi.NewRouter()
+
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
@@ -38,6 +42,8 @@ func New() (*chi.Mux, error) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
+
+	router.Mount("/", apiCtx.Router())
 
 	return router, nil
 }
