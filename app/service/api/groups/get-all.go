@@ -1,9 +1,9 @@
 package groups
 
 import (
-	"log"
 	"net/http"
 
+	s "github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/go-chi/render"
 )
 
@@ -12,14 +12,18 @@ type groupResponseRow struct {
 }
 
 func (ctx *Ctx) getAll(w http.ResponseWriter, r *http.Request) {
-	groups := ctx.dbGetAllGroups()
+	groups, err := ctx.dbGetAllGroups()
+	if err != nil {
+		render.Render(w, r, s.ErrServer(err))
+		return
+	}
 	render.Respond(w, r, groups)
 }
 
-func (ctx *Ctx) dbGetAllGroups() []groupResponseRow {
+func (ctx *Ctx) dbGetAllGroups() ([]groupResponseRow, error) {
 	rows, err := ctx.db.Query(`SELECT id FROM groups`)
 	if err != nil {
-		log.Fatal(err) // TODO
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -28,9 +32,9 @@ func (ctx *Ctx) dbGetAllGroups() []groupResponseRow {
 		var group groupResponseRow
 		err := rows.Scan(&group.ID)
 		if err != nil {
-			log.Fatal(err) // TODO
+			return nil, err
 		}
 		groups = append(groups, group)
 	}
-	return groups
+	return groups, nil
 }
