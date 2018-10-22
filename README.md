@@ -16,6 +16,21 @@ You can call `./AlgoreaBackend` alone to print the list of available commands.
 
 For instance, you can launch the web server using `./AlgoreaBackend serve`.
 
+## Testing
+
+### Unit tests
+Run all unit tests on all packages:
+```
+go test -v github.com/France-ioi/AlgoreaBackend/tests/unit
+```
+
+### BDD tests
+
+```
+go test -v github.com/France-ioi/AlgoreaBackend/tests/bdd
+```
+
+
 ## Software Walkthrough
 
 ### Routing a request
