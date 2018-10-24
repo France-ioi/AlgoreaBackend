@@ -3,7 +3,7 @@ server:
 database:
   user: algorea
   passwd: a_db_password
-  addr: db
+  addr: localhost
   dbname: algorea_db
   allownativepasswords: true
   parseTime: true # required for the migration system

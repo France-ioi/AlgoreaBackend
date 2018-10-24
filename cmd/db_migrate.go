@@ -13,7 +13,7 @@ import (
 func init() {
 
 	var migrateCmd = &cobra.Command{
-		Use:   "db migrate",
+		Use:   "db-migrate",
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Run: func(cmd *cobra.Command, args []string) {

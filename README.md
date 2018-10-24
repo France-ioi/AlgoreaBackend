@@ -16,6 +16,11 @@ You can call `./AlgoreaBackend` alone to print the list of available commands.
 
 For instance, you can launch the web server using `./AlgoreaBackend serve`.
 
+## Database Configuration
+
+Database configuration currently goes in `conf/default.yml` file.
+The empty dump (schema with data in it) can be loaded using the `./AlgoreaBackend db-restore` followed by `./AlgoreaBackend db-migrate`.
+
 ## Testing
 
 ### Unit tests
