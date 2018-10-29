@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/spf13/cobra"
 )
@@ -18,13 +18,14 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// load config
-			if err := app.Config.Load(); err != nil {
+			config, err := config.Load()
+			if err != nil {
 				fmt.Println("Unable to load config: ", err)
 				os.Exit(1)
 			}
 
 			// open DB
-			db, err := database.DBConn(app.Config.Database)
+			db, err := database.DBConn(config.Database)
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
@@ -34,7 +35,7 @@ func init() {
 			rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
 	                           FROM   information_schema.tables
 														 WHERE  table_type   = 'BASE TABLE'
-														   AND  table_schema = '` + app.Config.Database.DBName + "'")
+														   AND  table_schema = '` + config.Database.DBName + "'")
 			if err != nil {
 				fmt.Println("Unable to query the database: ", err)
 				os.Exit(1)
@@ -57,10 +58,10 @@ func init() {
 			// note: current solution is not really great as it makes some assumptions of the config :-/
 			command := exec.Command(
 				"mysql",
-				"-h"+app.Config.Database.Addr,
-				"-D"+app.Config.Database.DBName,
-				"-u"+app.Config.Database.User,
-				"-p"+app.Config.Database.Passwd,
+				"-h"+config.Database.Addr,
+				"-D"+config.Database.DBName,
+				"-u"+config.Database.User,
+				"-p"+config.Database.Passwd,
 				"--protocol=TCP",
 				"-e"+"source db/schema/20181024.sql",
 			)

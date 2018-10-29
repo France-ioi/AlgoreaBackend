@@ -7,3 +7,5 @@ database:
   dbname: algorea_db
   allownativepasswords: true
   parseTime: true # required for the migration system
+# reverseProxy: # server to which requests which do not match any route will be sent
+#   server: "http://localhost:3000"

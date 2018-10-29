@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,5 +23,5 @@ func Execute() {
 
 func init() {
 	// persistent flags will be available for every sub-commands
-	rootCmd.PersistentFlags().StringVar(&app.ConfigFile, "config", app.ConfigFile, "path to config file")
+	rootCmd.PersistentFlags().StringVar(&config.Path, "config", config.Path, "path to config file")
 }

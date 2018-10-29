@@ -1,33 +1,46 @@
 package app
 
 import (
+	"database/sql"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service/api"
-
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service/api"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
 
-// New configures application resources and routes.
-func New() (*chi.Mux, error) {
+// Application is the core state of the app
+type Application struct {
+	HTTPHandler *chi.Mux
+	Config      *config.Root
+	Database    *sql.DB
+}
 
-	if err := Config.Load(); err != nil {
+// New configures application resources and routes.
+func New() (*Application, error) {
+
+	config, err := config.Load()
+	if err != nil {
 		return nil, err
 	}
 
 	logger := NewLogger()
 
-	db, err := database.DBConn(Config.Database)
+	db, err := database.DBConn(config.Database)
 	if err != nil {
 		logger.WithField("module", "database").Error(err)
 		return nil, err
 	}
 
-	apiCtx := api.NewCtx(db)
+	apiCtx, err := api.NewCtx(config, db)
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
 
 	// Set up middlewares
 	router := chi.NewRouter()
@@ -36,7 +49,7 @@ func New() (*chi.Mux, error) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.DefaultCompress)
-	router.Use(middleware.Timeout(time.Duration(Config.Timeout) * time.Second))
+	router.Use(middleware.Timeout(time.Duration(config.Timeout) * time.Second))
 
 	router.Use(NewStructuredLogger(logger))
 	router.Use(render.SetContentType(render.ContentTypeJSON))
@@ -45,5 +58,5 @@ func New() (*chi.Mux, error) {
 
 	router.Mount("/", apiCtx.Router())
 
-	return router, nil
+	return &Application{router, config, db}, nil
 }

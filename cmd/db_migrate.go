@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
@@ -19,14 +19,15 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			// load config
-			if err := app.Config.Load(); err != nil {
+			config, err := config.Load()
+			if err != nil {
 				fmt.Println("Unable to load config: ", err)
 				os.Exit(1)
 			}
 
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
-			db, err := database.DBConn(app.Config.Database)
+			db, err := database.DBConn(config.Database)
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)

@@ -1,7 +1,6 @@
 package app_bdd_tests
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,31 +12,24 @@ import (
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 type testContext struct {
-	application      http.Handler
-	db               *sql.DB
+	application      *app.Application
 	lastResponse     *http.Response
 	lastResponseBody string
 }
 
 func (ctx *testContext) setupTestContext(interface{}) {
 
-	app.ConfigFile = "../../conf/default.yaml"
-	if err := app.Config.Load(); err != nil {
-		fmt.Println("Unable to load config")
-		panic(err)
-	}
-	ctx.application, _ = app.New()
-
-	db, err := database.DBConn(app.Config.Database)
+	config.Path = "../../conf/default.yaml"
+	var err error
+	ctx.application, err = app.New()
 	if err != nil {
-		fmt.Println("Unable to load db")
+		fmt.Println("Unable to load app")
 		panic(err)
 	}
-	ctx.db = db
 
 	err = ctx.emptyDB()
 	if err != nil {
@@ -68,7 +60,8 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
-	rows, err := ctx.db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+	db := ctx.application.Database
+	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
                                   AND  table_schema = 'algorea_db'
@@ -83,7 +76,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 		if err = rows.Scan(&tableName); err != nil {
 			return err
 		}
-		if _, err := ctx.db.Exec("TRUNCATE TABLE " + tableName); err != nil {
+		if _, err := db.Exec("TRUNCATE TABLE " + tableName); err != nil {
 			return err
 		}
 	}
@@ -94,6 +87,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
 func (ctx *testContext) dbSeed(tableName string, data *gherkin.DataTable) error {
 
+	db := ctx.application.Database
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -101,7 +95,7 @@ func (ctx *testContext) dbSeed(tableName string, data *gherkin.DataTable) error 
 		fields = append(fields, cell.Value)
 		marks = append(marks, "?")
 	}
-	stmt, err := ctx.db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")")
+	stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")")
 	if err != nil {
 		return err
 	}
@@ -118,7 +112,7 @@ func (ctx *testContext) dbSeed(tableName string, data *gherkin.DataTable) error 
 }
 
 func (ctx *testContext) makeRequest(method string, path string) error {
-	testServer := httptest.NewServer(ctx.application)
+	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
 
 	response, body, err := testRequest(testServer, method, path, nil)

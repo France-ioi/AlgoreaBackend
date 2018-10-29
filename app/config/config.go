@@ -1,4 +1,4 @@
-package app
+package config
 
 import (
 	"log"
@@ -7,25 +7,30 @@ import (
 	"github.com/spf13/viper"
 )
 
-type serverConfig struct {
+// Server is the part of the config for the HTTP Server
+type Server struct {
 	Port         int32
 	ReadTimeout  int32
 	WriteTimeout int32
 }
 
-type rootConfig struct {
-	Server   serverConfig
-	Database mysql.Config
-	Timeout  int32
+// ReverseProxy is the part of the config for the Reverse Proxy
+type ReverseProxy struct {
+	Server string
 }
 
-// Config is the application configuration
-var Config rootConfig
+// Root is the root of the app configuration
+type Root struct {
+	Server       Server
+	Database     mysql.Config
+	ReverseProxy ReverseProxy
+	Timeout      int32
+}
 
-// ConfigFile defines the file name which will be used to read the configuration
-var ConfigFile = "conf/default.yaml"
+// Path defines the file name which will be used to read the configuration
+var Path = "conf/default.yaml"
 
-// LoadConfig loads the app configuration from files, flags, env, ..., and maps it to the config struct
+// Load loads the app configuration from files, flags, env, ..., and maps it to the config struct
 // The precedence of config values in viper is the following:
 // 1) explicit call to Set
 // 2) flag (i.e., settable by command line)
@@ -33,8 +38,9 @@ var ConfigFile = "conf/default.yaml"
 // 4) config file
 // 5) key/value store
 // 6) default
-func (config *rootConfig) Load() error {
+func Load() (*Root, error) {
 
+	var config *Root
 	setDefaults()
 
 	// through env variables
@@ -42,19 +48,19 @@ func (config *rootConfig) Load() error {
 	viper.AutomaticEnv()          // read in environment variables
 
 	// through the config file
-	viper.SetConfigFile(ConfigFile)
+	viper.SetConfigFile(Path)
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal("Cannot read config:", err)
-		return err
+		return nil, err
 	}
 
 	// map the given config to a static struct
 	err := viper.Unmarshal(&config)
 	if err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return config, nil
 }
 
 func setDefaults() {

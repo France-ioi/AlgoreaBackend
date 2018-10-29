@@ -16,14 +16,14 @@ type Server struct {
 }
 
 // NewServer creates and configures an APIServer serving all application routes.
-func NewServer(app http.Handler) (*Server, error) {
+func NewServer(app *Application) (*Server, error) {
 	log.Println("Configuring server...")
 
 	srv := http.Server{
-		Addr:         fmt.Sprintf(":%d", Config.Server.Port),
-		ReadTimeout:  time.Duration(Config.Server.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(Config.Server.WriteTimeout) * time.Second,
-		Handler:      app,
+		Addr:         fmt.Sprintf(":%d", app.Config.Server.Port),
+		ReadTimeout:  time.Duration(app.Config.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(app.Config.Server.WriteTimeout) * time.Second,
+		Handler:      app.HTTPHandler,
 	}
 
 	return &Server{&srv}, nil
