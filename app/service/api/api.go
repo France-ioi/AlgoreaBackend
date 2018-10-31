@@ -13,8 +13,8 @@ import (
 
 // Ctx is the context of the root of the API
 type Ctx struct {
+	config       *config.Root
 	db           *sql.DB
-	groupCtx     *groups.Ctx
 	reverseProxy *httputil.ReverseProxy
 }
 
@@ -25,13 +25,13 @@ func NewCtx(config *config.Root, db *sql.DB) (*Ctx, error) {
 		return nil, err
 	}
 	proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-	return &Ctx{db, groups.NewCtx(db), proxy}, nil
+	return &Ctx{config, db, proxy}, nil
 }
 
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Mount("/groups", ctx.groupCtx.Router())
+	r.Mount("/groups", groups.NewCtx(ctx.db).Router())
 	r.NotFound(ctx.notFound)
 	return r
 }
