@@ -1,11 +1,12 @@
 package api
 
 import (
-	"database/sql"
 	"net/http/httputil"
 	"net/url"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service/api/groups"
 	"github.com/go-chi/chi"
@@ -14,12 +15,12 @@ import (
 // Ctx is the context of the root of the API
 type Ctx struct {
 	config       *config.Root
-	db           *sql.DB
+	db           *sqlx.DB
 	reverseProxy *httputil.ReverseProxy
 }
 
 // NewCtx creates a API context
-func NewCtx(config *config.Root, db *sql.DB) (*Ctx, error) {
+func NewCtx(config *config.Root, db *sqlx.DB) (*Ctx, error) {
 	proxyURL, err := url.Parse(config.ReverseProxy.Server)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,9 @@ func NewCtx(config *config.Root, db *sql.DB) (*Ctx, error) {
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Mount("/groups", groups.NewCtx(ctx.db).Router())
+	groupStore := database.NewGroupStore(ctx.db)
+
+	r.Mount("/groups", groups.New(groupStore).Router())
 	r.NotFound(ctx.notFound)
 	return r
 }

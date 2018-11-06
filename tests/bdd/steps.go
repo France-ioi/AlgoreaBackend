@@ -85,7 +85,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
 /** Steps **/
 
-func (ctx *testContext) dbSeed(tableName string, data *gherkin.DataTable) error {
+func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
 
 	db := ctx.application.Database
 	var fields []string
@@ -111,7 +111,7 @@ func (ctx *testContext) dbSeed(tableName string, data *gherkin.DataTable) error 
 	return nil
 }
 
-func (ctx *testContext) makeRequest(method string, path string) error {
+func (ctx *testContext) iSendrequestTo(method string, path string) error {
 	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
 
@@ -129,7 +129,7 @@ func (ctx *testContext) itShouldBeAJSONArrayWithEntries(count int) error {
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
-		return fmt.Errorf("Unable to decode the response as JSON: %s", err)
+		return fmt.Errorf("Unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
 	}
 
 	if count != len(objmap) {
@@ -139,11 +139,63 @@ func (ctx *testContext) itShouldBeAJSONArrayWithEntries(count int) error {
 	return nil
 }
 
+func (ctx *testContext) theResponseCodeShouldBe(code int) error {
+	if code != ctx.lastResponse.StatusCode {
+		return fmt.Errorf("expected response code to be: %d, but actual is: %d", code, ctx.lastResponse.StatusCode)
+	}
+	return nil
+}
+
+func (ctx *testContext) theResponseShouldMatchJSON(body *gherkin.DocString) (err error) {
+	var expected, actual []byte
+	var exp, act interface{}
+
+	// re-encode expected response
+	if err = json.Unmarshal([]byte(body.Content), &exp); err != nil {
+		return
+	}
+	if expected, err = json.MarshalIndent(exp, "", "  "); err != nil {
+		return
+	}
+
+	// re-encode actual response too
+	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
+		return fmt.Errorf("Unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+	}
+	if actual, err = json.MarshalIndent(act, "", "  "); err != nil {
+		return
+	}
+
+	// the matching may be adapted per different requirements.
+	if len(actual) != len(expected) {
+		return fmt.Errorf(
+			"expected json length: %d does not match actual: %d:\n%s",
+			len(expected),
+			len(actual),
+			string(actual),
+		)
+	}
+
+	for i, b := range actual {
+		if b != expected[i] {
+			return fmt.Errorf(
+				"expected JSON does not match actual, showing up to last matched character:\n%s",
+				string(actual[:i+1]),
+			)
+		}
+	}
+	return
+}
+
+// FeatureContext binds the supported steps to the verifying functions
 func FeatureContext(s *godog.Suite) {
 	ctx := &testContext{}
 	s.BeforeScenario(ctx.setupTestContext)
 
-	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbSeed)
-	s.Step(`^I make a (GET) (/[\w\/]*)$`, ctx.makeRequest)
+	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbHasTable)
+
+	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
+	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
+	s.Step(`^the response should match json:$`, ctx.theResponseShouldMatchJSON)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
 }

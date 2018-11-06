@@ -7,34 +7,18 @@ import (
 	"github.com/go-chi/render"
 )
 
-type groupResponseRow struct {
-	ID int `json:"id"`
+type GroupResponseRow struct {
+	Id   int    `json:"id" db:"ID"`
+	Name string `json:"name" db:"sName"`
 }
 
-func (ctx *Ctx) getAll(w http.ResponseWriter, r *http.Request) {
-	groups, err := ctx.dbGetAllGroups()
+func (srv *GroupsService) getAll(w http.ResponseWriter, r *http.Request) {
+	groups := []GroupResponseRow{}
+	err := srv.Store.GetAll(&groups)
+
 	if err != nil {
 		render.Render(w, r, s.ErrServer(err))
 		return
 	}
 	render.Respond(w, r, groups)
-}
-
-func (ctx *Ctx) dbGetAllGroups() ([]groupResponseRow, error) {
-	rows, err := ctx.db.Query(`SELECT id FROM groups`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var groups []groupResponseRow
-	for rows.Next() {
-		var group groupResponseRow
-		err := rows.Scan(&group.ID)
-		if err != nil {
-			return nil, err
-		}
-		groups = append(groups, group)
-	}
-	return groups, nil
 }

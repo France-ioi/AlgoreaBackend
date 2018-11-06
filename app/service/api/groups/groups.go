@@ -1,24 +1,25 @@
 package groups
 
 import (
-	"database/sql"
-
 	"github.com/go-chi/chi"
 )
 
-// Ctx is the context
-type Ctx struct {
-	db *sql.DB
+type GroupsStore interface {
+	GetAll(dest interface{}) error
 }
 
-// NewCtx creates a service context
-func NewCtx(db *sql.DB) *Ctx {
-	return &Ctx{db}
+type GroupsService struct {
+	Store GroupsStore
+}
+
+// New creates a service context
+func New(store GroupsStore) *GroupsService {
+	return &GroupsService{store}
 }
 
 // Router returns the router to the services
-func (ctx *Ctx) Router() *chi.Mux {
+func (srv *GroupsService) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Get("/", ctx.getAll)
+	r.Get("/", srv.getAll)
 	return r
 }

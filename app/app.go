@@ -1,12 +1,12 @@
 package app
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service/api"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -17,7 +17,7 @@ import (
 type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *config.Root
-	Database    *sql.DB
+	Database    *sqlx.DB
 }
 
 // New configures application resources and routes.
