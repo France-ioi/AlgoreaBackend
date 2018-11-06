@@ -4,16 +4,16 @@ import (
 	"github.com/go-chi/chi"
 )
 
-type GroupsStore interface {
+type GroupStore interface {
 	GetAll(dest interface{}) error
 }
 
 type GroupsService struct {
-	Store GroupsStore
+	Store GroupStore
 }
 
 // New creates a service context
-func New(store GroupsStore) *GroupsService {
+func New(store GroupStore) *GroupsService {
 	return &GroupsService{store}
 }
 
