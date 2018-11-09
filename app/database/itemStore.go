@@ -23,8 +23,8 @@ func (s *ItemStore) Create(
 	order int,
 ) error {
 
-	// groupItemStore := NewGroupItemStore(s.db)
-	// itemItemStore := NewItemItemStore(s.db)
+	groupItemStore := NewGroupItemStore(s.db)
+	itemItemStore := NewItemItemStore(s.db)
 	itemStringStore := NewItemStringStore(s.db)
 
 	return s.db.inTransaction(func(tx *sqlx.Tx) error {
@@ -32,15 +32,15 @@ func (s *ItemStore) Create(
 		if err = s.createRaw(tx, itemID, itemType); err != nil {
 			return err
 		}
-		// if err = groupItemStore.createRaw(tx, ...); err != nil {
-		// 	return err
-		// }
+		if err = groupItemStore.createRaw(tx, itemID); err != nil {
+			return err
+		}
 		if err = itemStringStore.createRaw(tx, itemID, languageID, title); err != nil {
 			return err
 		}
-		// if err = itemItemStore.createRaw(tx, ...); err != nil {
-		// 	return err
-		// }
+		if err = itemItemStore.createRaw(tx, parentID, itemID, order); err != nil {
+			return err
+		}
 		return nil
 	})
 }

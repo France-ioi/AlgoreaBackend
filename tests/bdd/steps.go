@@ -235,7 +235,7 @@ func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable)
 			dataValue := dataCell.Value
 			sqlValue := rowValPtr[iCol].(*string)
 			if dataValue != *sqlValue {
-				return fmt.Errorf("Not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, sqlValue)
+				return fmt.Errorf("Not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, *sqlValue)
 			}
 		}
 
