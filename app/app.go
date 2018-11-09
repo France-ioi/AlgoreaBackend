@@ -6,7 +6,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service/api"
-	"github.com/jmoiron/sqlx"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -17,7 +16,7 @@ import (
 type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *config.Root
-	Database    *sqlx.DB
+	Database    *database.DB
 }
 
 // New configures application resources and routes.

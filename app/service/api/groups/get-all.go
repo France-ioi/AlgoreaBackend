@@ -14,7 +14,7 @@ type GroupResponseRow struct {
 
 func (srv *GroupsService) getAll(w http.ResponseWriter, r *http.Request) {
 	groups := []GroupResponseRow{}
-	err := srv.Store.GetAll(&groups)
+	err := srv.Store.Groups.GetAll(&groups)
 
 	if err != nil {
 		render.Render(w, r, s.ErrServer(err))

@@ -83,6 +83,20 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 	return nil
 }
 
+func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody string) error {
+	testServer := httptest.NewServer(ctx.application.HTTPHandler)
+	defer testServer.Close()
+
+	response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+	ctx.lastResponse = response
+	ctx.lastResponseBody = body
+
+	return nil
+}
+
 /** Steps **/
 
 func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
@@ -111,18 +125,12 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
 	return nil
 }
 
+func (ctx *testContext) iSendrequestToWithBody(method string, path string, body *gherkin.DocString) error {
+	return ctx.iSendrequestGeneric(method, path, body.Content)
+}
+
 func (ctx *testContext) iSendrequestTo(method string, path string) error {
-	testServer := httptest.NewServer(ctx.application.HTTPHandler)
-	defer testServer.Close()
-
-	response, body, err := testRequest(testServer, method, path, nil)
-	if err != nil {
-		return err
-	}
-	ctx.lastResponse = response
-	ctx.lastResponseBody = body
-
-	return nil
+	return ctx.iSendrequestGeneric(method, path, "")
 }
 
 func (ctx *testContext) itShouldBeAJSONArrayWithEntries(count int) error {
@@ -187,6 +195,60 @@ func (ctx *testContext) theResponseShouldMatchJSON(body *gherkin.DocString) (err
 	return
 }
 
+func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable) error {
+	// For that, we build a SQL request with only the attribute we are interested about (those
+	// for the test data table) and we convert them to string (in SQL) to compare to table value.
+	// Expect 'null' string in the table to check for nullness
+
+	db := ctx.application.Database
+	var selects []string
+	head := data.Rows[0].Cells
+	for _, cell := range head {
+		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
+	}
+
+	sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName)
+	if err != nil {
+		return err
+	}
+	dataCols := data.Rows[0].Cells
+	iDataRow := 1
+	sqlCols, _ := sqlRows.Columns()
+	for sqlRows.Next() {
+		if iDataRow >= len(data.Rows) {
+			return fmt.Errorf("There are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
+		}
+		// Create a slice of string to represent each attribute value,
+		// and a second slice to contain pointers to each item.
+		rowValues := make([]string, len(sqlCols))
+		rowValPtr := make([]interface{}, len(sqlCols))
+		for i := range rowValues {
+			rowValPtr[i] = &rowValues[i]
+		}
+		// Scan the result into the column pointers...
+		if err := sqlRows.Scan(rowValPtr...); err != nil {
+			return err
+		}
+		// checking that all columns of the test data table match the SQL row
+		for iCol, dataCell := range data.Rows[iDataRow].Cells {
+			colName := dataCols[iCol].Value
+			dataValue := dataCell.Value
+			sqlValue := rowValPtr[iCol].(*string)
+			if dataValue != *sqlValue {
+				return fmt.Errorf("Not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, sqlValue)
+			}
+		}
+
+		iDataRow++
+	}
+
+	// check that no row in teh test data table has not been uncheck (if less rows in SQL result)
+	if iDataRow < len(data.Rows) {
+		return fmt.Errorf("There are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
+	}
+	return nil
+}
+
 // FeatureContext binds the supported steps to the verifying functions
 func FeatureContext(s *godog.Suite) {
 	ctx := &testContext{}
@@ -195,7 +257,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbHasTable)
 
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
+	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.iSendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
 	s.Step(`^the response should match json:$`, ctx.theResponseShouldMatchJSON)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
+	s.Step(`^the table "([^"]*)" should be:$`, ctx.tableShouldBe)
 }

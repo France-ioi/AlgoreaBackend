@@ -1,22 +1,22 @@
-package groups
+package items
 
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/go-chi/chi"
 )
 
-type GroupsService struct {
+type ItemService struct {
 	Store *database.DataStore
 }
 
 // New creates a service context
-func New(store *database.DataStore) *GroupsService {
-	return &GroupsService{store}
+func New(store *database.DataStore) *ItemService {
+	return &ItemService{store}
 }
 
 // Router returns the router to the services
-func (srv *GroupsService) Router() *chi.Mux {
+func (ctx *ItemService) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Get("/", srv.getAll)
+	r.Post("/", ctx.addItem)
 	return r
 }

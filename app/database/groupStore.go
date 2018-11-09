@@ -1,16 +1,12 @@
 package database
 
-import (
-	"github.com/jmoiron/sqlx"
-)
-
 // GroupStore implements database operations on groups
 type GroupStore struct {
-	db *sqlx.DB
+	db *DB
 }
 
 // NewGroupStore returns a GroupStore
-func NewGroupStore(db *sqlx.DB) *GroupStore {
+func NewGroupStore(db *DB) *GroupStore {
 	return &GroupStore{db}
 }
 
