@@ -15,6 +15,7 @@ func NewItemStringStore(db *DB) *ItemStringStore {
 }
 
 func (s *ItemStringStore) createRaw(tx *sqlx.Tx, itemID int, languageID int, title string) error {
+	// FIXME dummy ID and version
 	_, err := tx.Exec("INSERT INTO items_strings (ID, idItem, idLanguage, sTitle, iVersion) VALUES (?, ?, ?, ?, ?)", 1, itemID, languageID, title, 0)
 	return err
 }

@@ -15,6 +15,7 @@ func NewGroupItemStore(db *DB) *GroupItemStore {
 }
 
 func (s *GroupItemStore) createRaw(tx *sqlx.Tx, itemID int) error {
+	// FIXME dummy values
 	_, err := tx.Exec("INSERT INTO groups_items (ID, idGroup, idItem, sFullAccessDate, bCachedFullAccess, bOwnerAccess, idUserCreated, iVersion) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", 1, 6, itemID, "2018-01-01 00:00:00", true, true, 9, 0)
 	return err
 }

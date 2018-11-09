@@ -15,6 +15,7 @@ func NewItemItemStore(db *DB) *ItemItemStore {
 }
 
 func (s *ItemItemStore) createRaw(tx *sqlx.Tx, parentID int, childID int, order int) error {
+	// FIXME dummy ID and version
 	_, err := tx.Exec("INSERT INTO items_items (ID, idItemParent, idItemChild, iChildOrder, iDifficulty, iVersion) VALUES (?, ?, ?, ?, ?, ?)", 1, parentID, childID, order, 0, 0)
 	return err
 }
