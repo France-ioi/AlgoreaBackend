@@ -25,7 +25,7 @@ func (s *ItemStore) Create(
 
 	// groupItemStore := NewGroupItemStore(s.db)
 	// itemItemStore := NewItemItemStore(s.db)
-	// itemStringStore := NewItemStringStore(s.db)
+	itemStringStore := NewItemStringStore(s.db)
 
 	return s.db.inTransaction(func(tx *sqlx.Tx) error {
 		var err error
@@ -35,9 +35,9 @@ func (s *ItemStore) Create(
 		// if err = groupItemStore.createRaw(tx, ...); err != nil {
 		// 	return err
 		// }
-		// if err = itemStringStore.createRaw(tx, itemID, languageID, title); err != nil {
-		// 	return err
-		// }
+		if err = itemStringStore.createRaw(tx, itemID, languageID, title); err != nil {
+			return err
+		}
 		// if err = itemItemStore.createRaw(tx, ...); err != nil {
 		// 	return err
 		// }

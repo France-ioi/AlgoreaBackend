@@ -1,6 +1,8 @@
 package database
 
-import "github.com/jmoiron/sqlx"
+import (
+	"github.com/jmoiron/sqlx"
+)
 
 // ItemStringStore implements database operations on `items_strings`
 type ItemStringStore struct {
@@ -12,7 +14,7 @@ func NewItemStringStore(db *DB) *ItemStringStore {
 	return &ItemStringStore{db}
 }
 
-func (s *ItemStringStore) createRaw(tx *sqlx.Tx, itemID int, langageID int, title string) error {
-	_, err := tx.Exec("INSERT INTO items_strings (ID, idItem, idLanguage, sTitle) VALUES ($1, $2, $3, $4)", 1, itemID, langageID, title)
+func (s *ItemStringStore) createRaw(tx *sqlx.Tx, itemID int, languageID int, title string) error {
+	_, err := tx.Exec("INSERT INTO items_strings (ID, idItem, idLanguage, sTitle, iVersion) VALUES (?, ?, ?, ?, ?)", 1, itemID, languageID, title, 0)
 	return err
 }
