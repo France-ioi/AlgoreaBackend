@@ -7,10 +7,10 @@ import (
 // Doc is mainly in the "int64" file :-)
 
 type (
-	// String is an abstract type for the types below
+	// String is a string which can be set/not-set and null/not-null
 	String struct {
-		Value int64
-		validatableType
+		Value string
+		OptionalType
 	}
 	// RequiredString must be set and not null
 	RequiredString struct{ String }
@@ -22,10 +22,19 @@ type (
 	OptNullString struct{ String }
 )
 
+// NewString creates a String which is not-null and set with the given value
+func NewString(s string) *String {
+	n := &String{}
+	n.Value = s
+	n.Set = true
+	n.Null = false
+	return n
+}
+
 // UnmarshalJSON parse JSON data to the type
 func (i *String) UnmarshalJSON(data []byte) error {
-	i.validatableType.UnmarshalJSON(data)
-	var temp int64
+	i.OptionalType.UnmarshalJSON(data)
+	var temp string
 	err := json.Unmarshal(data, &temp)
 	if err == nil {
 		i.Value = temp
@@ -35,17 +44,17 @@ func (i *String) UnmarshalJSON(data []byte) error {
 
 // Validate checks that the subject matches "required" (set and not-null)
 func (i *RequiredString) Validate() error {
-	return i.validatableType.validateRequired()
+	return i.OptionalType.validateRequired()
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
 func (i *NullableString) Validate() error {
-	return i.validatableType.validateNullable()
+	return i.OptionalType.validateNullable()
 }
 
 // Validate checks that the subject matches "optional" (not-null)
 func (i *OptionalString) Validate() error {
-	return i.validatableType.validateOptional()
+	return i.OptionalType.validateOptional()
 }
 
 // Validate checks that the subject matches "optnull" (always true)

@@ -1,21 +1,27 @@
 package database
 
-import (
-	"github.com/jmoiron/sqlx"
-)
+import t "github.com/France-ioi/AlgoreaBackend/app/types"
 
 // ItemItemStore implements database operations on `items_items`
 type ItemItemStore struct {
 	db *DB
 }
 
-// NewItemItemStore returns a ItemItemStore
-func NewItemItemStore(db *DB) *ItemItemStore {
-	return &ItemItemStore{db}
+type ItemItem struct {
+	ID           t.Int64 `db:"ID"`
+	ParentItemID t.Int64 `db:"idItemParent"`
+	ChildItemID  t.Int64 `db:"idItemChild"`
+	Order        t.Int64 `db:"iChildOrder"`
+	Difficulty   int64   `db:"iDifficulty"` // when the db does not know the default, they will get the go type default
+	Version      int64   `db:"iVersion"`    // when the db does not know the default, they will get the go type default
 }
 
-func (s *ItemItemStore) createRaw(tx *sqlx.Tx, parentID int, childID int, order int) error {
-	// FIXME dummy ID and version
-	_, err := tx.Exec("INSERT INTO items_items (ID, idItemParent, idItemChild, iChildOrder, iDifficulty, iVersion) VALUES (?, ?, ?, ?, ?, ?)", 1, parentID, childID, order, 0, 0)
-	return err
+func (s *ItemItemStore) createRaw(tx Tx, entry *ItemItem) (int64, error) {
+	entry.ParentItemID = *t.NewInt64(4) // dummy
+
+	if !entry.ID.Set {
+		entry.ID = *t.NewInt64(generateID())
+	}
+	err := tx.insert("items_items", entry)
+	return entry.ID.Value, err
 }

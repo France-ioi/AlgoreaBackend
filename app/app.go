@@ -1,6 +1,7 @@
 package app
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -26,6 +27,9 @@ func New() (*Application, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Init the PRNG with current time
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	logger := NewLogger()
 

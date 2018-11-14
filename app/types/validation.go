@@ -4,10 +4,11 @@ import (
 	"errors"
 )
 
-// validatableType is an abstract type which is extended by other types with a value
-type validatableType struct {
-	Set  bool
-	Null bool
+// OptionalType is an abstract type which is extended by other types with a value
+type OptionalType struct {
+	Value interface{}
+	Set   bool
+	Null  bool
 }
 
 // Validatable is the interface indicating the type implementing it supports data validation.
@@ -27,27 +28,27 @@ func Validate(values ...validatable) error {
 }
 
 // UnmarshalJSON is the generic part of the unmarshalling
-func (v *validatableType) UnmarshalJSON(data []byte) error {
+func (v *OptionalType) UnmarshalJSON(data []byte) error {
 	v.Set = true // If this method was called, the value was set.
 	v.Null = (string(data) == "null")
 	return nil
 }
 
-func (v *validatableType) validateRequired() error {
+func (v *OptionalType) validateRequired() error {
 	if !v.Set || v.Null {
 		return errors.New("must be given and not null")
 	}
 	return nil
 }
 
-func (v *validatableType) validateNullable() error {
+func (v *OptionalType) validateNullable() error {
 	if !v.Set {
 		return errors.New("must be given")
 	}
 	return nil
 }
 
-func (v *validatableType) validateOptional() error {
+func (v *OptionalType) validateOptional() error {
 	if v.Null {
 		return errors.New("must not be null")
 	}

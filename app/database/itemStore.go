@@ -1,7 +1,7 @@
 package database
 
 import (
-	"github.com/jmoiron/sqlx"
+	t "github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // ItemStore implements database operations on items
@@ -9,43 +9,45 @@ type ItemStore struct {
 	db *DB
 }
 
-// NewItemStore returns a GroupStore
-func NewItemStore(db *DB) *ItemStore {
-	return &ItemStore{db}
+type Item struct {
+	ID            t.Int64  `db:"ID"`
+	Type          t.String `db:"sType"`
+	TeamsEditable bool     `db:"bTeamsEditable"` // when the db does not know the default, they will get the go type default
+	NoScore       bool     `db:"bNoScore"`       // when the db does not know the default, they will get the go type default
+	Version       int64    `db:"iVersion"`       // when the db does not know the default, they will get the go type default
 }
 
-func (s *ItemStore) Create(
-	itemID int,
-	itemType string,
-	languageID int,
-	title string,
-	parentID int,
-	order int,
-) error {
+// Create insert an Item row in the database and associted values in related tables if needed
+func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, parentID t.Int64, order t.Int64) error {
 
-	groupItemStore := NewGroupItemStore(s.db)
-	itemItemStore := NewItemItemStore(s.db)
-	itemStringStore := NewItemStringStore(s.db)
+	groupItemStore := &GroupItemStore{s.db}
+	itemItemStore := &ItemItemStore{s.db}
+	itemStringStore := &ItemStringStore{s.db}
 
-	return s.db.inTransaction(func(tx *sqlx.Tx) error {
-		var err error
-		if err = s.createRaw(tx, itemID, itemType); err != nil {
+	return s.db.inTransaction(func(tx Tx) error {
+		itemID, err := s.createRaw(tx, item)
+		itemIDt := *t.NewInt64(itemID)
+		if err != nil {
 			return err
 		}
-		if err = groupItemStore.createRaw(tx, itemID); err != nil {
+		if _, err = groupItemStore.createRaw(tx, &GroupItem{ItemID: itemIDt}); err != nil {
 			return err
 		}
-		if err = itemStringStore.createRaw(tx, itemID, languageID, title); err != nil {
+		if _, err = itemStringStore.createRaw(tx, &ItemString{ItemID: itemIDt, LanguageID: languageID, Title: title}); err != nil {
 			return err
 		}
-		if err = itemItemStore.createRaw(tx, parentID, itemID, order); err != nil {
+		if _, err = itemItemStore.createRaw(tx, &ItemItem{ChildItemID: itemIDt, Order: order}); err != nil {
 			return err
 		}
 		return nil
 	})
 }
 
-func (s *ItemStore) createRaw(tx *sqlx.Tx, itemID int, itemType string) error {
-	_, err := tx.Exec("INSERT INTO items (ID, sType, bTeamsEditable, bNoScore, iVersion) VALUES (?, ?, ?, ?, ?)", itemID, itemType, false, false, 0)
-	return err
+// createRaw insert a row in the transaction and returns the
+func (s *ItemStore) createRaw(tx Tx, entry *Item) (int64, error) {
+	if !entry.ID.Set {
+		entry.ID = *t.NewInt64(generateID())
+	}
+	err := tx.insert("items", entry)
+	return entry.ID.Value, err
 }

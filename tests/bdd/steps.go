@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -36,6 +37,9 @@ func (ctx *testContext) setupTestContext(interface{}) {
 		fmt.Println("Unable to empty db")
 		panic(err)
 	}
+
+	// reset the seed to get predictable results on PRNG
+	rand.Seed(1)
 }
 
 func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string, error) {

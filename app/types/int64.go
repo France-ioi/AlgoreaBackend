@@ -11,10 +11,10 @@ import (
 // For failing on optional, it has be done at the struct validation level
 
 type (
-	// Int64 is an abstract type for the types below
+	// Int64 is an integer which can be set/not-set and null/not-null
 	Int64 struct {
 		Value int64
-		validatableType
+		OptionalType
 	}
 	// RequiredInt64 must be set and not null
 	RequiredInt64 struct{ Int64 }
@@ -26,9 +26,18 @@ type (
 	OptNullInt64 struct{ Int64 }
 )
 
+// NewInt64 creates a Int64 which is not-null and set with the given value
+func NewInt64(v int64) *Int64 {
+	n := &Int64{}
+	n.Value = v
+	n.Set = true
+	n.Null = false
+	return n
+}
+
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) error {
-	i.validatableType.UnmarshalJSON(data)
+	i.OptionalType.UnmarshalJSON(data)
 	var temp int64
 	err := json.Unmarshal(data, &temp)
 	if err == nil {
@@ -39,17 +48,17 @@ func (i *Int64) UnmarshalJSON(data []byte) error {
 
 // Validate checks that the subject matches "required" (set and not-null)
 func (i *RequiredInt64) Validate() error {
-	return i.validatableType.validateRequired()
+	return i.OptionalType.validateRequired()
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
 func (i *NullableInt64) Validate() error {
-	return i.validatableType.validateNullable()
+	return i.OptionalType.validateNullable()
 }
 
 // Validate checks that the subject matches "optional" (not-null)
 func (i *OptionalInt64) Validate() error {
-	return i.validatableType.validateOptional()
+	return i.OptionalType.validateOptional()
 }
 
 // Validate checks that the subject matches "optnull" (always true)
