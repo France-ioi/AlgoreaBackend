@@ -158,7 +158,7 @@ func (ctx *testContext) theResponseCodeShouldBe(code int) error {
 	return nil
 }
 
-func (ctx *testContext) theResponseShouldMatchJSON(body *gherkin.DocString) (err error) {
+func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (err error) {
 	var expected, actual []byte
 	var exp, act interface{}
 
@@ -172,7 +172,7 @@ func (ctx *testContext) theResponseShouldMatchJSON(body *gherkin.DocString) (err
 
 	// re-encode actual response too
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
-		return fmt.Errorf("Unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if actual, err = json.MarshalIndent(act, "", "  "); err != nil {
 		return
@@ -263,7 +263,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.iSendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
-	s.Step(`^the response should match json:$`, ctx.theResponseShouldMatchJSON)
+	s.Step(`^the response body should be, in JSON:$`, ctx.theResponseBodyShouldBeJSON)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.tableShouldBe)
 }

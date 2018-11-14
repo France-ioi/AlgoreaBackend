@@ -43,7 +43,9 @@ func (i *NewItemRequest) itemData() *database.Item {
 	}
 }
 
-type newItemResponse struct {
+// NewItemResponseData is what will be returned as data in case of success
+type NewItemResponseData struct {
+	ItemID int64 `json:"ID"`
 }
 
 func (srv *ItemService) addItem(w http.ResponseWriter, r *http.Request) {
@@ -52,9 +54,11 @@ func (srv *ItemService) addItem(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, s.ErrInvalidRequest(err))
 		return
 	}
-	if err := srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64); err != nil {
+	id, err := srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
+	if err != nil {
 		render.Render(w, r, s.ErrInvalidRequest(err))
 		return
 	}
-	render.Respond(w, r, &newItemResponse{})
+
+	render.Render(w, r, s.CreateSuccess(&NewItemResponseData{id}))
 }

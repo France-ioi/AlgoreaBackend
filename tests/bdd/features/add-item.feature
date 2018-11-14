@@ -14,7 +14,15 @@ When I send a POST request to "/items/" with the following body:
     ]
   }
   """
-Then the response code should be 200
+Then the response code should be 201
+And the response body should be, in JSON:
+"""
+{
+  "success": true,
+  "message": "success",
+  "data": { "ID": 2 }
+}
+"""
 And the table "items" should be:
   | ID | sType  | sUrl |
   |  2 | Course | NULL |
@@ -41,7 +49,7 @@ When I send a POST request to "/items/" with the following body:
     ]
   }
   """
-Then the response code should be 200
+Then the response code should be 201
 And the table "items" should be:
   |                  ID | sType  | sUrl |
   | 5577006791947779410 | Course | NULL |

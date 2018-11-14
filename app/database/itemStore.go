@@ -18,25 +18,28 @@ type Item struct {
 }
 
 // Create insert an Item row in the database and associted values in related tables if needed
-func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, parentID t.Int64, order t.Int64) error {
+func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, parentID t.Int64, order t.Int64) (int64, error) {
 
 	groupItemStore := &GroupItemStore{s.db}
 	itemItemStore := &ItemItemStore{s.db}
 	itemStringStore := &ItemStringStore{s.db}
 
-	return s.db.inTransaction(func(tx Tx) error {
-		itemID, err := s.createRaw(tx, item)
-		itemIDt := *t.NewInt64(itemID)
-		if err != nil {
+	if !item.ID.Set { // set it here as it will be returned
+		item.ID = *t.NewInt64(generateID())
+	}
+	itemID := item.ID
+
+	return itemID.Value, s.db.inTransaction(func(tx Tx) error {
+		if _, err := s.createRaw(tx, item); err != nil {
 			return err
 		}
-		if _, err = groupItemStore.createRaw(tx, &GroupItem{ItemID: itemIDt}); err != nil {
+		if _, err := groupItemStore.createRaw(tx, &GroupItem{ItemID: itemID}); err != nil {
 			return err
 		}
-		if _, err = itemStringStore.createRaw(tx, &ItemString{ItemID: itemIDt, LanguageID: languageID, Title: title}); err != nil {
+		if _, err := itemStringStore.createRaw(tx, &ItemString{ItemID: itemID, LanguageID: languageID, Title: title}); err != nil {
 			return err
 		}
-		if _, err = itemItemStore.createRaw(tx, &ItemItem{ChildItemID: itemIDt, Order: order}); err != nil {
+		if _, err := itemItemStore.createRaw(tx, &ItemItem{ChildItemID: itemID, Order: order}); err != nil {
 			return err
 		}
 		return nil
