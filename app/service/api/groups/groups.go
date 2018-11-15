@@ -2,6 +2,8 @@ package groups
 
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	s "github.com/France-ioi/AlgoreaBackend/app/service"
+
 	"github.com/go-chi/chi"
 )
 
@@ -17,6 +19,6 @@ func New(store *database.DataStore) *GroupsService {
 // Router returns the router to the services
 func (srv *GroupsService) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Get("/", srv.getAll)
+	r.Get("/", s.AppHandler(srv.getAll).ServeHTTP)
 	return r
 }

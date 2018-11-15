@@ -23,8 +23,8 @@ func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// CreateSuccess generated a success response for a POST creation
-func CreateSuccess(data interface{}) render.Renderer {
+// CreationSuccess generated a success response for a POST creation
+func CreationSuccess(data interface{}) render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusCreated,
 		Success:        true,

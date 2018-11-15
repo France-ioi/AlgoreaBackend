@@ -48,17 +48,16 @@ type NewItemResponseData struct {
 	ItemID int64 `json:"ID"`
 }
 
-func (srv *ItemService) addItem(w http.ResponseWriter, r *http.Request) {
+func (srv *ItemService) addItem(w http.ResponseWriter, r *http.Request) *s.AppError {
 	data := &NewItemRequest{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, s.ErrInvalidRequest(err))
-		return
+		return s.ErrInvalidRequest(err)
 	}
 	id, err := srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
 	if err != nil {
-		render.Render(w, r, s.ErrInvalidRequest(err))
-		return
+		return s.ErrInvalidRequest(err)
 	}
 
-	render.Render(w, r, s.CreateSuccess(&NewItemResponseData{id}))
+	render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id}))
+	return nil
 }

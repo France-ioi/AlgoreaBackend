@@ -12,13 +12,13 @@ type GroupResponseRow struct {
 	Name string `json:"name" db:"sName"`
 }
 
-func (srv *GroupsService) getAll(w http.ResponseWriter, r *http.Request) {
+func (srv *GroupsService) getAll(w http.ResponseWriter, r *http.Request) *s.AppError {
 	groups := []GroupResponseRow{}
 	err := srv.Store.Groups.GetAll(&groups)
 
 	if err != nil {
-		render.Render(w, r, s.ErrServer(err))
-		return
+		return s.ErrUnexpected(err)
 	}
 	render.Respond(w, r, groups)
+	return nil
 }

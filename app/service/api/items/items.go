@@ -2,6 +2,7 @@ package items
 
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	s "github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/go-chi/chi"
 )
 
@@ -15,8 +16,8 @@ func New(store *database.DataStore) *ItemService {
 }
 
 // Router returns the router to the services
-func (ctx *ItemService) Router() *chi.Mux {
+func (srv *ItemService) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Post("/", ctx.addItem)
+	r.Post("/", s.AppHandler(srv.addItem).ServeHTTP)
 	return r
 }
