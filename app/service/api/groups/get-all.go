@@ -7,8 +7,9 @@ import (
 	"github.com/go-chi/render"
 )
 
+// GroupResponseRow is the structure of a row for the service response
 type GroupResponseRow struct {
-	Id   int    `json:"id" db:"ID"`
+	ID   int    `json:"id" db:"ID"`
 	Name string `json:"name" db:"sName"`
 }
 

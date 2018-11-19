@@ -7,6 +7,7 @@ type ItemItemStore struct {
 	db *DB
 }
 
+// ItemItem matches the content the `items_items` table
 type ItemItem struct {
 	ID           t.Int64 `db:"ID"`
 	ParentItemID t.Int64 `db:"idItemParent"`

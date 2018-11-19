@@ -33,7 +33,7 @@ func NewString(s string) *String {
 
 // UnmarshalJSON parse JSON data to the type
 func (i *String) UnmarshalJSON(data []byte) error {
-	i.OptionalType.UnmarshalJSON(data)
+	i.OptionalType.PrepareJSONUnmarshalling(data)
 	var temp string
 	err := json.Unmarshal(data, &temp)
 	if err == nil {

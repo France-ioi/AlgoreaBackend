@@ -9,6 +9,7 @@ type ItemStore struct {
 	db *DB
 }
 
+// Item matches the content the `items` table
 type Item struct {
 	ID            t.Int64  `db:"ID"`
 	Type          t.String `db:"sType"`

@@ -20,22 +20,22 @@ func (v *SampleStrInput) validate() error {
 
 func TestStrValid(t *testing.T) {
 
-	json_input := `{ "Title": 2147483645, "Description": 22, "Author": -1, "LastReader": 7 }`
+	json_input := `{ "Title": "The Pragmatic Programmer", "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
 	input := &SampleStrInput{}
 	if err := json.Unmarshal([]byte(json_input), &input); err != nil {
 		t.Error(err)
 	}
-	if input.Title.Value != 2147483645 {
-		t.Errorf("invalid decoded value: %d", input.Title.Value)
+	if input.Title.Value != "The Pragmatic Programmer" {
+		t.Errorf("invalid decoded value: %s", input.Title.Value)
 	}
-	if input.Description.Value != 22 {
-		t.Errorf("invalid decoded value: %d", input.Description.Value)
+	if input.Description.Value != "From Journeyman to Master" {
+		t.Errorf("invalid decoded value: %s", input.Description.Value)
 	}
-	if input.Author.Value != -1 {
-		t.Errorf("invalid decoded value: %d", input.Author.Value)
+	if input.Author.Value != "Andy Hunt" {
+		t.Errorf("invalid decoded value: %s", input.Author.Value)
 	}
-	if input.LastReader.Value != 7 {
-		t.Errorf("invalid decoded value: %d", input.LastReader.Value)
+	if input.LastReader.Value != "John Doe" {
+		t.Errorf("invalid decoded value: %s", input.LastReader.Value)
 	}
 	if err := input.validate(); err != nil {
 		t.Error(err)
@@ -43,16 +43,16 @@ func TestStrValid(t *testing.T) {
 }
 
 func TestStrWithNonStr(t *testing.T) {
-	json_input := `{ "Title": "not an int", "Description": 22, "Author": -1, "LastReader": 7 }`
+	json_input := `{ "Title": 1234, "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
 	input := &SampleStrInput{}
 	if err := json.Unmarshal([]byte(json_input), &input); err == nil {
-		t.Errorf("was expecting a decoding error, got: %d", input.Title.Value)
+		t.Errorf("was expecting a decoding error, got: %s", input.Title.Value)
 	}
 }
 
 func TestStrWithDefault(t *testing.T) {
 
-	json_input := `{ "Title": 0, "Description": 0, "Author": 0, "LastReader": 0 }`
+	json_input := `{ "Title": "", "Description": "", "Author": "", "LastReader": "" }`
 	input := &SampleStrInput{}
 	if err := json.Unmarshal([]byte(json_input), &input); err != nil {
 		t.Error(err)

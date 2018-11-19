@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// ItemService is the mount point for services related to `items`
 type ItemService struct {
 	Store *database.DataStore
 }

@@ -58,6 +58,8 @@ func (srv *ItemService) addItem(w http.ResponseWriter, r *http.Request) *s.AppEr
 		return s.ErrInvalidRequest(err)
 	}
 
-	render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id}))
+	if err := render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id})); err != nil {
+		return s.ErrUnexpected(err)
+	}
 	return nil
 }

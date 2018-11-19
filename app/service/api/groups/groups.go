@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// GroupsService is the mount point for services related to `groups`
 type GroupsService struct {
 	Store *database.DataStore
 }
