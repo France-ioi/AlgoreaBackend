@@ -37,7 +37,7 @@ func NewInt64(v int64) *Int64 {
 
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) error {
-	i.OptionalType.UnmarshalJSON(data)
+	i.OptionalType.PrepareJSONUnmarshalling(data)
 	var temp int64
 	err := json.Unmarshal(data, &temp)
 	if err == nil {

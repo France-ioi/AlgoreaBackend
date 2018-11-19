@@ -27,11 +27,10 @@ func Validate(values ...validatable) error {
 	return nil
 }
 
-// UnmarshalJSON is the generic part of the unmarshalling
-func (v *OptionalType) UnmarshalJSON(data []byte) error {
+// PrepareJSONUnmarshalling is the generic part of the unmarshalling
+func (v *OptionalType) PrepareJSONUnmarshalling(data []byte) {
 	v.Set = true // If this method was called, the value was set.
 	v.Null = (string(data) == "null")
-	return nil
 }
 
 func (v *OptionalType) validateRequired() error {
