@@ -40,10 +40,13 @@ func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			// ensure rollback is executed even in case of panic
-			tx.Rollback()
+			_ = tx.Rollback()
 			panic(p) // re-throw panic after rollback
 		} else if err != nil {
-			tx.Rollback() // do not change the err
+			// do not change the err
+			if err2 := tx.Rollback(); err2 != nil {
+				panic(p) // in case of eror on rollback, panic
+			}
 		} else {
 			err = tx.Commit() // if err is nil, returns the potential error from commit
 		}

@@ -19,7 +19,7 @@ func TestNotFoundProxy(t *testing.T) {
 	/* setup backend */
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Got-Query", r.URL.Path)
-		w.Write([]byte("hi"))
+		_, _ = w.Write([]byte("hi"))
 	}))
 	defer backend.Close()
 	backendURL, err := url.Parse(backend.URL)
