@@ -7,6 +7,7 @@ type GroupItemStore struct {
 	db *DB
 }
 
+// GroupItem matches the content the `groups_items` table
 type GroupItem struct {
 	ID               t.Int64 `db:"ID"`
 	GroupID          t.Int64 `db:"idGroup"`
