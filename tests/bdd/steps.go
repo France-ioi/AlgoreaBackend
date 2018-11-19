@@ -246,7 +246,7 @@ func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable)
 		iDataRow++
 	}
 
-	// check that no row in teh test data table has not been uncheck (if less rows in SQL result)
+	// check that no row in the test data table has not been uncheck (if less rows in SQL result)
 	if iDataRow < len(data.Rows) {
 		return fmt.Errorf("There are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
 	}
