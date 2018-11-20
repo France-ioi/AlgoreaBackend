@@ -23,19 +23,10 @@ The empty dump (schema with data in it) can be loaded using the `./AlgoreaBacken
 
 ## Testing
 
-### Unit tests
-Run all unit tests on all packages:
+Run all tests (unit and bdd):
+````
+go test -v ./...
 ```
-go test -v github.com/France-ioi/AlgoreaBackend/tests/unit/app
-go test -v github.com/France-ioi/AlgoreaBackend/tests/unit/api
-```
-
-### BDD tests
-
-```
-go test -v github.com/France-ioi/AlgoreaBackend/tests/bdd
-```
-
 
 ## Software Walkthrough
 
