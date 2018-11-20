@@ -1,0 +1,54 @@
+version: 2
+jobs:
+  deps:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /go:/tmp/go
+    steps:
+      - checkout
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache:
+          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+      - run: make deps
+      - run: rm -rf *; mkdir -p /tmp/go; cp -r /go/src /go/pkg /tmp/go/
+      - save_cache:
+          paths:
+          - /tmp/go
+          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+  test:
+    docker:
+      - image: circleci/golang:1.9
+      - image: circleci/mysql:5.6
+        environment:
+          MYSQL_USER: alg_ci_user
+          MYSQL_PASSWORD: dummy_password
+          MYSQL_DATABASE: ci_db
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /go:/tmp/go
+      ALGOREA_DATABASE.ADDR: 127.0.0.1
+      ALGOREA_DATABASE.USER: alg_ci_user
+      ALGOREA_DATABASE.PASSWD: dummy_password
+      ALGOREA_DATABASE.DBNAME: ci_db
+    steps:
+      - checkout
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache:
+          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+      - run: sudo apt-get install mysql-client # required for db-restore
+      - run:
+          name: Wait for MySQL
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
+      - run: go run main.go db-restore
+      - run: go run main.go db-migrate
+      - run: make test
+workflows:
+  version: 2
+  build_test:
+    jobs:
+      - deps
+      - test:
+          requires:
+          - deps

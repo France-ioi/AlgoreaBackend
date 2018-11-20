@@ -1,11 +1,15 @@
+MAINGOPATH=$(shell echo $(GOPATH) | cut -d: -f1 -)
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
-BIN_DIR := $(GOPATH)/bin
-GOMETALINTER := $(BIN_DIR)/gometalinter
+GOLIST=$(GOCMD) list
+BIN_DIR=$(MAINGOPATH)/bin
+GOMETALINTER=$(BIN_DIR)/gometalinter
 BINARY_NAME=AlgoreaBackend
+
+.PHONY: all build test lint clean deps print-deps
 
 all: build
 build:
@@ -19,6 +23,8 @@ clean:
 	rm -f $(BINARY_NAME)
 deps:
 	$(GOGET) -t ./...
+print-deps:
+	$(GOLIST) -f {{.Deps}}
 $(GOMETALINTER):
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install &> /dev/null
