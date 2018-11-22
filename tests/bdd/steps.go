@@ -65,10 +65,11 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
 	db := ctx.application.Database
+	db_name := ctx.application.Config.Database.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
-                                  AND  table_schema = 'algorea_db'
+                                  AND  table_schema = '` + db_name + `'
                                   AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
 		return err
