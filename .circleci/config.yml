@@ -74,6 +74,21 @@ jobs:
           command: (cd tests/bdd && /tmp/go/bin/godog --format=pretty)
       - store_test_results: *TESTPATH
       - store_artifacts: *TESTPATH
+  lint:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /tmp/go:/go
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache: *CACHEKEY
+      - run:
+          name: Install all linting tools
+          command: (cd /tmp/go && curl -L https://git.io/vp6lP | sh)
+      - run: make lint
 workflows:
   version: 2
   build_test:
@@ -83,5 +98,8 @@ workflows:
           requires:
           - deps
       - bdd-tests:
+          requires:
+          - deps
+      - lint:
           requires:
           - deps
