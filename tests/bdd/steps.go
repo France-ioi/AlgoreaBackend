@@ -1,4 +1,4 @@
-package app_bdd_tests
+package app_bdd_tests // nolint
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type testContext struct {
+type testContext struct { // nolint (bug in the linting)
 	application      *app.Application // do NOT call it directly, use `app()`
 	lastResponse     *http.Response
 	lastResponseBody string
@@ -64,24 +64,25 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint: errcheck
 
 	return resp, string(respBody), nil
 }
 
+// nolint: gosec
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
 	db := ctx.app().Database
-	db_name := ctx.app().Config.Database.DBName
+	dbName := ctx.app().Config.Database.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
-                                  AND  table_schema = '` + db_name + `'
+                                  AND  table_schema = '` + dbName + `'
                                   AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint: errcheck
 
 	for rows.Next() {
 		var tableName string
@@ -121,7 +122,7 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
 		fields = append(fields, cell.Value)
 		marks = append(marks, "?")
 	}
-	stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")")
+	stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")") // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -191,7 +192,7 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	}
 
 	// re-encode actual response too
-	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
+	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
 		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if actual, err = json.MarshalIndent(act, "", "  "); err != nil {
@@ -238,13 +239,13 @@ func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable)
 		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
 	}
 
-	sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName)
+	sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName) // nolint: gosec
 	if err != nil {
 		return err
 	}
 	dataCols := data.Rows[0].Cells
 	iDataRow := 1
-	sqlCols, _ := sqlRows.Columns()
+	sqlCols, _ := sqlRows.Columns() // nolint: gosec
 	for sqlRows.Next() {
 		if iDataRow >= len(data.Rows) {
 			return fmt.Errorf("There are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)

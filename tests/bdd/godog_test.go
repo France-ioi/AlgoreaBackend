@@ -1,4 +1,4 @@
-package app_bdd_tests
+package app_bdd_tests // nolint
 
 import (
 	"flag"
