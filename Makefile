@@ -14,8 +14,12 @@ BINARY_NAME=AlgoreaBackend
 all: build
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
-test:
-	$(GOTEST) -v ./...
+test-unit:
+	$(GOTEST) -v ./tests/unit/...
+test-bdd:
+	# to pass args: make ARGS="--godog.tags=wip" test-bdd
+	$(GOTEST) -v ./tests/bdd/... $(ARGS)
+test: test-unit test-bdd
 lint:
 	gometalinter ./... --vendor
 clean:
