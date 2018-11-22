@@ -8,38 +8,46 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/spf13/viper"
 )
 
 type testContext struct {
-	application      *app.Application
+	application      *app.Application // do NOT call it directly, use `app()`
 	lastResponse     *http.Response
 	lastResponseBody string
 }
 
 func (ctx *testContext) setupTestContext(interface{}) {
+	ctx.application = nil // app will be lazy loaded so that environment can be be changed before the tests
+}
 
-	config.Path = "../../conf/default.yaml"
-	var err error
-	ctx.application, err = app.New()
-	if err != nil {
-		fmt.Println("Unable to load app")
-		panic(err)
+func (ctx *testContext) app() *app.Application {
+
+	if ctx.application == nil {
+		config.Path = "../../conf/default.yaml"
+		var err error
+		ctx.application, err = app.New()
+		if err != nil {
+			fmt.Println("Unable to load app")
+			panic(err)
+		}
+		// reset the seed to get predictable results on PRNG for tests
+		rand.Seed(1)
+
+		err = ctx.emptyDB()
+		if err != nil {
+			fmt.Println("Unable to empty db")
+			panic(err)
+		}
 	}
-
-	err = ctx.emptyDB()
-	if err != nil {
-		fmt.Println("Unable to empty db")
-		panic(err)
-	}
-
-	// reset the seed to get predictable results on PRNG
-	rand.Seed(1)
+	return ctx.application
 }
 
 func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string, error) {
@@ -64,8 +72,8 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
-	db := ctx.application.Database
-	db_name := ctx.application.Config.Database.DBName
+	db := ctx.app().Database
+	db_name := ctx.app().Config.Database.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
@@ -89,7 +97,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 }
 
 func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody string) error {
-	testServer := httptest.NewServer(ctx.application.HTTPHandler)
+	testServer := httptest.NewServer(ctx.app().HTTPHandler)
 	defer testServer.Close()
 
 	response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
@@ -106,7 +114,7 @@ func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody 
 
 func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
 
-	db := ctx.application.Database
+	db := ctx.app().Database
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -127,6 +135,18 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
 			return err
 		}
 	}
+	return nil
+}
+
+func (ctx *testContext) runFallbackServer() error {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Got-Query", r.URL.Path)
+	}))
+	backendURL, err := url.Parse(backend.URL)
+	if err != nil {
+		return err
+	}
+	viper.Set("ReverseProxy.Server", backendURL.String())
 	return nil
 }
 
@@ -200,12 +220,19 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	return
 }
 
+func (ctx *testContext) theResponseHeaderShouldBe(headerName string, headerValue string) (err error) {
+	if ctx.lastResponse.Header.Get(headerName) != headerValue {
+		return fmt.Errorf("Headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
+	}
+	return nil
+}
+
 func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable) error {
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
 
-	db := ctx.application.Database
+	db := ctx.app().Database
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
@@ -260,11 +287,13 @@ func FeatureContext(s *godog.Suite) {
 	s.BeforeScenario(ctx.setupTestContext)
 
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbHasTable)
+	s.Step(`^a server is running as fallback$`, ctx.runFallbackServer)
 
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.iSendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
 	s.Step(`^the response body should be, in JSON:$`, ctx.theResponseBodyShouldBeJSON)
+	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.theResponseHeaderShouldBe)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.tableShouldBe)
 }
