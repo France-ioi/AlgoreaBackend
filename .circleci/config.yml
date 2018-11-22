@@ -10,13 +10,13 @@ jobs:
       - checkout
       - run: make print-deps > /tmp/deps.txt
       - restore_cache:
-          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "/tmp/deps.txt" }}
       - run: make deps
-      - run: rm -rf *; mkdir -p /tmp/go; cp -r /go/src /go/pkg /tmp/go/
+      - run: rm -rf *; cp -r /go /tmp/
       - save_cache:
           paths:
           - /tmp/go
-          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "/tmp/deps.txt" }}
   unit-tests:
     docker:
       - image: circleci/golang:1.9
@@ -27,7 +27,7 @@ jobs:
       - checkout
       - run: make print-deps > /tmp/deps.txt
       - restore_cache:
-          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "/tmp/deps.txt" }}
       - run: make test-unit
   bdd-tests:
     docker:
@@ -47,15 +47,20 @@ jobs:
     steps:
       - checkout
       - run: make print-deps > /tmp/deps.txt
+      - run: mkdir -p test-results/cucumber
       - restore_cache:
-          key: go-deps--{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "/tmp/deps.txt" }}
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
           name: Wait for MySQL
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
       - run: go run main.go db-restore
       - run: go run main.go db-migrate
-      - run: make test-bdd
+      - run:
+          name: Run BDD Tests
+          command: (cd tests/bdd && /tmp/go/bin/godog --format=junit) > test-results/cucumber/junit.xml
+      - store_test_results:
+          path: test-results
 workflows:
   version: 2
   build_test:

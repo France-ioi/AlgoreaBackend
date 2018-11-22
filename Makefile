@@ -6,8 +6,9 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOLIST=$(GOCMD) list
 BIN_DIR=$(MAINGOPATH)/bin
-GOMETALINTER=$(BIN_DIR)/gometalinter
 BINARY_NAME=AlgoreaBackend
+
+GODOG=$(BIN_DIR)/godog
 
 .PHONY: all build test lint clean deps print-deps
 
@@ -16,19 +17,21 @@ build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
 test-unit:
 	$(GOTEST) -v ./tests/unit/...
-test-bdd:
-	# to pass args: make ARGS="--godog.tags=wip" test-bdd
-	$(GOTEST) -v ./tests/bdd/... $(ARGS)
+test-bdd: $(GODOG)
+	# to pass args: make ARGS="--tags=wip" test-bdd
+	(cd tests/bdd && $(GODOG) --format=progress $(ARGS))
 test: test-unit test-bdd
 lint:
 	gometalinter ./... --vendor
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-deps:
+deps: $(GODOG)
 	$(GOGET) -t ./...
 print-deps:
 	$(GOLIST) -f {{.Deps}}
-$(GOMETALINTER):
+$(GODOG):
+	$(GOGET) -u github.com/DATA-DOG/godog/cmd/godog
+$(BIN_DIR)/gometalinter:
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install &> /dev/null

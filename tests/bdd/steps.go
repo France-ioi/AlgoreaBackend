@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -279,21 +278,4 @@ func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable)
 		return fmt.Errorf("There are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
 	}
 	return nil
-}
-
-// FeatureContext binds the supported steps to the verifying functions
-func FeatureContext(s *godog.Suite) {
-	ctx := &testContext{}
-	s.BeforeScenario(ctx.setupTestContext)
-
-	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbHasTable)
-	s.Step(`^a server is running as fallback$`, ctx.runFallbackServer)
-
-	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
-	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.iSendrequestToWithBody)
-	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
-	s.Step(`^the response body should be, in JSON:$`, ctx.theResponseBodyShouldBeJSON)
-	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.theResponseHeaderShouldBe)
-	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
-	s.Step(`^the table "([^"]*)" should be:$`, ctx.tableShouldBe)
 }
