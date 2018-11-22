@@ -68,6 +68,10 @@ jobs:
           command: |
             mkdir -p test-results/cucumber/
             (cd tests/bdd && /tmp/go/bin/godog --format=junit) > test-results/cucumber/junit.xml
+      - run:
+          when: on_fail
+          name: Run BDD Tests (detailed)
+          command: (cd tests/bdd && /tmp/go/bin/godog --format=pretty)
       - store_test_results: *TESTPATH
       - store_artifacts: *TESTPATH
 workflows:
