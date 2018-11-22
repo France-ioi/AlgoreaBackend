@@ -8,9 +8,9 @@ jobs:
       GOPATH: /go:/tmp/go
     steps:
       - checkout
-      - run: make print-deps > /tmp/deps.txt
+      - run: make print-deps > deps.txt
       - restore_cache:
-          key: go-deps----{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "deps.txt" }}
       - run: make deps
       - persist_to_workspace:
           root: ./
@@ -20,19 +20,21 @@ jobs:
       - save_cache:
           paths:
           - /tmp/go
-          key: go-deps----{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "deps.txt" }}
   unit-tests:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment:
-      GOPATH: /go:/tmp/go
+      GOPATH: /tmp/go:/go
     steps:
       - attach_workspace:
           at: ./
       - restore_cache:
-          key: go-deps----{{ checksum "/tmp/deps.txt" }}
-      - run: make test-unit
+          key: go-deps----{{ checksum "deps.txt" }}
+      - run: make test-unit-report
+      - store_test_results:
+          path: test-results
   bdd-tests:
     docker:
       - image: circleci/golang:1.9
@@ -43,7 +45,7 @@ jobs:
           MYSQL_DATABASE: ci_db
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment:
-      GOPATH: /go:/tmp/go
+      GOPATH: /tmp/go:/go
       ALGOREA_DATABASE.ADDR: 127.0.0.1
       ALGOREA_DATABASE.USER: alg_ci_user
       ALGOREA_DATABASE.PASSWD: dummy_password
@@ -53,7 +55,7 @@ jobs:
           at: ./
       - run: mkdir -p test-results/cucumber
       - restore_cache:
-          key: go-deps----{{ checksum "/tmp/deps.txt" }}
+          key: go-deps----{{ checksum "deps.txt" }}
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
           name: Wait for MySQL
@@ -62,7 +64,9 @@ jobs:
       - run: go run main.go db-migrate
       - run:
           name: Run BDD Tests
-          command: (cd tests/bdd && /tmp/go/bin/godog --format=junit) > test-results/cucumber/junit.xml
+          command: |
+            mkdir -p test-results/cucumber/
+            (cd tests/bdd && /tmp/go/bin/godog --format=junit) > test-results/cucumber/junit.xml
       - store_test_results:
           path: test-results
 workflows:
