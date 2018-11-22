@@ -12,6 +12,10 @@ jobs:
       - restore_cache:
           key: go-deps----{{ checksum "/tmp/deps.txt" }}
       - run: make deps
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "*"
       - run: rm -rf *; cp -r /go /tmp/
       - save_cache:
           paths:
@@ -24,8 +28,8 @@ jobs:
     environment:
       GOPATH: /go:/tmp/go
     steps:
-      - checkout
-      - run: make print-deps > /tmp/deps.txt
+      - attach_workspace:
+          at: ./
       - restore_cache:
           key: go-deps----{{ checksum "/tmp/deps.txt" }}
       - run: make test-unit
@@ -45,8 +49,8 @@ jobs:
       ALGOREA_DATABASE.PASSWD: dummy_password
       ALGOREA_DATABASE.DBNAME: ci_db
     steps:
-      - checkout
-      - run: make print-deps > /tmp/deps.txt
+      - attach_workspace:
+          at: ./
       - run: mkdir -p test-results/cucumber
       - restore_cache:
           key: go-deps----{{ checksum "/tmp/deps.txt" }}
