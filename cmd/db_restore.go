@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// nolint: gosec
 func init() {
 
 	var restoreCmd = &cobra.Command{
@@ -40,15 +41,15 @@ func init() {
 				fmt.Println("Unable to query the database: ", err)
 				os.Exit(1)
 			}
-			defer rows.Close()
+			defer rows.Close() // nolint: errcheck
 
 			for rows.Next() {
 				var tableName string
-				if err = rows.Scan(&tableName); err != nil {
+				if err := rows.Scan(&tableName); err != nil { // nolint: vetshadow
 					fmt.Println("Unable to parse the database result: ", err)
 					os.Exit(1)
 				}
-				if _, err := db.Exec("DROP TABLE " + tableName); err != nil {
+				if _, err := db.Exec("DROP TABLE " + tableName); err != nil { // nolint: vetshadow
 					fmt.Println("Unable to drop table: ", err)
 					os.Exit(1)
 				}

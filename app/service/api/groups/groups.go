@@ -7,18 +7,18 @@ import (
 	"github.com/go-chi/chi"
 )
 
-// GroupsService is the mount point for services related to `groups`
-type GroupsService struct {
+// Service is the mount point for services related to `groups`
+type Service struct {
 	Store *database.DataStore
 }
 
 // New creates a service context
-func New(store *database.DataStore) *GroupsService {
-	return &GroupsService{store}
+func New(store *database.DataStore) *Service {
+	return &Service{store}
 }
 
 // Router returns the router to the services
-func (srv *GroupsService) Router() *chi.Mux {
+func (srv *Service) Router() *chi.Mux {
 	r := chi.NewRouter()
 	r.Get("/", s.AppHandler(srv.getAll).ServeHTTP)
 	return r

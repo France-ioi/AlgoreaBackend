@@ -1,4 +1,4 @@
-package app_bdd_tests
+package app_bdd_tests // nolint
 
 import (
 	"encoding/json"
@@ -8,38 +8,45 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 
-	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/spf13/viper"
 )
 
-type testContext struct {
-	application      *app.Application
+type testContext struct { // nolint (bug in the linting)
+	application      *app.Application // do NOT call it directly, use `app()`
 	lastResponse     *http.Response
 	lastResponseBody string
 }
 
 func (ctx *testContext) setupTestContext(interface{}) {
+	ctx.application = nil // app will be lazy loaded so that environment can be be changed before the tests
+}
 
-	config.Path = "../../conf/default.yaml"
-	var err error
-	ctx.application, err = app.New()
-	if err != nil {
-		fmt.Println("Unable to load app")
-		panic(err)
+func (ctx *testContext) app() *app.Application {
+
+	if ctx.application == nil {
+		config.Path = "../../conf/default.yaml"
+		var err error
+		ctx.application, err = app.New()
+		if err != nil {
+			fmt.Println("Unable to load app")
+			panic(err)
+		}
+		// reset the seed to get predictable results on PRNG for tests
+		rand.Seed(1)
+
+		err = ctx.emptyDB()
+		if err != nil {
+			fmt.Println("Unable to empty db")
+			panic(err)
+		}
 	}
-
-	err = ctx.emptyDB()
-	if err != nil {
-		fmt.Println("Unable to empty db")
-		panic(err)
-	}
-
-	// reset the seed to get predictable results on PRNG
-	rand.Seed(1)
+	return ctx.application
 }
 
 func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string, error) {
@@ -57,23 +64,25 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint: errcheck
 
 	return resp, string(respBody), nil
 }
 
+// nolint: gosec
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
-	db := ctx.application.Database
+	db := ctx.app().Database
+	dbName := ctx.app().Config.Database.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
-                                  AND  table_schema = 'algorea_db'
+                                  AND  table_schema = '` + dbName + `'
                                   AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer rows.Close() // nolint: errcheck
 
 	for rows.Next() {
 		var tableName string
@@ -88,7 +97,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 }
 
 func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody string) error {
-	testServer := httptest.NewServer(ctx.application.HTTPHandler)
+	testServer := httptest.NewServer(ctx.app().HTTPHandler)
 	defer testServer.Close()
 
 	response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
@@ -105,7 +114,7 @@ func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody 
 
 func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
 
-	db := ctx.application.Database
+	db := ctx.app().Database
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -113,7 +122,7 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
 		fields = append(fields, cell.Value)
 		marks = append(marks, "?")
 	}
-	stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")")
+	stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")") // nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -126,6 +135,18 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
 			return err
 		}
 	}
+	return nil
+}
+
+func (ctx *testContext) runFallbackServer() error {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Got-Query", r.URL.Path)
+	}))
+	backendURL, err := url.Parse(backend.URL)
+	if err != nil {
+		return err
+	}
+	viper.Set("ReverseProxy.Server", backendURL.String())
 	return nil
 }
 
@@ -171,7 +192,7 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	}
 
 	// re-encode actual response too
-	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
+	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
 		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if actual, err = json.MarshalIndent(act, "", "  "); err != nil {
@@ -199,25 +220,32 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	return
 }
 
+func (ctx *testContext) theResponseHeaderShouldBe(headerName string, headerValue string) (err error) {
+	if ctx.lastResponse.Header.Get(headerName) != headerValue {
+		return fmt.Errorf("Headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
+	}
+	return nil
+}
+
 func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable) error {
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
 
-	db := ctx.application.Database
+	db := ctx.app().Database
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
 		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
 	}
 
-	sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName)
+	sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName) // nolint: gosec
 	if err != nil {
 		return err
 	}
 	dataCols := data.Rows[0].Cells
 	iDataRow := 1
-	sqlCols, _ := sqlRows.Columns()
+	sqlCols, _ := sqlRows.Columns() // nolint: gosec
 	for sqlRows.Next() {
 		if iDataRow >= len(data.Rows) {
 			return fmt.Errorf("There are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
@@ -251,19 +279,4 @@ func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable)
 		return fmt.Errorf("There are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
 	}
 	return nil
-}
-
-// FeatureContext binds the supported steps to the verifying functions
-func FeatureContext(s *godog.Suite) {
-	ctx := &testContext{}
-	s.BeforeScenario(ctx.setupTestContext)
-
-	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.dbHasTable)
-
-	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.iSendrequestTo)
-	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.iSendrequestToWithBody)
-	s.Step(`^the response code should be (\d+)$`, ctx.theResponseCodeShouldBe)
-	s.Step(`^the response body should be, in JSON:$`, ctx.theResponseBodyShouldBeJSON)
-	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.itShouldBeAJSONArrayWithEntries)
-	s.Step(`^the table "([^"]*)" should be:$`, ctx.tableShouldBe)
 }

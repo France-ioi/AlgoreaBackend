@@ -12,3 +12,6 @@
 
 # IDE's artefacts
 .vscode
+
+# Tests artefacts
+/test-results

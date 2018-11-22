@@ -23,6 +23,7 @@ type Tx struct {
 const dbStructTag string = "db"
 
 // DBConn connects to the database and test the connection
+// nolint: gosec
 func DBConn(dbconfig mysql.Config) (*DB, error) {
 
 	var db *sqlx.DB
@@ -40,8 +41,8 @@ func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			// ensure rollback is executed even in case of panic
-			_ = tx.Rollback()
-			panic(p) // re-throw panic after rollback
+			_ = tx.Rollback() // nolint: gosec
+			panic(p)          // re-throw panic after rollback
 		} else if err != nil {
 			// do not change the err
 			if err2 := tx.Rollback(); err2 != nil {
@@ -106,7 +107,7 @@ func (tx Tx) insert(tableName string, data interface{}) error {
 			}
 		}
 	}
-	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
+	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
 	_, err := tx.Exec(query, values...)
 	return err
 }

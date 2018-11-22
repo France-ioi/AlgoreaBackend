@@ -1,0 +1,105 @@
+version: 2
+jobs:
+  deps:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /go:/tmp/go
+    steps:
+      - checkout
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache: &CACHEKEY
+          key: go-deps@{{ checksum "/tmp/deps.txt" }}
+      - run: make deps
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - "*"
+      - run: rm -rf *; cp -r /go /tmp/
+      - save_cache:
+          <<: *CACHEKEY
+          paths:
+          - /tmp/go
+  unit-tests:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /tmp/go:/go
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache: *CACHEKEY
+      - run: make test-unit-report
+      - store_test_results: &TESTPATH
+          path: test-results
+      - store_artifacts: *TESTPATH
+  bdd-tests:
+    docker:
+      - image: circleci/golang:1.9
+      - image: circleci/mysql:5.6
+        environment:
+          MYSQL_USER: alg_ci_user
+          MYSQL_PASSWORD: dummy_password
+          MYSQL_DATABASE: ci_db
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /tmp/go:/go
+      ALGOREA_DATABASE.ADDR: 127.0.0.1
+      ALGOREA_DATABASE.USER: alg_ci_user
+      ALGOREA_DATABASE.PASSWD: dummy_password
+      ALGOREA_DATABASE.DBNAME: ci_db
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: mkdir -p test-results/cucumber
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache: *CACHEKEY
+      - run: sudo apt-get install mysql-client # required for db-restore
+      - run:
+          name: Wait for MySQL
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
+      - run: go run main.go db-restore
+      - run: go run main.go db-migrate
+      - run:
+          name: Run BDD Tests
+          command: |
+            mkdir -p test-results/cucumber/
+            (cd tests/bdd && /tmp/go/bin/godog --format=junit) > test-results/cucumber/junit.xml
+      - run:
+          when: on_fail
+          name: Run BDD Tests (detailed)
+          command: (cd tests/bdd && /tmp/go/bin/godog --format=pretty)
+      - store_test_results: *TESTPATH
+      - store_artifacts: *TESTPATH
+  lint:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    environment:
+      GOPATH: /tmp/go:/go
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: make print-deps > /tmp/deps.txt
+      - restore_cache: *CACHEKEY
+      - run:
+          name: Install all linting tools
+          command: (cd /tmp/go && curl -L https://git.io/vp6lP | sh)
+      - run: make lint
+workflows:
+  version: 2
+  build_test:
+    jobs:
+      - deps
+      - unit-tests:
+          requires:
+          - deps
+      - bdd-tests:
+          requires:
+          - deps
+      - lint:
+          requires:
+          - deps
