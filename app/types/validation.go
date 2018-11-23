@@ -18,13 +18,13 @@ type validatable interface {
 }
 
 // Validate checks a set of `Validatable` values and returns the first encountered error, or nil
-func Validate(values ...validatable) error {
+func Validate(values ...validatable) (err error) {
 	for _, value := range values {
-		if err := value.Validate(); err != nil {
-			return err
+		if err = value.Validate(); err != nil {
+			return
 		}
 	}
-	return nil
+	return
 }
 
 // PrepareJSONUnmarshalling is the generic part of the unmarshalling

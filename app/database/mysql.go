@@ -34,7 +34,8 @@ func DBConn(dbconfig mysql.Config) (*DB, error) {
 }
 
 func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {
-	tx, err := db.Beginx()
+	var tx *sqlx.Tx
+	tx, err = db.Beginx()
 	if err != nil {
 		return err
 	}
@@ -45,7 +46,7 @@ func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {
 			panic(p)          // re-throw panic after rollback
 		} else if err != nil {
 			// do not change the err
-			if err2 := tx.Rollback(); err2 != nil {
+			if tx.Rollback() != nil {
 				panic(p) // in case of eror on rollback, panic
 			}
 		} else {

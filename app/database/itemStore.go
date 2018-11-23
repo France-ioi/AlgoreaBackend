@@ -31,16 +31,18 @@ func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, paren
 	itemID := item.ID
 
 	return itemID.Value, s.db.inTransaction(func(tx Tx) error {
-		if _, err := s.createRaw(tx, item); err != nil {
+		var err error
+
+		if _, err = s.createRaw(tx, item); err != nil {
 			return err
 		}
-		if _, err := groupItemStore.createRaw(tx, &GroupItem{ItemID: itemID}); err != nil {
+		if _, err = groupItemStore.createRaw(tx, &GroupItem{ItemID: itemID}); err != nil {
 			return err
 		}
-		if _, err := itemStringStore.createRaw(tx, &ItemString{ItemID: itemID, LanguageID: languageID, Title: title}); err != nil {
+		if _, err = itemStringStore.createRaw(tx, &ItemString{ItemID: itemID, LanguageID: languageID, Title: title}); err != nil {
 			return err
 		}
-		if _, err := itemItemStore.createRaw(tx, &ItemItem{ChildItemID: itemID, Order: order}); err != nil {
+		if _, err = itemItemStore.createRaw(tx, &ItemItem{ChildItemID: itemID, Order: order}); err != nil {
 			return err
 		}
 		return nil

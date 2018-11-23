@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/exec"
@@ -17,26 +18,30 @@ func init() {
 		Use:   "db-restore",
 		Short: "load the last db schema",
 		Run: func(cmd *cobra.Command, args []string) {
+			var err error
 
 			// load config
-			config, err := config.Load()
+			var conf *config.Root
+			conf, err = config.Load()
 			if err != nil {
 				fmt.Println("Unable to load config: ", err)
 				os.Exit(1)
 			}
 
 			// open DB
-			db, err := database.DBConn(config.Database)
+			var db *database.DB
+			db, err = database.DBConn(conf.Database)
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
 
 			// remove all tables from DB
-			rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+			var rows *sql.Rows
+			rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
 	                           FROM   information_schema.tables
 														 WHERE  table_type   = 'BASE TABLE'
-														   AND  table_schema = '` + config.Database.DBName + "'")
+														   AND  table_schema = '` + conf.Database.DBName + "'")
 			if err != nil {
 				fmt.Println("Unable to query the database: ", err)
 				os.Exit(1)
@@ -45,11 +50,11 @@ func init() {
 
 			for rows.Next() {
 				var tableName string
-				if err := rows.Scan(&tableName); err != nil { // nolint: vetshadow
+				if err = rows.Scan(&tableName); err != nil { // nolint: vetshadow
 					fmt.Println("Unable to parse the database result: ", err)
 					os.Exit(1)
 				}
-				if _, err := db.Exec("DROP TABLE " + tableName); err != nil { // nolint: vetshadow
+				if _, err = db.Exec("DROP TABLE " + tableName); err != nil { // nolint: vetshadow
 					fmt.Println("Unable to drop table: ", err)
 					os.Exit(1)
 				}
@@ -59,10 +64,10 @@ func init() {
 			// note: current solution is not really great as it makes some assumptions of the config :-/
 			command := exec.Command(
 				"mysql",
-				"-h"+config.Database.Addr,
-				"-D"+config.Database.DBName,
-				"-u"+config.Database.User,
-				"-p"+config.Database.Passwd,
+				"-h"+conf.Database.Addr,
+				"-D"+conf.Database.DBName,
+				"-u"+conf.Database.User,
+				"-p"+conf.Database.Passwd,
 				"--protocol=TCP",
 				"-e"+"source db/schema/20181024.sql",
 			)

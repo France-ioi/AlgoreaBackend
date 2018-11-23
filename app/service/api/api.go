@@ -21,8 +21,10 @@ type Ctx struct {
 
 // NewCtx creates a API context
 func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
-	proxyURL, err := url.Parse(config.ReverseProxy.Server)
-	if err != nil {
+	var err error
+	var proxyURL *url.URL
+
+	if proxyURL, err = url.Parse(config.ReverseProxy.Server); err != nil {
 		return nil, err
 	}
 	proxy := httputil.NewSingleHostReverseProxy(proxyURL)

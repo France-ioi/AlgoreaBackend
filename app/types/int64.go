@@ -36,14 +36,14 @@ func NewInt64(v int64) *Int64 {
 }
 
 // UnmarshalJSON parse JSON data to the type
-func (i *Int64) UnmarshalJSON(data []byte) error {
+func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 	i.OptionalType.PrepareJSONUnmarshalling(data)
 	var temp int64
-	err := json.Unmarshal(data, &temp)
+	err = json.Unmarshal(data, &temp)
 	if err == nil {
 		i.Value = temp
 	}
-	return err
+	return
 }
 
 // Validate checks that the subject matches "required" (set and not-null)

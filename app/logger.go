@@ -45,6 +45,8 @@ type StructuredLogger struct {
 
 // NewLogger creates and configures a new logrus Logger.
 func NewLogger() *logrus.Logger {
+	var err error
+
 	Logger = logrus.New()
 	if viper.GetBool("log_textlogging") {
 		Logger.Formatter = &logrus.TextFormatter{
@@ -60,7 +62,8 @@ func NewLogger() *logrus.Logger {
 	if level == "" {
 		level = "error"
 	}
-	l, err := logrus.ParseLevel(level)
+	var l logrus.Level
+	l, err = logrus.ParseLevel(level)
 	if err != nil {
 		log.Fatal(err)
 	}

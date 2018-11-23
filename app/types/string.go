@@ -32,14 +32,14 @@ func NewString(s string) *String {
 }
 
 // UnmarshalJSON parse JSON data to the type
-func (i *String) UnmarshalJSON(data []byte) error {
+func (i *String) UnmarshalJSON(data []byte) (err error) {
 	i.OptionalType.PrepareJSONUnmarshalling(data)
 	var temp string
-	err := json.Unmarshal(data, &temp)
+	err = json.Unmarshal(data, &temp)
 	if err == nil {
 		i.Value = temp
 	}
-	return err
+	return
 }
 
 // Validate checks that the subject matches "required" (set and not-null)

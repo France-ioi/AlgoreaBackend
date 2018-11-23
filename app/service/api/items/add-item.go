@@ -49,16 +49,19 @@ type NewItemResponseData struct {
 }
 
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
+	var err error
+
 	data := &NewItemRequest{}
-	if err := render.Bind(r, data); err != nil {
+	if err = render.Bind(r, data); err != nil {
 		return s.ErrInvalidRequest(err)
 	}
-	id, err := srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
+	var id int64
+	id, err = srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
 	if err != nil {
 		return s.ErrInvalidRequest(err)
 	}
 
-	if err := render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id})); err != nil {
+	if err = render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id})); err != nil {
 		return s.ErrUnexpected(err)
 	}
 	return s.NoError

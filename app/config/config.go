@@ -39,6 +39,7 @@ var Path = "conf/default.yaml"
 // 5) key/value store
 // 6) default
 func Load() (*Root, error) {
+	var err error
 
 	var config *Root
 	setDefaults()
@@ -49,14 +50,13 @@ func Load() (*Root, error) {
 
 	// through the config file
 	viper.SetConfigFile(Path)
-	if err := viper.ReadInConfig(); err != nil {
+	if err = viper.ReadInConfig(); err != nil {
 		log.Fatal("Cannot read config:", err)
 		return nil, err
 	}
 
 	// map the given config to a static struct
-	err := viper.Unmarshal(&config)
-	if err != nil {
+	if err = viper.Unmarshal(&config); err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
 		return nil, err
 	}

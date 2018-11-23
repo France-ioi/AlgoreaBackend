@@ -17,9 +17,11 @@ func init() {
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Run: func(cmd *cobra.Command, args []string) {
+			var err error
 
 			// load config
-			config, err := config.Load()
+			var conf *config.Root
+			conf, err = config.Load()
 			if err != nil {
 				fmt.Println("Unable to load config: ", err)
 				os.Exit(1)
@@ -27,14 +29,16 @@ func init() {
 
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
-			db, err := database.DBConn(config.Database)
+			var db *database.DB
+			db, err = database.DBConn(conf.Database)
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
 
 			// migrate
-			n, err := migrate.Exec(db.DB.DB, "mysql", migrations, migrate.Up)
+			var n int
+			n, err = migrate.Exec(db.DB.DB, "mysql", migrations, migrate.Up)
 			if err != nil {
 				fmt.Println("Unable to apply migration:", err)
 			} else if n == 0 {
