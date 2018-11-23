@@ -1,15 +1,17 @@
-MAINGOPATH=$(shell echo $(GOPATH) | cut -d: -f1 -)
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOLIST=$(GOCMD) list
-BIN_DIR=$(MAINGOPATH)/bin
 BINARY_NAME=AlgoreaBackend
 
 TEST_REPORT_DIR=test-results
 
+ifndef BIN_DIR # to allow BIN_DIR to be given as args (see CI)
+	FIRSTGOPATH=$(shell echo $(GOPATH) | cut -d: -f1 -)
+	BIN_DIR=$(FIRSTGOPATH)/bin
+endif
 GODOG=$(BIN_DIR)/godog
 GO_JUNIT_REPORT=$(BIN_DIR)/go-junit-report
 GOMETALINTER=$(BIN_DIR)/gometalinter
