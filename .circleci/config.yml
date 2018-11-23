@@ -2,7 +2,7 @@ version: 2
 jobs:
   deps:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.11
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment: &GOENV
       GOPATH: /go:/tmp/go
@@ -26,7 +26,7 @@ jobs:
           - /tmp/go
   unit-tests:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.11
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment: *GOENV
     steps:
@@ -40,7 +40,7 @@ jobs:
       - store_artifacts: *TESTPATH
   bdd-tests:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.11
       - image: circleci/mysql:5.6
         environment:
           MYSQL_USER: alg_ci_user
@@ -78,7 +78,7 @@ jobs:
       - store_artifacts: *TESTPATH
   lint:
     docker:
-      - image: circleci/golang:1.9
+      - image: circleci/golang:1.11
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment: *GOENV
     steps:
