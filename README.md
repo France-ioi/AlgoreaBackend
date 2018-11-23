@@ -2,30 +2,49 @@
 
 ## Running the app
 
-You can run the application commands (implemented in `cmd`) using:
+Installing the dependencies:
 ```
-go run main.go <cmd> <opt>
+make deps
 ```
-or by compiling it and then executing the binary:
+
+Compile the app:
 ```
-go build
+make
+```
+
+You can then run the app: (call `./AlgoreaBackend` to print the list of available commands)
+```
 ./AlgoreaBackend <cmd> <opt>
 ```
-
-You can call `./AlgoreaBackend` alone to print the list of available commands.
-
 For instance, you can launch the web server using `./AlgoreaBackend serve`.
 
 ## Database Configuration
 
-Database configuration currently goes in `conf/default.yml` file.
+Database configuration currently goes in `conf/default.yml` file or using environment variables (higher priority)
 The empty dump (schema with data in it) can be loaded using the `./AlgoreaBackend db-restore` followed by `./AlgoreaBackend db-migrate`.
 
 ## Testing
 
 Run all tests (unit and bdd):
-````
-go test -v ./...
+```
+make test
+```
+Only unit:
+```
+make test-unit
+```
+Only bdd (cucumber using `godog`):
+```
+make test-bdd <anyflag for godog>
+```
+
+## Style
+
+A `.editorconfig` file defines the basic editor style configuration to use. Check the "editorconfig" support for your favorite editor if it is not installed by default.
+
+For the Go coding styles, we use the standard linters (many). You can install and run them with:
+```
+go lint
 ```
 
 ## Software Walkthrough
