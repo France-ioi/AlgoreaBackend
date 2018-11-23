@@ -23,7 +23,7 @@ type Application struct {
 // New configures application resources and routes.
 func New() (*Application, error) {
 
-	config, err := config.Load()
+	conf, err := config.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +33,13 @@ func New() (*Application, error) {
 
 	logger := NewLogger()
 
-	db, err := database.DBConn(config.Database)
+	db, err := database.DBConn(conf.Database)
 	if err != nil {
 		logger.WithField("module", "database").Error(err)
 		return nil, err
 	}
 
-	apiCtx, err := api.NewCtx(config, db)
+	apiCtx, err := api.NewCtx(conf, db)
 	if err != nil {
 		logger.Error(err)
 		return nil, err
@@ -52,7 +52,7 @@ func New() (*Application, error) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.DefaultCompress)
-	router.Use(middleware.Timeout(time.Duration(config.Timeout) * time.Second))
+	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))
 
 	router.Use(NewStructuredLogger(logger))
 	router.Use(render.SetContentType(render.ContentTypeJSON))
@@ -61,5 +61,5 @@ func New() (*Application, error) {
 
 	router.Mount("/", apiCtx.Router())
 
-	return &Application{router, config, db}, nil
+	return &Application{router, conf, db}, nil
 }

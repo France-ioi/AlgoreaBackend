@@ -48,7 +48,7 @@ type NewItemResponseData struct {
 	ItemID int64 `json:"ID"`
 }
 
-func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) *s.AppError {
+func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 	data := &NewItemRequest{}
 	if err := render.Bind(r, data); err != nil {
 		return s.ErrInvalidRequest(err)
@@ -61,5 +61,5 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) *s.AppError 
 	if err := render.Render(w, r, s.CreationSuccess(&NewItemResponseData{id})); err != nil {
 		return s.ErrUnexpected(err)
 	}
-	return nil
+	return s.NoError
 }

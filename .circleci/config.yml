@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment:
+    environment: &GOENV
       GOPATH: /go:/tmp/go
     steps:
       - checkout
@@ -16,7 +16,10 @@ jobs:
           root: ./
           paths:
             - "*"
-      - run: rm -rf *; cp -r /go /tmp/
+      - run:
+          name: Do not cache anything about this repo
+          command: rm -rf * /go/bin/AlgoreaBackend /go/pkg/*/github.com/France-ioi/AlgoreaBackend
+      - run: cp -r /go /tmp/
       - save_cache:
           <<: *CACHEKEY
           paths:
@@ -25,14 +28,13 @@ jobs:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment:
-      GOPATH: /tmp/go:/go
+    environment: *GOENV
     steps:
       - attach_workspace:
           at: ./
       - run: make print-deps > /tmp/deps.txt
       - restore_cache: *CACHEKEY
-      - run: make test-unit-report
+      - run: BIN_DIR=/tmp/go/bin make test-unit-report
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
@@ -46,7 +48,7 @@ jobs:
           MYSQL_DATABASE: ci_db
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment:
-      GOPATH: /tmp/go:/go
+      <<: *GOENV
       ALGOREA_DATABASE.ADDR: 127.0.0.1
       ALGOREA_DATABASE.USER: alg_ci_user
       ALGOREA_DATABASE.PASSWD: dummy_password
@@ -78,8 +80,7 @@ jobs:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment:
-      GOPATH: /tmp/go:/go
+    environment: *GOENV
     steps:
       - attach_workspace:
           at: ./
@@ -88,7 +89,7 @@ jobs:
       - run:
           name: Install all linting tools
           command: (cd /tmp/go && curl -L https://git.io/vp6lP | sh)
-      - run: make lint
+      - run: BIN_DIR=/tmp/go/bin make lint
 workflows:
   version: 2
   build_test:

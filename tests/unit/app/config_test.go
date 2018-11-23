@@ -11,23 +11,23 @@ func TestLoadConfig(t *testing.T) {
 
 	os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
 	config.Path = "test_config.yaml"
-	config, err := config.Load()
+	conf, err := config.Load()
 	if err != nil {
 		t.Error("unable to load config")
 	}
 
 	// test config override
-	if config.Server.Port != 1234 {
+	if conf.Server.Port != 1234 {
 		t.Error("invalid port from config file.")
 	}
 
 	// test default
-	if config.Server.ReadTimeout != 60 {
+	if conf.Server.ReadTimeout != 60 {
 		t.Error("invalid default value")
 	}
 
 	// test env
-	if config.Server.WriteTimeout != 999 {
+	if conf.Server.WriteTimeout != 999 {
 		t.Error("invalid env value")
 	}
 
