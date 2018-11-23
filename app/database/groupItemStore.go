@@ -13,10 +13,10 @@ type GroupItem struct {
 	GroupID          t.Int64 `db:"idGroup"`
 	ItemID           t.Int64 `db:"idItem"`
 	FullAccessDate   string  `db:"sFullAccessDate"`   // should be a datetime
-	CachedFullAccess bool    `db:"bCachedFullAccess"` // when the db does not know the default, they will get the go type default
-	OwnerAccess      bool    `db:"bOwnerAccess"`      // when the db does not know the default, they will get the go type default
-	CreatedUserID    int64   `db:"idUserCreated"`     // when the db does not know the default, they will get the go type default
-	Version          int64   `db:"iVersion"`          // when the db does not know the default, they will get the go type default
+	CachedFullAccess bool    `db:"bCachedFullAccess"` // use Go default in DB (to be fixed)
+	OwnerAccess      bool    `db:"bOwnerAccess"`      // use Go default in DB (to be fixed)
+	CreatedUserID    int64   `db:"idUserCreated"`     // use Go default in DB (to be fixed)
+	Version          int64   `db:"iVersion"`          // use Go default in DB (to be fixed)
 }
 
 func (s *GroupItemStore) createRaw(tx Tx, entry *GroupItem) (int64, error) {

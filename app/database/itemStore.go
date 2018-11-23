@@ -13,9 +13,9 @@ type ItemStore struct {
 type Item struct {
 	ID            t.Int64  `db:"ID"`
 	Type          t.String `db:"sType"`
-	TeamsEditable bool     `db:"bTeamsEditable"` // when the db does not know the default, they will get the go type default
-	NoScore       bool     `db:"bNoScore"`       // when the db does not know the default, they will get the go type default
-	Version       int64    `db:"iVersion"`       // when the db does not know the default, they will get the go type default
+	TeamsEditable bool     `db:"bTeamsEditable"` // use Go default in DB (to be fixed)
+	NoScore       bool     `db:"bNoScore"`       // use Go default in DB (to be fixed)
+	Version       int64    `db:"iVersion"`       // use Go default in DB (to be fixed)
 }
 
 // Create insert an Item row in the database and associted values in related tables if needed

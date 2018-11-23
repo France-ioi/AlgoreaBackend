@@ -13,7 +13,7 @@ type ItemString struct {
 	ItemID     t.Int64  `db:"idItem"`
 	LanguageID t.Int64  `db:"idLanguage"`
 	Title      t.String `db:"sTitle"`
-	Version    int64    `db:"iVersion"` // when the db does not know the default, they will get the go type default
+	Version    int64    `db:"iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *ItemStringStore) createRaw(tx Tx, entry *ItemString) (int64, error) {

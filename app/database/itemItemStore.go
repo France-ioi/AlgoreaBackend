@@ -13,8 +13,8 @@ type ItemItem struct {
 	ParentItemID t.Int64 `db:"idItemParent"`
 	ChildItemID  t.Int64 `db:"idItemChild"`
 	Order        t.Int64 `db:"iChildOrder"`
-	Difficulty   int64   `db:"iDifficulty"` // when the db does not know the default, they will get the go type default
-	Version      int64   `db:"iVersion"`    // when the db does not know the default, they will get the go type default
+	Difficulty   int64   `db:"iDifficulty"` // use Go default in DB (to be fixed)
+	Version      int64   `db:"iVersion"`    // use Go default in DB (to be fixed)
 }
 
 func (s *ItemItemStore) createRaw(tx Tx, entry *ItemItem) (int64, error) {
