@@ -1,43 +1,43 @@
 package api
 
 import (
-	"net/http/httputil"
-	"net/url"
+  "net/http/httputil"
+  "net/url"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+  "github.com/France-ioi/AlgoreaBackend/app/config"
+  "github.com/France-ioi/AlgoreaBackend/app/database"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service/api/groups"
-	"github.com/France-ioi/AlgoreaBackend/app/service/api/items"
-	"github.com/go-chi/chi"
+  "github.com/France-ioi/AlgoreaBackend/app/service/api/groups"
+  "github.com/France-ioi/AlgoreaBackend/app/service/api/items"
+  "github.com/go-chi/chi"
 )
 
 // Ctx is the context of the root of the API
 type Ctx struct {
-	config       *config.Root
-	db           *database.DB
-	reverseProxy *httputil.ReverseProxy
+  config       *config.Root
+  db           *database.DB
+  reverseProxy *httputil.ReverseProxy
 }
 
 // NewCtx creates a API context
 func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
-	var err error
-	var proxyURL *url.URL
+  var err error
+  var proxyURL *url.URL
 
-	if proxyURL, err = url.Parse(config.ReverseProxy.Server); err != nil {
-		return nil, err
-	}
-	proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-	return &Ctx{config, db, proxy}, nil
+  if proxyURL, err = url.Parse(config.ReverseProxy.Server); err != nil {
+    return nil, err
+  }
+  proxy := httputil.NewSingleHostReverseProxy(proxyURL)
+  return &Ctx{config, db, proxy}, nil
 }
 
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
-	r := chi.NewRouter()
-	dataStore := database.NewDataStore(ctx.db)
+  r := chi.NewRouter()
+  dataStore := database.NewDataStore(ctx.db)
 
-	r.Mount("/items", items.New(dataStore).Router())
-	r.Mount("/groups", groups.New(dataStore).Router())
-	r.NotFound(ctx.notFound)
-	return r
+  r.Mount("/items", items.New(dataStore).Router())
+  r.Mount("/groups", groups.New(dataStore).Router())
+  r.NotFound(ctx.notFound)
+  return r
 }
