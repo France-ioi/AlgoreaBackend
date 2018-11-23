@@ -60,7 +60,7 @@ func New() (*Application, error) {
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
 
-	router.Mount("/", apiCtx.Router())
+	router.Mount(conf.Server.RootPath, apiCtx.Router())
 
 	return &Application{router, conf, db}, nil
 }

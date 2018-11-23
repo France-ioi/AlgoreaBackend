@@ -1,5 +1,6 @@
 server:
   port: 8080
+  rootpath: "/" # the path at which the router is mounted
 database:
   user: algorea
   passwd: a_db_password
