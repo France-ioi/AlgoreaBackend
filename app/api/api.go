@@ -35,9 +35,8 @@ func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
 	dataStore := database.NewDataStore(ctx.db)
-
-	r.Mount("/items", items.New(dataStore).Router())
-	r.Mount("/groups", groups.New(dataStore).Router())
+	items.New(dataStore).AppendRoutes(r)
+	groups.New(dataStore).AppendRoutes(r)
 	r.NotFound(ctx.notFound)
 	return r
 }
