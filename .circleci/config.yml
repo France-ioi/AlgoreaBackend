@@ -86,10 +86,7 @@ jobs:
           at: ./
       - run: make print-deps > /tmp/deps.txt
       - restore_cache: *CACHEKEY
-      - run:
-          name: Install all linting tools
-          command: (cd /tmp/go && curl -L https://git.io/vp6lP | sh)
-      - run: BIN_DIR=/tmp/go/bin make lint
+      - run: make lint
 workflows:
   version: 2
   build_test:
