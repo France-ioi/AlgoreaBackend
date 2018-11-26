@@ -8,5 +8,9 @@ database:
   dbname: algorea_db
   allownativepasswords: true
   parseTime: true # required for the migration system
+logging:
+  textlogging: true
+  loglevel: warning # debug, info, warning, error, fatal, panic
+
 # reverseProxy: # server to which requests which do not match any route will be sent
 #   server: "http://localhost:3000"

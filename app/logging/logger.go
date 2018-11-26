@@ -1,4 +1,4 @@
-package app
+package logging
 
 // MIT License
 
@@ -28,9 +28,9 @@ import (
   "net/http"
   "time"
 
+  "github.com/France-ioi/AlgoreaBackend/app/config"
   "github.com/go-chi/chi/middleware"
   "github.com/sirupsen/logrus"
-  "github.com/spf13/viper"
 )
 
 var (
@@ -43,22 +43,20 @@ type StructuredLogger struct {
   Logger *logrus.Logger
 }
 
-// NewLogger creates and configures a new logrus Logger.
-func NewLogger() *logrus.Logger {
+// New creates and configures a new logrus Logger.
+func New(conf config.Logging) *logrus.Logger {
   var err error
 
   Logger = logrus.New()
-  if viper.GetBool("log_textlogging") {
+  if conf.TextLogging {
     Logger.Formatter = &logrus.TextFormatter{
       DisableTimestamp: true,
     }
   } else {
-    Logger.Formatter = &logrus.JSONFormatter{
-      DisableTimestamp: true,
-    }
+    Logger.Formatter = &logrus.JSONFormatter{}
   }
 
-  level := viper.GetString("log_level")
+  level := conf.LogLevel
   if level == "" {
     level = "error"
   }
