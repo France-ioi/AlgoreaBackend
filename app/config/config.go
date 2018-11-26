@@ -20,12 +20,19 @@ type ReverseProxy struct {
   Server string
 }
 
+// Logging for all config related to logger
+type Logging struct {
+  TextLogging bool // true: text, false: json
+  LogLevel    string
+}
+
 // Root is the root of the app configuration
 type Root struct {
   Server       Server
   Database     mysql.Config
   ReverseProxy ReverseProxy
   Timeout      int32
+  Logging      Logging
 }
 
 // Path defines the file name which will be used to read the configuration
