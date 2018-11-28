@@ -21,14 +21,26 @@ And the database has the following table 'items_strings':
   | 33 |     23 |          1 |     Reduce Graph |        0 |
   | 39 |     21 |          2 | Graphe: Methodes |        0 |
 And the database has the following table 'groups_items':
-  | ID | idGroup | idItem | bCachedFullAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-  | 41 |      11 |     21 |              true |               false |            0  |        0 |
-  | 42 |      11 |     22 |              true |               false |            0  |        0 |
-  | 43 |      11 |     23 |              true |               false |            0  |        0 |
+  | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+  | 41 |      13 |     21 |      2010-01-01 |              true |               false |            0  |        0 |
+  | 42 |      13 |     22 |            null |              true |               false |            0  |        0 |
+  | 43 |      13 |     23 |            null |              true |               false |            0  |        0 |
+  | 44 |      11 |     21 |            null |              true |               false |            0  |        0 |
+  | 45 |      11 |     22 |            null |              true |               false |            0  |        0 |
+  | 46 |      11 |     23 |            null |              true |               false |            0  |        0 |
 And the database has the following table 'items_items':
   | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
   | 51 |           21 |          22 |           1 |           0 |        0 |
   | 52 |           22 |          23 |           1 |           0 |        0 |
+And the database has the following table 'groups_groups':
+  | ID | idGroupParent | idGroupChild | iVersion |
+  | 61 |            13 |           11 |        0 |
+And the database has the following table 'groups_ancestors':
+  | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
+  | 71 |              11 |           11 |       1 |        0 |
+  | 72 |              12 |           12 |       1 |        0 |
+  | 73 |              13 |           13 |       1 |        0 |
+  | 74 |              13 |           11 |       0 |        0 |
 And I am the user with ID "1" and my preferred language is "1"
 When I send a GET request to "/items/?ids=21,22,23"
 Then the response code should be 200
