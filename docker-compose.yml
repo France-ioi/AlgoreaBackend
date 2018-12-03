@@ -12,14 +12,14 @@ services:
       MYSQL_USER: algorea
       MYSQL_PASSWORD: a_db_password
       MYSQL_DATABASE: algorea_db
-  former_platform:
-    image: algorea_platform
-    ports:
-    - "8080:80"
-    links:
-    - db
-    environment:
-      DATABASE_HOST: db
-      DATABASE_NAME: algorea_db
-      DATABASE_USER: algorea
-      DATABASE_PASSWORD: a_db_password
+  # former_platform:
+  #   image: franceioi/algoreaplatform:latest
+  #   ports:
+  #   - "8080:80"
+  #   links:
+  #   - db
+  #   environment:
+  #     DATABASE_HOST: db
+  #     DATABASE_NAME: algorea_db
+  #     DATABASE_USER: algorea
+  #     DATABASE_PASSWORD: a_db_password
