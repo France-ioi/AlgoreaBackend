@@ -1,6 +1,7 @@
 package app_test // nolint
 
 import (
+  "io/ioutil"
   "os"
   "testing"
 
@@ -9,8 +10,22 @@ import (
 
 func TestLoadConfig(t *testing.T) {
 
+  // create a temp config file
+  tmpFile, err := ioutil.TempFile(os.TempDir(), "config-*.yaml")
+  if err != nil {
+    t.Error(err)
+  }
+  defer os.Remove(tmpFile.Name())
+  defer tmpFile.Close()
+
+  text := []byte("server:\n  port: 1234\n")
+  if _, err = tmpFile.Write(text); err != nil {
+    t.Error(err)
+  }
+
+  config.Path = tmpFile.Name()
+
   os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
-  config.Path = "test_config.yaml"
   conf, err := config.Load()
   if err != nil {
     t.Error("unable to load config")
