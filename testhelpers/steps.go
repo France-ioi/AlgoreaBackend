@@ -1,4 +1,4 @@
-package app_bdd_tests // nolint
+package testhelpers
 
 import (
   "encoding/json"
@@ -13,24 +13,22 @@ import (
 
   "github.com/DATA-DOG/godog/gherkin"
   "github.com/France-ioi/AlgoreaBackend/app"
-  "github.com/France-ioi/AlgoreaBackend/app/config"
   "github.com/spf13/viper"
 )
 
-type testContext struct { // nolint (bug in the linting)
+type TestContext struct { // nolint
   application      *app.Application // do NOT call it directly, use `app()`
   lastResponse     *http.Response
   lastResponseBody string
 }
 
-func (ctx *testContext) setupTestContext(interface{}) {
+func (ctx *TestContext) SetupTestContext(interface{}) { // nolint
   ctx.application = nil // app will be lazy loaded so that environment can be be changed before the tests
 }
 
-func (ctx *testContext) app() *app.Application {
+func (ctx *TestContext) app() *app.Application {
 
   if ctx.application == nil {
-    config.Path = "../../conf/default.yaml"
     var err error
     ctx.application, err = app.New()
     if err != nil {
@@ -70,7 +68,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 }
 
 // nolint: gosec
-func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
+func (ctx *TestContext) emptyDB() error { // FIXME, get the db name from config
 
   db := ctx.app().Database
   dbName := ctx.app().Config.Database.Connection.DBName
@@ -96,7 +94,7 @@ func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
   return nil
 }
 
-func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody string) error {
+func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody string) error {
   testServer := httptest.NewServer(ctx.app().HTTPHandler)
   defer testServer.Close()
 
@@ -127,7 +125,7 @@ func dbDataTableValue(input string) interface{} {
 
 /** Steps **/
 
-func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
+func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
   db := ctx.app().Database
   var fields []string
@@ -153,7 +151,7 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
   return nil
 }
 
-func (ctx *testContext) runFallbackServer() error {
+func (ctx *TestContext) RunFallbackServer() error { // nolint
   backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("X-Got-Query", r.URL.Path)
   }))
@@ -165,15 +163,15 @@ func (ctx *testContext) runFallbackServer() error {
   return nil
 }
 
-func (ctx *testContext) iSendrequestToWithBody(method string, path string, body *gherkin.DocString) error {
+func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *gherkin.DocString) error { // nolint
   return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
-func (ctx *testContext) iSendrequestTo(method string, path string) error {
+func (ctx *TestContext) ISendrequestTo(method string, path string) error { // nolint
   return ctx.iSendrequestGeneric(method, path, "")
 }
 
-func (ctx *testContext) itShouldBeAJSONArrayWithEntries(count int) error {
+func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { // nolint
   var objmap []map[string]*json.RawMessage
 
   if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
@@ -187,14 +185,14 @@ func (ctx *testContext) itShouldBeAJSONArrayWithEntries(count int) error {
   return nil
 }
 
-func (ctx *testContext) theResponseCodeShouldBe(code int) error {
+func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
   if code != ctx.lastResponse.StatusCode {
     return fmt.Errorf("expected response code to be: %d, but actual is: %d", code, ctx.lastResponse.StatusCode)
   }
   return nil
 }
 
-func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (err error) {
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (err error) { // nolint
   var expected, actual []byte
   var exp, act interface{}
 
@@ -237,14 +235,14 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
   return
 }
 
-func (ctx *testContext) theResponseHeaderShouldBe(headerName string, headerValue string) (err error) {
+func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
   if ctx.lastResponse.Header.Get(headerName) != headerValue {
     return fmt.Errorf("Headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
   }
   return nil
 }
 
-func (ctx *testContext) tableShouldBe(tableName string, data *gherkin.DataTable) error {
+func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
   // For that, we build a SQL request with only the attribute we are interested about (those
   // for the test data table) and we convert them to string (in SQL) to compare to table value.
   // Expect 'null' string in the table to check for nullness
