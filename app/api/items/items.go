@@ -19,4 +19,5 @@ func New(store *database.DataStore) *Service {
 // AppendRoutes adds the routes of this pakcage to the parent router
 func (srv *Service) AppendRoutes(router *chi.Mux) {
   router.Post("/items/", s.AppHandler(srv.addItem).ServeHTTP)
+  router.Get("/items/", s.AppHandler(srv.getList).ServeHTTP)
 }

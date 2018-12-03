@@ -7,6 +7,11 @@ import (
   "github.com/spf13/viper"
 )
 
+// Database is the part of the config related to the database
+type Database struct {
+  Connection mysql.Config
+}
+
 // Server is the part of the config for the HTTP Server
 type Server struct {
   Port         int32
@@ -24,12 +29,14 @@ type ReverseProxy struct {
 type Logging struct {
   TextLogging bool // true: text, false: json
   LogLevel    string
+  SQLLogLevel int
+  LogSQL      bool
 }
 
 // Root is the root of the app configuration
 type Root struct {
   Server       Server
-  Database     mysql.Config
+  Database     Database
   ReverseProxy ReverseProxy
   Timeout      int32
   Logging      Logging

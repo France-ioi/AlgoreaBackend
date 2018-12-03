@@ -73,7 +73,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 func (ctx *testContext) emptyDB() error { // FIXME, get the db name from config
 
   db := ctx.app().Database
-  dbName := ctx.app().Config.Database.DBName
+  dbName := ctx.app().Config.Database.Connection.DBName
   rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                                 FROM   information_schema.tables
                                 WHERE  table_type   = 'BASE TABLE'
@@ -110,6 +110,21 @@ func (ctx *testContext) iSendrequestGeneric(method string, path string, reqBody 
   return nil
 }
 
+// dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
+// e.g., the string "null" means the SQL `NULL`
+func dbDataTableValue(input string) interface{} {
+  switch(input) {
+  case "false":
+    return false
+  case "true":
+    return true
+  case "null":
+    return nil
+  default:
+    return input
+  }
+}
+
 /** Steps **/
 
 func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) error {
@@ -129,7 +144,7 @@ func (ctx *testContext) dbHasTable(tableName string, data *gherkin.DataTable) er
   for i := 1; i < len(data.Rows); i++ {
     var vals []interface{}
     for _, cell := range data.Rows[i].Cells {
-      vals = append(vals, cell.Value)
+      vals = append(vals,dbDataTableValue(cell.Value))
     }
     if _, err = stmt.Exec(vals...); err != nil {
       return err
@@ -187,7 +202,7 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
   if err = json.Unmarshal([]byte(body.Content), &exp); err != nil {
     return
   }
-  if expected, err = json.MarshalIndent(exp, "", "  "); err != nil {
+  if expected, err = json.Marshal(exp); err != nil {
     return
   }
 
@@ -195,26 +210,28 @@ func (ctx *testContext) theResponseBodyShouldBeJSON(body *gherkin.DocString) (er
   if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
     return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
   }
-  if actual, err = json.MarshalIndent(act, "", "  "); err != nil {
+  if actual, err = json.Marshal(act); err != nil {
     return
   }
 
   // the matching may be adapted per different requirements.
   if len(actual) != len(expected) {
     return fmt.Errorf(
-      "expected json length: %d does not match actual: %d:\n%s",
+      "expected json length: %d does not match actual: %d.\n     Got: %s\nExpected: %s",
       len(expected),
       len(actual),
       string(actual),
+      string(expected),
     )
   }
 
   for i, b := range actual {
     if b != expected[i] {
       return fmt.Errorf(
-        "expected JSON does not match actual, showing up to last matched character:\n%s",
-        string(actual[:i+1]),
-      )
+        "expected JSON does not match actual.\n     Got: %s\nExpected: %s",
+        string(actual),
+        string(expected),
+        )
     }
   }
   return
