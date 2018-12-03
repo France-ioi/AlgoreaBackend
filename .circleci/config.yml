@@ -49,10 +49,10 @@ jobs:
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment:
       <<: *GOENV
-      ALGOREA_DATABASE.ADDR: 127.0.0.1
-      ALGOREA_DATABASE.USER: alg_ci_user
-      ALGOREA_DATABASE.PASSWD: dummy_password
-      ALGOREA_DATABASE.DBNAME: ci_db
+      ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
+      ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
+      ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
+      ALGOREA_DATABASE.CONNECTION.DBNAME: ci_db
     steps:
       - attach_workspace:
           at: ./
