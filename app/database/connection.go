@@ -6,13 +6,18 @@ import (
   "strings"
 
   t "github.com/France-ioi/AlgoreaBackend/app/types"
-  "github.com/go-sql-driver/mysql"
+  "github.com/France-ioi/AlgoreaBackend/app/logging"
+  "github.com/France-ioi/AlgoreaBackend/app/config"
   "github.com/jmoiron/sqlx"
+  "github.com/jinzhu/gorm"
 )
 
 // DB is a wrapper around the database connector that can be shared through the app
 type DB struct {
   *sqlx.DB
+  gorm           *gorm.DB
+  DriverName     string
+  DataSourceName string
 }
 
 // Tx is a wrapper around a database transaction
@@ -24,13 +29,21 @@ const dbStructTag string = "db"
 
 // DBConn connects to the database and test the connection
 // nolint: gosec
-func DBConn(dbconfig mysql.Config) (*DB, error) {
-
+func DBConn(dbConfig config.Database) (*DB, error) {
+  var err error
   var db *sqlx.DB
-  db, _ = sqlx.Open("mysql", dbconfig.FormatDSN()) // failure not expected as it just prepares the database abstraction
-  err := db.Ping()
+  var driverName = "mysql"
+  var dataSourceName = dbConfig.Connection.FormatDSN()
 
-  return &DB{db}, err
+  // failure not expected as it just prepares the database abstraction
+  db, _ = sqlx.Open(driverName, dataSourceName)
+  gorm, _ := gorm.Open(driverName, dataSourceName)
+  err = db.Ping()
+
+  // setup logging
+  gorm.SetLogger(logging.Logger)
+
+  return &DB{db, gorm, driverName, dataSourceName}, err
 }
 
 func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {

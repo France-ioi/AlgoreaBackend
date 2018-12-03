@@ -49,6 +49,12 @@ func ErrInvalidRequest(err error) APIError {
   return APIError{http.StatusBadRequest, err}
 }
 
+// ErrForbidden is for errors caused by a lack of permissions globally or on a requested object
+// It results in a 403 Invalid request response
+func ErrForbidden(err error) APIError {
+  return APIError{http.StatusForbidden, err}
+}
+
 // ErrUnexpected is for internal errors (not supposed to fail) not directly caused by the user input
 // It results in a 500 Internal Server Error response
 func ErrUnexpected(err error) APIError {

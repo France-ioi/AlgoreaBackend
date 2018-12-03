@@ -41,7 +41,7 @@ func init() {
       rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                              FROM   information_schema.tables
                              WHERE  table_type   = 'BASE TABLE'
-                               AND  table_schema = '` + conf.Database.DBName + "'")
+                               AND  table_schema = '` + conf.Database.Connection.DBName + "'")
       if err != nil {
         fmt.Println("Unable to query the database: ", err)
         os.Exit(1)
@@ -64,10 +64,10 @@ func init() {
       // note: current solution is not really great as it makes some assumptions of the config :-/
       command := exec.Command(
         "mysql",
-        "-h"+conf.Database.Addr,
-        "-D"+conf.Database.DBName,
-        "-u"+conf.Database.User,
-        "-p"+conf.Database.Passwd,
+        "-h"+conf.Database.Connection.Addr,
+        "-D"+conf.Database.Connection.DBName,
+        "-u"+conf.Database.Connection.User,
+        "-p"+conf.Database.Connection.Passwd,
         "--protocol=TCP",
         "-e"+"source db/schema/20181024.sql",
       )
