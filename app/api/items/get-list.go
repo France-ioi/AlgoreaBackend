@@ -32,7 +32,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
 
   // Validate that the user can see the item ids
   var valid bool
-  if valid, err = srv.Store.Items.ValidateUserAccess(ids); err != nil {
+  if valid, err = srv.Store.Items().ValidateUserAccess(ids); err != nil {
     return s.ErrUnexpected(err)
   }
   if !valid {
@@ -44,7 +44,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
 
   // Fetch the requested items
   items := []ListResponseRow{}
-	err = srv.Store.Items.GetList(ids, &items)
+	err = srv.Store.Items().GetList(ids, &items)
 
 	if err != nil {
 		return s.ErrUnexpected(err)

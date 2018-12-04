@@ -7,7 +7,7 @@ import (
 
 // ItemStore implements database operations on items
 type ItemStore struct {
-  db *DB
+  *DataStore
 }
 
 // Item matches the content the `items` table
@@ -22,9 +22,9 @@ type Item struct {
 // Create insert an Item row in the database and associted values in related tables if needed
 func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, parentID t.Int64, order t.Int64) (int64, error) {
 
-  groupItemStore := &GroupItemStore{s.db}
-  itemItemStore := &ItemItemStore{s.db}
-  itemStringStore := &ItemStringStore{s.db}
+  groupItemStore := &GroupItemStore{s.DataStore}
+  itemItemStore := &ItemItemStore{s.DataStore}
+  itemStringStore := &ItemStringStore{s.DataStore}
 
   if !item.ID.Set { // set it here as it will be returned
     item.ID = *t.NewInt64(generateID())

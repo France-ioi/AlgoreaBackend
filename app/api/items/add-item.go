@@ -56,7 +56,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
     return s.ErrInvalidRequest(err)
   }
   var id int64
-  id, err = srv.Store.Items.Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
+  id, err = srv.Store.Items().Create(data.itemData(), data.Strings[0].LanguageID.Int64, data.Strings[0].Title.String, data.Parents[0].ID.Int64, data.Parents[0].Order.Int64)
   if err != nil {
     return s.ErrInvalidRequest(err)
   }
