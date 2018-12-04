@@ -41,7 +41,7 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
     userID := r.Context().Value(ctxUserID).(int64)
     body := "user_id:" + strconv.FormatInt(userID, 10)
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte(body))
+    w.Write([]byte(body)) // nolint
   })
   mainSrv := httptest.NewServer(middleware(handler))
   defer mainSrv.Close()
@@ -63,7 +63,7 @@ func TestValid(t *testing.T) {
   didService, resp := callAuthThroughMiddleware("123", func(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseInt(r.URL.Query()["sessionid"][0], 10, 64)
     dataJSON, _ := json.Marshal(&authResp{id, ""})
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
@@ -99,7 +99,7 @@ func TestInvalidResponseFormat1(t *testing.T) {
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
     dataJSON, _ := json.Marshal([]invalidAuthResp{invalidAuthResp{"duh?"}}) // unexpected format
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
