@@ -22,13 +22,13 @@ all: build
 build:
 	$(GOBUILD) -o $(BINARY_NAME) -v
 test-unit:
-	$(GOTEST) -v ./app/...
+	$(GOTEST) -cover -v ./app/...
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS)
 test-unit-report: $(GO_JUNIT_REPORT)
 	mkdir -p $(TEST_REPORT_DIR)/go-test
-	$(GOTEST) -v ./app/... 2>&1 | $(GO_JUNIT_REPORT) > $(TEST_REPORT_DIR)/go-test/junit.xml
+	$(GOTEST) -cover -v ./app/... 2>&1 | $(GO_JUNIT_REPORT) > $(TEST_REPORT_DIR)/go-test/junit.xml
 test-bdd-report: $(GODOG)
 	mkdir -p $(TEST_REPORT_DIR)/cucumber
 	$(GODOG) --format=junit > $(TEST_REPORT_DIR)/cucumber/junit.xml
