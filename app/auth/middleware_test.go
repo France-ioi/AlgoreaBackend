@@ -116,7 +116,7 @@ func TestInvalidResponseFormat2(t *testing.T) {
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
     dataJSON, _ := json.Marshal(invalidAuthResp{"duh?"}) // unexpected format
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
@@ -130,7 +130,7 @@ func TestInvalidJSON(t *testing.T) {
   assert := assert_lib.New(t)
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("this is invalid json"))
+    w.Write([]byte("this is invalid json")) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
@@ -145,7 +145,7 @@ func TestAuthError(t *testing.T) {
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
     dataJSON, _ := json.Marshal(&authResp{-1, "invalid token error"})
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
@@ -160,7 +160,7 @@ func TestAuthErrorPositiveID(t *testing.T) {
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
     dataJSON, _ := json.Marshal(&authResp{99, "invalid token error"})
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
@@ -175,7 +175,7 @@ func TestInvalidID(t *testing.T) {
 
   didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
     dataJSON, _ := json.Marshal(&authResp{-1, ""}) // unexpected resp from the auth server
-    w.Write(dataJSON)
+    w.Write(dataJSON) // nolint
   }, false)
   defer resp.Body.Close()
   bodyBytes, _ := ioutil.ReadAll(resp.Body)
