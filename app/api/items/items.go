@@ -1,23 +1,19 @@
 package items
 
 import (
-  "github.com/France-ioi/AlgoreaBackend/app/database"
+  "github.com/France-ioi/AlgoreaBackend/app/auth"
   s "github.com/France-ioi/AlgoreaBackend/app/service"
   "github.com/go-chi/chi"
 )
 
 // Service is the mount point for services related to `items`
 type Service struct {
-  Store *database.DataStore
+  s.Base
 }
 
-// New creates a service context
-func New(store *database.DataStore) *Service {
-  return &Service{store}
-}
-
-// AppendRoutes adds the routes of this pakcage to the parent router
-func (srv *Service) AppendRoutes(router *chi.Mux) {
+// SetRoutes defines the routes for this package in a route group
+func (srv *Service) SetRoutes(router chi.Router) {
+  router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
   router.Post("/items/", s.AppHandler(srv.addItem).ServeHTTP)
   router.Get("/items/", s.AppHandler(srv.getList).ServeHTTP)
 }

@@ -4,7 +4,7 @@ import t "github.com/France-ioi/AlgoreaBackend/app/types"
 
 // ItemStringStore implements database operations on `items_strings`
 type ItemStringStore struct {
-  db *DB
+  *DataStore
 }
 
 // ItemString matches the content the `items_strings` table

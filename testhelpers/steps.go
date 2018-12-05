@@ -18,12 +18,17 @@ import (
 
 type TestContext struct { // nolint
   application      *app.Application // do NOT call it directly, use `app()`
+  userID           int64            // userID that will be used for the next requests
   lastResponse     *http.Response
   lastResponseBody string
 }
 
 func (ctx *TestContext) SetupTestContext(interface{}) { // nolint
-  ctx.application = nil // app will be lazy loaded so that environment can be be changed before the tests
+  *ctx = TestContext{} // reset the full context
+  ctx.userID = 999 // the default for the moment
+}
+
+func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 }
 
 func (ctx *TestContext) app() *app.Application {
@@ -53,6 +58,10 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
     return nil, "", err
   }
 
+  // set a dummy auth cookie
+  req.AddCookie(&http.Cookie{Name: "PHPSESSID", Value: "dummy"})
+
+  // execute the queyr
   resp, err := http.DefaultClient.Do(req)
   if err != nil {
     return nil, "", err
@@ -67,8 +76,24 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
   return resp, string(respBody), nil
 }
 
+func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
+  // set the auth proxy server up
+  backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    dataJSON := fmt.Sprintf(`{"userID": %d, "error":""}`, ctx.userID)
+    w.Write([]byte(dataJSON)) // nolint
+  }))
+
+  // put the backend URL into the config
+  backendURL, _ := url.Parse(backend.URL) // nolint
+  ctx.app().Config.Auth.ProxyURL = backendURL.String()
+
+  return backend
+}
+
 // nolint: gosec
-func (ctx *TestContext) emptyDB() error { // FIXME, get the db name from config
+func (ctx *TestContext) emptyDB() error {
 
   db := ctx.app().Database
   dbName := ctx.app().Config.Database.Connection.DBName
@@ -95,9 +120,15 @@ func (ctx *TestContext) emptyDB() error { // FIXME, get the db name from config
 }
 
 func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody string) error {
+  // app server
   testServer := httptest.NewServer(ctx.app().HTTPHandler)
   defer testServer.Close()
 
+  // auth proxy server
+  authProxyServer := ctx.setupAuthProxyServer()
+  defer authProxyServer.Close()
+
+  // do request
   response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
   if err != nil {
     return err
@@ -160,6 +191,11 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
     return err
   }
   viper.Set("ReverseProxy.Server", backendURL.String())
+  return nil
+}
+
+func (ctx *TestContext) IAmUserWithID(id int64) error { // nolint
+  ctx.userID = id
   return nil
 }
 

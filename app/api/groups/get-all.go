@@ -17,7 +17,7 @@ func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) s.APIError {
   var err error
 
   groups := []GroupResponseRow{}
-  if err = srv.Store.Groups.GetAll(&groups); err != nil {
+  if err = srv.Store.Groups().GetAll(&groups); err != nil {
     return s.ErrUnexpected(err)
   }
   render.Respond(w, r, groups)

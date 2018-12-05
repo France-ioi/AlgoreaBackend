@@ -42,7 +42,7 @@ And the database has the following table 'groups_ancestors':
   | 72 |              12 |           12 |       1 |        0 |
   | 73 |              13 |           13 |       1 |        0 |
   | 74 |              13 |           11 |       0 |        0 |
-# And I am the user with ID "1" and my preferred language is "1"
+And I am the user with ID "1"
 When I send a GET request to "/items/?ids=21,22,23"
 Then the response code should be 200
 And the response body should be, in JSON:

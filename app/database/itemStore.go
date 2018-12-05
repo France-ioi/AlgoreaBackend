@@ -1,13 +1,14 @@
 package database
 
 import (
+  "github.com/France-ioi/AlgoreaBackend/app/auth"
   "github.com/France-ioi/AlgoreaBackend/app/logging"
   t "github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // ItemStore implements database operations on items
 type ItemStore struct {
-  db *DB
+  *DataStore
 }
 
 // Item matches the content the `items` table
@@ -22,9 +23,9 @@ type Item struct {
 // Create insert an Item row in the database and associted values in related tables if needed
 func (s *ItemStore) Create(item *Item, languageID t.Int64, title t.String, parentID t.Int64, order t.Int64) (int64, error) {
 
-  groupItemStore := &GroupItemStore{s.db}
-  itemItemStore := &ItemItemStore{s.db}
-  itemStringStore := &ItemStringStore{s.db}
+  groupItemStore := &GroupItemStore{s.DataStore}
+  itemItemStore := &ItemItemStore{s.DataStore}
+  itemStringStore := &ItemStringStore{s.DataStore}
 
   if !item.ID.Set { // set it here as it will be returned
     item.ID = *t.NewInt64(generateID())
@@ -79,7 +80,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(itemIDs []int64) (bool, error) {
+func (s *ItemStore) ValidateUserAccess(user *auth.User, itemIDs []int64) (bool, error) {
 
   accessResult := []struct {
     ItemID       int64 `sql:"column:idItem"`
@@ -91,7 +92,7 @@ func (s *ItemStore) ValidateUserAccess(itemIDs []int64) (bool, error) {
     Table("groups_items").
     Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
     Joins("JOIN groups_ancestors ON groups_items.idGroup = groups_ancestors.idGroupAncestor").
-    Where("groups_ancestors.idGroupChild = 11").
+    Where("groups_ancestors.idGroupChild = ?", user.SelfGroupID()).
     Where("groups_items.idItem IN (?)", itemIDs).
     Group("idItem")
   query.Scan(&accessResult)

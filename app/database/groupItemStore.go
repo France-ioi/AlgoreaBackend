@@ -4,7 +4,7 @@ import t "github.com/France-ioi/AlgoreaBackend/app/types"
 
 // GroupItemStore implements database operations on `groups_items`
 type GroupItemStore struct {
-  db *DB
+  *DataStore
 }
 
 // GroupItem matches the content the `groups_items` table

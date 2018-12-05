@@ -2,7 +2,7 @@ package database
 
 // GroupStore implements database operations on groups
 type GroupStore struct {
-  db *DB
+  *DataStore
 }
 
 // GetAll returns all groups
