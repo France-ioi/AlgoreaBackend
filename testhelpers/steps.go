@@ -93,7 +93,7 @@ func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
 }
 
 // nolint: gosec
-func (ctx *TestContext) emptyDB() error { // FIXME, get the db name from config
+func (ctx *TestContext) emptyDB() error {
 
   db := ctx.app().Database
   dbName := ctx.app().Config.Database.Connection.DBName
