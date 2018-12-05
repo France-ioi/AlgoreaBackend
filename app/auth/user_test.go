@@ -7,11 +7,6 @@ import (
   assert_lib "github.com/stretchr/testify/assert"
 )
 
-type MockDataStore struct {}
-func (s *MockDataStore) Users() UserStore {
-  return &MockUserStore{}
-}
-
 type MockUserStore struct {}
 func (s *MockUserStore) GetByID(userID int64, dest interface{}) error {
   u := dest.(*userData)
@@ -24,8 +19,8 @@ func TestUserFromContext(t *testing.T) {
 
   var userID int64 = 8
   ctx := context.WithValue(context.Background(), ctxUserID, userID)
-  dataStore := &MockDataStore{}
-  user := UserFromContext(ctx, dataStore)
+  store := &MockUserStore{}
+  user := UserFromContext(ctx, store)
 
   assert.EqualValues(userID, user.UserID)
   assert.NotNil(user.store)

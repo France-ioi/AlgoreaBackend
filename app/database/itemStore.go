@@ -1,6 +1,7 @@
 package database
 
 import (
+  "github.com/France-ioi/AlgoreaBackend/app/auth"
   "github.com/France-ioi/AlgoreaBackend/app/logging"
   t "github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -79,7 +80,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(itemIDs []int64) (bool, error) {
+func (s *ItemStore) ValidateUserAccess(user *auth.User, itemIDs []int64) (bool, error) {
 
   accessResult := []struct {
     ItemID       int64 `sql:"column:idItem"`
@@ -91,7 +92,7 @@ func (s *ItemStore) ValidateUserAccess(itemIDs []int64) (bool, error) {
     Table("groups_items").
     Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
     Joins("JOIN groups_ancestors ON groups_items.idGroup = groups_ancestors.idGroupAncestor").
-    Where("groups_ancestors.idGroupChild = 11").
+    Where("groups_ancestors.idGroupChild = ?", user.SelfGroupID()).
     Where("groups_items.idItem IN (?)", itemIDs).
     Group("idItem")
   query.Scan(&accessResult)

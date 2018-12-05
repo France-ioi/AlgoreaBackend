@@ -33,6 +33,11 @@ type Logging struct {
   LogSQL      bool
 }
 
+// Auth is the part of the config related to the user authentication
+type Auth struct {
+  ProxyURL string
+}
+
 // Root is the root of the app configuration
 type Root struct {
   Server       Server
@@ -40,6 +45,7 @@ type Root struct {
   ReverseProxy ReverseProxy
   Timeout      int32
   Logging      Logging
+  Auth         Auth
 }
 
 // Path defines the file name which will be used to read the configuration

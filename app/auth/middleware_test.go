@@ -1,6 +1,7 @@
 package auth
 
 import (
+  "github.com/France-ioi/AlgoreaBackend/app/config"
   "encoding/json"
   "io/ioutil"
   "net/http"
@@ -34,7 +35,7 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
   }
 
   // dummy server using the middleware
-  middleware := UserIDMiddleware(backendURLStr + "/a_path")
+  middleware := UserIDMiddleware(&config.Auth{ProxyURL: backendURLStr + "/a_path"})
   enteredService := false // used to log if the service has been reached
   handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
     enteredService = true // has passed into the service

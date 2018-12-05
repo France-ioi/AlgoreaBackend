@@ -1,6 +1,7 @@
 package auth
 
 import (
+  "github.com/France-ioi/AlgoreaBackend/app/config"
   "context"
   "encoding/json"
   "net/http"
@@ -12,14 +13,9 @@ const (
   ctxUserID ctxKey = iota
 )
 
-type authResponse struct {
-  UserID int64  `json:"userID"`
-  Error  string `json:"error"`
-}
-
 // UserIDMiddleware is a middleware retrieving user ID from the request content
 // Created by giving the reverse proxy used for getting the auth info
-func UserIDMiddleware(serviceURL string) func(next http.Handler) http.Handler {
+func UserIDMiddleware(config *config.Auth) func(next http.Handler) http.Handler {
   return func(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -35,7 +31,7 @@ func UserIDMiddleware(serviceURL string) func(next http.Handler) http.Handler {
       // create a new url from the raw RequestURI sent by the client
       cookieParam := "?sessionid=" + authCookie.Value
       var authRequest *http.Request
-      if authRequest, err = http.NewRequest("GET", serviceURL+cookieParam, nil); err != nil {
+      if authRequest, err = http.NewRequest("GET", config.ProxyURL+cookieParam, nil); err != nil {
         http.Error(w, "Unable to parse create request to auth server: "+err.Error(), http.StatusBadGateway)
         return
       }
@@ -48,7 +44,10 @@ func UserIDMiddleware(serviceURL string) func(next http.Handler) http.Handler {
         return
       }
 
-      auth := &authResponse{}
+      auth := &struct {
+        UserID int64  `json:"userID"`
+        Error  string `json:"error"`
+      }{}
       if err = json.NewDecoder(resp.Body).Decode(auth); err != nil {
         http.Error(w, "Unable to parse response for auth server: "+err.Error(), http.StatusBadGateway)
         return

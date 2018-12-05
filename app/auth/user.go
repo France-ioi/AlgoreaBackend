@@ -7,6 +7,7 @@ import (
 )
 
 // User represents the context around the authenticated user making the request
+// the data is loaded lazily
 type User struct {
   UserID   int64
   store    UserStore
@@ -15,26 +16,22 @@ type User struct {
 type userData struct {
   ID              int64  `sql:"column:ID"`
   Login           string `sql:"column:sLogin"`
-  DefaultLanguage int64  `sql:"column:sDefaultLanguage"`
+  DefaultLanguage string `sql:"column:sDefaultLanguage"`
   IsAdmin         bool   `sql:"column:bIsAdmin"`
   SelfGroupID     int64  `sql:"column:idGroupSelf"`
   OwnedGroupID    int64  `sql:"column:idGroupOwned"`
   AccessGroupID   int64  `sql:"column:idGroupAccess"`
 }
 
-// DataStore is an interface of the store that can be given as arg
-type DataStore interface {
-  Users() UserStore
-}
 // UserStore is an interface to the store for `users`
 type UserStore interface {
   GetByID(userID int64, dest interface{}) error
 }
 
 // UserFromContext creates a User context from a context set by the middleware
-func UserFromContext(context context.Context, store DataStore) *User {
+func UserFromContext(context context.Context, store UserStore) *User {
   userID := context.Value(ctxUserID).(int64)
-  return &User{userID, store.Users(), nil}
+  return &User{userID, store, nil}
 }
 
 func (u *User)lazyLoadData() error {
