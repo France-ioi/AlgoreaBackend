@@ -1,7 +1,7 @@
 package api
 
 import (
-  "github.com/France-ioi/AlgoreaBackend/app/auth"
+  "github.com/France-ioi/AlgoreaBackend/app/service"
   "net/http/httputil"
   "net/url"
 
@@ -35,10 +35,9 @@ func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
   r := chi.NewRouter()
-  dataStore := database.NewDataStore(ctx.db)
-  r.Use(auth.UserIDMiddleware(&ctx.config.Auth))
-  items.New(dataStore).AppendRoutes(r)
-  groups.New(dataStore).AppendRoutes(r)
+  base := service.Base{ Store: database.NewDataStore(ctx.db), Config: ctx.config }
+  r.Group((&items.Service{Base: base}).SetRoutes)
+  r.Group((&groups.Service{Base: base}).SetRoutes)
   r.NotFound(ctx.notFound)
   return r
 }
