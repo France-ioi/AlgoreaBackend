@@ -38,6 +38,9 @@ jobs:
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
+      - run:
+          name: Upload coverage results to Codecov
+          command: cp test-results/coverage.txt ./ && bash <(curl -s https://codecov.io/bash)
   bdd-tests:
     docker:
       - image: circleci/golang:1.11
