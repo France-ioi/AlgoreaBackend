@@ -7,7 +7,7 @@ type UserStore struct {
 
 // GetByID populates `dest` with the user identified by userID
 func (s *UserStore) GetByID(userID int64, dest interface{}) error {
-  query := s.db.gorm.
+  query := s.db.
     Table("users").
     Where("ID = ?", userID)
   query.Scan(dest)

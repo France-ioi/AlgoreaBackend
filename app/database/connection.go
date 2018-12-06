@@ -8,21 +8,12 @@ import (
   t "github.com/France-ioi/AlgoreaBackend/app/types"
   "github.com/France-ioi/AlgoreaBackend/app/logging"
   "github.com/France-ioi/AlgoreaBackend/app/config"
-  "github.com/jmoiron/sqlx"
   "github.com/jinzhu/gorm"
 )
 
 // DB is a wrapper around the database connector that can be shared through the app
 type DB struct {
-  *sqlx.DB
-  gorm           *gorm.DB
-  DriverName     string
-  DataSourceName string
-}
-
-// Tx is a wrapper around a database transaction
-type Tx struct {
-  *sqlx.Tx
+  *gorm.DB
 }
 
 const dbStructTag string = "db"
@@ -31,48 +22,46 @@ const dbStructTag string = "db"
 // nolint: gosec
 func DBConn(dbConfig config.Database) (*DB, error) {
   var err error
-  var db *sqlx.DB
+  var db *gorm.DB
   var driverName = "mysql"
   var dataSourceName = dbConfig.Connection.FormatDSN()
 
-  // failure not expected as it just prepares the database abstraction
-  db, _ = sqlx.Open(driverName, dataSourceName)
-  gorm, _ := gorm.Open(driverName, dataSourceName)
-  err = db.Ping()
+  db, err = gorm.Open(driverName, dataSourceName)
 
   // setup logging
-  gorm.SetLogger(logging.Logger)
+  db.SetLogger(logging.Logger)
 
-  return &DB{db, gorm, driverName, dataSourceName}, err
+  return &DB{db}, err
 }
 
-func (db *DB) inTransaction(txFunc func(Tx) error) (err error) {
-  var tx *sqlx.Tx
-  tx, err = db.Beginx()
+func (db *DB) inTransaction(txFunc func(*DB) error) (err error) {
+  var txGormDB *gorm.DB = db.Begin()
+  var txDB = &DB{txGormDB}
   if err != nil {
     return err
   }
   defer func() {
     if p := recover(); p != nil {
       // ensure rollback is executed even in case of panic
-      _ = tx.Rollback() // nolint: gosec
+      _ = txDB.Rollback() // nolint: gosec
       panic(p)          // re-throw panic after rollback
     } else if err != nil {
       // do not change the err
-      if tx.Rollback() != nil {
+      if txDB.Rollback() != nil {
         panic(p) // in case of eror on rollback, panic
       }
     } else {
-      err = tx.Commit() // if err is nil, returns the potential error from commit
+      txDB.Commit() // if err is nil, returns the potential error from commit
+      err = txDB.Error
     }
   }()
-  err = txFunc(Tx{tx})
+  err = txFunc(txDB)
   return err
 }
 
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
-func (tx Tx) insert(tableName string, data interface{}) error {
+func (db *DB) insert(tableName string, data interface{}) error {
   // introspect data
   dataV := reflect.ValueOf(data)
 
@@ -122,6 +111,6 @@ func (tx Tx) insert(tableName string, data interface{}) error {
     }
   }
   query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
-  _, err := tx.Exec(query, values...)
-  return err
+  db.Exec(query, values...)
+  return db.Error
 }

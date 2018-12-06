@@ -9,8 +9,8 @@ import (
 
 // GroupResponseRow is the structure of a row for the service response
 type GroupResponseRow struct {
-  ID   int    `json:"id" db:"ID"`
-  Name string `json:"name" db:"sName"`
+  ID   int    `json:"id"   sql:"column:ID"`
+  Name string `json:"name" sql:"column:sName"`
 }
 
 func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) s.APIError {

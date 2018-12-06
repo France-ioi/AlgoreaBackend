@@ -17,12 +17,12 @@ type ItemItem struct {
   Version      int64   `db:"iVersion"`    // use Go default in DB (to be fixed)
 }
 
-func (s *ItemItemStore) createRaw(tx Tx, entry *ItemItem) (int64, error) {
+func (s *ItemItemStore) createRaw(entry *ItemItem) (int64, error) {
   entry.ParentItemID = *t.NewInt64(4) // dummy
 
   if !entry.ID.Set {
     entry.ID = *t.NewInt64(generateID())
   }
-  err := tx.insert("items_items", entry)
+  err := s.db.insert("items_items", entry)
   return entry.ID.Value, err
 }

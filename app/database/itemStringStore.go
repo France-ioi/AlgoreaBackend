@@ -16,10 +16,10 @@ type ItemString struct {
   Version    int64    `db:"iVersion"` // use Go default in DB (to be fixed)
 }
 
-func (s *ItemStringStore) createRaw(tx Tx, entry *ItemString) (int64, error) {
+func (s *ItemStringStore) createRaw(entry *ItemString) (int64, error) {
   if !entry.ID.Set {
     entry.ID = *t.NewInt64(generateID())
   }
-  err := tx.insert("items_strings", entry)
+  err := s.db.insert("items_strings", entry)
   return entry.ID.Value, err
 }

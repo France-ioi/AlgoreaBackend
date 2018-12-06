@@ -38,7 +38,7 @@ func init() {
 
       // migrate
       var n int
-      n, err = migrate.Exec(db.DB.DB, "mysql", migrations, migrate.Up)
+      n, err = migrate.Exec(db.DB.DB(), "mysql", migrations, migrate.Up)
       if err != nil {
         fmt.Println("Unable to apply migration:", err)
       } else if n == 0 {

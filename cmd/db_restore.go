@@ -38,10 +38,10 @@ func init() {
 
       // remove all tables from DB
       var rows *sql.Rows
-      rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
-                             FROM   information_schema.tables
-                             WHERE  table_type   = 'BASE TABLE'
-                               AND  table_schema = '` + conf.Database.Connection.DBName + "'")
+      rows, err = db.Raw(`SELECT CONCAT(table_schema, '.', table_name)
+                          FROM   information_schema.tables
+                          WHERE  table_type   = 'BASE TABLE'
+                            AND  table_schema = '` + conf.Database.Connection.DBName + "'").Rows()
       if err != nil {
         fmt.Println("Unable to query the database: ", err)
         os.Exit(1)
@@ -54,7 +54,7 @@ func init() {
           fmt.Println("Unable to parse the database result: ", err)
           os.Exit(1)
         }
-        if _, err = db.Exec("DROP TABLE " + tableName); err != nil { // nolint: vetshadow
+        if db.Exec("DROP TABLE " + tableName); db.Error != nil { // nolint: vetshadow
           fmt.Println("Unable to drop table: ", err)
           os.Exit(1)
         }

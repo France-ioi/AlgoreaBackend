@@ -97,11 +97,11 @@ func (ctx *TestContext) emptyDB() error {
 
   db := ctx.app().Database
   dbName := ctx.app().Config.Database.Connection.DBName
-  rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
-                                FROM   information_schema.tables
-                                WHERE  table_type   = 'BASE TABLE'
-                                  AND  table_schema = '` + dbName + `'
-                                  AND  table_name  != 'gorp_migrations'`)
+  rows, err := db.Raw(`SELECT CONCAT(table_schema, '.', table_name)
+                        FROM   information_schema.tables
+                        WHERE  table_type   = 'BASE TABLE'
+                          AND  table_schema = '` + dbName + `'
+                          AND  table_name  != 'gorp_migrations'`).Rows()
   if err != nil {
     return err
   }
@@ -112,7 +112,7 @@ func (ctx *TestContext) emptyDB() error {
     if err = rows.Scan(&tableName); err != nil {
       return err
     }
-    if _, err := db.Exec("TRUNCATE TABLE " + tableName); err != nil {
+    if db.Exec("TRUNCATE TABLE " + tableName); db.Error != nil {
       return err
     }
   }
@@ -166,17 +166,15 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
     fields = append(fields, cell.Value)
     marks = append(marks, "?")
   }
-  stmt, err := db.Prepare("INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")") // nolint: gosec
-  if err != nil {
-    return err
-  }
+  query := "INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")" // nolint: gosec
   for i := 1; i < len(data.Rows); i++ {
     var vals []interface{}
     for _, cell := range data.Rows[i].Cells {
       vals = append(vals,dbDataTableValue(cell.Value))
     }
-    if _, err = stmt.Exec(vals...); err != nil {
-      return err
+    db.Exec(query, vals...)
+    if db.Error != nil {
+      return db.Error
     }
   }
   return nil
@@ -223,7 +221,7 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { // no
 
 func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
   if code != ctx.lastResponse.StatusCode {
-    return fmt.Errorf("expected response code to be: %d, but actual is: %d", code, ctx.lastResponse.StatusCode)
+    return fmt.Errorf("expected http response code: %d, actual is: %d. \n Data: %s", code, ctx.lastResponse.StatusCode, ctx.lastResponseBody)
   }
   return nil
 }
@@ -290,7 +288,7 @@ func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable)
     selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
   }
 
-  sqlRows, err := db.Query("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName) // nolint: gosec
+  sqlRows, err := db.Raw("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName).Rows() // nolint: gosec
   if err != nil {
     return err
   }
