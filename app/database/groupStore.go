@@ -1,11 +1,15 @@
 package database
 
+import (
+	"github.com/jinzhu/gorm"
+)
+
 // GroupStore implements database operations on groups
 type GroupStore struct {
   *DataStore
 }
 
-// GetAll returns all groups
-func (s *GroupStore) GetAll(dest interface{}) error {
-  return s.db.Raw("SELECT ID, sName FROM groups").Scan(dest).Error
+// All creates a composable query without filtering
+func (s *GroupStore) All() *gorm.DB {
+  return s.db.Table("groups")
 }
