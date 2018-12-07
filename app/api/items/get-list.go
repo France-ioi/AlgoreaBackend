@@ -9,13 +9,6 @@ import (
   "github.com/go-chi/render"
 )
 
-// ListResponseRow is the structure of a row for the service response
-type ListResponseRow struct {
-  ItemID    int64  `json:"item_id"     sql:"column:idItem"`
-  Title     string `json:"title"       sql:"column:sTitle"`
-  Language  int64  `json:"language_id" sql:"column:idLanguage"`
-}
-
 func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
   var err error
 
@@ -46,13 +39,19 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
   // Todo: validate the hierarchy
   // srv.Store.Items.IsValidHierarchy(...)
 
+  // Build response
   // Fetch the requested items
-  items := []ListResponseRow{}
-  err = srv.Store.Items().GetList(ids, &items)
-
-  if err != nil {
-    return s.ErrUnexpected(err)
+  items := []struct {
+    ItemID    int64  `json:"item_id"     sql:"column:idItem"`
+    Title     string `json:"title"       sql:"column:sTitle"`
+    Language  int64  `json:"language_id" sql:"column:idLanguage"`
+  }{}
+  db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids)
+  db = db.Scan(&items)
+  if db.Error != nil {
+    return s.ErrUnexpected(db.Error)
   }
+
   render.Respond(w, r, items)
   return s.NoError
 }

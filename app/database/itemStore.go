@@ -57,20 +57,6 @@ func (s *ItemStore) createRaw(entry *Item) (int64, error) {
   return entry.ID.Value, err
 }
 
-// GetList returns all items with the given ids
-func (s *ItemStore) GetList(itemIDs []int64, dest interface{}) error {
-  query := s.db.
-    Table("items_strings").
-    Where("idItem IN (?)", itemIDs)
-  query.Scan(dest)
-
-  errors := query.GetErrors()
-  if len(errors) > 0 {
-    return errors[0]
-  }
-  return nil
-}
-
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
 func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
   return false, nil

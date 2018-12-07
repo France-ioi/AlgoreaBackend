@@ -1,6 +1,9 @@
 package database
 
-import t "github.com/France-ioi/AlgoreaBackend/app/types"
+import (
+	"github.com/jinzhu/gorm"
+	t "github.com/France-ioi/AlgoreaBackend/app/types"
+)
 
 // ItemStringStore implements database operations on `items_strings`
 type ItemStringStore struct {
@@ -22,4 +25,9 @@ func (s *ItemStringStore) createRaw(entry *ItemString) (int64, error) {
   }
   err := s.db.insert("items_strings", entry)
   return entry.ID.Value, err
+}
+
+// All creates a composable query without filtering
+func (s *ItemStringStore) All() *gorm.DB {
+  return s.db.Table("items_strings")
 }
