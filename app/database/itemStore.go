@@ -71,18 +71,13 @@ func (s *ItemStore) ValidateUserAccess(user *auth.User, itemIDs []int64) (bool, 
     GrayedAccess bool  `sql:"column:grayedAccess"`
   }{}
 
-  query := s.db.
-    Table("groups_items").
+  db := s.GroupItems().MatchingUserAncestors(user).
     Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-    Joins("JOIN groups_ancestors ON groups_items.idGroup = groups_ancestors.idGroupAncestor").
-    Where("groups_ancestors.idGroupChild = ?", user.SelfGroupID()).
     Where("groups_items.idItem IN (?)", itemIDs).
     Group("idItem")
-  query.Scan(&accessResult)
-
-  errors := query.GetErrors()
-  if len(errors) > 0 {
-    return false, errors[0]
+  db = db.Scan(&accessResult)
+  if db.Error != nil {
+    return false, db.Error
   }
 
   // check for each id whether it has access

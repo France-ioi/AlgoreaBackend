@@ -44,6 +44,11 @@ func (s *DataStore) ItemItems() *ItemItemStore {
   return &ItemItemStore{s}
 }
 
+// GroupAncestors returns a GroupAncestorStore
+func (s *DataStore) GroupAncestors() *GroupAncestorStore {
+  return &GroupAncestorStore{s}
+}
+
 func generateID() int64 {
   // gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
   // !!! to be safe, the insertion should be be retried if the ID conflicts with an existing entry

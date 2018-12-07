@@ -1,6 +1,10 @@
 package database
 
-import t "github.com/France-ioi/AlgoreaBackend/app/types"
+import (
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/jinzhu/gorm"
+	t "github.com/France-ioi/AlgoreaBackend/app/types"
+)
 
 // GroupItemStore implements database operations on `groups_items`
 type GroupItemStore struct {
@@ -27,4 +31,15 @@ func (s *GroupItemStore) createRaw(entry *GroupItem) (int64, error) {
   }
   err := s.db.insert("groups_items", entry)
   return entry.ID.Value, err
+}
+
+// All creates a composable query without filtering
+func (s *GroupItemStore) All() *gorm.DB {
+  return s.db.Table("groups_items")
+}
+
+// MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
+func (s *GroupItemStore) MatchingUserAncestors(user *auth.User) *gorm.DB {
+  userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
+  return s.All().Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }
