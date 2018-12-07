@@ -112,7 +112,8 @@ func (ctx *TestContext) emptyDB() error {
     if err = rows.Scan(&tableName); err != nil {
       return err
     }
-    if db.Exec("TRUNCATE TABLE " + tableName); db.Error != nil {
+    err = db.Exec("TRUNCATE TABLE " + tableName).Error
+    if err != nil {
       return err
     }
   }
@@ -172,9 +173,9 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
     for _, cell := range data.Rows[i].Cells {
       vals = append(vals,dbDataTableValue(cell.Value))
     }
-    db.Exec(query, vals...)
-    if db.Error != nil {
-      return db.Error
+    err := db.Exec(query, vals...).Error
+    if err != nil {
+      return err
     }
   }
   return nil

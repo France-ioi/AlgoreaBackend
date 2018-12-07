@@ -54,7 +54,8 @@ func init() {
           fmt.Println("Unable to parse the database result: ", err)
           os.Exit(1)
         }
-        if db.Exec("DROP TABLE " + tableName); db.Error != nil { // nolint: vetshadow
+        err = db.Exec("DROP TABLE " + tableName).Error
+        if err != nil {
           fmt.Println("Unable to drop table: ", err)
           os.Exit(1)
         }

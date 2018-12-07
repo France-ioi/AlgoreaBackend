@@ -35,27 +35,27 @@ func DBConn(dbConfig config.Database) (*DB, error) {
 }
 
 func (db *DB) inTransaction(txFunc func(*DB) error) (err error) {
-  var txGormDB *gorm.DB = db.Begin()
-  var txDB = &DB{txGormDB}
+  var txDB *gorm.DB = db.Begin()
   if err != nil {
     return err
   }
   defer func() {
     if p := recover(); p != nil {
       // ensure rollback is executed even in case of panic
-      _ = txDB.Rollback() // nolint: gosec
+      txDB.Rollback()
       panic(p)          // re-throw panic after rollback
     } else if err != nil {
       // do not change the err
-      if txDB.Rollback() != nil {
+      txDB = txDB.Rollback()
+      if txDB.Error != nil {
         panic(p) // in case of eror on rollback, panic
       }
     } else {
-      txDB.Commit() // if err is nil, returns the potential error from commit
+      txDB = txDB.Commit() // if err is nil, returns the potential error from commit
       err = txDB.Error
     }
   }()
-  err = txFunc(txDB)
+  err = txFunc(&DB{txDB})
   return err
 }
 
@@ -111,6 +111,6 @@ func (db *DB) insert(tableName string, data interface{}) error {
     }
   }
   query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
-  db.Exec(query, values...)
+  db = &DB{db.Exec(query, values...)}
   return db.Error
 }
