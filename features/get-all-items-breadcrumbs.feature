@@ -26,9 +26,6 @@ And the database has the following table 'groups_items':
   | 41 |      13 |     21 |      2010-01-01 |              true |                false |               false |            0  |        0 |
   | 42 |      13 |     22 |            null |              true |                false |               false |            0  |        0 |
   | 43 |      13 |     23 |            null |              true |                false |               false |            0  |        0 |
-  | 44 |      11 |     21 |            null |             false |                false |               false |            0  |        0 |
-  | 45 |      11 |     22 |            null |             false |                false |               false |            0  |        0 |
-  | 46 |      11 |     23 |            null |             false |                false |               false |            0  |        0 |
 And the database has the following table 'items_items':
   | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
   | 51 |           21 |          22 |           1 |           0 |        0 |
