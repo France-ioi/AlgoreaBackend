@@ -6,10 +6,10 @@ import (
 
 // GroupStore implements database operations on groups
 type GroupStore struct {
-  *DataStore
+	*DataStore
 }
 
 // All creates a composable query without filtering
 func (s *GroupStore) All() *gorm.DB {
-  return s.db.Table("groups")
+	return s.db.Table("groups")
 }

@@ -7,6 +7,6 @@ import (
 
 // Base is the common service context data
 type Base struct {
-  Store  *database.DataStore
-  Config *config.Root
+	Store  *database.DataStore
+	Config *config.Root
 }
