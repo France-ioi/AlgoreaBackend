@@ -1,8 +1,6 @@
 package database
 
 import (
-	"github.com/jinzhu/gorm"
-
 	t "github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -13,22 +11,23 @@ type ItemStringStore struct {
 
 // ItemString matches the content the `items_strings` table
 type ItemString struct {
-	ID         t.Int64  `db:"ID"`
-	ItemID     t.Int64  `db:"idItem"`
-	LanguageID t.Int64  `db:"idLanguage"`
-	Title      t.String `db:"sTitle"`
-	Version    int64    `db:"iVersion"` // use Go default in DB (to be fixed)
+	ID         t.Int64  `sql:"column:ID"`
+	ItemID     t.Int64  `sql:"column:idItem"`
+	LanguageID t.Int64  `sql:"column:idLanguage"`
+	Title      t.String `sql:"column:sTitle"`
+	Version    int64    `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
-func (s *ItemStringStore) createRaw(entry *ItemString) (int64, error) {
-	if !entry.ID.Set {
-		entry.ID = *t.NewInt64(generateID())
-	}
-	err := s.db.insert("items_strings", entry)
-	return entry.ID.Value, err
+func (s *ItemStringStore) tableName() string {
+	return "items_strings"
+}
+
+// Insert does a INSERT query in the given table with data that may contain types.* types
+func (s *ItemStringStore) Insert(data *ItemString) error {
+	return s.db.insert(s.tableName(), data)
 }
 
 // All creates a composable query without filtering
-func (s *ItemStringStore) All() *gorm.DB {
-	return s.db.Table("items_strings")
+func (s *ItemStringStore) All() *DB {
+	return &DB{s.db.Table(s.tableName())}
 }

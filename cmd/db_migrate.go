@@ -31,7 +31,7 @@ func init() {
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
 			var db *database.DB
-			db, err = database.DBConn(conf.Database)
+			db, err = database.Open(conf.Database)
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)

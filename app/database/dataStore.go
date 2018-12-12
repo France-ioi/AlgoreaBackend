@@ -2,6 +2,8 @@ package database
 
 import (
 	"math/rand"
+
+	t "github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DataStore gather all stores for database operations on business data
@@ -49,8 +51,23 @@ func (s *DataStore) GroupAncestors() *GroupAncestorStore {
 	return &GroupAncestorStore{s}
 }
 
-func generateID() int64 {
+// NewID generates a positive random int64 to be used as ID
+// !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
+func (s *DataStore) NewID() int64 {
 	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
-	// !!! to be safe, the insertion should be be retried if the ID conflicts with an existing entry
 	return rand.Int63()
+}
+
+// GenIDIfNotSet does check the given ID is set. If not, generate a (random) ID for it
+func (s *DataStore) GenIDIfNotSet(id *t.Int64) {
+	if !id.Set {
+		*id = *t.NewInt64(s.NewID())
+	}
+}
+
+// InTransaction execute the given function in a transaction and commit
+func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
+	return s.db.inTransaction(func(db *DB) error {
+		return txFunc(&DataStore{db})
+	})
 }

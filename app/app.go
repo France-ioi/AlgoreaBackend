@@ -38,7 +38,7 @@ func New() (*Application, error) {
 	log.SetOutput(logger.Writer()) // redirect the stdlib's log to our logger
 
 	var db *database.DB
-	if db, err = database.DBConn(conf.Database); err != nil {
+	if db, err = database.Open(conf.Database); err != nil {
 		logger.WithField("module", "database").Error(err)
 		return nil, err
 	}
