@@ -17,7 +17,7 @@ type DB struct {
 	*gorm.DB
 }
 
-// Open connects to the database and test the connection
+// Open connects to the database and tests the connection
 // nolint: gosec
 func Open(dbConfig config.Database) (*DB, error) {
 	var err error
@@ -61,7 +61,6 @@ func (db *DB) inTransaction(txFunc func(*DB) error) (err error) {
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
 func (db *DB) insert(tableName string, data interface{}) error {
-
 	// introspect data
 	dataV := reflect.ValueOf(data)
 

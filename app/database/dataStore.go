@@ -58,8 +58,8 @@ func (s *DataStore) NewID() int64 {
 	return rand.Int63()
 }
 
-// GenIDIfNotSet does check the given ID is set. If not, generate a (random) ID for it
-func (s *DataStore) GenIDIfNotSet(id *t.Int64) {
+// EnsureSetID does check the given ID is set. If not, generate a (random) ID for it
+func (s *DataStore) EnsureSetID(id *t.Int64) {
 	if !id.Set {
 		*id = *t.NewInt64(s.NewID())
 	}

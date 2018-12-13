@@ -96,7 +96,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 }
 
 func (srv *Service) insertItem(input *NewItemRequest) error {
-	srv.Store.GenIDIfNotSet(&input.ID.Int64)
+	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
 		var err error
