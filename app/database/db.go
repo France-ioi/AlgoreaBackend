@@ -17,11 +17,9 @@ type DB struct {
 	*gorm.DB
 }
 
-const dbStructTag string = "db"
-
-// DBConn connects to the database and test the connection
+// Open connects to the database and tests the connection
 // nolint: gosec
-func DBConn(dbConfig config.Database) (*DB, error) {
+func Open(dbConfig config.Database) (*DB, error) {
 	var err error
 	var db *gorm.DB
 	var driverName = "mysql"
@@ -86,7 +84,9 @@ func (db *DB) insert(tableName string, data interface{}) error {
 	for i := 0; i < dataV.NumField(); i++ {
 		// gets us a StructField
 		field := typ.Field(i)
-		if attrName := field.Tag.Get(dbStructTag); attrName != "" {
+		sqlParam := strings.Split(field.Tag.Get("sql"), ":")
+		if len(sqlParam) == 2 && sqlParam[0] == "column" {
+			attrName := sqlParam[1]
 			value := dataV.Field(i).Interface()
 			null := false
 			skip := false

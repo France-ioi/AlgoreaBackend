@@ -1,9 +1,5 @@
 package database
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
 // UserStore implements database operations on `users`
 type UserStore struct {
 	*DataStore
@@ -15,11 +11,11 @@ func (s *UserStore) GetByID(userID int64, dest interface{}) error {
 }
 
 // ByID returns a composable query of users filtered by userID
-func (s *UserStore) ByID(userID int64) *gorm.DB {
-	return s.All().Where("ID = ?", userID)
+func (s *UserStore) ByID(userID int64) *DB {
+	return &DB{s.All().Where("ID = ?", userID)}
 }
 
 // All creates a composable query without filtering
-func (s *UserStore) All() *gorm.DB {
-	return s.db.Table("users")
+func (s *UserStore) All() *DB {
+	return &DB{s.db.Table("users")}
 }

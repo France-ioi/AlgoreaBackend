@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/France-ioi/AlgoreaBackend/app/service"
+
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/spf13/viper"
 
@@ -275,6 +277,20 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue
 	if ctx.lastResponse.Header.Get(headerName) != headerValue {
 		return fmt.Errorf("Headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
 	}
+	return nil
+}
+
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) { // nolint
+
+	errorResp := service.ErrorResponse{}
+	// decode response
+	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
+		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+	}
+	if !strings.Contains(errorResp.ErrorText, s) {
+		return fmt.Errorf("Cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
+	}
+
 	return nil
 }
 
