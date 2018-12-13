@@ -1,6 +1,7 @@
 package items
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -28,6 +29,12 @@ type NewItemRequest struct {
 
 // Bind validates the request body attributes
 func (in *NewItemRequest) Bind(r *http.Request) error {
+	if len(in.Strings) != 1 {
+		return errors.New("Only one string per item is supported at the moment")
+	}
+	if len(in.Parents) != 1 {
+		return errors.New("Only one parent item is supported at the moment")
+	}
 	return t.Validate(&in.ID, &in.Type)
 }
 
