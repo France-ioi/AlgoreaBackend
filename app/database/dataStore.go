@@ -65,7 +65,7 @@ func (s *DataStore) GenIDIfNotSet(id *t.Int64) {
 	}
 }
 
-// InTransaction execute the given function in a transaction and commit
+// InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	return s.db.inTransaction(func(db *DB) error {
 		return txFunc(&DataStore{db})
