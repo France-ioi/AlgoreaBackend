@@ -71,6 +71,19 @@ func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 	}
 }
 
+type Response struct {
+	ItemID int64 `json:"ID"`
+}
+
+// ShowAccount godoc
+// @Summary Show a account
+// @Description get string by ID
+// @ID get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Account ID"
+// @Success 200 {object} items.Response
+// @Router /accounts/{id} [get]
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 	var err error
 
@@ -86,10 +99,8 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 	}
 
 	// response
-	response := struct {
-		ItemID int64 `json:"ID"`
-	}{input.ID.Value}
-	if err = render.Render(w, r, s.CreationSuccess(&response)); err != nil {
+	resp := Response{input.ID.Value}
+	if err = render.Render(w, r, s.CreationSuccess(&resp)); err != nil {
 		return s.ErrUnexpected(err)
 	}
 	return s.NoError
