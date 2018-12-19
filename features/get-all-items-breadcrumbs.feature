@@ -1,11 +1,13 @@
 @wip
 Feature: Get item information for breadcrumb
 
-Scenario: Full access on all breadcrumb
+Background:
   Given the database has the following table 'users':
     | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
     | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
+
+Scenario: Full access on all breadcrumb
+  Given the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
@@ -52,10 +54,7 @@ Scenario: Full access on all breadcrumb
     """
 
 Scenario: Partial access to all items except for last which is greyed
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
@@ -103,10 +102,7 @@ Scenario: Partial access to all items except for last which is greyed
     """
 
 Scenario: Corrupt breadcrumb hierarchy (one parent-child link missing), but user has full access to all
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
@@ -154,10 +150,7 @@ Scenario: Corrupt breadcrumb hierarchy (one parent-child link missing), but user
     """
 
 Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
@@ -199,10 +192,7 @@ Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), a
     """
 
 Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |

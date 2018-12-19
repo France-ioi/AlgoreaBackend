@@ -11,24 +11,33 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+type dbquery struct {
+	sql    string
+	values []interface{}
+}
 
 type TestContext struct { // nolint
 	application      *app.Application // do NOT call it directly, use `app()`
 	userID           int64            // userID that will be used for the next requests
+	featureQueries   []dbquery
 	lastResponse     *http.Response
 	lastResponseBody string
+	inScenario       bool
 }
 
 func (ctx *TestContext) SetupTestContext(interface{}) { // nolint
-	*ctx = TestContext{} // reset the full context
-	ctx.userID = 999     // the default for the moment
+	ctx.application = nil
+	ctx.userID = 999 // the default for the moment
+	ctx.lastResponse = nil
+	ctx.lastResponseBody = ""
+	ctx.inScenario = true
 }
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
@@ -46,7 +55,7 @@ func (ctx *TestContext) app() *app.Application {
 		// reset the seed to get predictable results on PRNG for tests
 		rand.Seed(1)
 
-		err = ctx.emptyDB()
+		err = ctx.initDB()
 		if err != nil {
 			fmt.Println("Unable to empty db")
 			panic(err)
@@ -123,6 +132,23 @@ func (ctx *TestContext) emptyDB() error {
 	return nil
 }
 
+func (ctx *TestContext) initDB() error {
+	var err error
+	err = ctx.emptyDB()
+	if err != nil {
+		return err
+	}
+
+	for _, query := range ctx.featureQueries {
+		err = ctx.app().Database.Exec(query.sql, query.values).Error
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody string) error {
 	// app server
 	testServer := httptest.NewServer(ctx.app().HTTPHandler)
@@ -162,7 +188,6 @@ func dbDataTableValue(input string) interface{} {
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
-	db := ctx.app().Database
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -176,9 +201,13 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 		for _, cell := range data.Rows[i].Cells {
 			vals = append(vals, dbDataTableValue(cell.Value))
 		}
-		err := db.Exec(query, vals...).Error
-		if err != nil {
-			return err
+		if ctx.inScenario {
+			err := ctx.app().Database.Exec(query, vals...).Error
+			if err != nil {
+				return err
+			}
+		} else {
+			ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
 		}
 	}
 	return nil
