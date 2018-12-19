@@ -133,14 +133,13 @@ func (ctx *TestContext) emptyDB() error {
 }
 
 func (ctx *TestContext) initDB() error {
-	var err error
-	err = ctx.emptyDB()
+	err := ctx.emptyDB()
 	if err != nil {
 		return err
 	}
 
 	for _, query := range ctx.featureQueries {
-		err = ctx.app().Database.Exec(query.sql, query.values).Error
+		err := ctx.app().Database.Exec(query.sql, query.values).Error
 		if err != nil {
 			return err
 		}
