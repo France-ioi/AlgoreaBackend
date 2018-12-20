@@ -38,9 +38,31 @@ func (s *ItemStore) Insert(data *Item) error {
 	return s.db.insert(s.tableName(), data)
 }
 
+// All creates a composable query without filtering
+func (s *ItemStore) All() *DB {
+	return &DB{s.db.Table(s.tableName())}
+}
+
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
 func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
-	return false, nil
+	l := len(ids) - 1
+	if l < 1 {
+		return false, fmt.Errorf("not enough ids %v", ids)
+	}
+
+	items := s.Items().All().Where("items.ID IN (?)", ids[1:]).Or("items.ID = ? AND items.sType = ?", ids[0], "Root")
+	all := s.ItemItems().All()
+	for i := 0; i < l; i++ {
+		all.DB = all.Or("items_items.idItemParent = ? AND items_items.idItemChild = ?", ids[i], ids[i+1])
+	}
+
+	var n int
+	db := items.Joins("JOIN ? AS data ON data.idItemParent=items.ID", all.SubQuery()).Count(&n)
+	if db.Error != nil {
+		return false, db.Error
+	}
+
+	return n == l, nil
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all

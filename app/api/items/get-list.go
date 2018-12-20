@@ -29,8 +29,11 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
 		return s.ErrForbidden(errors.New("Insufficient access on given item ids"))
 	}
 
-	// Todo: validate the hierarchy
-	// srv.Store.Items.IsValidHierarchy(...)
+	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
+		return s.ErrUnexpected(err)
+	} else if !valid {
+		return s.ErrForbidden(errors.New("Insufficient access on given item ids"))
+	}
 
 	// Build response
 	// Fetch the requested items
