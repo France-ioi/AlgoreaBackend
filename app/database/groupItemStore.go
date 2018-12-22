@@ -2,7 +2,7 @@ package database
 
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	t "github.com/France-ioi/AlgoreaBackend/app/types"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // GroupItemStore implements database operations on `groups_items`
@@ -12,14 +12,14 @@ type GroupItemStore struct {
 
 // GroupItem matches the content the `groups_items` table
 type GroupItem struct {
-	ID               t.Int64 `sql:"column:ID"`
-	GroupID          t.Int64 `sql:"column:idGroup"`
-	ItemID           t.Int64 `sql:"column:idItem"`
-	FullAccessDate   string  `sql:"column:sFullAccessDate"`   // should be a datetime
-	CachedFullAccess bool    `sql:"column:bCachedFullAccess"` // use Go default in DB (to be fixed)
-	OwnerAccess      bool    `sql:"column:bOwnerAccess"`      // use Go default in DB (to be fixed)
-	CreatedUserID    int64   `sql:"column:idUserCreated"`     // use Go default in DB (to be fixed)
-	Version          int64   `sql:"column:iVersion"`          // use Go default in DB (to be fixed)
+	ID               types.Int64 `sql:"column:ID"`
+	GroupID          types.Int64 `sql:"column:idGroup"`
+	ItemID           types.Int64 `sql:"column:idItem"`
+	FullAccessDate   string      `sql:"column:sFullAccessDate"`   // should be a datetime
+	CachedFullAccess bool        `sql:"column:bCachedFullAccess"` // use Go default in DB (to be fixed)
+	OwnerAccess      bool        `sql:"column:bOwnerAccess"`      // use Go default in DB (to be fixed)
+	CreatedUserID    int64       `sql:"column:idUserCreated"`     // use Go default in DB (to be fixed)
+	Version          int64       `sql:"column:iVersion"`          // use Go default in DB (to be fixed)
 }
 
 func (s *GroupItemStore) tableName() string {

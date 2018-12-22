@@ -3,7 +3,7 @@ package database
 import (
 	"math/rand"
 
-	t "github.com/France-ioi/AlgoreaBackend/app/types"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DataStore gather all stores for database operations on business data
@@ -59,9 +59,9 @@ func (s *DataStore) NewID() int64 {
 }
 
 // EnsureSetID does check the given ID is set. If not, generate a (random) ID for it
-func (s *DataStore) EnsureSetID(id *t.Int64) {
+func (s *DataStore) EnsureSetID(id *types.Int64) {
 	if !id.Set {
-		*id = *t.NewInt64(s.NewID())
+		*id = *types.NewInt64(s.NewID())
 	}
 }
 
