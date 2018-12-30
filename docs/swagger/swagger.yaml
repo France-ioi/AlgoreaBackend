@@ -1,43 +1,108 @@
-basePath: /v2
+basePath: '{{.BasePath}}'
 definitions:
-  items.Response:
+  items.LocalizedTitle:
+    properties:
+      language_id:
+        $ref: '#/definitions/types.RequiredInt64'
+        type: object
+      title:
+        $ref: '#/definitions/types.RequiredString'
+        type: object
+    type: object
+  items.NewItemRequest:
+    properties:
+      id:
+        $ref: '#/definitions/types.OptionalInt64'
+        type: object
+      parents:
+        items:
+          $ref: '#/definitions/items.ParentRef'
+        type: array
+      strings:
+        items:
+          $ref: '#/definitions/items.LocalizedTitle'
+        type: array
+      type:
+        $ref: '#/definitions/types.RequiredString'
+        type: object
+    type: object
+  items.NewItemResponse:
     properties:
       ID:
         type: integer
     type: object
-host: petstore.swagger.io
+  items.ParentRef:
+    properties:
+      id:
+        $ref: '#/definitions/types.RequiredInt64'
+        type: object
+      order:
+        $ref: '#/definitions/types.RequiredInt64'
+        type: object
+    type: object
+  types.OptionalInt64:
+    properties:
+      "null":
+        type: boolean
+      set:
+        type: boolean
+      value:
+        type: integer
+    type: object
+  types.RequiredInt64:
+    properties:
+      "null":
+        type: boolean
+      set:
+        type: boolean
+      value:
+        type: integer
+    type: object
+  types.RequiredString:
+    properties:
+      "null":
+        type: boolean
+      set:
+        type: boolean
+      value:
+        type: string
+    type: object
+host: '{{.Host}}'
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: This is a sample server Petstore server.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Swagger Example API
-  version: "1.0"
+  contact: {}
+  description: '{{.Description}}'
+  license: {}
+  title: Algorea Backend API
+  version: '{{.Version}}'
 paths:
-  /accounts/{id}:
-    get:
+  /items/:
+    post:
       consumes:
       - application/json
-      description: get string by ID
-      operationId: get-string-by-int
+      description: Add an item within a hierarchy.
+      operationId: add-item
       parameters:
-      - description: Account ID
-        in: path
-        name: id
+      - description: '{}'
+        in: body
+        name: body
         required: true
-        type: integer
+        schema:
+          $ref: '#/definitions/items.NewItemRequest'
+          type: object
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/items.Response'
+            $ref: '#/definitions/items.NewItemResponse'
             type: object
-      summary: Show a account
+      security:
+      - cookieAuth: []
+      summary: Add an item
+securityDefinitions:
+  cookieAuth:
+    in: Cookie
+    name: PHPSESSID
+    type: apiKey
 swagger: "2.0"

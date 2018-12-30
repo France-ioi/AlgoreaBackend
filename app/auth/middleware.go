@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -25,6 +26,8 @@ func UserIDMiddleware(config *config.Auth) func(next http.Handler) http.Handler 
 			var err error
 
 			if authCookie, err = r.Cookie(authCookieName); err != nil {
+				log.Printf("err, %v", err)
+				log.Printf("cookies, %v", r.Cookies())
 				http.Error(w, "Unable to get the expected auth cookie from the request", http.StatusUnauthorized)
 				return
 			}
@@ -41,6 +44,7 @@ func UserIDMiddleware(config *config.Auth) func(next http.Handler) http.Handler 
 			var resp *http.Response
 			resp, err = httpClient.Do(authRequest)
 			if err != nil {
+				log.Printf("err, %v", err)
 				http.Error(w, err.Error(), http.StatusBadGateway)
 				return
 			}

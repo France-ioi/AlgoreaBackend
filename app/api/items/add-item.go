@@ -8,24 +8,8 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	s "github.com/France-ioi/AlgoreaBackend/app/service"
-	t "github.com/France-ioi/AlgoreaBackend/app/types"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
-
-// NewItemRequest is the expected input for new created item
-type NewItemRequest struct {
-	ID   t.OptionalInt64  `json:"id"`
-	Type t.RequiredString `json:"type"`
-
-	Strings []struct {
-		LanguageID t.RequiredInt64  `json:"language_id"`
-		Title      t.RequiredString `json:"title"`
-	} `json:"strings"`
-
-	Parents []struct {
-		ID    t.RequiredInt64 `json:"id"`
-		Order t.RequiredInt64 `json:"order"`
-	} `json:"parents"`
-}
 
 // Bind validates the request body attributes
 func (in *NewItemRequest) Bind(r *http.Request) error {
@@ -35,7 +19,7 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Parents) != 1 {
 		return errors.New("Only one parent item is supported at the moment")
 	}
-	return t.Validate(&in.ID, &in.Type)
+	return types.Validate(&in.ID, &in.Type)
 }
 
 func (in *NewItemRequest) itemData() *database.Item {
@@ -47,16 +31,16 @@ func (in *NewItemRequest) itemData() *database.Item {
 
 func (in *NewItemRequest) groupItemData(id int64) *database.GroupItem {
 	return &database.GroupItem{
-		ID:             *t.NewInt64(id),
+		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,
-		GroupID:        *t.NewInt64(6),        // dummy
+		GroupID:        *types.NewInt64(6),    // dummy
 		FullAccessDate: "2018-01-01 00:00:00", // dummy
 	}
 }
 
 func (in *NewItemRequest) stringData(id int64) *database.ItemString {
 	return &database.ItemString{
-		ID:         *t.NewInt64(id),
+		ID:         *types.NewInt64(id),
 		ItemID:     in.ID.Int64,
 		LanguageID: in.Strings[0].LanguageID.Int64,
 		Title:      in.Strings[0].Title.String,
@@ -64,26 +48,23 @@ func (in *NewItemRequest) stringData(id int64) *database.ItemString {
 }
 func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 	return &database.ItemItem{
-		ID:           *t.NewInt64(id),
+		ID:           *types.NewInt64(id),
 		ChildItemID:  in.ID.Int64,
 		Order:        in.Parents[0].Order.Int64,
 		ParentItemID: in.Parents[0].ID.Int64,
 	}
 }
 
-type Response struct {
-	ItemID int64 `json:"ID"`
-}
-
 // ShowAccount godoc
-// @Summary Show a account
-// @Description get string by ID
-// @ID get-string-by-int
+// @Summary Add an item
+// @Description Add an item within a hierarchy.
+// @ID add-item
 // @Accept  json
 // @Produce  json
-// @Param id path int true "Account ID"
-// @Success 200 {object} items.Response
-// @Router /accounts/{id} [get]
+// @Param body body items.NewItemRequest true "{}"
+// @Success 200 {object} items.NewItemResponse
+// @Router /items/ [post]
+// @Security cookieAuth
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 	var err error
 
@@ -99,7 +80,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) s.APIError {
 	}
 
 	// response
-	resp := Response{input.ID.Value}
+	resp := NewItemResponse{input.ID.Value}
 	if err = render.Render(w, r, s.CreationSuccess(&resp)); err != nil {
 		return s.ErrUnexpected(err)
 	}

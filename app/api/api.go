@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/swaggo/http-swagger"
+	// docs package is necessary for Swagger UI to be served.
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
@@ -34,20 +35,12 @@ func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
 	return &Ctx{config, db, proxy}, nil
 }
 
-// @title Swagger Example API
-// @version 1.0
-// @description This is a sample server Petstore server.
-// @termsOfService http://swagger.io/terms/
-
-// @contact.name API Support
-// @contact.url http://www.swagger.io/support
-// @contact.email support@swagger.io
-
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host petstore.swagger.io
-// @BasePath /v2
+// @title Algorea Backend API
+//
+// @securityDefinitions.apiKey cookieAuth
+// @in Cookie
+// @name PHPSESSID
+//
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
