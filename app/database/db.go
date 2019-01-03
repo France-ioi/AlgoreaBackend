@@ -9,7 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	t "github.com/France-ioi/AlgoreaBackend/app/types"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DB is a wrapper around the database connector that can be shared through the app
@@ -91,11 +91,11 @@ func (db *DB) insert(tableName string, data interface{}) error {
 			null := false
 			skip := false
 			switch value.(type) {
-			case t.Int64:
-				val := value.(t.Int64)
+			case types.Int64:
+				val := value.(types.Int64)
 				value, null, skip = val.Value, val.Null, !val.Set
-			case t.String:
-				val := value.(t.String)
+			case types.String:
+				val := value.(types.String)
 				value, null, skip = val.Value, val.Null, !val.Set
 			}
 			// only add non optional value (we suppose they will be understandable by the

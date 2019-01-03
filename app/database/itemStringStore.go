@@ -1,7 +1,7 @@
 package database
 
 import (
-	t "github.com/France-ioi/AlgoreaBackend/app/types"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // ItemStringStore implements database operations on `items_strings`
@@ -11,11 +11,11 @@ type ItemStringStore struct {
 
 // ItemString matches the content the `items_strings` table
 type ItemString struct {
-	ID         t.Int64  `sql:"column:ID"`
-	ItemID     t.Int64  `sql:"column:idItem"`
-	LanguageID t.Int64  `sql:"column:idLanguage"`
-	Title      t.String `sql:"column:sTitle"`
-	Version    int64    `sql:"column:iVersion"` // use Go default in DB (to be fixed)
+	ID         types.Int64  `sql:"column:ID"`
+	ItemID     types.Int64  `sql:"column:idItem"`
+	LanguageID types.Int64  `sql:"column:idLanguage"`
+	Title      types.String `sql:"column:sTitle"`
+	Version    int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *ItemStringStore) tableName() string {
