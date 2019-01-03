@@ -30,7 +30,12 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
 	}
 
 	// Todo: validate the hierarchy
-	// srv.Store.Items.IsValidHierarchy(...)
+	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
+		return s.ErrUnexpected(err)
+	} else if !valid {
+		// Todo: check error message
+		return s.ErrInvalidRequest(errors.New("Incorrect hierarchy on given item ids"))
+	}
 
 	// Build response
 	// Fetch the requested items

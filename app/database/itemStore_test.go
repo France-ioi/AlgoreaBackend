@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 	"testing"
 )
 
@@ -80,5 +81,59 @@ func TestCheckAccess(t *testing.T) {
 				t.Fatalf("Expected error %v", tC.err)
 			}
 		})
+	}
+}
+
+
+func TestCheckHierarchy(t *testing.T) {
+	var rootID int64 = 21
+	root := itemAncestorDetails{
+		ID: rootID,
+		Type: *types.NewString(ItemTypeRoot),
+		IdItemChild: 22,
+	}
+
+	var taskID int64 = 23
+	task := itemAncestorDetails{
+		ID: taskID,
+		Type: *types.NewString(ItemTypeTask),
+		IdItemChild: 0,
+	}
+
+	var categoryID int64 = 22
+	category := itemAncestorDetails{
+		ID: categoryID,
+		Type: *types.NewString(ItemTypeCategory),
+		IdItemChild: 23,
+	}
+
+	var chapterID int64 = 25
+	chapter := itemAncestorDetails{
+		ID: chapterID,
+		Type: *types.NewString(ItemTypeChapter),
+		IdItemChild: 0,
+	}
+
+	items := []itemAncestorDetails{
+		root,
+		task,
+		category,
+	}
+
+	err := checkHierarchy(items)
+	if err != nil {
+		t.Errorf("checkHierarchy must return nil on items")
+	}
+
+	itemsIncorrect := []itemAncestorDetails{
+		root,
+		chapter,
+		task,
+		category,
+	}
+
+	err = checkHierarchy(itemsIncorrect)
+	if err == nil {
+		t.Errorf("checkHierarchy must return error on itemsIncorrect")
 	}
 }
