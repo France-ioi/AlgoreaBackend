@@ -1,7 +1,7 @@
 @wip
 Feature: Get item information for breadcrumb
 
-Scenario: Full access on all breadcrumb
+Background:
   Given the database has the following table 'users':
     | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
     | 1  | jdoe   | 0        | 11          | 12           | 0        |
@@ -21,14 +21,6 @@ Scenario: Full access on all breadcrumb
     | 32 | 22     | 1          | DFS              | 0        |
     | 33 | 23     | 1          | Reduce Graph     | 0        |
     | 39 | 21     | 2          | Graphe: Methodes | 0        |
-  And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
   And the database has the following table 'groups_groups':
     | ID | idGroupParent | idGroupChild | iVersion |
     | 61 | 13            | 11           | 0        |
@@ -38,6 +30,16 @@ Scenario: Full access on all breadcrumb
     | 72 | 12              | 12           | 1       | 0        |
     | 73 | 13              | 13           | 1       | 0        |
     | 74 | 13              | 11           | 0       | 0        |
+
+Scenario: Full access on all breadcrumb
+  Given the database has the following table 'groups_items':
+    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
+    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
+    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
+  And the database has the following table 'items_items':
+    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+    | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
   When I send a GET request to "/items/?ids=21,22,23"
   Then the response code should be 200
@@ -52,26 +54,7 @@ Scenario: Full access on all breadcrumb
     """
 
 Scenario: Partial access to all items except for last which is greyed
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
-    | ID | sName      | sTextId | iGrade | sType     | iVersion |
-    | 11 | jdoe       |         | -2     | UserAdmin | 0        |
-    | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
-    | 13 | Group B    |         | -2     | Class     | 0        |
-  And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore | iVersion |
-    | 21 | false          | false    | 0        |
-    | 22 | false          | false    | 0        |
-    | 23 | false          | false    | 0        |
-  And the database has the following table 'items_strings':
-    | ID | idItem | idLanguage | sTitle           | iVersion |
-    | 31 | 21     | 1          | Graph: Methods   | 0        |
-    | 32 | 22     | 1          | DFS              | 0        |
-    | 33 | 23     | 1          | Reduce Graph     | 0        |
-    | 39 | 21     | 2          | Graphe: Methodes | 0        |
-  And the database has the following table 'groups_items':
+  Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
     | 41 | 13      | 21     | 2010-01-01      | false             | true                 | false               | 0             | 0        |
     | 42 | 13      | 22     | null            | false             | true                 | false               | 0             | 0        |
@@ -80,15 +63,6 @@ Scenario: Partial access to all items except for last which is greyed
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
-  And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
-  And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
-    | 71 | 11              | 11           | 1       | 0        |
-    | 72 | 12              | 12           | 1       | 0        |
-    | 73 | 13              | 13           | 1       | 0        |
-    | 74 | 13              | 11           | 0       | 0        |
   And I am the user with ID "1"
   When I send a GET request to "/items/?ids=21,22,23"
   Then the response code should be 200
@@ -103,26 +77,7 @@ Scenario: Partial access to all items except for last which is greyed
     """
 
 Scenario: Corrupt breadcrumb hierarchy (one parent-child link missing), but user has full access to all
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
-    | ID | sName      | sTextId | iGrade | sType     | iVersion |
-    | 11 | jdoe       |         | -2     | UserAdmin | 0        |
-    | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
-    | 13 | Group B    |         | -2     | Class     | 0        |
-  And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore | iVersion |
-    | 21 | false          | false    | 0        |
-    | 22 | false          | false    | 0        |
-    | 23 | false          | false    | 0        |
-  And the database has the following table 'items_strings':
-    | ID | idItem | idLanguage | sTitle           | iVersion |
-    | 31 | 21     | 1          | Graph: Methods   | 0        |
-    | 32 | 22     | 1          | DFS              | 0        |
-    | 33 | 23     | 1          | Reduce Graph     | 0        |
-    | 39 | 21     | 2          | Graphe: Methodes | 0        |
-  And the database has the following table 'groups_items':
+  Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
     | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
     | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
@@ -131,15 +86,6 @@ Scenario: Corrupt breadcrumb hierarchy (one parent-child link missing), but user
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
-  And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
-  And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
-    | 71 | 11              | 11           | 1       | 0        |
-    | 72 | 12              | 12           | 1       | 0        |
-    | 73 | 13              | 13           | 1       | 0        |
-    | 74 | 13              | 11           | 0       | 0        |
   And I am the user with ID "1"
   When I send a GET request to "/items/?ids=21,22,23"
   Then the response code should be 200
@@ -154,44 +100,16 @@ Scenario: Corrupt breadcrumb hierarchy (one parent-child link missing), but user
     """
 
 Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
-    | ID | sName      | sTextId | iGrade | sType     | iVersion |
-    | 11 | jdoe       |         | -2     | UserAdmin | 0        |
-    | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
-    | 13 | Group B    |         | -2     | Class     | 0        |
-  And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore | iVersion |
-    | 21 | false          | false    | 0        |
-    | 22 | false          | false    | 0        |
-    | 24 | false          | false    | 0        |
-  And the database has the following table 'items_strings':
-    | ID | idItem | idLanguage | sTitle           | iVersion |
-    | 31 | 21     | 1          | Graph: Methods   | 0        |
-    | 32 | 22     | 1          | DFS              | 0        |
-    | 33 | 24     | 1          | Reduce Graph     | 0        |
-    | 39 | 21     | 2          | Graphe: Methodes | 0        |
-  And the database has the following table 'groups_items':
+  Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
     | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
     | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 43 | 13      | 24     | null            | true              | false                | false               | 0             | 0        |
+    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
   And the database has the following table 'items_items':
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 24          | 1           | 0           | 0        |
-  And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
-  And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
-    | 71 | 11              | 11           | 1       | 0        |
-    | 72 | 12              | 12           | 1       | 0        |
-    | 73 | 13              | 13           | 1       | 0        |
-    | 74 | 13              | 11           | 0       | 0        |
+    | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23,24"
+  When I send a GET request to "/items/?ids=21,22,24,23"
   Then the response code should be 403
   And the response body should be, in JSON:
     """
@@ -199,44 +117,16 @@ Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), a
     """
 
 Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-  And the database has the following table 'groups':
-    | ID | sName      | sTextId | iGrade | sType     | iVersion |
-    | 11 | jdoe       |         | -2     | UserAdmin | 0        |
-    | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
-    | 13 | Group B    |         | -2     | Class     | 0        |
-  And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore | iVersion |
-    | 21 | false          | false    | 0        |
-    | 22 | false          | false    | 0        |
-    | 24 | false          | false    | 0        |
-  And the database has the following table 'items_strings':
-    | ID | idItem | idLanguage | sTitle           | iVersion |
-    | 31 | 21     | 1          | Graph: Methods   | 0        |
-    | 32 | 22     | 1          | DFS              | 0        |
-    | 33 | 24     | 1          | Reduce Graph     | 0        |
-    | 39 | 21     | 2          | Graphe: Methodes | 0        |
-  And the database has the following table 'groups_items':
+  Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
     | 41 | 13      | 21     | 2010-01-01      | false             | true                 | false               | 0             | 0        |
     | 42 | 13      | 22     | null            | false             | false                | true                | 0             | 0        |
-    | 43 | 13      | 24     | null            | false             | true                 | false               | 0             | 0        |
+    | 43 | 13      | 23     | null            | false             | true                 | false               | 0             | 0        |
   And the database has the following table 'items_items':
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 24          | 1           | 0           | 0        |
-  And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
-  And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
-    | 71 | 11              | 11           | 1       | 0        |
-    | 72 | 12              | 12           | 1       | 0        |
-    | 73 | 13              | 13           | 1       | 0        |
-    | 74 | 13              | 11           | 0       | 0        |
+    | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23,24"
+  When I send a GET request to "/items/?ids=21,22,23"
   Then the response code should be 403
   And the response body should be, in JSON:
     """
