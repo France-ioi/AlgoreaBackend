@@ -4,14 +4,9 @@ jobs:
     docker:
       - image: circleci/golang:1.11
     working_directory: /home/circleci/France-ioi/AlgoreaBackend
-    environment: &GOENV
-      GOPATH: /go:/tmp/go
+    environment:
     steps:
       - checkout
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: &CACHEKEY
-          key: go-deps@{{ checksum "/tmp/deps.txt" }}
-      - run: make deps
       - run:
           name: Compile project
           command: make build
@@ -19,25 +14,17 @@ jobs:
           root: ./
           paths:
             - "*"
-      - run:
-          name: Do not cache anything about this repo
-          command: rm -rf * /go/bin/AlgoreaBackend /go/pkg/*/github.com/France-ioi/AlgoreaBackend
-      - run: cp -r /go /tmp/
-      - save_cache:
-          <<: *CACHEKEY
-          paths:
-          - /tmp/go
   unit-tests:
     docker:
       - image: circleci/golang:1.11
     working_directory: /home/circleci/France-ioi/AlgoreaBackend
-    environment: *GOENV
+    environment:
     steps:
       - attach_workspace:
           at: ./
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
-      - run: BIN_DIR=/tmp/go/bin make test-unit-report
+      - run:
+          name: Run unit tests
+          command: make test-unit-report
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
@@ -54,7 +41,6 @@ jobs:
           MYSQL_DATABASE: ci_db
     working_directory: /home/circleci/France-ioi/AlgoreaBackend
     environment:
-      <<: *GOENV
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
       ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
@@ -64,7 +50,6 @@ jobs:
           at: ./
       - run: mkdir -p test-results/cucumber
       - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
           name: Wait for MySQL
@@ -86,12 +71,11 @@ jobs:
     docker:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment: *GOENV
+    environment:
     steps:
       - attach_workspace:
           at: ./
       - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
       - run: make lint
 workflows:
   version: 2
