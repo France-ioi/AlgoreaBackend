@@ -12,6 +12,9 @@ jobs:
       - restore_cache: &CACHEKEY
           key: go-deps@{{ checksum "/tmp/deps.txt" }}
       - run: make deps
+      - run:
+          name: Compile project
+          command: make build
       - persist_to_workspace:
           root: ./
           paths:
