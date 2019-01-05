@@ -54,9 +54,9 @@ jobs:
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
       - run:
           name: Recreate database
-          command: AlgoreaBackend db-restore && AlgoreaBackend db-migrate
-      # go run main.go db-restore
-      # - run: go run main.go db-migrate
+          command: |
+            go run main.go db-restore
+            go run main.go db-migrate
       - run:
           name: Run BDD Tests
           command: make test-bdd-report
@@ -69,7 +69,7 @@ jobs:
   lint:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    working_directory: /home/circleci/France-ioi/AlgoreaBackend
     environment:
     steps:
       - attach_workspace:
