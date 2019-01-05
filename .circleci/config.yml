@@ -3,7 +3,7 @@ jobs:
   deps:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    working_directory: /home/circleci/France-ioi/AlgoreaBackend
     environment: &GOENV
       GOPATH: /go:/tmp/go
     steps:
@@ -27,7 +27,7 @@ jobs:
   unit-tests:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    working_directory: /home/circleci/France-ioi/AlgoreaBackend
     environment: *GOENV
     steps:
       - attach_workspace:
@@ -49,7 +49,7 @@ jobs:
           MYSQL_USER: alg_ci_user
           MYSQL_PASSWORD: dummy_password
           MYSQL_DATABASE: ci_db
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    working_directory: /home/circleci/France-ioi/AlgoreaBackend
     environment:
       <<: *GOENV
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
