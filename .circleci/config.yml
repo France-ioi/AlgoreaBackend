@@ -63,7 +63,7 @@ jobs:
       - run:
           when: on_fail
           name: Run BDD Tests (detailed)
-          command: /tmp/go/bin/godog --format=pretty
+          command: godog --format=pretty
       - store_test_results: *TESTPATH
       - store_artifacts: *TESTPATH
   lint:
@@ -74,6 +74,16 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
+      - run:
+          name: Copy sources inside GOPATH
+          command: |
+            mkdir /go/src/github.com
+            cp -r /home/circleci/France-ioi /go/src/github.com/France-ioi
+      - run:
+          name: Install dependencies
+          command: |
+            cd /go/src/github.com/France-ioi/AlgoreaBackend
+            go get ./...
       - run:
           name: Run metalinter
           command: GOMODULE111=off make lint # gometalinter doesn't support Go modules yet
