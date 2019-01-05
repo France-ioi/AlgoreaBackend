@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  deps:
+  build:
     docker:
       - image: circleci/golang:1.11
     working_directory: /home/circleci/France-ioi/AlgoreaBackend
@@ -48,19 +48,18 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: mkdir -p test-results/cucumber
-      - run: make print-deps > /tmp/deps.txt
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
           name: Wait for MySQL
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
-      - run: go run main.go db-restore
-      - run: go run main.go db-migrate
+      - run:
+          name: Recreate database
+          command: AlgoreaBackend db-restore && AlgoreaBackend db-migrate
+      # go run main.go db-restore
+      # - run: go run main.go db-migrate
       - run:
           name: Run BDD Tests
-          command: |
-            mkdir -p test-results/cucumber/
-            /tmp/go/bin/godog --format=junit > test-results/cucumber/junit.xml
+          command: make test-bdd-report
       - run:
           when: on_fail
           name: Run BDD Tests (detailed)
@@ -75,19 +74,20 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: make print-deps > /tmp/deps.txt
-      - run: make lint
+      - run:
+          name: Run metalinter
+          command: GOMODULE111=off make lint # gometalinter doesn't support Go modules yet
 workflows:
   version: 2
   build_test:
     jobs:
-      - deps
+      - build
       - unit-tests:
           requires:
-          - deps
+          - build
       - bdd-tests:
           requires:
-          - deps
+          - build
       - lint:
           requires:
-          - deps
+          - build
