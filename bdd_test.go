@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 	os.Exit(status)
 }
 
-// gireContext binds the supported steps to the verifying functions
+// FeatureContext binds the supported steps to the verifying functions
 func FeatureContext(s *godog.Suite) {
 	ctx := &testhelpers.TestContext{}
 	s.BeforeScenario(ctx.SetupTestContext)
