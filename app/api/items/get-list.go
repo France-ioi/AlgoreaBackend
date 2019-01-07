@@ -7,26 +7,26 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	s "github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) getUser(r *http.Request) *auth.User {
 	return auth.UserFromContext(r.Context(), srv.Store.Users())
 }
 
-func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
+func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIError {
 	// Get IDs from request and validate it.
 	ids, err := idsFromRequest(r)
 	if err != nil {
-		return s.ErrInvalidRequest(err)
+		return service.ErrInvalidRequest(err)
 	}
 
 	// Validate that the user can see the item IDs.
 	user := srv.getUser(r)
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
-		return s.ErrUnexpected(err)
+		return service.ErrUnexpected(err)
 	} else if !valid {
-		return s.ErrForbidden(errors.New("Insufficient access on given item ids"))
+		return service.ErrForbidden(errors.New("Insufficient access on given item ids"))
 	}
 
 	// Todo: validate the hierarchy
@@ -46,15 +46,15 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) s.APIError {
 	}{}
 	db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids).Scan(&items)
 	if db.Error != nil {
-		return s.ErrUnexpected(db.Error)
+		return service.ErrUnexpected(db.Error)
 	}
 
 	render.Respond(w, r, items)
-	return s.NoError
+	return service.NoError
 }
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	ids, err := s.QueryParamToInt64Slice(r, "ids")
+	ids, err := service.QueryParamToInt64Slice(r, "ids")
 	if err != nil {
 		return nil, err
 	}
