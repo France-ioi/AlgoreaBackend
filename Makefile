@@ -34,12 +34,13 @@ test-bdd-report: $(GODOG)
 	$(GODOG) --format=junit > $(TEST_REPORT_DIR)/cucumber/junit.xml
 test: test-unit test-bdd
 lint: $(GOMETALINTER)
-	PATH=./bin:$(PATH) $(GOMETALINTER) ./... --deadline=90s
+	PATH=./bin:$(PATH) GO111MODULE=off $(GOMETALINTER) ./... --deadline=90s
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-deps: $(GODOG) $(GO_JUNIT_REPORT)
-	$(GOGET) -t ./...
+	rm -rf ./bin
+deps:
+	GO111MODULE=off $(GOGET) -t ./...
 print-deps:
 	$(GOLIST) -f {{.Deps}} && $(GOLIST) -f {{.TestImports}} ./...
 $(GODOG):

@@ -1,11 +1,10 @@
 # Algorea Backend
 
-## Running the app
+## Requirements
 
-Installing the dependencies:
-```
-make deps
-```
+This project requires Go >=1.11 with modules enabled (GO111MODULE=on). However, we recommend to develop into your $GOPATH (old style) as the linter does not support modules for now.
+
+## Running the app
 
 Compile the app:
 ```
@@ -44,7 +43,8 @@ A `.editorconfig` file defines the basic editor style configuration to use. Chec
 
 For the Go coding styles, we use the standard linters (many). You can install and run them with:
 ```
-go lint
+make deps
+make lint
 ```
 
 ## Software Walkthrough
