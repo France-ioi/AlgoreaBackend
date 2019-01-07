@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
@@ -80,16 +81,9 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
-	// check permissions:
-	// can add a parent only if manager of that parent
-	user := srv.getUser(r)
-	var hasAccess bool
-	hasAccess, err = srv.Store.Items().HasManagerAccess(user, input.Parents[0].ID.Value)
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
-	if !hasAccess {
-		return service.ErrForbidden(errors.New("Insufficient access on the parent item"))
+	// check permissions
+	if ret := srv.checkPermission(srv.getUser(r), input.Parents[0].ID.Value); ret != service.NoError {
+		return ret
 	}
 
 	// insertion
@@ -123,4 +117,19 @@ func (srv *Service) insertItem(input *NewItemRequest) error {
 		}
 		return store.ItemItems().Insert(input.itemItemData(store.NewID()))
 	})
+}
+
+func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service.APIError {
+	// can add a parent only if manager of that parent
+	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
+	if err != nil {
+		return service.ErrUnexpected(err)
+	}
+	if !found {
+		return service.ErrForbidden(errors.New("Cannot find the parent item"))
+	}
+	if !hasAccess {
+		return service.ErrForbidden(errors.New("Insufficient access on the parent item"))
+	}
+	return service.NoError
 }
