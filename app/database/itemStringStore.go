@@ -1,6 +1,8 @@
 package database
 
 import (
+	"fmt"
+
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -23,6 +25,22 @@ type ItemString struct {
 
 func (s *ItemStringStore) tableName() string {
 	return "items_strings"
+}
+
+func (s *ItemStringStore) GetByItemID(id int64) (*ItemString, error) {
+	var it ItemString
+	if err := s.db.Table(s.tableName()).Where("idItem=?", id).First(&it).Error; err != nil {
+		return nil, fmt.Errorf("failed to get item_string of item '%d': %v", id, err)
+	}
+	return &it, nil
+}
+
+func (s *ItemStringStore) GetByItemIDs(ids []int64) ([]*ItemString, error) {
+	var itt []*ItemString
+	if err := s.db.Table(s.tableName()).Where("idItem IN (?)", ids).Scan(&itt).Error; err != nil {
+		return nil, fmt.Errorf("failed to get item_string of items %v: %v", ids, err)
+	}
+	return itt, nil
 }
 
 // Insert does a INSERT query in the given table with data that may contain types.* types

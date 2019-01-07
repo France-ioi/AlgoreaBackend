@@ -17,4 +17,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
 	router.Post("/items/", service.AppHandler(srv.addItem).ServeHTTP)
 	router.Get("/items/", service.AppHandler(srv.getList).ServeHTTP)
+	router.Get("/items/{itemID}", service.AppHandler(srv.getItem).ServeHTTP)
 }

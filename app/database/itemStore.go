@@ -33,6 +33,22 @@ func (s *ItemStore) tableName() string {
 	return "items"
 }
 
+func (s *ItemStore) Get(id int64) (*Item, error) {
+	var it Item
+	if err := s.db.Table(s.tableName()).Where("ID=?", id).First(&it).Error; err != nil {
+		return nil, fmt.Errorf("failed to get item '%d': %v", id, err)
+	}
+	return &it, nil
+}
+
+func (s *ItemStore) ListByIDs(ids []int64) ([]*Item, error) {
+	var itt []*Item
+	if err := s.db.Table(s.tableName()).Where("ID IN (?)", ids).Scan(&itt).Error; err != nil {
+		return nil, fmt.Errorf("failed to get items %v: %v", ids, err)
+	}
+	return itt, nil
+}
+
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemStore) Insert(data *Item) error {
 	return s.insert(s.tableName(), data)
@@ -102,6 +118,7 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 	}
 
 	if err := checkAccess(itemIDs, accDets); err != nil {
+		logging.Logger.Infof("checkAccess %v %v", itemIDs, accDets)
 		logging.Logger.Infof("User access validation failed: %v", err)
 		return false, nil
 	}
