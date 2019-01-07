@@ -56,6 +56,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response error message should contain "([^"]*)"$`, ctx.TheResponseErrorMessageShouldContain)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
+	s.Step(`^the table "([^"]*)" at ID "(\d*)" should be:$`, ctx.TableAtIDShouldBe)
 
 	s.AfterScenario(ctx.ScenarioTeardown)
 }

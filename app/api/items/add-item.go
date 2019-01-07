@@ -30,10 +30,10 @@ type NewItemRequest struct {
 // Bind validates the request body attributes
 func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Strings) != 1 {
-		return errors.New("Only one string per item is supported at the moment")
+		return errors.New("Exactly one string per item is supported at the moment")
 	}
 	if len(in.Parents) != 1 {
-		return errors.New("Only one parent item is supported at the moment")
+		return errors.New("Exactly one parent item is supported at the moment")
 	}
 	return types.Validate(&in.ID, &in.Type)
 }
@@ -78,6 +78,18 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	input := &NewItemRequest{}
 	if err = render.Bind(r, input); err != nil {
 		return service.ErrInvalidRequest(err)
+	}
+
+	// check permissions:
+	// can add a parent only if manager of that parent
+	user := srv.getUser(r)
+	var hasAccess bool
+	hasAccess, err = srv.Store.Items().HasManagerAccess(user, input.Parents[0].ID.Value)
+	if err != nil {
+		return service.ErrUnexpected(err)
+	}
+	if !hasAccess {
+		return service.ErrForbidden(errors.New("Insufficient access on the parent item"))
 	}
 
 	// insertion

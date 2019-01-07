@@ -32,6 +32,10 @@ type TestContext struct { // nolint
 	inScenario       bool
 }
 
+const (
+	noID int64 = -1
+)
+
 func (ctx *TestContext) SetupTestContext(interface{}) { // nolint
 	ctx.application = nil
 	ctx.userID = 999 // the default for the moment
@@ -323,6 +327,10 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 }
 
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
+	return ctx.TableAtIDShouldBe(tableName, noID, data)
+}
+
+func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
@@ -334,7 +342,15 @@ func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable)
 		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
 	}
 
-	sqlRows, err := db.Raw("SELECT " + strings.Join(selects, ", ") + " FROM " + tableName).Rows() // nolint: gosec
+	// define 'where' condition if needed
+	where := ""
+	if id != noID {
+		where = fmt.Sprintf(" WHERE ID = '%d' ", id)
+	}
+
+	// exec sql
+	query := fmt.Sprintf("SELECT %s FROM `%s` %s", strings.Join(selects, ", "), tableName, where) // nolint: gosec
+	sqlRows, err := db.Raw(query).Rows()
 	if err != nil {
 		return err
 	}

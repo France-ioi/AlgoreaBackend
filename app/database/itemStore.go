@@ -38,6 +38,11 @@ func (s *ItemStore) Insert(data *Item) error {
 	return s.db.insert(s.tableName(), data)
 }
 
+// HasManagerAccess returns whether the user has manager access to all the given item_id's
+func (s *ItemStore) HasManagerAccess(user *auth.User, itemID int64) (bool, error) {
+	return true, nil
+}
+
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
 func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 	return false, nil
