@@ -50,7 +50,7 @@ func (s *ItemStore) HasManagerAccess(user *auth.User, itemID int64) (found bool,
 
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, bManagerAccess, bOwnerAccess").
-		Where("groups_items.idItem = ?", itemID).
+		Where("idItem = ?", itemID).
 		Scan(&dbRes)
 	if db.Error != nil {
 		return false, false, db.Error
