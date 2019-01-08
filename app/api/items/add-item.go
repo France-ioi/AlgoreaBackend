@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
@@ -30,10 +31,10 @@ type NewItemRequest struct {
 // Bind validates the request body attributes
 func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Strings) != 1 {
-		return errors.New("Only one string per item is supported at the moment")
+		return errors.New("Exactly one string per item is supported at the moment")
 	}
 	if len(in.Parents) != 1 {
-		return errors.New("Only one parent item is supported at the moment")
+		return errors.New("Exactly one parent item is supported at the moment")
 	}
 	return types.Validate(&in.ID, &in.Type)
 }
@@ -80,6 +81,11 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
+	// check permissions
+	if ret := srv.checkPermission(srv.getUser(r), input.Parents[0].ID.Value); ret != service.NoError {
+		return ret
+	}
+
 	// insertion
 	if err = srv.insertItem(input); err != nil {
 		return service.ErrInvalidRequest(err)
@@ -111,4 +117,19 @@ func (srv *Service) insertItem(input *NewItemRequest) error {
 		}
 		return store.ItemItems().Insert(input.itemItemData(store.NewID()))
 	})
+}
+
+func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service.APIError {
+	// can add a parent only if manager of that parent
+	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
+	if err != nil {
+		return service.ErrUnexpected(err)
+	}
+	if !found {
+		return service.ErrForbidden(errors.New("Cannot find the parent item"))
+	}
+	if !hasAccess {
+		return service.ErrForbidden(errors.New("Insufficient access on the parent item"))
+	}
+	return service.NoError
 }
