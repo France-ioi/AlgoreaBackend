@@ -3,38 +3,28 @@ jobs:
   deps:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment: &GOENV
-      GOPATH: /go:/tmp/go
     steps:
       - checkout
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: &CACHEKEY
-          key: go-deps@{{ checksum "/tmp/deps.txt" }}
-      - run: make deps
+      - restore_cache: &CACHEKEYMOD
+          key: go-deps-modules@{{ checksum "go.sum" }}
+      - run: make
       - persist_to_workspace:
           root: ./
           paths:
             - "*"
-      - run:
-          name: Do not cache anything about this repo
-          command: rm -rf * /go/bin/AlgoreaBackend /go/pkg/*/github.com/France-ioi/AlgoreaBackend
-      - run: cp -r /go /tmp/
       - save_cache:
-          <<: *CACHEKEY
+          <<: *CACHEKEYMOD
           paths:
-          - /tmp/go
+          - /go/pkg/mod
+          - ~/.cache/go-build/
   unit-tests:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment: *GOENV
     steps:
       - attach_workspace:
           at: ./
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
-      - run: BIN_DIR=/tmp/go/bin make test-unit-report
+      - restore_cache: *CACHEKEYMOD
+      - run: make test-unit-report
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
@@ -49,9 +39,7 @@ jobs:
           MYSQL_USER: alg_ci_user
           MYSQL_PASSWORD: dummy_password
           MYSQL_DATABASE: ci_db
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     environment:
-      <<: *GOENV
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
       ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
@@ -60,36 +48,55 @@ jobs:
       - attach_workspace:
           at: ./
       - run: mkdir -p test-results/cucumber
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
+      - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
           name: Wait for MySQL
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
-      - run: go run main.go db-restore
-      - run: go run main.go db-migrate
+      - run:
+          name: Seed database
+          command: |
+            go run main.go db-restore
+            go run main.go db-migrate
+      - run: make /go/bin/godog
       - run:
           name: Run BDD Tests
           command: |
             mkdir -p test-results/cucumber/
-            /tmp/go/bin/godog --format=junit > test-results/cucumber/junit.xml
+            /go/bin/godog --format=junit > test-results/cucumber/junit.xml
       - run:
           when: on_fail
-          name: Run BDD Tests (detailed)
-          command: /tmp/go/bin/godog --format=pretty
+          name: On failure, run BDD tests with details
+          command: /go/bin/godog --format=pretty
       - store_test_results: *TESTPATH
       - store_artifacts: *TESTPATH
+  # The "lint" job is still complex as it cannot use Go modules.
+  # It can be simplify to a few as soon as `gometalinter` supports Go modules
   lint:
     docker:
       - image: circleci/golang:1.11
     working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment: *GOENV
+    environment:
+      GOPATH: /go:/tmp/go
+      GO111MODULE: "off"
     steps:
-      - attach_workspace:
-          at: ./
+      # prepare
+      - checkout
       - run: make print-deps > /tmp/deps.txt
-      - restore_cache: *CACHEKEY
+      - restore_cache: &CACHEKEYNOMOD
+          key: go-deps-nomod@{{ checksum "/tmp/deps.txt" }}
+      - run: make deps
+      # lint
       - run: make lint
+      # cache of deps for the next `lint` jobs
+      - run:
+          name: Do not cache anything about this repo
+          command: rm -rf * /go/bin/AlgoreaBackend /go/pkg/*/github.com/France-ioi/AlgoreaBackend
+      - run: sudo cp -r /go /tmp/
+      - save_cache:
+          <<: *CACHEKEYNOMOD
+          paths:
+          - /tmp/go
 workflows:
   version: 2
   build_test:
@@ -101,6 +108,4 @@ workflows:
       - bdd-tests:
           requires:
           - deps
-      - lint:
-          requires:
-          - deps
+      - lint
