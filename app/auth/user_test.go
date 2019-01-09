@@ -9,7 +9,7 @@ import (
 
 type MockUserStore struct{}
 
-func (s *MockUserStore) GetByID(userID int64, dest interface{}) error {
+func (s *MockUserStore) GetProfileByID(userID int64, dest interface{}) error {
 	u := dest.(*userData)
 	u.SelfGroupID = userID + 1
 	return nil

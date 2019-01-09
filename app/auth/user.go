@@ -15,18 +15,19 @@ type User struct {
 	data   *userData
 }
 type userData struct {
-	ID              int64  `sql:"column:ID"`
-	Login           string `sql:"column:sLogin"`
-	DefaultLanguage string `sql:"column:sDefaultLanguage"`
-	IsAdmin         bool   `sql:"column:bIsAdmin"`
-	SelfGroupID     int64  `sql:"column:idGroupSelf"`
-	OwnedGroupID    int64  `sql:"column:idGroupOwned"`
-	AccessGroupID   int64  `sql:"column:idGroupAccess"`
+	ID                int64  `sql:"column:ID"`
+	Login             string `sql:"column:sLogin"`
+	DefaultLanguage   string `sql:"column:sDefaultLanguage"`
+	DefaultLanguageID int64  `sql:"column:idDefaultLanguage"`
+	IsAdmin           bool   `sql:"column:bIsAdmin"`
+	SelfGroupID       int64  `sql:"column:idGroupSelf"`
+	OwnedGroupID      int64  `sql:"column:idGroupOwned"`
+	AccessGroupID     int64  `sql:"column:idGroupAccess"`
 }
 
 // UserStore is an interface to the store for `users`
 type UserStore interface {
-	GetByID(userID int64, dest interface{}) error
+	GetProfileByID(userID int64, dest interface{}) error
 }
 
 // UserFromContext creates a User context from a context set by the middleware
@@ -39,7 +40,7 @@ func (u *User) lazyLoadData() error {
 	var err error
 	if u.data == nil {
 		u.data = &userData{}
-		err = u.store.GetByID(u.UserID, u.data)
+		err = u.store.GetProfileByID(u.UserID, u.data)
 		if err != nil {
 			logging.Logger.Error(fmt.Errorf("Unable to lazy load user data: %s", err.Error()))
 		}
