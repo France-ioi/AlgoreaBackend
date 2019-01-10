@@ -52,7 +52,7 @@ Scenario: Valid, id is given
     | 6129484611666145821 |           21 |           2 |         100 |
   And the table "groups_items" at ID "5577006791947779410" should be:
     |                  ID | idGroup | idItem |     sFullAccessDate | bCachedFullAccess | bOwnerAccess | idUserCreated |
-    | 5577006791947779410 |       6 |      2 | 2018-01-01 00:00:00 |                 0 |            0 |             0 |
+    | 5577006791947779410 |      11 |      2 | 2018-01-01 00:00:00 |                 0 |            0 |             0 |
 
 Scenario: Id not given
   Given I am the user with ID "1"

@@ -46,11 +46,11 @@ func (in *NewItemRequest) itemData() *database.Item {
 	}
 }
 
-func (in *NewItemRequest) groupItemData(id int64) *database.GroupItem {
+func (in *NewItemRequest) groupItemData(id int64, groupID int64) *database.GroupItem {
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,
-		GroupID:        *types.NewInt64(6),    // dummy
+		GroupID:        *types.NewInt64(groupID),
 		FullAccessDate: "2018-01-01 00:00:00", // dummy
 	}
 }
@@ -74,6 +74,7 @@ func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
+	user := srv.getUser(r)
 
 	// validate input (could be moved to JSON validation later)
 	input := &NewItemRequest{}
@@ -87,7 +88,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	// insertion
-	if err = srv.insertItem(input); err != nil {
+	if err = srv.insertItem(user, input); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
@@ -101,7 +102,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
-func (srv *Service) insertItem(input *NewItemRequest) error {
+func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -109,7 +110,7 @@ func (srv *Service) insertItem(input *NewItemRequest) error {
 		if err = store.Items().Insert(input.itemData()); err != nil {
 			return err
 		}
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID())); err != nil {
+		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.SelfGroupID())); err != nil {
 			return err
 		}
 		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {
