@@ -36,7 +36,7 @@ func NewString(s string) *String {
 // UnmarshalJSON parse JSON data to the type
 func (s *String) UnmarshalJSON(data []byte) (err error) {
 	s.Set = true // If this method was called, the value was set.
-	s.Null = (string(data) == "null")
+	s.Null = (string(data) == jsonNull)
 	var temp string
 	err = json.Unmarshal(data, &temp)
 	if err == nil {

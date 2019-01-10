@@ -1,5 +1,7 @@
 package types
 
+const jsonNull = "null"
+
 // NOTE: to be probably replace by JSON schema validation and remove
 
 // Validatable is the interface indicating the type implementing it supports data validation.

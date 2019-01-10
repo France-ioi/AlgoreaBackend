@@ -18,6 +18,15 @@ func (v *SampleStrInput) validate() error {
 	return Validate(&v.Title, &v.Description, &v.Author, &v.LastReader)
 }
 
+func TestNewString(t *testing.T) {
+	assert := assert_lib.New(t)
+	var value = "Foo"
+	n := NewString(value)
+	assert.Equal(value, n.Value)
+	assert.True(n.Set)
+	assert.False(n.Null)
+}
+
 func TestStrValid(t *testing.T) {
 	assert := assert_lib.New(t)
 
