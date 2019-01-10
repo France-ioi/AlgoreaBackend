@@ -46,11 +46,12 @@ func (in *NewItemRequest) itemData() *database.Item {
 	}
 }
 
-func (in *NewItemRequest) groupItemData(id int64, groupID int64) *database.GroupItem {
+func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *database.GroupItem {
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,
 		GroupID:        *types.NewInt64(groupID),
+		CreatorUserID:  *types.NewInt64(userID),
 		FullAccessDate: "2018-01-01 00:00:00", // dummy
 	}
 }
@@ -110,7 +111,7 @@ func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 		if err = store.Items().Insert(input.itemData()); err != nil {
 			return err
 		}
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.SelfGroupID())); err != nil {
+		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
 			return err
 		}
 		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {

@@ -14,10 +14,10 @@ type GroupItem struct {
 	ID               types.Int64 `sql:"column:ID"`
 	GroupID          types.Int64 `sql:"column:idGroup"`
 	ItemID           types.Int64 `sql:"column:idItem"`
+	CreatorUserID    types.Int64 `sql:"column:idUserCreated"`     // if not set, will use Go default in DB
 	FullAccessDate   string      `sql:"column:sFullAccessDate"`   // should be a datetime
 	CachedFullAccess bool        `sql:"column:bCachedFullAccess"` // use Go default in DB (to be fixed)
 	OwnerAccess      bool        `sql:"column:bOwnerAccess"`      // use Go default in DB (to be fixed)
-	CreatedUserID    int64       `sql:"column:idUserCreated"`     // use Go default in DB (to be fixed)
 	Version          int64       `sql:"column:iVersion"`          // use Go default in DB (to be fixed)
 }
 
