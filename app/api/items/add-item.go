@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 
@@ -52,7 +53,7 @@ func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *
 		ItemID:         in.ID.Int64,
 		GroupID:        *types.NewInt64(groupID),
 		CreatorUserID:  *types.NewInt64(userID),
-		FullAccessDate: "2018-01-01 00:00:00", // dummy
+		FullAccessDate: *types.NewDatetime(time.Now()),
 	}
 }
 

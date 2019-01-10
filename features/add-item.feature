@@ -19,6 +19,7 @@ Background:
 
 Scenario: Valid, id is given
   Given I am the user with ID "1"
+  And the time now is "2018-01-01T00:00:00Z"
   When I send a POST request to "/items/" with the following body:
     """
     {
