@@ -18,7 +18,11 @@ type GroupItem struct {
 	FullAccessDate types.Datetime `sql:"column:sFullAccessDate"`
 	OwnerAccess    types.Bool     `sql:"column:bOwnerAccess"`
 	ManagerAccess  types.Bool     `sql:"column:bManagerAccess"`
-	Version        int64          `sql:"column:iVersion"` // use Go default in DB (to be fixed)
+	// computed fields
+	CachedFullAccessDate types.Datetime `sql:"column:sCachedFullAccessDate"`
+	CachedFullAccess     types.Bool     `sql:"column:bCachedFullAccess"`
+
+	Version int64 `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *GroupItemStore) tableName() string {
