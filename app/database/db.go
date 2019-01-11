@@ -164,6 +164,9 @@ func decodeValue(value interface{}) (unWrappedValue interface{}, isNull bool, sk
 	case types.Datetime:
 		val := value.(types.Datetime)
 		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
+	case types.Bool:
+		val := value.(types.Bool)
+		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
 	}
 	return
 }
