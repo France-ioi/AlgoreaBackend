@@ -17,6 +17,7 @@ type GroupItem struct {
 	CreatorUserID    types.Int64    `sql:"column:idUserCreated"`
 	FullAccessDate   types.Datetime `sql:"column:sFullAccessDate"`
 	OwnerAccess      types.Bool     `sql:"column:bOwnerAccess"`
+	ManagerAccess    types.Bool     `sql:"column:bManagerAccess"`
 	CachedFullAccess bool           `sql:"column:bCachedFullAccess"` // use Go default in DB (to be fixed)
 	Version          int64          `sql:"column:iVersion"`          // use Go default in DB (to be fixed)
 }

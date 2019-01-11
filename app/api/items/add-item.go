@@ -55,6 +55,7 @@ func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *
 		CreatorUserID:  *types.NewInt64(userID),
 		FullAccessDate: *types.NewDatetime(time.Now()),
 		OwnerAccess:    *types.NewBool(true),
+		ManagerAccess:  *types.NewBool(true),
 	}
 }
 
