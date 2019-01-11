@@ -45,8 +45,11 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 
 func (in *NewItemRequest) itemData() *database.Item {
 	return &database.Item{
-		ID:   in.ID.Int64,
-		Type: in.Type.String,
+		ID:                in.ID.Int64,
+		Type:              in.Type.String,
+		DefaultLanguageID: in.Strings[0].LanguageID.Int64,
+		TeamsEditable:     *types.NewBool(false), // has no db default at the moment, so must be set
+		NoScore:           *types.NewBool(false), // has no db default at the moment, so must be set
 	}
 }
 

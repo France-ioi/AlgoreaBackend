@@ -43,8 +43,8 @@ Scenario: Valid, id is given
   }
   """
   And the table "items" at ID "2" should be:
-    | ID | sType  | sUrl |
-    |  2 | Course | NULL |
+    | ID | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore |
+    |  2 | Course | NULL |                 3 |              0 |        0 |
   And the table "items_strings" should be:
     |                  ID | idItem  | idLanguage |   sTitle |          sImageUrl | sSubtitle |                 sDescription |
     | 8674665223082153551 |      2  |          3 | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |

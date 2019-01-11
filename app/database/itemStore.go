@@ -21,11 +21,12 @@ type itemAccessDetails struct {
 
 // Item matches the content the `items` table
 type Item struct {
-	ID            types.Int64  `sql:"column:ID"`
-	Type          types.String `sql:"column:sType"`
-	TeamsEditable bool         `sql:"column:bTeamsEditable"` // use Go default in DB (to be fixed)
-	NoScore       bool         `sql:"column:bNoScore"`       // use Go default in DB (to be fixed)
-	Version       int64        `sql:"column:iVersion"`       // use Go default in DB (to be fixed)
+	ID                types.Int64  `sql:"column:ID"`
+	Type              types.String `sql:"column:sType"`
+	DefaultLanguageID types.Int64  `sql:"column:idDefaultLanguage"`
+	TeamsEditable     types.Bool   `sql:"column:bTeamsEditable"`
+	NoScore           types.Bool   `sql:"column:bNoScore"`
+	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *ItemStore) tableName() string {
