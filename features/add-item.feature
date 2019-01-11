@@ -26,7 +26,7 @@ Scenario: Valid, id is given
       "id": 2,
       "type": "Course",
       "strings": [
-        { "language_id": 3, "title": "my title" }
+        { "language_id": 3, "title": "my title", "image_url":"http://bit.ly/1234", "subtitle": "hard task", "description": "the goal of this task is ..." }
       ],
       "parents": [
         { "id": 21, "order": 100 }
@@ -46,8 +46,8 @@ Scenario: Valid, id is given
     | ID | sType  | sUrl |
     |  2 | Course | NULL |
   And the table "items_strings" should be:
-    |                  ID | idItem  | idLanguage |   sTitle |
-    | 8674665223082153551 |      2  |          3 | my title |
+    |                  ID | idItem  | idLanguage |   sTitle |          sImageUrl | sSubtitle |                 sDescription |
+    | 8674665223082153551 |      2  |          3 | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
   And the table "items_items" should be:
     |                  ID | idItemParent | idItemChild | iChildOrder |
     | 6129484611666145821 |           21 |           2 |         100 |

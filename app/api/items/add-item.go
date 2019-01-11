@@ -19,8 +19,11 @@ type NewItemRequest struct {
 	Type types.RequiredString `json:"type"`
 
 	Strings []struct {
-		LanguageID types.RequiredInt64  `json:"language_id"`
-		Title      types.RequiredString `json:"title"`
+		LanguageID  types.RequiredInt64  `json:"language_id"`
+		Title       types.RequiredString `json:"title"`
+		ImageURL    types.OptNullString  `json:"image_url"`
+		Subtitle    types.OptNullString  `json:"subtitle"`
+		Description types.OptNullString  `json:"description"`
 	} `json:"strings"`
 
 	Parents []struct {
@@ -61,10 +64,13 @@ func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *
 
 func (in *NewItemRequest) stringData(id int64) *database.ItemString {
 	return &database.ItemString{
-		ID:         *types.NewInt64(id),
-		ItemID:     in.ID.Int64,
-		LanguageID: in.Strings[0].LanguageID.Int64,
-		Title:      in.Strings[0].Title.String,
+		ID:          *types.NewInt64(id),
+		ItemID:      in.ID.Int64,
+		LanguageID:  in.Strings[0].LanguageID.Int64,
+		Title:       in.Strings[0].Title.String,
+		ImageURL:    in.Strings[0].ImageURL.String,
+		Subtitle:    in.Strings[0].Subtitle.String,
+		Description: in.Strings[0].Description.String,
 	}
 }
 func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
