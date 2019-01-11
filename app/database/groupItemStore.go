@@ -11,15 +11,14 @@ type GroupItemStore struct {
 
 // GroupItem matches the content the `groups_items` table
 type GroupItem struct {
-	ID               types.Int64    `sql:"column:ID"`
-	GroupID          types.Int64    `sql:"column:idGroup"`
-	ItemID           types.Int64    `sql:"column:idItem"`
-	CreatorUserID    types.Int64    `sql:"column:idUserCreated"`
-	FullAccessDate   types.Datetime `sql:"column:sFullAccessDate"`
-	OwnerAccess      types.Bool     `sql:"column:bOwnerAccess"`
-	ManagerAccess    types.Bool     `sql:"column:bManagerAccess"`
-	CachedFullAccess bool           `sql:"column:bCachedFullAccess"` // use Go default in DB (to be fixed)
-	Version          int64          `sql:"column:iVersion"`          // use Go default in DB (to be fixed)
+	ID             types.Int64    `sql:"column:ID"`
+	GroupID        types.Int64    `sql:"column:idGroup"`
+	ItemID         types.Int64    `sql:"column:idItem"`
+	CreatorUserID  types.Int64    `sql:"column:idUserCreated"`
+	FullAccessDate types.Datetime `sql:"column:sFullAccessDate"`
+	OwnerAccess    types.Bool     `sql:"column:bOwnerAccess"`
+	ManagerAccess  types.Bool     `sql:"column:bManagerAccess"`
+	Version        int64          `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *GroupItemStore) tableName() string {
