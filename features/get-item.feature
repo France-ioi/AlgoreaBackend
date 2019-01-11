@@ -20,58 +20,58 @@ Feature: Get item for tree navigation
       | 73 | 13              | 13           | 1       | 0        |
       | 74 | 13              | 11           | 0       | 0        |
     And the database has the following table 'items':
-      | ID | bTeamsEditable | bNoScore | iVersion |
-      | 23 | false          | false    | 0        |
-      | 24 | false          | false    | 0        |
-      | 25 | false          | false    | 0        |
-      | 26 | false          | false    | 0        |
-      | 41 | false          | false    | 0        |
-      | 61 | false          | false    | 0        |
-      | 62 | false          | false    | 0        |
+      | ID  | bTeamsEditable | bNoScore | iVersion |
+      | 200 | false          | false    | 0        |
+      | 210 | false          | false    | 0        |
+      | 220 | false          | false    | 0        |
+      | 230 | false          | false    | 0        |
+      | 211 | false          | false    | 0        |
+      | 231 | false          | false    | 0        |
+      | 232 | false          | false    | 0        |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-      | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
+      | 43 | 13      | 200    | null            | true              | false                | false               | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-      | 54 | 23           | 24          | 1           | 0           | 0        |
-      | 55 | 23           | 25          | 2           | 0           | 0        |
-      | 56 | 23           | 26          | 3           | 0           | 0        |
-      | 57 | 24           | 41          | 3           | 0           | 0        |
-      | 58 | 26           | 61          | 3           | 0           | 0        |
-      | 59 | 26           | 62          | 3           | 0           | 0        |
+      | 54 | 200          | 210         | 1           | 0           | 0        |
+      | 55 | 200          | 220         | 2           | 0           | 0        |
+      | 56 | 200          | 230         | 3           | 0           | 0        |
+      | 57 | 210          | 211         | 1           | 0           | 0        |
+      | 58 | 230          | 231         | 1           | 0           | 0        |
+      | 59 | 230          | 232         | 2           | 0           | 0        |
     And the database has the following table 'items_strings':
       | ID | idItem | idLanguage | sTitle    | iVersion |
-      | 53 | 23     | 1          | Root      | 0        |
-      | 54 | 24     | 1          | Chapter A | 0        |
-      | 55 | 25     | 1          | Chapter B | 0        |
-      | 56 | 26     | 2          | Chapter C | 0        |
-      | 57 | 41     | 2          | Lesson 1  | 0        |
-      | 58 | 61     | 2          | Lesson 2  | 0        |
-      | 59 | 62     | 2          | Lesson 3  | 0        |
+      | 53 | 200    | 1          | Root      | 0        |
+      | 54 | 210    | 1          | Chapter A | 0        |
+      | 55 | 220    | 1          | Chapter B | 0        |
+      | 56 | 230    | 2          | Chapter C | 0        |
+      | 57 | 211    | 2          | Lesson 1  | 0        |
+      | 58 | 231    | 2          | Lesson 2  | 0        |
+      | 59 | 232    | 2          | Lesson 3  | 0        |
     And I am the user with ID "1"
-    When I send a GET request to "/items/23"
+    When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       {
-      "item_id":23,
-      "title":"Root",
-      "children":
-      [{
-      "item_id":24,"order":1,
-      "title":"Chapter A",
-      "children":[{"item_id":41,"order":3,"title":"Lesson 1"}]
-      },{
-      "item_id":25,
-      "order":2,
-      "title":"Chapter B"
-      },{
-      "item_id":26,
-      "order":3,
-      "title":"Chapter C",
-      "children":[
-      {"item_id":61,"order":3,"title":"Lesson 2"},
-      {"item_id":62,"order":3,"title":"Lesson 3"}]
-      }]
-      }
+        "item_id": 200,
+        "title": "Root",
+        "children": [
+          {
+            "item_id": 210,
+            "order": 1,
+            "title": "Chapter A",
+            "children": [{ "item_id": 211, "order": 1, "title": "Lesson 1"}]
+          },
+          { "item_id": 220, "order": 2, "title": "Chapter B"},
+          {
+            "item_id": 230,
+            "order": 3,
+            "title": "Chapter C",
+            "children": [
+              {"item_id": 231, "order": 1, "title": "Lesson 2"},
+              {"item_id": 232, "order": 2, "title": "Lesson 3"}
+            ]
+          }]
+        }
       """
