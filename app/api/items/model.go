@@ -2,6 +2,7 @@ package items
 
 import "github.com/France-ioi/AlgoreaBackend/app/database"
 
+// Item .
 type Item struct {
 	ItemID   int64   `json:"item_id"`
 	Title    string  `json:"title,omitempty"`

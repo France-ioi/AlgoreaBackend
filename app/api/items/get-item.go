@@ -13,10 +13,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// GetItemRequest .
 type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
 
+// Bind .
 func (req *GetItemRequest) Bind(r *http.Request) error {
 	strItemID := chi.URLParam(r, "itemID")
 	itemID, err := strconv.Atoi(strItemID)

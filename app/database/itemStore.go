@@ -29,6 +29,8 @@ type Item struct {
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
+// TreeItem represents the content of `items` table filled with some additional information
+// from `items_strings` and `items_items`.
 type TreeItem struct {
 	ID            types.Int64  `sql:"column:ID"`
 	Type          types.String `sql:"column:sType"`
@@ -45,12 +47,13 @@ func (s *ItemStore) tableName() string {
 	return "items"
 }
 
+// GetOne returns a single element of the tree structure.
 func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
 	var it TreeItem
 
 	if err := s.db.Table(s.tableName()).
 		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
-		Where("items.ID IN (?) AND items_strings.idLanguage=?", id, languageID).
+		Where("items.ID=? AND items_strings.idLanguage=?", id, languageID).
 		Select("items.*, items_strings.sTitle as sTitle").
 		First(&it).Error; err != nil {
 		return nil, fmt.Errorf("failed to get item '%d': %v", id, err)
@@ -58,18 +61,7 @@ func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
 	return &it, nil
 }
 
-func (s *ItemStore) List(ids []int64, languageID int64) ([]*TreeItem, error) {
-	var itt []*TreeItem
-	if err := s.db.Table(s.tableName()).
-		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
-		Where("items.ID IN (?) AND items_strings.idLanguage=?", ids, languageID).
-		Select("items.*, items_strings.sTitle as sTitle").
-		Scan(&itt).Error; err != nil {
-		return nil, fmt.Errorf("failed to get items %v: %v", ids, err)
-	}
-	return itt, nil
-}
-
+// GetChildrenOf returns all children of the given root item.
 func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*TreeItem, error) {
 	var itt []*TreeItem
 

@@ -35,6 +35,7 @@ func (s *ItemItemStore) Insert(data *ItemItem) error {
 	return s.insert(s.tableName(), data)
 }
 
+// ChildrenOf .
 func (s *ItemItemStore) ChildrenOf(parentID int64) ([]*ItemItem, error) {
 	var ii []*ItemItem
 	err := s.db.Table(s.tableName()).Where("idItemParent=?", parentID).Scan(&ii).Error
