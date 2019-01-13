@@ -9,6 +9,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -43,20 +45,14 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	languageID := int64(1)
 
 	// Fetch information about the root item.
-	dbItem, err := srv.Store.Items().GetInLanguage(req.ID, languageID)
+	dbItem, err := srv.Store.Items().GetOne(req.ID, languageID)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
-	item := &Item{}
-	item.fillItemData(dbItem)
+	item := itemFromDB(dbItem)
 	if err := srv.buildChildrenStructure(item, languageID); err != nil {
 		return service.ErrUnexpected(err)
-	}
-	for i := range item.Children {
-		if err := srv.buildChildrenStructure(item.Children[i], languageID); err != nil {
-			return service.ErrUnexpected(err)
-		}
 	}
 
 	render.Respond(rw, httpReq, item)
@@ -64,19 +60,32 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 }
 
 func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {
-	// Fetch information about the children items.
-	dbChildrenItemItems, err := srv.Store.ItemItems().ChildrenOf(item.ItemID)
+	allChildren, err := srv.Store.Items().GetChildrenOf(item.ItemID, languageID)
 	if err != nil {
 		return err
 	}
-	childrenIDs := make([]int64, 0, len(dbChildrenItemItems))
-	for _, chIt := range dbChildrenItemItems {
-		childrenIDs = append(childrenIDs, chIt.ChildItemID.Value)
+
+	for i, ch := range allChildren {
+		logging.Logger.Errorf("ch #%d %#v", i, ch)
 	}
-	dbChildrenItems, err := srv.Store.Items().ListByIDsInLanguage(childrenIDs, languageID)
-	if err != nil {
-		return err
+
+	directChildren := childrenOf(item.ItemID, allChildren)
+	item.fillChildren(directChildren)
+
+	for i, ch := range item.Children {
+		grandChildren := childrenOf(ch.ItemID, allChildren)
+		item.Children[i].fillChildren(grandChildren)
 	}
-	item.fillChildren(dbChildrenItems, dbChildrenItemItems)
+
 	return nil
+}
+
+func childrenOf(parentID int64, items []*database.Item) []*database.Item {
+	var children []*database.Item
+	for _, it := range items {
+		if it.ParentID == parentID {
+			children = append(children, it)
+		}
+	}
+	return children
 }

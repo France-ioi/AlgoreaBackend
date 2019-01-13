@@ -33,7 +33,7 @@ func (s *ItemStore) tableName() string {
 	return "items"
 }
 
-func (s *ItemStore) GetInLanguage(id, languageID int64) (*Item, error) {
+func (s *ItemStore) GetOne(id, languageID int64) (*Item, error) {
 	var it Item
 
 	if err := s.db.Table(s.tableName()).
@@ -46,7 +46,7 @@ func (s *ItemStore) GetInLanguage(id, languageID int64) (*Item, error) {
 	return &it, nil
 }
 
-func (s *ItemStore) ListByIDsInLanguage(ids []int64, languageID int64) ([]*Item, error) {
+func (s *ItemStore) List(ids []int64, languageID int64) ([]*Item, error) {
 	var itt []*Item
 	if err := s.db.Table(s.tableName()).
 		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
@@ -54,6 +54,22 @@ func (s *ItemStore) ListByIDsInLanguage(ids []int64, languageID int64) ([]*Item,
 		Select("items.*, items_strings.sTitle as sTitle").
 		Scan(&itt).Error; err != nil {
 		return nil, fmt.Errorf("failed to get items %v: %v", ids, err)
+	}
+	return itt, nil
+}
+
+func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*Item, error) {
+	var itt []*Item
+
+	err := s.db.Table(s.tableName()).
+		Joins("JOIN items_ancestors ON (items.ID=items_ancestors.idItemChild)").
+		Joins("JOIN items_strings ON (items_ancestors.idItemChild=items_strings.idItem)").
+		Joins("JOIN items_items ON (items_ancestors.idItemChild=items_items.idItemChild)").
+		Where("items_ancestors.idItemAncestor=? AND items_strings.idLanguage=?", rootID, languageID).
+		Select("items.*, sTitle, iChildOrder, idItemParent").
+		Scan(&itt).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tree children of '%d': %v", rootID, err)
 	}
 	return itt, nil
 }

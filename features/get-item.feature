@@ -39,6 +39,17 @@ Feature: Get item for tree navigation
       | 57 | 210          | 211         | 1           | 0           | 0        |
       | 58 | 230          | 231         | 1           | 0           | 0        |
       | 59 | 230          | 232         | 2           | 0           | 0        |
+    And the database has the following table 'items_ancestors':
+      | ID | idItemAncestor | idItemChild |
+      | 51 | 200            | 210         |
+      | 52 | 200            | 220         |
+      | 53 | 200            | 230         |
+      | 54 | 200            | 211         |
+      | 55 | 200            | 231         |
+      | 56 | 200            | 232         |
+      | 57 | 210            | 211         |
+      | 58 | 230            | 231         |
+      | 59 | 230            | 232         |
     And the database has the following table 'items_strings':
       | ID | idItem | idLanguage | sTitle    | iVersion |
       | 53 | 200    | 1          | Root      | 0        |
