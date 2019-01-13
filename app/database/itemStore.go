@@ -33,17 +33,26 @@ func (s *ItemStore) tableName() string {
 	return "items"
 }
 
-func (s *ItemStore) Get(id int64) (*Item, error) {
+func (s *ItemStore) GetInLanguage(id, languageID int64) (*Item, error) {
 	var it Item
-	if err := s.db.Table(s.tableName()).Where("ID=?", id).First(&it).Error; err != nil {
+
+	if err := s.db.Table(s.tableName()).
+		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
+		Where("items.ID IN (?) AND items_strings.idLanguage=?", id, languageID).
+		Select("items.*, items_strings.sTitle as sTitle").
+		First(&it).Error; err != nil {
 		return nil, fmt.Errorf("failed to get item '%d': %v", id, err)
 	}
 	return &it, nil
 }
 
-func (s *ItemStore) ListByIDs(ids []int64) ([]*Item, error) {
+func (s *ItemStore) ListByIDsInLanguage(ids []int64, languageID int64) ([]*Item, error) {
 	var itt []*Item
-	if err := s.db.Table(s.tableName()).Where("ID IN (?)", ids).Scan(&itt).Error; err != nil {
+	if err := s.db.Table(s.tableName()).
+		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
+		Where("items.ID IN (?) AND items_strings.idLanguage=?", ids, languageID).
+		Select("items.*, items_strings.sTitle as sTitle").
+		Scan(&itt).Error; err != nil {
 		return nil, fmt.Errorf("failed to get items %v: %v", ids, err)
 	}
 	return itt, nil

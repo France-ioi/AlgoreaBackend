@@ -44,10 +44,10 @@ Feature: Get item for tree navigation
       | 53 | 200    | 1          | Root      | 0        |
       | 54 | 210    | 1          | Chapter A | 0        |
       | 55 | 220    | 1          | Chapter B | 0        |
-      | 56 | 230    | 2          | Chapter C | 0        |
-      | 57 | 211    | 2          | Lesson 1  | 0        |
-      | 58 | 231    | 2          | Lesson 2  | 0        |
-      | 59 | 232    | 2          | Lesson 3  | 0        |
+      | 56 | 230    | 1          | Chapter C | 0        |
+      | 57 | 211    | 1          | Lesson 1  | 0        |
+      | 58 | 231    | 1          | Lesson 2  | 0        |
+      | 59 | 232    | 1          | Lesson 3  | 0        |
     And I am the user with ID "1"
     When I send a GET request to "/items/200"
     Then the response code should be 200

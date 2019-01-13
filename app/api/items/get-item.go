@@ -39,25 +39,22 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	} else if !valid {
 		return service.ErrForbidden(errors.New("Insufficient access on given item ids"))
 	}
+	// TODO: read language from somewhere
+	languageID := int64(1)
 
 	// Fetch information about the root item.
-	dbItem, err := srv.Store.Items().Get(req.ID)
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
-	dbItemString, err := srv.Store.ItemStrings().GetByItemID(req.ID)
+	dbItem, err := srv.Store.Items().GetInLanguage(req.ID, languageID)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
 	item := &Item{}
 	item.fillItemData(dbItem)
-	item.fillItemStringData(dbItemString)
-	if err := srv.buildChildrenStructure(item); err != nil {
+	if err := srv.buildChildrenStructure(item, languageID); err != nil {
 		return service.ErrUnexpected(err)
 	}
 	for i := range item.Children {
-		if err := srv.buildChildrenStructure(item.Children[i]); err != nil {
+		if err := srv.buildChildrenStructure(item.Children[i], languageID); err != nil {
 			return service.ErrUnexpected(err)
 		}
 	}
@@ -66,7 +63,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	return service.NoError
 }
 
-func (srv *Service) buildChildrenStructure(item *Item) error {
+func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {
 	// Fetch information about the children items.
 	dbChildrenItemItems, err := srv.Store.ItemItems().ChildrenOf(item.ItemID)
 	if err != nil {
@@ -76,14 +73,10 @@ func (srv *Service) buildChildrenStructure(item *Item) error {
 	for _, chIt := range dbChildrenItemItems {
 		childrenIDs = append(childrenIDs, chIt.ChildItemID.Value)
 	}
-	dbChildrenItems, err := srv.Store.Items().ListByIDs(childrenIDs)
+	dbChildrenItems, err := srv.Store.Items().ListByIDsInLanguage(childrenIDs, languageID)
 	if err != nil {
 		return err
 	}
-	dbChildrenItemStrings, err := srv.Store.ItemStrings().GetByItemIDs(childrenIDs)
-	if err != nil {
-		return err
-	}
-	item.fillChildren(dbChildrenItems, dbChildrenItemItems, dbChildrenItemStrings)
+	item.fillChildren(dbChildrenItems, dbChildrenItemItems)
 	return nil
 }
