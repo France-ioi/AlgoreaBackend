@@ -9,7 +9,7 @@ type Item struct {
 	Children []*Item `json:"children,omitempty"`
 }
 
-func itemFromDB(dbIt *database.Item) *Item {
+func treeItemFromDB(dbIt *database.TreeItem) *Item {
 	if dbIt == nil {
 		return nil
 	}
@@ -20,9 +20,9 @@ func itemFromDB(dbIt *database.Item) *Item {
 	}
 }
 
-func (it *Item) fillChildren(chItt []*database.Item) {
+func (it *Item) fillChildren(chItt []*database.TreeItem) {
 	for _, chIt := range chItt {
-		chItem := itemFromDB(chIt)
+		chItem := treeItemFromDB(chIt)
 		it.Children = append(it.Children, chItem)
 	}
 }

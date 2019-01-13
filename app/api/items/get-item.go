@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -50,7 +49,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrUnexpected(err)
 	}
 
-	item := itemFromDB(dbItem)
+	item := treeItemFromDB(dbItem)
 	if err := srv.buildChildrenStructure(item, languageID); err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -65,10 +64,6 @@ func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {
 		return err
 	}
 
-	for i, ch := range allChildren {
-		logging.Logger.Errorf("ch #%d %#v", i, ch)
-	}
-
 	directChildren := childrenOf(item.ItemID, allChildren)
 	item.fillChildren(directChildren)
 
@@ -80,8 +75,8 @@ func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {
 	return nil
 }
 
-func childrenOf(parentID int64, items []*database.Item) []*database.Item {
-	var children []*database.Item
+func childrenOf(parentID int64, items []*database.TreeItem) []*database.TreeItem {
+	var children []*database.TreeItem
 	for _, it := range items {
 		if it.ParentID == parentID {
 			children = append(children, it)

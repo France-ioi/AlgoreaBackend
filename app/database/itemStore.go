@@ -29,12 +29,24 @@ type Item struct {
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
+type TreeItem struct {
+	ID            types.Int64  `sql:"column:ID"`
+	Type          types.String `sql:"column:sType"`
+	TeamsEditable bool         `sql:"column:bTeamsEditable"` // use Go default in DB (to be fixed)
+	NoScore       bool         `sql:"column:bNoScore"`       // use Go default in DB (to be fixed)
+	Version       int64        `sql:"column:iVersion"`       // use Go default in DB (to be fixed)
+	Title         types.String `sql:"column:sTitle"`         // from items_strings
+	Order         types.Int64  `sql:"column:iChildOrder"`    // from items_items
+	ParentID      int64        `sql:"column:idItemParent"`
+	TreeLevel     int64        `sql:"column:treeLevel"` // information if direct child of root
+}
+
 func (s *ItemStore) tableName() string {
 	return "items"
 }
 
-func (s *ItemStore) GetOne(id, languageID int64) (*Item, error) {
-	var it Item
+func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
+	var it TreeItem
 
 	if err := s.db.Table(s.tableName()).
 		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
@@ -46,8 +58,8 @@ func (s *ItemStore) GetOne(id, languageID int64) (*Item, error) {
 	return &it, nil
 }
 
-func (s *ItemStore) List(ids []int64, languageID int64) ([]*Item, error) {
-	var itt []*Item
+func (s *ItemStore) List(ids []int64, languageID int64) ([]*TreeItem, error) {
+	var itt []*TreeItem
 	if err := s.db.Table(s.tableName()).
 		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
 		Where("items.ID IN (?) AND items_strings.idLanguage=?", ids, languageID).
@@ -58,8 +70,8 @@ func (s *ItemStore) List(ids []int64, languageID int64) ([]*Item, error) {
 	return itt, nil
 }
 
-func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*Item, error) {
-	var itt []*Item
+func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*TreeItem, error) {
+	var itt []*TreeItem
 
 	err := s.db.Table(s.tableName()).
 		Joins("JOIN items_ancestors ON (items.ID=items_ancestors.idItemChild)").
