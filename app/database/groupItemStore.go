@@ -1,7 +1,6 @@
 package database
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -37,7 +36,7 @@ func (s *GroupItemStore) All() *DB {
 }
 
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
-func (s *GroupItemStore) MatchingUserAncestors(user *auth.User) *DB {
+func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
 	userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
 	return &DB{s.All().Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)}
 }

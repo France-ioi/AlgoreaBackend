@@ -3,7 +3,6 @@ package database
 import (
 	"fmt"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -40,7 +39,7 @@ func (s *ItemStore) Insert(data *Item) error {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *auth.User, itemID int64) (found bool, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
 
 	var dbRes = []struct {
 		ItemID        int64 `sql:"column:idItem"`
@@ -68,7 +67,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(user *auth.User, itemIDs []int64) (bool, error) {
+func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
 
 	var accDets []itemAccessDetails
 	db := s.GroupItems().MatchingUserAncestors(user).

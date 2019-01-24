@@ -1,9 +1,5 @@
 package database
 
-import (
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-)
-
 // GroupAncestorStore implements database operations on `groups_ancestors` (which is a precomputed cache over groups_groups)
 type GroupAncestorStore struct {
 	*DataStore
@@ -15,6 +11,6 @@ func (s *GroupAncestorStore) All() *DB {
 }
 
 // UserAncestors returns a composable query of ancestors of user's self group, i.e. groups of which he is a member
-func (s *GroupAncestorStore) UserAncestors(user *auth.User) *DB {
+func (s *GroupAncestorStore) UserAncestors(user AuthUser) *DB {
 	return &DB{s.All().Where("idGroupChild = ?", user.SelfGroupID())}
 }
