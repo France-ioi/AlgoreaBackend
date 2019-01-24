@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
@@ -27,7 +28,7 @@ type userData struct {
 
 // UserStore is an interface to the store for `users`
 type UserStore interface {
-	GetProfileByID(userID int64, dest interface{}) error
+	ByID(userID int64) database.DB
 }
 
 // UserFromContext creates a User context from a context set by the middleware
@@ -40,9 +41,12 @@ func (u *User) lazyLoadData() error {
 	var err error
 	if u.data == nil {
 		u.data = &userData{}
-		err = u.store.GetProfileByID(u.UserID, u.data)
-		if err != nil {
-			logging.Logger.Error(fmt.Errorf("Unable to lazy load user data: %s", err.Error()))
+		db := u.store.ByID(u.UserID).
+			Joins("LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode)").
+			Select("users.*, l.ID as idDefaultLanguage").
+			Scan(u.data)
+		if db.Error() != nil {
+			logging.Logger.Error(fmt.Errorf("Unable to lazy load user data: %s", db.Error()))
 		}
 	}
 	return err
