@@ -24,10 +24,10 @@ func (s *ItemStringStore) tableName() string {
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemStringStore) Insert(data *ItemString) error {
-	return s.db.insert(s.tableName(), data)
+	return s.insert(s.tableName(), data)
 }
 
 // All creates a composable query without filtering
-func (s *ItemStringStore) All() *DB {
-	return &DB{s.db.Table(s.tableName())}
+func (s *ItemStringStore) All() DB {
+	return s.table(s.tableName())
 }

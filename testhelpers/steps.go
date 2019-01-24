@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,9 +10,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
+	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
@@ -108,16 +111,26 @@ func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
 	return backend
 }
 
+func (ctx *TestContext) db() *sql.DB {
+	conf := ctx.app().Config
+	conn, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
+	if err != nil {
+		fmt.Println("Unable to connect to the database: ", err)
+		os.Exit(1)
+	}
+	return conn
+}
+
 // nolint: gosec
 func (ctx *TestContext) emptyDB() error {
 
-	db := ctx.app().Database
+	db := ctx.db()
 	dbName := ctx.app().Config.Database.Connection.DBName
-	rows, err := db.Raw(`SELECT CONCAT(table_schema, '.', table_name)
-                        FROM   information_schema.tables
-                        WHERE  table_type   = 'BASE TABLE'
-                          AND  table_schema = '` + dbName + `'
-                          AND  table_name  != 'gorp_migrations'`).Rows()
+	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+                         FROM   information_schema.tables
+                         WHERE  table_type   = 'BASE TABLE'
+                           AND  table_schema = '` + dbName + `'
+                           AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
 		return err
 	}
@@ -128,7 +141,7 @@ func (ctx *TestContext) emptyDB() error {
 		if err = rows.Scan(&tableName); err != nil {
 			return err
 		}
-		err = db.Exec("TRUNCATE TABLE " + tableName).Error
+		_, err = db.Exec("TRUNCATE TABLE " + tableName)
 		if err != nil {
 			return err
 		}
@@ -141,9 +154,10 @@ func (ctx *TestContext) initDB() error {
 	if err != nil {
 		return err
 	}
+	db := ctx.db()
 
 	for _, query := range ctx.featureQueries {
-		err := ctx.app().Database.Exec(query.sql, query.values).Error
+		_, err := db.Exec(query.sql, query.values)
 		if err != nil {
 			return err
 		}
@@ -191,6 +205,7 @@ func dbDataTableValue(input string) interface{} {
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
+	db := ctx.db()
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -205,7 +220,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 			vals = append(vals, dbDataTableValue(cell.Value))
 		}
 		if ctx.inScenario {
-			err := ctx.app().Database.Exec(query, vals...).Error
+			_, err := db.Exec(query, vals...)
 			if err != nil {
 				return err
 			}
@@ -335,7 +350,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
 
-	db := ctx.app().Database
+	db := ctx.db()
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
@@ -350,7 +365,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 
 	// exec sql
 	query := fmt.Sprintf("SELECT %s FROM `%s` %s", strings.Join(selects, ", "), tableName, where) // nolint: gosec
-	sqlRows, err := db.Raw(query).Rows()
+	sqlRows, err := db.Query(query)
 	if err != nil {
 		return err
 	}

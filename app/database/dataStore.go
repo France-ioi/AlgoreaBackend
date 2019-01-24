@@ -8,12 +8,12 @@ import (
 
 // DataStore gather all stores for database operations on business data
 type DataStore struct {
-	db *DB
+	DB
 }
 
 // NewDataStore returns a DataStore
-func NewDataStore(db *DB) *DataStore {
-	return &DataStore{db}
+func NewDataStore(conn DB) *DataStore {
+	return &DataStore{conn}
 }
 
 // Users returns a UserStore
@@ -67,7 +67,7 @@ func (s *DataStore) EnsureSetID(id *types.Int64) {
 
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
-	return s.db.inTransaction(func(db *DB) error {
+	return s.inTransaction(func(db DB) error {
 		return txFunc(&DataStore{db})
 	})
 }

@@ -6,10 +6,10 @@ import (
 	"os"
 	"os/exec"
 
+	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 // nolint: gosec
@@ -30,8 +30,8 @@ func init() {
 			}
 
 			// open DB
-			var db *database.DB
-			db, err = database.Open(conf.Database)
+			var db *sql.DB
+			db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
@@ -39,10 +39,10 @@ func init() {
 
 			// remove all tables from DB
 			var rows *sql.Rows
-			rows, err = db.Raw(`SELECT CONCAT(table_schema, '.', table_name)
-                          FROM   information_schema.tables
-                          WHERE  table_type   = 'BASE TABLE'
-                            AND  table_schema = '` + conf.Database.Connection.DBName + "'").Rows()
+			rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+                            FROM   information_schema.tables
+                            WHERE  table_type   = 'BASE TABLE'
+                              AND  table_schema = '` + conf.Database.Connection.DBName + "'")
 			if err != nil {
 				fmt.Println("Unable to query the database: ", err)
 				os.Exit(1)
@@ -55,7 +55,7 @@ func init() {
 					fmt.Println("Unable to parse the database result: ", err)
 					os.Exit(1)
 				}
-				err = db.Exec("DROP TABLE " + tableName).Error
+				_, err = db.Query("DROP TABLE " + tableName)
 				if err != nil {
 					fmt.Println("Unable to drop table: ", err)
 					os.Exit(1)

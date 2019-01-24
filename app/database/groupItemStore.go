@@ -27,16 +27,16 @@ func (s *GroupItemStore) tableName() string {
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *GroupItemStore) Insert(data *GroupItem) error {
-	return s.db.insert(s.tableName(), data)
+	return s.insert(s.tableName(), data)
 }
 
 // All creates a composable query without filtering
-func (s *GroupItemStore) All() *DB {
-	return &DB{s.db.Table(s.tableName())}
+func (s *GroupItemStore) All() DB {
+	return s.table(s.tableName())
 }
 
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
-func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
+func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) DB {
 	userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
-	return &DB{s.All().Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)}
+	return s.All().Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }

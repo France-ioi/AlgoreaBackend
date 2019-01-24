@@ -34,7 +34,7 @@ func (s *ItemStore) tableName() string {
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemStore) Insert(data *Item) error {
-	return s.db.insert(s.tableName(), data)
+	return s.insert(s.tableName(), data)
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
@@ -51,8 +51,8 @@ func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, a
 		Select("idItem, bManagerAccess, bOwnerAccess").
 		Where("idItem = ?", itemID).
 		Scan(&dbRes)
-	if db.Error != nil {
-		return false, false, db.Error
+	if db.Error() != nil {
+		return false, false, db.Error()
 	}
 	if len(dbRes) != 1 {
 		return false, false, nil
@@ -74,8 +74,8 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Where("groups_items.idItem IN (?)", itemIDs).
 		Group("idItem").Scan(&accDets)
-	if db.Error != nil {
-		return false, db.Error
+	if db.Error() != nil {
+		return false, db.Error()
 	}
 
 	if err := checkAccess(itemIDs, accDets); err != nil {

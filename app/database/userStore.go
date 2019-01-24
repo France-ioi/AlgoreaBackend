@@ -10,15 +10,15 @@ func (s *UserStore) GetProfileByID(userID int64, dest interface{}) error {
 	return s.ByID(userID).
 		Joins("LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode)").
 		Select("users.*, l.ID as idDefaultLanguage").
-		Scan(dest).Error
+		Scan(dest).Error()
 }
 
 // ByID returns a composable query of users filtered by userID
-func (s *UserStore) ByID(userID int64) *DB {
-	return &DB{s.All().Where("users.ID = ?", userID)}
+func (s *UserStore) ByID(userID int64) DB {
+	return s.All().Where("users.ID = ?", userID)
 }
 
 // All creates a composable query without filtering
-func (s *UserStore) All() *DB {
-	return &DB{s.db.Table("users")}
+func (s *UserStore) All() DB {
+	return s.table("users")
 }
