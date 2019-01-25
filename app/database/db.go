@@ -154,18 +154,14 @@ func decodeValue(value interface{}) (unWrappedValue interface{}, isNull bool, sk
 	isNull = false
 	skip = false
 	unWrappedValue = value
-	switch value.(type) {
+	switch val := value.(type) {
 	case types.Int64:
-		val := value.(types.Int64)
 		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
 	case types.String:
-		val := value.(types.String)
 		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
 	case types.Datetime:
-		val := value.(types.Datetime)
 		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
 	case types.Bool:
-		val := value.(types.Bool)
 		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
 	}
 	return
