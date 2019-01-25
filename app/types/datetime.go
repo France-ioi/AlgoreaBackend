@@ -46,6 +46,11 @@ func (t *Datetime) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+// AllAttributes unwrap the wrapped value and its attributes
+func (t Datetime) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+	return t.Value, t.Null, t.Set
+}
+
 // Validate checks that the subject matches "required" (set and not-null)
 func (t *RequiredDatetime) Validate() error {
 	if !t.Set || t.Null {

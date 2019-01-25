@@ -131,11 +131,14 @@ func (conn *db) insert(tableName string, data interface{}) error {
 		sqlParam := strings.Split(field.Tag.Get("sql"), ":")
 		if len(sqlParam) == 2 && sqlParam[0] == "column" {
 			attrName := sqlParam[1]
-			value, null, skip := decodeValue(dataV.Field(i).Interface())
+			value, null, set := dataV.Field(i).Interface(), false, true
+			if val, ok := value.(types.NullableOptional); ok {
+				value, null, set = val.AllAttributes()
+			}
 
 			// only add non optional value (we suppose they will be understandable by the
 			// SQL lib, or optional which are set) and optional value which are set
-			if !skip {
+			if set {
 				attributes = append(attributes, attrName)
 				if null {
 					valueMarks = append(valueMarks, "NULL")
@@ -148,21 +151,4 @@ func (conn *db) insert(tableName string, data interface{}) error {
 	}
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
 	return conn.Exec(query, values...).Error
-}
-
-func decodeValue(value interface{}) (unWrappedValue interface{}, isNull bool, skip bool) {
-	isNull = false
-	skip = false
-	unWrappedValue = value
-	switch val := value.(type) {
-	case types.Int64:
-		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
-	case types.String:
-		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
-	case types.Datetime:
-		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
-	case types.Bool:
-		unWrappedValue, isNull, skip = val.Value, val.Null, !val.Set
-	}
-	return
 }

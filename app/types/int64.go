@@ -49,6 +49,11 @@ func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 	return
 }
 
+// AllAttributes unwrap the wrapped value and its attributes
+func (i Int64) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+	return i.Value, i.Null, i.Set
+}
+
 // Validate checks that the subject matches "required" (set and not-null)
 func (i *RequiredInt64) Validate() error {
 	if !i.Set || i.Null {
