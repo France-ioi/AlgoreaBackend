@@ -23,5 +23,5 @@ func (s *ItemItemStore) tableName() string {
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemItemStore) Insert(data *ItemItem) error {
-	return s.db.insert(s.tableName(), data)
+	return s.insert(s.tableName(), data)
 }

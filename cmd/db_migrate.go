@@ -1,14 +1,15 @@
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
-	"github.com/rubenv/sql-migrate"
+	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
+	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func init() {
@@ -30,8 +31,8 @@ func init() {
 
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
-			var db *database.DB
-			db, err = database.Open(conf.Database)
+			var db *sql.DB
+			db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
@@ -39,7 +40,7 @@ func init() {
 
 			// migrate
 			var n int
-			n, err = migrate.Exec(db.DB.DB(), "mysql", migrations, migrate.Up)
+			n, err = migrate.Exec(db, "mysql", migrations, migrate.Up)
 			if err != nil {
 				fmt.Println("Unable to apply migration:", err)
 			} else if n == 0 {

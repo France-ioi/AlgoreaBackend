@@ -3,7 +3,6 @@ package database
 import (
 	"fmt"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -35,12 +34,12 @@ func (s *ItemStore) tableName() string {
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemStore) Insert(data *Item) error {
-	return s.db.insert(s.tableName(), data)
+	return s.insert(s.tableName(), data)
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *auth.User, itemID int64) (found bool, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
 
 	var dbRes = []struct {
 		ItemID        int64 `sql:"column:idItem"`
@@ -52,8 +51,8 @@ func (s *ItemStore) HasManagerAccess(user *auth.User, itemID int64) (found bool,
 		Select("idItem, bManagerAccess, bOwnerAccess").
 		Where("idItem = ?", itemID).
 		Scan(&dbRes)
-	if db.Error != nil {
-		return false, false, db.Error
+	if db.Error() != nil {
+		return false, false, db.Error()
 	}
 	if len(dbRes) != 1 {
 		return false, false, nil
@@ -68,15 +67,15 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(user *auth.User, itemIDs []int64) (bool, error) {
+func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
 
 	var accDets []itemAccessDetails
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Where("groups_items.idItem IN (?)", itemIDs).
 		Group("idItem").Scan(&accDets)
-	if db.Error != nil {
-		return false, db.Error
+	if db.Error() != nil {
+		return false, db.Error()
 	}
 
 	if err := checkAccess(itemIDs, accDets); err != nil {

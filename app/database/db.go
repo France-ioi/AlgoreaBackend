@@ -7,34 +7,46 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
-// DB is a wrapper around the database connector that can be shared through the app
-type DB struct {
+// DB is the database connector that can be shared through the app
+type DB interface {
+	inTransaction(txFunc func(DB) error) error
+	insert(tableName string, data interface{}) error
+	table(string) DB
+
+	Select(query interface{}, args ...interface{}) DB
+	Where(query interface{}, args ...interface{}) DB
+	Joins(query string, args ...interface{}) DB
+	Group(query string) DB
+
+	SubQuery() interface{}
+	Scan(dest interface{}) DB
+	Error() error
+}
+
+type db struct {
 	*gorm.DB
 }
 
 // Open connects to the database and tests the connection
 // nolint: gosec
-func Open(dbConfig config.Database) (*DB, error) {
+func Open(dsnConfig string) (DB, error) {
 	var err error
-	var db *gorm.DB
+	var dbConn *gorm.DB
 	var driverName = "mysql"
-	var dataSourceName = dbConfig.Connection.FormatDSN()
-
-	db, err = gorm.Open(driverName, dataSourceName)
+	dbConn, err = gorm.Open(driverName, dsnConfig)
 
 	// setup logging
-	db.SetLogger(logging.Logger)
+	dbConn.SetLogger(logging.Logger.WithField("module", "database"))
 
-	return &DB{db}, err
+	return &db{dbConn}, err
 }
 
-func (db *DB) inTransaction(txFunc func(*DB) error) (err error) {
-	var txDB *gorm.DB = db.Begin()
+func (conn *db) inTransaction(txFunc func(DB) error) (err error) {
+	var txDB = conn.Begin()
 	if err != nil {
 		return err
 	}
@@ -54,13 +66,45 @@ func (db *DB) inTransaction(txFunc func(*DB) error) (err error) {
 			err = txDB.Error
 		}
 	}()
-	err = txFunc(&DB{txDB})
+	err = txFunc(&db{txDB})
 	return err
+}
+
+func (conn *db) table(tableName string) DB {
+	return &db{conn.DB.Table(tableName)}
+}
+
+func (conn *db) Where(query interface{}, args ...interface{}) DB {
+	return &db{conn.DB.Where(query, args...)}
+}
+
+func (conn *db) Joins(query string, args ...interface{}) DB {
+	return &db{conn.DB.Joins(query, args...)}
+}
+
+func (conn *db) Select(query interface{}, args ...interface{}) DB {
+	return &db{conn.DB.Select(query, args...)}
+}
+
+func (conn *db) Group(query string) DB {
+	return &db{conn.DB.Group(query)}
+}
+
+func (conn *db) SubQuery() interface{} {
+	return conn.DB.SubQuery()
+}
+
+func (conn *db) Scan(dest interface{}) DB {
+	return &db{conn.DB.Scan(dest)}
+}
+
+func (conn *db) Error() error {
+	return conn.DB.Error
 }
 
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
-func (db *DB) insert(tableName string, data interface{}) error {
+func (conn *db) insert(tableName string, data interface{}) error {
 	// introspect data
 	dataV := reflect.ValueOf(data)
 
@@ -112,6 +156,5 @@ func (db *DB) insert(tableName string, data interface{}) error {
 		}
 	}
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
-	db = &DB{db.Exec(query, values...)}
-	return db.Error
+	return conn.Exec(query, values...).Error
 }

@@ -17,8 +17,8 @@ func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	db := srv.Store.Groups().All().Select("ID, sName")
 	db = db.Scan(&groups)
-	if db.Error != nil {
-		return service.ErrUnexpected(db.Error)
+	if db.Error() != nil {
+		return service.ErrUnexpected(db.Error())
 	}
 
 	render.Respond(w, r, groups)
