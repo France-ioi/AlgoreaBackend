@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -45,8 +44,9 @@ func (u *User) lazyLoadData() error {
 			Joins("LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode)").
 			Select("users.*, l.ID as idDefaultLanguage").
 			Scan(u.data)
-		if db.Error() != nil {
-			logging.Logger.Error(fmt.Errorf("Unable to lazy load user data: %s", db.Error()))
+		if err = db.Error(); err != nil {
+			u.data = nil
+			logging.Logger.Errorf("Unable to lazy load user data: %s", db.Error())
 		}
 	}
 	return err
