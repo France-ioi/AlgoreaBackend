@@ -18,6 +18,15 @@ func (v *SampleIntInput) validate() error {
 	return Validate(&v.ID, &v.ChildID, &v.Order, &v.ParentID)
 }
 
+func TestNewInt(t *testing.T) {
+	assert := assert_lib.New(t)
+	var value int64 = 2147483645
+	n := NewInt64(value)
+	assert.Equal(value, n.Value)
+	assert.True(n.Set)
+	assert.False(n.Null)
+}
+
 func TestIntValid(t *testing.T) {
 	assert := assert_lib.New(t)
 

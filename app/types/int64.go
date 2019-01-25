@@ -40,13 +40,18 @@ func NewInt64(v int64) *Int64 {
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 	i.Set = true // If this method was called, the value was set.
-	i.Null = (string(data) == "null")
+	i.Null = (string(data) == jsonNull)
 	var temp int64
 	err = json.Unmarshal(data, &temp)
 	if err == nil {
 		i.Value = temp
 	}
 	return
+}
+
+// AllAttributes unwrap the wrapped value and its attributes
+func (i Int64) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+	return i.Value, i.Null, i.Set
 }
 
 // Validate checks that the subject matches "required" (set and not-null)

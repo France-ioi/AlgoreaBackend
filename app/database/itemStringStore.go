@@ -11,11 +11,14 @@ type ItemStringStore struct {
 
 // ItemString matches the content the `items_strings` table
 type ItemString struct {
-	ID         types.Int64  `sql:"column:ID"`
-	ItemID     types.Int64  `sql:"column:idItem"`
-	LanguageID types.Int64  `sql:"column:idLanguage"`
-	Title      types.String `sql:"column:sTitle"`
-	Version    int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
+	ID          types.Int64  `sql:"column:ID"`
+	ItemID      types.Int64  `sql:"column:idItem"`
+	LanguageID  types.Int64  `sql:"column:idLanguage"`
+	Title       types.String `sql:"column:sTitle"`
+	ImageURL    types.String `sql:"column:sImageUrl"`
+	Subtitle    types.String `sql:"column:sSubtitle"`
+	Description types.String `sql:"column:sDescription"`
+	Version     int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
 func (s *ItemStringStore) tableName() string {

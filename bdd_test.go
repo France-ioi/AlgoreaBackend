@@ -47,6 +47,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
 	s.Step(`^I am the user with ID "([^"]*)"$`, ctx.IAmUserWithID)
+	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)

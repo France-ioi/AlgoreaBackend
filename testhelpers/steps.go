@@ -12,7 +12,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/viper"
@@ -246,6 +248,14 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 func (ctx *TestContext) IAmUserWithID(id int64) error { // nolint
 	ctx.userID = id
 	return nil
+}
+
+func (ctx *TestContext) TimeNow(timeStr string) error { // nolint
+	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
+	if err == nil {
+		monkey.Patch(time.Now, func() time.Time { return testTime })
+	}
+	return err
 }
 
 func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *gherkin.DocString) error { // nolint

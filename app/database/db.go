@@ -131,20 +131,14 @@ func (conn *db) insert(tableName string, data interface{}) error {
 		sqlParam := strings.Split(field.Tag.Get("sql"), ":")
 		if len(sqlParam) == 2 && sqlParam[0] == "column" {
 			attrName := sqlParam[1]
-			value := dataV.Field(i).Interface()
-			null := false
-			skip := false
-			switch value.(type) {
-			case types.Int64:
-				val := value.(types.Int64)
-				value, null, skip = val.Value, val.Null, !val.Set
-			case types.String:
-				val := value.(types.String)
-				value, null, skip = val.Value, val.Null, !val.Set
+			value, null, set := dataV.Field(i).Interface(), false, true
+			if val, ok := value.(types.NullableOptional); ok {
+				value, null, set = val.AllAttributes()
 			}
+
 			// only add non optional value (we suppose they will be understandable by the
 			// SQL lib, or optional which are set) and optional value which are set
-			if !skip {
+			if set {
 				attributes = append(attributes, attrName)
 				if null {
 					valueMarks = append(valueMarks, "NULL")

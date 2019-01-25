@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 
@@ -18,8 +19,11 @@ type NewItemRequest struct {
 	Type types.RequiredString `json:"type"`
 
 	Strings []struct {
-		LanguageID types.RequiredInt64  `json:"language_id"`
-		Title      types.RequiredString `json:"title"`
+		LanguageID  types.RequiredInt64  `json:"language_id"`
+		Title       types.RequiredString `json:"title"`
+		ImageURL    types.OptNullString  `json:"image_url"`
+		Subtitle    types.OptNullString  `json:"subtitle"`
+		Description types.OptNullString  `json:"description"`
 	} `json:"strings"`
 
 	Parents []struct {
@@ -41,26 +45,38 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 
 func (in *NewItemRequest) itemData() *database.Item {
 	return &database.Item{
-		ID:   in.ID.Int64,
-		Type: in.Type.String,
+		ID:                in.ID.Int64,
+		Type:              in.Type.String,
+		DefaultLanguageID: in.Strings[0].LanguageID.Int64,
+		TeamsEditable:     *types.NewBool(false), // has no db default at the moment, so must be set
+		NoScore:           *types.NewBool(false), // has no db default at the moment, so must be set
 	}
 }
 
-func (in *NewItemRequest) groupItemData(id int64) *database.GroupItem {
+func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *database.GroupItem {
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,
-		GroupID:        *types.NewInt64(6),    // dummy
-		FullAccessDate: "2018-01-01 00:00:00", // dummy
+		GroupID:        *types.NewInt64(groupID),
+		CreatorUserID:  *types.NewInt64(userID),
+		FullAccessDate: *types.NewDatetime(time.Now()),
+		OwnerAccess:    *types.NewBool(true),
+		ManagerAccess:  *types.NewBool(true),
+		// as the owner gets full access, there is no need to request parents' access to get the actual access level
+		CachedFullAccessDate: *types.NewDatetime(time.Now()),
+		CachedFullAccess:     *types.NewBool(true),
 	}
 }
 
 func (in *NewItemRequest) stringData(id int64) *database.ItemString {
 	return &database.ItemString{
-		ID:         *types.NewInt64(id),
-		ItemID:     in.ID.Int64,
-		LanguageID: in.Strings[0].LanguageID.Int64,
-		Title:      in.Strings[0].Title.String,
+		ID:          *types.NewInt64(id),
+		ItemID:      in.ID.Int64,
+		LanguageID:  in.Strings[0].LanguageID.Int64,
+		Title:       in.Strings[0].Title.String,
+		ImageURL:    in.Strings[0].ImageURL.String,
+		Subtitle:    in.Strings[0].Subtitle.String,
+		Description: in.Strings[0].Description.String,
 	}
 }
 func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
@@ -74,6 +90,7 @@ func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
+	user := srv.getUser(r)
 
 	// validate input (could be moved to JSON validation later)
 	input := &NewItemRequest{}
@@ -87,7 +104,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	// insertion
-	if err = srv.insertItem(input); err != nil {
+	if err = srv.insertItem(user, input); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
@@ -101,7 +118,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
-func (srv *Service) insertItem(input *NewItemRequest) error {
+func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -109,7 +126,7 @@ func (srv *Service) insertItem(input *NewItemRequest) error {
 		if err = store.Items().Insert(input.itemData()); err != nil {
 			return err
 		}
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID())); err != nil {
+		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
 			return err
 		}
 		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {

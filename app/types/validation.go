@@ -1,5 +1,12 @@
 package types
 
+const jsonNull = "null"
+
+// NullableOptional is a generic interface for all set/null information about these custom types
+type NullableOptional interface {
+	AllAttributes() (value interface{}, isNull bool, isSet bool)
+}
+
 // NOTE: to be probably replace by JSON schema validation and remove
 
 // Validatable is the interface indicating the type implementing it supports data validation.

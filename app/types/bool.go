@@ -8,25 +8,25 @@ import (
 // Doc is mainly in the "int64" file :-)
 
 type (
-	// String is a string which can be set/not-set and null/not-null
-	String struct {
-		Value string
+	// Bool is a bool which can be set/not-set and null/not-null
+	Bool struct {
+		Value bool
 		Set   bool
 		Null  bool
 	}
-	// RequiredString must be set and not null
-	RequiredString struct{ String }
-	// NullableString must be set and can be null
-	NullableString struct{ String }
-	// OptionalString can be not set. If set, cannot be null.
-	OptionalString struct{ String }
-	// OptNullString can be not set or null
-	OptNullString struct{ String }
+	// RequiredBool must be set and not null
+	RequiredBool struct{ Bool }
+	// NullableBool must be set and can be null
+	NullableBool struct{ Bool }
+	// OptionalBool can be not set. If set, cannot be null.
+	OptionalBool struct{ Bool }
+	// OptNullBool can be not set or null
+	OptNullBool struct{ Bool }
 )
 
-// NewString creates a String which is not-null and set with the given value
-func NewString(s string) *String {
-	n := &String{}
+// NewBool creates a Bool which is not-null and set with the given value
+func NewBool(s bool) *Bool {
+	n := &Bool{}
 	n.Value = s
 	n.Set = true
 	n.Null = false
@@ -34,10 +34,10 @@ func NewString(s string) *String {
 }
 
 // UnmarshalJSON parse JSON data to the type
-func (s *String) UnmarshalJSON(data []byte) (err error) {
+func (s *Bool) UnmarshalJSON(data []byte) (err error) {
 	s.Set = true // If this method was called, the value was set.
 	s.Null = (string(data) == jsonNull)
-	var temp string
+	var temp bool
 	err = json.Unmarshal(data, &temp)
 	if err == nil {
 		s.Value = temp
@@ -46,12 +46,12 @@ func (s *String) UnmarshalJSON(data []byte) (err error) {
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
-func (s String) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+func (s Bool) AllAttributes() (value interface{}, isNull bool, isSet bool) {
 	return s.Value, s.Null, s.Set
 }
 
 // Validate checks that the subject matches "required" (set and not-null)
-func (s *RequiredString) Validate() error {
+func (s *RequiredBool) Validate() error {
 	if !s.Set || s.Null {
 		return errors.New("must be given and not null")
 	}
@@ -59,7 +59,7 @@ func (s *RequiredString) Validate() error {
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
-func (s *NullableString) Validate() error {
+func (s *NullableBool) Validate() error {
 	if !s.Set {
 		return errors.New("must be given")
 	}
@@ -67,7 +67,7 @@ func (s *NullableString) Validate() error {
 }
 
 // Validate checks that the subject matches "optional" (not-null)
-func (s *OptionalString) Validate() error {
+func (s *OptionalBool) Validate() error {
 	if s.Null {
 		return errors.New("must not be null")
 	}
@@ -75,6 +75,6 @@ func (s *OptionalString) Validate() error {
 }
 
 // Validate checks that the subject matches "optnull" (always true)
-func (s *OptNullString) Validate() error {
+func (s *OptNullBool) Validate() error {
 	return nil
 }

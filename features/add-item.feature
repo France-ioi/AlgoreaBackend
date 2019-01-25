@@ -19,13 +19,14 @@ Background:
 
 Scenario: Valid, id is given
   Given I am the user with ID "1"
+  And the time now is "2018-01-01T00:00:00Z"
   When I send a POST request to "/items/" with the following body:
     """
     {
       "id": 2,
       "type": "Course",
       "strings": [
-        { "language_id": 3, "title": "my title" }
+        { "language_id": 3, "title": "my title", "image_url":"http://bit.ly/1234", "subtitle": "hard task", "description": "the goal of this task is ..." }
       ],
       "parents": [
         { "id": 21, "order": 100 }
@@ -42,17 +43,17 @@ Scenario: Valid, id is given
   }
   """
   And the table "items" at ID "2" should be:
-    | ID | sType  | sUrl |
-    |  2 | Course | NULL |
+    | ID | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore |
+    |  2 | Course | NULL |                 3 |              0 |        0 |
   And the table "items_strings" should be:
-    |                  ID | idItem  | idLanguage |   sTitle |
-    | 8674665223082153551 |      2  |          3 | my title |
+    |                  ID | idItem  | idLanguage |   sTitle |          sImageUrl | sSubtitle |                 sDescription |
+    | 8674665223082153551 |      2  |          3 | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
   And the table "items_items" should be:
     |                  ID | idItemParent | idItemChild | iChildOrder |
     | 6129484611666145821 |           21 |           2 |         100 |
   And the table "groups_items" at ID "5577006791947779410" should be:
-    |                  ID | idGroup | idItem |     sFullAccessDate | bCachedFullAccess | bOwnerAccess | idUserCreated |
-    | 5577006791947779410 |       6 |      2 | 2018-01-01 00:00:00 |                 0 |            0 |             0 |
+    |                  ID | idGroup | idItem | idUserCreated |     sFullAccessDate |  bOwnerAccess | bManagerAccess | sCachedFullAccessDate | bCachedFullAccess |
+    | 5577006791947779410 |      11 |      2 |             1 | 2018-01-01 00:00:00 |             1 |              1 |   2018-01-01 00:00:00 |                 1 |
 
 Scenario: Id not given
   Given I am the user with ID "1"
