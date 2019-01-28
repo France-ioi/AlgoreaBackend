@@ -6,7 +6,7 @@ jobs:
     steps:
       - checkout
       - restore_cache: &CACHEKEYMOD
-          key: go-deps-modules@{{ checksum "go.sum" }}
+          key: go-deps-modules-@{{ checksum "go.sum" }}
       - run: make
       - persist_to_workspace:
           root: ./
@@ -17,21 +17,7 @@ jobs:
           paths:
           - /go/pkg/mod
           - ~/.cache/go-build/
-  unit-tests:
-    docker:
-      - image: circleci/golang:1.11
-    steps:
-      - attach_workspace:
-          at: ./
-      - restore_cache: *CACHEKEYMOD
-      - run: make test-unit-report
-      - store_test_results: &TESTPATH
-          path: test-results
-      - store_artifacts: *TESTPATH
-      - run:
-          name: Upload test coverage results to Codecov
-          command: bash <(curl -s https://codecov.io/bash)
-  bdd-tests:
+  tests:
     docker:
       - image: circleci/golang:1.11
       - image: circleci/mysql:5.6
@@ -47,7 +33,6 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: mkdir -p test-results/cucumber
       - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get install mysql-client # required for db-restore
       - run:
@@ -58,18 +43,24 @@ jobs:
           command: |
             go run main.go db-restore
             go run main.go db-migrate
-      - run: make /go/bin/godog
       - run:
-          name: Run BDD Tests
+          name: Prepare for report
           command: |
-            mkdir -p test-results/cucumber/
-            /go/bin/godog --format=junit > test-results/cucumber/junit.xml
+            mkdir -p test-results
+            go get -u github.com/jstemmer/go-junit-report
+      - run:
+          name: Run tests (make verbosity disabled)
+          command: NOTVERBOSE=1 make test 2>&1 | go-junit-report > test-results/junit.xml
+      - run:
+          name: Upload test coverage results to Codecov
+          command: bash <(curl -s https://codecov.io/bash)
+      - store_test_results: &TESTPATH
+          path: test-results
+      - store_artifacts: *TESTPATH
       - run:
           when: on_fail
           name: On failure, run BDD tests with details
-          command: /go/bin/godog --format=pretty
-      - store_test_results: *TESTPATH
-      - store_artifacts: *TESTPATH
+          command: make test-bdd
   # The "lint" job is still complex as it cannot use Go modules.
   # It can be simplify to a few as soon as `gometalinter` supports Go modules
   lint:
@@ -102,10 +93,7 @@ workflows:
   build_test:
     jobs:
       - deps
-      - unit-tests:
-          requires:
-          - deps
-      - bdd-tests:
+      - tests:
           requires:
           - deps
       - lint
