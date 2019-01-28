@@ -159,18 +159,18 @@ func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	db := s.ItemItems().All()
+	rootID := ids[0]
 	previousID := ids[0]
-	for index, id := range ids {
-		if index == 0 {
+	for _, id := range ids {
+		if rootID == id {
 			continue
 		}
-
-		db = db.Or("idItemParent=? AND idItemChild=? AND iChildOrder=1", previousID, id)
+		db.Or("(idItemParent=? AND idItemChild=? AND iChildOrder=1)", previousID, id)
 		previousID = id
 	}
 
 	count := 0
-	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {
+	if err := db.Count(&count).Error(); err != nil {
 		return false, err
 	}
 
