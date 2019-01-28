@@ -48,4 +48,4 @@ $(GODOG):
 $(GO_JUNIT_REPORT):
 	$(GOGET) -u github.com/jstemmer/go-junit-report
 $(GOMETALINTER):
-	curl -L https://git.io/vp6lP | sh
+	curl -L https://git.io/vp6lP | sh /dev/stdin -b ./bin
