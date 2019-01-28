@@ -159,13 +159,13 @@ func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	db := s.ItemItems().All()
-	rootID := ids[0]
 	previousID := ids[0]
-	for _, id := range ids {
-		if rootID == id {
+	for index, id := range ids {
+		if index == 0 {
 			continue
 		}
-		db.Or("(idItemParent=? AND idItemChild=? AND iChildOrder=1)", previousID, id)
+
+		db = db.Or("idItemParent=? AND idItemChild=? AND iChildOrder=1", previousID, id)
 		previousID = id
 	}
 
