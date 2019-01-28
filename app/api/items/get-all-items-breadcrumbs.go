@@ -29,16 +29,20 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrForbidden(errors.New("Insufficient access on given item ids"))
 	}
 
-	// Todo: validate the hierarchy
-	// srv.Store.Items.IsValidHierarchy(...)
+	// Validate the hierarchy
+	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
+		return service.ErrUnexpected(err)
+	} else if !valid {
+		return service.ErrInvalidRequest(errors.New("The IDs chain is corrupt"))
+	}
 
 	// Build response
 	// Fetch the requested items
-	items := []struct {
+	var items []struct {
 		ItemID   int64  `json:"item_id"     sql:"column:idItem"`
 		Title    string `json:"title"       sql:"column:sTitle"`
 		Language int64  `json:"language_id" sql:"column:idLanguage"`
-	}{}
+	}
 	db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids).Scan(&items)
 	if db.Error() != nil {
 		return service.ErrUnexpected(db.Error())

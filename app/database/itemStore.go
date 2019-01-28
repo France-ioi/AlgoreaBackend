@@ -38,6 +38,16 @@ func (s *ItemStore) Insert(data *Item) error {
 	return s.insert(s.tableName(), data)
 }
 
+// ByID returns a composable query of items filtered by itemID
+func (s *ItemStore) ByID(itemID int64) DB {
+	return s.All().Where("items.ID = ?", itemID)
+}
+
+// All creates a composable query without filtering
+func (s *ItemStore) All() DB {
+	return s.table(s.tableName())
+}
+
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
 func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
@@ -64,7 +74,19 @@ func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, a
 
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
 func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
-	return false, nil
+	if len(ids) == 0 {
+		return false, nil
+	}
+
+	if valid, err := s.checkIfItemIsRoot(ids[0]); !valid || err != nil {
+		return false, err
+	}
+
+	if valid, err := s.checkHierarchicalChain(ids); !valid || err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
@@ -118,4 +140,43 @@ func checkAccessForID(id int64, last bool, accDets []itemAccessDetails) error {
 
 	// no row matching this item_id
 	return fmt.Errorf("not visible item_id %d", id)
+}
+
+func (s *ItemStore) checkIfItemIsRoot(id int64) (bool, error) {
+	count := 0
+	if err := s.ByID(id).Count(&count).Error(); err != nil {
+		return false, err
+	}
+	if count == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
+	if len(ids) == 1 {
+		return true, nil
+	}
+
+	db := s.ItemItems().All()
+	rootID := ids[0]
+	previousID := ids[0]
+	for _, id := range ids {
+		if rootID == id {
+			continue
+		}
+		db.Or("(idItemParent=? AND idItemChild=? AND iChildOrder=1)", previousID, id)
+		previousID = id
+	}
+
+	count := 0
+	if err := db.Count(&count).Error(); err != nil {
+		return false, err
+	}
+
+	if count != len(ids)-1 {
+		return false, nil
+	}
+
+	return true, nil
 }

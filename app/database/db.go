@@ -17,6 +17,7 @@ type DB interface {
 	insert(tableName string, data interface{}) error
 	table(string) DB
 
+	Or(query interface{}, args ...interface{}) DB
 	Select(query interface{}, args ...interface{}) DB
 	Where(query interface{}, args ...interface{}) DB
 	Joins(query string, args ...interface{}) DB
@@ -24,6 +25,8 @@ type DB interface {
 
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
+	Count(dest interface{}) DB
+
 	Error() error
 }
 
@@ -82,6 +85,10 @@ func (conn *db) Joins(query string, args ...interface{}) DB {
 	return &db{conn.DB.Joins(query, args...)}
 }
 
+func (conn *db) Or(query interface{}, args ...interface{}) DB {
+	return &db{conn.DB.Or(query, args...)}
+}
+
 func (conn *db) Select(query interface{}, args ...interface{}) DB {
 	return &db{conn.DB.Select(query, args...)}
 }
@@ -96,6 +103,10 @@ func (conn *db) SubQuery() interface{} {
 
 func (conn *db) Scan(dest interface{}) DB {
 	return &db{conn.DB.Scan(dest)}
+}
+
+func (conn *db) Count(dest interface{}) DB {
+	return &db{conn.DB.Count(dest)}
 }
 
 func (conn *db) Error() error {
