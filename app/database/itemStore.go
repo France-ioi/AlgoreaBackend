@@ -170,7 +170,7 @@ func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	count := 0
-	if err := db.Count(&count).Error(); err != nil {
+	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {
 		return false, err
 	}
 
