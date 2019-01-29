@@ -14,7 +14,7 @@ When I send a POST request to "/items/" with the following body:
   }
   """
 Then the response code should be 400
-And the response error message should contain "must be given"
+And the response error message should contain "Wrong value for 'type': must be given"
 
 Scenario: No strings given
 When I send a POST request to "/items/" with the following body:
@@ -30,7 +30,7 @@ When I send a POST request to "/items/" with the following body:
   }
   """
 Then the response code should be 400
-And the response error message should contain "one string per item"
+And the response error message should contain "Exactly one string per item is supported"
 
 Scenario: More than one string given
 When I send a POST request to "/items/" with the following body:
@@ -48,7 +48,7 @@ When I send a POST request to "/items/" with the following body:
   }
   """
 Then the response code should be 400
-And the response error message should contain "one string per item"
+And the response error message should contain "Exactly one string per item is supported"
 
 Scenario: No parents given
 When I send a POST request to "/items/" with the following body:
@@ -64,7 +64,7 @@ When I send a POST request to "/items/" with the following body:
   }
   """
 Then the response code should be 400
-And the response error message should contain "one parent item"
+And the response error message should contain "Exactly one parent item is supported"
 
 Scenario: More than 1 parent given
 When I send a POST request to "/items/" with the following body:
@@ -82,7 +82,7 @@ When I send a POST request to "/items/" with the following body:
   }
   """
 Then the response code should be 400
-And the response error message should contain "one parent item"
+And the response error message should contain "Exactly one parent item is supported"
 
 Scenario: Not existing parent
 Given the database has the following table 'users':

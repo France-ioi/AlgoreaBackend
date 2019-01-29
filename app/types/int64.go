@@ -40,7 +40,7 @@ func NewInt64(v int64) *Int64 {
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 	i.Set = true // If this method was called, the value was set.
-	i.Null = (string(data) == jsonNull)
+	i.Null = string(data) == jsonNull
 	var temp int64
 	err = json.Unmarshal(data, &temp)
 	if err == nil {

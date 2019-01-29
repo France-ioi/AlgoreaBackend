@@ -47,7 +47,11 @@ func init() {
 				fmt.Println("Unable to query the database: ", err)
 				os.Exit(1)
 			}
-			defer rows.Close() // nolint: errcheck
+
+			defer func() {
+				_ = rows.Close()
+				_ = db.Close()
+			}()
 
 			for rows.Next() {
 				var tableName string

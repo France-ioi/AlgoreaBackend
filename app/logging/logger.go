@@ -72,7 +72,7 @@ func New(conf config.Logging) *logrus.Logger {
 
 // NewStructuredLogger implements a custom structured logrus Logger.
 func NewStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Handler {
-	return middleware.RequestLogger(&StructuredLogger{Logger})
+	return middleware.RequestLogger(&StructuredLogger{logger})
 }
 
 // NewLogEntry sets default request log fields.
@@ -134,12 +134,14 @@ func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 // logger entry and set additional fields between handlers.
 
 // GetLogEntry return the request scoped logrus.FieldLogger.
+//noinspection GoUnusedExportedFunction
 func GetLogEntry(r *http.Request) logrus.FieldLogger {
 	entry := middleware.GetLogEntry(r).(*StructuredLoggerEntry)
 	return entry.Logger
 }
 
 // LogEntrySetField adds a field to the request scoped logrus.FieldLogger.
+//noinspection GoUnusedExportedFunction
 func LogEntrySetField(r *http.Request, key string, value interface{}) {
 	if entry, ok := r.Context().Value(middleware.LogEntryCtxKey).(*StructuredLoggerEntry); ok {
 		entry.Logger = entry.Logger.WithField(key, value)
@@ -147,6 +149,7 @@ func LogEntrySetField(r *http.Request, key string, value interface{}) {
 }
 
 // LogEntrySetFields adds multiple fields to the request scoped logrus.FieldLogger.
+//noinspection GoUnusedExportedFunction
 func LogEntrySetFields(r *http.Request, fields map[string]interface{}) {
 	if entry, ok := r.Context().Value(middleware.LogEntryCtxKey).(*StructuredLoggerEntry); ok {
 		entry.Logger = entry.Logger.WithFields(fields)

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"testing"
 
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
@@ -43,7 +43,7 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
 		userID := r.Context().Value(ctxUserID).(int64)
 		body := "user_id:" + strconv.FormatInt(userID, 10)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(body)) // nolint
+		_, _ = w.Write([]byte(body))
 	})
 	mainSrv := httptest.NewServer(middleware(handler))
 	defer mainSrv.Close()
@@ -60,14 +60,14 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
 }
 
 func TestValid(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("123", func(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.ParseInt(r.URL.Query()["sessionid"][0], 10, 64)
 		dataJSON, _ := json.Marshal(&authResp{id, ""})
-		w.Write(dataJSON) // nolint
+		_, _ = w.Write(dataJSON)
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(200, resp.StatusCode)
 	assert.True(didService)
@@ -75,10 +75,10 @@ func TestValid(t *testing.T) {
 }
 
 func TestMissingSession(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("", func(w http.ResponseWriter, r *http.Request) {}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -86,7 +86,7 @@ func TestMissingSession(t *testing.T) {
 }
 
 func TestNotResponding(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("123", func(w http.ResponseWriter, r *http.Request) {}, true)
 	assert.Equal(502, resp.StatusCode)
@@ -97,13 +97,13 @@ func TestInvalidResponseFormat1(t *testing.T) {
 	type invalidAuthResp struct {
 		Message string `json:"message"`
 	}
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal([]invalidAuthResp{{"duh?"}}) // unexpected format
-		w.Write(dataJSON)                                        // nolint
+		_, _ = w.Write(dataJSON)                                        // nolint
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -114,13 +114,13 @@ func TestInvalidResponseFormat2(t *testing.T) {
 	type invalidAuthResp struct {
 		Message string `json:"message"`
 	}
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal(invalidAuthResp{"duh?"}) // unexpected format
-		w.Write(dataJSON)                                    // nolint
+		_, _ = w.Write(dataJSON)                                    // nolint
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -129,12 +129,12 @@ func TestInvalidResponseFormat2(t *testing.T) {
 }
 
 func TestInvalidJSON(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("this is invalid json")) // nolint
+		_, _ = w.Write([]byte("this is invalid json"))
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -143,13 +143,13 @@ func TestInvalidJSON(t *testing.T) {
 }
 
 func TestAuthError(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal(&authResp{-1, "invalid token error"})
-		w.Write(dataJSON) // nolint
+		_, _ = w.Write(dataJSON)
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -158,13 +158,13 @@ func TestAuthError(t *testing.T) {
 }
 
 func TestAuthErrorPositiveID(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal(&authResp{99, "invalid token error"})
-		w.Write(dataJSON) // nolint
+		_, _ = w.Write(dataJSON)
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -173,13 +173,13 @@ func TestAuthErrorPositiveID(t *testing.T) {
 }
 
 func TestInvalidID(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal(&authResp{-1, ""}) // unexpected resp from the auth server
-		w.Write(dataJSON)                              // nolint
+		_, _ = w.Write(dataJSON)
 	}, false)
-	defer resp.Body.Close()
+	defer func() {_ = resp.Body.Close()}()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
