@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 )
 
 type SampleBoolInput struct {
@@ -15,20 +15,20 @@ type SampleBoolInput struct {
 }
 
 func (v *SampleBoolInput) validate() error {
-	return Validate(&v.Enabled, &v.Deletable, &v.CachedFullAccess, &v.CachedManagerAccess)
+	return Validate([]string{"enabled", "deletable", "cachedFullAccess", "cachedManagerAccess"},
+		&v.Enabled, &v.Deletable, &v.CachedFullAccess, &v.CachedManagerAccess)
 }
 
 func TestNewBool(t *testing.T) {
-	assert := assert_lib.New(t)
-	var value = true
-	n := NewBool(value)
-	assert.Equal(value, n.Value)
+	assert := assertlib.New(t)
+	n := NewBool(true)
+	assert.Equal(true, n.Value)
 	assert.True(n.Set)
 	assert.False(n.Null)
 }
 
 func TestBoolValid(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Enabled": true, "Deletable": false, "CachedFullAccess": true, "CachedManagerAccess": true}`
 	input := &SampleBoolInput{}
@@ -41,7 +41,7 @@ func TestBoolValid(t *testing.T) {
 }
 
 func TestBoolWithNonBool(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Enabled": 1234, "Deletable": true, "CachedFullAccess": false, "CachedManagerAccess": true }`
 	input := &SampleBoolInput{}
@@ -49,7 +49,7 @@ func TestBoolWithNonBool(t *testing.T) {
 }
 
 func TestBoolWithDefault(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Enabled": false, "Deletable": false, "CachedFullAccess": false, "CachedManagerAccess": false}`
 	input := &SampleBoolInput{}
@@ -58,7 +58,7 @@ func TestBoolWithDefault(t *testing.T) {
 }
 
 func TestBoolWithNull(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Enabled": null, "Deletable": null, "CachedFullAccess": null, "CachedManagerAccess": null }`
 	input := &SampleBoolInput{}
@@ -71,7 +71,7 @@ func TestBoolWithNull(t *testing.T) {
 }
 
 func TestBoolWithNotSet(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{}`
 	input := &SampleBoolInput{}

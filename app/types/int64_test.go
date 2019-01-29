@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 )
 
 type SampleIntInput struct {
@@ -15,11 +15,12 @@ type SampleIntInput struct {
 }
 
 func (v *SampleIntInput) validate() error {
-	return Validate(&v.ID, &v.ChildID, &v.Order, &v.ParentID)
+	return Validate([]string{"ID", "childID", "order", "parentID"},
+		&v.ID, &v.ChildID, &v.Order, &v.ParentID)
 }
 
 func TestNewInt(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 	var value int64 = 2147483645
 	n := NewInt64(value)
 	assert.Equal(value, n.Value)
@@ -28,7 +29,7 @@ func TestNewInt(t *testing.T) {
 }
 
 func TestIntValid(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "ID": 2147483645, "ChildID": 22, "Order": -1, "ParentID": 7 }`
 	input := &SampleIntInput{}
@@ -41,7 +42,7 @@ func TestIntValid(t *testing.T) {
 }
 
 func TestIntWithNonInt(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "ID": "not an int", "ChildID": 22, "Order": -1, "ParentID": 7 }`
 	input := &SampleIntInput{}
@@ -49,7 +50,7 @@ func TestIntWithNonInt(t *testing.T) {
 }
 
 func TestIntWithDefault(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "ID": 0, "ChildID": 0, "Order": 0, "ParentID": 0 }`
 	input := &SampleIntInput{}
@@ -58,7 +59,7 @@ func TestIntWithDefault(t *testing.T) {
 }
 
 func TestIntWithNull(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "ID": null, "ChildID": null, "Order": null, "ParentID": null }`
 	input := &SampleIntInput{}
@@ -71,7 +72,7 @@ func TestIntWithNull(t *testing.T) {
 }
 
 func TestIntWithNotSet(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{}`
 	input := &SampleIntInput{}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 )
 
 type SampleStrInput struct {
@@ -15,11 +15,12 @@ type SampleStrInput struct {
 }
 
 func (v *SampleStrInput) validate() error {
-	return Validate(&v.Title, &v.Description, &v.Author, &v.LastReader)
+	return Validate([]string{"title", "description", "author", "lastReader"},
+		&v.Title, &v.Description, &v.Author, &v.LastReader)
 }
 
 func TestNewString(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 	var value = "Foo"
 	n := NewString(value)
 	assert.Equal(value, n.Value)
@@ -28,7 +29,7 @@ func TestNewString(t *testing.T) {
 }
 
 func TestStrValid(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Title": "The Pragmatic Programmer", "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
 	input := &SampleStrInput{}
@@ -41,7 +42,7 @@ func TestStrValid(t *testing.T) {
 }
 
 func TestStrWithNonStr(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Title": 1234, "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
 	input := &SampleStrInput{}
@@ -49,7 +50,7 @@ func TestStrWithNonStr(t *testing.T) {
 }
 
 func TestStrWithDefault(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Title": "", "Description": "", "Author": "", "LastReader": "" }`
 	input := &SampleStrInput{}
@@ -58,7 +59,7 @@ func TestStrWithDefault(t *testing.T) {
 }
 
 func TestStrWithNull(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "Title": null, "Description": null, "Author": null, "LastReader": null }`
 	input := &SampleStrInput{}
@@ -71,7 +72,7 @@ func TestStrWithNull(t *testing.T) {
 }
 
 func TestStrWithNotSet(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{}`
 	input := &SampleStrInput{}

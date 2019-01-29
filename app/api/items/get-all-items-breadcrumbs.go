@@ -26,7 +26,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {
-		return service.ErrForbidden(errors.New("Insufficient access on given item ids"))
+		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
 	}
 
 	// Todo: validate the hierarchy
@@ -34,11 +34,11 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 
 	// Build response
 	// Fetch the requested items
-	items := []struct {
+	var items []struct {
 		ItemID   int64  `json:"item_id"     sql:"column:idItem"`
 		Title    string `json:"title"       sql:"column:sTitle"`
 		Language int64  `json:"language_id" sql:"column:idLanguage"`
-	}{}
+	}
 	db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids).Scan(&items)
 	if db.Error() != nil {
 		return service.ErrUnexpected(db.Error())
@@ -54,10 +54,10 @@ func idsFromRequest(r *http.Request) ([]int64, error) {
 		return nil, err
 	}
 	if len(ids) == 0 {
-		return nil, errors.New("No ids given")
+		return nil, errors.New("no ids given")
 	}
 	if len(ids) > 10 {
-		return nil, errors.New("Maximum ids expected")
+		return nil, errors.New("maximum ids expected")
 	}
 	return ids, nil
 }

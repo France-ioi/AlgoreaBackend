@@ -82,7 +82,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	// set a dummy auth cookie
 	req.AddCookie(&http.Cookie{Name: "PHPSESSID", Value: "dummy"})
 
-	// execute the queyr
+	// execute the query
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, "", err
@@ -92,7 +92,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer func() { /* #nosec */ _ = resp.Body.Close()}()
 
 	return resp, string(respBody), nil
 }
@@ -103,7 +103,7 @@ func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		dataJSON := fmt.Sprintf(`{"userID": %d, "error":""}`, ctx.userID)
-		w.Write([]byte(dataJSON)) // nolint
+		_, _ = w.Write([]byte(dataJSON)) // nolint
 	}))
 
 	// put the backend URL into the config
@@ -127,6 +127,8 @@ func (ctx *TestContext) db() *sql.DB {
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
+	defer func() {_ = db.Close()}()
+
 	dbName := ctx.app().Config.Database.Connection.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -136,7 +138,7 @@ func (ctx *TestContext) emptyDB() error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close() // nolint: errcheck
+	defer func() {_ = rows.Close()}()
 
 	for rows.Next() {
 		var tableName string
@@ -270,11 +272,11 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { // no
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
-		return fmt.Errorf("Unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
 	}
 
 	if count != len(objmap) {
-		return fmt.Errorf("The result does not have the expected length. Expected: %d, received: %d", count, len(objmap))
+		return fmt.Errorf("the result does not have the expected length. Expected: %d, received: %d", count, len(objmap))
 	}
 
 	return nil
@@ -301,7 +303,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 
 	// re-encode actual response too
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
-		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if actual, err = json.Marshal(act); err != nil {
 		return
@@ -332,7 +334,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
 	if ctx.lastResponse.Header.Get(headerName) != headerValue {
-		return fmt.Errorf("Headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
+		return fmt.Errorf("headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
 	}
 	return nil
 }
@@ -342,10 +344,10 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	errorResp := service.ErrorResponse{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
-		return fmt.Errorf("Unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if !strings.Contains(errorResp.ErrorText, s) {
-		return fmt.Errorf("Cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
+		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
 	}
 
 	return nil
@@ -384,7 +386,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	sqlCols, _ := sqlRows.Columns() // nolint: gosec
 	for sqlRows.Next() {
 		if iDataRow >= len(data.Rows) {
-			return fmt.Errorf("There are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
+			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
 		}
 		// Create a slice of string to represent each attribute value,
 		// and a second slice to contain pointers to each item.
@@ -403,7 +405,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 			dataValue := dataCell.Value
 			sqlValue := rowValPtr[iCol].(*string)
 			if dataValue != *sqlValue {
-				return fmt.Errorf("Not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, *sqlValue)
+				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, *sqlValue)
 			}
 		}
 
@@ -412,7 +414,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 
 	// check that no row in the test data table has not been uncheck (if less rows in SQL result)
 	if iDataRow < len(data.Rows) {
-		return fmt.Errorf("There are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
+		return fmt.Errorf("there are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
 	}
 	return nil
 }

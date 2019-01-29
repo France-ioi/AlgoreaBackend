@@ -35,12 +35,12 @@ type NewItemRequest struct {
 // Bind validates the request body attributes
 func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Strings) != 1 {
-		return errors.New("Exactly one string per item is supported at the moment")
+		return errors.New("exactly one string per item is supported at the moment")
 	}
 	if len(in.Parents) != 1 {
-		return errors.New("Exactly one parent item is supported at the moment")
+		return errors.New("exactly one parent item is supported at the moment")
 	}
-	return types.Validate(&in.ID, &in.Type)
+	return types.Validate([]string{"id", "type"}, &in.ID, &in.Type)
 }
 
 func (in *NewItemRequest) itemData() *database.Item {
@@ -143,10 +143,10 @@ func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service
 		return service.ErrUnexpected(err)
 	}
 	if !found {
-		return service.ErrForbidden(errors.New("Cannot find the parent item"))
+		return service.ErrForbidden(errors.New("cannot find the parent item"))
 	}
 	if !hasAccess {
-		return service.ErrForbidden(errors.New("Insufficient access on the parent item"))
+		return service.ErrForbidden(errors.New("insufficient access on the parent item"))
 	}
 	return service.NoError
 }

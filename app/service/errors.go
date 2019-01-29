@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 )
@@ -31,9 +32,13 @@ func (e APIError) httpResponse() render.Renderer {
 	if e.Error == nil {
 		return &ErrorResponse{Response: response}
 	}
+	errorText := e.Error.Error()
+	if len(errorText) > 0 {
+		errorText = strings.ToUpper(errorText[0:1]) + errorText[1:]
+	}
 	return &ErrorResponse{
 		Response:  response,
-		ErrorText: e.Error.Error(), // FIXME: should be disabled in prod
+		ErrorText: errorText, // FIXME: should be disabled in prod
 	}
 }
 

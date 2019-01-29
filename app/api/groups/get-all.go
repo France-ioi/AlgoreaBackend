@@ -10,10 +10,10 @@ import (
 
 func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) service.APIError {
 
-	groups := []struct {
+	var groups []struct {
 		ID   int    `json:"id"   sql:"column:ID"`
 		Name string `json:"name" sql:"column:sName"`
-	}{}
+	}
 
 	db := srv.Store.Groups().All().Select("ID, sName")
 	db = db.Scan(&groups)

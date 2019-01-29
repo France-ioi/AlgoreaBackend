@@ -37,7 +37,7 @@ func NewDatetime(t time.Time) *Datetime {
 // UnmarshalJSON parse JSON data to the type
 func (t *Datetime) UnmarshalJSON(data []byte) (err error) {
 	t.Set = true // If this method was called, the value was set.
-	t.Null = (string(data) == jsonNull)
+	t.Null = string(data) == jsonNull
 	var temp time.Time
 	err = json.Unmarshal(data, &temp)
 	if err == nil {

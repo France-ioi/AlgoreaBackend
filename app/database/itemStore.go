@@ -42,11 +42,11 @@ func (s *ItemStore) Insert(data *Item) error {
 // It is assumed that the `OwnerAccess` implies manager access
 func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
 
-	var dbRes = []struct {
+	var dbRes []struct {
 		ItemID        int64 `sql:"column:idItem"`
 		ManagerAccess bool  `sql:"column:bManagerAccess"`
 		OwnerAccess   bool  `sql:"column:bOwnerAccess"`
-	}{}
+	}
 
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, bManagerAccess, bOwnerAccess").
@@ -92,7 +92,7 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 // - user has to have full access to all but last, and grayed access to that last item.
 func checkAccess(itemIDs []int64, accDets []itemAccessDetails) error {
 	for i, id := range itemIDs {
-		last := (i == len(itemIDs)-1)
+		last := i == len(itemIDs)-1
 		if err := checkAccessForID(id, last, accDets); err != nil {
 			return err
 		}

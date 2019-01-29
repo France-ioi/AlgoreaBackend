@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -24,7 +24,7 @@ func (m *MockUserStore) ByID(userID int64) database.DB {
 }
 
 func TestUserFromContext(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	var userID int64 = 8
 	ctx := context.WithValue(context.Background(), ctxUserID, userID)
@@ -38,7 +38,7 @@ func TestUserFromContext(t *testing.T) {
 }
 
 func TestSelfGroupID(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	db, dbMock := database.NewDBMock()
 	userStore := &database.UserStore{DataStore: &database.DataStore{DB: db}}
@@ -54,7 +54,7 @@ func TestSelfGroupID(t *testing.T) {
 }
 
 func TestSelfGroupIDFail(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 	logging.Logger = logrus.New() // fixme: should not be required to set it in tests
 
 	db, dbMock := database.NewDBMock()
