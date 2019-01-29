@@ -28,6 +28,7 @@ type dbquery struct {
 	values []interface{}
 }
 
+// TestContext implements context for tests
 type TestContext struct {
 	// nolint
 	application                      *app.Application // do NOT call it directly, use `app()`
@@ -128,7 +129,7 @@ func (ctx *TestContext) db() *sql.DB {
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 
 	dbName := ctx.app().Config.Database.Connection.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
@@ -160,7 +161,7 @@ func (ctx *TestContext) initDB() error {
 		return err
 	}
 	db := ctx.db()
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 
 	for _, query := range ctx.featureQueries {
 		_, err := db.Exec(query.sql, query.values)
@@ -212,7 +213,7 @@ func dbDataTableValue(input string) interface{} {
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
 	db := ctx.db()
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 
 	var fields []string
 	var marks []string
@@ -367,7 +368,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// Expect 'null' string in the table to check for nullness
 
 	db := ctx.db()
-	defer db.Close()
+	defer db.Close() // nolint: errcheck
 
 	var selects []string
 	head := data.Rows[0].Cells
