@@ -82,7 +82,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	// set a dummy auth cookie
 	req.AddCookie(&http.Cookie{Name: "PHPSESSID", Value: "dummy"})
 
-	// execute the queyr
+	// execute the query
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, "", err
@@ -92,7 +92,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { /* #nosec */ _ = resp.Body.Close()}()
 
 	return resp, string(respBody), nil
 }
