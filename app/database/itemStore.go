@@ -78,12 +78,12 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 		return false, nil
 	}
 
-	if valid, err := s.checkIfItemIsRoot(ids[0]); !valid || err != nil {
-		return false, err
+	if valid, err := s.isRootItem(ids[0]); !valid || err != nil {
+		return valid, err
 	}
 
-	if valid, err := s.checkHierarchicalChain(ids); !valid || err != nil {
-		return false, err
+	if valid, err := s.isHierarchicalChain(ids); !valid || err != nil {
+		return valid, err
 	}
 
 	return true, nil
@@ -142,9 +142,9 @@ func checkAccessForID(id int64, last bool, accDets []itemAccessDetails) error {
 	return fmt.Errorf("not visible item_id %d", id)
 }
 
-func (s *ItemStore) checkIfItemIsRoot(id int64) (bool, error) {
+func (s *ItemStore) isRootItem(id int64) (bool, error) {
 	count := 0
-	if err := s.ByID(id).Count(&count).Error(); err != nil {
+	if err := s.ByID(id).Where("sType='Root'").Count(&count).Error(); err != nil {
 		return false, err
 	}
 	if count == 0 {
@@ -153,7 +153,11 @@ func (s *ItemStore) checkIfItemIsRoot(id int64) (bool, error) {
 	return true, nil
 }
 
-func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
+func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
+	if len(ids) == 0 {
+		return false, nil
+	}
+
 	if len(ids) == 1 {
 		return true, nil
 	}
@@ -165,7 +169,7 @@ func (s *ItemStore) checkHierarchicalChain(ids []int64) (bool, error) {
 			continue
 		}
 
-		db = db.Or("idItemParent=? AND idItemChild=? AND iChildOrder=1", previousID, id)
+		db = db.Or("idItemParent=? AND idItemChild=?", previousID, id)
 		previousID = id
 	}
 
