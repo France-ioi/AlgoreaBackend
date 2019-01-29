@@ -13,9 +13,7 @@ type AppHandler func(http.ResponseWriter, *http.Request) APIError
 
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	apiErr := fn(w, r)
-	if apiErr != NoError { // err is APIError, not os.Error
-		if err := render.Render(w, r, apiErr.httpResponse()); err != nil {
-			panic(err) // if unable to render errors, panic
-		}
+	if apiErr != NoError { // apiErr is an APIError, not os.Error
+		_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails
 	}
 }
