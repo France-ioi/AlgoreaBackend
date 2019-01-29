@@ -2,6 +2,8 @@ package config
 
 import (
 	"log"
+	"path/filepath"
+	"runtime"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
@@ -48,8 +50,10 @@ type Root struct {
 	Auth         Auth
 }
 
-// Path defines the file name which will be used to read the configuration
-var Path = "conf/default.yaml"
+var (
+	configName = "default"
+	configDir  = configDirectory()
+)
 
 // Load loads the app configuration from files, flags, env, ..., and maps it to the config struct
 // The precedence of config values in viper is the following:
@@ -70,7 +74,9 @@ func Load() (*Root, error) {
 	viper.AutomaticEnv()          // read in environment variables
 
 	// through the config file
-	viper.SetConfigFile(Path)
+	viper.SetConfigName(configName)
+	viper.AddConfigPath(configDir)
+
 	if err = viper.ReadInConfig(); err != nil {
 		log.Fatal("Cannot read config:", err)
 		return nil, err
@@ -94,4 +100,10 @@ func setDefaults() {
 	viper.SetDefault("server.readTimeout", 60)  // in seconds
 	viper.SetDefault("server.writeTimeout", 60) // in seconds
 	viper.SetDefault("server.rootpath", "/")
+}
+
+func configDirectory() string {
+	_, codeFilePath, _, _ := runtime.Caller(0)
+	codeDir := filepath.Dir(codeFilePath)
+	return filepath.Dir(codeDir + "/../../conf/")
 }

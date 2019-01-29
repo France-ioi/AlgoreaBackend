@@ -17,9 +17,15 @@ You can then run the app: (call `./AlgoreaBackend` to print the list of availabl
 ```
 For instance, you can launch the web server using `./AlgoreaBackend serve`.
 
+## Running the setup
+
+The application needs a database (MySQL) to run and requires it for a major part of its tests.
+
+To make testing and development easier, a `docker-compose` file declares a database using the default configuration. Launch `docker-compose up` to run tests without any configuration efforts.
+
 ## Database Configuration
 
-Database configuration currently goes in `conf/default.yml` file or using environment variables (higher priority)
+Database configuration currently goes in `conf/default.yml` file or using environment variables (higher priority, see `.circleci/config.yml` for examples)
 The empty dump (schema with data in it) can be loaded using the `./AlgoreaBackend db-restore` followed by `./AlgoreaBackend db-migrate`.
 
 ## Testing
@@ -32,9 +38,13 @@ Only unit:
 ```
 make test-unit
 ```
-Only bdd (cucumber using `godog`):
+Only bdd (cucumber using `godog`), using the database connection:
 ```
-make test-bdd <anyflag for godog>
+make test-bdd
+```
+or if you want only to run bdd tests with a specific tag:
+```
+make ARGS="--tags=wip" test-bdd
 ```
 
 ## Style
@@ -43,7 +53,6 @@ A `.editorconfig` file defines the basic editor style configuration to use. Chec
 
 For the Go coding styles, we use the standard linters (many). You can install and run them with:
 ```
-make deps
 make lint
 ```
 

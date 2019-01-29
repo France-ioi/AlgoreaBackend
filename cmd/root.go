@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 var rootCmd = &cobra.Command{
@@ -24,5 +22,5 @@ func Execute() {
 
 func init() {
 	// persistent flags will be available for every sub-commands
-	rootCmd.PersistentFlags().StringVar(&config.Path, "config", config.Path, "path to config file")
+	// here you can bind command line flags to variables
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	assert_lib "github.com/stretchr/testify/assert"
@@ -12,7 +13,8 @@ func TestLoadConfig(t *testing.T) {
 	assert := assert_lib.New(t)
 
 	// create a temp config file
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "config-*.yaml")
+	tmpDir := os.TempDir()
+	tmpFile, err := ioutil.TempFile(tmpDir, "config-*.yaml")
 	assert.NoError(err)
 	defer os.Remove(tmpFile.Name())
 	defer tmpFile.Close()
@@ -21,7 +23,10 @@ func TestLoadConfig(t *testing.T) {
 	_, err = tmpFile.Write(text)
 	assert.NoError(err)
 
-	Path = tmpFile.Name()
+	// change default config values
+	fileName := filepath.Base(tmpFile.Name())
+	configName = fileName[:len(fileName)-5] // strip the ".yaml"
+	configDir = tmpDir
 
 	os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
 	conf, err := Load()

@@ -1,4 +1,3 @@
-@wip
 Feature: Get item information for breadcrumb
 
 Background:
