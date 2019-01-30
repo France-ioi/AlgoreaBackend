@@ -17,13 +17,13 @@ func TestQueryParamToInt64Slice(t *testing.T) {
 		{
 			desc:           "no param",
 			queryString:    "",
-			expectedList:   []int64{},
+			expectedList:   nil,
 			expectedErrMsg: "",
 		},
 		{
 			desc:           "wrong param name",
 			queryString:    "id=1,2",
-			expectedList:   []int64{},
+			expectedList:   nil,
 			expectedErrMsg: "",
 		},
 		{

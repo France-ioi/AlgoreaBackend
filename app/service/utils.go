@@ -8,8 +8,9 @@ import (
 )
 
 // QueryParamToInt64Slice extracts from the query parameter of the request a list of integer separated by commas (',')
+// returns `nil` for no IDs
 func QueryParamToInt64Slice(req *http.Request, paramName string) ([]int64, error) {
-	ids := []int64{}
+	var ids []int64
 	paramValue := req.URL.Query().Get(paramName)
 	if paramValue == "" {
 		return ids, nil
