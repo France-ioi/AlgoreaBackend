@@ -28,13 +28,15 @@ type dbquery struct {
 	values []interface{}
 }
 
-type TestContext struct { // nolint
-	application      *app.Application // do NOT call it directly, use `app()`
-	userID           int64            // userID that will be used for the next requests
-	featureQueries   []dbquery
-	lastResponse     *http.Response
-	lastResponseBody string
-	inScenario       bool
+// TestContext implements context for tests
+type TestContext struct {
+	// nolint
+	application                      *app.Application // do NOT call it directly, use `app()`
+	userID                           int64            // userID that will be used for the next requests
+	featureQueries                   []dbquery
+	lastResponse                     *http.Response
+	lastResponseBody                 string
+	inScenario                       bool
 }
 
 const (
@@ -159,6 +161,7 @@ func (ctx *TestContext) initDB() error {
 		return err
 	}
 	db := ctx.db()
+	defer func() { /* #nosec */ _ = db.Close()}()
 
 	for _, query := range ctx.featureQueries {
 		_, err := db.Exec(query.sql, query.values)
@@ -210,6 +213,8 @@ func dbDataTableValue(input string) interface{} {
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
 	db := ctx.db()
+	defer func() {/* #nosec */ _ = db.Close()}()
+
 	var fields []string
 	var marks []string
 	head := data.Rows[0].Cells
@@ -363,6 +368,8 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// Expect 'null' string in the table to check for nullness
 
 	db := ctx.db()
+	defer func() { /* #nosec */ _ = db.Close()}()
+
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {

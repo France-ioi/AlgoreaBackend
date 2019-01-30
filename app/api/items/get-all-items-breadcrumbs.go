@@ -29,8 +29,12 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
 	}
 
-	// Todo: validate the hierarchy
-	// srv.Store.Items.IsValidHierarchy(...)
+	// Validate the hierarchy
+	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
+		return service.ErrUnexpected(err)
+	} else if !valid {
+		return service.ErrInvalidRequest(errors.New("the IDs chain is corrupt"))
+	}
 
 	// Build response
 	// Fetch the requested items
@@ -57,7 +61,7 @@ func idsFromRequest(r *http.Request) ([]int64, error) {
 		return nil, errors.New("no ids given")
 	}
 	if len(ids) > 10 {
-		return nil, errors.New("maximum ids expected")
+		return nil, errors.New("no more than 10 ids expected")
 	}
 	return ids, nil
 }
