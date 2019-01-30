@@ -23,9 +23,13 @@ func TestNewInt(t *testing.T) {
 	assert := assertlib.New(t)
 	var value int64 = 2147483645
 	n := NewInt64(value)
+	val, null, set := n.AllAttributes()
 	assert.Equal(value, n.Value)
+	assert.Equal(value, val)
 	assert.True(n.Set)
+	assert.True(set)
 	assert.False(n.Null)
+	assert.False(null)
 }
 
 func TestIntValid(t *testing.T) {

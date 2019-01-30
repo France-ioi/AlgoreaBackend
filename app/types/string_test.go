@@ -23,9 +23,13 @@ func TestNewString(t *testing.T) {
 	assert := assertlib.New(t)
 	var value = "Foo"
 	n := NewString(value)
+	val, null, set := n.AllAttributes()
 	assert.Equal(value, n.Value)
+	assert.Equal(value, val)
 	assert.True(n.Set)
+	assert.True(set)
 	assert.False(n.Null)
+	assert.False(null)
 }
 
 func TestStrValid(t *testing.T) {
