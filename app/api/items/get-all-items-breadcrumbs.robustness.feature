@@ -1,4 +1,3 @@
-@wip
 Feature: Get item information for breadcrumb - robustness
   Background:
     Given the database has the following table 'users':
