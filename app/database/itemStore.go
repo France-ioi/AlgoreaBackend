@@ -52,11 +52,11 @@ func (s *ItemStore) All() DB {
 // It is assumed that the `OwnerAccess` implies manager access
 func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
 
-	var dbRes = []struct {
+	var dbRes []struct {
 		ItemID        int64 `sql:"column:idItem"`
 		ManagerAccess bool  `sql:"column:bManagerAccess"`
 		OwnerAccess   bool  `sql:"column:bOwnerAccess"`
-	}{}
+	}
 
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, bManagerAccess, bOwnerAccess").

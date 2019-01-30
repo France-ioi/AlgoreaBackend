@@ -6,7 +6,7 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
-	migrate "github.com/rubenv/sql-migrate"
+	"github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"

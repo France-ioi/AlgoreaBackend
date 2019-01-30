@@ -1,5 +1,10 @@
 package types
 
+import (
+	"errors"
+	"fmt"
+)
+
 const jsonNull = "null"
 
 // NullableOptional is a generic interface for all set/null information about these custom types
@@ -16,11 +21,14 @@ type validatable interface {
 }
 
 // Validate checks a set of `Validatable` values and returns the first encountered error, or nil
-func Validate(values ...validatable) (err error) {
-	for _, value := range values {
-		if err = value.Validate(); err != nil {
-			return
+func Validate(names []string, values ...validatable) error {
+	if len(names) != len(values) {
+		return errors.New("the number of names should match the number of values for validation")
+	}
+	for index, value := range values {
+		if err := value.Validate(); err != nil {
+			return fmt.Errorf("wrong value for '%s': %s", names[index], err.Error())
 		}
 	}
-	return
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	assert_lib "github.com/stretchr/testify/assert"
+	assertlib "github.com/stretchr/testify/assert"
 )
 
 type SampleDTInput struct {
@@ -16,11 +16,12 @@ type SampleDTInput struct {
 }
 
 func (v *SampleDTInput) validate() error {
-	return Validate(&v.CreatedAt, &v.ValidFrom, &v.ModifiedAt, &v.AccessUntil)
+	return Validate([]string{"createdAt", "validFrom", "optionalDatetime", "optNullDatetime"},
+		&v.CreatedAt, &v.ValidFrom, &v.ModifiedAt, &v.AccessUntil)
 }
 
 func TestNewDT(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	value := time.Date(2001, time.February, 3, 5, 6, 7, 890000000, time.UTC)
 	n := NewDatetime(value)
@@ -30,7 +31,7 @@ func TestNewDT(t *testing.T) {
 }
 
 func TestDTValid(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "CreatedAt": "2001-02-03T05:06:07.89Z", "ValidFrom": "2002-01-01T23:11:11.000000001+02:00", "ModifiedAt": "2001-09-02T12:30:00Z", "AccessUntil": "2042-12-31T23:59:59Z" }`
 	input := &SampleDTInput{}
@@ -43,7 +44,7 @@ func TestDTValid(t *testing.T) {
 }
 
 func TestDTWithNonDT(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "CreatedAt": "2001", "ValidFrom": "2002-01-01T23:11:11Z", "ModifiedAt": "2001-09-02T12:30Z", "AccessUntil": "2042-12-31T23:59:59Z" }`
 	input := &SampleDTInput{}
@@ -51,7 +52,7 @@ func TestDTWithNonDT(t *testing.T) {
 }
 
 func TestDTWithNull(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{ "CreatedAt": null, "ValidFrom": null, "ModifiedAt": null, "AccessUntil": null }`
 	input := &SampleDTInput{}
@@ -64,7 +65,7 @@ func TestDTWithNull(t *testing.T) {
 }
 
 func TestDTWithNotSet(t *testing.T) {
-	assert := assert_lib.New(t)
+	assert := assertlib.New(t)
 
 	jsonInput := `{}`
 	input := &SampleDTInput{}
