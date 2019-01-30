@@ -25,9 +25,13 @@ func TestNewDT(t *testing.T) {
 
 	value := time.Date(2001, time.February, 3, 5, 6, 7, 890000000, time.UTC)
 	n := NewDatetime(value)
+	val, null, set := n.AllAttributes()
 	assert.Equal(value, n.Value)
+	assert.Equal(value, val)
 	assert.True(n.Set)
+	assert.True(set)
 	assert.False(n.Null)
+	assert.False(null)
 }
 
 func TestDTValid(t *testing.T) {
