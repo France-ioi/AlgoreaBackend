@@ -26,6 +26,7 @@ type DB interface {
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
 	Count(dest interface{}) DB
+	Take(out interface{}, where ...interface{}) DB
 
 	Error() error
 }
@@ -107,6 +108,10 @@ func (conn *db) Scan(dest interface{}) DB {
 
 func (conn *db) Count(dest interface{}) DB {
 	return &db{conn.DB.Count(dest)}
+}
+
+func (conn *db) Take(out interface{}, where ...interface{}) DB {
+	return &db{conn.DB.Take(out, where...)}
 }
 
 func (conn *db) Error() error {

@@ -60,7 +60,7 @@ Feature: Get item for tree navigation
       | 58 | 231    | 1          | Lesson 2  | 0        |
       | 59 | 232    | 1          | Lesson 3  | 0        |
     And I am the user with ID "1"
-    When I send a GET request to "/items/200"
+    When I send a GET request to "/items/nav-tree/200"
     Then the response code should be 200
     And the response body should be, in JSON:
       """

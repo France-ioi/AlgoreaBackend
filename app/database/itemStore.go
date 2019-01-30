@@ -51,11 +51,11 @@ func (s *ItemStore) tableName() string {
 func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
 	var it TreeItem
 
-	if err := s.db.Table(s.tableName()).
-		Joins("JOIN items_strings ON (items.ID=items_strings.idItem)").
-		Where("items.ID=? AND items_strings.idLanguage=?", id, languageID).
+	if err := s.ByID(id).
 		Select("items.*, items_strings.sTitle as sTitle").
-		First(&it).Error; err != nil {
+		Joins("LEFT JOIN items_strings ON (items.ID=items_strings.idItem)").
+		Where("items_strings.idLanguage=?", languageID).
+		Take(&it).Error(); err != nil {
 		return nil, fmt.Errorf("failed to get item '%d': %v", id, err)
 	}
 	return &it, nil
@@ -65,13 +65,13 @@ func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
 func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*TreeItem, error) {
 	var itt []*TreeItem
 
-	err := s.db.Table(s.tableName()).
+	err := s.All().
 		Joins("JOIN items_ancestors ON (items.ID=items_ancestors.idItemChild)").
 		Joins("JOIN items_strings ON (items_ancestors.idItemChild=items_strings.idItem)").
 		Joins("JOIN items_items ON (items_ancestors.idItemChild=items_items.idItemChild)").
 		Where("items_ancestors.idItemAncestor=? AND items_strings.idLanguage=?", rootID, languageID).
 		Select("items.*, sTitle, iChildOrder, idItemParent").
-		Scan(&itt).Error
+		Scan(&itt).Error()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tree children of '%d': %v", rootID, err)
 	}

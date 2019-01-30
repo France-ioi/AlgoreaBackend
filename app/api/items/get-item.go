@@ -29,7 +29,7 @@ func (req *GetItemRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getNavigationSubtree(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	req := &GetItemRequest{}
 	if err := req.Bind(httpReq); err != nil {
 		return service.ErrInvalidRequest(err)

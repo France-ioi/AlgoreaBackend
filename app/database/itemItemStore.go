@@ -38,7 +38,7 @@ func (s *ItemItemStore) Insert(data *ItemItem) error {
 // ChildrenOf .
 func (s *ItemItemStore) ChildrenOf(parentID int64) ([]*ItemItem, error) {
 	var ii []*ItemItem
-	err := s.db.Table(s.tableName()).Where("idItemParent=?", parentID).Scan(&ii).Error
+	err := s.All().Where("idItemParent=?", parentID).Scan(&ii).Error()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get children of item '%d': %v", parentID, err)
 	}
