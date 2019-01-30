@@ -42,12 +42,6 @@ func (e APIError) httpResponse() render.Renderer {
 	}
 }
 
-// Render generates the HTTP response from ErrResponse
-func (e APIError) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
-	return nil
-}
-
 // ErrInvalidRequest is for errors caused by invalid request input
 // It results in a 400 Invalid request response
 func ErrInvalidRequest(err error) APIError {
