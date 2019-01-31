@@ -17,6 +17,11 @@ endif
 GODOG=$(BIN_DIR)/godog
 GOMETALINTER=$(LOCAL_BIN_DIR)/gometalinter
 
+# extract AWS_PROFILE if given
+ifdef AWS_PROFILE
+	AWS_PARAMS=--profile $(AWS_PROFILE)
+endif
+
 # use the NOTVERBOSE env var to disable verbosity on make test
 ifneq ("$(NOT_VERBOSE)","1")
 	Q :=
@@ -49,6 +54,13 @@ deps:
 	GO111MODULE=off $(GOGET) -t ./...
 print-deps:
 	$(GOLIST) -f {{.Deps}} && $(GOLIST) -f {{.TestImports}} ./...
+lambda-build:
+	GOOS=linux $(GOBUILD) -o $(LOCAL_BIN_DIR)/$(BINARY_NAME)-linux
+lambda-archive: lambda-build
+	zip -j $(LOCAL_BIN_DIR)/lambda.zip $(LOCAL_BIN_DIR)/$(BINARY_NAME)-linux
+lambda-upload: lambda-archive
+	# pass AWS profile with AWS_PROFILE: make AWS_PROFILE="myprofile" lambda-upload
+	aws lambda update-function-code --function-name AlgoreaBackend --zip-file fileb://$(LOCAL_BIN_DIR)/lambda.zip $(AWS_PARAMS)
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GODOG):
