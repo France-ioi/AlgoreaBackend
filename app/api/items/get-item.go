@@ -40,7 +40,7 @@ func (srv *Service) getNavigationSubtree(rw http.ResponseWriter, httpReq *http.R
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, []int64{req.ID}); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {
-		return service.ErrForbidden(errors.New("Insufficient access on given item ids"))
+		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
 	}
 	// TODO: read language from somewhere
 	languageID := int64(1)

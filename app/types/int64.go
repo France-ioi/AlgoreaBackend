@@ -61,7 +61,7 @@ func (i *Int64) Scan(value interface{}) (err error) {
 	case int:
 	case int32:
 	case int64:
-		i.Value, i.Set, i.Null = int64(v), true, false
+		i.Value, i.Set, i.Null = v, true, false
 		return
 	}
 
