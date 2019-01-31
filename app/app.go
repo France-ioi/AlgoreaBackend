@@ -41,7 +41,6 @@ func New() (*Application, error) {
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {
 		logger.WithField("module", "database").Error(err)
-		return nil, err
 	}
 
 	var apiCtx *api.Ctx
