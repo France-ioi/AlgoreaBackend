@@ -87,6 +87,7 @@ func (s *ItemStore) tableName() string {
 
 func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]NavigationItemChild, error){
 	var result []NavigationItemChild
+	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
 		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, " +
 			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, " +
