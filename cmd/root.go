@@ -2,13 +2,31 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/akrylysov/algnhsa"
+	_ "github.com/aws/aws-lambda-go/events" // force algnhsa dependency
+	_ "github.com/aws/aws-lambda-go/lambda" // force algnhsa dependency
 	"github.com/spf13/cobra"
+
+	"github.com/France-ioi/AlgoreaBackend/app"
 )
 
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		var err error
+
+		var application *app.Application
+		application, err = app.New()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		algnhsa.ListenAndServe(application.HTTPHandler, nil)
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

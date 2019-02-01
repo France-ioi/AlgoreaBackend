@@ -11,11 +11,11 @@ Compile the app:
 make
 ```
 
-You can then run the app: (call `./AlgoreaBackend` to print the list of available commands)
+You can then run the app: (call `./bin/AlgoreaBackend` to print the list of available commands)
 ```
-./AlgoreaBackend <cmd> <opt>
+./bin/AlgoreaBackend <cmd> <opt>
 ```
-For instance, you can launch the web server using `./AlgoreaBackend serve`.
+For instance, you can launch the web server using `./bin/AlgoreaBackend serve`.
 
 ## Running the setup
 
@@ -26,7 +26,7 @@ To make testing and development easier, a `docker-compose` file declares a datab
 ## Database Configuration
 
 Database configuration currently goes in `conf/default.yml` file or using environment variables (higher priority, see `.circleci/config.yml` for examples)
-The empty dump (schema with data in it) can be loaded using the `./AlgoreaBackend db-restore` followed by `./AlgoreaBackend db-migrate`.
+The empty dump (schema with data in it) can be loaded using the `./bin/AlgoreaBackend db-restore` followed by `./bin/AlgoreaBackend db-migrate`.
 
 ## Testing
 
