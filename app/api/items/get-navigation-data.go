@@ -21,15 +21,15 @@ type GetItemRequest struct {
 // Bind .
 func (req *GetItemRequest) Bind(r *http.Request) error {
 	strItemID := chi.URLParam(r, "itemID")
-	itemID, err := strconv.Atoi(strItemID)
+	itemID, err := strconv.ParseInt(strItemID, 10, 64)
 	if err != nil {
 		return fmt.Errorf("missing itemID")
 	}
-	req.ID = int64(itemID)
+	req.ID = itemID
 	return nil
 }
 
-func (srv *Service) getNavigationSubtree(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	req := &GetItemRequest{}
 	if err := req.Bind(httpReq); err != nil {
 		return service.ErrInvalidRequest(err)
@@ -42,9 +42,21 @@ func (srv *Service) getNavigationSubtree(rw http.ResponseWriter, httpReq *http.R
 	} else if !valid {
 		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
 	}
-	// TODO: read language from somewhere
-	languageID := int64(1)
 
+	var defaultLanguageID int64 = 1
+	result, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID(), defaultLanguageID)
+	if err != nil {
+		return service.ErrUnexpected(err)
+	}
+
+	// TODO:
+	//	filter by the user's access rights
+	//  construct the tree,
+	//  filter the data fields,
+	//  use a separate structure for the response
+	render.Respond(rw, httpReq, result)
+	return service.NoError
+	/*
 	// Fetch information about the root item.
 	dbItem, err := srv.Store.Items().GetOne(req.ID, languageID)
 	if err != nil {
@@ -58,6 +70,7 @@ func (srv *Service) getNavigationSubtree(rw http.ResponseWriter, httpReq *http.R
 
 	render.Respond(rw, httpReq, item)
 	return service.NoError
+	*/
 }
 
 func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {

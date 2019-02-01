@@ -22,6 +22,7 @@ type DB interface {
 	Where(query interface{}, args ...interface{}) DB
 	Joins(query string, args ...interface{}) DB
 	Group(query string) DB
+	Raw(query string, args ...interface{}) DB
 
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
@@ -42,6 +43,7 @@ func Open(dsnConfig string) (DB, error) {
 	var dbConn *gorm.DB
 	var driverName = "mysql"
 	dbConn, err = gorm.Open(driverName, dsnConfig)
+	dbConn.LogMode(true)
 
 	// setup logging
 	dbConn.SetLogger(logging.Logger.WithField("module", "database"))
@@ -96,6 +98,10 @@ func (conn *db) Select(query interface{}, args ...interface{}) DB {
 
 func (conn *db) Group(query string) DB {
 	return &db{conn.DB.Group(query)}
+}
+
+func (conn *db) Raw(query string, args ...interface{}) DB {
+	return &db{conn.DB.Raw(query, args...)}
 }
 
 func (conn *db) SubQuery() interface{} {

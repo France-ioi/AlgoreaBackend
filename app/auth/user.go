@@ -59,3 +59,11 @@ func (u *User) SelfGroupID() int64 {
 	}
 	return u.data.SelfGroupID
 }
+
+// DefaultLanguageID return the idDefaultLanguage of the user
+func (u *User) DefaultLanguageID() int64 {
+	if u.lazyLoadData() != nil {
+		return 0
+	}
+	return u.data.DefaultLanguageID
+}

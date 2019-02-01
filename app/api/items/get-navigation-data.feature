@@ -39,17 +39,6 @@ Feature: Get item for tree navigation
       | 57 | 210          | 211         | 1           | 0           | 0        |
       | 58 | 230          | 231         | 1           | 0           | 0        |
       | 59 | 230          | 232         | 2           | 0           | 0        |
-    And the database has the following table 'items_ancestors':
-      | ID | idItemAncestor | idItemChild |
-      | 51 | 200            | 210         |
-      | 52 | 200            | 220         |
-      | 53 | 200            | 230         |
-      | 54 | 200            | 211         |
-      | 55 | 200            | 231         |
-      | 56 | 200            | 232         |
-      | 57 | 210            | 211         |
-      | 58 | 230            | 231         |
-      | 59 | 230            | 232         |
     And the database has the following table 'items_strings':
       | ID | idItem | idLanguage | sTitle    | iVersion |
       | 53 | 200    | 1          | Root      | 0        |
@@ -66,23 +55,146 @@ Feature: Get item for tree navigation
       """
       {
         "item_id": 200,
-        "title": "Root",
+        "type": "Category",
+        "transparent_folder": true,
+        "has_unlocked_items": true,
+        "title": "Category 1",
+        "user_score": 12345,
+        "user_validated": 678,
+        "user_finished": true,
+        "key_obtained": true,
+        "nb_submissions_attempts": 10,
+        "start_date": "2019-01-30T09:26:41Z",
+        "validation_date": "2019-01-31T09:26:41Z",
+        "finish_date": "2019-02-01T09:26:41Z",
+        "partial_access": true,
+        "full_access": true,
+        "gray_access": true,
         "children": [
           {
             "item_id": 210,
             "order": 1,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
             "title": "Chapter A",
-            "children": [{ "item_id": 211, "order": 1, "title": "Lesson 1"}]
+            "user_score": 12345,
+            "user_validated": 678,
+            "user_finished": true,
+            "key_obtained": true,
+            "nb_submissions_attempts": 10,
+            "start_date": "2019-01-30T09:26:41Z",
+            "validation_date": "2019-01-31T09:26:41Z",
+            "finish_date": "2019-02-01T09:26:41Z",
+            "partial_access": true,
+            "full_access": true,
+            "gray_access": true,
+            "children": [
+              {
+                "item_id": 211,
+                "order": 1,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "title": "Task 1",
+                "user_score": 12345,
+                "user_validated": 678,
+                "user_finished": true,
+                "key_obtained": true,
+                "nb_submissions_attempts": 10,
+                "start_date": "2019-01-30T09:26:41Z",
+                "validation_date": "2019-01-31T09:26:41Z",
+                "finish_date": "2019-02-01T09:26:41Z",
+                "partial_access": true,
+                "full_access": true,
+                "gray_access": true
+              }
+            ]
           },
-          { "item_id": 220, "order": 2, "title": "Chapter B"},
+          {
+            "item_id": 220,
+            "order": 2,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "title": "Chapter B",
+            "user_score": 12345,
+            "user_validated": 678,
+            "user_finished": true,
+            "key_obtained": true,
+            "nb_submissions_attempts": 10,
+            "start_date": "2019-01-30T09:26:41Z",
+            "validation_date": "2019-01-31T09:26:41Z",
+            "finish_date": "2019-02-01T09:26:41Z",
+            "partial_access": true,
+            "full_access": true,
+            "gray_access": true
+          },
           {
             "item_id": 230,
             "order": 3,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
             "title": "Chapter C",
+            "user_score": 12345,
+            "user_validated": 678,
+            "user_finished": true,
+            "key_obtained": true,
+            "nb_submissions_attempts": 10,
+            "start_date": "2019-01-30T09:26:41Z",
+            "validation_date": "2019-01-31T09:26:41Z",
+            "finish_date": "2019-02-01T09:26:41Z",
+            "partial_access": true,
+            "full_access": true,
+            "gray_access": true,
             "children": [
-              {"item_id": 231, "order": 1, "title": "Lesson 2"},
-              {"item_id": 232, "order": 2, "title": "Lesson 3"}
+              {
+                "item_id": 231,
+                "order": 1,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "title": "Task 2",
+                "user_score": 12345,
+                "user_validated": 678,
+                "user_finished": true,
+                "key_obtained": true,
+                "nb_submissions_attempts": 10,
+                "start_date": "2019-01-30T09:26:41Z",
+                "validation_date": "2019-01-31T09:26:41Z",
+                "finish_date": "2019-02-01T09:26:41Z",
+                "partial_access": true,
+                "full_access": true,
+                "gray_access": true
+              },
+              {
+                "item_id": 232,
+                "order": 2,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "title": "Taks 3",
+                "user_score": 12345,
+                "user_validated": 678,
+                "user_finished": true,
+                "key_obtained": true,
+                "nb_submissions_attempts": 10,
+                "start_date": "2019-01-30T09:26:41Z",
+                "validation_date": "2019-01-31T09:26:41Z",
+                "finish_date": "2019-02-01T09:26:41Z",
+                "partial_access": true,
+                "full_access": true,
+                "gray_access": true
+              }
             ]
           }]
         }
       """
+# TODO: test different languages

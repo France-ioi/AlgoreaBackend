@@ -7,66 +7,66 @@ import (
 
 func TestCheckAccess(t *testing.T) {
 	testCases := []struct {
-		desc               string
-		itemIDs            []int64
-		itemAccessDetailss []itemAccessDetails
-		err                error
+		desc              string
+		itemIDs           []int64
+		itemAccessDetails []itemAccessDetailsWithID
+		err               error
 	}{
 		{
-			desc:               "empty IDs",
-			itemIDs:            nil,
-			itemAccessDetailss: nil,
-			err:                nil,
+			desc:              "empty IDs",
+			itemIDs:           nil,
+			itemAccessDetails: nil,
+			err:               nil,
 		},
 		{
-			desc:               "empty access results",
-			itemIDs:            []int64{21, 22, 23},
-			itemAccessDetailss: nil,
-			err:                fmt.Errorf("not visible item_id 21"),
+			desc:              "empty access results",
+			itemIDs:           []int64{21, 22, 23},
+			itemAccessDetails: nil,
+			err:               fmt.Errorf("not visible item_id 21"),
 		},
 		{
 			desc:    "missing access result on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetailss: []itemAccessDetails{
-				{ItemID: 21, FullAccess: true},
-				{ItemID: 22, FullAccess: true},
+			itemAccessDetails: []itemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 			},
 			err: fmt.Errorf("not visible item_id 23"),
 		},
 		{
 			desc:    "no access on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetailss: []itemAccessDetails{
-				{ItemID: 21, FullAccess: true},
+			itemAccessDetails: []itemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 				{ItemID: 22},
-				{ItemID: 23, FullAccess: true},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 			},
 			err: fmt.Errorf("not enough perm on item_id 22"),
 		},
 		{
 			desc:    "full access on all items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetailss: []itemAccessDetails{
-				{ItemID: 21, FullAccess: true},
-				{ItemID: 22, FullAccess: true},
-				{ItemID: 23, FullAccess: true},
+			itemAccessDetails: []itemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 			},
 			err: nil,
 		},
 		{
 			desc:    "full access on all but last, last with greyed",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetailss: []itemAccessDetails{
-				{ItemID: 21, PartialAccess: true},
-				{ItemID: 22, PartialAccess: true},
-				{ItemID: 23, GrayedAccess: true},
+			itemAccessDetails: []itemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{GrayedAccess: true}},
 			},
 			err: nil,
 		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			err := checkAccess(tC.itemIDs, tC.itemAccessDetailss)
+			err := checkAccess(tC.itemIDs, tC.itemAccessDetails)
 			if err != nil {
 				if tC.err != nil {
 					if want, got := tC.err.Error(), err.Error(); want != got {

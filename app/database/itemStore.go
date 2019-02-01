@@ -12,11 +12,18 @@ type ItemStore struct {
 	*DataStore
 }
 
-type itemAccessDetails struct {
+type ItemAccessDetails struct {
+	// MAX(groups_items.bCachedFullAccess)
+	FullAccess    bool  `sql:"column:fullAccess" json:"full_access"`
+	// MAX(groups_items.bCachedPartialAccess)
+	PartialAccess bool  `sql:"column:partialAccess" json:"partial_access"`
+	// MAX(groups_items.bCachedGrayAccess)
+	GrayedAccess  bool  `sql:"column:grayedAccess" json:"grayed_access"`
+}
+
+type itemAccessDetailsWithID struct {
 	ItemID        int64 `sql:"column:idItem"`
-	FullAccess    bool  `sql:"column:fullAccess"`
-	PartialAccess bool  `sql:"column:partialAccess"`
-	GrayedAccess  bool  `sql:"column:grayedAccess"`
+	ItemAccessDetails
 }
 
 // Item matches the content the `items` table
@@ -28,6 +35,36 @@ type Item struct {
 	NoScore           types.Bool   `sql:"column:bNoScore"`
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
+
+type NavigationItemCommonFields struct {
+	// items
+	ID                		int64  `sql:"column:ID" json:"item_id"`
+	Type              		string `sql:"column:sType" json:"type"`
+	TransparentFolder 		bool	 `sql:"colums:bTransparentFolder" json:"transparent_folder"`
+	// whether items.idItemUnlocked is empty
+	HasUnlockedItems  		bool   `sql:"hasUnlockedItems" json:"has_unlocked_items"`
+
+	// title (from items_strings) in the user’s default language or (if not available) default language of the item
+	Title         				string `sql:"column:sTitle" json:"title"`
+
+	// from users_items for current user
+	UserScore 						float32	`sql:"column:iScore" json:"user_score,omitempty"`
+	UserValidated 				bool	  `sql:"column:bValidated" json:"user_validated,omitempty"`
+	UserFinished					bool	  `sql:"column:bFinished" json:"user_finished,omitempty"`
+	KeyObtained 					bool 	  `sql:"column:bKeyObtained" json:"key_obtained,omitempty"`
+	SubmissionsAttempts   int64   `sql:"column:nbSubmissionsAttempts" json:"submissions_attempts,omitempty"`
+	StartDate             string  `sql:"column:sStartDate" json:"start_date,omitempty"` // iso8601 str
+	ValidationDate        string  `sql:"column:sValidationDate" json:"validation_date,omitempty"` // iso8601 str
+	FinishDate            string  `sql:"column:sFinishDate" json:"finish_date,omitempty"` // iso8601 str
+}
+
+type NavigationItemChild struct {
+	*NavigationItemCommonFields
+
+	Order 						int64 `sql:"column:iChildOrder" json:"order"`
+	AccessRestricted  bool  `sql:"column:bAccessRestricted" json:"access_restricted"`
+}
+
 
 // TreeItem represents the content of `items` table filled with some additional information
 // from `items_strings` and `items_items`.
@@ -45,6 +82,38 @@ type TreeItem struct {
 
 func (s *ItemStore) tableName() string {
 	return "items"
+}
+
+
+func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]NavigationItemChild, error){
+	var result []NavigationItemChild
+	if err := s.Raw(
+		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, " +
+			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, " +
+			"COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, " +
+			"users_items.iScore AS iScore, users_items.bValidated AS bValidated, " +
+			"users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained, " +
+			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, " +
+			"users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate, " +
+			"users_items.sFinishDate AS sFinishDate, " +
+			"union_table.iChildOrder AS iChildOrder, " +
+			"union_table.idItemParent AS idItemParent " +
+			"FROM " +
+			"(SELECT items.*, NULL AS idItemParent, NULL AS iChildOrder FROM items WHERE items.ID=? UNION " +
+			"(SELECT items.*, idItemParent, iChildOrder FROM items, items_items " +
+			" WHERE items.ID=idItemChild AND idItemParent=?" +
+			" ORDER BY items_items.iChildOrder) UNION" +
+			"(SELECT items.*, ii2.idItemParent, ii2.iChildOrder FROM items, items_items ii1 " +
+			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent " +
+			" WHERE items.ID=ii2.idItemChild AND ii1.idItemParent=?" +
+			" ORDER BY ii2.idItemParent, ii2.iChildOrder)) union_table " +
+			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? " +
+			"LEFT JOIN items_strings dstrings ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=? " +
+			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=?",
+			rootID, rootID, rootID, userLanguageID, defaultLanguageID, userID).Scan(&result).Error(); err != nil {
+				return nil, err
+	}
+	return &result, nil
 }
 
 // GetOne returns a single element of the tree structure.
@@ -137,7 +206,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
 func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
 
-	var accDets []itemAccessDetails
+	var accDets []itemAccessDetailsWithID
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Where("groups_items.idItem IN (?)", itemIDs).
@@ -158,7 +227,7 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 // - user has to have full access to all items
 // OR
 // - user has to have full access to all but last, and grayed access to that last item.
-func checkAccess(itemIDs []int64, accDets []itemAccessDetails) error {
+func checkAccess(itemIDs []int64, accDets []itemAccessDetailsWithID) error {
 	for i, id := range itemIDs {
 		last := i == len(itemIDs)-1
 		if err := checkAccessForID(id, last, accDets); err != nil {
@@ -168,7 +237,7 @@ func checkAccess(itemIDs []int64, accDets []itemAccessDetails) error {
 	return nil
 }
 
-func checkAccessForID(id int64, last bool, accDets []itemAccessDetails) error {
+func checkAccessForID(id int64, last bool, accDets []itemAccessDetailsWithID) error {
 	for _, res := range accDets {
 		if res.ItemID != id {
 			continue
