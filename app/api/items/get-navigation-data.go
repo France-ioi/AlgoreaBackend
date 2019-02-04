@@ -139,10 +139,12 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	// TODO:
-	//	filter by the user's access rights
-	//  construct the tree,
-	//  filter the data fields,
-	//  use a separate structure for the response
+	//	+ filter by the user's access rights
+	//  + construct the tree,
+	//  + filter the data fields,
+	//  + use a separate structure for the response
+	//  write more tests
+	//  clean up
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 	/*
