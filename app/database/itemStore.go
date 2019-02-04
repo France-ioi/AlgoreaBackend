@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -38,31 +37,33 @@ type Item struct {
 
 type NavigationItemCommonFields struct {
 	// items
-	ID                		int64  `sql:"column:ID" json:"item_id"`
-	Type              		string `sql:"column:sType" json:"type"`
-	TransparentFolder 		bool	 `sql:"colums:bTransparentFolder" json:"transparent_folder"`
+	ID                		int64  `sql:"column:ID"`
+	Type              		string `sql:"column:sType"`
+	TransparentFolder 		bool	 `sql:"column:bTransparentFolder"`
 	// whether items.idItemUnlocked is empty
-	HasUnlockedItems  		bool   `sql:"hasUnlockedItems" json:"has_unlocked_items"`
+	HasUnlockedItems  		bool   `sql:"column:hasUnlockedItems"`
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title         				string `sql:"column:sTitle" json:"title"`
+	Title         				string `sql:"column:sTitle"`
 
 	// from users_items for current user
-	UserScore 						float32	`sql:"column:iScore" json:"user_score,omitempty"`
-	UserValidated 				bool	  `sql:"column:bValidated" json:"user_validated,omitempty"`
-	UserFinished					bool	  `sql:"column:bFinished" json:"user_finished,omitempty"`
-	KeyObtained 					bool 	  `sql:"column:bKeyObtained" json:"key_obtained,omitempty"`
-	SubmissionsAttempts   int64   `sql:"column:nbSubmissionsAttempts" json:"submissions_attempts,omitempty"`
-	StartDate             string  `sql:"column:sStartDate" json:"start_date,omitempty"` // iso8601 str
-	ValidationDate        string  `sql:"column:sValidationDate" json:"validation_date,omitempty"` // iso8601 str
-	FinishDate            string  `sql:"column:sFinishDate" json:"finish_date,omitempty"` // iso8601 str
+	UserScore 						float32	`sql:"column:iScore"`
+	UserValidated 				bool	  `sql:"column:bValidated"`
+	UserFinished					bool	  `sql:"column:bFinished"`
+	KeyObtained 					bool 	  `sql:"column:bKeyObtained"`
+	SubmissionsAttempts   int64   `sql:"column:nbSubmissionsAttempts"`
+	StartDate             string  `sql:"column:sStartDate"` // iso8601 str
+	ValidationDate        string  `sql:"column:sValidationDate"` // iso8601 str
+	FinishDate            string  `sql:"column:sFinishDate"` // iso8601 str
+
+	IDItemParent					int64   `sql:"column:idItemParent"`
+	Order 						    int64 	`sql:"column:iChildOrder"`
+	AccessRestricted  		bool  	`sql:"column:bAccessRestricted"`
 }
 
 type NavigationItemChild struct {
 	*NavigationItemCommonFields
 
-	Order 						int64 `sql:"column:iChildOrder" json:"order"`
-	AccessRestricted  bool  `sql:"column:bAccessRestricted" json:"access_restricted"`
 }
 
 
@@ -98,15 +99,19 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, default
 			"users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate, " +
 			"users_items.sFinishDate AS sFinishDate, " +
 			"union_table.iChildOrder AS iChildOrder, " +
+			"union_table.bAccessRestricted, " +
 			"union_table.idItemParent AS idItemParent " +
 			"FROM " +
-			"(SELECT items.*, NULL AS idItemParent, NULL AS iChildOrder FROM items WHERE items.ID=? UNION " +
-			"(SELECT items.*, idItemParent, iChildOrder FROM items, items_items " +
-			" WHERE items.ID=idItemChild AND idItemParent=?" +
+			"(SELECT items.*, NULL AS idItemParent, NULL AS iChildOrder, NULL AS bAccessRestricted " +
+			" FROM items WHERE items.ID=? UNION " +
+			"(SELECT items.*, idItemParent, iChildOrder, bAccessRestricted FROM items " +
+			" JOIN items_items ON items.ID=idItemChild " +
+			" WHERE idItemParent=?" +
 			" ORDER BY items_items.iChildOrder) UNION" +
-			"(SELECT items.*, ii2.idItemParent, ii2.iChildOrder FROM items, items_items ii1 " +
+			"(SELECT items.*, ii2.idItemParent, ii2.iChildOrder, ii2.bAccessRestricted FROM items " +
+			" JOIN items_items ii1 ON ii1.idItemParent=? " +
 			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent " +
-			" WHERE items.ID=ii2.idItemChild AND ii1.idItemParent=?" +
+			" WHERE items.ID=ii2.idItemChild " +
 			" ORDER BY ii2.idItemParent, ii2.iChildOrder)) union_table " +
 			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? " +
 			"LEFT JOIN items_strings dstrings ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=? " +
@@ -206,22 +211,46 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
 func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
-
-	var accDets []itemAccessDetailsWithID
-	db := s.GroupItems().MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-		Where("groups_items.idItem IN (?)", itemIDs).
-		Group("idItem").Scan(&accDets)
-	if db.Error() != nil {
-		return false, db.Error()
+	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
+	if err != nil {
+		return false, err
 	}
 
-	if err := checkAccess(itemIDs, accDets); err != nil {
-		logging.Logger.Infof("checkAccess %v %v", itemIDs, accDets)
+	if err := checkAccess(itemIDs, accessDetails); err != nil {
+		logging.Logger.Infof("checkAccess %v %v", itemIDs, accessDetails)
 		logging.Logger.Infof("User access validation failed: %v", err)
 		return false, nil
 	}
 	return true, nil
+}
+
+// GetAccessDetailsForIDs returns access details for given item IDs and the given user
+func (s *ItemStore) GetAccessDetailsForIDs (user AuthUser, itemIDs []int64) ([]itemAccessDetailsWithID, error) {
+	var accessDetails []itemAccessDetailsWithID
+	db := s.GroupItems().MatchingUserAncestors(user).
+		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
+		Where("groups_items.idItem IN (?)", itemIDs).
+		Group("idItem").Scan(&accessDetails)
+	if err := db.Error(); err != nil {
+		return nil, err
+	}
+	return accessDetails, nil
+}
+
+func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
+	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
+	if err != nil {
+		return nil, err
+	}
+	accessDetailsMap := make(map[int64]ItemAccessDetails, len(accessDetails))
+	for _, row := range accessDetails {
+		accessDetailsMap[row.ItemID] = ItemAccessDetails{
+			FullAccess: row.FullAccess,
+			PartialAccess: row.PartialAccess,
+			GrayedAccess: row.GrayedAccess,
+		}
+	}
+	return accessDetailsMap, nil
 }
 
 // checkAccess checks if the user has access to all items:
