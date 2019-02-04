@@ -314,27 +314,13 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 		return
 	}
 
-	for i, b := range actual {
-		if b != expected[i] {
-			return fmt.Errorf(
-				"expected JSON does not match actual.\n     Got: %s\nExpected: %s",
-				string(actual),
-				string(expected),
-			)
-		}
-	}
-
-	// the matching may be adapted per different requirements.
-	if len(actual) != len(expected) {
+	if string(expected) != string(actual) {
 		return fmt.Errorf(
-			"expected json length: %d does not match actual: %d.\n     Got: %s\nExpected: %s",
-			len(expected),
-			len(actual),
+			"expected JSON does not match actual.\n     Got: %s\nExpected: %s",
 			string(actual),
 			string(expected),
 		)
 	}
-
 	return
 }
 
