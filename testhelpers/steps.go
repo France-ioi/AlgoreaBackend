@@ -319,7 +319,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	sActual := string(actual)
 
 	if sExpected != sActual {
-		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{
+		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
 			A:        difflib.SplitLines(string(expected)),
 			B:        difflib.SplitLines(string(actual)),
 			FromFile: "Expected",

@@ -11,6 +11,7 @@ type ItemStore struct {
 	*DataStore
 }
 
+// ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
 	// MAX(groups_items.bCachedFullAccess)
 	FullAccess    bool  `sql:"column:fullAccess" json:"full_access"`
@@ -35,6 +36,7 @@ type Item struct {
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
+// RawNavigationItem represents one row of a navigation subtree returned from the DB
 type RawNavigationItem struct {
 	// items
 	ID                		int64    `sql:"column:ID"`
@@ -66,7 +68,7 @@ func (s *ItemStore) tableName() string {
 	return "items"
 }
 
-
+// GetRawNavigationData reads a navigation subtree from the DB and returns an array of RawNavigationItem's
 func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]RawNavigationItem, error){
 	var result []RawNavigationItem
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
@@ -161,7 +163,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
 func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
-	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
+	accessDetails, err := s.getAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		return false, err
 	}
@@ -174,8 +176,8 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 	return true, nil
 }
 
-// GetAccessDetailsForIDs returns access details for given item IDs and the given user
-func (s *ItemStore) GetAccessDetailsForIDs (user AuthUser, itemIDs []int64) ([]itemAccessDetailsWithID, error) {
+// getAccessDetailsForIDs returns access details for given item IDs and the given user
+func (s *ItemStore) getAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]itemAccessDetailsWithID, error) {
 	var accessDetails []itemAccessDetailsWithID
 	db := s.GroupItems().MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
@@ -187,8 +189,9 @@ func (s *ItemStore) GetAccessDetailsForIDs (user AuthUser, itemIDs []int64) ([]i
 	return accessDetails, nil
 }
 
+// GetAccessDetailsMapForIDs returns access details for given item IDs and the given user as a map (item_id->details)
 func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
-	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
+	accessDetails, err := s.getAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		return nil, err
 	}

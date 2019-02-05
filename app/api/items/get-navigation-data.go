@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"fmt"
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"net/http"
 	"strconv"
 
@@ -18,7 +19,7 @@ type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
 
-type NavigationItemCommonFields struct {
+type navigationItemCommonFields struct {
 	ID                		int64   `json:"item_id"`
 	Type              		string  `json:"type"`
 	TransparentFolder 		bool	  `json:"transparent_folder"`
@@ -41,15 +42,15 @@ type NavigationItemCommonFields struct {
 	PartialAccess					bool		`json:"partial_access"`
 	GrayAccess  					bool		`json:"gray_access"`
 
-	Children							[]NavigationItemChild `json:"children,omitempty"`
+	Children							[]navigationItemChild `json:"children,omitempty"`
 }
 
-type NavigationDataResponse struct {
-	*NavigationItemCommonFields
+type navigationDataResponse struct {
+	*navigationItemCommonFields
 }
 
-type NavigationItemChild struct {
-	*NavigationItemCommonFields
+type navigationItemChild struct {
+	*navigationItemCommonFields
 
 	Order 						int64 `json:"order"`
 	AccessRestricted  bool  `json:"access_restricted"`
@@ -74,41 +75,44 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 
 	user := srv.getUser(httpReq)
 	var defaultLanguageID int64 = 1
-	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID(), defaultLanguageID)
+	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID,
+		user.DefaultLanguageID(), defaultLanguageID)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
-	var ids []int64
-	for _, row := range *rawData {
-		ids = append(ids, row.ID)
-	}
-	accessDetailsMap, err := srv.Store.Items().GetAccessDetailsMapForIDs(user, ids)
+	accessDetailsMap, err := srv.getAccessDetailsForRawNavigationItems(rawData, user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
 	accessDetailsForRootItem, hasAccessDetailsForRootItem := accessDetailsMap[req.ID]
 	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID || !hasAccessDetailsForRootItem ||
-		(!accessDetailsForRootItem.FullAccess && !accessDetailsForRootItem.PartialAccess && !accessDetailsForRootItem.GrayedAccess){
+		(!accessDetailsForRootItem.FullAccess && !accessDetailsForRootItem.PartialAccess && !accessDetailsForRootItem.GrayedAccess) {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
-	response := NavigationDataResponse{
+	response := navigationDataResponse{
 		srv.fillNavigationCommonFieldsWithDBData(&(*rawData)[0], &accessDetailsForRootItem),
 	}
-	idsToResponseData := map[int64]*NavigationItemCommonFields{req.ID: response.NavigationItemCommonFields}
+	idsToResponseData := map[int64]*navigationItemCommonFields{req.ID: response.navigationItemCommonFields}
+	srv.fillNavigationSubtreeWithChildren(rawData, accessDetailsMap, idsToResponseData)
 
+	render.Respond(rw, httpReq, response)
+	return service.NoError
+}
+
+func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]database.RawNavigationItem,
+	accessDetailsMap map[int64]database.ItemAccessDetails,
+	idsToResponseData map[int64]*navigationItemCommonFields) {
 	for index, item := range *rawData {
 		if index == 0 {
 			continue
 		}
 
 		accessDetailsForItem, hasAccessDetailsForItem := accessDetailsMap[item.ID]
-		if !hasAccessDetailsForItem ||
-			(!accessDetailsForItem.FullAccess && !accessDetailsForItem.PartialAccess &&
-				!accessDetailsForItem.GrayedAccess) {
-			continue // The user has no access to the item
+		if !hasAccessDetailsForItem || !hasSufficientAccessOnNavigationItem(accessDetailsForItem) {
+			continue
 		}
 
 		accessDetailsForParentItem, hasAccessDetailsForParentItem := accessDetailsMap[item.IDItemParent]
@@ -118,25 +122,38 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		}
 
 		if parentItemCommonFields, ok := idsToResponseData[item.IDItemParent]; ok {
-			child := NavigationItemChild{
-				NavigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&item, &accessDetailsForItem),
-				Order: item.Order,
-				AccessRestricted:	item.AccessRestricted,
+			child := navigationItemChild{
+				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&item, &accessDetailsForItem),
+				Order:                      item.Order,
+				AccessRestricted:           item.AccessRestricted,
 			}
-			idsToResponseData[child.ID] = child.NavigationItemCommonFields
+			idsToResponseData[child.ID] = child.navigationItemCommonFields
 			parentItemCommonFields.Children = append(parentItemCommonFields.Children, child)
 		}
 	}
+}
 
-	render.Respond(rw, httpReq, response)
-	return service.NoError
+// hasSufficientAccessOnNavigationItem checks if the user has access rights on the item
+func hasSufficientAccessOnNavigationItem(accessDetailsForItem database.ItemAccessDetails) bool {
+	return accessDetailsForItem.FullAccess || accessDetailsForItem.PartialAccess ||
+		accessDetailsForItem.GrayedAccess
+}
+
+func (srv *Service) getAccessDetailsForRawNavigationItems(rawData *[]database.RawNavigationItem, user *auth.User,
+	) (map[int64]database.ItemAccessDetails, error) {
+	var ids []int64
+	for _, row := range *rawData {
+		ids = append(ids, row.ID)
+	}
+	accessDetailsMap, err := srv.Store.Items().GetAccessDetailsMapForIDs(user, ids)
+	return accessDetailsMap, err
 }
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(
 	  rawData *database.RawNavigationItem,
 		accessDetail *database.ItemAccessDetails,
-	)*NavigationItemCommonFields {
-	return &NavigationItemCommonFields{
+	)*navigationItemCommonFields {
+	return &navigationItemCommonFields{
 		ID: rawData.ID,
 		Type: rawData.Type,
 		TransparentFolder: rawData.TransparentFolder,
