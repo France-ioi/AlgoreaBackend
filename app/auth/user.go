@@ -46,7 +46,7 @@ func (u *User) lazyLoadData() error {
 			Scan(u.data)
 		if err = db.Error(); err != nil {
 			u.data = nil
-			logging.Logger.Errorf("Unable to lazy load user data: %s", db.Error())
+			logging.Logger.Errorf("Unable to load user data: %s", db.Error())
 		}
 	}
 	return err

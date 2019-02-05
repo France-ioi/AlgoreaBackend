@@ -35,50 +35,31 @@ type Item struct {
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
-type NavigationItemCommonFields struct {
+type RawNavigationItem struct {
 	// items
-	ID                		int64  `sql:"column:ID"`
-	Type              		string `sql:"column:sType"`
-	TransparentFolder 		bool	 `sql:"column:bTransparentFolder"`
+	ID                		int64    `sql:"column:ID"`
+	Type              		string   `sql:"column:sType"`
+	TransparentFolder 		bool	   `sql:"column:bTransparentFolder"`
 	// whether items.idItemUnlocked is empty
-	HasUnlockedItems  		bool   `sql:"column:hasUnlockedItems"`
+	HasUnlockedItems  		bool     `sql:"column:hasUnlockedItems"`
+	AccessRestricted  		bool  	 `sql:"column:bAccessRestricted"`
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title         				string `sql:"column:sTitle"`
+	Title         				string   `sql:"column:sTitle"`
 
 	// from users_items for current user
-	UserScore 						float32	`sql:"column:iScore"`
-	UserValidated 				bool	  `sql:"column:bValidated"`
-	UserFinished					bool	  `sql:"column:bFinished"`
-	KeyObtained 					bool 	  `sql:"column:bKeyObtained"`
-	SubmissionsAttempts   int64   `sql:"column:nbSubmissionsAttempts"`
-	StartDate             string  `sql:"column:sStartDate"` // iso8601 str
-	ValidationDate        string  `sql:"column:sValidationDate"` // iso8601 str
-	FinishDate            string  `sql:"column:sFinishDate"` // iso8601 str
+	UserScore 						float32	 `sql:"column:iScore"`
+	UserValidated 				bool	   `sql:"column:bValidated"`
+	UserFinished					bool	   `sql:"column:bFinished"`
+	KeyObtained 					bool 	   `sql:"column:bKeyObtained"`
+	SubmissionsAttempts   int64    `sql:"column:nbSubmissionsAttempts"`
+	StartDate             string   `sql:"column:sStartDate"` // iso8601 str
+	ValidationDate        string   `sql:"column:sValidationDate"` // iso8601 str
+	FinishDate            string   `sql:"column:sFinishDate"` // iso8601 str
 
-	IDItemParent					int64   `sql:"column:idItemParent"`
-	Order 						    int64 	`sql:"column:iChildOrder"`
-	AccessRestricted  		bool  	`sql:"column:bAccessRestricted"`
-}
-
-type NavigationItemChild struct {
-	*NavigationItemCommonFields
-
-}
-
-
-// TreeItem represents the content of `items` table filled with some additional information
-// from `items_strings` and `items_items`.
-type TreeItem struct {
-	ID            types.Int64  `sql:"column:ID"`
-	Type          types.String `sql:"column:sType"`
-	TeamsEditable bool         `sql:"column:bTeamsEditable"` // use Go default in DB (to be fixed)
-	NoScore       bool         `sql:"column:bNoScore"`       // use Go default in DB (to be fixed)
-	Version       int64        `sql:"column:iVersion"`       // use Go default in DB (to be fixed)
-	Title         types.String `sql:"column:sTitle"`         // from items_strings
-	Order         types.Int64  `sql:"column:iChildOrder"`    // from items_items
-	ParentID      int64        `sql:"column:idItemParent"`
-	TreeLevel     int64        `sql:"column:treeLevel"` // information if direct child of root
+	// items_items
+	IDItemParent					int64    `sql:"column:idItemParent"`
+	Order 						    int64 	 `sql:"column:iChildOrder"`
 }
 
 func (s *ItemStore) tableName() string {
@@ -86,8 +67,8 @@ func (s *ItemStore) tableName() string {
 }
 
 
-func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]NavigationItemChild, error){
-	var result []NavigationItemChild
+func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]RawNavigationItem, error){
+	var result []RawNavigationItem
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
 		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, " +
@@ -120,37 +101,6 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, default
 				return nil, err
 	}
 	return &result, nil
-}
-
-// GetOne returns a single element of the tree structure.
-func (s *ItemStore) GetOne(id, languageID int64) (*TreeItem, error) {
-	var it TreeItem
-
-	if err := s.ByID(id).
-		Select("items.*, items_strings.sTitle as sTitle").
-		Joins("LEFT JOIN items_strings ON (items.ID=items_strings.idItem)").
-		Where("items_strings.idLanguage=?", languageID).
-		Take(&it).Error(); err != nil {
-		return nil, fmt.Errorf("failed to get item '%d': %v", id, err)
-	}
-	return &it, nil
-}
-
-// GetChildrenOf returns all children of the given root item.
-func (s *ItemStore) GetChildrenOf(rootID, languageID int64) ([]*TreeItem, error) {
-	var itt []*TreeItem
-
-	err := s.All().
-		Joins("JOIN items_ancestors ON (items.ID=items_ancestors.idItemChild)").
-		Joins("JOIN items_strings ON (items_ancestors.idItemChild=items_strings.idItem)").
-		Joins("JOIN items_items ON (items_ancestors.idItemChild=items_items.idItemChild)").
-		Where("items_ancestors.idItemAncestor=? AND items_strings.idLanguage=?", rootID, languageID).
-		Select("items.*, sTitle, iChildOrder, idItemParent").
-		Scan(&itt).Error()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get tree children of '%d': %v", rootID, err)
-	}
-	return itt, nil
 }
 
 // Insert does a INSERT query in the given table with data that may contain types.* types

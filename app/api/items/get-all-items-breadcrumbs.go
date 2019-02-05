@@ -26,7 +26,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {
-		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
+		return service.ErrForbidden(errors.New("insufficient access rights on given item ids"))
 	}
 
 	// Validate the hierarchy

@@ -19,17 +19,15 @@ type GetItemRequest struct {
 }
 
 type NavigationItemCommonFields struct {
-	// items
-	ID                		int64  `json:"item_id"`
-	Type              		string `json:"type"`
-	TransparentFolder 		bool	 `json:"transparent_folder"`
+	ID                		int64   `json:"item_id"`
+	Type              		string  `json:"type"`
+	TransparentFolder 		bool	  `json:"transparent_folder"`
 	// whether items.idItemUnlocked is empty
-	HasUnlockedItems  		bool   `json:"has_unlocked_items"`
+	HasUnlockedItems  		bool    `json:"has_unlocked_items"`
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title         				string `json:"title"`
+	Title         				string  `json:"title"`
 
-	// from users_items for current user
 	UserScore 						float32	`json:"user_score,omitempty"`
 	UserValidated 				bool	  `json:"user_validated,omitempty"`
 	UserFinished					bool	  `json:"user_finished,omitempty"`
@@ -75,14 +73,6 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.getUser(httpReq)
-	/*
-	// Validate that the user has access to the root element.
-	if valid, err := srv.Store.Items().ValidateUserAccess(user, []int64{req.ID}); err != nil {
-		return service.ErrUnexpected(err)
-	} else if !valid {
-		return service.ErrForbidden(errors.New("insufficient access on given item ids"))
-	}
-	*/
 	var defaultLanguageID int64 = 1
 	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID(), defaultLanguageID)
 	if err != nil {
@@ -101,7 +91,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	accessDetailsForRootItem, hasAccessDetailsForRootItem := accessDetailsMap[req.ID]
 	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID || !hasAccessDetailsForRootItem ||
 		(!accessDetailsForRootItem.FullAccess && !accessDetailsForRootItem.PartialAccess && !accessDetailsForRootItem.GrayedAccess){
-		return service.ErrForbidden(errors.New("insufficient access on given item id"))
+		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
 	response := NavigationDataResponse{
@@ -138,34 +128,12 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		}
 	}
 
-	// TODO:
-	//	+ filter by the user's access rights
-	//  + construct the tree,
-	//  + filter the data fields,
-	//  + use a separate structure for the response
-	//  write more tests
-	//  clean up
 	render.Respond(rw, httpReq, response)
 	return service.NoError
-	/*
-	// Fetch information about the root item.
-	dbItem, err := srv.Store.Items().GetOne(req.ID, languageID)
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
-
-	item := treeItemFromDB(dbItem)
-	if err := srv.buildChildrenStructure(item, languageID); err != nil {
-		return service.ErrUnexpected(err)
-	}
-
-	render.Respond(rw, httpReq, item)
-	return service.NoError
-	*/
 }
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(
-	  rawData *database.NavigationItemChild,
+	  rawData *database.RawNavigationItem,
 		accessDetail *database.ItemAccessDetails,
 	)*NavigationItemCommonFields {
 	return &NavigationItemCommonFields{
@@ -187,31 +155,4 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(
 		PartialAccess: accessDetail.PartialAccess,
 		GrayAccess: accessDetail.GrayedAccess,
 	}
-}
-
-func (srv *Service) buildChildrenStructure(item *Item, languageID int64) error {
-	allChildren, err := srv.Store.Items().GetChildrenOf(item.ItemID, languageID)
-	if err != nil {
-		return err
-	}
-
-	directChildren := childrenOf(item.ItemID, allChildren)
-	item.fillChildren(directChildren)
-
-	for i, ch := range item.Children {
-		grandChildren := childrenOf(ch.ItemID, allChildren)
-		item.Children[i].fillChildren(grandChildren)
-	}
-
-	return nil
-}
-
-func childrenOf(parentID int64, items []*database.TreeItem) []*database.TreeItem {
-	var children []*database.TreeItem
-	for _, it := range items {
-		if it.ParentID == parentID {
-			children = append(children, it)
-		}
-	}
-	return children
 }
