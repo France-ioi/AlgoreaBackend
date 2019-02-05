@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 
 // Important notes on all these custom types:
@@ -48,25 +47,6 @@ func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 		i.Value = temp
 	}
 	return
-}
-
-// Scan converts GORM types
-func (i *Int64) Scan(value interface{}) (err error) {
-	if value == nil {
-		i.Value, i.Set, i.Null = 0, false, true
-		return
-	}
-
-	switch v := value.(type) {
-	case int:
-	case int32:
-	case int64:
-		i.Value, i.Set, i.Null = v, true, false
-		return
-	}
-
-	i.Value, i.Set, i.Null = 0, false, true
-	return fmt.Errorf("failed to convert %T to Int64", value)
 }
 
 // AllAttributes unwrap the wrapped value and its attributes

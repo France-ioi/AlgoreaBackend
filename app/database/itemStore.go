@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -165,6 +166,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
 	accessDetails, err := s.getAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
+		logging.Logger.Infof("User access rights loading failed: %v", err)
 		return false, err
 	}
 

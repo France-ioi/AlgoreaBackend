@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 )
 
 // Doc is mainly in the "int64" file :-)
@@ -44,25 +43,6 @@ func (s *String) UnmarshalJSON(data []byte) (err error) {
 		s.Value = temp
 	}
 	return
-}
-
-// Scan converts GORM types
-func (s *String) Scan(value interface{}) (err error) {
-	if value == nil {
-		s.Value, s.Set, s.Null = "", false, true
-		return
-	}
-
-	switch v := value.(type) {
-	case string:
-	case []rune:
-	case []uint8:
-		s.Value, s.Set, s.Null = string(v), true, false
-		return
-	}
-
-	s.Value, s.Set, s.Null = "", false, true
-	return fmt.Errorf("failed to convert %T to String", value)
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
