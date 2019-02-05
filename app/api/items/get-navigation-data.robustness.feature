@@ -1,4 +1,3 @@
-@wip
 Feature: Get item for tree navigation - robustness
 Background:
   Given the database has the following table 'users':
