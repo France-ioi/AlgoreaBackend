@@ -41,6 +41,7 @@ Feature: Get item for tree navigation
       | 211 | Task     | false          | false    | 1234,2345      | true               | 0        |
       | 231 | Task     | false          | false    | 1234,2345      | true               | 0        |
       | 232 | Task     | false          | false    | 1234,2345      | true               | 0        |
+      | 250 | Task     | false          | false    | 1234,2345      | true               | 0        |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
       | 43 | 13      | 200    | null            | true              | true                 | true                | 0             | 0        |
@@ -50,6 +51,7 @@ Feature: Get item for tree navigation
       | 47 | 13      | 211    | null            | true              | true                 | true                | 0             | 0        |
       | 48 | 13      | 231    | null            | true              | true                 | true                | 0             | 0        |
       | 49 | 13      | 232    | null            | true              | true                 | true                | 0             | 0        |
+      | 42 | 13      | 250    | null            | true              | true                 | true                | 0             | 0        |
       | 50 | 14      | 200    | null            | false             | false                | true                | 0             | 0        |
       | 51 | 14      | 210    | null            | true              | true                 | true                | 0             | 0        |
       | 52 | 14      | 220    | null            | true              | true                 | true                | 0             | 0        |
