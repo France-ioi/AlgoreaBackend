@@ -38,6 +38,7 @@ func (ctx *Ctx) Router() *chi.Mux {
 	base := service.Base{Store: database.NewDataStore(ctx.db), Config: ctx.config}
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
+	r.Get("/status", ctx.status)
 	r.NotFound(ctx.notFound)
 	return r
 }

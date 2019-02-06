@@ -78,8 +78,7 @@ func Load() (*Root, error) {
 	viper.AddConfigPath(configDir)
 
 	if err = viper.ReadInConfig(); err != nil {
-		log.Fatal("Cannot read config:", err)
-		return nil, err
+		log.Print("Cannot read the config file, ignoring it.")
 	}
 
 	// map the given config to a static struct
