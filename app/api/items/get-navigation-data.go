@@ -19,28 +19,38 @@ type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
 
+type navigationItemUser struct {
+	Score     						float32	`json:"score"`
+	Validated     				bool	  `json:"validated"`
+	Finished    					bool	  `json:"finished"`
+	KeyObtained 					bool 	  `json:"key_obtained"`
+	SubmissionsAttempts   int64   `json:"submissions_attempts"`
+	StartDate             string  `json:"start_date"` // iso8601 str
+	ValidationDate        string  `json:"validation_date"` // iso8601 str
+	FinishDate            string  `json:"finish_date"` // iso8601 str
+}
+
+type navigationItemAccessRights struct {
+	FullAccess						bool		`json:"full_access"`
+	PartialAccess					bool		`json:"partial_access"`
+	GrayAccess  					bool		`json:"gray_access"`
+}
+
+type navigationItemString struct {
+	// title (from items_strings) in the user’s default language or (if not available) default language of the item
+	Title         				string  `json:"title"`
+}
+
 type navigationItemCommonFields struct {
-	ID                		int64   `json:"item_id"`
+	ID                		int64   `json:"id"`
 	Type              		string  `json:"type"`
 	TransparentFolder 		bool	  `json:"transparent_folder"`
 	// whether items.idItemUnlocked is empty
 	HasUnlockedItems  		bool    `json:"has_unlocked_items"`
 
-	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title         				string  `json:"title"`
-
-	UserScore 						float32	`json:"user_score,omitempty"`
-	UserValidated 				bool	  `json:"user_validated,omitempty"`
-	UserFinished					bool	  `json:"user_finished,omitempty"`
-	KeyObtained 					bool 	  `json:"key_obtained,omitempty"`
-	SubmissionsAttempts   int64   `json:"submissions_attempts,omitempty"`
-	StartDate             string  `json:"start_date,omitempty"` // iso8601 str
-	ValidationDate        string  `json:"validation_date,omitempty"` // iso8601 str
-	FinishDate            string  `json:"finish_date,omitempty"` // iso8601 str
-
-	FullAccess						bool		`json:"full_access"`
-	PartialAccess					bool		`json:"partial_access"`
-	GrayAccess  					bool		`json:"gray_access"`
+	String                navigationItemString `json:"string"`
+	User                  navigationItemUser `json:"user"`
+	AccessRights          navigationItemAccessRights `json:"access_rights"`
 
 	Children							[]navigationItemChild `json:"children,omitempty"`
 }
@@ -158,18 +168,21 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(
 		Type: rawData.Type,
 		TransparentFolder: rawData.TransparentFolder,
 		HasUnlockedItems: rawData.HasUnlockedItems,
-		Title: rawData.Title,
-		UserScore: rawData.UserScore,
-		UserValidated: rawData.UserValidated,
-		UserFinished: rawData.UserFinished,
-		KeyObtained: rawData.KeyObtained,
-		SubmissionsAttempts: rawData.SubmissionsAttempts,
-		StartDate: rawData.StartDate,
-		ValidationDate: rawData.ValidationDate,
-		FinishDate: rawData.FinishDate,
-
-		FullAccess: accessDetail.FullAccess,
-		PartialAccess: accessDetail.PartialAccess,
-		GrayAccess: accessDetail.GrayedAccess,
+		String: navigationItemString{ Title: rawData.Title },
+		User: navigationItemUser{
+			Score: rawData.UserScore,
+			Validated: rawData.UserValidated,
+			Finished: rawData.UserFinished,
+			KeyObtained: rawData.UserKeyObtained,
+			SubmissionsAttempts: rawData.UserSubmissionsAttempts,
+			StartDate: rawData.UserStartDate,
+			ValidationDate: rawData.UserValidationDate,
+			FinishDate: rawData.UserFinishDate,
+		},
+		AccessRights: navigationItemAccessRights{
+			FullAccess:    accessDetail.FullAccess,
+			PartialAccess: accessDetail.PartialAccess,
+			GrayAccess:    accessDetail.GrayedAccess,
+		},
 	}
 }

@@ -111,148 +111,191 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 200,
+        "id": 200,
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Category 1",
-        "user_score": 12341,
-        "user_validated": true,
-        "user_finished": true,
-        "key_obtained": true,
-        "submissions_attempts": 11,
-        "start_date": "2019-01-30T09:26:41Z",
-        "validation_date": "2019-01-31T09:26:41Z",
-        "finish_date": "2019-02-01T09:26:41Z",
-        "partial_access": true,
-        "full_access": true,
-        "gray_access": true,
+        "string": {
+          "title": "Category 1"
+        },
+        "user": {
+          "score": 12341,
+          "validated": true,
+          "finished": true,
+          "key_obtained": true,
+          "submissions_attempts": 11,
+          "start_date": "2019-01-30T09:26:41Z",
+          "validation_date": "2019-01-31T09:26:41Z",
+          "finish_date": "2019-02-01T09:26:41Z"
+        },
+        "access_rights": {
+          "partial_access": true,
+          "full_access": true,
+          "gray_access": true
+        },
         "children": [
           {
-            "item_id": 210,
+            "id": 210,
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter A",
-            "user_score": 12342,
-            "user_validated": true,
-            "user_finished": true,
-            "key_obtained": true,
-            "submissions_attempts": 12,
-            "start_date": "2019-01-30T09:26:42Z",
-            "validation_date": "2019-01-31T09:26:42Z",
-            "finish_date": "2019-02-01T09:26:42Z",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true,
+            "string": {
+              "title": "Chapter A"
+            },
+            "user": {
+              "score": 12342,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 12,
+              "start_date": "2019-01-30T09:26:42Z",
+              "validation_date": "2019-01-31T09:26:42Z",
+              "finish_date": "2019-02-01T09:26:42Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            },
             "children": [
               {
-                "item_id": 211,
+                "id": 211,
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Task 1",
-                "user_score": 12343,
-                "user_validated": true,
-                "user_finished": true,
-                "key_obtained": true,
-                "submissions_attempts": 13,
-                "start_date": "2019-01-30T09:26:43Z",
-                "validation_date": "2019-01-31T09:26:43Z",
-                "finish_date": "2019-02-01T09:26:43Z",
-                "partial_access": true,
-                "full_access": true,
-                "gray_access": true
+                "string": {
+                  "title": "Task 1"
+                },
+                "user": {
+                  "score": 12343,
+                  "validated": true,
+                  "finished": true,
+                  "key_obtained": true,
+                  "submissions_attempts": 13,
+                  "start_date": "2019-01-30T09:26:43Z",
+                  "validation_date": "2019-01-31T09:26:43Z",
+                  "finish_date": "2019-02-01T09:26:43Z"
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": true,
+                  "gray_access": true
+                }
               }
             ]
           },
           {
-            "item_id": 220,
+            "id": 220,
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter B",
-            "user_score": 12344,
-            "user_validated": true,
-            "user_finished": true,
-            "key_obtained": true,
-            "submissions_attempts": 14,
-            "start_date": "2019-01-30T09:26:44Z",
-            "validation_date": "2019-01-31T09:26:44Z",
-            "finish_date": "2019-02-01T09:26:44Z",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true
+            "string": {
+              "title": "Chapter B"
+            },
+            "user": {
+              "score": 12344,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 14,
+              "start_date": "2019-01-30T09:26:44Z",
+              "validation_date": "2019-01-31T09:26:44Z",
+              "finish_date": "2019-02-01T09:26:44Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
           },
           {
-            "item_id": 230,
+            "id": 230,
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter C",
-            "user_score": 12345,
-            "user_validated": true,
-            "user_finished": true,
-            "key_obtained": true,
-            "submissions_attempts": 15,
-            "start_date": "2019-01-30T09:26:45Z",
-            "validation_date": "2019-01-31T09:26:45Z",
-            "finish_date": "2019-02-01T09:26:45Z",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true,
+            "string": {
+              "title": "Chapter C"
+            },
+            "user": {
+              "score": 12345,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 15,
+              "start_date": "2019-01-30T09:26:45Z",
+              "validation_date": "2019-01-31T09:26:45Z",
+              "finish_date": "2019-02-01T09:26:45Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            },
             "children": [
               {
-                "item_id": 231,
+                "id": 231,
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Task 2",
-                "user_score": 12346,
-                "user_validated": true,
-                "user_finished": true,
-                "key_obtained": true,
-                "submissions_attempts": 16,
-                "start_date": "2019-01-30T09:26:46Z",
-                "validation_date": "2019-01-31T09:26:46Z",
-                "finish_date": "2019-02-01T09:26:46Z",
-                "partial_access": true,
-                "full_access": true,
-                "gray_access": true
+                "string": {
+                  "title": "Task 2"
+                },
+                "user": {
+                  "score": 12346,
+                  "validated": true,
+                  "finished": true,
+                  "key_obtained": true,
+                  "submissions_attempts": 16,
+                  "start_date": "2019-01-30T09:26:46Z",
+                  "validation_date": "2019-01-31T09:26:46Z",
+                  "finish_date": "2019-02-01T09:26:46Z"
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": true,
+                  "gray_access": true
+                }
               },
               {
-                "item_id": 232,
+                "id": 232,
                 "order": 2,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Task 3",
-                "user_score": 12347,
-                "user_validated": true,
-                "user_finished": true,
-                "key_obtained": true,
-                "submissions_attempts": 17,
-                "start_date": "2019-01-30T09:26:47Z",
-                "validation_date": "2019-01-31T09:26:47Z",
-                "finish_date": "2019-02-01T09:26:47Z",
-                "partial_access": true,
-                "full_access": true,
-                "gray_access": true
+                "string": {
+                  "title": "Task 3"
+                },
+                "user": {
+                  "score": 12347,
+                  "validated": true,
+                  "finished": true,
+                  "key_obtained": true,
+                  "submissions_attempts": 17,
+                  "start_date": "2019-01-30T09:26:47Z",
+                  "validation_date": "2019-01-31T09:26:47Z",
+                  "finish_date": "2019-02-01T09:26:47Z"
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": true,
+                  "gray_access": true
+                }
               }
             ]
-          }]
-        }
+          }
+        ]
+      }
       """
 
   Scenario: Should return only one node if the root item doesn't have children
@@ -262,22 +305,28 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 232,
+        "id": 232,
         "type": "Task",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Task 3",
-        "user_score": 12347,
-        "user_validated": true,
-        "user_finished": true,
-        "key_obtained": true,
-        "submissions_attempts": 17,
-        "start_date": "2019-01-30T09:26:47Z",
-        "validation_date": "2019-01-31T09:26:47Z",
-        "finish_date": "2019-02-01T09:26:47Z",
-        "partial_access": true,
-        "full_access": true,
-        "gray_access": true
+        "string": {
+          "title": "Task 3"
+        },
+        "user": {
+          "score": 12347,
+          "validated": true,
+          "finished": true,
+          "key_obtained": true,
+          "submissions_attempts": 17,
+          "start_date": "2019-01-30T09:26:47Z",
+          "validation_date": "2019-01-31T09:26:47Z",
+          "finish_date": "2019-02-01T09:26:47Z"
+        },
+        "access_rights": {
+          "partial_access": true,
+          "full_access": true,
+          "gray_access": true
+        }
       }
       """
 
@@ -288,62 +337,80 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 230,
+        "id": 230,
         "type": "Chapter",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Chapter C",
-        "user_score": 12345,
-        "user_validated": true,
-        "user_finished": true,
-        "key_obtained": true,
-        "submissions_attempts": 15,
-        "start_date": "2019-01-30T09:26:45Z",
-        "validation_date": "2019-01-31T09:26:45Z",
-        "finish_date": "2019-02-01T09:26:45Z",
-        "partial_access": true,
-        "full_access": true,
-        "gray_access": true,
+        "string": {
+          "title": "Chapter C"
+        },
+        "user": {
+          "score": 12345,
+          "validated": true,
+          "finished": true,
+          "key_obtained": true,
+          "submissions_attempts": 15,
+          "start_date": "2019-01-30T09:26:45Z",
+          "validation_date": "2019-01-31T09:26:45Z",
+          "finish_date": "2019-02-01T09:26:45Z"
+        },
+        "access_rights": {
+          "partial_access": true,
+          "full_access": true,
+          "gray_access": true
+        },
         "children": [
           {
-            "item_id": 231,
+            "id": 231,
             "order": 1,
             "access_restricted": true,
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Task 2",
-            "user_score": 12346,
-            "user_validated": true,
-            "user_finished": true,
-            "key_obtained": true,
-            "submissions_attempts": 16,
-            "start_date": "2019-01-30T09:26:46Z",
-            "validation_date": "2019-01-31T09:26:46Z",
-            "finish_date": "2019-02-01T09:26:46Z",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true
+            "string": {
+              "title": "Task 2"
+            },
+            "user": {
+              "score": 12346,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 16,
+              "start_date": "2019-01-30T09:26:46Z",
+              "validation_date": "2019-01-31T09:26:46Z",
+              "finish_date": "2019-02-01T09:26:46Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
           },
           {
-            "item_id": 232,
+            "id": 232,
             "order": 2,
             "access_restricted": true,
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Task 3",
-            "user_score": 12347,
-            "user_validated": true,
-            "user_finished": true,
-            "key_obtained": true,
-            "submissions_attempts": 17,
-            "start_date": "2019-01-30T09:26:47Z",
-            "validation_date": "2019-01-31T09:26:47Z",
-            "finish_date": "2019-02-01T09:26:47Z",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true
+            "string": {
+              "title": "Task 3"
+            },
+            "user": {
+              "score": 12347,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 17,
+              "start_date": "2019-01-30T09:26:47Z",
+              "validation_date": "2019-01-31T09:26:47Z",
+              "finish_date": "2019-02-01T09:26:47Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
           }
         ]
       }
@@ -356,14 +423,28 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 200,
+        "id": 200,
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Category 1",
-        "partial_access": false,
-        "full_access": false,
-        "gray_access": true
+        "string": {
+          "title": "Category 1"
+        },
+        "user": {
+          "finish_date": "",
+          "finished": false,
+          "key_obtained": false,
+          "score": 0,
+          "start_date": "",
+          "submissions_attempts": 0,
+          "validated": false,
+          "validation_date": ""
+        },
+        "access_rights": {
+          "partial_access": false,
+          "full_access": false,
+          "gray_access": true
+        }
       }
       """
 
@@ -374,50 +455,106 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 200,
+        "id": 200,
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Category 1",
-        "partial_access": true,
-        "full_access": true,
-        "gray_access": true,
+        "string": {
+          "title": "Category 1"
+        },
+        "user": {
+          "finish_date": "",
+          "finished": false,
+          "key_obtained": false,
+          "score": 0,
+          "start_date": "",
+          "submissions_attempts": 0,
+          "validated": false,
+          "validation_date": ""
+        },
+        "access_rights": {
+          "partial_access": true,
+          "full_access": true,
+          "gray_access": true
+        },
         "children": [
           {
-            "item_id": 210,
+            "id": 210,
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter A",
-            "partial_access": false,
-            "full_access": false,
-            "gray_access": true
+            "string": {
+              "title": "Chapter A"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": false,
+              "full_access": false,
+              "gray_access": true
+            }
           },
           {
-            "item_id": 220,
+            "id": 220,
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter B",
-            "partial_access": true,
-            "full_access": true,
-            "gray_access": true
+            "string": {
+              "title": "Chapter B"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
           },
           {
-            "item_id": 230,
+            "id": 230,
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter C",
-            "partial_access": false,
-            "full_access": false,
-            "gray_access": true
+            "string": {
+              "title": "Chapter C"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": false,
+              "full_access": false,
+              "gray_access": true
+            }
           }
         ]
       }
@@ -430,88 +567,186 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "item_id": 200,
+        "id": 200,
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
-        "title": "Catégorie 1",
-        "partial_access": true,
-        "full_access": false,
-        "gray_access": true,
+        "string": {
+          "title": "Catégorie 1"
+        },
+        "user": {
+          "finish_date": "",
+          "finished": false,
+          "key_obtained": false,
+          "score": 0,
+          "start_date": "",
+          "submissions_attempts": 0,
+          "validated": false,
+          "validation_date": ""
+        },
+        "access_rights": {
+          "partial_access": true,
+          "full_access": false,
+          "gray_access": true
+        },
         "children": [
           {
-            "item_id": 210,
+            "id": 210,
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapitre A",
-            "partial_access": true,
-            "full_access": false,
-            "gray_access": true,
+            "string": {
+              "title": "Chapitre A"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": false,
+              "gray_access": true
+            },
             "children": [
               {
-                "item_id": 211,
+                "id": 211,
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Tâche 1",
-                "partial_access": true,
-                "full_access": false,
-                "gray_access": true
+                "string": {
+                  "title": "Tâche 1"
+                },
+                "user": {
+                  "finish_date": "",
+                  "finished": false,
+                  "key_obtained": false,
+                  "score": 0,
+                  "start_date": "",
+                  "submissions_attempts": 0,
+                  "validated": false,
+                  "validation_date": ""
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": false,
+                  "gray_access": true
+                }
               }
             ]
           },
           {
-            "item_id": 220,
+            "id": 220,
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapter B",
-            "partial_access": true,
-            "full_access": false,
-            "gray_access": true
+            "string": {
+              "title": "Chapter B"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": false,
+              "gray_access": true
+            }
           },
           {
-            "item_id": 230,
+            "id": 230,
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
-            "title": "Chapitre C",
-            "partial_access": true,
-            "full_access": false,
-            "gray_access": true,
+            "string": {
+              "title": "Chapitre C"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": false,
+              "gray_access": true
+            },
             "children": [
               {
-                "item_id": 231,
+                "id": 231,
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Task 2",
-                "partial_access": true,
-                "full_access": false,
-                "gray_access": true
+                "string": {
+                  "title": "Task 2"
+                },
+                "user": {
+                  "finish_date": "",
+                  "finished": false,
+                  "key_obtained": false,
+                  "score": 0,
+                  "start_date": "",
+                  "submissions_attempts": 0,
+                  "validated": false,
+                  "validation_date": ""
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": false,
+                  "gray_access": true
+                }
               },
               {
-                "item_id": 232,
+                "id": 232,
                 "order": 2,
                 "access_restricted": true,
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
-                "title": "Task 3",
-                "partial_access": true,
-                "full_access": false,
-                "gray_access": true
+                "string": {
+                  "title": "Task 3"
+                },
+                "user": {
+                  "finish_date": "",
+                  "finished": false,
+                  "key_obtained": false,
+                  "score": 0,
+                  "start_date": "",
+                  "submissions_attempts": 0,
+                  "validated": false,
+                  "validation_date": ""
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": false,
+                  "gray_access": true
+                }
               }
             ]
           }]

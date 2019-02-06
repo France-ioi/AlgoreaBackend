@@ -51,14 +51,14 @@ type RawNavigationItem struct {
 	Title         				string   `sql:"column:sTitle"`
 
 	// from users_items for current user
-	UserScore 						float32	 `sql:"column:iScore"`
-	UserValidated 				bool	   `sql:"column:bValidated"`
-	UserFinished					bool	   `sql:"column:bFinished"`
-	KeyObtained 					bool 	   `sql:"column:bKeyObtained"`
-	SubmissionsAttempts   int64    `sql:"column:nbSubmissionsAttempts"`
-	StartDate             string   `sql:"column:sStartDate"` // iso8601 str
-	ValidationDate        string   `sql:"column:sValidationDate"` // iso8601 str
-	FinishDate            string   `sql:"column:sFinishDate"` // iso8601 str
+	UserScore 						  float32	 `sql:"column:iScore"`
+	UserValidated 				  bool	   `sql:"column:bValidated"`
+	UserFinished					  bool	   `sql:"column:bFinished"`
+	UserKeyObtained 			  bool 	   `sql:"column:bKeyObtained"`
+	UserSubmissionsAttempts int64    `sql:"column:nbSubmissionsAttempts"`
+	UserStartDate           string   `sql:"column:sStartDate"` // iso8601 str
+	UserValidationDate      string   `sql:"column:sValidationDate"` // iso8601 str
+	UserFinishDate          string   `sql:"column:sFinishDate"` // iso8601 str
 
 	// items_items
 	IDItemParent					int64    `sql:"column:idItemParent"`
