@@ -30,99 +30,76 @@ Feature: Get item information for breadcrumb - robustness
       | 73 | 13              | 13           | 1       | 0        |
       | 74 | 13              | 11           | 0       | 0        |
 
-  Scenario: Full access on all breadcrumb
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 51 | 21           | 22          | 1           | 0           | 0        |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
-  Then the response code should be 200
-  And the response body should be, in JSON:
-  """
-  [
-  { "item_id": 21, "language_id": 1, "title": "Graph: Methods" },
-  { "item_id": 22, "language_id": 1, "title": "DFS" },
-  { "item_id": 23, "language_id": 1, "title": "Reduce Graph" },
-  { "item_id": 21, "language_id": 2, "title": "Graphe: Methodes" }
-  ]
-  """
+  Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
+    Given the database has the following table 'groups_items':
+      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+      | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
+      | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
+      | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
+    And the database has the following table 'items_items':
+      | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+      | 52 | 22           | 23          | 1           | 0           | 0        |
+    And I am the user with ID "1"
+    When I send a GET request to "/items/?ids=21,22,23"
+    Then the response code should be 400
+    And the response error message should contain "The IDs chain is corrupt"
 
-Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
-  Then the response code should be 400
-  And the response error message should contain "The IDs chain is corrupt"
+  Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing at the end), but user has full access to all
+    Given the database has the following table 'groups_items':
+      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+      | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
+      | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
+      | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
+      | 44 | 13      | 24     | null            | true              | false                | false               | 0             | 0        |
+    And the database has the following table 'items_items':
+      | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+      | 52 | 21           | 22          | 1           | 0           | 0        |
+      | 53 | 22           | 23          | 1           | 0           | 0        |
+    And I am the user with ID "1"
+    When I send a GET request to "/items/?ids=21,22,23,24"
+    Then the response code should be 400
+    And the response error message should contain "The IDs chain is corrupt"
 
-Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing at the end), but user has full access to all
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 43 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
-    | 44 | 13      | 24     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 21           | 22          | 1           | 0           | 0        |
-    | 53 | 22           | 23          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23,24"
-  Then the response code should be 400
-  And the response error message should contain "The IDs chain is corrupt"
+  Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
+    Given the database has the following table 'groups_items':
+      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+      | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
+      | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
+      | 44 | 13      | 24     | null            | true              | false                | false               | 0             | 0        |
+    And the database has the following table 'items_items':
+      | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+      | 51 | 21           | 22          | 1           | 0           | 0        |
+      | 52 | 22           | 23          | 1           | 0           | 0        |
+      | 53 | 23           | 24          | 1           | 0           | 0        |
+    And I am the user with ID "1"
+    When I send a GET request to "/items/?ids=21,22,24,23"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights on given item ids"
 
-Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | true              | false                | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 44 | 13      | 24     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 51 | 21           | 22          | 1           | 0           | 0        |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
-    | 53 | 23           | 24          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,24,23"
-  Then the response code should be 403
-  And the response error message should contain "Insufficient access rights on given item ids"
+  Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
+    Given the database has the following table 'groups_items':
+      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+      | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
+      | 44 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
+    And the database has the following table 'items_items':
+      | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+      | 52 | 22           | 23          | 1           | 0           | 0        |
+      | 53 | 23           | 24          | 1           | 0           | 0        |
+    And I am the user with ID "1"
+    When I send a GET request to "/items/?ids=22,23"
+    Then the response code should be 400
+    And the response error message should contain "The IDs chain is corrupt"
 
-Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 42 | 13      | 22     | null            | true              | false                | false               | 0             | 0        |
-    | 44 | 13      | 23     | null            | true              | false                | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
-    | 53 | 23           | 24          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=22,23"
-  Then the response code should be 400
-  And the response error message should contain "The IDs chain is corrupt"
-
-Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
-  Given the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2010-01-01      | false             | true                 | false               | 0             | 0        |
-    | 42 | 13      | 22     | null            | false             | false                | true                | 0             | 0        |
-    | 43 | 13      | 23     | null            | false             | true                 | false               | 0             | 0        |
-  And the database has the following table 'items_items':
-    | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
-    | 52 | 22           | 23          | 1           | 0           | 0        |
-  And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
-  Then the response code should be 403
-  And the response error message should contain "Insufficient access rights on given item ids"
+  Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
+    Given the database has the following table 'groups_items':
+      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
+      | 41 | 13      | 21     | 2010-01-01      | false             | true                 | false               | 0             | 0        |
+      | 42 | 13      | 22     | null            | false             | false                | true                | 0             | 0        |
+      | 43 | 13      | 23     | null            | false             | true                 | false               | 0             | 0        |
+    And the database has the following table 'items_items':
+      | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
+      | 52 | 22           | 23          | 1           | 0           | 0        |
+    And I am the user with ID "1"
+    When I send a GET request to "/items/?ids=21,22,23"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights on given item ids"
