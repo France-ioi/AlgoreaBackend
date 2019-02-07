@@ -116,7 +116,8 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (
 			" WHERE items.ID=ii2.idItemChild " +
 			" ORDER BY ii2.idItemParent, ii2.iChildOrder)) union_table " +
 			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
-			"LEFT JOIN items_strings dstrings ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
+			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
+			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
 			languageJoinPart,
 			params...).Scan(&result).Error(); err != nil {
 				return nil, err
