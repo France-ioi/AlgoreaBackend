@@ -84,9 +84,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.getUser(httpReq)
-	var defaultLanguageID int64 = 1
-	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID,
-		user.DefaultLanguageID(), defaultLanguageID)
+	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID())
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}

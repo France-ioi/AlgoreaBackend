@@ -70,21 +70,19 @@ func (s *ItemStore) tableName() string {
 }
 
 // GetRawNavigationData reads a navigation subtree from the DB and returns an array of RawNavigationItem's
-func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, defaultLanguageID int64) (*[]RawNavigationItem, error){
+func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (*[]RawNavigationItem, error){
 	var result []RawNavigationItem
 
 	languageSelectPart := "COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, "
 	languageJoinPart := "LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "
-	params := []interface{}{rootID, rootID, rootID}
+	params := []interface{}{rootID, rootID, rootID, userID}
 
-	if userLanguageID == 0 || userLanguageID == defaultLanguageID {
+	if userLanguageID == 0 {
 		languageSelectPart = "dstrings.sTitle AS sTitle, "
 		languageJoinPart = ""
 	} else {
 		params = append(params, userLanguageID)
 	}
-
-	params = append(params, defaultLanguageID, userID)
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
@@ -101,22 +99,25 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, default
 			"union_table.idItemParent AS idItemParent " +
 			"FROM " +
 			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
+			"items.idDefaultLanguage, " +
 			" NULL AS idItemParent, NULL AS iChildOrder, NULL AS bAccessRestricted " +
 			" FROM items WHERE items.ID=? UNION " +
 			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
+			"items.idDefaultLanguage, " +
 			" idItemParent, iChildOrder, bAccessRestricted FROM items " +
 			" JOIN items_items ON items.ID=idItemChild " +
 			" WHERE idItemParent=?" +
 			" ORDER BY items_items.iChildOrder) UNION" +
-			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked," +
+			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
+			"items.idDefaultLanguage, " +
 			" ii2.idItemParent, ii2.iChildOrder, ii2.bAccessRestricted FROM items " +
 			" JOIN items_items ii1 ON ii1.idItemParent=? " +
 			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent " +
 			" WHERE items.ID=ii2.idItemChild " +
 			" ORDER BY ii2.idItemParent, ii2.iChildOrder)) union_table " +
-			languageJoinPart +
-			"LEFT JOIN items_strings dstrings ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=? " +
-			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=?",
+			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
+			"LEFT JOIN items_strings dstrings ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
+			languageJoinPart,
 			params...).Scan(&result).Error(); err != nil {
 				return nil, err
 	}
