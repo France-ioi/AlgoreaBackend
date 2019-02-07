@@ -3,13 +3,13 @@ package items
 import (
 	"errors"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
