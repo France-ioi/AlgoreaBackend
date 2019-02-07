@@ -77,7 +77,7 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID, default
 	languageJoinPart := "LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "
 	params := []interface{}{rootID, rootID, rootID}
 
-	if userLanguageID == 0 {
+	if userLanguageID == 0 || userLanguageID == defaultLanguageID {
 		languageSelectPart = "dstrings.sTitle AS sTitle, "
 		languageJoinPart = ""
 	} else {
