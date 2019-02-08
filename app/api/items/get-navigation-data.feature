@@ -75,12 +75,12 @@ Feature: Get item for tree navigation
       | 76 | 18      | 232    | null            | false             | true                 | true                | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | bAccessRestricted | iDifficulty | iVersion |
-      | 54 | 200          | 210         | 1           | true              | 0           | 0        |
+      | 54 | 200          | 210         | 3           | true              | 0           | 0        |
       | 55 | 200          | 220         | 2           | true              | 0           | 0        |
-      | 56 | 200          | 230         | 3           | true              | 0           | 0        |
+      | 56 | 200          | 230         | 1           | true              | 0           | 0        |
       | 57 | 210          | 211         | 1           | true              | 0           | 0        |
-      | 58 | 230          | 231         | 1           | true              | 0           | 0        |
-      | 59 | 230          | 232         | 2           | true              | 0           | 0        |
+      | 58 | 230          | 231         | 2           | true              | 0           | 0        |
+      | 59 | 230          | 232         | 1           | true              | 0           | 0        |
     And the database has the following table 'items_strings':
       | ID | idItem | idLanguage | sTitle      | iVersion |
       | 53 | 200    | 1          | Category 1  | 0        |
@@ -135,8 +135,114 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 210,
+            "id": 230,
             "order": 1,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "string": {
+              "title": "Chapter C"
+            },
+            "user": {
+              "score": 12345,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 15,
+              "start_date": "2019-01-30T09:26:45Z",
+              "validation_date": "2019-01-31T09:26:45Z",
+              "finish_date": "2019-02-01T09:26:45Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            },
+            "children": [
+              {
+                "id": 232,
+                "order": 1,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "string": {
+                  "title": "Task 3"
+                },
+                "user": {
+                  "score": 12347,
+                  "validated": true,
+                  "finished": true,
+                  "key_obtained": true,
+                  "submissions_attempts": 17,
+                  "start_date": "2019-01-30T09:26:47Z",
+                  "validation_date": "2019-01-31T09:26:47Z",
+                  "finish_date": "2019-02-01T09:26:47Z"
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": true,
+                  "gray_access": true
+                }
+              },
+              {
+                "id": 231,
+                "order": 2,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "string": {
+                  "title": "Task 2"
+                },
+                "user": {
+                  "score": 12346,
+                  "validated": true,
+                  "finished": true,
+                  "key_obtained": true,
+                  "submissions_attempts": 16,
+                  "start_date": "2019-01-30T09:26:46Z",
+                  "validation_date": "2019-01-31T09:26:46Z",
+                  "finish_date": "2019-02-01T09:26:46Z"
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": true,
+                  "gray_access": true
+                }
+              }
+            ]
+          },
+          {
+            "id": 220,
+            "order": 2,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "string": {
+              "title": "Chapter B"
+            },
+            "user": {
+              "score": 12344,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 14,
+              "start_date": "2019-01-30T09:26:44Z",
+              "validation_date": "2019-01-31T09:26:44Z",
+              "finish_date": "2019-02-01T09:26:44Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
+          },
+          {
+            "id": 210,
+            "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
@@ -179,112 +285,6 @@ Feature: Get item for tree navigation
                   "start_date": "2019-01-30T09:26:43Z",
                   "validation_date": "2019-01-31T09:26:43Z",
                   "finish_date": "2019-02-01T09:26:43Z"
-                },
-                "access_rights": {
-                  "partial_access": true,
-                  "full_access": true,
-                  "gray_access": true
-                }
-              }
-            ]
-          },
-          {
-            "id": 220,
-            "order": 2,
-            "access_restricted": true,
-            "type": "Chapter",
-            "transparent_folder": true,
-            "has_unlocked_items": true,
-            "string": {
-              "title": "Chapter B"
-            },
-            "user": {
-              "score": 12344,
-              "validated": true,
-              "finished": true,
-              "key_obtained": true,
-              "submissions_attempts": 14,
-              "start_date": "2019-01-30T09:26:44Z",
-              "validation_date": "2019-01-31T09:26:44Z",
-              "finish_date": "2019-02-01T09:26:44Z"
-            },
-            "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
-            }
-          },
-          {
-            "id": 230,
-            "order": 3,
-            "access_restricted": true,
-            "type": "Chapter",
-            "transparent_folder": true,
-            "has_unlocked_items": true,
-            "string": {
-              "title": "Chapter C"
-            },
-            "user": {
-              "score": 12345,
-              "validated": true,
-              "finished": true,
-              "key_obtained": true,
-              "submissions_attempts": 15,
-              "start_date": "2019-01-30T09:26:45Z",
-              "validation_date": "2019-01-31T09:26:45Z",
-              "finish_date": "2019-02-01T09:26:45Z"
-            },
-            "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
-            },
-            "children": [
-              {
-                "id": 231,
-                "order": 1,
-                "access_restricted": true,
-                "type": "Task",
-                "transparent_folder": true,
-                "has_unlocked_items": true,
-                "string": {
-                  "title": "Task 2"
-                },
-                "user": {
-                  "score": 12346,
-                  "validated": true,
-                  "finished": true,
-                  "key_obtained": true,
-                  "submissions_attempts": 16,
-                  "start_date": "2019-01-30T09:26:46Z",
-                  "validation_date": "2019-01-31T09:26:46Z",
-                  "finish_date": "2019-02-01T09:26:46Z"
-                },
-                "access_rights": {
-                  "partial_access": true,
-                  "full_access": true,
-                  "gray_access": true
-                }
-              },
-              {
-                "id": 232,
-                "order": 2,
-                "access_restricted": true,
-                "type": "Task",
-                "transparent_folder": true,
-                "has_unlocked_items": true,
-                "string": {
-                  "title": "Task 3"
-                },
-                "user": {
-                  "score": 12347,
-                  "validated": true,
-                  "finished": true,
-                  "key_obtained": true,
-                  "submissions_attempts": 17,
-                  "start_date": "2019-01-30T09:26:47Z",
-                  "validation_date": "2019-01-31T09:26:47Z",
-                  "finish_date": "2019-02-01T09:26:47Z"
                 },
                 "access_rights": {
                   "partial_access": true,
@@ -361,34 +361,8 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 231,
-            "order": 1,
-            "access_restricted": true,
-            "type": "Task",
-            "transparent_folder": true,
-            "has_unlocked_items": true,
-            "string": {
-              "title": "Task 2"
-            },
-            "user": {
-              "score": 12346,
-              "validated": true,
-              "finished": true,
-              "key_obtained": true,
-              "submissions_attempts": 16,
-              "start_date": "2019-01-30T09:26:46Z",
-              "validation_date": "2019-01-31T09:26:46Z",
-              "finish_date": "2019-02-01T09:26:46Z"
-            },
-            "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
-            }
-          },
-          {
             "id": 232,
-            "order": 2,
+            "order": 1,
             "access_restricted": true,
             "type": "Task",
             "transparent_folder": true,
@@ -405,6 +379,32 @@ Feature: Get item for tree navigation
               "start_date": "2019-01-30T09:26:47Z",
               "validation_date": "2019-01-31T09:26:47Z",
               "finish_date": "2019-02-01T09:26:47Z"
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": true,
+              "gray_access": true
+            }
+          },
+          {
+            "id": 231,
+            "order": 2,
+            "access_restricted": true,
+            "type": "Task",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "string": {
+              "title": "Task 2"
+            },
+            "user": {
+              "score": 12346,
+              "validated": true,
+              "finished": true,
+              "key_obtained": true,
+              "submissions_attempts": 16,
+              "start_date": "2019-01-30T09:26:46Z",
+              "validation_date": "2019-01-31T09:26:46Z",
+              "finish_date": "2019-02-01T09:26:46Z"
             },
             "access_rights": {
               "partial_access": true,
@@ -479,14 +479,14 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 210,
+            "id": 230,
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
-              "title": "Chapter A"
+              "title": "Chapter C"
             },
             "user": {
               "finish_date": "",
@@ -531,14 +531,14 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 230,
+            "id": 210,
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
-              "title": "Chapter C"
+              "title": "Chapter A"
             },
             "user": {
               "finish_date": "",
@@ -591,8 +591,114 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 210,
+            "id": 230,
             "order": 1,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "string": {
+              "title": "Chapitre C"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": false,
+              "gray_access": true
+            },
+            "children": [
+              {
+                "id": 232,
+                "order": 1,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "string": {
+                  "title": "Task 3"
+                },
+                "user": {
+                  "finish_date": "",
+                  "finished": false,
+                  "key_obtained": false,
+                  "score": 0,
+                  "start_date": "",
+                  "submissions_attempts": 0,
+                  "validated": false,
+                  "validation_date": ""
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": false,
+                  "gray_access": true
+                }
+              },
+              {
+                "id": 231,
+                "order": 2,
+                "access_restricted": true,
+                "type": "Task",
+                "transparent_folder": true,
+                "has_unlocked_items": true,
+                "string": {
+                  "title": "Task 2"
+                },
+                "user": {
+                  "finish_date": "",
+                  "finished": false,
+                  "key_obtained": false,
+                  "score": 0,
+                  "start_date": "",
+                  "submissions_attempts": 0,
+                  "validated": false,
+                  "validation_date": ""
+                },
+                "access_rights": {
+                  "partial_access": true,
+                  "full_access": false,
+                  "gray_access": true
+                }
+              }
+            ]
+          },
+          {
+            "id": 220,
+            "order": 2,
+            "access_restricted": true,
+            "type": "Chapter",
+            "transparent_folder": true,
+            "has_unlocked_items": true,
+            "string": {
+              "title": "Chapter B"
+            },
+            "user": {
+              "finish_date": "",
+              "finished": false,
+              "key_obtained": false,
+              "score": 0,
+              "start_date": "",
+              "submissions_attempts": 0,
+              "validated": false,
+              "validation_date": ""
+            },
+            "access_rights": {
+              "partial_access": true,
+              "full_access": false,
+              "gray_access": true
+            }
+          },
+          {
+            "id": 210,
+            "order": 3,
             "access_restricted": true,
             "type": "Chapter",
             "transparent_folder": true,
@@ -643,112 +749,7 @@ Feature: Get item for tree navigation
                 }
               }
             ]
-          },
-          {
-            "id": 220,
-            "order": 2,
-            "access_restricted": true,
-            "type": "Chapter",
-            "transparent_folder": true,
-            "has_unlocked_items": true,
-            "string": {
-              "title": "Chapter B"
-            },
-            "user": {
-              "finish_date": "",
-              "finished": false,
-              "key_obtained": false,
-              "score": 0,
-              "start_date": "",
-              "submissions_attempts": 0,
-              "validated": false,
-              "validation_date": ""
-            },
-            "access_rights": {
-              "partial_access": true,
-              "full_access": false,
-              "gray_access": true
-            }
-          },
-          {
-            "id": 230,
-            "order": 3,
-            "access_restricted": true,
-            "type": "Chapter",
-            "transparent_folder": true,
-            "has_unlocked_items": true,
-            "string": {
-              "title": "Chapitre C"
-            },
-            "user": {
-              "finish_date": "",
-              "finished": false,
-              "key_obtained": false,
-              "score": 0,
-              "start_date": "",
-              "submissions_attempts": 0,
-              "validated": false,
-              "validation_date": ""
-            },
-            "access_rights": {
-              "partial_access": true,
-              "full_access": false,
-              "gray_access": true
-            },
-            "children": [
-              {
-                "id": 231,
-                "order": 1,
-                "access_restricted": true,
-                "type": "Task",
-                "transparent_folder": true,
-                "has_unlocked_items": true,
-                "string": {
-                  "title": "Task 2"
-                },
-                "user": {
-                  "finish_date": "",
-                  "finished": false,
-                  "key_obtained": false,
-                  "score": 0,
-                  "start_date": "",
-                  "submissions_attempts": 0,
-                  "validated": false,
-                  "validation_date": ""
-                },
-                "access_rights": {
-                  "partial_access": true,
-                  "full_access": false,
-                  "gray_access": true
-                }
-              },
-              {
-                "id": 232,
-                "order": 2,
-                "access_restricted": true,
-                "type": "Task",
-                "transparent_folder": true,
-                "has_unlocked_items": true,
-                "string": {
-                  "title": "Task 3"
-                },
-                "user": {
-                  "finish_date": "",
-                  "finished": false,
-                  "key_obtained": false,
-                  "score": 0,
-                  "start_date": "",
-                  "submissions_attempts": 0,
-                  "validated": false,
-                  "validation_date": ""
-                },
-                "access_rights": {
-                  "partial_access": true,
-                  "full_access": false,
-                  "gray_access": true
-                }
-              }
-            ]
-          }]
-        }
+          }
+        ]
+      }
       """
