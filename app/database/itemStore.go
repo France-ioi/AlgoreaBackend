@@ -289,8 +289,8 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64) (*[]Raw
 			"IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed, " +
 			"items.idDefaultLanguage, " +
 			" NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted " +
-			" FROM items WHERE items.ID=? UNION " +
-			"(SELECT items.ID AS ID, items.sType, items.bDisplayDetailsInParent, " +
+			" FROM items WHERE items.ID=? UNION ALL " +
+			"SELECT items.ID AS ID, items.sType, items.bDisplayDetailsInParent, " +
 			"items.sValidationType, items.idItemUnlocked, " +
 			"items.iScoreMinUnlock, " +
 			"items.sTeamMode, " +
@@ -314,12 +314,12 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64) (*[]Raw
 			"NULL AS bHintsAllowed, " +
 			"items.idDefaultLanguage, " +
 			" iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted FROM items " +
-			" JOIN items_items ON items.ID=idItemChild AND idItemParent=? " +
-			" ORDER BY items_items.iChildOrder)) union_table " +
+			" JOIN items_items ON items.ID=idItemChild AND idItemParent=?) union_table " +
 		"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
 		"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
 			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
-		languageJoinPart,
+		languageJoinPart +
+		"ORDER BY iChildOrder",
 		params...).Scan(&result).Error(); err != nil {
 		return nil, err
 	}

@@ -33,8 +33,8 @@ Feature: Get item view information
       | 74 | 13              | 11           | 0       | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | sCategory | bAlwaysVisible | bAccessRestricted | iVersion |
-      | 54 | 200          | 210         | 1           | Discovery | true           | true              | 0        |
-      | 55 | 200          | 220         | 2           | Discovery | true           | true              | 0        |
+      | 54 | 200          | 210         | 2           | Discovery | true           | true              | 0        |
+      | 55 | 200          | 220         | 1           | Discovery | true           | true              | 0        |
     And the database has the following table 'users_items':
       | ID | idUser | idItem | idAttemptActive | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | nbHintsCached | sStartDate           | sFinishDate          | sValidationDate      | sContestStartDate    | sState     | sAnswer     | iVersion |
       | 1  | 1      | 200    | 100             | 12341  | 11                    | true        | true      | true         | 11            | 2019-01-30T09:26:41Z | 2019-02-01T09:26:41Z | 2019-01-31T09:26:41Z | 2019-02-01T06:26:41Z | Some state | Some answer | 0        |
@@ -108,53 +108,8 @@ Feature: Get item view information
 
       "children": [
         {
-          "id": 210,
-
-          "order": 1,
-          "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
-
-          "type": "Chapter",
-          "display_details_in_parent": true,
-          "validation_type": "All",
-          "has_unlocked_items": true,
-          "score_min_unlock": 100,
-          "team_mode": "All",
-          "teams_editable": true,
-          "team_max_members": 10,
-          "has_attempts": true,
-          "access_open_date": "2019-02-06T09:26:41Z",
-          "duration": "10:20:31",
-          "end_contest_date": "2019-03-06T09:26:41Z",
-          "no_score": true,
-          "group_code_enter": true,
-
-          "string": {
-            "language_id": 1,
-            "title": "Chapter A",
-            "image_url": "http://example.com/my1.jpg",
-            "subtitle": "Subtitle 1",
-            "description": "Description 1"
-          },
-
-          "user": {
-            "active_attempt_id": 100,
-            "score": 12342,
-            "submissions_attempts": 12,
-            "validated": true,
-            "finished": true,
-            "key_obtained": true,
-            "hints_cached": 11,
-            "start_date": "2019-01-30T09:26:42Z",
-            "validation_date": "2019-01-31T09:26:42Z",
-            "finish_date": "2019-02-01T09:26:42Z",
-            "contest_start_date": "2019-02-01T06:26:42Z"
-          }
-        },
-        {
           "id": 220,
-          "order": 2,
+          "order": 1,
           "category": "Discovery",
           "always_visible": true,
           "access_restricted": true,
@@ -194,6 +149,51 @@ Feature: Get item view information
             "validation_date": "2019-01-31T09:26:44Z",
             "finish_date": "2019-02-01T09:26:44Z",
             "contest_start_date": "2019-02-01T06:26:44Z"
+          }
+        },
+        {
+          "id": 210,
+
+          "order": 2,
+          "category": "Discovery",
+          "always_visible": true,
+          "access_restricted": true,
+
+          "type": "Chapter",
+          "display_details_in_parent": true,
+          "validation_type": "All",
+          "has_unlocked_items": true,
+          "score_min_unlock": 100,
+          "team_mode": "All",
+          "teams_editable": true,
+          "team_max_members": 10,
+          "has_attempts": true,
+          "access_open_date": "2019-02-06T09:26:41Z",
+          "duration": "10:20:31",
+          "end_contest_date": "2019-03-06T09:26:41Z",
+          "no_score": true,
+          "group_code_enter": true,
+
+          "string": {
+            "language_id": 1,
+            "title": "Chapter A",
+            "image_url": "http://example.com/my1.jpg",
+            "subtitle": "Subtitle 1",
+            "description": "Description 1"
+          },
+
+          "user": {
+            "active_attempt_id": 100,
+            "score": 12342,
+            "submissions_attempts": 12,
+            "validated": true,
+            "finished": true,
+            "key_obtained": true,
+            "hints_cached": 11,
+            "start_date": "2019-01-30T09:26:42Z",
+            "validation_date": "2019-01-31T09:26:42Z",
+            "finish_date": "2019-02-01T09:26:42Z",
+            "contest_start_date": "2019-02-01T06:26:42Z"
           }
         }
       ]
@@ -258,7 +258,6 @@ Feature: Get item view information
 
 
 # TODO:
-#  Chapter as a root node
 #  Root node without AccessSolutions
 #  Grayed Root
 #  Grayed Child
