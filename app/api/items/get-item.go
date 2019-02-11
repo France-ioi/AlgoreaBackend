@@ -93,40 +93,33 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.getUser(httpReq)
-	rawData, err := srv.Store.Items().GetRawItemData(req.ID, user.UserID, user.DefaultLanguageID())
+	rawData, err := srv.Store.Items().GetRawItemData(req.ID, user.UserID, user.DefaultLanguageID(), user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
-	accessDetailsMap, err := srv.getAccessDetailsForRawItems(rawData, user)
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
-
-	accessDetailsForRootItem, hasAccessDetailsForRootItem := accessDetailsMap[req.ID]
-	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID || !hasAccessDetailsForRootItem ||
-		(!accessDetailsForRootItem.FullAccess && !accessDetailsForRootItem.PartialAccess && !accessDetailsForRootItem.GrayedAccess) {
+	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if !accessDetailsForRootItem.FullAccess && !accessDetailsForRootItem.PartialAccess {
+	if !(*rawData)[0].FullAccess && !(*rawData)[0].PartialAccess {
 		return service.ErrForbidden(errors.New("the item is grayed"))
 	}
 
 	response := itemResponse{
-		srv.fillItemCommonFieldsWithDBData(&(*rawData)[0], &accessDetailsForRootItem),
+		srv.fillItemCommonFieldsWithDBData(&(*rawData)[0]),
 		nil,
 	}
 
-	setItemResponseRootNodeFields(&accessDetailsForRootItem, &response, rawData)
-	srv.fillItemResponseWithChildren(&response, rawData, accessDetailsMap)
+	setItemResponseRootNodeFields(&response, rawData)
+	srv.fillItemResponseWithChildren(&response, rawData)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
 }
 
-func setItemResponseRootNodeFields(accessDetailsForRootItem *database.ItemAccessDetails, response *itemResponse, rawData *[]database.RawItem) {
-	if accessDetailsForRootItem.AccessSolutions {
+func setItemResponseRootNodeFields(response *itemResponse, rawData *[]database.RawItem) {
+	if (*rawData)[0].AccessSolutions {
 		response.String.EduComment = &((*rawData)[0].StringEduComment)
 	}
 	response.User.State = (*rawData)[0].UserState
@@ -153,10 +146,7 @@ func (srv *Service) getAccessDetailsForRawItems(rawData *[]database.RawItem, use
 	return accessDetailsMap, err
 }
 
-func (srv *Service) fillItemCommonFieldsWithDBData(
-	rawData *database.RawItem,
-	accessDetail *database.ItemAccessDetails,
-)*itemCommonFields {
+func (srv *Service) fillItemCommonFieldsWithDBData(rawData *database.RawItem) *itemCommonFields {
 	result := itemCommonFields{
 		ID: rawData.ID,
 		Type: rawData.Type,
@@ -180,7 +170,7 @@ func (srv *Service) fillItemCommonFieldsWithDBData(
 			ImageUrl: rawData.StringImageUrl,
 		},
 	}
-	if accessDetail.FullAccess || accessDetail.PartialAccess {
+	if rawData.FullAccess || rawData.PartialAccess {
 		result.String.Subtitle = &rawData.StringSubtitle
 		result.String.Description = &rawData.StringDescription
 
@@ -199,20 +189,13 @@ func (srv *Service) fillItemCommonFieldsWithDBData(
 	return &result
 }
 
-func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]database.RawItem,
-	accessDetailsMap map[int64]database.ItemAccessDetails) {
+func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]database.RawItem) {
 	for index := range *rawData {
 		if index == 0 {
 			continue
 		}
 
-		accessDetailsForItem, hasAccessDetailsForItem := accessDetailsMap[(*rawData)[index].ID]
-		if !hasAccessDetailsForItem ||
-			(!accessDetailsForItem.FullAccess && !accessDetailsForItem.PartialAccess && !accessDetailsForItem.GrayedAccess) {
-			continue
-		}
-
-		child := srv.fillItemCommonFieldsWithDBData(&(*rawData)[index], &accessDetailsForItem)
+		child := srv.fillItemCommonFieldsWithDBData(&(*rawData)[index])
 		child.Order = &(*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
 		child.AlwaysVisible = (*rawData)[index].AlwaysVisible
