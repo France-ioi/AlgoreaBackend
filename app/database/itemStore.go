@@ -140,35 +140,35 @@ type RawItem struct {
 	GroupCodeEnter         bool     `sql:"column:groupCodeEnter"`
 
 	// root node only
-	TitleBarVisible        *bool    `sql:"column:bTitleBarVisible"`
-	ReadOnly               *bool    `sql:"column:bReadOnly"`
-	FullScreen             *string  `sql:"column:sFullScreen"`
-	ShowSource             *bool    `sql:"column:bShowSource"`
-	ValidationMin          *int64   `sql:"column:iValidationMin"`
-	ShowUserInfos          *bool    `sql:"column:bShowUserInfos"`
-	ContestPhase           *string  `sql:"column:sContestPhase"`
-	Url                    *string  `sql:"column:sUrl"` // only if not a chapter
-	UsesAPI                *bool    `sql:"column:bUsesAPI"` // only if not a chapter
-	HintsAllowed           *bool    `sql:"column:bHintsAllowed"` // only if not a chapter
+	TitleBarVisible *bool   `sql:"column:bTitleBarVisible"`
+	ReadOnly        *bool   `sql:"column:bReadOnly"`
+	FullScreen      *string `sql:"column:sFullScreen"`
+	ShowSource      *bool   `sql:"column:bShowSource"`
+	ValidationMin   *int64  `sql:"column:iValidationMin"`
+	ShowUserInfos   *bool   `sql:"column:bShowUserInfos"`
+	ContestPhase    *string `sql:"column:sContestPhase"`
+	URL             *string `sql:"column:sUrl"`          // only if not a chapter
+	UsesAPI         *bool   `sql:"column:bUsesAPI"`      // only if not a chapter
+	HintsAllowed    *bool   `sql:"column:bHintsAllowed"` // only if not a chapter
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
-	StringLanguageId       int64    `sql:"column:idLanguage"`
-	StringTitle         	 string   `sql:"column:sTitle"`
-	StringImageUrl         string   `sql:"column:sImageUrl"`
-	StringSubtitle         string   `sql:"column:sSubtitle"`
-	StringDescription      string   `sql:"column:sDescription"`
-	StringEduComment       string   `sql:"column:sEduComment"`
+	StringLanguageID  int64  `sql:"column:idLanguage"`
+	StringTitle       string `sql:"column:sTitle"`
+	StringImageURL    string `sql:"column:sImageUrl"`
+	StringSubtitle    string `sql:"column:sSubtitle"`
+	StringDescription string `sql:"column:sDescription"`
+	StringEduComment  string `sql:"column:sEduComment"`
 
 	// from users_items for current user
-	UserActiveAttemptId     int64    `sql:"column:idAttemptActive"`
-	UserScore 						  float32	 `sql:"column:iScore"`
-	UserSubmissionsAttempts int64    `sql:"column:nbSubmissionsAttempts"`
-	UserValidated 				  bool	   `sql:"column:bValidated"`
-	UserFinished					  bool	   `sql:"column:bFinished"`
-	UserKeyObtained 			  bool 	   `sql:"column:bKeyObtained"`
-	UserHintsCached         int64    `sql:"column:nbHintsCached"`
-	UserStartDate           string   `sql:"column:sStartDate"` // iso8601 str
-	UserValidationDate      string   `sql:"column:sValidationDate"` // iso8601 str
+	UserActiveAttemptID     int64   `sql:"column:idAttemptActive"`
+	UserScore               float32 `sql:"column:iScore"`
+	UserSubmissionsAttempts int64   `sql:"column:nbSubmissionsAttempts"`
+	UserValidated           bool    `sql:"column:bValidated"`
+	UserFinished            bool    `sql:"column:bFinished"`
+	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
+	UserHintsCached         int64   `sql:"column:nbHintsCached"`
+	UserStartDate           string  `sql:"column:sStartDate"` // iso8601 str
+	UserValidationDate      string  `sql:"column:sValidationDate"` // iso8601 str
 	UserFinishDate          string   `sql:"column:sFinishDate"` // iso8601 str
 	UserContestStartDate    string   `sql:"column:sContestStartDate"` // iso8601 str
 	UserState               *string  `sql:"column:sState"` // only if not a chapter
