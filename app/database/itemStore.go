@@ -65,6 +65,8 @@ type RawNavigationItem struct {
 	// items_items
 	IDItemParent					int64    `sql:"column:idItemParent"`
 	Order 						    int64 	 `sql:"column:iChildOrder"`
+
+	*ItemAccessDetails
 }
 
 func (s *ItemStore) tableName() string {
@@ -72,46 +74,48 @@ func (s *ItemStore) tableName() string {
 }
 
 // GetRawNavigationData reads a navigation subtree from the DB and returns an array of RawNavigationItem's
-func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (*[]RawNavigationItem, error){
+func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID int64, user AuthUser) (*[]RawNavigationItem, error){
 	var result []RawNavigationItem
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
-		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, " +
-			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, " +
-			"COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, " +
-			"users_items.iScore AS iScore, users_items.bValidated AS bValidated, " +
-			"users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained, " +
-			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, " +
-			"users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate, " +
-			"users_items.sFinishDate AS sFinishDate, " +
-			"union_table.iChildOrder AS iChildOrder, " +
-			"union_table.bAccessRestricted, " +
-			"union_table.idItemParent AS idItemParent " +
-			"FROM " +
-			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
-			"items.idDefaultLanguage, " +
-			" NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted " +
-			" FROM items WHERE items.ID=? UNION " +
-			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
-			"items.idDefaultLanguage, " +
-			" idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted FROM items " +
-			" JOIN items_items ON items.ID=idItemChild " +
-			" WHERE idItemParent=?) UNION" +
-			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
-			"items.idDefaultLanguage, " +
-			" ii2.idItemParent, ii1.idItemParent AS idItemGrandparent, " +
-			" ii2.iChildOrder, ii2.bAccessRestricted FROM items " +
-			" JOIN items_items ii1 ON ii1.idItemParent=? " +
-			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent " +
-			" WHERE items.ID=ii2.idItemChild)) union_table " +
-			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
-			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
-			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
-			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? " +
+		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, "+
+			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, "+
+			"COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, "+
+			"users_items.iScore AS iScore, users_items.bValidated AS bValidated, "+
+			"users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained, "+
+			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, "+
+			"users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate, "+
+			"users_items.sFinishDate AS sFinishDate, "+
+			"union_table.iChildOrder AS iChildOrder, "+
+			"union_table.bAccessRestricted, "+
+			"union_table.idItemParent AS idItemParent," +
+			"accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess "+
+			"FROM "+
+			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
+			"items.idDefaultLanguage, "+
+			" NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted "+
+			" FROM items WHERE items.ID=? UNION "+
+			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
+			"items.idDefaultLanguage, "+
+			" idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted FROM items "+
+			" JOIN items_items ON items.ID=idItemChild "+
+			" WHERE idItemParent=?) UNION"+
+			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
+			"items.idDefaultLanguage, "+
+			" ii2.idItemParent, ii1.idItemParent AS idItemGrandparent, "+
+			" ii2.iChildOrder, ii2.bAccessRestricted FROM items "+
+			" JOIN items_items ii1 ON ii1.idItemParent=? "+
+			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent "+
+			" WHERE items.ID=ii2.idItemChild)) union_table "+
+			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? "+
+			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) "+
+			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage "+
+			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "+
+			"JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) "+
 			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
-		rootID, rootID, rootID, userID, userLanguageID).Scan(&result).Error(); err != nil {
-				return nil, err
+		rootID, rootID, rootID, userID, userLanguageID, s.accessRightsSubQuery(user)).Scan(&result).Error(); err != nil {
+		return nil, err
 	}
 	return &result, nil
 }
@@ -178,7 +182,7 @@ type RawItem struct {
 }
 
 // GetRawItemData reads data needed by the getItem service from the DB and returns an array of RawItem's
-func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64) (*[]RawItem, error){
+func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64) (*[]RawItem, error) {
 	var result []RawItem
 
 	languageSelectPart := "COALESCE(ustrings.idLanguage, dstrings.idLanguage) AS idLanguage, " +
@@ -202,117 +206,124 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64) (*[]Raw
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
-		"SELECT " +
-			"union_table.ID, " +
-			"union_table.sType, " +
-			"union_table.bDisplayDetailsInParent, " +
-			"union_table.sValidationType, " +
-			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, " +
-			"union_table.iScoreMinUnlock, " +
-			"union_table.sTeamMode, " +
-			"union_table.bTeamsEditable, " +
-			"union_table.iTeamMaxMembers, " +
-			"union_table.bHasAttempts, " +
-			"union_table.sAccessOpenDate, " +
-			"union_table.sDuration, " +
-			"union_table.sEndContestDate, " +
-			"union_table.bNoScore, " +
-			"union_table.groupCodeEnter, " +
+		"SELECT "+
+			"union_table.ID, "+
+			"union_table.sType, "+
+			"union_table.bDisplayDetailsInParent, "+
+			"union_table.sValidationType, "+
+			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, "+
+			"union_table.iScoreMinUnlock, "+
+			"union_table.sTeamMode, "+
+			"union_table.bTeamsEditable, "+
+			"union_table.iTeamMaxMembers, "+
+			"union_table.bHasAttempts, "+
+			"union_table.sAccessOpenDate, "+
+			"union_table.sDuration, "+
+			"union_table.sEndContestDate, "+
+			"union_table.bNoScore, "+
+			"union_table.groupCodeEnter, "+
 
-			languageSelectPart +
+			languageSelectPart+
 
-			"users_items.idAttemptActive AS idAttemptActive," +
-			"users_items.iScore AS iScore, " +
-			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, " +
-			"users_items.bValidated AS bValidated, " +
-			"users_items.bFinished AS bFinished, " +
-			"users_items.bKeyObtained AS bKeyObtained, " +
-			"users_items.nbHintsCached AS nbHintsCached, " +
-			"users_items.sStartDate AS sStartDate, " +
-			"users_items.sValidationDate AS sValidationDate, " +
-			"users_items.sFinishDate AS sFinishDate, " +
-			"users_items.sContestStartDate AS sContestStartDate, " +
-			"IF(union_table.sType <> 'Chapter', users_items.sState, NULL) AS sState, " +
-			"IF(union_table.sType <> 'Chapter', users_items.sAnswer, NULL) AS sAnswer, " +
+			"users_items.idAttemptActive AS idAttemptActive,"+
+			"users_items.iScore AS iScore, "+
+			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, "+
+			"users_items.bValidated AS bValidated, "+
+			"users_items.bFinished AS bFinished, "+
+			"users_items.bKeyObtained AS bKeyObtained, "+
+			"users_items.nbHintsCached AS nbHintsCached, "+
+			"users_items.sStartDate AS sStartDate, "+
+			"users_items.sValidationDate AS sValidationDate, "+
+			"users_items.sFinishDate AS sFinishDate, "+
+			"users_items.sContestStartDate AS sContestStartDate, "+
+			"IF(union_table.sType <> 'Chapter', users_items.sState, NULL) AS sState, "+
+			"IF(union_table.sType <> 'Chapter', users_items.sAnswer, NULL) AS sAnswer, "+
 
-			"union_table.iChildOrder AS iChildOrder, " +
-			"union_table.sCategory AS sCategory, " +
-			"union_table.bAlwaysVisible, " +
-			"union_table.bAccessRestricted, " +
-			// root node only
-			"union_table.bTitleBarVisible, " +
-			"union_table.bReadOnly, " +
-			"union_table.sFullScreen, " +
-			"union_table.bShowSource, " +
-			"union_table.iValidationMin, " +
-			"union_table.bShowUserInfos, " +
-			"union_table.sContestPhase, " +
-			"union_table.sUrl, " +
-			"union_table.bUsesAPI, " +
-			"union_table.bHintsAllowed " +
-		"FROM " +
-			"(SELECT items.ID AS ID, " +
-			"items.sType, " +
-			"items.bDisplayDetailsInParent, " +
-			"items.sValidationType, " +
-			"items.idItemUnlocked, " +
-			"items.iScoreMinUnlock, " +
-			"items.sTeamMode, " +
-			"items.bTeamsEditable, " +
-			"items.iTeamMaxMembers, " +
-			"items.bHasAttempts, " +
-			"items.sAccessOpenDate, " +
-			"items.sDuration, " +
-			"items.sEndContestDate, " +
-			"items.bNoScore, " +
-			"items.groupCodeEnter, " +
-			"items.bTitleBarVisible, " +
-			"items.bReadOnly, " +
-			"items.sFullScreen, " +
-			"items.bShowSource, " +
-			"items.iValidationMin, " +
-			"items.bShowUserInfos, " +
-			"items.sContestPhase, " +
-			"IF(items.sType <> 'Chapter', items.sUrl, NULL) AS sUrl, " +
-			"IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI, " +
-			"IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed, " +
-			"items.idDefaultLanguage, " +
-			" NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted " +
-			" FROM items WHERE items.ID=? UNION ALL " +
-			"SELECT items.ID AS ID, items.sType, items.bDisplayDetailsInParent, " +
-			"items.sValidationType, items.idItemUnlocked, " +
-			"items.iScoreMinUnlock, " +
-			"items.sTeamMode, " +
-			"items.bTeamsEditable, " +
-			"items.iTeamMaxMembers, " +
-			"items.bHasAttempts, " +
-			"items.sAccessOpenDate, " +
-			"items.sDuration, " +
-			"items.sEndContestDate, " +
-			"items.bNoScore, " +
-			"items.groupCodeEnter, " +
-			"NULL AS bTitleBarVisible, " +
-			"NULL AS bReadOnly, " +
-			"NULL AS sFullScreen, " +
-			"NULL AS bShowSource, " +
-			"NULL AS iValidationMin, " +
-			"NULL AS bShowUserInfos, " +
-			"NULL AS sContestPhase, " +
-			"NULL AS sUrl, " +
-			"NULL AS bUsesAPI, " +
-			"NULL AS bHintsAllowed, " +
-			"items.idDefaultLanguage, " +
-			" iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted FROM items " +
-			" JOIN items_items ON items.ID=idItemChild AND idItemParent=?) union_table " +
-		"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
-		"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
-			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
-		languageJoinPart +
-		"ORDER BY iChildOrder",
+			"union_table.iChildOrder AS iChildOrder, "+
+			"union_table.sCategory AS sCategory, "+
+			"union_table.bAlwaysVisible, "+
+			"union_table.bAccessRestricted, "+
+		// root node only
+			"union_table.bTitleBarVisible, "+
+			"union_table.bReadOnly, "+
+			"union_table.sFullScreen, "+
+			"union_table.bShowSource, "+
+			"union_table.iValidationMin, "+
+			"union_table.bShowUserInfos, "+
+			"union_table.sContestPhase, "+
+			"union_table.sUrl, "+
+			"union_table.bUsesAPI, "+
+			"union_table.bHintsAllowed "+
+			"FROM "+
+			"(SELECT items.ID AS ID, "+
+			"items.sType, "+
+			"items.bDisplayDetailsInParent, "+
+			"items.sValidationType, "+
+			"items.idItemUnlocked, "+
+			"items.iScoreMinUnlock, "+
+			"items.sTeamMode, "+
+			"items.bTeamsEditable, "+
+			"items.iTeamMaxMembers, "+
+			"items.bHasAttempts, "+
+			"items.sAccessOpenDate, "+
+			"items.sDuration, "+
+			"items.sEndContestDate, "+
+			"items.bNoScore, "+
+			"items.groupCodeEnter, "+
+			"items.bTitleBarVisible, "+
+			"items.bReadOnly, "+
+			"items.sFullScreen, "+
+			"items.bShowSource, "+
+			"items.iValidationMin, "+
+			"items.bShowUserInfos, "+
+			"items.sContestPhase, "+
+			"IF(items.sType <> 'Chapter', items.sUrl, NULL) AS sUrl, "+
+			"IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI, "+
+			"IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed, "+
+			"items.idDefaultLanguage, "+
+			" NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted "+
+			" FROM items WHERE items.ID=? UNION ALL "+
+			"SELECT items.ID AS ID, items.sType, items.bDisplayDetailsInParent, "+
+			"items.sValidationType, items.idItemUnlocked, "+
+			"items.iScoreMinUnlock, "+
+			"items.sTeamMode, "+
+			"items.bTeamsEditable, "+
+			"items.iTeamMaxMembers, "+
+			"items.bHasAttempts, "+
+			"items.sAccessOpenDate, "+
+			"items.sDuration, "+
+			"items.sEndContestDate, "+
+			"items.bNoScore, "+
+			"items.groupCodeEnter, "+
+			"NULL AS bTitleBarVisible, "+
+			"NULL AS bReadOnly, "+
+			"NULL AS sFullScreen, "+
+			"NULL AS bShowSource, "+
+			"NULL AS iValidationMin, "+
+			"NULL AS bShowUserInfos, "+
+			"NULL AS sContestPhase, "+
+			"NULL AS sUrl, "+
+			"NULL AS bUsesAPI, "+
+			"NULL AS bHintsAllowed, "+
+			"items.idDefaultLanguage, "+
+			" iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted FROM items "+
+			" JOIN items_items ON items.ID=idItemChild AND idItemParent=?) union_table "+
+			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? "+
+			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) "+
+			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage "+
+			languageJoinPart+
+			"ORDER BY iChildOrder",
 		params...).Scan(&result).Error(); err != nil {
 		return nil, err
 	}
 	return &result, nil
+}
+
+func (s *ItemStore) accessRightsSubQuery(user AuthUser) interface{} {
+	return s.GroupItems().MatchingUserAncestors(user).
+		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
+		Group("idItem").
+		SubQuery()
 }
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
