@@ -17,6 +17,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
+	"github.com/pmezard/go-difflib/difflib"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
@@ -302,7 +303,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	if err = json.Unmarshal([]byte(body.Content), &exp); err != nil {
 		return
 	}
-	if expected, err = json.Marshal(exp); err != nil {
+	if expected, err = json.MarshalIndent(exp, "", "\t"); err != nil {
 		return
 	}
 
@@ -310,29 +311,28 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
 		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
 	}
-	if actual, err = json.Marshal(act); err != nil {
+	if actual, err = json.MarshalIndent(act, "", "\t"); err != nil {
 		return
 	}
 
-	// the matching may be adapted per different requirements.
-	if len(actual) != len(expected) {
-		return fmt.Errorf(
-			"expected json length: %d does not match actual: %d.\n     Got: %s\nExpected: %s",
-			len(expected),
-			len(actual),
-			string(actual),
-			string(expected),
-		)
-	}
+	sExpected := string(expected)
+	sActual := string(actual)
 
-	for i, b := range actual {
-		if b != expected[i] {
-			return fmt.Errorf(
-				"expected JSON does not match actual.\n     Got: %s\nExpected: %s",
-				string(actual),
-				string(expected),
-			)
-		}
+	if sExpected != sActual {
+		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
+			A:        difflib.SplitLines(string(expected)),
+			B:        difflib.SplitLines(string(actual)),
+			FromFile: "Expected",
+			FromDate: "",
+			ToFile:   "Actual",
+			ToDate:   "",
+			Context:  1,
+		})
+
+		return fmt.Errorf(
+			"expected JSON does not match actual.\n     Diff:\n%s",
+			diff,
+		)
 	}
 	return
 }

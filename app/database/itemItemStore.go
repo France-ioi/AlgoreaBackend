@@ -1,6 +1,10 @@
 package database
 
-import "github.com/France-ioi/AlgoreaBackend/app/types"
+import (
+	"fmt"
+
+	"github.com/France-ioi/AlgoreaBackend/app/types"
+)
 
 // ItemItemStore implements database operations on `items_items`
 type ItemItemStore struct {
@@ -29,4 +33,14 @@ func (s *ItemItemStore) All() DB {
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemItemStore) Insert(data *ItemItem) error {
 	return s.insert(s.tableName(), data)
+}
+
+// ChildrenOf .
+func (s *ItemItemStore) ChildrenOf(parentID int64) ([]*ItemItem, error) {
+	var ii []*ItemItem
+	err := s.All().Where("idItemParent=?", parentID).Scan(&ii).Error()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get children of item '%d': %v", parentID, err)
+	}
+	return ii, nil
 }

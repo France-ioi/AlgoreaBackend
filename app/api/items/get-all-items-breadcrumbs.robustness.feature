@@ -74,7 +74,7 @@ Feature: Get item information for breadcrumb - robustness
     And I am the user with ID "1"
     When I send a GET request to "/items/?ids=21,22,24,23"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access on given item ids"
+    And the response error message should contain "Insufficient access rights on given item ids"
 
   Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
     Given the database has the following table 'groups_items':
@@ -102,4 +102,4 @@ Feature: Get item information for breadcrumb - robustness
     And I am the user with ID "1"
     When I send a GET request to "/items/?ids=21,22,23"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access on given item ids"
+    And the response error message should contain "Insufficient access rights on given item ids"

@@ -46,7 +46,7 @@ func (u *User) lazyLoadData() error {
 			Scan(u.data)
 		if err = db.Error(); err != nil {
 			u.data = nil
-			logging.Logger.Errorf("Unable to lazy load user data: %s", db.Error())
+			logging.Logger.Errorf("Unable to load user data: %s", db.Error())
 		}
 	}
 	return err
@@ -58,4 +58,12 @@ func (u *User) SelfGroupID() int64 {
 		return 0
 	}
 	return u.data.SelfGroupID
+}
+
+// DefaultLanguageID return the idDefaultLanguage of the user
+func (u *User) DefaultLanguageID() int64 {
+	if u.lazyLoadData() != nil {
+		return 0
+	}
+	return u.data.DefaultLanguageID
 }
