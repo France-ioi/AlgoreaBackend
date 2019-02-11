@@ -75,22 +75,11 @@ func (s *ItemStore) tableName() string {
 func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (*[]RawNavigationItem, error){
 	var result []RawNavigationItem
 
-	languageSelectPart := "COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, "
-	languageJoinPart := "LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "
-	params := []interface{}{rootID, rootID, rootID, userID}
-
-	if userLanguageID == 0 {
-		languageSelectPart = "dstrings.sTitle AS sTitle, "
-		languageJoinPart = ""
-	} else {
-		params = append(params, userLanguageID)
-	}
-
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	if err := s.Raw(
 		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, " +
 			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, " +
-			languageSelectPart +
+			"COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, " +
 			"users_items.iScore AS iScore, users_items.bValidated AS bValidated, " +
 			"users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained, " +
 			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, " +
@@ -119,9 +108,9 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (
 			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
 			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
 			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
-			languageJoinPart +
+			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? " +
 			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
-			params...).Scan(&result).Error(); err != nil {
+		rootID, rootID, rootID, userID, userLanguageID).Scan(&result).Error(); err != nil {
 				return nil, err
 	}
 	return &result, nil
