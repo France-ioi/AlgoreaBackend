@@ -100,16 +100,17 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (
 			"FROM " +
 			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
 			"items.idDefaultLanguage, " +
-			" NULL AS idItemParent, NULL AS iChildOrder, NULL AS bAccessRestricted " +
+			" NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted " +
 			" FROM items WHERE items.ID=? UNION " +
 			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
 			"items.idDefaultLanguage, " +
-			" idItemParent, iChildOrder, bAccessRestricted FROM items " +
+			" idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted FROM items " +
 			" JOIN items_items ON items.ID=idItemChild " +
 			" WHERE idItemParent=?) UNION" +
 			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, " +
 			"items.idDefaultLanguage, " +
-			" ii2.idItemParent, ii2.iChildOrder, ii2.bAccessRestricted FROM items " +
+			" ii2.idItemParent, ii1.idItemParent AS idItemGrandparent, " +
+			" ii2.iChildOrder, ii2.bAccessRestricted FROM items " +
 			" JOIN items_items ii1 ON ii1.idItemParent=? " +
 			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent " +
 			" WHERE items.ID=ii2.idItemChild)) union_table " +
@@ -117,7 +118,7 @@ func (s *ItemStore) GetRawNavigationData(rootID, userID, userLanguageID int64) (
 			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
 			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
 			languageJoinPart +
-			"ORDER BY idItemParent, iChildOrder",
+			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
 			params...).Scan(&result).Error(); err != nil {
 				return nil, err
 	}
