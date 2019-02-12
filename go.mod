@@ -1,6 +1,9 @@
 module github.com/France-ioi/AlgoreaBackend
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.3.2
+	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
+	github.com/aws/aws-lambda-go v1.8.2
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/go-chi/cors v1.0.0
 	github.com/go-chi/render v1.0.1
