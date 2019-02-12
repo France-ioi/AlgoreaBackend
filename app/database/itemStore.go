@@ -109,9 +109,10 @@ func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID in
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
-	itemQ := s.visibleByID(user, rootID).Select("items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted, fullAccess, partialAccess, grayedAccess")
-	childrenQ := s.visibleChildrenOfID(user, rootID).Select("items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage,	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted, fullAccess, partialAccess, grayedAccess")
-	gChildrenQ := s.visibleGrandChildrenOfID(user, rootID).Select("items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted, fullAccess, partialAccess, grayedAccess")
+	commonAttributes := "items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, fullAccess, partialAccess, grayedAccess"
+	itemQ := s.visibleByID(user, rootID).Select(commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
+	childrenQ := s.visibleChildrenOfID(user, rootID).Select(commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
+	gChildrenQ := s.visibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
 
 	query := s.Raw(
 		`
