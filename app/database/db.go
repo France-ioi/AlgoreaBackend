@@ -24,6 +24,7 @@ type DB interface {
 	Group(query string) DB
 	Raw(query string, args ...interface{}) DB
 
+	Query() interface{}
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
 	Count(dest interface{}) DB
@@ -106,6 +107,10 @@ func (conn *db) Raw(query string, args ...interface{}) DB {
 
 func (conn *db) SubQuery() interface{} {
 	return conn.DB.SubQuery()
+}
+
+func (conn *db) Query() interface{} {
+	return conn.DB.QueryExpr()
 }
 
 func (conn *db) Scan(dest interface{}) DB {
