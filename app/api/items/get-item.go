@@ -91,7 +91,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.getUser(httpReq)
+	user := srv.GetUser(httpReq)
 	rawData, err := srv.Store.Items().GetRawItemData(req.ID, user.UserID, user.DefaultLanguageID(), user)
 	if err != nil {
 		return service.ErrUnexpected(err)

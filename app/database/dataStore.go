@@ -51,6 +51,12 @@ func (s *DataStore) GroupAncestors() *GroupAncestorStore {
 	return &GroupAncestorStore{s}
 }
 
+// UserAnswers returns a UserAnswerStore
+func (s *DataStore) UserAnswers() *UserAnswerStore {
+	return &UserAnswerStore{s}
+}
+
+
 // NewID generates a positive random int64 to be used as ID
 // !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
 func (s *DataStore) NewID() int64 {

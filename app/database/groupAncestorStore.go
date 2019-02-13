@@ -14,3 +14,9 @@ func (s *GroupAncestorStore) All() DB {
 func (s *GroupAncestorStore) UserAncestors(user AuthUser) DB {
 	return s.All().Where("idGroupChild = ?", user.SelfGroupID())
 }
+
+// OwnedByUser returns a composable query for getting all the groups_ancestors rows for groups
+// that are descendants of the user's owned group
+func (s *GroupAncestorStore) OwnedByUser(user AuthUser) DB {
+	return s.All().Where("idGroupAncestor=?", user.OwnedGroupID())
+}

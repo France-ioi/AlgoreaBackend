@@ -6,4 +6,6 @@ package database
 // Typically it is used to check the permissions and authorizations
 type AuthUser interface {
 	SelfGroupID() int64
+  DefaultLanguageID() int64
+	OwnedGroupID() int64
 }
