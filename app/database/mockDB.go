@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 // NewDBMock generate a DB mock the database engine
