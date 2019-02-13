@@ -15,11 +15,13 @@ type ItemStore struct {
 // ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
 	// MAX(groups_items.bCachedFullAccess)
-	FullAccess    bool  `sql:"column:fullAccess" json:"full_access"`
+	FullAccess       bool  `sql:"column:fullAccess" json:"full_access"`
 	// MAX(groups_items.bCachedPartialAccess)
-	PartialAccess bool  `sql:"column:partialAccess" json:"partial_access"`
+	PartialAccess    bool  `sql:"column:partialAccess" json:"partial_access"`
 	// MAX(groups_items.bCachedGrayAccess)
-	GrayedAccess  bool  `sql:"column:grayedAccess" json:"grayed_access"`
+	GrayedAccess     bool  `sql:"column:grayedAccess" json:"grayed_access"`
+	// MAX(groups_items.bCachedAccessSolutions)
+	AccessSolutions  bool  `sql:"column:accessSolutions" json:"access_solutions"`
 }
 
 type itemAccessDetailsWithID struct {
@@ -106,23 +108,222 @@ func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID in
 			" JOIN items_items ii1 ON ii1.idItemParent=? "+
 			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent "+
 			" WHERE items.ID=ii2.idItemChild)) union_table "+
-			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? "+
-			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) "+
-			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage "+
-			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "+
-			"JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) "+
+			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? " +
+			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) " +
+			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage " +
+			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? " +
+			"JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) " +
 			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
-		rootID, rootID, rootID, userID, userLanguageID, s.accessRightsSubQuery(user)).Scan(&result).Error(); err != nil {
+		rootID, rootID, rootID, userID, userLanguageID, s.accessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-func (s *ItemStore) accessRightsSubQuery(user AuthUser) interface{} {
+// RawItem represents one row of the getItem service data returned from the DB
+type RawItem struct {
+	// items
+	ID                		 int64    `sql:"column:ID"`
+	Type              		 string   `sql:"column:sType"`
+	DisplayDetailsInParent bool	    `sql:"column:bDisplayDetailsInParent"`
+	ValidationType         string   `sql:"column:sValidationType"`
+	HasUnlockedItems  		 bool     `sql:"column:hasUnlockedItems"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int64    `sql:"column:iScoreMinUnlock"`
+	TeamMode               string   `sql:"column:sTeamMode"`
+	TeamsEditable          bool	    `sql:"column:bTeamsEditable"`
+	TeamMaxMembers         int64    `sql:"column:iTeamMaxMembers"`
+	HasAttempts            bool	    `sql:"column:bHasAttempts"`
+	AccessOpenDate         string   `sql:"column:sAccessOpenDate"` // iso8601 str
+	Duration               string   `sql:"column:sDuration"`
+	EndContestDate         string   `sql:"column:sEndContestDate"` // iso8601 str
+	NoScore                bool     `sql:"column:bNoScore"`
+	GroupCodeEnter         bool     `sql:"column:groupCodeEnter"`
+
+	// root node only
+	TitleBarVisible *bool   `sql:"column:bTitleBarVisible"`
+	ReadOnly        *bool   `sql:"column:bReadOnly"`
+	FullScreen      *string `sql:"column:sFullScreen"`
+	ShowSource      *bool   `sql:"column:bShowSource"`
+	ValidationMin   *int64  `sql:"column:iValidationMin"`
+	ShowUserInfos   *bool   `sql:"column:bShowUserInfos"`
+	ContestPhase    *string `sql:"column:sContestPhase"`
+	URL             *string `sql:"column:sUrl"`          // only if not a chapter
+	UsesAPI         *bool   `sql:"column:bUsesAPI"`      // only if not a chapter
+	HintsAllowed    *bool   `sql:"column:bHintsAllowed"` // only if not a chapter
+
+	// from items_strings: in the user’s default language or (if not available) default language of the item
+	StringLanguageID  int64  `sql:"column:idLanguage"`
+	StringTitle       string `sql:"column:sTitle"`
+	StringImageURL    string `sql:"column:sImageUrl"`
+	StringSubtitle    string `sql:"column:sSubtitle"`
+	StringDescription string `sql:"column:sDescription"`
+	StringEduComment  string `sql:"column:sEduComment"`
+
+	// from users_items for current user
+	UserActiveAttemptID     int64   `sql:"column:idAttemptActive"`
+	UserScore               float32 `sql:"column:iScore"`
+	UserSubmissionsAttempts int64   `sql:"column:nbSubmissionsAttempts"`
+	UserValidated           bool    `sql:"column:bValidated"`
+	UserFinished            bool    `sql:"column:bFinished"`
+	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
+	UserHintsCached         int64   `sql:"column:nbHintsCached"`
+	UserStartDate           string  `sql:"column:sStartDate"` // iso8601 str
+	UserValidationDate      string  `sql:"column:sValidationDate"` // iso8601 str
+	UserFinishDate          string   `sql:"column:sFinishDate"` // iso8601 str
+	UserContestStartDate    string   `sql:"column:sContestStartDate"` // iso8601 str
+	UserState               *string  `sql:"column:sState"` // only if not a chapter
+	UserAnswer              *string  `sql:"column:sAnswer"` // only if not a chapter
+
+	// items_items
+	Order 						    int64 	 `sql:"column:iChildOrder"`
+	Category 						  *string  `sql:"column:sCategory"`
+	AlwaysVisible 				*bool    `sql:"column:bAlwaysVisible"`
+	AccessRestricted 			*bool    `sql:"column:bAccessRestricted"`
+
+	*ItemAccessDetails
+}
+
+// GetRawItemData reads data needed by the getItem service from the DB and returns an array of RawItem's
+func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user AuthUser) (*[]RawItem, error) {
+	var result []RawItem
+
+	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
+	if err := s.Raw(
+		`SELECT
+			union_table.ID,
+			union_table.sType,
+			union_table.bDisplayDetailsInParent,
+			union_table.sValidationType,` +
+			// idItemUnlocked is a comma-separated list of item IDs which will be unlocked if this item is validated
+			// Here we consider both NULL and an empty string as FALSE
+			`COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems,
+			union_table.iScoreMinUnlock,
+			union_table.sTeamMode,
+			union_table.bTeamsEditable,
+			union_table.iTeamMaxMembers,
+			union_table.bHasAttempts,
+			union_table.sAccessOpenDate,
+			union_table.sDuration,
+			union_table.sEndContestDate,
+			union_table.bNoScore,
+			union_table.groupCodeEnter,
+
+			COALESCE(ustrings.idLanguage, dstrings.idLanguage) AS idLanguage,
+			IF(ustrings.idLanguage IS NULL, dstrings.sTitle, ustrings.sTitle) AS sTitle,
+			IF(ustrings.idLanguage IS NULL, dstrings.sImageUrl, ustrings.sImageUrl) AS sImageUrl,
+			IF(ustrings.idLanguage IS NULL, dstrings.sSubtitle, ustrings.sSubtitle) AS sSubtitle,
+			IF(ustrings.idLanguage IS NULL, dstrings.sDescription, ustrings.sDescription) AS sDescription,
+			IF(ustrings.idLanguage IS NULL, dstrings.sEduComment, ustrings.sEduComment) AS sEduComment,
+
+			users_items.idAttemptActive AS idAttemptActive,
+			users_items.iScore AS iScore,
+			users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts,
+			users_items.bValidated AS bValidated,
+			users_items.bFinished AS bFinished,
+			users_items.bKeyObtained AS bKeyObtained,
+			users_items.nbHintsCached AS nbHintsCached,
+			users_items.sStartDate AS sStartDate,
+			users_items.sValidationDate AS sValidationDate,
+			users_items.sFinishDate AS sFinishDate,
+			users_items.sContestStartDate AS sContestStartDate,
+			IF(union_table.sType <> 'Chapter', users_items.sState, NULL) as sState,
+			users_items.sAnswer,
+
+			union_table.iChildOrder AS iChildOrder,
+			union_table.sCategory AS sCategory,
+			union_table.bAlwaysVisible,
+			union_table.bAccessRestricted, ` +
+		  // inputItem only
+			`union_table.bTitleBarVisible,
+			union_table.bReadOnly,
+			union_table.sFullScreen,
+			union_table.bShowSource,
+			union_table.iValidationMin,
+			union_table.bShowUserInfos,
+			union_table.sContestPhase,
+			union_table.sUrl,
+			union_table.bUsesAPI,
+			union_table.bHintsAllowed,
+			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions 
+		FROM (
+      SELECT
+        items.ID AS ID,
+			  items.sType,
+			  items.bDisplayDetailsInParent,
+			  items.sValidationType,
+			  items.idItemUnlocked,
+			  items.iScoreMinUnlock,
+			  items.sTeamMode,
+			  items.bTeamsEditable,
+			  items.iTeamMaxMembers,
+			  items.bHasAttempts,
+			  items.sAccessOpenDate,
+			  items.sDuration,
+			  items.sEndContestDate,
+			  items.bNoScore,
+			  items.groupCodeEnter,
+			  items.bTitleBarVisible,
+			  items.bReadOnly,
+			  items.sFullScreen,
+			  items.bShowSource,
+			  items.iValidationMin,
+			  items.bShowUserInfos,
+			  items.sContestPhase,
+			  items.sUrl,
+			  IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI,
+			  IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed,
+			  items.idDefaultLanguage,
+			  NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted
+			FROM items WHERE items.ID=?
+      UNION ALL
+			SELECT
+        items.ID AS ID, items.sType, items.bDisplayDetailsInParent,
+			  items.sValidationType, items.idItemUnlocked,
+			  items.iScoreMinUnlock,
+			  items.sTeamMode,
+			  items.bTeamsEditable,
+			  items.iTeamMaxMembers,
+			  items.bHasAttempts,
+			  items.sAccessOpenDate,
+			  items.sDuration,
+			  items.sEndContestDate,
+			  items.bNoScore,
+			  items.groupCodeEnter,
+			  NULL AS bTitleBarVisible,
+			  NULL AS bReadOnly,
+			  NULL AS sFullScreen,
+			  NULL AS bShowSource,
+			  NULL AS iValidationMin,
+			  NULL AS bShowUserInfos,
+			  NULL AS sContestPhase,
+			  NULL AS sUrl,
+			  NULL AS bUsesAPI,
+			  NULL AS bHintsAllowed,
+			  items.idDefaultLanguage,
+			  iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted
+      FROM items
+			JOIN items_items ON items.ID=idItemChild AND idItemParent=?
+    ) union_table
+    LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=?
+    LEFT JOIN items_strings dstrings FORCE INDEX (idItem)
+    ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage
+    LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=?
+    JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)
+    ORDER BY iChildOrder`,
+		rootID, rootID, userID, userLanguageID, s.accessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (s *ItemStore) accessRights(user AuthUser) DB {
 	return s.GroupItems().MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-		Group("idItem").
-		SubQuery()
+		Select(
+			"idItem, MAX(bCachedFullAccess) AS fullAccess, " +
+				"MAX(bCachedPartialAccess) AS partialAccess, " +
+				"MAX(bCachedGrayedAccess) AS grayedAccess, " +
+				"MAX(bCachedAccessSolutions) AS accessSolutions").
+		Group("idItem")
 }
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
@@ -201,7 +402,8 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 func (s *ItemStore) getAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]itemAccessDetailsWithID, error) {
 	var accessDetails []itemAccessDetailsWithID
 	db := s.GroupItems().MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
+		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, " +
+			"MAX(bCachedGrayedAccess) AS grayedAccess, MAX(bCachedAccessSolutions) AS accessSolutions").
 		Where("groups_items.idItem IN (?)", itemIDs).
 		Group("idItem").Scan(&accessDetails)
 	if err := db.Error(); err != nil {
@@ -222,6 +424,7 @@ func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (m
 			FullAccess: row.FullAccess,
 			PartialAccess: row.PartialAccess,
 			GrayedAccess: row.GrayedAccess,
+			AccessSolutions: row.AccessSolutions,
 		}
 	}
 	return accessDetailsMap, nil
