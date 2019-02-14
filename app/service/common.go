@@ -1,10 +1,11 @@
 package service
 
 import (
+	"net/http"
+
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"net/http"
 )
 
 // Base is the common service context data
