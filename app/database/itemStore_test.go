@@ -9,7 +9,7 @@ func TestCheckAccess(t *testing.T) {
 	testCases := []struct {
 		desc              string
 		itemIDs           []int64
-		itemAccessDetails []itemAccessDetailsWithID
+		itemAccessDetails []ItemAccessDetailsWithID
 		err               error
 	}{
 		{
@@ -27,7 +27,7 @@ func TestCheckAccess(t *testing.T) {
 		{
 			desc:    "missing access result on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []itemAccessDetailsWithID{
+			itemAccessDetails: []ItemAccessDetailsWithID{
 				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 			},
@@ -36,7 +36,7 @@ func TestCheckAccess(t *testing.T) {
 		{
 			desc:    "no access on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []itemAccessDetailsWithID{
+			itemAccessDetails: []ItemAccessDetailsWithID{
 				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 				{ItemID: 22},
 				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
@@ -46,7 +46,7 @@ func TestCheckAccess(t *testing.T) {
 		{
 			desc:    "full access on all items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []itemAccessDetailsWithID{
+			itemAccessDetails: []ItemAccessDetailsWithID{
 				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
 				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
@@ -56,7 +56,7 @@ func TestCheckAccess(t *testing.T) {
 		{
 			desc:    "full access on all but last, last with greyed",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []itemAccessDetailsWithID{
+			itemAccessDetails: []ItemAccessDetailsWithID{
 				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
 				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
 				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{GrayedAccess: true}},

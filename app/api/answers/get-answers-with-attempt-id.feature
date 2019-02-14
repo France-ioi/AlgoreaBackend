@@ -1,9 +1,9 @@
-Feature: Get item answers - robustness
+Feature: Get answers with attempt_id
 Background:
   Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
-    | 2  | guest  | 0        | 404         | 404          | 0        |
+    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName | sLastName |
+    | 1  | jdoe   | 0        | 11          | 12           | John       | Doe       |
+    | 2  | guest  | 0        | 404         | 404          |            |           |
   And the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
@@ -28,28 +28,35 @@ Background:
     | 42 | 13      | 190    | null            | false             | false                | false               | 0             | 0        |
     | 43 | 13      | 200    | null            | true              | true                 | true                | 0             | 0        |
     | 44 | 13      | 210    | null            | false             | false                | true                | 0             | 0        |
+  And the database has the following table 'users_answers':
+    | ID | idUser | idItem | idAttempt | sName | sType      | sState | sAnswer | sLangProg | sSubmissionDate     | iScore | bValidated |
+    | 1  | 1      | 200    | 100       | name  | Submission | null   | answer  | lang      | 2017-05-29 06:38:38 | 100    | true       |
+  And the database has the following table 'groups_attempts':
+    | ID  | idGroup | idItem |
+    | 100 | 13      | 200    |
 
-  Scenario: Should fail when the user has only grayed access to the item
+  Scenario: Full access on the item+user pair
     Given I am the user with ID "1"
-    When I send a GET request to "/answers?item_id=210&user_id=1"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights on the given item id"
-
-  Scenario: Should fail when the user doesn't have access to the item
-    Given I am the user with ID "1"
-    When I send a GET request to "/answers?item_id=190&user_id=1"
-    Then the response code should be 404
-    And the response error message should contain "Insufficient access rights on the given item id"
-
-  Scenario: Should fail when the item doesn't exist
-    Given I am the user with ID "1"
-    When I send a GET request to "/answers?item_id=404&user_id=1"
-    Then the response code should be 404
-    And the response error message should contain "Insufficient access rights on the given item id"
-
-  Scenario: Should fail when the authenticated user is not an admin of the selfGroup of the input user (via idGroupOwned)
-    Given I am the user with ID "1"
-    When I send a GET request to "/answers?item_id=190&user_id=2"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
+    When I send a GET request to "/answers?attempt_id=100"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "answers": [
+        {
+          "id": 1,
+          "lang_prog": "lang",
+          "name": "name",
+          "score": 100,
+          "submission_date": "2017-05-29T06:38:38Z",
+          "type": "Submission",
+          "user": {
+            "login": "jdoe",
+            "first_name": "John",
+            "last_name": "Doe"
+          },
+          "validated": true
+        }
+      ]
+    }
+    """

@@ -13,6 +13,7 @@ type Base struct {
 	Config *config.Root
 }
 
+// GetUser returns the authenticated user data from context
 func (srv *Base) GetUser(r *http.Request) *auth.User {
 	return auth.UserFromContext(r.Context(), srv.Store.Users())
 }

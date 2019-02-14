@@ -26,9 +26,24 @@ func (s *DataStore) Items() *ItemStore {
 	return &ItemStore{s}
 }
 
+// GroupAttempts returns a GroupAttemptStore
+func (s *DataStore) GroupAttempts() *GroupAttemptStore {
+	return &GroupAttemptStore{s}
+}
+
 // Groups returns a GroupStore
 func (s *DataStore) Groups() *GroupStore {
 	return &GroupStore{s}
+}
+
+// GroupAncestors returns a GroupAncestorStore
+func (s *DataStore) GroupAncestors() *GroupAncestorStore {
+	return &GroupAncestorStore{s}
+}
+
+// GroupGroups returns a GroupGroupStore
+func (s *DataStore) GroupGroups() *GroupGroupStore {
+	return &GroupGroupStore{s}
 }
 
 // GroupItems returns a GroupItemStore
@@ -46,16 +61,10 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{s}
 }
 
-// GroupAncestors returns a GroupAncestorStore
-func (s *DataStore) GroupAncestors() *GroupAncestorStore {
-	return &GroupAncestorStore{s}
-}
-
 // UserAnswers returns a UserAnswerStore
 func (s *DataStore) UserAnswers() *UserAnswerStore {
 	return &UserAnswerStore{s}
 }
-
 
 // NewID generates a positive random int64 to be used as ID
 // !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
