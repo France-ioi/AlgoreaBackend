@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -19,39 +18,39 @@ type GetItemRequest struct {
 }
 
 type navigationItemUser struct {
-	Score     						float32	`json:"score"`
-	Validated     				bool	  `json:"validated"`
-	Finished    					bool	  `json:"finished"`
-	KeyObtained 					bool 	  `json:"key_obtained"`
-	SubmissionsAttempts   int64   `json:"submissions_attempts"`
-	StartDate             string  `json:"start_date"` // iso8601 str
-	ValidationDate        string  `json:"validation_date"` // iso8601 str
-	FinishDate            string  `json:"finish_date"` // iso8601 str
+	Score               float32 `json:"score"`
+	Validated           bool    `json:"validated"`
+	Finished            bool    `json:"finished"`
+	KeyObtained         bool    `json:"key_obtained"`
+	SubmissionsAttempts int64   `json:"submissions_attempts"`
+	StartDate           string  `json:"start_date"`      // iso8601 str
+	ValidationDate      string  `json:"validation_date"` // iso8601 str
+	FinishDate          string  `json:"finish_date"`     // iso8601 str
 }
 
 type navigationItemAccessRights struct {
-	FullAccess						bool		`json:"full_access"`
-	PartialAccess					bool		`json:"partial_access"`
-	GrayAccess  					bool		`json:"gray_access"`
+	FullAccess    bool `json:"full_access"`
+	PartialAccess bool `json:"partial_access"`
+	GrayAccess    bool `json:"gray_access"`
 }
 
 type navigationItemString struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title         				string  `json:"title"`
+	Title string `json:"title"`
 }
 
 type navigationItemCommonFields struct {
-	ID                		int64   `json:"id"`
-	Type              		string  `json:"type"`
-	TransparentFolder 		bool	  `json:"transparent_folder"`
+	ID                int64  `json:"id"`
+	Type              string `json:"type"`
+	TransparentFolder bool   `json:"transparent_folder"`
 	// whether items.idItemUnlocked is empty
-	HasUnlockedItems  		bool    `json:"has_unlocked_items"`
+	HasUnlockedItems bool `json:"has_unlocked_items"`
 
-	String                navigationItemString `json:"string"`
-	User                  navigationItemUser `json:"user"`
-	AccessRights          navigationItemAccessRights `json:"access_rights"`
+	String       navigationItemString       `json:"string"`
+	User         navigationItemUser         `json:"user"`
+	AccessRights navigationItemAccessRights `json:"access_rights"`
 
-	Children							[]navigationItemChild `json:"children,omitempty"`
+	Children []navigationItemChild `json:"children,omitempty"`
 }
 
 type navigationDataResponse struct {
@@ -61,8 +60,8 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order 						int64 `json:"order"`
-	AccessRestricted  bool  `json:"access_restricted"`
+	Order            int64 `json:"order"`
+	AccessRestricted bool  `json:"access_restricted"`
 }
 
 // Bind .
@@ -83,19 +82,19 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.GetUser(httpReq)
-	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID(), user)
+	rawData, err := getRawNavigationData(srv.Store, req.ID, user.UserID, user.DefaultLanguageID(), user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
-	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID  {
+	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
 	response := navigationDataResponse{
 		srv.fillNavigationCommonFieldsWithDBData(&(*rawData)[0]),
 	}
-	idMap := map[int64]*database.RawNavigationItem{}
+	idMap := map[int64]*rawNavigationItem{}
 	for index := range *rawData {
 		idMap[(*rawData)[index].ID] = &(*rawData)[index]
 	}
@@ -106,8 +105,8 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	return service.NoError
 }
 
-func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]database.RawNavigationItem,
-	idMap map[int64]*database.RawNavigationItem,
+func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]rawNavigationItem,
+	idMap map[int64]*rawNavigationItem,
 	idsToResponseData map[int64]*navigationItemCommonFields) {
 	for index, item := range *rawData {
 		if index == 0 {
@@ -132,24 +131,22 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]database.RawNav
 	}
 }
 
-func (srv *Service) fillNavigationCommonFieldsWithDBData(
-	  rawData *database.RawNavigationItem,
-	)*navigationItemCommonFields {
+func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
 	return &navigationItemCommonFields{
-		ID: rawData.ID,
-		Type: rawData.Type,
+		ID:                rawData.ID,
+		Type:              rawData.Type,
 		TransparentFolder: rawData.TransparentFolder,
-		HasUnlockedItems: rawData.HasUnlockedItems,
-		String: navigationItemString{ Title: rawData.Title },
+		HasUnlockedItems:  rawData.HasUnlockedItems,
+		String:            navigationItemString{Title: rawData.Title},
 		User: navigationItemUser{
-			Score: rawData.UserScore,
-			Validated: rawData.UserValidated,
-			Finished: rawData.UserFinished,
-			KeyObtained: rawData.UserKeyObtained,
+			Score:               rawData.UserScore,
+			Validated:           rawData.UserValidated,
+			Finished:            rawData.UserFinished,
+			KeyObtained:         rawData.UserKeyObtained,
 			SubmissionsAttempts: rawData.UserSubmissionsAttempts,
-			StartDate: rawData.UserStartDate,
-			ValidationDate: rawData.UserValidationDate,
-			FinishDate: rawData.UserFinishDate,
+			StartDate:           rawData.UserStartDate,
+			ValidationDate:      rawData.UserValidationDate,
+			FinishDate:          rawData.UserFinishDate,
 		},
 		AccessRights: navigationItemAccessRights{
 			FullAccess:    rawData.FullAccess,

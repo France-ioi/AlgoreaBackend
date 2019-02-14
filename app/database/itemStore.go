@@ -22,85 +22,42 @@ type Item struct {
 	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
-// RawNavigationItem represents one row of a navigation subtree returned from the DB
-type RawNavigationItem struct {
-	// items
-	ID                int64  `sql:"column:ID"`
-	Type              string `sql:"column:sType"`
-	TransparentFolder bool   `sql:"column:bTransparentFolder"`
-	// whether items.idItemUnlocked is empty
-	HasUnlockedItems bool `sql:"column:hasUnlockedItems"`
-	AccessRestricted bool `sql:"column:bAccessRestricted"`
-
-	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title string `sql:"column:sTitle"`
-
-	// from users_items for current user
-	UserScore               float32 `sql:"column:iScore"`
-	UserValidated           bool    `sql:"column:bValidated"`
-	UserFinished            bool    `sql:"column:bFinished"`
-	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
-	UserSubmissionsAttempts int64   `sql:"column:nbSubmissionsAttempts"`
-	UserStartDate           string  `sql:"column:sStartDate"`      // iso8601 str
-	UserValidationDate      string  `sql:"column:sValidationDate"` // iso8601 str
-	UserFinishDate          string  `sql:"column:sFinishDate"`     // iso8601 str
-
-	// items_items
-	IDItemParent int64 `sql:"column:idItemParent"`
-	Order        int64 `sql:"column:iChildOrder"`
-
-	*ItemAccessDetails
-}
-
 func (s *ItemStore) tableName() string {
 	return "items"
 }
 
-// GetRawNavigationData reads a navigation subtree from the DB and returns an array of RawNavigationItem's
-func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID int64, user AuthUser) (*[]RawNavigationItem, error) {
-	var result []RawNavigationItem
+// Visible returns a view of the visible items for the given user
+func (s *ItemStore) Visible(user AuthUser) DB {
+	groupItemsPerms := s.GroupItems().
+		MatchingUserAncestors(user).
+		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
+		Group("idItem")
 
-	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
-	if err := s.Raw(
-		"SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder, "+
-			"COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems, "+
-			"COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle, "+
-			"users_items.iScore AS iScore, users_items.bValidated AS bValidated, "+
-			"users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained, "+
-			"users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts, "+
-			"users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate, "+
-			"users_items.sFinishDate AS sFinishDate, "+
-			"union_table.iChildOrder AS iChildOrder, "+
-			"union_table.bAccessRestricted, "+
-			"union_table.idItemParent AS idItemParent,"+
-			"accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess "+
-			"FROM "+
-			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
-			"items.idDefaultLanguage, "+
-			" NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted "+
-			" FROM items WHERE items.ID=? UNION "+
-			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
-			"items.idDefaultLanguage, "+
-			" idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted FROM items "+
-			" JOIN items_items ON items.ID=idItemChild "+
-			" WHERE idItemParent=?) UNION"+
-			"(SELECT  items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
-			"items.idDefaultLanguage, "+
-			" ii2.idItemParent, ii1.idItemParent AS idItemGrandparent, "+
-			" ii2.iChildOrder, ii2.bAccessRestricted FROM items "+
-			" JOIN items_items ii1 ON ii1.idItemParent=? "+
-			" JOIN items_items ii2 ON ii1.idItemChild = ii2.idItemParent "+
-			" WHERE items.ID=ii2.idItemChild)) union_table "+
-			"LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=? "+
-			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) "+
-			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage "+
-			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "+
-			"JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) "+
-			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
-		rootID, rootID, rootID, userID, userLanguageID, s.AccessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
-		return nil, err
-	}
-	return &result, nil
+	return s.All().
+		Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
+		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+}
+
+// VisibleByID returns a view of the visible item identified by itemID, for the given user
+func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) DB {
+	return s.Visible(user).Where("items.ID = ?", itemID)
+}
+
+// VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
+func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
+	return s.
+		Visible(user).
+		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().All().SubQuery()).
+		Where("ii.idItemParent = ?", itemID)
+}
+
+// VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
+func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) DB {
+	return s.
+		Visible(user).                                                                             // visible items are the leaves (potential grandChildren)
+		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().All().SubQuery()).         // get their parents' IDs (ii1)
+		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().All().SubQuery()). // get their grand parents' IDs (ii2)
+		Where("ii2.idItemParent = ?", itemID)
 }
 
 // RawItem represents one row of the getItem service data returned from the DB
@@ -227,7 +184,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 			union_table.sUrl,
 			union_table.bUsesAPI,
 			union_table.bHintsAllowed,
-			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions 
+			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
 		FROM (
       SELECT
         items.ID AS ID,
