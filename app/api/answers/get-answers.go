@@ -92,7 +92,6 @@ type answersResponse struct {
 func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *answersResponse) {
 	responseData := answersResponse{Answers: make([]answersResponseAnswer, 0, len(rawData))}
 	for _, row := range rawData {
-		fmt.Printf("%#v", row)
 		responseData.Answers = append(responseData.Answers, answersResponseAnswer{
 			ID:             row.ID,
 			Name:           row.Name,
