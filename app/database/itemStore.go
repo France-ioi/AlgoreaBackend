@@ -73,7 +73,7 @@ func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID in
 			"union_table.iChildOrder AS iChildOrder, "+
 			"union_table.bAccessRestricted, "+
 			"union_table.idItemParent AS idItemParent,"+
-			"AccessRights.fullAccess, AccessRights.partialAccess, AccessRights.grayedAccess "+
+			"accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess "+
 			"FROM "+
 			"(SELECT items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, "+
 			"items.idDefaultLanguage, "+
@@ -95,7 +95,7 @@ func (s *ItemStore) GetRawNavigationData(rootID int64, userID, userLanguageID in
 			"LEFT JOIN items_strings dstrings FORCE INDEX (idItem) "+
 			" ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage "+
 			"LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=? "+
-			"JOIN ? AccessRights on AccessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) "+
+			"JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0) "+
 			"ORDER BY idItemGrandparent, idItemParent, iChildOrder",
 		rootID, rootID, rootID, userID, userLanguageID, s.AccessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 			union_table.sUrl,
 			union_table.bUsesAPI,
 			union_table.bHintsAllowed,
-			AccessRights.fullAccess, AccessRights.partialAccess, AccessRights.grayedAccess, AccessRights.accessSolutions 
+			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions 
 		FROM (
       SELECT
         items.ID AS ID,
@@ -291,7 +291,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
     LEFT JOIN items_strings dstrings FORCE INDEX (idItem)
     ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage
     LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=?
-    JOIN ? AccessRights on AccessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)
+    JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)
     ORDER BY iChildOrder`,
 		rootID, rootID, userID, userLanguageID, s.AccessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
 		return nil, err
