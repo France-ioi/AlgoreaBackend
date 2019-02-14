@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -83,7 +82,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	}
 
 	user := srv.getUser(httpReq)
-	rawData, err := srv.Store.Items().GetRawNavigationData(req.ID, user.UserID, user.DefaultLanguageID(), user)
+	rawData, err := getRawNavigationData(srv.Store, req.ID, user.UserID, user.DefaultLanguageID(), user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -95,7 +94,7 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	response := navigationDataResponse{
 		srv.fillNavigationCommonFieldsWithDBData(&(*rawData)[0]),
 	}
-	idMap := map[int64]*database.RawNavigationItem{}
+	idMap := map[int64]*rawNavigationItem{}
 	for index := range *rawData {
 		idMap[(*rawData)[index].ID] = &(*rawData)[index]
 	}
@@ -106,8 +105,8 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	return service.NoError
 }
 
-func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]database.RawNavigationItem,
-	idMap map[int64]*database.RawNavigationItem,
+func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]rawNavigationItem,
+	idMap map[int64]*rawNavigationItem,
 	idsToResponseData map[int64]*navigationItemCommonFields) {
 	for index, item := range *rawData {
 		if index == 0 {
@@ -132,9 +131,7 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]database.RawNav
 	}
 }
 
-func (srv *Service) fillNavigationCommonFieldsWithDBData(
-	  rawData *database.RawNavigationItem,
-	)*navigationItemCommonFields {
+func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
 	return &navigationItemCommonFields{
 		ID: rawData.ID,
 		Type: rawData.Type,

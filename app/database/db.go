@@ -22,8 +22,10 @@ type DB interface {
 	Where(query interface{}, args ...interface{}) DB
 	Joins(query string, args ...interface{}) DB
 	Group(query string) DB
+	Union(query interface{}) DB
 	Raw(query string, args ...interface{}) DB
 
+	Query() interface{}
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
 	Count(dest interface{}) DB
@@ -100,12 +102,20 @@ func (conn *db) Group(query string) DB {
 	return &db{conn.DB.Group(query)}
 }
 
+func (conn *db) Union(query interface{}) DB {
+	return &db{conn.DB.New().Raw("? UNION (?)", conn.DB.QueryExpr(), query)}
+}
+
 func (conn *db) Raw(query string, args ...interface{}) DB {
 	return &db{conn.DB.Raw(query, args...)}
 }
 
 func (conn *db) SubQuery() interface{} {
 	return conn.DB.SubQuery()
+}
+
+func (conn *db) Query() interface{} {
+	return conn.DB.QueryExpr()
 }
 
 func (conn *db) Scan(dest interface{}) DB {
