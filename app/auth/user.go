@@ -73,6 +73,5 @@ func (u *User) OwnedGroupID() int64 {
 	if u.lazyLoadData() != nil {
 		return 0
 	}
-	return u.data.SelfGroupID
+	return u.data.OwnedGroupID
 }
-

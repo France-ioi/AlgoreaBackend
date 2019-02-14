@@ -127,8 +127,8 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	if err := srv.Store.GroupAttempts().ByAttemptID(attemptID).
 		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess).
 		Where("((groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?))",
-			srv.Store.GroupAncestors().UserAncestors(user).Select("idGroupAncestor").SubQuery(),
-			srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupChild").SubQuery()).
+			srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild").SubQuery(),
+			srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent").SubQuery()).
 		Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
