@@ -28,13 +28,16 @@ func (s *ItemStore) tableName() string {
 
 // Visible returns a view of the visible items for the given user
 func (s *ItemStore) Visible(user AuthUser) DB {
+	return s.KeepItemsVisibleBy(user, s.All())
+}
+
+func (s *ItemStore) KeepItemsVisibleBy(user AuthUser, db DB) DB {
 	groupItemsPerms := s.GroupItems().
 		MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Group("idItem")
 
-	return s.All().
-		Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
+	return db.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
 		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
 }
 
@@ -424,7 +427,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 		return true, nil
 	}
 
-	db := s.ItemItems().All()
+	var db DB = s.ItemItems().All()
 	previousID := ids[0]
 	for index, id := range ids {
 		if index == 0 {
@@ -437,7 +440,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 
 	count := 0
 	// For now, we don’t have a unique key for the pair ('idItemParent' and 'idItemChild') and
-	// theoritically it’s still possible to have multiple rows with the same pair
+	// theoretically it’s still possible to have multiple rows with the same pair
 	// of 'idItemParent' and 'idItemChild'.
 	// The “Group(...)” here resolves the issue.
 	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {

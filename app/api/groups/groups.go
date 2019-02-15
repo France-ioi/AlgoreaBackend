@@ -16,4 +16,5 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
 	router.Get("/groups/", service.AppHandler(srv.getAll).ServeHTTP)
+	router.Get("/groups/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
 }

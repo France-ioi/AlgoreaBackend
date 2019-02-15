@@ -1,8 +1,6 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -26,8 +24,8 @@ func (s *ItemItemStore) tableName() string {
 }
 
 // All creates a composable query without filtering
-func (s *ItemItemStore) All() DB {
-	return s.table(s.tableName())
+func (s *ItemItemStore) All() *ItemItemStore {
+	return &ItemItemStore{&DataStore{s.table(s.tableName())}}
 }
 
 // Insert does a INSERT query in the given table with data that may contain types.* types
@@ -35,12 +33,7 @@ func (s *ItemItemStore) Insert(data *ItemItem) error {
 	return s.insert(s.tableName(), data)
 }
 
-// ChildrenOf .
-func (s *ItemItemStore) ChildrenOf(parentID int64) ([]*ItemItem, error) {
-	var ii []*ItemItem
-	err := s.All().Where("idItemParent=?", parentID).Scan(&ii).Error()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get children of item '%d': %v", parentID, err)
-	}
-	return ii, nil
+// DescendantsOf returns a composable query for getting children of the given item
+func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
+	return &ItemItemStore{&DataStore{s.Where("items_items.idItemParent=?", parentID)}}
 }

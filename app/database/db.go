@@ -27,9 +27,10 @@ type DB interface {
 	Union(query interface{}) DB
 	Raw(query string, args ...interface{}) DB
 
-	Query() interface{}
+	QueryExpr() interface{}
 	SubQuery() interface{}
 	Scan(dest interface{}) DB
+	ScanIntoSliceOfMaps(dest *[]map[string]interface{}) DB
 	Count(dest interface{}) DB
 	Take(out interface{}, where ...interface{}) DB
 
@@ -124,12 +125,55 @@ func (conn *db) SubQuery() interface{} {
 	return conn.DB.SubQuery()
 }
 
-func (conn *db) Query() interface{} {
+func (conn *db) QueryExpr() interface{} {
 	return conn.DB.QueryExpr()
 }
 
 func (conn *db) Scan(dest interface{}) DB {
 	return &db{conn.DB.Scan(dest)}
+}
+
+func (conn *db) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) DB {
+	rows, err := conn.DB.Rows()
+	if err != nil {
+		conn.DB.Error = err
+		return conn
+	}
+	cols, err := rows.Columns()
+	if err != nil {
+		return conn
+	}
+
+	if rows != nil {
+		defer func() { _ = rows.Close() }()
+	}
+
+	if conn.DB.Error != nil {
+		return conn
+	}
+
+	for rows.Next() {
+		columns := make([]interface{}, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+		for i, _ := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err := rows.Scan(columnPointers...); err != nil {
+			return conn
+		}
+
+		rowMap := make(map[string]interface{})
+		for i, columnName := range cols {
+			if value, ok := columns[i].([]byte); ok {
+				columns[i] = string(value)
+			}
+			rowMap[columnName] = columns[i]
+		}
+		*dest = append(*dest, rowMap)
+	}
+
+	return conn
 }
 
 func (conn *db) Count(dest interface{}) DB {

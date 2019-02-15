@@ -16,7 +16,21 @@ func (s *GroupAncestorStore) UserAncestors(user AuthUser) DB {
 }
 
 // OwnedByUser returns a composable query for getting all the groups_ancestors rows for groups
-// that are descendants of the user's owned group
+// that are descendants of the user's owned group using AuthUser object
 func (s *GroupAncestorStore) OwnedByUser(user AuthUser) DB {
 	return s.All().Where("idGroupAncestor=?", user.OwnedGroupID())
+}
+
+// OwnedByUserID returns a composable query for getting all the groups_ancestors rows for groups
+// that are descendants of the user's owned group using ID
+func (s *GroupAncestorStore) OwnedByUserID(ownerUserID int64) DB {
+	return s.All().
+		Joins("JOIN users on users.idGroupOwned=groups_ancestors.idGroupAncestor").
+		Where("users.ID=?", ownerUserID)
+}
+
+func (s *GroupAncestorStore) KeepUsersThatAreDescendantsOf(groupID int64, db DB) DB {
+	return db.
+		Joins("JOIN groups_ancestors ON groups_ancestors.idGroupChild=users.idGroupSelf").
+		Where("groups_ancestors.idGroupAncestor = ?", groupID)
 }

@@ -46,7 +46,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, userID, u
 	itemQ := items.VisibleByID(user, rootID).Select(commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
-	itemThreeGenQ := itemQ.Union(childrenQ.Query()).Union(gChildrenQ.Query())
+	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
 
 	query := dataStore.DB.Raw(`
 		SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder,

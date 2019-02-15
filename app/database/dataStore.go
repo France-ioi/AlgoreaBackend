@@ -51,6 +51,11 @@ func (s *DataStore) GroupItems() *GroupItemStore {
 	return &GroupItemStore{s}
 }
 
+// ItemAncestors returns a ItemAncestorStore
+func (s *DataStore) ItemAncestors() *ItemAncestorStore {
+	return &ItemAncestorStore{s}
+}
+
 // ItemStrings returns a ItemStringStore
 func (s *DataStore) ItemStrings() *ItemStringStore {
 	return &ItemStringStore{s}
