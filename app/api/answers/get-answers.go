@@ -6,7 +6,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/go-chi/render"
 	"net/http"
-	"strconv"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -20,11 +19,11 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
             users.sLogin, users.sFirstName, users.sLastName`).
 		Order("sSubmissionDate DESC")
 
-	userID, userIDError := resolveURLQueryGetInt64Field(httpReq, "user_id")
-	itemID, itemIDError := resolveURLQueryGetInt64Field(httpReq, "item_id")
+	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
+	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
 
 	if userIDError != nil || itemIDError != nil { // attempt_id
-		attemptID, attemptIDError := resolveURLQueryGetInt64Field(httpReq, "attempt_id")
+		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
 		if attemptIDError != nil {
 			return service.ErrInvalidRequest(fmt.Errorf("either user_id & item_id or attempt_id must be present"))
 		}
@@ -85,14 +84,10 @@ type answersResponseAnswer struct {
 	User answersResponseAnswerUser `json:"user"`
 }
 
-type answersResponse struct {
-	Answers []answersResponseAnswer `json:"answers"`
-}
-
-func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *answersResponse) {
-	responseData := answersResponse{Answers: make([]answersResponseAnswer, 0, len(rawData))}
+func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *[]answersResponseAnswer) {
+	responseData := make([]answersResponseAnswer, 0, len(rawData))
 	for _, row := range rawData {
-		responseData.Answers = append(responseData.Answers, answersResponseAnswer{
+		responseData = append(responseData, answersResponseAnswer{
 			ID:             row.ID,
 			Name:           row.Name,
 			Type:           row.Type,
@@ -108,15 +103,6 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 		})
 	}
 	return &responseData
-}
-
-func resolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, error) {
-	strValue := httpReq.URL.Query().Get(name)
-	int64Value, err := strconv.ParseInt(strValue, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("missing %s", name)
-	}
-	return int64Value, nil
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *auth.User) service.APIError {

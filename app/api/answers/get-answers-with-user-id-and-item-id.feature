@@ -3,7 +3,7 @@ Background:
   Given the database has the following table 'users':
     | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName | sLastName |
     | 1  | jdoe   | 0        | 11          | 12           | John       | Doe       |
-    | 2  | other  | 0        | 21          | 22           | Another    | User      |
+    | 2  | other  | 0        | 21          | 22           | George     | Bush      |
   And the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
@@ -36,8 +36,9 @@ Background:
     | 46 | 23      | 200    | null            | true              | true                 | true                | 0             | 0        |
     | 47 | 23      | 210    | null            | false             | false                | true                | 0             | 0        |
   And the database has the following table 'users_answers':
-    | ID | idUser | idItem | idAttempt | sName | sType      | sState | sAnswer | sLangProg | sSubmissionDate     | iScore | bValidated |
-    | 1  | 1      | 200    |           | name  | Submission | null   | answer  | lang      | 2017-05-29 06:38:38 | 100    | true       |
+    | ID | idUser | idItem | idAttempt | sName            | sType      | sState  | sLangProg | sSubmissionDate     | iScore | bValidated |
+    | 1  | 1      | 200    | 1         | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
+    | 2  | 1      | 200    | 2         | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
 
   Scenario: Full access on the item+user pair (same user)
     Given I am the user with ID "1"
@@ -45,24 +46,37 @@ Background:
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    {
-      "answers": [
-        {
-          "id": 1,
-          "lang_prog": "lang",
-          "name": "name",
-          "score": 100,
-          "submission_date": "2017-05-29T06:38:38Z",
-          "type": "Submission",
-          "user": {
-            "login": "jdoe",
-            "first_name": "John",
-            "last_name": "Doe"
-          },
-          "validated": true
-        }
-      ]
-    }
+    [
+      {
+        "id": 1,
+        "lang_prog": "python",
+        "name": "My answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      },
+      {
+        "id": 2,
+        "lang_prog": "python",
+        "name": "My second answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      }
+    ]
+
     """
 
   Scenario: Full access on the item+user pair (different user)
@@ -71,22 +85,34 @@ Background:
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    {
-      "answers": [
-        {
-          "id": 1,
-          "lang_prog": "lang",
-          "name": "name",
-          "score": 100,
-          "submission_date": "2017-05-29T06:38:38Z",
-          "type": "Submission",
-          "user": {
-            "login": "jdoe",
-            "first_name": "John",
-            "last_name": "Doe"
-          },
-          "validated": true
-        }
-      ]
-    }
+    [
+      {
+        "id": 1,
+        "lang_prog": "python",
+        "name": "My answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      },
+      {
+        "id": 2,
+        "lang_prog": "python",
+        "name": "My second answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      }
+    ]
     """
