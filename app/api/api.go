@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 
+	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -38,6 +39,7 @@ func (ctx *Ctx) Router() *chi.Mux {
 	base := service.Base{Store: database.NewDataStore(ctx.db), Config: ctx.config}
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
+	r.Group((&answers.Service{Base: base}).SetRoutes)
 	r.Get("/status", ctx.status)
 	r.NotFound(ctx.notFound)
 	return r

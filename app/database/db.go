@@ -22,6 +22,8 @@ type DB interface {
 	Where(query interface{}, args ...interface{}) DB
 	Joins(query string, args ...interface{}) DB
 	Group(query string) DB
+	Having(query interface{}, args ...interface{}) DB
+	Order(value interface{}, reorder ...bool) DB
 	Union(query interface{}) DB
 	Raw(query string, args ...interface{}) DB
 
@@ -100,6 +102,14 @@ func (conn *db) Select(query interface{}, args ...interface{}) DB {
 
 func (conn *db) Group(query string) DB {
 	return &db{conn.DB.Group(query)}
+}
+
+func (conn *db) Order(value interface{}, reorder ...bool) DB {
+	return &db{conn.DB.Order(value, reorder...)}
+}
+
+func (conn *db) Having(query interface{}, args ...interface{}) DB {
+	return &db{conn.DB.Having(query, args...)}
 }
 
 func (conn *db) Union(query interface{}) DB {

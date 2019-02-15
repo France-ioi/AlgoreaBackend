@@ -67,3 +67,11 @@ func (u *User) DefaultLanguageID() int64 {
 	}
 	return u.data.DefaultLanguageID
 }
+
+// OwnedGroupID returns ID of the group that will contain groups this user manages
+func (u *User) OwnedGroupID() int64 {
+	if u.lazyLoadData() != nil {
+		return 0
+	}
+	return u.data.OwnedGroupID
+}

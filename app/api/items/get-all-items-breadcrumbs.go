@@ -6,13 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
-
-func (srv *Service) getUser(r *http.Request) *auth.User {
-	return auth.UserFromContext(r.Context(), srv.Store.Users())
-}
 
 func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIError {
 	// Get IDs from request and validate it.
@@ -22,7 +17,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	// Validate that the user can see the item IDs.
-	user := srv.getUser(r)
+	user := srv.GetUser(r)
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {

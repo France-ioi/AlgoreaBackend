@@ -90,7 +90,7 @@ func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
-	user := srv.getUser(r)
+	user := srv.GetUser(r)
 
 	// validate input (could be moved to JSON validation later)
 	input := &NewItemRequest{}
@@ -99,7 +99,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	// check permissions
-	if ret := srv.checkPermission(srv.getUser(r), input.Parents[0].ID.Value); ret != service.NoError {
+	if ret := srv.checkPermission(user, input.Parents[0].ID.Value); ret != service.NoError {
 		return ret
 	}
 

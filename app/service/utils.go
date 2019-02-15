@@ -25,3 +25,13 @@ func QueryParamToInt64Slice(req *http.Request, paramName string) ([]int64, error
 	}
 	return ids, nil
 }
+
+// ResolveURLQueryGetInt64Field extracts a get-parameter of type int64 from the query
+func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, error) {
+	strValue := httpReq.URL.Query().Get(name)
+	int64Value, err := strconv.ParseInt(strValue, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("missing %s", name)
+	}
+	return int64Value, nil
+}
