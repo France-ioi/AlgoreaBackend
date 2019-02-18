@@ -65,7 +65,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) filterByValidated(r *http.Request, query database.DB) database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		query = query.Where("users_answers.validated = ?", validated)
+		query = query.Where("users_answers.bValidated = ?", validated)
 	}
 	return query
 }

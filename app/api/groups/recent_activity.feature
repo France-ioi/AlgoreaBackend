@@ -206,3 +206,51 @@ Feature: Get recent activity for group_id and item_id
 			}
 	  ]
     """
+
+	Scenario: User is an admin of the group and there are visible descendants of the item; request validated answers only
+		Given I am the user with ID "1"
+		When I send a GET request to "/groups/recent_activity?group_id=13&item_id=200&validated=1"
+		Then the response code should be 200
+		And the response body should be, in JSON:
+		"""
+		[
+			{
+				"id": 3,
+				"item": {
+					"id": 200,
+					"string": {
+						"language_id": 2,
+						"title": "Catégorie 1"
+					},
+					"type": "Category"
+				},
+				"score": 100,
+				"submission_date": "2017-05-30T06:38:38Z",
+				"user": {
+					"first_name": "John",
+					"last_name": "Doe",
+					"login": "user"
+				},
+				"validated": true
+			},
+			{
+				"id": 2,
+				"item": {
+					"id": 200,
+					"string": {
+						"language_id": 2,
+						"title": "Catégorie 1"
+					},
+					"type": "Category"
+				},
+				"score": 100,
+				"submission_date": "2017-05-29T06:38:38Z",
+				"user": {
+					"first_name": "John",
+					"last_name": "Doe",
+					"login": "user"
+				},
+				"validated": true
+			}
+		]
+    """
