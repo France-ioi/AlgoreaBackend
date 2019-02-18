@@ -110,7 +110,7 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result *map
 
 	switch valueName[0] {
 	case 'b':
-		value = value == 1
+		value = value == int64(1)
 		fallthrough
 	case 's':
 		fallthrough

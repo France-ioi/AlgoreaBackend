@@ -13,7 +13,7 @@ Feature: Get recent activity for group_id and item_id
 		And the database has the following table 'users_answers':
 			| ID | idUser | idItem | idAttempt | sName            | sType      | sState  | sLangProg | sSubmissionDate     | iScore | bValidated |
 			| 2  | 2      | 200    | 101       | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
-			| 1  | 2      | 200    | 100       | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
+			| 1  | 2      | 200    | 100       | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | false      |
 			| 3  | 2      | 200    | 101       | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
 			| 4  | 2      | 200    | 101       | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
 			| 5  | 2      | 200    | 101       | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
@@ -58,7 +58,7 @@ Feature: Get recent activity for group_id and item_id
 					"last_name": "Doe",
 					"login": "user"
 				},
-				"validated": false
+				"validated": true
 			},
 			{
 				"id": 1,
@@ -96,7 +96,7 @@ Feature: Get recent activity for group_id and item_id
 					"last_name": "Doe",
 					"login": "user"
 				},
-				"validated": false
+				"validated": true
 			}
 		]
     """
@@ -125,7 +125,7 @@ Feature: Get recent activity for group_id and item_id
 					"last_name": "Doe",
 					"login": "user"
 				},
-				"validated": false
+				"validated": true
 			}
 		]
     """
@@ -173,7 +173,7 @@ Feature: Get recent activity for group_id and item_id
 					"last_name": "Doe",
 					"login": "user"
 				},
-				"validated": false
+				"validated": true
 			}
 	  ]
     """
@@ -202,7 +202,7 @@ Feature: Get recent activity for group_id and item_id
 					"last_name": "Doe",
 					"login": "user"
 				},
-				"validated": false
+				"validated": true
 			}
 	  ]
     """
