@@ -33,7 +33,7 @@ func (s *ItemItemStore) Insert(data *ItemItem) error {
 	return s.insert(s.tableName(), data)
 }
 
-// DescendantsOf returns a composable query for getting children of the given item
+// ChildrenOf returns a composable query for selecting children of the given item
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 	return &ItemItemStore{&DataStore{s.Where("items_items.idItemParent=?", parentID)}}
 }

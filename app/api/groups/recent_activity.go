@@ -2,25 +2,19 @@ package groups
 
 import (
 	"errors"
-	"github.com/go-chi/render"
 	"net/http"
 	"strings"
 	"unicode"
 
+	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	/*
-		fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
-		fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
-		if (fromIDError != nil && fromSubmissionDateError == nil) || (fromIDError == nil && fromSubmissionDateError != nil) {
-			return service.ErrInvalidRequest(errors.New(
-				"both from.id and from.submission_date or none of them must be presented"))
-		}
-	*/
 	itemID, err := service.ResolveURLQueryGetInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -32,7 +26,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var count int64
-	if err := srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
+	if err = srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
 		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -43,29 +37,64 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	query := srv.Store.UserAnswers().All().WithUsers().WithItems().
 		Select(
 			`users_answers.ID as ID, users_answers.sSubmissionDate, users_answers.bValidated, users_answers.iScore,
-       items.ID AS Item_ID, items.sType AS Item_sType,
-		   users.sLogin AS User_sLogin, users.sFirstName AS User_sFirstName, users.sLastName AS User_sLastName,
-			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item_String_sTitle,
-       COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS Item_String_idLanguage`).
+       items.ID AS Item__ID, items.sType AS Item__sType,
+		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
+			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle,
+       COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS Item__String__idLanguage`).
 		Where("users_answers.idItem IN (?)",
 			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
-		Where("users_answers.sType LIKE 'Submission'").
-		Joins("LEFT JOIN items_strings default_strings FORCE INDEX (idItem) ON default_strings.idItem=items.ID AND default_strings.idLanguage=items.idDefaultLanguage").
-		Joins("LEFT JOIN items_strings user_strings ON user_strings.idItem=items.ID AND user_strings.idLanguage=?", user.DefaultLanguageID())
+		Where("users_answers.sType LIKE 'Submission'")
+	query = srv.Store.Items().JoinStrings(user, query)
 	query = srv.Store.Items().KeepItemsVisibleBy(user, query)
 	query = srv.Store.GroupAncestors().KeepUsersThatAreDescendantsOf(groupID, query)
+	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+	query = srv.SetQueryLimit(r, query)
+	query = srv.filterByValidated(r, query)
+
+	if query, err = srv.filterByFromSubmissionDateAndFromID(r, query); err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
 	var result []map[string]interface{}
 	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
-	convertedResult := make([]map[string]interface{}, len(result))
-	for index, _ := range result {
+	convertedResult := convertSliceOfMapsFromDBToJSON(result)
+
+	render.Respond(w, r, convertedResult)
+	return service.NoError
+}
+
+func (srv *Service) filterByValidated(r *http.Request, query database.DB) database.DB {
+	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
+	if err == nil {
+		query = query.Where("users_answers.validated = ?", validated)
+	}
+	return query
+}
+
+func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query database.DB) (database.DB, error) {
+	fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
+	fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
+	if (fromIDError != nil && fromSubmissionDateError == nil) || (fromIDError == nil && fromSubmissionDateError != nil) {
+		return nil, errors.New("both from.id and from.submission_date or none of them must be present")
+	}
+	if fromIDError == nil {
+		// include fromSubmissionDate, exclude fromID
+		query = query.Where("users_answers.sSubmissionDate <= ? AND users_answers.ID > ?",
+			fromSubmissionDate, fromID)
+	}
+	return query, nil
+}
+
+func convertSliceOfMapsFromDBToJSON(dbMap []map[string]interface{}) []map[string]interface{} {
+	convertedResult := make([]map[string]interface{}, len(dbMap))
+	for index := range dbMap {
 		convertedResult[index] = map[string]interface{}{}
-		for key, value := range result[index] {
+		for key, value := range dbMap[index] {
 			currentMap := &convertedResult[index]
 
-			subKeys := strings.Split(key, "_")
+			subKeys := strings.Split(key, "__")
 			for subKeyIndex, subKey := range subKeys {
 				if subKeyIndex == len(subKeys)-1 {
 					setConvertedValue(subKey, value, currentMap)
@@ -86,19 +115,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 			}
 		}
 	}
-
-	/*
-		Filter by items_ansestors
-		Filter: users are descendands of the group
-
-		WHERE sType='Submission'
-		AND bValidated // if validated=true
-		AND sSubmissionDate <= ... // if from.submission_date
-		AND ID > ... // if from.id
-		ORDER BY users_answers.sSubmissionDate DESC, users_answers.ID
-	*/
-	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return convertedResult
 }
 
 func setConvertedValue(valueName string, value interface{}, result *map[string]interface{}) {
@@ -118,11 +135,11 @@ func setConvertedValue(valueName string, value interface{}, result *map[string]i
 	}
 
 	switch valueName[0] {
-	case 's':
-		valueName = valueName[1:]
 	case 'b':
 		value = value == 1
-		valueName = valueName[1:]
+		fallthrough
+	case 's':
+		fallthrough
 	case 'i':
 		valueName = valueName[1:]
 	}
@@ -136,7 +153,8 @@ func toSnakeCase(in string) string {
 
 	var out []rune
 	for i := 0; i < len(runes); i++ {
-		if i > 0 && (unicode.IsUpper(runes[i]) || unicode.IsNumber(runes[i])) && ((i+1 < len(runes) && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
+		if i > 0 && (unicode.IsUpper(runes[i]) || unicode.IsNumber(runes[i])) &&
+			((i+1 < len(runes) && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
 			out = append(out, '_')
 		}
 		out = append(out, unicode.ToLower(runes[i]))

@@ -36,7 +36,7 @@ type rawNavigationItem struct {
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
-func getRawNavigationData(dataStore *database.DataStore, rootID int64, userID, userLanguageID int64, user *auth.User) (*[]rawNavigationItem, error) {
+func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *auth.User) (*[]rawNavigationItem, error) {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
@@ -48,26 +48,23 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, userID, u
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
 
-	query := dataStore.DB.Raw(`
-		SELECT union_table.ID, union_table.sType, union_table.bTransparentFolder,
-			COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems,
-			COALESCE(ustrings.sTitle, dstrings.sTitle) AS sTitle,
+	query := dataStore.Raw(`
+		SELECT items.ID, items.sType, items.bTransparentFolder,
+			COALESCE(items.idItemUnlocked, '')<>'' as hasUnlockedItems,
+			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitle,
 			users_items.iScore AS iScore, users_items.bValidated AS bValidated,
 			users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained,
 			users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts,
 			users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate,
 			users_items.sFinishDate AS sFinishDate,
-			union_table.iChildOrder AS iChildOrder,
-			union_table.bAccessRestricted,
-			union_table.idItemParent AS idItemParent,
-			union_table.fullAccess, union_table.partialAccess, union_table.grayedAccess
-		FROM ? union_table
-		LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=?
-		LEFT JOIN items_strings dstrings FORCE INDEX (idItem)
-			 ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage
-		LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=?
-		ORDER BY idItemGrandparent, idItemParent, iChildOrder`,
-		itemThreeGenQ.SubQuery(), userID, userLanguageID)
+			items.iChildOrder AS iChildOrder,
+			items.bAccessRestricted,
+			items.idItemParent AS idItemParent,
+			items.fullAccess, items.partialAccess, items.grayedAccess
+		FROM ? items`, itemThreeGenQ.SubQuery()).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
+		Order("idItemGrandparent, idItemParent, iChildOrder")
+	query = dataStore.Items().JoinStrings(user, query)
 
 	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err

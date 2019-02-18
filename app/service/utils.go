@@ -44,3 +44,12 @@ func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, 
 	}
 	return strValue, nil
 }
+
+// ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty
+func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, error) {
+	strValue := httpReq.URL.Query().Get(name)
+	if strValue == "" {
+		return false, fmt.Errorf("missing %s", name)
+	}
+	return strValue == "1", nil
+}

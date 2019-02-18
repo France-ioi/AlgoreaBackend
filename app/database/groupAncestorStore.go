@@ -29,6 +29,7 @@ func (s *GroupAncestorStore) OwnedByUserID(ownerUserID int64) DB {
 		Where("users.ID=?", ownerUserID)
 }
 
+// KeepUsersThatAreDescendantsOf joins `groups_ancestors` on idGroupAncestor=groupID & idGroupChild=users.idGroupSelf
 func (s *GroupAncestorStore) KeepUsersThatAreDescendantsOf(groupID int64, db DB) DB {
 	return db.
 		Joins("JOIN groups_ancestors ON groups_ancestors.idGroupChild=users.idGroupSelf").

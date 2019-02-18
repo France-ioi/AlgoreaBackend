@@ -30,6 +30,7 @@ func (s *UserAnswerStore) WithGroupAttempts() *UserAnswerStore {
 	}
 }
 
+// WithItems joins `items`
 func (s *UserAnswerStore) WithItems() *UserAnswerStore {
 	return &UserAnswerStore{
 		&DataStore{

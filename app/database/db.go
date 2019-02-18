@@ -17,14 +17,17 @@ type DB interface {
 	insert(tableName string, data interface{}) error
 	table(string) DB
 
+	Limit(limit interface{}) DB
 	Or(query interface{}, args ...interface{}) DB
 	Select(query interface{}, args ...interface{}) DB
+	Table(name string) DB
 	Where(query interface{}, args ...interface{}) DB
 	Joins(query string, args ...interface{}) DB
 	Group(query string) DB
 	Having(query interface{}, args ...interface{}) DB
 	Order(value interface{}, reorder ...bool) DB
 	Union(query interface{}) DB
+	UnionAll(query interface{}) DB
 	Raw(query string, args ...interface{}) DB
 
 	QueryExpr() interface{}
@@ -85,6 +88,10 @@ func (conn *db) table(tableName string) DB {
 	return &db{conn.DB.Table(tableName)}
 }
 
+func (conn *db) Limit(limit interface{}) DB {
+	return &db{conn.DB.Limit(limit)}
+}
+
 func (conn *db) Where(query interface{}, args ...interface{}) DB {
 	return &db{conn.DB.Where(query, args...)}
 }
@@ -99,6 +106,10 @@ func (conn *db) Or(query interface{}, args ...interface{}) DB {
 
 func (conn *db) Select(query interface{}, args ...interface{}) DB {
 	return &db{conn.DB.Select(query, args...)}
+}
+
+func (conn *db) Table(name string) DB {
+	return &db{conn.DB.Table(name)}
 }
 
 func (conn *db) Group(query string) DB {
@@ -117,8 +128,13 @@ func (conn *db) Union(query interface{}) DB {
 	return &db{conn.DB.New().Raw("? UNION (?)", conn.DB.QueryExpr(), query)}
 }
 
+func (conn *db) UnionAll(query interface{}) DB {
+	return &db{conn.DB.New().Raw("? UNION ALL (?)", conn.DB.QueryExpr(), query)}
+}
+
 func (conn *db) Raw(query string, args ...interface{}) DB {
-	return &db{conn.DB.Raw(query, args...)}
+	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
+	return &db{conn.DB.Raw("").Joins(query, args...)}
 }
 
 func (conn *db) SubQuery() interface{} {
@@ -135,27 +151,26 @@ func (conn *db) Scan(dest interface{}) DB {
 
 func (conn *db) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) DB {
 	rows, err := conn.DB.Rows()
-	if err != nil {
-		conn.DB.Error = err
+	if conn.DB.AddError(err) != nil {
 		return conn
 	}
 	cols, err := rows.Columns()
-	if err != nil {
+	if conn.DB.AddError(err) != nil {
 		return conn
 	}
 
 	if rows != nil {
-		defer func() { _ = rows.Close() }()
-	}
-
-	if conn.DB.Error != nil {
-		return conn
+		defer func() {
+			if conn.DB.AddError(rows.Close()) != nil {
+				return
+			}
+		}()
 	}
 
 	for rows.Next() {
 		columns := make([]interface{}, len(cols))
 		columnPointers := make([]interface{}, len(cols))
-		for i, _ := range columns {
+		for i := range columns {
 			columnPointers[i] = &columns[i]
 		}
 
