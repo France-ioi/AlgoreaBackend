@@ -40,7 +40,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
        COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS Item__String__idLanguage`).
 		Where("users_answers.idItem IN (?)",
 			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
-		Where("users_answers.sType LIKE 'Submission'")
+		Where("users_answers.sType='Submission'")
 	query = srv.Store.Items().JoinStrings(user, query)
 	query = srv.Store.Items().KeepItemsVisibleBy(user, query)
 	query = srv.Store.GroupAncestors().KeepUsersThatAreDescendantsOf(groupID, query)
@@ -78,8 +78,9 @@ func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query d
 	}
 	if fromIDError == nil {
 		// include fromSubmissionDate, exclude fromID
-		query = query.Where("users_answers.sSubmissionDate <= ? AND users_answers.ID > ?",
-			fromSubmissionDate, fromID)
+		query = query.Where(
+			"(users_answers.sSubmissionDate <= ? AND users_answers.ID > ?) OR users_answers.sSubmissionDate < ?",
+			fromSubmissionDate, fromID, fromSubmissionDate)
 	}
 	return query, nil
 }
