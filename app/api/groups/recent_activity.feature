@@ -22,7 +22,7 @@ Feature: Get recent activity for group_id and item_id
 			| 200 | Category | false          | false    | 1234,2345      | true               | 0        |
 		And the database has the following table 'groups_items':
 			| ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-			| 43 | 21      | 200    | null            | true              | true                 | true                | 0             | 0        |
+			| 43 | 21      | 200    | null            | false             | false                | true                | 0             | 0        |
 		And the database has the following table 'items_ancestors':
 			| ID | idItemAncestor | idItemChild | iVersion |
 		  | 1  | 200            | 200         | 0        |
@@ -46,7 +46,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -65,7 +64,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -84,7 +82,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -113,7 +110,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -142,7 +138,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -161,7 +156,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -190,7 +184,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -219,7 +212,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
@@ -238,7 +230,6 @@ Feature: Get recent activity for group_id and item_id
 				"item": {
 					"id": 200,
 					"string": {
-						"language_id": 2,
 						"title": "Catégorie 1"
 					},
 					"type": "Category"
