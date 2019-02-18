@@ -2,11 +2,8 @@ package groups
 
 import (
 	"errors"
-	"net/http"
-	"strings"
-	"unicode"
-
 	"github.com/go-chi/render"
+	"net/http"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -59,7 +56,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
-	convertedResult := convertSliceOfMapsFromDBToJSON(result)
+	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
 	render.Respond(w, r, convertedResult)
 	return service.NoError
@@ -85,80 +82,4 @@ func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query d
 			fromSubmissionDate, fromID)
 	}
 	return query, nil
-}
-
-func convertSliceOfMapsFromDBToJSON(dbMap []map[string]interface{}) []map[string]interface{} {
-	convertedResult := make([]map[string]interface{}, len(dbMap))
-	for index := range dbMap {
-		convertedResult[index] = map[string]interface{}{}
-		for key, value := range dbMap[index] {
-			currentMap := &convertedResult[index]
-
-			subKeys := strings.Split(key, "__")
-			for subKeyIndex, subKey := range subKeys {
-				if subKeyIndex == len(subKeys)-1 {
-					setConvertedValue(subKey, value, currentMap)
-				} else {
-					subKey = toSnakeCase(subKey)
-					shouldCreateSubMap := true
-					if subMap, hasSubMap := (*currentMap)[subKey]; hasSubMap {
-						if subMap, ok := subMap.(*map[string]interface{}); ok {
-							currentMap = subMap
-							shouldCreateSubMap = false
-						}
-					}
-					if shouldCreateSubMap {
-						(*currentMap)[subKey] = &map[string]interface{}{}
-						currentMap = (*currentMap)[subKey].(*map[string]interface{})
-					}
-				}
-			}
-		}
-	}
-	return convertedResult
-}
-
-func setConvertedValue(valueName string, value interface{}, result *map[string]interface{}) {
-	if value == nil {
-		return
-	}
-
-	if valueName == "ID" {
-		(*result)["id"] = value.(int64)
-		return
-	}
-
-	if valueName[:2] == "id" {
-		valueName = toSnakeCase(valueName[2:]) + "_id"
-		(*result)[valueName] = value.(int64)
-		return
-	}
-
-	switch valueName[0] {
-	case 'b':
-		value = value == 1
-		fallthrough
-	case 's':
-		fallthrough
-	case 'i':
-		valueName = valueName[1:]
-	}
-	(*result)[toSnakeCase(valueName)] = value
-}
-
-// toSnakeCase convert the given string to snake case following the Golang format:
-// acronyms are converted to lower-case and preceded by an underscore.
-func toSnakeCase(in string) string {
-	runes := []rune(in)
-
-	var out []rune
-	for i := 0; i < len(runes); i++ {
-		if i > 0 && (unicode.IsUpper(runes[i]) || unicode.IsNumber(runes[i])) &&
-			((i+1 < len(runes) && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
-			out = append(out, '_')
-		}
-		out = append(out, unicode.ToLower(runes[i]))
-	}
-
-	return string(out)
 }
