@@ -4,6 +4,7 @@ Feature: Get recent activity for group_id and item_id
 			| ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName  | sLastName | sDefaultLanguage |
 			| 1  | owner  | 0        | 21          | 22           | Jean-Michel | Blanquer  | fr               |
 			| 2  | user   | 0        | 11          | 12           | John        | Doe       | en               |
+			| 3  | jane   | 0        | 31          | 32           | Jane        | Doe       | en               |
 		And the database has the following table 'groups_ancestors':
 			| ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
 			| 75 | 22              | 13           | 0       | 0        |
@@ -17,6 +18,9 @@ Feature: Get recent activity for group_id and item_id
 			| 3  | 2      | 200    | 101       | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
 			| 4  | 2      | 200    | 101       | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
 			| 5  | 2      | 200    | 101       | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
+			| 6  | 3      | 200    | 101       | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
+			| 7  | 3      | 200    | 100       | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | false      |
+			| 8  | 3      | 200    | 101       | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100    | true       |
 		And the database has the following table 'items':
 			| ID  | sType    | bTeamsEditable | bNoScore | idItemUnlocked | bTransparentFolder | iVersion |
 			| 200 | Category | false          | false    | 1234,2345      | true               | 0        |
@@ -34,7 +38,11 @@ Feature: Get recent activity for group_id and item_id
 			| ID | sCode |
 			| 2  | fr    |
 
-	Scenario: User is an admin of the group and there are visible descendants of the item (also checks that answers having sType!="Submission" are filtered out; also checks ordering)
+	Scenario: User is an admin of the group and there are visible descendants of the item
+		This spec also checks:
+	    1) that answers having sType!="Submission" are filtered out,
+	    2) answers ordering,
+	    3) filtering by users groups
 		Given I am the user with ID "1"
 		When I send a GET request to "/groups/recent_activity?group_id=13&item_id=200"
 		Then the response code should be 200
