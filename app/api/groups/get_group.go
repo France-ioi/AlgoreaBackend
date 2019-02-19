@@ -2,9 +2,9 @@ package groups
 
 import (
 	"errors"
-	"fmt"
-	"github.com/go-chi/render"
 	"net/http"
+
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -26,7 +26,6 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	var result []map[string]interface{}
 	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
-		fmt.Println(err)
 		return service.ErrUnexpected(err)
 	}
 	if len(result) == 0 {
