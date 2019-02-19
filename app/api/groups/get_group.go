@@ -20,7 +20,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	query := srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
 		Joins("JOIN groups ON idGroupChild=groups.ID").
 		Where("idGroupChild = ?", groupID).Select(
-		`groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated, groups.sType,
+		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated, groups.sType,
      groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
      groups.sPassword, groups.sPasswordTimer, groups.sPasswordEnd, groups.bOpenContest`).Limit(1)
 
