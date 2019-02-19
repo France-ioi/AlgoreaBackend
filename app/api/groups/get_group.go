@@ -17,11 +17,10 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	user := srv.GetUser(r)
 
-	query := srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
-		Joins("JOIN groups ON idGroupChild=groups.ID").
-		Where("idGroupChild = ?", groupID).Select(
-		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated, groups.sType,
-     groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
+	query := srv.Store.Groups().OwnedBy(user).
+		Where("groups.ID = ?", groupID).Select(
+		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated,
+     groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
      groups.sPassword, groups.sPasswordTimer, groups.sPasswordEnd, groups.bOpenContest`).Limit(1)
 
 	var result []map[string]interface{}
