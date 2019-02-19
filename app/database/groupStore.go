@@ -4,3 +4,8 @@ package database
 type GroupStore struct {
 	*DataStore
 }
+
+// ByID returns a composable query of groups filtered by groupID
+func (s *GroupStore) ByID(groupID int64) *DB {
+	return s.Where("groups.ID = ?", groupID)
+}

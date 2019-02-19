@@ -67,56 +67,67 @@ func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, e
 	return int64Value, nil
 }
 
-// ConvertSliceOfMapsFromDBToJSON given a slice of maps that represents a DB result data,
+// ConvertSliceOfMapsFromDBToJSON given a slice of maps that represents DB result data,
 // converts it to a slice of maps for rendering JSON so that:
 // 1) all maps keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
 // 2) all maps keys are converted to snake case
 // 3) prefixes are stripped, values are converted to needed types accordingly
 // 4) fields with nil values are skipped
-func ConvertSliceOfMapsFromDBToJSON(dbMap []map[string]interface{}) []map[string]interface{} {
-	convertedResult := make([]map[string]interface{}, len(dbMap))
-	for index := range dbMap {
-		convertedResult[index] = map[string]interface{}{}
-		for key, value := range dbMap[index] {
-			currentMap := &convertedResult[index]
-
-			subKeys := strings.Split(key, "__")
-			for subKeyIndex, subKey := range subKeys {
-				if subKeyIndex == len(subKeys)-1 {
-					setConvertedValueToJSONMap(subKey, value, currentMap)
-				} else {
-					subKey = toSnakeCase(subKey)
-					shouldCreateSubMap := true
-					if subMap, hasSubMap := (*currentMap)[subKey]; hasSubMap {
-						if subMap, ok := subMap.(*map[string]interface{}); ok {
-							currentMap = subMap
-							shouldCreateSubMap = false
-						}
-					}
-					if shouldCreateSubMap {
-						(*currentMap)[subKey] = &map[string]interface{}{}
-						currentMap = (*currentMap)[subKey].(*map[string]interface{})
-					}
-				}
-			}
-		}
+func ConvertSliceOfMapsFromDBToJSON(dbMaps []map[string]interface{}) []map[string]interface{} {
+	convertedResult := make([]map[string]interface{}, len(dbMaps))
+	for index := range dbMaps {
+		convertedResult[index] = ConvertMapFromDBToJSON(dbMaps[index])
 	}
 	return convertedResult
 }
 
-func setConvertedValueToJSONMap(valueName string, value interface{}, result *map[string]interface{}) {
+// ConvertMapFromDBToJSON given a map that represents DB result data,
+// converts it a map for rendering JSON so that:
+// 1) all map keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
+// 2) all map keys are converted to snake case
+// 3) prefixes are stripped, values are converted to needed types accordingly
+// 4) fields with nil values are skipped
+func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{} {
+	result := map[string]interface{}{}
+	for key, value := range dbMap {
+		currentMap := result
+
+		subKeys := strings.Split(key, "__")
+		for subKeyIndex, subKey := range subKeys {
+			if subKeyIndex == len(subKeys)-1 {
+				setConvertedValueToJSONMap(subKey, value, currentMap)
+			} else {
+				subKey = toSnakeCase(subKey)
+				shouldCreateSubMap := true
+				if subMap, hasSubMap := currentMap[subKey]; hasSubMap {
+					if subMap, ok := subMap.(map[string]interface{}); ok {
+						currentMap = subMap
+						shouldCreateSubMap = false
+					}
+				}
+				if shouldCreateSubMap {
+					currentMap[subKey] = map[string]interface{}{}
+					currentMap = currentMap[subKey].(map[string]interface{})
+				}
+			}
+		}
+	}
+	return result
+}
+
+func setConvertedValueToJSONMap(valueName string, value interface{}, result map[string]interface{}) {
 	if value == nil {
 		return
 	}
 
 	if valueName == "ID" {
-		(*result)["id"] = value.(int64)
+		result["id"] = value.(int64)
 		return
 	}
 
 	if valueName[:2] == "id" {
 		valueName = toSnakeCase(valueName[2:]) + "_id"
-		(*result)[valueName] = value.(int64)
+		result[valueName] = value.(int64)
 		return
 	}
 
@@ -124,12 +135,10 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result *map
 	case 'b':
 		value = value == int64(1)
 		fallthrough
-	case 's':
-		fallthrough
-	case 'i':
+	case 's', 'i':
 		valueName = valueName[1:]
 	}
-	(*result)[toSnakeCase(valueName)] = value
+	result[toSnakeCase(valueName)] = value
 }
 
 // toSnakeCase convert the given string to snake case following the Golang format:
