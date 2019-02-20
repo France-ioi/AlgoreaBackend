@@ -37,7 +37,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
        items.ID AS Item__ID, items.sType AS Item__sType,
 		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
 			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
-		Where("users_answers.idItem IN (?)",
+		Where("users_answers.idItem IN ?",
 			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
 		Where("users_answers.sType='Submission'")
 	query = srv.Store.Items().JoinStrings(user, query)
