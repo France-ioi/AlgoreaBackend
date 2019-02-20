@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
@@ -12,6 +11,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 

@@ -2,8 +2,8 @@ package items
 
 import (
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )

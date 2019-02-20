@@ -1,6 +1,8 @@
 package users
 
-import "github.com/France-ioi/AlgoreaBackend/app/database"
+import (
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+)
 
 // OnlyDescendantsOf filters users by joining `groups_ancestors`
 // on idGroupAncestor=groupID & idGroupChild=users.idGroupSelf

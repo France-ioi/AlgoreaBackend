@@ -3,13 +3,13 @@ package answers
 import (
 	"errors"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"net/http"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database/items"
+	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
