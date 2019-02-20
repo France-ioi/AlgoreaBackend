@@ -29,13 +29,13 @@ Feature: Get recent activity for group_id and item_id - robustness
 
   Scenario: Should fail when user is not an admin of the group
     Given I am the user with ID "1"
-    When I send a GET request to "/groups/recent_activity?group_id=13&item_id=200"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should return empty array when user is an admin of the group, but has no access rights to the item
     Given I am the user with ID "3"
-    When I send a GET request to "/groups/recent_activity?group_id=13&item_id=200"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

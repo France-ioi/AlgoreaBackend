@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/go-chi/chi"
 )
 
 // QueryParamToInt64Slice extracts from the query parameter of the request a list of integer separated by commas (',')
@@ -53,6 +55,16 @@ func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, erro
 		return false, fmt.Errorf("missing %s", name)
 	}
 	return strValue == "1", nil
+}
+
+// ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query
+func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, error) {
+	strValue := chi.URLParam(httpReq, name)
+	int64Value, err := strconv.ParseInt(strValue, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("missing %s", name)
+	}
+	return int64Value, nil
 }
 
 // ConvertSliceOfMapsFromDBToJSON given a slice of maps that represents a DB result data,

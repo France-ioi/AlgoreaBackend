@@ -17,7 +17,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryGetInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
