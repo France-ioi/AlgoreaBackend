@@ -1,0 +1,12 @@
+# 2nd gen
+- { ID: 11, idItemChild: 1900, idItemParent: 190 }
+- { ID: 12, idItemChild: 1901, idItemParent: 190 }
+- { ID: 13, idItemChild: 1902, idItemParent: 190 }
+- { ID: 14, idItemChild: 1903, idItemParent: 190 }
+- { ID: 15, idItemChild: 1904, idItemParent: 190 }
+# 3rd gen
+- { ID: 21, idItemChild: 19000, idItemParent: 1900 }
+- { ID: 22, idItemChild: 19001, idItemParent: 1900 }
+- { ID: 23, idItemChild: 19002, idItemParent: 1900 }
+- { ID: 24, idItemChild: 19003, idItemParent: 1900 }
+- { ID: 25, idItemChild: 19004, idItemParent: 1900 }
