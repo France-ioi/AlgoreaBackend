@@ -50,7 +50,9 @@ func Open(dsnConfig string) (DB, error) {
 	dbConn.LogMode(true)
 
 	// setup logging
-	dbConn.SetLogger(logging.Logger.WithField("module", "database"))
+	if logging.Logger != nil {
+		dbConn.SetLogger(logging.Logger.WithField("module", "database"))
+	}
 
 	return &db{dbConn}, err
 }
