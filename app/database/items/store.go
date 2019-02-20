@@ -1,15 +1,21 @@
-package database
+package items
 
 import (
 	"fmt"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
-// ItemStore implements database operations on items
-type ItemStore struct {
-	*DataStore
+// Store implements database operations on items
+type Store struct {
+	*database.DataStore
+}
+
+// NewStore returns an items.Store
+func NewStore(s *database.DataStore) *Store {
+	return &Store{s}
 }
 
 // Item matches the content the `items` table
@@ -19,36 +25,25 @@ type Item struct {
 	DefaultLanguageID types.Int64  `sql:"column:idDefaultLanguage"`
 	TeamsEditable     types.Bool   `sql:"column:bTeamsEditable"`
 	NoScore           types.Bool   `sql:"column:bNoScore"`
-	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
+	Version           int64        `sql:"column:iVersion"` // use Go default in database.DB (to be fixed)
 }
 
-func (s *ItemStore) tableName() string {
+func (s *Store) tableName() string {
 	return "items"
 }
 
 // Visible returns a view of the visible items for the given user
-func (s *ItemStore) Visible(user AuthUser) DB {
-	return s.KeepItemsVisibleBy(user, s.All())
-}
-
-// KeepItemsVisibleBy returns a subview of the visible items for the given user basing on the given view
-func (s *ItemStore) KeepItemsVisibleBy(user AuthUser, db DB) DB {
-	groupItemsPerms := s.GroupItems().
-		MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-		Group("idItem")
-
-	return db.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
-		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+func (s *Store) Visible(user database.AuthUser) database.DB {
+	return s.All().SoThat(OnlyVisibleBy(user))
 }
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user
-func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) DB {
+func (s *Store) VisibleByID(user database.AuthUser, itemID int64) database.DB {
 	return s.Visible(user).Where("items.ID = ?", itemID)
 }
 
 // VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *Store) VisibleChildrenOfID(user database.AuthUser, itemID int64) database.DB {
 	return s.
 		Visible(user).
 		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().All().SubQuery()).
@@ -56,7 +51,7 @@ func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *Store) VisibleGrandChildrenOfID(user database.AuthUser, itemID int64) database.DB {
 	return s.
 		Visible(user).                                                                             // visible items are the leaves (potential grandChildren)
 		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().All().SubQuery()).         // get their parents' IDs (ii1)
@@ -64,7 +59,7 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) DB {
 		Where("ii2.idItemParent = ?", itemID)
 }
 
-// RawItem represents one row of the getItem service data returned from the DB
+// RawItem represents one row of the getItem service data returned from the database.DB
 type RawItem struct {
 	// items
 	ID                     int64  `sql:"column:ID"`
@@ -124,11 +119,11 @@ type RawItem struct {
 	AlwaysVisible    *bool   `sql:"column:bAlwaysVisible"`
 	AccessRestricted *bool   `sql:"column:bAccessRestricted"`
 
-	*ItemAccessDetails
+	*AccessDetails
 }
 
 // GetRawItemData reads data needed by the getItem service from the DB and returns an array of RawItem's
-func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user AuthUser) (*[]RawItem, error) {
+func (s *Store) GetRawItemData(rootID, userID, userLanguageID int64, user database.AuthUser) (*[]RawItem, error) {
 	var result []RawItem
 
 	commonColumns := `items.ID AS ID,
@@ -235,11 +230,11 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 			items.bHintsAllowed,
 			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
     FROM ? items `, unionQuery.SubQuery()).
+		SoThat(JoinStrings(user)).
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
 		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
 			s.AccessRights(user).SubQuery()).
 		Order("iChildOrder")
-	query = s.JoinStrings(user, query)
 
 	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err
@@ -249,7 +244,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 
 // AccessRights returns a composable query for getting
 // (idItem, fullAccess, partialAccess, grayedAccess, accessSolutions) for the given user
-func (s *ItemStore) AccessRights(user AuthUser) DB {
+func (s *Store) AccessRights(user database.AuthUser) database.DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
 			"idItem, MAX(bCachedFullAccess) AS fullAccess, " +
@@ -259,24 +254,24 @@ func (s *ItemStore) AccessRights(user AuthUser) DB {
 		Group("idItem")
 }
 
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *ItemStore) Insert(data *Item) error {
-	return s.insert(s.tableName(), data)
+// InsertData does a INSERT query in the given table with data that may contain types.* types
+func (s *Store) InsertData(data *Item) error {
+	return s.DataStore.Insert(s.tableName(), data)
 }
 
 // ByID returns a composable query of items filtered by itemID
-func (s *ItemStore) ByID(itemID int64) DB {
+func (s *Store) ByID(itemID int64) database.DB {
 	return s.All().Where("items.ID = ?", itemID)
 }
 
 // All creates a composable query without filtering
-func (s *ItemStore) All() DB {
-	return s.table(s.tableName())
+func (s *Store) All() database.DB {
+	return s.Table(s.tableName())
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
+func (s *Store) HasManagerAccess(user database.AuthUser, itemID int64) (found bool, allowed bool, err error) {
 
 	var dbRes []struct {
 		ItemID        int64 `sql:"column:idItem"`
@@ -299,7 +294,7 @@ func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, a
 }
 
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
-func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
+func (s *Store) IsValidHierarchy(ids []int64) (bool, error) {
 	if len(ids) == 0 {
 		return false, nil
 	}
@@ -316,7 +311,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
+func (s *Store) ValidateUserAccess(user database.AuthUser, itemIDs []int64) (bool, error) {
 	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		logging.Logger.Infof("User access rights loading failed: %v", err)
@@ -332,8 +327,8 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 }
 
 // GetAccessDetailsForIDs returns access details for given item IDs and the given user
-func (s *ItemStore) GetAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
-	var accessDetails []ItemAccessDetailsWithID
+func (s *Store) GetAccessDetailsForIDs(user database.AuthUser, itemIDs []int64) ([]AccessDetailsWithID, error) {
+	var accessDetails []AccessDetailsWithID
 	db := s.AccessRights(user).
 		Where("groups_items.idItem IN (?)", itemIDs).
 		Scan(&accessDetails)
@@ -344,14 +339,14 @@ func (s *ItemStore) GetAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]It
 }
 
 // GetAccessDetailsMapForIDs returns access details for given item IDs and the given user as a map (item_id->details)
-func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
+func (s *Store) GetAccessDetailsMapForIDs(user database.AuthUser, itemIDs []int64) (map[int64]AccessDetails, error) {
 	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		return nil, err
 	}
-	accessDetailsMap := make(map[int64]ItemAccessDetails, len(accessDetails))
+	accessDetailsMap := make(map[int64]AccessDetails, len(accessDetails))
 	for _, row := range accessDetails {
-		accessDetailsMap[row.ItemID] = ItemAccessDetails{
+		accessDetailsMap[row.ItemID] = AccessDetails{
 			FullAccess:      row.FullAccess,
 			PartialAccess:   row.PartialAccess,
 			GrayedAccess:    row.GrayedAccess,
@@ -365,7 +360,7 @@ func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (m
 // - user has to have full access to all items
 // OR
 // - user has to have full access to all but last, and grayed access to that last item.
-func checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
+func checkAccess(itemIDs []int64, accDets []AccessDetailsWithID) error {
 	for i, id := range itemIDs {
 		last := i == len(itemIDs)-1
 		if err := checkAccessForID(id, last, accDets); err != nil {
@@ -375,7 +370,7 @@ func checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
 	return nil
 }
 
-func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) error {
+func checkAccessForID(id int64, last bool, accDets []AccessDetailsWithID) error {
 	for _, res := range accDets {
 		if res.ItemID != id {
 			continue
@@ -395,7 +390,7 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 	return fmt.Errorf("not visible item_id %d", id)
 }
 
-func (s *ItemStore) isRootItem(id int64) (bool, error) {
+func (s *Store) isRootItem(id int64) (bool, error) {
 	count := 0
 	if err := s.ByID(id).Where("sType='Root'").Count(&count).Error(); err != nil {
 		return false, err
@@ -406,7 +401,7 @@ func (s *ItemStore) isRootItem(id int64) (bool, error) {
 	return true, nil
 }
 
-func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
+func (s *Store) isHierarchicalChain(ids []int64) (bool, error) {
 	if len(ids) == 0 {
 		return false, nil
 	}
@@ -415,7 +410,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 		return true, nil
 	}
 
-	var db DB = s.ItemItems().All()
+	var db database.DB = s.ItemItems().All()
 	previousID := ids[0]
 	for index, id := range ids {
 		if index == 0 {
@@ -440,21 +435,4 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// JoinStrings joins items_strings with the given view twice
-// (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) JoinStrings(user AuthUser, db DB) DB {
-	return db.
-		Joins(
-			`LEFT JOIN items_strings default_strings FORCE INDEX (idItem)
-         ON default_strings.idItem = items.ID AND default_strings.idLanguage = items.idDefaultLanguage`).
-		Joins(`LEFT JOIN items_strings user_strings
-         ON user_strings.idItem=items.ID AND user_strings.idLanguage = ?`, user.DefaultLanguageID())
-}
-
-// WithStrings joins items_strings twice
-// (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) WithStrings(user AuthUser) DB {
-	return s.JoinStrings(user, s)
 }

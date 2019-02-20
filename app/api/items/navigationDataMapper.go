@@ -3,6 +3,7 @@ package items
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/database/items"
 )
 
 // rawNavigationItem represents one row of a navigation subtree returned from the DB
@@ -32,20 +33,20 @@ type rawNavigationItem struct {
 	IDItemParent int64 `sql:"column:idItemParent"`
 	Order        int64 `sql:"column:iChildOrder"`
 
-	*database.ItemAccessDetails
+	*items.AccessDetails
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
 func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *auth.User) (*[]rawNavigationItem, error) {
 	var result []rawNavigationItem
-	items := dataStore.Items()
+	itemStore := items.NewStore(dataStore)
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
 	commonAttributes := "items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, fullAccess, partialAccess, grayedAccess"
-	itemQ := items.VisibleByID(user, rootID).Select(commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
-	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
-	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
+	itemQ := itemStore.VisibleByID(user, rootID).Select(commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
+	childrenQ := itemStore.VisibleChildrenOfID(user, rootID).Select(commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
+	gChildrenQ := itemStore.VisibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
 
 	query := dataStore.Raw(`
@@ -62,9 +63,9 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *aut
 			items.idItemParent AS idItemParent,
 			items.fullAccess, items.partialAccess, items.grayedAccess
 		FROM ? items`, itemThreeGenQ.SubQuery()).
+		SoThat(items.JoinStrings(user)).
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
 		Order("idItemGrandparent, idItemParent, iChildOrder")
-	query = dataStore.Items().JoinStrings(user, query)
 
 	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err

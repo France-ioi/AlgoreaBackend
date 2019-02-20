@@ -8,7 +8,7 @@ type UserAnswerStore struct {
 // All creates a composable query without filtering
 func (s *UserAnswerStore) All() *UserAnswerStore {
 	return &UserAnswerStore{
-		&DataStore{s.table("users_answers")},
+		&DataStore{s.Table("users_answers")},
 	}
 }
 

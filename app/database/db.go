@@ -14,8 +14,7 @@ import (
 // DB is the database connector that can be shared through the app
 type DB interface {
 	inTransaction(txFunc func(DB) error) error
-	insert(tableName string, data interface{}) error
-	table(string) DB
+	Insert(tableName string, data interface{}) error
 
 	Limit(limit interface{}) DB
 	Or(query interface{}, args ...interface{}) DB
@@ -36,6 +35,9 @@ type DB interface {
 	ScanIntoSliceOfMaps(dest *[]map[string]interface{}) DB
 	Count(dest interface{}) DB
 	Take(out interface{}, where ...interface{}) DB
+
+	SoThat(functors ...Functor) DB
+	New() DB
 
 	Error() error
 }
@@ -82,10 +84,6 @@ func (conn *db) inTransaction(txFunc func(DB) error) (err error) {
 	}()
 	err = txFunc(&db{txDB})
 	return err
-}
-
-func (conn *db) table(tableName string) DB {
-	return &db{conn.DB.Table(tableName)}
 }
 
 func (conn *db) Limit(limit interface{}) DB {
@@ -203,9 +201,9 @@ func (conn *db) Error() error {
 	return conn.DB.Error
 }
 
-// insert reads fields from the data struct and insert the values which have been set
+// Insert reads fields from the data struct and Insert the values which have been set
 // into the given table
-func (conn *db) insert(tableName string, data interface{}) error {
+func (conn *db) Insert(tableName string, data interface{}) error {
 	// introspect data
 	dataV := reflect.ValueOf(data)
 
@@ -252,4 +250,25 @@ func (conn *db) insert(tableName string, data interface{}) error {
 	}
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
 	return conn.Exec(query, values...).Error
+}
+
+func (conn *db) New() DB {
+	return &db{conn.DB.New()}
+}
+
+// Context represents functors' context
+type Context struct {
+	DB
+}
+
+// Functor represents a function that `SoThat` method calls
+type Functor func(*Context)
+
+// SoThat applies given functors in reversed order
+func (conn *db) SoThat(functors ...Functor) DB {
+	c := Context{conn}
+	for i := len(functors) - 1; i >= 0; i-- {
+		functors[i](&c)
+	}
+	return c.DB
 }

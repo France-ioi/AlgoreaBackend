@@ -7,7 +7,7 @@ type GroupAttemptStore struct {
 
 // All creates a composable query without filtering
 func (s *GroupAttemptStore) All() DB {
-	return s.table("groups_attempts")
+	return s.Table("groups_attempts")
 }
 
 // ByAttemptID returns a composable query for filtering by idAttempt

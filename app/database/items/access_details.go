@@ -1,7 +1,7 @@
-package database
+package items
 
-// ItemAccessDetails represents access rights for an item
-type ItemAccessDetails struct {
+// AccessDetails represents access rights for an item
+type AccessDetails struct {
 	// MAX(groups_items.bCachedFullAccess)
 	FullAccess bool `sql:"column:fullAccess" json:"full_access"`
 	// MAX(groups_items.bCachedPartialAccess)
@@ -12,18 +12,18 @@ type ItemAccessDetails struct {
 	AccessSolutions bool `sql:"column:accessSolutions" json:"access_solutions"`
 }
 
-// ItemAccessDetailsWithID represents access rights for an item + ItemID
-type ItemAccessDetailsWithID struct {
+// AccessDetailsWithID represents access rights for an item + ItemID
+type AccessDetailsWithID struct {
 	ItemID int64 `sql:"column:idItem"`
-	ItemAccessDetails
+	AccessDetails
 }
 
 // IsGrayed returns true when GrayedAccess is on, but FullAccess and PartialAccess are off
-func (accessDetails *ItemAccessDetails) IsGrayed() bool {
+func (accessDetails *AccessDetails) IsGrayed() bool {
 	return !accessDetails.FullAccess && !accessDetails.PartialAccess && accessDetails.GrayedAccess
 }
 
 // IsForbidden returns true when FullAccess, PartialAccess, GrayedAccess are off
-func (accessDetails *ItemAccessDetails) IsForbidden() bool {
+func (accessDetails *AccessDetails) IsForbidden() bool {
 	return !accessDetails.FullAccess && !accessDetails.PartialAccess && !accessDetails.GrayedAccess
 }

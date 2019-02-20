@@ -7,7 +7,7 @@ type GroupAncestorStore struct {
 
 // All creates a composable query without filtering
 func (s *GroupAncestorStore) All() DB {
-	return s.table("groups_ancestors")
+	return s.Table("groups_ancestors")
 }
 
 // UserAncestors returns a composable query of ancestors of user's self group, i.e. groups of which he is a member

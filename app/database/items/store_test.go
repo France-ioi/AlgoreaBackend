@@ -1,4 +1,4 @@
-package database
+package items
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ func TestCheckAccess(t *testing.T) {
 	testCases := []struct {
 		desc              string
 		itemIDs           []int64
-		itemAccessDetails []ItemAccessDetailsWithID
+		itemAccessDetails []AccessDetailsWithID
 		err               error
 	}{
 		{
@@ -27,39 +27,39 @@ func TestCheckAccess(t *testing.T) {
 		{
 			desc:    "missing access result on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+			itemAccessDetails: []AccessDetailsWithID{
+				{ItemID: 21, AccessDetails: AccessDetails{FullAccess: true}},
+				{ItemID: 22, AccessDetails: AccessDetails{FullAccess: true}},
 			},
 			err: fmt.Errorf("not visible item_id 23"),
 		},
 		{
 			desc:    "no access on one of the items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+			itemAccessDetails: []AccessDetailsWithID{
+				{ItemID: 21, AccessDetails: AccessDetails{FullAccess: true}},
 				{ItemID: 22},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 23, AccessDetails: AccessDetails{FullAccess: true}},
 			},
 			err: fmt.Errorf("not enough perm on item_id 22"),
 		},
 		{
 			desc:    "full access on all items",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+			itemAccessDetails: []AccessDetailsWithID{
+				{ItemID: 21, AccessDetails: AccessDetails{FullAccess: true}},
+				{ItemID: 22, AccessDetails: AccessDetails{FullAccess: true}},
+				{ItemID: 23, AccessDetails: AccessDetails{FullAccess: true}},
 			},
 			err: nil,
 		},
 		{
 			desc:    "full access on all but last, last with greyed",
 			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{GrayedAccess: true}},
+			itemAccessDetails: []AccessDetailsWithID{
+				{ItemID: 21, AccessDetails: AccessDetails{PartialAccess: true}},
+				{ItemID: 22, AccessDetails: AccessDetails{PartialAccess: true}},
+				{ItemID: 23, AccessDetails: AccessDetails{GrayedAccess: true}},
 			},
 			err: nil,
 		},

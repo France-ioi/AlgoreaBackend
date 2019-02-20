@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"net/http"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -16,7 +17,7 @@ type Base struct {
 
 // GetUser returns the authenticated user data from context
 func (srv *Base) GetUser(r *http.Request) *auth.User {
-	return auth.UserFromContext(r.Context(), srv.Store.Users())
+	return auth.UserFromContext(r.Context(), users.NewStore(srv.Store))
 }
 
 // SetQueryLimit limits the number of records of the given query according to the `limit` request parameter

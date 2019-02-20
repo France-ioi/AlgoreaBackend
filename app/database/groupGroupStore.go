@@ -9,7 +9,7 @@ type GroupGroupStore struct {
 
 // All creates a composable query without filtering
 func (s *GroupGroupStore) All() DB {
-	return s.table("groups_groups")
+	return s.Table("groups_groups")
 }
 
 // WhereUserIsMember returns a composable query of direct ancestors of user's self group,

@@ -3,10 +3,13 @@ package answers
 import (
 	"errors"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/go-chi/render"
+	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"net/http"
 
+	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database/items"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -107,7 +110,7 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *auth.User) service.APIError {
 	var count int64
-	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
+	itemsUserCanAccess := items.NewStore(srv.Store).AccessRights(user).
 		Having("fullAccess>0 OR partialAccess>0").SubQuery()
 	if err := srv.Store.GroupAttempts().ByAttemptID(attemptID).
 		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess).
@@ -126,7 +129,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *auth.User) service.APIError {
 	if userID != user.UserID {
 		count := 0
-		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf").SubQuery()
+		givenUserSelfGroup := users.NewStore(srv.Store).ByID(userID).Select("idGroupSelf").SubQuery()
 		if err := srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild=?", givenUserSelfGroup).
 			Count(&count).Error(); err != nil {
@@ -137,7 +140,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		}
 	}
 
-	accessDetails, err := srv.Store.Items().GetAccessDetailsForIDs(user, []int64{itemID})
+	accessDetails, err := items.NewStore(srv.Store).GetAccessDetailsForIDs(user, []int64{itemID})
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}

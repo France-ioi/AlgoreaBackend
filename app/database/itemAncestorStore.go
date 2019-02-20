@@ -11,7 +11,7 @@ func (s *ItemAncestorStore) tableName() string {
 
 // All creates a composable query without filtering
 func (s *ItemAncestorStore) All() *ItemAncestorStore {
-	return &ItemAncestorStore{&DataStore{s.table(s.tableName())}}
+	return &ItemAncestorStore{&DataStore{s.Table(s.tableName())}}
 }
 
 // DescendantsOf returns a composable query for getting descendants of the given item

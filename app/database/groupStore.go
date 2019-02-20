@@ -7,5 +7,5 @@ type GroupStore struct {
 
 // All creates a composable query without filtering
 func (s *GroupStore) All() DB {
-	return s.table("groups")
+	return s.Table("groups")
 }

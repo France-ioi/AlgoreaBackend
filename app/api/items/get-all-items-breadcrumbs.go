@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database/items"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -18,14 +19,14 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 
 	// Validate that the user can see the item IDs.
 	user := srv.GetUser(r)
-	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
+	if valid, err := items.NewStore(srv.Store).ValidateUserAccess(user, ids); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item ids"))
 	}
 
 	// Validate the hierarchy
-	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
+	if valid, err := items.NewStore(srv.Store).IsValidHierarchy(ids); err != nil {
 		return service.ErrUnexpected(err)
 	} else if !valid {
 		return service.ErrInvalidRequest(errors.New("the IDs chain is corrupt"))

@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	dbItems "github.com/France-ioi/AlgoreaBackend/app/database/items"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -43,8 +44,8 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 	return types.Validate([]string{"id", "type"}, &in.ID, &in.Type)
 }
 
-func (in *NewItemRequest) itemData() *database.Item {
-	return &database.Item{
+func (in *NewItemRequest) itemData() *dbItems.Item {
+	return &dbItems.Item{
 		ID:                in.ID.Int64,
 		Type:              in.Type.String,
 		DefaultLanguageID: in.Strings[0].LanguageID.Int64,
@@ -123,22 +124,22 @@ func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
 		var err error
-		if err = store.Items().Insert(input.itemData()); err != nil {
+		if err = dbItems.NewStore(store).InsertData(input.itemData()); err != nil {
 			return err
 		}
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
+		if err = store.GroupItems().InsertData(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
 			return err
 		}
-		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {
+		if err = store.ItemStrings().InsertData(input.stringData(store.NewID())); err != nil {
 			return err
 		}
-		return store.ItemItems().Insert(input.itemItemData(store.NewID()))
+		return store.ItemItems().InsertData(input.itemItemData(store.NewID()))
 	})
 }
 
 func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service.APIError {
 	// can add a parent only if manager of that parent
-	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
+	found, hasAccess, err := dbItems.NewStore(srv.Store).HasManagerAccess(user, parentItemID)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}

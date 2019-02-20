@@ -2,6 +2,8 @@ package groups
 
 import (
 	"errors"
+	"github.com/France-ioi/AlgoreaBackend/app/database/items"
+	"github.com/France-ioi/AlgoreaBackend/app/database/users"
 	"github.com/go-chi/render"
 	"net/http"
 
@@ -39,11 +41,12 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
 		Where("users_answers.idItem IN ?",
 			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
-		Where("users_answers.sType='Submission'")
-	query = srv.Store.Items().JoinStrings(user, query)
-	query = srv.Store.Items().KeepItemsVisibleBy(user, query)
-	query = srv.Store.GroupAncestors().KeepUsersThatAreDescendantsOf(groupID, query)
-	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+		Where("users_answers.sType='Submission'").
+		SoThat(items.OnlyVisibleBy(user)).
+		SoThat(users.OnlyDescendantsOf(groupID)).
+		SoThat(items.JoinStrings(user)).
+		Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+
 	query = srv.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 

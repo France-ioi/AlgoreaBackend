@@ -16,16 +16,6 @@ func NewDataStore(conn DB) *DataStore {
 	return &DataStore{conn}
 }
 
-// Users returns a UserStore
-func (s *DataStore) Users() *UserStore {
-	return &UserStore{s}
-}
-
-// Items returns a ItemStore
-func (s *DataStore) Items() *ItemStore {
-	return &ItemStore{s}
-}
-
 // GroupAttempts returns a GroupAttemptStore
 func (s *DataStore) GroupAttempts() *GroupAttemptStore {
 	return &GroupAttemptStore{s}

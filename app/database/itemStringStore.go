@@ -25,12 +25,12 @@ func (s *ItemStringStore) tableName() string {
 	return "items_strings"
 }
 
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *ItemStringStore) Insert(data *ItemString) error {
-	return s.insert(s.tableName(), data)
+// InsertData does a INSERT query in the given table with data that may contain types.* types
+func (s *ItemStringStore) InsertData(data *ItemString) error {
+	return s.DB.Insert(s.tableName(), data)
 }
 
 // All creates a composable query without filtering
 func (s *ItemStringStore) All() DB {
-	return s.table(s.tableName())
+	return s.Table(s.tableName())
 }

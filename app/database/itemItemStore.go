@@ -25,12 +25,12 @@ func (s *ItemItemStore) tableName() string {
 
 // All creates a composable query without filtering
 func (s *ItemItemStore) All() *ItemItemStore {
-	return &ItemItemStore{&DataStore{s.table(s.tableName())}}
+	return &ItemItemStore{&DataStore{s.Table(s.tableName())}}
 }
 
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *ItemItemStore) Insert(data *ItemItem) error {
-	return s.insert(s.tableName(), data)
+// InsertData does a INSERT query in the given table with data that may contain types.* types
+func (s *ItemItemStore) InsertData(data *ItemItem) error {
+	return s.DB.Insert(s.tableName(), data)
 }
 
 // ChildrenOf returns a composable query for selecting children of the given item
