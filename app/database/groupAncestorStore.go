@@ -25,7 +25,7 @@ func (s *GroupAncestorStore) OwnedByUser(user AuthUser) DB {
 // that are descendants of the user's owned group using ID
 func (s *GroupAncestorStore) OwnedByUserID(ownerUserID int64) DB {
 	return s.All().
-		Joins("JOIN users on users.idGroupOwned=groups_ancestors.idGroupAncestor").
+		Joins("JOIN users ON users.idGroupOwned=groups_ancestors.idGroupAncestor").
 		Where("users.ID=?", ownerUserID)
 }
 
