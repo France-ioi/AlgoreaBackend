@@ -72,7 +72,7 @@ func (srv *Service) filterByValidated(r *http.Request, query database.DB) databa
 func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query database.DB) (database.DB, error) {
 	fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
 	fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
-	if (fromIDError != nil && fromSubmissionDateError == nil) || (fromIDError == nil && fromSubmissionDateError != nil) {
+	if (fromIDError == nil) != (fromSubmissionDateError == nil) {
 		return nil, errors.New("both from.id and from.submission_date or none of them must be present")
 	}
 	if fromIDError == nil {
