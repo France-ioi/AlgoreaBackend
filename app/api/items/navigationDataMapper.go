@@ -66,7 +66,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *aut
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
 		Order("idItemGrandparent, idItemParent, iChildOrder")
 
-	if err := query.Scan(&result).Error; err != nil {
+	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err
 	}
 	return &result, nil
