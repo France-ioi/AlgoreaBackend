@@ -7,13 +7,8 @@ type GroupGroupStore struct {
 	*DataStore
 }
 
-// All creates a composable query without filtering
-func (s *GroupGroupStore) All() DB {
-	return s.table("groups_groups")
-}
-
 // WhereUserIsMember returns a composable query of direct ancestors of user's self group,
 // i.e. groups of which he is a direct member
-func (s *GroupGroupStore) WhereUserIsMember(user AuthUser) DB {
-	return s.All().Where("idGroupChild = ? AND sType='direct'", user.SelfGroupID())
+func (s *GroupGroupStore) WhereUserIsMember(user AuthUser) *DB {
+	return s.Where("idGroupChild = ? AND sType='direct'", user.SelfGroupID())
 }

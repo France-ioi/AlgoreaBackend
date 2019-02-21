@@ -17,12 +17,12 @@ import (
 // Ctx is the context of the root of the API
 type Ctx struct {
 	config       *config.Root
-	db           database.DB
+	db           *database.DB
 	reverseProxy *httputil.ReverseProxy
 }
 
 // NewCtx creates a API context
-func NewCtx(config *config.Root, db database.DB) (*Ctx, error) {
+func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
 	var err error
 	var proxyURL *url.URL
 

@@ -23,7 +23,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var count int64
-	if err = srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
+	if err = srv.Store.GroupAncestors().OwnedByUser(user).
 		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -31,19 +31,20 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return service.ErrForbidden(errors.New("insufficient access rights"))
 	}
 
-	query := srv.Store.UserAnswers().All().WithUsers().WithItems().
+	query := srv.Store.UserAnswers().WithUsers().WithItems().
 		Select(
 			`users_answers.ID as ID, users_answers.sSubmissionDate, users_answers.bValidated, users_answers.iScore,
        items.ID AS Item__ID, items.sType AS Item__sType,
 		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
 			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
+		JoinsUserAndDefaultItemStrings(user).
 		Where("users_answers.idItem IN ?",
-			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
-		Where("users_answers.sType='Submission'")
-	query = srv.Store.Items().JoinStrings(user, query)
-	query = srv.Store.Items().KeepItemsVisibleBy(user, query)
-	query = srv.Store.GroupAncestors().KeepUsersThatAreDescendantsOf(groupID, query)
-	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+			srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
+		Where("users_answers.sType='Submission'").
+		WhereItemsAreVisible(user).
+		WhereUsersAreDescendantsOfGroup(groupID).
+		Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+
 	query = srv.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 
@@ -61,7 +62,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func (srv *Service) filterByValidated(r *http.Request, query database.DB) database.DB {
+func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
 		query = query.Where("users_answers.bValidated = ?", validated)
@@ -69,7 +70,7 @@ func (srv *Service) filterByValidated(r *http.Request, query database.DB) databa
 	return query
 }
 
-func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query database.DB) (database.DB, error) {
+func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query *database.DB) (*database.DB, error) {
 	fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
 	fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
 	if (fromIDError == nil) != (fromSubmissionDateError == nil) {

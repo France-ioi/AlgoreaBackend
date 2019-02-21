@@ -27,7 +27,7 @@ type userData struct {
 
 // UserStore is an interface to the store for `users`
 type UserStore interface {
-	ByID(userID int64) database.DB
+	ByID(userID int64) *database.DB
 }
 
 // UserFromContext creates a User context from a context set by the middleware

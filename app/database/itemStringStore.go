@@ -29,8 +29,3 @@ func (s *ItemStringStore) tableName() string {
 func (s *ItemStringStore) Insert(data *ItemString) error {
 	return s.insert(s.tableName(), data)
 }
-
-// All creates a composable query without filtering
-func (s *ItemStringStore) All() DB {
-	return s.table(s.tableName())
-}
