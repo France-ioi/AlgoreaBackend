@@ -23,7 +23,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var count int64
-	if err = srv.Store.GroupAncestors().OwnedByUserID(user.UserID).
+	if err = srv.Store.GroupAncestors().OwnedByUser(user).
 		Where("idGroupChild = ?", groupID).Count(&count).Error; err != nil {
 		return service.ErrUnexpected(err)
 	}

@@ -21,14 +21,6 @@ func (s *GroupAncestorStore) OwnedByUser(user AuthUser) *DB {
 	return s.All().Where("idGroupAncestor=?", user.OwnedGroupID())
 }
 
-// OwnedByUserID returns a composable query for getting all the groups_ancestors rows for groups
-// that are descendants of the user's owned group using ID
-func (s *GroupAncestorStore) OwnedByUserID(ownerUserID int64) *DB {
-	return s.All().
-		Joins("JOIN users ON users.idGroupOwned=groups_ancestors.idGroupAncestor").
-		Where("users.ID=?", ownerUserID)
-}
-
 // KeepUsersThatAreDescendantsOf joins `groups_ancestors` on idGroupAncestor=groupID & idGroupChild=users.idGroupSelf
 func (s *GroupAncestorStore) KeepUsersThatAreDescendantsOf(groupID int64, conn *DB) *DB {
 	return conn.
