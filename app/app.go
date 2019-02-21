@@ -19,7 +19,7 @@ import (
 type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *config.Root
-	Database    database.DB
+	Database    *database.DB
 }
 
 // New configures application resources and routes.
@@ -37,7 +37,7 @@ func New() (*Application, error) {
 	logger := logging.New(conf.Logging)
 	log.SetOutput(logger.Writer()) // redirect the stdlib's log to our logger
 
-	var db database.DB
+	db := &database.DB{}
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {
 		logger.WithField("module", "database").Error(err)

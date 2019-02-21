@@ -6,11 +6,11 @@ type GroupAttemptStore struct {
 }
 
 // All creates a composable query without filtering
-func (s *GroupAttemptStore) All() DB {
-	return s.table("groups_attempts")
+func (s *GroupAttemptStore) All() *DB {
+	return s.Table("groups_attempts")
 }
 
 // ByAttemptID returns a composable query for filtering by idAttempt
-func (s *GroupAttemptStore) ByAttemptID(attemptID int64) DB {
+func (s *GroupAttemptStore) ByAttemptID(attemptID int64) *DB {
 	return s.All().Where("ID = ?", attemptID)
 }

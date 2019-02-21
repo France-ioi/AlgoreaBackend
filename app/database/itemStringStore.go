@@ -31,6 +31,6 @@ func (s *ItemStringStore) Insert(data *ItemString) error {
 }
 
 // All creates a composable query without filtering
-func (s *ItemStringStore) All() DB {
-	return s.table(s.tableName())
+func (s *ItemStringStore) All() *DB {
+	return s.Table(s.tableName())
 }

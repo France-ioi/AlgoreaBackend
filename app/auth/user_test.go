@@ -18,9 +18,9 @@ type MockUserStore struct {
 	mock.Mock
 }
 
-func (m *MockUserStore) ByID(userID int64) database.DB {
+func (m *MockUserStore) ByID(userID int64) *database.DB {
 	args := m.Called(userID)
-	return args.Get(0).(database.DB)
+	return args.Get(0).(*database.DB)
 }
 
 func TestUserFromContext(t *testing.T) {

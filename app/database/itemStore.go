@@ -27,28 +27,17 @@ func (s *ItemStore) tableName() string {
 }
 
 // Visible returns a view of the visible items for the given user
-func (s *ItemStore) Visible(user AuthUser) DB {
-	return s.KeepItemsVisibleBy(user, s.All())
-}
-
-// KeepItemsVisibleBy returns a subview of the visible items for the given user basing on the given view
-func (s *ItemStore) KeepItemsVisibleBy(user AuthUser, db DB) DB {
-	groupItemsPerms := s.GroupItems().
-		MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-		Group("idItem")
-
-	return db.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
-		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+func (s *ItemStore) Visible(user AuthUser) *DB {
+	return s.All().WhereItemsVisible(user)
 }
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user
-func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) *DB {
 	return s.Visible(user).Where("items.ID = ?", itemID)
 }
 
 // VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) *DB {
 	return s.
 		Visible(user).
 		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().All().SubQuery()).
@@ -56,7 +45,7 @@ func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) *DB {
 	return s.
 		Visible(user).                                                                             // visible items are the leaves (potential grandChildren)
 		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().All().SubQuery()).         // get their parents' IDs (ii1)
@@ -249,7 +238,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 
 // AccessRights returns a composable query for getting
 // (idItem, fullAccess, partialAccess, grayedAccess, accessSolutions) for the given user
-func (s *ItemStore) AccessRights(user AuthUser) DB {
+func (s *ItemStore) AccessRights(user AuthUser) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
 			"idItem, MAX(bCachedFullAccess) AS fullAccess, " +
@@ -265,13 +254,13 @@ func (s *ItemStore) Insert(data *Item) error {
 }
 
 // ByID returns a composable query of items filtered by itemID
-func (s *ItemStore) ByID(itemID int64) DB {
+func (s *ItemStore) ByID(itemID int64) *DB {
 	return s.All().Where("items.ID = ?", itemID)
 }
 
 // All creates a composable query without filtering
-func (s *ItemStore) All() DB {
-	return s.table(s.tableName())
+func (s *ItemStore) All() *DB {
+	return s.Table(s.tableName())
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
@@ -415,7 +404,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 		return true, nil
 	}
 
-	var db DB = s.ItemItems().All()
+	var db *DB = s.ItemItems().All().DB
 	previousID := ids[0]
 	for index, id := range ids {
 		if index == 0 {
@@ -444,7 +433,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 
 // JoinStrings joins items_strings with the given view twice
 // (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) JoinStrings(user AuthUser, db DB) DB {
+func (s *ItemStore) JoinStrings(user AuthUser, db *DB) *DB {
 	return db.
 		Joins(
 			`LEFT JOIN items_strings default_strings FORCE INDEX (idItem)
@@ -455,6 +444,6 @@ func (s *ItemStore) JoinStrings(user AuthUser, db DB) DB {
 
 // WithStrings joins items_strings twice
 // (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) WithStrings(user AuthUser) DB {
-	return s.JoinStrings(user, s)
+func (s *ItemStore) WithStrings(user AuthUser) *DB {
+	return s.JoinStrings(user, s.DB)
 }

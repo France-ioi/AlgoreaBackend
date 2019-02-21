@@ -6,11 +6,11 @@ type UserStore struct {
 }
 
 // ByID returns a composable query of users filtered by userID
-func (s *UserStore) ByID(userID int64) DB {
+func (s *UserStore) ByID(userID int64) *DB {
 	return s.All().Where("users.ID = ?", userID)
 }
 
 // All creates a composable query without filtering
-func (s *UserStore) All() DB {
-	return s.table("users")
+func (s *UserStore) All() *DB {
+	return s.Table("users")
 }

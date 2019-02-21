@@ -9,7 +9,7 @@ import (
 )
 
 // NewDBMock generate a DB mock the database engine
-func NewDBMock() (DB, sqlmock.Sqlmock) {
+func NewDBMock() (*DB, sqlmock.Sqlmock) {
 	dbMock, mock, err := sqlmock.New()
 	if err != nil {
 		fmt.Println("Unable to create the mock db: ", err)
@@ -22,5 +22,5 @@ func NewDBMock() (DB, sqlmock.Sqlmock) {
 		os.Exit(1)
 	}
 
-	return &db{dbConn}, mock
+	return &DB{dbConn}, mock
 }

@@ -39,9 +39,9 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
 		Where("users_answers.idItem IN ?",
 			srv.Store.ItemAncestors().All().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
-		Where("users_answers.sType='Submission'")
+		Where("users_answers.sType='Submission'").
+		WhereItemsVisible(user)
 	query = srv.Store.Items().JoinStrings(user, query)
-	query = srv.Store.Items().KeepItemsVisibleBy(user, query)
 	query = srv.Store.GroupAncestors().KeepUsersThatAreDescendantsOf(groupID, query)
 	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
 	query = srv.SetQueryLimit(r, query)
@@ -61,7 +61,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func (srv *Service) filterByValidated(r *http.Request, query database.DB) database.DB {
+func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
 		query = query.Where("users_answers.bValidated = ?", validated)
@@ -69,7 +69,7 @@ func (srv *Service) filterByValidated(r *http.Request, query database.DB) databa
 	return query
 }
 
-func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query database.DB) (database.DB, error) {
+func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query *database.DB) (*database.DB, error) {
 	fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
 	fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
 	if (fromIDError == nil) != (fromSubmissionDateError == nil) {

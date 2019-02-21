@@ -35,12 +35,12 @@ func (s *GroupItemStore) Insert(data *GroupItem) error {
 }
 
 // All creates a composable query without filtering
-func (s *GroupItemStore) All() DB {
-	return s.table(s.tableName())
+func (s *GroupItemStore) All() *DB {
+	return s.Table(s.tableName())
 }
 
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
-func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) DB {
+func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
 	userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
 	return s.All().Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }

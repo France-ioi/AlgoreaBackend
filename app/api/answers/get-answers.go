@@ -13,7 +13,7 @@ import (
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.UserAnswers().WithUsers().
+	dataQuery := srv.Store.UserAnswers().All().WithUsers().
 		Select(`users_answers.ID, users_answers.sName, users_answers.sType, users_answers.sLangProg,
             users_answers.sSubmissionDate, users_answers.iScore, users_answers.bValidated,
             users.sLogin, users.sFirstName, users.sLastName`).
