@@ -18,57 +18,57 @@ func NewDataStore(conn *DB) *DataStore {
 
 // Users returns a UserStore
 func (s *DataStore) Users() *UserStore {
-	return &UserStore{s}
+	return &UserStore{NewDataStore(s.Table("users"))}
 }
 
 // Items returns a ItemStore
 func (s *DataStore) Items() *ItemStore {
-	return &ItemStore{s}
+	return &ItemStore{NewDataStore(s.Table("items"))}
 }
 
 // GroupAttempts returns a GroupAttemptStore
 func (s *DataStore) GroupAttempts() *GroupAttemptStore {
-	return &GroupAttemptStore{s}
+	return &GroupAttemptStore{NewDataStore(s.Table("groups_attempts"))}
 }
 
 // Groups returns a GroupStore
 func (s *DataStore) Groups() *GroupStore {
-	return &GroupStore{s}
+	return &GroupStore{NewDataStore(s.Table("groups"))}
 }
 
 // GroupAncestors returns a GroupAncestorStore
 func (s *DataStore) GroupAncestors() *GroupAncestorStore {
-	return &GroupAncestorStore{s}
+	return &GroupAncestorStore{NewDataStore(s.Table("groups_ancestors"))}
 }
 
 // GroupGroups returns a GroupGroupStore
 func (s *DataStore) GroupGroups() *GroupGroupStore {
-	return &GroupGroupStore{s}
+	return &GroupGroupStore{NewDataStore(s.Table("groups_groups"))}
 }
 
 // GroupItems returns a GroupItemStore
 func (s *DataStore) GroupItems() *GroupItemStore {
-	return &GroupItemStore{s}
+	return &GroupItemStore{NewDataStore(s.Table("groups_items"))}
 }
 
 // ItemAncestors returns a ItemAncestorStore
 func (s *DataStore) ItemAncestors() *ItemAncestorStore {
-	return &ItemAncestorStore{s}
+	return &ItemAncestorStore{NewDataStore(s.Table("items_ancestors"))}
 }
 
 // ItemStrings returns a ItemStringStore
 func (s *DataStore) ItemStrings() *ItemStringStore {
-	return &ItemStringStore{s}
+	return &ItemStringStore{NewDataStore(s.Table("items_strings"))}
 }
 
 // ItemItems returns a ItemItemStore
 func (s *DataStore) ItemItems() *ItemItemStore {
-	return &ItemItemStore{s}
+	return &ItemItemStore{NewDataStore(s.Table("items_items"))}
 }
 
 // UserAnswers returns a UserAnswerStore
 func (s *DataStore) UserAnswers() *UserAnswerStore {
-	return &UserAnswerStore{s}
+	return &UserAnswerStore{NewDataStore(s.Table("users_answers"))}
 }
 
 // NewID generates a positive random int64 to be used as ID

@@ -23,11 +23,6 @@ func (s *ItemItemStore) tableName() string {
 	return "items_items"
 }
 
-// All creates a composable query without filtering
-func (s *ItemItemStore) All() *ItemItemStore {
-	return &ItemItemStore{&DataStore{s.Table(s.tableName())}}
-}
-
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemItemStore) Insert(data *ItemItem) error {
 	return s.insert(s.tableName(), data)
