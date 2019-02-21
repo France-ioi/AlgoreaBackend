@@ -436,9 +436,3 @@ func (s *ItemStore) JoinStrings(user AuthUser, db *DB) *DB {
 		Joins(`LEFT JOIN items_strings user_strings
          ON user_strings.idItem=items.ID AND user_strings.idLanguage = ?`, user.DefaultLanguageID())
 }
-
-// WithStrings joins items_strings twice
-// (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) WithStrings(user AuthUser) *DB {
-	return s.JoinStrings(user, s.DB)
-}
