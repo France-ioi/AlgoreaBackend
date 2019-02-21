@@ -28,7 +28,7 @@ func (s *ItemStore) tableName() string {
 
 // Visible returns a view of the visible items for the given user
 func (s *ItemStore) Visible(user AuthUser) *DB {
-	return s.WhereItemsVisible(user)
+	return s.WhereItemsAreVisible(user)
 }
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user

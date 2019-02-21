@@ -40,7 +40,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		Where("users_answers.idItem IN ?",
 			srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
 		Where("users_answers.sType='Submission'").
-		WhereItemsVisible(user).
+		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)
 	query = srv.Store.Items().JoinStrings(user, query)
 	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
