@@ -224,11 +224,11 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 			items.bHintsAllowed,
 			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
     FROM ? items `, unionQuery.SubQuery()).
+		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
 		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
 			s.AccessRights(user).SubQuery()).
 		Order("iChildOrder")
-	query = s.JoinStrings(user, query)
 
 	if err := query.Scan(&result).Error; err != nil {
 		return nil, err
@@ -424,15 +424,4 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// JoinStrings joins items_strings with the given view twice
-// (as default_strings for item's default language and as user_strings for the user's default language)
-func (s *ItemStore) JoinStrings(user AuthUser, db *DB) *DB {
-	return db.
-		Joins(
-			`LEFT JOIN items_strings default_strings FORCE INDEX (idItem)
-         ON default_strings.idItem = items.ID AND default_strings.idLanguage = items.idDefaultLanguage`).
-		Joins(`LEFT JOIN items_strings user_strings
-         ON user_strings.idItem=items.ID AND user_strings.idLanguage = ?`, user.DefaultLanguageID())
 }

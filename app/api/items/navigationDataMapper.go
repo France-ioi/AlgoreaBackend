@@ -62,9 +62,9 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *aut
 			items.idItemParent AS idItemParent,
 			items.fullAccess, items.partialAccess, items.grayedAccess
 		FROM ? items`, itemThreeGenQ.SubQuery()).
+		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
 		Order("idItemGrandparent, idItemParent, iChildOrder")
-	query = dataStore.Items().JoinStrings(user, query)
 
 	if err := query.Scan(&result).Error; err != nil {
 		return nil, err

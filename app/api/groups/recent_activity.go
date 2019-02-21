@@ -37,13 +37,14 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
        items.ID AS Item__ID, items.sType AS Item__sType,
 		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
 			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
+		JoinsUserAndDefaultItemStrings(user).
 		Where("users_answers.idItem IN ?",
 			srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
 		Where("users_answers.sType='Submission'").
 		WhereItemsAreVisible(user).
-		WhereUsersAreDescendantsOfGroup(groupID)
-	query = srv.Store.Items().JoinStrings(user, query)
-	query = query.Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+		WhereUsersAreDescendantsOfGroup(groupID).
+		Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+
 	query = srv.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 
