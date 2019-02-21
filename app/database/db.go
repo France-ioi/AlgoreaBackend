@@ -16,6 +16,11 @@ type DB struct {
 	*gorm.DB
 }
 
+// NewDB wraps *gorm.DB
+func NewDB(db *gorm.DB) *DB {
+	return &DB{db}
+}
+
 // Open connects to the database and tests the connection
 // nolint: gosec
 func Open(dsnConfig string) (*DB, error) {
@@ -28,7 +33,7 @@ func Open(dsnConfig string) (*DB, error) {
 	// setup logging
 	dbConn.SetLogger(logging.Logger.WithField("module", "database"))
 
-	return &DB{dbConn}, err
+	return NewDB(dbConn), err
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
@@ -52,45 +57,45 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 			err = txDB.Error
 		}
 	}()
-	err = txFunc(&DB{txDB})
+	err = txFunc(NewDB(txDB))
 	return err
 }
 
 // Limit specifies the number of records to be retrieved
 func (conn *DB) Limit(limit interface{}) *DB {
-	return &DB{conn.DB.Limit(limit)}
+	return NewDB(conn.DB.Limit(limit))
 }
 
 // Where returns a new relation, filters records with given conditions, accepts `map`, `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
-	return &DB{conn.DB.Where(query, args...)}
+	return NewDB(conn.DB.Where(query, args...))
 }
 
 // Joins specifies Joins conditions
 //     db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
 func (conn *DB) Joins(query string, args ...interface{}) *DB {
-	return &DB{conn.DB.Joins(query, args...)}
+	return NewDB(conn.DB.Joins(query, args...))
 }
 
 // Or filters records that match before conditions or this one, similar to `Where`
 func (conn *DB) Or(query interface{}, args ...interface{}) *DB {
-	return &DB{conn.DB.Or(query, args...)}
+	return NewDB(conn.DB.Or(query, args...))
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
-	return &DB{conn.DB.Select(query, args...)}
+	return NewDB(conn.DB.Select(query, args...))
 }
 
 // Table specifies the table you would like to run db operations
 func (conn *DB) Table(name string) *DB {
-	return &DB{conn.DB.Table(name)}
+	return NewDB(conn.DB.Table(name))
 }
 
 // Group specifies the group method on the find
 func (conn *DB) Group(query string) *DB {
-	return &DB{conn.DB.Group(query)}
+	return NewDB(conn.DB.Group(query))
 }
 
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
@@ -98,29 +103,29 @@ func (conn *DB) Group(query string) *DB {
 //     db.Order("name DESC", true) // reorder
 //     db.Order(gorm.Expr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
-	return &DB{conn.DB.Order(value, reorder...)}
+	return NewDB(conn.DB.Order(value, reorder...))
 }
 
 // Having specifies HAVING conditions for GROUP BY
 func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
-	return &DB{conn.DB.Having(query, args...)}
+	return NewDB(conn.DB.Having(query, args...))
 }
 
 // Union specifies UNION of two queries (receiver UNION query)
 func (conn *DB) Union(query interface{}) *DB {
-	return &DB{conn.DB.New().Raw("? UNION ?", conn.DB.QueryExpr(), query)}
+	return NewDB(conn.DB.New().Raw("? UNION ?", conn.DB.QueryExpr(), query))
 }
 
 // UnionAll specifies UNION ALL of two queries (receiver UNION ALL query)
 func (conn *DB) UnionAll(query interface{}) *DB {
-	return &DB{conn.DB.New().Raw("? UNION ALL ?", conn.DB.QueryExpr(), query)}
+	return NewDB(conn.DB.New().Raw("? UNION ALL ?", conn.DB.QueryExpr(), query))
 }
 
 // Raw uses raw sql as conditions
 //    db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
 func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
-	return &DB{conn.DB.Raw("").Joins(query, args...)}
+	return NewDB(conn.DB.Raw("").Joins(query, args...))
 }
 
 // SubQuery returns the query as sub query
@@ -135,7 +140,7 @@ func (conn *DB) QueryExpr() interface{} {
 
 // Scan scans value to a struct
 func (conn *DB) Scan(dest interface{}) *DB {
-	return &DB{conn.DB.Scan(dest)}
+	return NewDB(conn.DB.Scan(dest))
 }
 
 // ScanIntoSliceOfMaps scans value into a slice of maps
@@ -183,12 +188,12 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 
 // Count gets how many records for a model
 func (conn *DB) Count(dest interface{}) *DB {
-	return &DB{conn.DB.Count(dest)}
+	return NewDB(conn.DB.Count(dest))
 }
 
 // Take returns a record that match given conditions, the order will depend on the database implementation
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
-	return &DB{conn.DB.Take(out, where...)}
+	return NewDB(conn.DB.Take(out, where...))
 }
 
 // insert reads fields from the data struct and insert the values which have been set
@@ -244,7 +249,7 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 
 // WhereItemsVisible returns a subview of the visible items for the given user basing on the given view
 func (conn *DB) WhereItemsVisible(user AuthUser) *DB {
-	groupItemsPerms := NewDataStore(&DB{conn.New()}).GroupItems().
+	groupItemsPerms := NewDataStore(NewDB(conn.DB.New())).GroupItems().
 		MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Group("idItem")

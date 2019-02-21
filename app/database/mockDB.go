@@ -22,5 +22,5 @@ func NewDBMock() (*DB, sqlmock.Sqlmock) {
 		os.Exit(1)
 	}
 
-	return &DB{dbConn}, mock
+	return NewDB(dbConn), mock
 }
