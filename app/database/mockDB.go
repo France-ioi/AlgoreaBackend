@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jinzhu/gorm"
 )
 

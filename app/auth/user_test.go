@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/sirupsen/logrus"
 	assertlib "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
