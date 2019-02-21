@@ -404,7 +404,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 		return true, nil
 	}
 
-	var db *DB = s.ItemItems().All().DB
+	db := s.ItemItems().All().DB
 	previousID := ids[0]
 	for index, id := range ids {
 		if index == 0 {
