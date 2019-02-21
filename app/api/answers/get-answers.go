@@ -43,7 +43,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	}
 
 	var result []rawAnswersData
-	if err := dataQuery.Scan(&result).Error(); err != nil {
+	if err := dataQuery.Scan(&result).Error; err != nil {
 		return service.ErrUnexpected(err)
 	}
 
@@ -114,7 +114,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 		Where("((groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?))",
 			srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild").SubQuery(),
 			srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent").SubQuery()).
-		Count(&count).Error(); err != nil {
+		Count(&count).Error; err != nil {
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {
@@ -129,7 +129,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf").SubQuery()
 		if err := srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild=?", givenUserSelfGroup).
-			Count(&count).Error(); err != nil {
+			Count(&count).Error; err != nil {
 			return service.ErrUnexpected(err)
 		}
 		if count == 0 {

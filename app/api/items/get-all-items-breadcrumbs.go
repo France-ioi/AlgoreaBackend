@@ -39,8 +39,8 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		Language int64  `json:"language_id" sql:"column:idLanguage"`
 	}
 	db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids).Scan(&items)
-	if db.Error() != nil {
-		return service.ErrUnexpected(db.Error())
+	if db.Error != nil {
+		return service.ErrUnexpected(db.Error)
 	}
 
 	render.Respond(w, r, items)

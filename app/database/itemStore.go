@@ -230,7 +230,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 		Order("iChildOrder")
 	query = s.JoinStrings(user, query)
 
-	if err := query.Scan(&result).Error(); err != nil {
+	if err := query.Scan(&result).Error; err != nil {
 		return nil, err
 	}
 	return &result, nil
@@ -277,8 +277,8 @@ func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, a
 		Select("idItem, bManagerAccess, bOwnerAccess").
 		Where("idItem = ?", itemID).
 		Scan(&dbRes)
-	if db.Error() != nil {
-		return false, false, db.Error()
+	if db.Error != nil {
+		return false, false, db.Error
 	}
 	if len(dbRes) != 1 {
 		return false, false, nil
@@ -326,7 +326,7 @@ func (s *ItemStore) GetAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]It
 	db := s.AccessRights(user).
 		Where("groups_items.idItem IN (?)", itemIDs).
 		Scan(&accessDetails)
-	if err := db.Error(); err != nil {
+	if err := db.Error; err != nil {
 		return nil, err
 	}
 	return accessDetails, nil
@@ -386,7 +386,7 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 
 func (s *ItemStore) isRootItem(id int64) (bool, error) {
 	count := 0
-	if err := s.ByID(id).Where("sType='Root'").Count(&count).Error(); err != nil {
+	if err := s.ByID(id).Where("sType='Root'").Count(&count).Error; err != nil {
 		return false, err
 	}
 	if count == 0 {
@@ -420,7 +420,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	// theoretically it’s still possible to have multiple rows with the same pair
 	// of 'idItemParent' and 'idItemChild'.
 	// The “Group(...)” here resolves the issue.
-	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {
+	if err := db.Group("idItemParent, idItemChild").Count(&count).Error; err != nil {
 		return false, err
 	}
 

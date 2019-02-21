@@ -66,7 +66,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *aut
 		Order("idItemGrandparent, idItemParent, iChildOrder")
 	query = dataStore.Items().JoinStrings(user, query)
 
-	if err := query.Scan(&result).Error(); err != nil {
+	if err := query.Scan(&result).Error; err != nil {
 		return nil, err
 	}
 	return &result, nil

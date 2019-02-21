@@ -191,11 +191,6 @@ func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return &DB{conn.DB.Take(out, where...)}
 }
 
-// Error returns current errors
-func (conn *DB) Error() error {
-	return conn.DB.Error
-}
-
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
 func (conn *DB) insert(tableName string, data interface{}) error {
