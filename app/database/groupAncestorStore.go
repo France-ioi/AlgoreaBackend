@@ -15,10 +15,3 @@ func (s *GroupAncestorStore) UserAncestors(user AuthUser) *DB {
 func (s *GroupAncestorStore) OwnedByUser(user AuthUser) *DB {
 	return s.Where("idGroupAncestor=?", user.OwnedGroupID())
 }
-
-// KeepUsersThatAreDescendantsOf joins `groups_ancestors` on idGroupAncestor=groupID & idGroupChild=users.idGroupSelf
-func (s *GroupAncestorStore) KeepUsersThatAreDescendantsOf(groupID int64, conn *DB) *DB {
-	return conn.
-		Joins("JOIN groups_ancestors ON groups_ancestors.idGroupChild=users.idGroupSelf").
-		Where("groups_ancestors.idGroupAncestor = ?", groupID)
-}
