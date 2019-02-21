@@ -2,7 +2,7 @@ package database
 
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
 func (conn *DB) WhereItemsAreVisible(user AuthUser) *DB {
-	groupItemsPerms := NewDataStore(NewDB(conn.db.New())).GroupItems().
+	groupItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().
 		MatchingUserAncestors(user).
 		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
 		Group("idItem")
