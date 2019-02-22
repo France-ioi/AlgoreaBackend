@@ -109,7 +109,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
 		Having("fullAccess>0 OR partialAccess>0").SubQuery()
-	if err := srv.Store.GroupAttempts().ByAttemptID(attemptID).
+	if err := srv.Store.GroupAttempts().ByID(attemptID).
 		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess).
 		Where("((groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?))",
 			srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild").SubQuery(),
