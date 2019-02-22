@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -64,6 +66,14 @@ func (ctx *TestContext) app() *app.Application {
 			fmt.Println("Unable to load app")
 			panic(err)
 		}
+
+		// redirect logging to file to clear test results
+		logFile, err := os.Create("bdd_tests.log")
+		if err != nil {
+			panic(err)
+		}
+		logging.Logger.SetOutput(bufio.NewWriter(logFile))
+
 		// reset the seed to get predictable results on PRNG for tests
 		rand.Seed(1)
 

@@ -16,3 +16,4 @@
 
 # Tests artefacts
 /test-results
+*.log
