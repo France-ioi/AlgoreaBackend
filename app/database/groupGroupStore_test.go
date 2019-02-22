@@ -14,7 +14,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := auth.NewMockUser(1, 2, 3)
+	mockUser := auth.NewMockUser(1, 2, 3, 4)
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` WHERE (groups_groups.idGroupChild = ? AND groups_groups.sType='direct')")).
 		WithArgs(mockUser.SelfGroupID()).

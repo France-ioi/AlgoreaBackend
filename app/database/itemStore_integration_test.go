@@ -53,7 +53,7 @@ func TestVisible(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12)
+	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -69,7 +69,7 @@ func TestVisibleByID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12)
+	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -85,7 +85,7 @@ func TestVisibleChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12)
+	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -101,7 +101,7 @@ func TestVisibleGrandChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12)
+	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 

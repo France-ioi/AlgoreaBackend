@@ -14,7 +14,7 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := auth.NewMockUser(1, 1, 11)
+	mockUser := auth.NewMockUser(1, 2, 11, 0)
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupAncestor=?")).
 		WithArgs(mockUser.OwnedGroupID()).
