@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func setupDB(t *testing.T) database.DB {
+func setupDB(t *testing.T) *database.DB {
 	var err error
 
 	if testhelpers.HasNoDBFlag() {
@@ -36,7 +36,7 @@ func setupDB(t *testing.T) database.DB {
 	rawDb.Close()
 
 	// Return a new db connection
-	var db database.DB
+	var db *database.DB
 	db, err = database.Open(conf.Database.Connection.FormatDSN())
 	if err != nil {
 		t.Fatal(err)
@@ -52,9 +52,10 @@ type itemIdRow struct {
 func TestVisible(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
+	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11)
-	datastore := database.NewDataStore(db)
-	itemStore := datastore.Items()
+	dataStore := database.NewDataStore(db)
+	itemStore := dataStore.Items()
 
 	var result []itemIdRow
 	db = itemStore.Visible(user).Select("ID").Scan(&result)
@@ -68,8 +69,8 @@ func TestVisibleByID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	user := auth.NewMockUser(1, 11)
-	datastore := database.NewDataStore(db)
-	itemStore := datastore.Items()
+	dataStore := database.NewDataStore(db)
+	itemStore := dataStore.Items()
 
 	var result []itemIdRow
 	db = itemStore.VisibleByID(user, 191).Select("ID").Scan(&result)
@@ -83,8 +84,8 @@ func TestVisibleChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	user := auth.NewMockUser(1, 11)
-	datastore := database.NewDataStore(db)
-	itemStore := datastore.Items()
+	dataStore := database.NewDataStore(db)
+	itemStore := dataStore.Items()
 
 	var result []itemIdRow
 	db = itemStore.VisibleChildrenOfID(user, 190).Select("items.ID").Scan(&result)
@@ -98,8 +99,8 @@ func TestVisibleGrandChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB(t)
 	user := auth.NewMockUser(1, 11)
-	datastore := database.NewDataStore(db)
-	itemStore := datastore.Items()
+	dataStore := database.NewDataStore(db)
+	itemStore := dataStore.Items()
 
 	var result []itemIdRow
 	db = itemStore.VisibleGrandChildrenOfID(user, 190).Select("items.ID").Scan(&result)
