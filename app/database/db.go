@@ -63,6 +63,11 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	return err
 }
 
+// Close close current db connection.  If database connection is not an io.Closer, returns an error.
+func (conn *DB) Close() error {
+	return conn.db.Close()
+}
+
 // Limit specifies the number of records to be retrieved
 func (conn *DB) Limit(limit interface{}) *DB {
 	return newDB(conn.db.Limit(limit))
