@@ -2,7 +2,9 @@ package testhelpers
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/DATA-DOG/godog"
@@ -18,7 +20,7 @@ var opt = godog.Options{
 // (the one from the tested package)
 func RunGodogTests(m *testing.M) {
 
-	opt.Paths = []string{"."} // run feature files included in the package directory
+	opt.Paths = featureFilesInCurrentDir()
 	godog.BindFlags("godog.", flag.CommandLine, &opt)
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
@@ -29,4 +31,19 @@ func RunGodogTests(m *testing.M) {
 		status = st
 	}
 	os.Exit(status)
+}
+
+func featureFilesInCurrentDir() []string {
+	files, err := ioutil.ReadDir(".")
+	if err != nil {
+		panic(err)
+	}
+	var featuresFiles []string
+	for _, f := range files {
+		filename := f.Name()
+		if filepath.Ext(filename) == ".feature" {
+			featuresFiles = append(featuresFiles, filename)
+		}
+	}
+	return featuresFiles
 }
