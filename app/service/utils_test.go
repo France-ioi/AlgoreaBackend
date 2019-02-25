@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi"
-
 	assertlib "github.com/stretchr/testify/assert"
 )
 
@@ -74,7 +73,6 @@ func TestQueryParamToInt64Slice(t *testing.T) {
 			assert.Equal(testCase.expectedList, list)
 		})
 	}
-
 }
 
 func TestResolveURLQueryPathInt64Field(t *testing.T) {
@@ -144,6 +142,146 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			_, _ = http.DefaultClient.Do(request)
 			ts.Close()
 			assert.True(called, "The handler was not called")
+		})
+	}
+}
+
+func TestResolveURLQueryGetStringField(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedValue  string
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no param",
+			queryString:    "",
+			expectedValue:  "",
+			expectedErrMsg: "missing name",
+		},
+		{
+			desc:           "wrong param name",
+			queryString:    "name1=value",
+			expectedValue:  "",
+			expectedErrMsg: "missing name",
+		},
+		{
+			desc:           "value given",
+			queryString:    "name=value",
+			expectedValue:  "value",
+			expectedErrMsg: "",
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			list, err := ResolveURLQueryGetStringField(req, "name")
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(err)
+			}
+			assert.Equal(testCase.expectedValue, list)
+		})
+	}
+}
+
+func TestResolveURLQueryGetBoolField(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedValue  bool
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no param",
+			queryString:    "",
+			expectedValue:  false,
+			expectedErrMsg: "missing flag",
+		},
+		{
+			desc:           "wrong param name",
+			queryString:    "flag1=1",
+			expectedValue:  false,
+			expectedErrMsg: "missing flag",
+		},
+		{
+			desc:           "true value given",
+			queryString:    "flag=1",
+			expectedValue:  true,
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "false value given",
+			queryString:    "flag=0",
+			expectedValue:  false,
+			expectedErrMsg: "",
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			list, err := ResolveURLQueryGetBoolField(req, "flag")
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(err)
+			}
+			assert.Equal(testCase.expectedValue, list)
+		})
+	}
+}
+
+func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
+	tests := []struct {
+		name  string
+		dbMap []map[string]interface{}
+		want  []map[string]interface{}
+	}{
+		{
+			"nested structures",
+			[]map[string]interface{}{{"User__ID": int64(1)}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{"user": &map[string]interface{}{"id": int64(1)}}},
+		},
+		{
+			"converts to snake case",
+			[]map[string]interface{}{{
+				"TheGreatestUser": "root", "MyID": int64(1), "ID": int64(2),
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"the_greatest_user": "root", "my_id": int64(1), "id": int64(2),
+			}},
+		},
+		{
+			"handles prefixes",
+			[]map[string]interface{}{{
+				"ID":          int64(123),
+				"idUser":      int64(1),
+				"bTrueFlag":   int64(1),
+				"bFalseFlag":  1,
+				"bFalseFlag2": int64(2),
+				"bFalseFlag3": int64(0),
+				"sString":     "value",
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"id":           int64(123),
+				"user_id":      int64(1),
+				"true_flag":    true,
+				"false_flag":   false,
+				"false_flag_2": false,
+				"false_flag_3": false,
+				"string":       "value",
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ConvertSliceOfMapsFromDBToJSON(tt.dbMap)
+			assertlib.Equal(t, tt.want, got)
 		})
 	}
 }
