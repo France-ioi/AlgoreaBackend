@@ -251,8 +251,8 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			}},
 			[]map[string]interface{}{
 				{
-					"user": &map[string]interface{}{"id": int64(1)},
-					"item": &map[string]interface{}{"string": &map[string]interface{}{"title": "Chapter 1", "id": int64(2)}},
+					"user": map[string]interface{}{"id": int64(1)},
+					"item": map[string]interface{}{"string": map[string]interface{}{"title": "Chapter 1", "id": int64(2)}},
 				},
 			},
 		},
