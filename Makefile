@@ -40,7 +40,7 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
 	$(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
 test-unit:
-	TESTS_NODB=1 $(GOTEST) -race -cover -v ./app/...
+	$(GOTEST) -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) .

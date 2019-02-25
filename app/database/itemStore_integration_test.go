@@ -1,3 +1,5 @@
+// +build !unit
+
 package database_test
 
 import (
@@ -14,10 +16,6 @@ import (
 
 func setupDB(t *testing.T) *database.DB {
 	var err error
-
-	if testhelpers.HasNoDBFlag() {
-		t.Skip("Skipping BDD tests in package 'api' (TESTS_NODB env set)")
-	}
 
 	// needs actual config for connection to DB
 	var conf *config.Root
