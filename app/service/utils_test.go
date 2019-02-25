@@ -244,8 +244,13 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 	}{
 		{
 			"nested structures",
-			[]map[string]interface{}{{"User__ID": int64(1)}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{"user": &map[string]interface{}{"id": int64(1)}}},
+			[]map[string]interface{}{{"User__ID": int64(1), "Item__String__Title": "Chapter 1"}}, // gorm returns numbers as int64
+			[]map[string]interface{}{
+				{
+					"user": &map[string]interface{}{"id": int64(1)},
+					"item": &map[string]interface{}{"string": &map[string]interface{}{"title": "Chapter 1"}},
+				},
+			},
 		},
 		{
 			"converts to snake case",
@@ -276,6 +281,11 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"false_flag_3": false,
 				"string":       "value",
 			}},
+		},
+		{
+			"skips nil fields",
+			[]map[string]interface{}{{"TheGreatestUser": nil}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{}},
 		},
 	}
 	for _, tt := range tests {
