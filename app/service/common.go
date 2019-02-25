@@ -21,7 +21,7 @@ func (srv *Base) GetUser(r *http.Request) *auth.User {
 
 // SetQueryLimit limits the number of records of the given query according to the `limit` request parameter
 // The default limit is 500
-func (srv *Base) SetQueryLimit(r *http.Request, db *database.DB) *database.DB {
+func SetQueryLimit(r *http.Request, db *database.DB) *database.DB {
 	limit, err := ResolveURLQueryGetInt64Field(r, "limit")
 	if err != nil || limit < 0 {
 		limit = 500

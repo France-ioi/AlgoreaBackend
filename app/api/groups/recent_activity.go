@@ -45,7 +45,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		WhereUsersAreDescendantsOfGroup(groupID).
 		Order("users_answers.sSubmissionDate DESC, users_answers.ID")
 
-	query = srv.SetQueryLimit(r, query)
+	query = service.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 
 	if query, err = srv.filterByFromSubmissionDateAndFromID(r, query); err != nil {
