@@ -21,7 +21,7 @@ func (v *SampleBoolInput) validate() error {
 
 func TestNewBool(t *testing.T) {
 	assert := assertlib.New(t)
-	var value = true
+	const value = true
 	n := NewBool(value)
 	val, null, set := n.AllAttributes()
 	assert.Equal(value, n.Value)

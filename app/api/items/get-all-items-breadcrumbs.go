@@ -38,7 +38,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		Title    string `json:"title"       sql:"column:sTitle"`
 		Language int64  `json:"language_id" sql:"column:idLanguage"`
 	}
-	db := srv.Store.ItemStrings().All().Where("idItem IN (?)", ids).Scan(&items)
+	db := srv.Store.ItemStrings().Where("idItem IN (?)", ids).Scan(&items)
 	if db.Error() != nil {
 		return service.ErrUnexpected(db.Error())
 	}

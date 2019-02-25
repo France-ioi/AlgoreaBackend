@@ -2,6 +2,8 @@ package database
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"regexp"
 	"testing"
 )
 
@@ -81,4 +83,19 @@ func TestCheckAccess(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestItemStore_ByID(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	const itemID = 123
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `items` WHERE (items.ID = ?)")).
+		WithArgs(itemID).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	var result []interface{}
+	err := NewDataStore(db).Items().ByID(itemID).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

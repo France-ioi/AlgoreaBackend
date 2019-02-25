@@ -11,38 +11,19 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
-// DB is the database connector that can be shared through the app
-type DB interface {
-	inTransaction(txFunc func(DB) error) error
-	insert(tableName string, data interface{}) error
-	table(string) DB
-
-	Or(query interface{}, args ...interface{}) DB
-	Select(query interface{}, args ...interface{}) DB
-	Where(query interface{}, args ...interface{}) DB
-	Joins(query string, args ...interface{}) DB
-	Group(query string) DB
-	Having(query interface{}, args ...interface{}) DB
-	Order(value interface{}, reorder ...bool) DB
-	Union(query interface{}) DB
-	Raw(query string, args ...interface{}) DB
-
-	Query() interface{}
-	SubQuery() interface{}
-	Scan(dest interface{}) DB
-	Count(dest interface{}) DB
-	Take(out interface{}, where ...interface{}) DB
-
-	Error() error
+// DB contains information for current db connection (wraps *gorm.DB)
+type DB struct {
+	db *gorm.DB
 }
 
-type db struct {
-	*gorm.DB
+// newDB wraps *gorm.DB
+func newDB(db *gorm.DB) *DB {
+	return &DB{db}
 }
 
 // Open connects to the database and tests the connection
 // nolint: gosec
-func Open(dsnConfig string) (DB, error) {
+func Open(dsnConfig string) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
@@ -54,11 +35,11 @@ func Open(dsnConfig string) (DB, error) {
 		dbConn.SetLogger(logging.Logger.WithField("module", "database"))
 	}
 
-	return &db{dbConn}, err
+	return newDB(dbConn), err
 }
 
-func (conn *db) inTransaction(txFunc func(DB) error) (err error) {
-	var txDB = conn.Begin()
+func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
+	var txDB = conn.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -78,77 +59,158 @@ func (conn *db) inTransaction(txFunc func(DB) error) (err error) {
 			err = txDB.Error
 		}
 	}()
-	err = txFunc(&db{txDB})
+	err = txFunc(newDB(txDB))
 	return err
 }
 
-func (conn *db) table(tableName string) DB {
-	return &db{conn.DB.Table(tableName)}
+// Close close current db connection.  If database connection is not an io.Closer, returns an error.
+func (conn *DB) Close() error {
+	return conn.db.Close()
 }
 
-func (conn *db) Where(query interface{}, args ...interface{}) DB {
-	return &db{conn.DB.Where(query, args...)}
+// Limit specifies the number of records to be retrieved
+func (conn *DB) Limit(limit interface{}) *DB {
+	return newDB(conn.db.Limit(limit))
 }
 
-func (conn *db) Joins(query string, args ...interface{}) DB {
-	return &db{conn.DB.Joins(query, args...)}
+// Where returns a new relation, filters records with given conditions, accepts `map`, `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
+func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
+	return newDB(conn.db.Where(query, args...))
 }
 
-func (conn *db) Or(query interface{}, args ...interface{}) DB {
-	return &db{conn.DB.Or(query, args...)}
+// Joins specifies Joins conditions
+//     db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
+func (conn *DB) Joins(query string, args ...interface{}) *DB {
+	return newDB(conn.db.Joins(query, args...))
 }
 
-func (conn *db) Select(query interface{}, args ...interface{}) DB {
-	return &db{conn.DB.Select(query, args...)}
+// Or filters records that match before conditions or this one, similar to `Where`
+func (conn *DB) Or(query interface{}, args ...interface{}) *DB {
+	return newDB(conn.db.Or(query, args...))
 }
 
-func (conn *db) Group(query string) DB {
-	return &db{conn.DB.Group(query)}
+// Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
+// When creating/updating, specify fields that you want to save to database
+func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
+	return newDB(conn.db.Select(query, args...))
 }
 
-func (conn *db) Order(value interface{}, reorder ...bool) DB {
-	return &db{conn.DB.Order(value, reorder...)}
+// Table specifies the table you would like to run db operations
+func (conn *DB) Table(name string) *DB {
+	return newDB(conn.db.Table(name))
 }
 
-func (conn *db) Having(query interface{}, args ...interface{}) DB {
-	return &db{conn.DB.Having(query, args...)}
+// Group specifies the group method on the find
+func (conn *DB) Group(query string) *DB {
+	return newDB(conn.db.Group(query))
 }
 
-func (conn *db) Union(query interface{}) DB {
-	return &db{conn.DB.New().Raw("? UNION (?)", conn.DB.QueryExpr(), query)}
+// Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
+//     db.Order("name DESC")
+//     db.Order("name DESC", true) // reorder
+//     db.Order(gorm.Expr("name = ? DESC", "first")) // sql expression
+func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
+	return newDB(conn.db.Order(value, reorder...))
 }
 
-func (conn *db) Raw(query string, args ...interface{}) DB {
-	return &db{conn.DB.Raw(query, args...)}
+// Having specifies HAVING conditions for GROUP BY
+func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
+	return newDB(conn.db.Having(query, args...))
 }
 
-func (conn *db) SubQuery() interface{} {
-	return conn.DB.SubQuery()
+// Union specifies UNION of two queries (receiver UNION query)
+func (conn *DB) Union(query interface{}) *DB {
+	return newDB(conn.db.New().Raw("? UNION ?", conn.db.QueryExpr(), query))
 }
 
-func (conn *db) Query() interface{} {
-	return conn.DB.QueryExpr()
+// UnionAll specifies UNION ALL of two queries (receiver UNION ALL query)
+func (conn *DB) UnionAll(query interface{}) *DB {
+	return newDB(conn.db.New().Raw("? UNION ALL ?", conn.db.QueryExpr(), query))
 }
 
-func (conn *db) Scan(dest interface{}) DB {
-	return &db{conn.DB.Scan(dest)}
+// Raw uses raw sql as conditions
+//    db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
+func (conn *DB) Raw(query string, args ...interface{}) *DB {
+	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
+	return newDB(conn.db.Raw("").Joins(query, args...))
 }
 
-func (conn *db) Count(dest interface{}) DB {
-	return &db{conn.DB.Count(dest)}
+// SubQuery returns the query as sub query
+func (conn *DB) SubQuery() interface{} {
+	return conn.db.SubQuery()
 }
 
-func (conn *db) Take(out interface{}, where ...interface{}) DB {
-	return &db{conn.DB.Take(out, where...)}
+// QueryExpr returns the query as expr object
+func (conn *DB) QueryExpr() interface{} {
+	return conn.db.QueryExpr()
 }
 
-func (conn *db) Error() error {
-	return conn.DB.Error
+// Scan scans value to a struct
+func (conn *DB) Scan(dest interface{}) *DB {
+	return newDB(conn.db.Scan(dest))
+}
+
+// ScanIntoSliceOfMaps scans value into a slice of maps
+func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
+	rows, err := conn.db.Rows()
+	if conn.db.AddError(err) != nil {
+		return conn
+	}
+	cols, err := rows.Columns()
+	if conn.db.AddError(err) != nil {
+		return conn
+	}
+
+	if rows != nil {
+		defer func() {
+			if conn.db.AddError(rows.Close()) != nil {
+				return
+			}
+		}()
+	}
+
+	for rows.Next() {
+		columns := make([]interface{}, len(cols))
+		columnPointers := make([]interface{}, len(cols))
+		for i := range columns {
+			columnPointers[i] = &columns[i]
+		}
+
+		if err := rows.Scan(columnPointers...); err != nil {
+			return conn
+		}
+
+		rowMap := make(map[string]interface{})
+		for i, columnName := range cols {
+			if value, ok := columns[i].([]byte); ok {
+				columns[i] = string(value)
+			}
+			rowMap[columnName] = columns[i]
+		}
+		*dest = append(*dest, rowMap)
+	}
+
+	return conn
+}
+
+// Count gets how many records for a model
+func (conn *DB) Count(dest interface{}) *DB {
+	return newDB(conn.db.Count(dest))
+}
+
+// Take returns a record that match given conditions, the order will depend on the database implementation
+func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
+	return newDB(conn.db.Take(out, where...))
+}
+
+// Error returns current errors
+func (conn *DB) Error() error {
+	return conn.db.Error
 }
 
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
-func (conn *db) insert(tableName string, data interface{}) error {
+func (conn *DB) insert(tableName string, data interface{}) error {
 	// introspect data
 	dataV := reflect.ValueOf(data)
 
@@ -194,5 +256,5 @@ func (conn *db) insert(tableName string, data interface{}) error {
 		}
 	}
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
-	return conn.Exec(query, values...).Error
+	return conn.db.Exec(query, values...).Error
 }

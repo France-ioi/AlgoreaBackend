@@ -15,7 +15,7 @@ func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) service.APIEr
 		Name string `json:"name" sql:"column:sName"`
 	}
 
-	db := srv.Store.Groups().All().Select("ID, sName")
+	db := srv.Store.Groups().Select("ID, sName")
 	db = db.Scan(&groups)
 	if db.Error() != nil {
 		return service.ErrUnexpected(db.Error())

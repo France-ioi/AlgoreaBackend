@@ -4,8 +4,3 @@ package database
 type GroupStore struct {
 	*DataStore
 }
-
-// All creates a composable query without filtering
-func (s *GroupStore) All() DB {
-	return s.table("groups")
-}

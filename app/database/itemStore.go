@@ -27,36 +27,29 @@ func (s *ItemStore) tableName() string {
 }
 
 // Visible returns a view of the visible items for the given user
-func (s *ItemStore) Visible(user AuthUser) DB {
-	groupItemsPerms := s.GroupItems().
-		MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
-		Group("idItem")
-
-	return s.All().
-		Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
-		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+func (s *ItemStore) Visible(user AuthUser) *DB {
+	return s.WhereItemsAreVisible(user)
 }
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user
-func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) *DB {
 	return s.Visible(user).Where("items.ID = ?", itemID)
 }
 
 // VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) *DB {
 	return s.
 		Visible(user).
-		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().All().SubQuery()).
+		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().SubQuery()).
 		Where("ii.idItemParent = ?", itemID)
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) DB {
+func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) *DB {
 	return s.
-		Visible(user).                                                                             // visible items are the leaves (potential grandChildren)
-		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().All().SubQuery()).         // get their parents' IDs (ii1)
-		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().All().SubQuery()). // get their grand parents' IDs (ii2)
+		Visible(user).                                                                       // visible items are the leaves (potential grandChildren)
+		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().SubQuery()).         // get their parents' IDs (ii1)
+		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().SubQuery()). // get their grand parents' IDs (ii2)
 		Where("ii2.idItemParent = ?", itemID)
 }
 
@@ -127,33 +120,78 @@ type RawItem struct {
 func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user AuthUser) (*[]RawItem, error) {
 	var result []RawItem
 
-	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
-	if err := s.Raw(
-		`SELECT
-			union_table.ID,
-			union_table.sType,
-			union_table.bDisplayDetailsInParent,
-			union_table.sValidationType,`+
-			// idItemUnlocked is a comma-separated list of item IDs which will be unlocked if this item is validated
-			// Here we consider both NULL and an empty string as FALSE
-			`COALESCE(union_table.idItemUnlocked, '')<>'' as hasUnlockedItems,
-			union_table.iScoreMinUnlock,
-			union_table.sTeamMode,
-			union_table.bTeamsEditable,
-			union_table.iTeamMaxMembers,
-			union_table.bHasAttempts,
-			union_table.sAccessOpenDate,
-			union_table.sDuration,
-			union_table.sEndContestDate,
-			union_table.bNoScore,
-			union_table.groupCodeEnter,
+	commonColumns := `items.ID AS ID,
+		items.sType,
+		items.bDisplayDetailsInParent,
+		items.sValidationType,
+		items.idItemUnlocked,
+		items.iScoreMinUnlock,
+		items.sTeamMode,
+		items.bTeamsEditable,
+		items.iTeamMaxMembers,
+		items.bHasAttempts,
+		items.sAccessOpenDate,
+		items.sDuration,
+		items.sEndContestDate,
+		items.bNoScore,
+		items.idDefaultLanguage,
+		items.groupCodeEnter, `
 
-			COALESCE(ustrings.idLanguage, dstrings.idLanguage) AS idLanguage,
-			IF(ustrings.idLanguage IS NULL, dstrings.sTitle, ustrings.sTitle) AS sTitle,
-			IF(ustrings.idLanguage IS NULL, dstrings.sImageUrl, ustrings.sImageUrl) AS sImageUrl,
-			IF(ustrings.idLanguage IS NULL, dstrings.sSubtitle, ustrings.sSubtitle) AS sSubtitle,
-			IF(ustrings.idLanguage IS NULL, dstrings.sDescription, ustrings.sDescription) AS sDescription,
-			IF(ustrings.idLanguage IS NULL, dstrings.sEduComment, ustrings.sEduComment) AS sEduComment,
+	rootItemQuery := s.ByID(rootID).Select(
+		commonColumns + `items.bTitleBarVisible,
+		items.bReadOnly,
+		items.sFullScreen,
+		items.bShowSource,
+		items.iValidationMin,
+		items.bShowUserInfos,
+		items.sContestPhase,
+		items.sUrl,
+		IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI,
+		IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed,
+		NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted`)
+
+	childrenQuery := s.Select(
+		commonColumns+`NULL AS bTitleBarVisible,
+		NULL AS bReadOnly,
+		NULL AS sFullScreen,
+		NULL AS bShowSource,
+		NULL AS iValidationMin,
+		NULL AS bShowUserInfos,
+		NULL AS sContestPhase,
+		NULL AS sUrl,
+		NULL AS bUsesAPI,
+		NULL AS bHintsAllowed,
+		iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted`).
+		Joins("JOIN items_items ON items.ID=idItemChild AND idItemParent=?", rootID)
+
+	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
+	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
+	query := s.Raw(`
+    SELECT
+		  items.ID,
+      items.sType,
+		  items.bDisplayDetailsInParent,
+      items.sValidationType,`+
+		// idItemUnlocked is a comma-separated list of item IDs which will be unlocked if this item is validated
+		// Here we consider both NULL and an empty string as FALSE
+		` COALESCE(items.idItemUnlocked, '')<>'' as hasUnlockedItems,
+			items.iScoreMinUnlock,
+			items.sTeamMode,
+			items.bTeamsEditable,
+			items.iTeamMaxMembers,
+			items.bHasAttempts,
+			items.sAccessOpenDate,
+			items.sDuration,
+			items.sEndContestDate,
+			items.bNoScore,
+			items.groupCodeEnter,
+
+			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguage,
+			IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS sTitle,
+			IF(user_strings.idLanguage IS NULL, default_strings.sImageUrl, user_strings.sImageUrl) AS sImageUrl,
+			IF(user_strings.idLanguage IS NULL, default_strings.sSubtitle, user_strings.sSubtitle) AS sSubtitle,
+			IF(user_strings.idLanguage IS NULL, default_strings.sDescription, user_strings.sDescription) AS sDescription,
+			IF(user_strings.idLanguage IS NULL, default_strings.sEduComment, user_strings.sEduComment) AS sEduComment,
 
 			users_items.idAttemptActive AS idAttemptActive,
 			users_items.iScore AS iScore,
@@ -166,91 +204,33 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 			users_items.sValidationDate AS sValidationDate,
 			users_items.sFinishDate AS sFinishDate,
 			users_items.sContestStartDate AS sContestStartDate,
-			IF(union_table.sType <> 'Chapter', users_items.sState, NULL) as sState,
+			IF(items.sType <> 'Chapter', users_items.sState, NULL) as sState,
 			users_items.sAnswer,
 
-			union_table.iChildOrder AS iChildOrder,
-			union_table.sCategory AS sCategory,
-			union_table.bAlwaysVisible,
-			union_table.bAccessRestricted, `+
-			// inputItem only
-			`union_table.bTitleBarVisible,
-			union_table.bReadOnly,
-			union_table.sFullScreen,
-			union_table.bShowSource,
-			union_table.iValidationMin,
-			union_table.bShowUserInfos,
-			union_table.sContestPhase,
-			union_table.sUrl,
-			union_table.bUsesAPI,
-			union_table.bHintsAllowed,
+			items.iChildOrder AS iChildOrder,
+			items.sCategory AS sCategory,
+			items.bAlwaysVisible,
+			items.bAccessRestricted, `+
+		// inputItem only
+		` items.bTitleBarVisible,
+			items.bReadOnly,
+			items.sFullScreen,
+			items.bShowSource,
+			items.iValidationMin,
+			items.bShowUserInfos,
+			items.sContestPhase,
+			items.sUrl,
+			items.bUsesAPI,
+			items.bHintsAllowed,
 			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
-		FROM (
-      SELECT
-        items.ID AS ID,
-			  items.sType,
-			  items.bDisplayDetailsInParent,
-			  items.sValidationType,
-			  items.idItemUnlocked,
-			  items.iScoreMinUnlock,
-			  items.sTeamMode,
-			  items.bTeamsEditable,
-			  items.iTeamMaxMembers,
-			  items.bHasAttempts,
-			  items.sAccessOpenDate,
-			  items.sDuration,
-			  items.sEndContestDate,
-			  items.bNoScore,
-			  items.groupCodeEnter,
-			  items.bTitleBarVisible,
-			  items.bReadOnly,
-			  items.sFullScreen,
-			  items.bShowSource,
-			  items.iValidationMin,
-			  items.bShowUserInfos,
-			  items.sContestPhase,
-			  items.sUrl,
-			  IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI,
-			  IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed,
-			  items.idDefaultLanguage,
-			  NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted
-			FROM items WHERE items.ID=?
-      UNION ALL
-			SELECT
-        items.ID AS ID, items.sType, items.bDisplayDetailsInParent,
-			  items.sValidationType, items.idItemUnlocked,
-			  items.iScoreMinUnlock,
-			  items.sTeamMode,
-			  items.bTeamsEditable,
-			  items.iTeamMaxMembers,
-			  items.bHasAttempts,
-			  items.sAccessOpenDate,
-			  items.sDuration,
-			  items.sEndContestDate,
-			  items.bNoScore,
-			  items.groupCodeEnter,
-			  NULL AS bTitleBarVisible,
-			  NULL AS bReadOnly,
-			  NULL AS sFullScreen,
-			  NULL AS bShowSource,
-			  NULL AS iValidationMin,
-			  NULL AS bShowUserInfos,
-			  NULL AS sContestPhase,
-			  NULL AS sUrl,
-			  NULL AS bUsesAPI,
-			  NULL AS bHintsAllowed,
-			  items.idDefaultLanguage,
-			  iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted
-      FROM items
-			JOIN items_items ON items.ID=idItemChild AND idItemParent=?
-    ) union_table
-    LEFT JOIN users_items ON users_items.idItem=union_table.ID AND users_items.idUser=?
-    LEFT JOIN items_strings dstrings FORCE INDEX (idItem)
-    ON dstrings.idItem=union_table.ID AND dstrings.idLanguage=union_table.idDefaultLanguage
-    LEFT JOIN items_strings ustrings ON ustrings.idItem=union_table.ID AND ustrings.idLanguage=?
-    JOIN ? accessRights on accessRights.idItem=union_table.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)
-    ORDER BY iChildOrder`,
-		rootID, rootID, userID, userLanguageID, s.AccessRights(user).SubQuery()).Scan(&result).Error(); err != nil {
+    FROM ? items `, unionQuery.SubQuery()).
+		JoinsUserAndDefaultItemStrings(user).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
+		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
+			s.AccessRights(user).SubQuery()).
+		Order("iChildOrder")
+
+	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err
 	}
 	return &result, nil
@@ -258,7 +238,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 
 // AccessRights returns a composable query for getting
 // (idItem, fullAccess, partialAccess, grayedAccess, accessSolutions) for the given user
-func (s *ItemStore) AccessRights(user AuthUser) DB {
+func (s *ItemStore) AccessRights(user AuthUser) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
 			"idItem, MAX(bCachedFullAccess) AS fullAccess, " +
@@ -274,13 +254,8 @@ func (s *ItemStore) Insert(data *Item) error {
 }
 
 // ByID returns a composable query of items filtered by itemID
-func (s *ItemStore) ByID(itemID int64) DB {
-	return s.All().Where("items.ID = ?", itemID)
-}
-
-// All creates a composable query without filtering
-func (s *ItemStore) All() DB {
-	return s.table(s.tableName())
+func (s *ItemStore) ByID(itemID int64) *DB {
+	return s.Where("items.ID = ?", itemID)
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
@@ -424,7 +399,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 		return true, nil
 	}
 
-	db := s.ItemItems().All()
+	db := s.ItemItems().DB
 	previousID := ids[0]
 	for index, id := range ids {
 		if index == 0 {
@@ -437,7 +412,7 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 
 	count := 0
 	// For now, we don’t have a unique key for the pair ('idItemParent' and 'idItemChild') and
-	// theoritically it’s still possible to have multiple rows with the same pair
+	// theoretically it’s still possible to have multiple rows with the same pair
 	// of 'idItemParent' and 'idItemChild'.
 	// The “Group(...)” here resolves the issue.
 	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {

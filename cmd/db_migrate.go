@@ -49,6 +49,9 @@ func init() {
 				fmt.Printf("%d migration(s) applied successfully!\n", n)
 			}
 
+			if db.Close() != nil {
+				fmt.Println("Cannot close DB connection:", err)
+			}
 		},
 	}
 
