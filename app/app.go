@@ -1,18 +1,17 @@
 package app
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // Application is the core state of the app
@@ -26,26 +25,31 @@ type Application struct {
 func New() (*Application, error) {
 	var err error
 
+	// Load config
 	var conf *config.Root
 	if conf, err = config.Load(); err != nil {
+		log.Error(err)
 		return nil, err
 	}
+
+	// Set up logger
+	setupLogger(log.StandardLogger(), conf.Logging)
 
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	logger := logging.New(conf.Logging)
-	log.SetOutput(logger.Writer()) // redirect the stdlib's log to our logger
-
+	// Connect to DB
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {
-		logger.WithField("module", "database").Error(err)
+		log.Error(err)
 	}
+	db.SetLogger(log.StandardLogger())
 
+	// Set up API
 	var apiCtx *api.Ctx
 	if apiCtx, err = api.NewCtx(conf, db); err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -58,7 +62,6 @@ func New() (*Application, error) {
 	router.Use(middleware.DefaultCompress)
 	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))
 
-	router.Use(logging.NewStructuredLogger(logger))
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain

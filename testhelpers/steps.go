@@ -19,10 +19,10 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/pmezard/go-difflib/difflib"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -72,7 +72,7 @@ func (ctx *TestContext) app() *app.Application {
 		if err != nil {
 			panic(err)
 		}
-		logging.Logger.SetOutput(bufio.NewWriter(logFile))
+		log.SetOutput(bufio.NewWriter(logFile))
 
 		// reset the seed to get predictable results on PRNG for tests
 		rand.Seed(1)

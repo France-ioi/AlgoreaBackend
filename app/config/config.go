@@ -30,9 +30,7 @@ type ReverseProxy struct {
 // Logging for all config related to logger
 type Logging struct {
 	TextLogging bool // true: text, false: json
-	LogLevel    string
-	SQLLogLevel int
-	LogSQL      bool
+	Level       string
 }
 
 // Auth is the part of the config related to the user authentication
@@ -99,6 +97,9 @@ func setDefaults() {
 	viper.SetDefault("server.readTimeout", 60)  // in seconds
 	viper.SetDefault("server.writeTimeout", 60) // in seconds
 	viper.SetDefault("server.rootpath", "/")
+
+	// logging
+	viper.SetDefault("logging.level", "error")
 }
 
 func configDirectory() string {
