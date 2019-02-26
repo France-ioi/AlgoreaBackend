@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -58,7 +59,10 @@ func TestSelfGroupIDFail(t *testing.T) {
 	userStore := database.NewDataStore(db).Users()
 	dbMock.ExpectQuery("^SELECT").WithArgs(42).WillReturnError(errors.New("db error"))
 	user := User{42, userStore, nil}
+	hook := test.NewGlobal()
 
 	assert.EqualValues(0, user.SelfGroupID())
 	assert.Nil(user.data)
+	assert.NotNil(hook.LastEntry())
+	assert.Contains(hook.LastEntry().Message, "Unable to load user data")
 }

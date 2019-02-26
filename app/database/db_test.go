@@ -2,12 +2,14 @@ package database
 
 import (
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 	"regexp"
 	"testing"
 
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 func TestDB_inTransaction_NoErrors(t *testing.T) {
@@ -102,6 +104,32 @@ func TestDB_inTransaction_ErrorOnCommit(t *testing.T) {
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	}))
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_SetLogger_Enabled(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	logger, hook := test.NewNullLogger()
+	db.SetLogger(logger)
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	var result []interface{}
+	db.Raw("SELECT 1").Scan(&result)
+	assert.Contains(t, hook.LastEntry().Message, "SELECT 1")
+}
+
+func TestDB_SetLogger_Disabled(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db.SetLogger(nil)
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	// just check it does not affect query
+	var result []interface{}
+	db.Raw("SELECT 1").Scan(&result)
+	assert.Len(t, result, 1)
 }
 
 func TestDB_Limit(t *testing.T) {
