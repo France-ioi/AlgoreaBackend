@@ -82,3 +82,12 @@ func TestDataStore_ByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDataStore_ByID_ForAbstractDataStore(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, "method ByID() called for abstract DataStore", func() {
+		NewDataStore(db).ByID(123)
+	})
+}
