@@ -1,6 +1,7 @@
 package database
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,4 +66,28 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 			assert.IsType(t, tt.wantType, store)
 		})
 	}
+}
+
+func TestDataStore_ByID(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	const id = 123
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `tableName` WHERE (tableName.ID = ?)")).
+		WithArgs(id).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	var result []interface{}
+	err := NewDataStoreWithTable(db, "tableName").ByID(id).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_ByID_ForAbstractDataStore(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, "method ByID() called for abstract DataStore", func() {
+		NewDataStore(db).ByID(123)
+	})
 }

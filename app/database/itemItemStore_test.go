@@ -19,6 +19,7 @@ func TestItemItemStore_ChildrenOf(t *testing.T) {
 	store := NewDataStore(db).ItemItems()
 	newStore := store.ChildrenOf(parentItemID)
 	assert.NotEqual(t, store, newStore)
+	assert.Equal(t, "items_items", newStore.DataStore.tableName)
 
 	var result []interface{}
 	err := newStore.Scan(&result).Error()

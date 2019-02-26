@@ -7,7 +7,7 @@ type ItemAncestorStore struct {
 
 // DescendantsOf returns a composable query for getting descendants of the given item
 func (s *ItemAncestorStore) DescendantsOf(ancestorID int64) *ItemItemStore {
-	return &ItemItemStore{&DataStore{
-		s.Where("items_ancestors.idItemAncestor = ?", ancestorID),
-	}}
+	return &ItemItemStore{NewDataStoreWithTable(
+		s.Where("items_ancestors.idItemAncestor = ?", ancestorID), s.tableName,
+	)}
 }

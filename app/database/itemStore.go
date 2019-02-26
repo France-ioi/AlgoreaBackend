@@ -253,11 +253,6 @@ func (s *ItemStore) Insert(data *Item) error {
 	return s.insert(s.tableName(), data)
 }
 
-// ByID returns a composable query of items filtered by itemID
-func (s *ItemStore) ByID(itemID int64) *DB {
-	return s.Where("items.ID = ?", itemID)
-}
-
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
 func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
