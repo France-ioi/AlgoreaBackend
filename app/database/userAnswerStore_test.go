@@ -17,6 +17,7 @@ func TestUserAnswerStore_WithUsers(t *testing.T) {
 	store := NewDataStore(db).UserAnswers()
 	newStore := store.WithUsers()
 	assert.NotEqual(t, store, newStore)
+	assert.Equal(t, "users_answers", newStore.DataStore.tableName)
 
 	var result []interface{}
 	err := newStore.Scan(&result).Error()
@@ -34,6 +35,7 @@ func TestUserAnswerStore_WithGroupAttempts(t *testing.T) {
 	store := NewDataStore(db).UserAnswers()
 	newStore := store.WithGroupAttempts()
 	assert.NotEqual(t, store, newStore)
+	assert.Equal(t, "users_answers", newStore.DataStore.tableName)
 
 	var result []interface{}
 	err := newStore.Scan(&result).Error()
@@ -51,6 +53,7 @@ func TestUserAnswerStore_WithItems(t *testing.T) {
 	store := NewDataStore(db).UserAnswers()
 	newStore := store.WithItems()
 	assert.NotEqual(t, store, newStore)
+	assert.Equal(t, "users_answers", newStore.DataStore.tableName)
 
 	var result []interface{}
 	err := newStore.Scan(&result).Error()

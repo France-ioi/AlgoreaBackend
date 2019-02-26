@@ -17,7 +17,13 @@ func TestItemAncestorStore_DescendantsOf(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	var result []interface{}
-	err := NewDataStore(db).ItemAncestors().DescendantsOf(ancestorItemID).Scan(&result).Error()
+	store := NewDataStore(db).ItemAncestors()
+	newStore := store.DescendantsOf(ancestorItemID)
+
+	assert.NotEqual(t, newStore, store)
+	assert.Equal(t, "items_ancestors", newStore.DataStore.tableName)
+
+	err := newStore.Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -41,7 +41,7 @@ func TestSelfGroupID(t *testing.T) {
 	assert := assertlib.New(t)
 
 	db, dbMock := database.NewDBMock()
-	userStore := &database.UserStore{DataStore: &database.DataStore{DB: db}}
+	userStore := database.NewDataStore(db).Users()
 	dbMock.ExpectQuery("^SELECT").WithArgs(42).WillReturnRows(
 		sqlmock.
 			NewRows([]string{"idGroupSelf"}).
@@ -58,7 +58,7 @@ func TestSelfGroupIDFail(t *testing.T) {
 	logging.Logger = logrus.New() // fixme: should not be required to set it in tests
 
 	db, dbMock := database.NewDBMock()
-	userStore := &database.UserStore{DataStore: &database.DataStore{DB: db}}
+	userStore := database.NewDataStore(db).Users()
 	dbMock.ExpectQuery("^SELECT").WithArgs(42).WillReturnError(errors.New("db error"))
 	user := User{42, userStore, nil}
 

@@ -9,66 +9,72 @@ import (
 // DataStore gather all stores for database operations on business data
 type DataStore struct {
 	*DB
+	tableName string
 }
 
 // NewDataStore returns a DataStore
 func NewDataStore(conn *DB) *DataStore {
-	return &DataStore{conn}
+	return &DataStore{DB: conn}
+}
+
+// NewDataStoreWithTable returns a specialized DataStore
+func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
+	return &DataStore{conn.Table(tableName), tableName}
 }
 
 // Users returns a UserStore
 func (s *DataStore) Users() *UserStore {
-	return &UserStore{NewDataStore(s.Table("users"))}
+	return &UserStore{NewDataStoreWithTable(s.DB, "users")}
 }
 
 // Items returns a ItemStore
 func (s *DataStore) Items() *ItemStore {
-	return &ItemStore{NewDataStore(s.Table("items"))}
+	return &ItemStore{NewDataStoreWithTable(s.DB, "items")}
 }
 
 // GroupAttempts returns a GroupAttemptStore
 func (s *DataStore) GroupAttempts() *GroupAttemptStore {
-	return &GroupAttemptStore{NewDataStore(s.Table("groups_attempts"))}
+	return &GroupAttemptStore{NewDataStoreWithTable(s.DB, "groups_attempts")}
 }
 
 // Groups returns a GroupStore
 func (s *DataStore) Groups() *GroupStore {
-	return &GroupStore{NewDataStore(s.Table("groups"))}
+	return &GroupStore{NewDataStoreWithTable(s.DB, "groups")}
 }
 
 // GroupAncestors returns a GroupAncestorStore
 func (s *DataStore) GroupAncestors() *GroupAncestorStore {
-	return &GroupAncestorStore{NewDataStore(s.Table("groups_ancestors"))}
+	return &GroupAncestorStore{NewDataStoreWithTable(s.DB, "groups_ancestors")}
 }
 
 // GroupGroups returns a GroupGroupStore
 func (s *DataStore) GroupGroups() *GroupGroupStore {
-	return &GroupGroupStore{NewDataStore(s.Table("groups_groups"))}
+	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups")}
 }
 
 // GroupItems returns a GroupItemStore
 func (s *DataStore) GroupItems() *GroupItemStore {
-	return &GroupItemStore{NewDataStore(s.Table("groups_items"))}
+	return &GroupItemStore{NewDataStoreWithTable(s.DB, "groups_items")}
 }
 
 // ItemAncestors returns a ItemAncestorStore
 func (s *DataStore) ItemAncestors() *ItemAncestorStore {
-	return &ItemAncestorStore{NewDataStore(s.Table("items_ancestors"))}
+	return &ItemAncestorStore{NewDataStoreWithTable(s.DB, "items_ancestors")}
 }
 
 // ItemStrings returns a ItemStringStore
 func (s *DataStore) ItemStrings() *ItemStringStore {
-	return &ItemStringStore{NewDataStore(s.Table("items_strings"))}
+	return &ItemStringStore{NewDataStoreWithTable(s.DB, "items_strings")}
 }
 
 // ItemItems returns a ItemItemStore
 func (s *DataStore) ItemItems() *ItemItemStore {
-	return &ItemItemStore{NewDataStore(s.Table("items_items"))}
+	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
 }
 
 // UserAnswers returns a UserAnswerStore
 func (s *DataStore) UserAnswers() *UserAnswerStore {
-	return &UserAnswerStore{NewDataStore(s.Table("users_answers"))}
+	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}
 }
 
 // NewID generates a positive random int64 to be used as ID
@@ -88,6 +94,14 @@ func (s *DataStore) EnsureSetID(id *types.Int64) {
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	return s.inTransaction(func(db *DB) error {
-		return txFunc(&DataStore{db})
+		return txFunc(NewDataStoreWithTable(db, s.tableName))
 	})
+}
+
+// ByID returns a composable query for filtering by _table_.ID
+func (s *DataStore) ByID(id int64) *DB {
+	if len(s.tableName) == 0 {
+		panic("method ByID() called for abstract DataStore")
+	}
+	return s.Where(s.tableName+".ID = ?", id)
 }

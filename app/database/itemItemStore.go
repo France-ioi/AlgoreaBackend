@@ -19,16 +19,14 @@ type ItemItem struct {
 	Version      int64       `sql:"column:iVersion"`    // use Go default in DB (to be fixed)
 }
 
-func (s *ItemItemStore) tableName() string {
-	return "items_items"
-}
-
 // Insert does a INSERT query in the given table with data that may contain types.* types
 func (s *ItemItemStore) Insert(data *ItemItem) error {
-	return s.insert(s.tableName(), data)
+	return s.insert(s.tableName, data)
 }
 
 // ChildrenOf returns a composable query for selecting children of the given item
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
-	return &ItemItemStore{&DataStore{s.Where("items_items.idItemParent=?", parentID)}}
+	return &ItemItemStore{
+		NewDataStoreWithTable(s.Where("items_items.idItemParent=?", parentID), s.tableName),
+	}
 }

@@ -52,7 +52,7 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 			// do not change the err
 			txDB = txDB.Rollback()
 			if txDB.Error != nil {
-				panic(p) // in case of eror on rollback, panic
+				panic(p) // in case of error on rollback, panic
 			}
 		} else {
 			txDB = txDB.Commit() // if err is nil, returns the potential error from commit
