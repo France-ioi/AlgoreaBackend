@@ -12,6 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // Application is the core state of the app
@@ -56,8 +57,9 @@ func New() (*Application, error) {
 	// Set up middlewares
 	router := chi.NewRouter()
 
-	router.Use(middleware.Recoverer)
 	router.Use(middleware.RequestID)
+	router.Use(service.NewStructuredLogger(log.StandardLogger()))
+	router.Use(middleware.Recoverer)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.DefaultCompress)
 	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))

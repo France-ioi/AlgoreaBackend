@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"github.com/go-chi/chi"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
@@ -37,7 +36,6 @@ func NewCtx(config *config.Root, db *database.DB) (*Ctx, error) {
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
-	r.Use(service.NewStructuredLogger(log.StandardLogger()))
 	base := service.Base{Store: database.NewDataStore(ctx.db), Config: ctx.config}
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
