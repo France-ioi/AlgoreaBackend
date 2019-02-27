@@ -174,11 +174,14 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name string `json:"name" valid:"required" sql:"column:structs.sName"`
+					Name        string `json:"name" valid:"required" sql:"column:structs.sName"`
+					OtherStruct struct {
+						Name string `json:"name" valid:"required" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" valid:"required"`
 				} `json:"struct" valid:"required"`
 			}{},
-			`{"struct":{"name":"John Doe"}}`,
-			map[string]interface{}{"structs.sName": "John Doe"},
+			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
+			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 	}
 	for _, tt := range tests {
