@@ -165,6 +165,14 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			map[string]interface{}{},
 		},
 		{
+			"skips fields ignored by json",
+			&struct {
+				Name string `json:"-" sql:"column:sName"`
+			}{},
+			`{}`,
+			map[string]interface{}{},
+		},
+		{
 			"keeps nulls",
 			&struct {
 				Name        string  `json:"name" gorm:"column:sName"`
