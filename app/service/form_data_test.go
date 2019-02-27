@@ -85,15 +85,20 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name string `json:"name" valid:"required"`
+					Name        string `json:"name" valid:"required"`
+					OtherStruct struct {
+						Name string `json:"name" valid:"required"`
+					} `json:"other_struct" valid:"required"`
 				} `json:"struct" valid:"required"`
 			}{},
 			`{"id":0}`,
 			"invalid input data",
 			FieldErrors{
-				"id":          {"unexpected field"},
-				"struct":      {"non zero value required"},
-				"Struct.name": {"non zero value required"},
+				"id":                      {"unexpected field"},
+				"struct":                  {"non zero value required"},
+				"Struct.name":             {"non zero value required"},
+				"Struct.other_struct":     {"non zero value required"},
+				"Struct.OtherStruct.name": {"non zero value required"},
 			},
 		},
 	}
