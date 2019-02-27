@@ -52,6 +52,15 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			FieldErrors{"my_id": {"unexpected field"}},
 		},
 		{
+			"field ignored by json",
+			&struct {
+				Name string `json:"-" gorm:"column:sName"`
+			}{},
+			`{"Name":"test"}`,
+			"invalid input data",
+			FieldErrors{"Name": {"unexpected field"}},
+		},
+		{
 			"decoder error for a field",
 			&struct {
 				Time time.Time `json:"time"`
@@ -140,6 +149,14 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Description string `json:"description" gorm:"column:sDescription"`
 			}{},
 			`{}`,
+			map[string]interface{}{},
+		},
+		{
+			"skips unexported fields",
+			&struct {
+				name string `json:"name" gorm:"column:sName"`
+			}{},
+			`{"name":"test"}`,
 			map[string]interface{}{},
 		},
 		{
