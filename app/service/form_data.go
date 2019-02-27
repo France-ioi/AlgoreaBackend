@@ -97,7 +97,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 					f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], "decoding error: "+matches[2])
 					continue
 				}
-				f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString)
+				f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
 			}
 		}
 	}
@@ -107,7 +107,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 func (f *FormData) validateFieldValues() error {
 	if _, err := govalidator.ValidateStruct(f.definitionStructure); err != nil {
 		if unhandledErr := f.processGovalidatorErrors(err); unhandledErr != nil {
-			return err
+			return err // should never happen
 		}
 	}
 	return nil
@@ -125,12 +125,12 @@ func (f *FormData) processGovalidatorErrors(err error) error {
 				f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
 			} else {
 				if err := f.processGovalidatorErrors(validatorError); err != nil {
-					return err
+					return err // should never happen
 				}
 			}
 		}
 	} else {
-		return err
+		return err // should never happen
 	}
 	return nil
 }
