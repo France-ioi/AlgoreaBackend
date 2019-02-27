@@ -154,7 +154,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips unexported fields",
 			&struct {
-				name string `json:"name" gorm:"column:sName"`
+				name string
 			}{},
 			`{"name":"test"}`,
 			map[string]interface{}{},
