@@ -106,31 +106,25 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 
 func (f *FormData) validateFieldValues() error {
 	if _, err := govalidator.ValidateStruct(f.definitionStructure); err != nil {
-		if unhandledErr := f.processGovalidatorErrors(err); unhandledErr != nil {
-			return err // should never happen
-		}
+		f.processGovalidatorErrors(err)
 	}
 	return nil
 }
 
-func (f *FormData) processGovalidatorErrors(err error) error {
-	if validatorErrors, ok := err.(govalidator.Errors); ok {
-		for _, validatorError := range validatorErrors {
-			if err, ok := validatorError.(govalidator.Error); ok {
-				path := strings.Join(err.Path, ".")
-				if len(path) > 0 {
-					path += "."
-				}
-				path += err.Name
-				f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
-			} else if err := f.processGovalidatorErrors(validatorError); err != nil {
-				return err // should never happen
+func (f *FormData) processGovalidatorErrors(err error) {
+	validatorErrors := err.(govalidator.Errors)
+	for _, validatorError := range validatorErrors {
+		if err, ok := validatorError.(govalidator.Error); ok {
+			path := strings.Join(err.Path, ".")
+			if len(path) > 0 {
+				path += "."
 			}
+			path += err.Name
+			f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
+		} else {
+			f.processGovalidatorErrors(validatorError)
 		}
-	} else {
-		return err // should never happen
 	}
-	return nil
 }
 
 func (f *FormData) checkProvidedFields() {
