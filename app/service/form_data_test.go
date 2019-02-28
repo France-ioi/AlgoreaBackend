@@ -43,6 +43,19 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			FieldErrors{"id": {"expected type 'int64', got unconvertible type 'string'"}},
 		},
 		{
+			"null value for a not-null field",
+			&struct {
+				ID   int64  `json:"id"`
+				Name string `json:"name"`
+			}{},
+			`{"id":null, "name":null}`,
+			"invalid input data",
+			FieldErrors{
+				"id":   {"should not be null (expected type: int64)"},
+				"name": {"should not be null (expected type: string)"},
+			},
+		},
+		{
 			"unexpected field",
 			&struct {
 				ID int64 `json:"id"`
@@ -113,7 +126,10 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
 			err := f.ParseJSONRequestData(req)
 			if tt.wantErr != "" {
-				assert.Equal(t, tt.wantErr, err.Error())
+				assert.NotNil(t, err, "Should produce an error, but it did not")
+				if err != nil {
+					assert.Equal(t, tt.wantErr, err.Error())
+				}
 			} else {
 				assert.Nil(t, err)
 			}
@@ -183,17 +199,15 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"keeps nulls",
 			&struct {
-				Name        string  `json:"name" gorm:"column:sName"`
 				Description *string `json:"description" gorm:"column:sDescription"`
 				Text        *string `json:"text" gorm:"column:sText"`
-				Number      int64   `json:"number" gorm:"column:iNumber"`
 				Number2     *int64  `json:"number2" gorm:"column:iNumber2"`
 				Number3     *int64  `json:"number3" gorm:"column:iNumber3"`
 			}{},
-			`{"name": null, "description": null, "text": "", "number": null, "number2": null, "number3": 0}`,
+			`{"description": null, "text": "", "number2": null, "number3": 0}`,
 			map[string]interface{}{
-				"sName": "", "sDescription": (*string)(nil), "sText": func() *string { s := ""; return &s }(),
-				"iNumber": int64(0), "iNumber2": (*int64)(nil), "iNumber3": func() *int64 { n := int64(0); return &n }(),
+				"sDescription": (*string)(nil), "sText": func() *string { s := ""; return &s }(),
+				"iNumber2": (*int64)(nil), "iNumber3": func() *int64 { n := int64(0); return &n }(),
 			},
 		},
 		{

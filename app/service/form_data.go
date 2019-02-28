@@ -10,8 +10,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/France-ioi/mapstructure"
+
 	"github.com/asaskevich/govalidator"
-	"github.com/mitchellh/mapstructure"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB
