@@ -10,7 +10,8 @@ import (
 // ErrorResponse is an extension of the response for returning errors
 type ErrorResponse struct {
 	Response
-	ErrorText string `json:"error_text,omitempty"` // application-level error message, for debugging
+	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
+	Errors    interface{} `json:"errors,omitempty"`     // form errors
 }
 
 // APIError represents an error as returned by this application. It works in
@@ -29,17 +30,21 @@ func (e APIError) httpResponse() render.Renderer {
 		Success:        false,
 		Message:        http.StatusText(e.HTTPStatusCode),
 	}
+	result := ErrorResponse{Response: response}
 	if e.Error == nil {
-		return &ErrorResponse{Response: response}
+		return &result
 	}
-	errorText := e.Error.Error()
-	if len(errorText) > 0 {
-		errorText = strings.ToUpper(errorText[0:1]) + errorText[1:]
+
+	if fieldErrors, ok := e.Error.(FieldErrors); ok {
+		result.Errors = fieldErrors
 	}
-	return &ErrorResponse{
-		Response:  response,
-		ErrorText: errorText, // FIXME: should be disabled in prod
+
+	result.ErrorText = e.Error.Error() // FIXME: should be disabled in prod
+	if len(result.ErrorText) > 0 {
+		result.ErrorText = strings.ToUpper(result.ErrorText[0:1]) + result.ErrorText[1:]
 	}
+
+	return &result
 }
 
 // ErrInvalidRequest is for errors caused by invalid request input

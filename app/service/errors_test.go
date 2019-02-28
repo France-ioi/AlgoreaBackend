@@ -36,6 +36,29 @@ func TestInvalidRequest(t *testing.T) {
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
 
+func TestInvalidRequest_WithFormErrors(t *testing.T) {
+	assert := assertlib.New(t)
+
+	formErrors := make(FieldErrors)
+	formErrors["name"] = []string{"is required"}
+	formErrors["phone"] = []string{"is required", "must be a phone number"}
+
+	recorder := responseForError(ErrInvalidRequest(formErrors))
+	assert.JSONEq(`{
+			"success":false,
+			"message":"Bad Request",
+			"error_text":"Invalid input data",
+			"errors": {
+				"name": ["is required"],
+				"phone": [
+					"is required",
+					"must be a phone number"
+				]
+			}
+	}`, recorder.Body.String())
+	assert.Equal(http.StatusBadRequest, recorder.Code)
+}
+
 func TestForbidden(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(ErrForbidden(errors.New("sample forbidden resp")))
