@@ -45,7 +45,7 @@ func New() (*Application, error) {
 	if db, err = database.Open(dbConfig); err != nil {
 		log.Error(err)
 	}
-	db.SetLogger(log.StandardLogger())
+	db.SetLogger(database.NewStructuredDBLogger(log.StandardLogger()))
 
 	// Set up API
 	var apiCtx *api.Ctx

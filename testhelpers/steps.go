@@ -1,7 +1,6 @@
 package testhelpers
 
 import (
-	"bufio"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -19,7 +18,6 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/pmezard/go-difflib/difflib"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
@@ -66,13 +64,6 @@ func (ctx *TestContext) app() *app.Application {
 			fmt.Println("Unable to load app")
 			panic(err)
 		}
-
-		// redirect logging to file to clear test results
-		logFile, err := os.Create("bdd_tests.log")
-		if err != nil {
-			panic(err)
-		}
-		log.SetOutput(bufio.NewWriter(logFile))
 
 		// reset the seed to get predictable results on PRNG for tests
 		rand.Seed(1)

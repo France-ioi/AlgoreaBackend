@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+	log "github.com/sirupsen/logrus"
 )
 
 var opt = godog.Options{
@@ -22,6 +24,14 @@ func RunGodogTests(m *testing.M) {
 
 	opt.Paths = featureFilesInCurrentDir()
 	godog.BindFlags("godog.", flag.CommandLine, &opt)
+
+	// log to file for tests to prevent mixing with godog output
+	f, err := os.OpenFile("bdd_test.log", os.O_WRONLY|os.O_CREATE, 0755)
+	if err != nil {
+		fmt.Printf("Unable to open file for logs, fallback to default: %v\n", err)
+	} else {
+		log.SetOutput(f)
+	}
 
 	status := godog.RunWithOptions("godogs", func(s *godog.Suite) {
 		FeatureContext(s)

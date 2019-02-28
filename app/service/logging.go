@@ -46,6 +46,7 @@ func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	entry := &StructuredLoggerEntry{Logger: log.NewEntry(l.Logger)}
 	logFields := log.Fields{}
 
+	logFields["type"] = "web"
 	logFields["ts"] = time.Now().UTC().Format(time.RFC1123)
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {

@@ -2,8 +2,6 @@ package database
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"reflect"
 	"strings"
 
@@ -34,17 +32,12 @@ func Open(dsnConfig string) (*DB, error) {
 	return newDB(dbConn), err
 }
 
-// DBLogger is the logger type for the DB logs
-type DBLogger interface {
-	Print(v ...interface{})
-}
-
 // SetLogger sets the logger to use for db and the verbosity level.
 // Pass `nil` as logger to disable logging (only errors to stdout)
 func (conn *DB) SetLogger(logger DBLogger) {
 	if logger == nil {
 		conn.db.LogMode(false)
-		conn.db.SetLogger(gorm.Logger{LogWriter: log.New(os.Stdout, "\r\n", 0)})
+		conn.db.SetLogger(StdOutColoredLogger) // print errors on stdout
 	} else {
 		conn.db.LogMode(true)
 		conn.db.SetLogger(logger)
