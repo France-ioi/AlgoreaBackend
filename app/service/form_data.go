@@ -123,10 +123,8 @@ func (f *FormData) processGovalidatorErrors(err error) error {
 				}
 				path += err.Name
 				f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
-			} else {
-				if err := f.processGovalidatorErrors(validatorError); err != nil {
-					return err // should never happen
-				}
+			} else if err := f.processGovalidatorErrors(validatorError); err != nil {
+				return err // should never happen
 			}
 		}
 	} else {
