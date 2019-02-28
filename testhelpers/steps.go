@@ -32,12 +32,12 @@ type dbquery struct {
 // TestContext implements context for tests
 type TestContext struct {
 	// nolint
-	application                      *app.Application // do NOT call it directly, use `app()`
-	userID                           int64            // userID that will be used for the next requests
-	featureQueries                   []dbquery
-	lastResponse                     *http.Response
-	lastResponseBody                 string
-	inScenario                       bool
+	application      *app.Application // do NOT call it directly, use `app()`
+	userID           int64            // userID that will be used for the next requests
+	featureQueries   []dbquery
+	lastResponse     *http.Response
+	lastResponseBody string
+	inScenario       bool
 }
 
 const (
@@ -95,7 +95,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer func() { /* #nosec */ _ = resp.Body.Close()}()
+	defer func() { /* #nosec */ _ = resp.Body.Close() }()
 
 	return resp, string(respBody), nil
 }
@@ -130,7 +130,7 @@ func (ctx *TestContext) db() *sql.DB {
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
-	defer func() {_ = db.Close()}()
+	defer func() { _ = db.Close() }()
 
 	dbName := ctx.app().Config.Database.Connection.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
@@ -141,7 +141,7 @@ func (ctx *TestContext) emptyDB() error {
 	if err != nil {
 		return err
 	}
-	defer func() {_ = rows.Close()}()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var tableName string
@@ -162,7 +162,7 @@ func (ctx *TestContext) initDB() error {
 		return err
 	}
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	for _, query := range ctx.featureQueries {
 		_, err := db.Exec(query.sql, query.values)
@@ -214,7 +214,7 @@ func dbDataTableValue(input string) interface{} {
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
 	db := ctx.db()
-	defer func() {/* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	var fields []string
 	var marks []string
@@ -368,7 +368,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// Expect 'null' string in the table to check for nullness
 
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	var selects []string
 	head := data.Rows[0].Cells
