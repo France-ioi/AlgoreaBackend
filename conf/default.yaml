@@ -10,8 +10,10 @@ database:
     allownativepasswords: true
     parseTime: true # required for the migration system
 logging:
-  textlogging: true
+  format: text # text, json
+  output: file # stdout, stderr, file
   level: debug # debug, info, warning, error, fatal, panic
+  logSQLQueries: true
 
 # reverseProxy: # server to which requests which do not match any route will be sent
 #   server: "http://localhost:3000"
