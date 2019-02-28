@@ -37,9 +37,7 @@ func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	}
 
 	f.checkProvidedFields()
-	if err := f.validateFieldValues(); err != nil {
-		return err
-	}
+	f.validateFieldValues()
 
 	if len(f.fieldErrors) > 0 {
 		return f.fieldErrors
@@ -104,11 +102,10 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	return nil
 }
 
-func (f *FormData) validateFieldValues() error {
+func (f *FormData) validateFieldValues() {
 	if _, err := govalidator.ValidateStruct(f.definitionStructure); err != nil {
 		f.processGovalidatorErrors(err)
 	}
-	return nil
 }
 
 func (f *FormData) processGovalidatorErrors(err error) {
