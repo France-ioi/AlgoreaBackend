@@ -135,6 +135,16 @@ func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	return newDB(conn.db.Raw("").Joins(query, args...))
 }
 
+// Updates update attributes with callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
+func (conn *DB) Updates(values interface{}, ignoreProtectedAttrs ...bool) *DB {
+	return newDB(conn.db.Updates(values, ignoreProtectedAttrs...))
+}
+
+// UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
+func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
+	return newDB(conn.db.UpdateColumn(attrs...))
+}
+
 // SubQuery returns the query as sub query
 func (conn *DB) SubQuery() interface{} {
 	return conn.db.SubQuery()
@@ -257,4 +267,9 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 	}
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
 	return conn.db.Exec(query, values...).Error
+}
+
+// Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting
+func (conn *DB) Set(name string, value interface{}) *DB {
+	return newDB(conn.db.Set(name, value))
 }

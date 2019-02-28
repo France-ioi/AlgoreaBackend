@@ -366,3 +366,52 @@ func TestDB_ScanIntoSliceOfMaps_RowsError(t *testing.T) {
 	assert.Nil(t, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDB_Updates(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `id` = ?, `name` = ?")).
+		WithArgs(1, "some name").
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	db = db.Table("myTable")
+	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": "some name"})
+	assert.NotEqual(t, updateDB, db)
+	assert.NoError(t, updateDB.Error())
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_UpdateColumn(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `name` = ?")).
+		WithArgs("some name").
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	db = db.Table("myTable")
+	updateDB := db.UpdateColumn("name", "some name")
+	assert.NotEqual(t, updateDB, db)
+	assert.NoError(t, updateDB.Error())
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Set(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR UPDATE").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	db = db.Table("myTable")
+	setDB := db.Set("gorm:query_option", "FOR UPDATE")
+	assert.NotEqual(t, setDB, db)
+	assert.NoError(t, setDB.Error())
+
+	var result []interface{}
+	assert.NoError(t, setDB.Scan(&result).Error())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
