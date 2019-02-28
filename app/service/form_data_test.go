@@ -201,6 +201,39 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
+		{
+			"sql vs gorm: the last gorm column name wins",
+			&struct {
+				Name string `json:"name" sql:"column:name_sql1;column:name_sql2" gorm:"column:name_gorm1;column:name_gorm2"`
+			}{},
+			`{"name":"John"}`,
+			map[string]interface{}{"name_gorm2": "John"},
+		},
+		{
+			"sql vs gorm: gorm '-' skips the field",
+			&struct {
+				Name string `json:"name" sql:"column:name_sql" gorm:"-"`
+			}{},
+			`{"name":"John"}`,
+			map[string]interface{}{},
+		},
+		{
+			"sql vs gorm: sql '-' skips the field",
+			&struct {
+				Name string `json:"name" sql:"-" gorm:"column:name_gorm"`
+			}{},
+			`{"name":"John"}`,
+			map[string]interface{}{},
+		},
+		{
+			"several fields with the same column name: the last one wins",
+			&struct {
+				Name1 string `json:"name1" sql:"column:name"`
+				Name2 string `json:"name2" sql:"column:name"`
+			}{},
+			`{"name1":"John", "name2":"Paul"}`,
+			map[string]interface{}{"name": "Paul"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
