@@ -2,7 +2,7 @@ module github.com/France-ioi/AlgoreaBackend
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.3.2
-	github.com/France-ioi/mapstructure v1.1.3-0.20190228174931-97c94cb0f90c
+	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
 	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 	github.com/aws/aws-lambda-go v1.8.2
