@@ -59,14 +59,16 @@ var mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)'
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	var rawData map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
+	var err error
+	if err = json.NewDecoder(r.Body).Decode(&rawData); err != nil {
 		return err
 	}
 
 	f.fieldErrors = make(FieldErrors)
 	f.usedKeys = map[string]bool{}
 
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+	var decoder *mapstructure.Decoder
+	decoder, err = mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		Result:           f.definitionStructure,
 		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
 		ErrorUnused:      false, // we will check this on our own
@@ -80,7 +82,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 		panic(err) // this error can only be caused by bugs in the code
 	}
 
-	if err := decoder.Decode(rawData); err != nil {
+	if err = decoder.Decode(rawData); err != nil {
 		if err, ok := err.(*mapstructure.Error); ok {
 			for _, fieldErrorString := range err.Errors { // Convert mapstructure's errors to our format
 				if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
