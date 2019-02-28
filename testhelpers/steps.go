@@ -373,7 +373,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
-		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
+		selects = append(selects, cell.Value)
 	}
 
 	// define 'where' condition if needed
@@ -397,7 +397,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		}
 		// Create a slice of string to represent each attribute value,
 		// and a second slice to contain pointers to each item.
-		rowValues := make([]string, len(sqlCols))
+		rowValues := make([]*string, len(sqlCols))
 		rowValPtr := make([]interface{}, len(sqlCols))
 		for i := range rowValues {
 			rowValPtr[i] = &rowValues[i]
@@ -406,13 +406,25 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		if err := sqlRows.Scan(rowValPtr...); err != nil {
 			return err
 		}
+
+		nullValue := "null"
+		pNullValue := &nullValue
 		// checking that all columns of the test data table match the SQL row
 		for iCol, dataCell := range data.Rows[iDataRow].Cells {
 			colName := dataCols[iCol].Value
 			dataValue := dataCell.Value
-			sqlValue := rowValPtr[iCol].(*string)
-			if dataValue != *sqlValue {
-				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, *sqlValue)
+			sqlValue := rowValPtr[iCol].(**string)
+
+			if *sqlValue == nil {
+				sqlValue = &pNullValue
+			}
+
+			if dataValue == "true" && **sqlValue == "1" || dataValue == "false" && **sqlValue == "0" {
+				continue
+			}
+
+			if dataValue != **sqlValue {
+				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, **sqlValue)
 			}
 		}
 
