@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
@@ -34,8 +33,7 @@ func New() (*Application, error) {
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	logger := logging.New(conf.Logging)
-	log.SetOutput(logger.Writer()) // redirect the stdlib's log to our logger
+	logger := logging.Logger
 
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()

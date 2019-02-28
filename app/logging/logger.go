@@ -9,32 +9,38 @@ import (
 )
 
 var (
-	// Logger is a configured logrus.Logger.
-	Logger *logrus.Logger
+	// Logger is the actual logrus logger which is used
+	Logger = new()
 )
 
-// New creates and configures a new logrus Logger.
-func New(conf config.Logging) *logrus.Logger {
-	var err error
+func new() *logrus.Logger {
+	logger := logrus.New()
+	if conf, err := config.Load(); err == nil {
+		// If config, configure logger. Otherwise, use default logger
+		configureLogger(logger, conf.Logging)
+	}
+	log.SetOutput(logger.Writer())
+	return logger
+}
 
-	Logger = logrus.New()
+func configureLogger(logger *logrus.Logger, conf config.Logging) {
+
 	if conf.TextLogging {
-		Logger.Formatter = &logrus.TextFormatter{
+		logger.Formatter = &logrus.TextFormatter{
 			DisableTimestamp: true,
 		}
 	} else {
-		Logger.Formatter = &logrus.JSONFormatter{}
+		logger.Formatter = &logrus.JSONFormatter{}
 	}
 
 	level := conf.LogLevel
 	if level == "" {
 		level = "error"
 	}
-	var l logrus.Level
-	l, err = logrus.ParseLevel(level)
+	l, err := logrus.ParseLevel(level)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
+	} else {
+		logger.Level = l
 	}
-	Logger.Level = l
-	return Logger
 }
