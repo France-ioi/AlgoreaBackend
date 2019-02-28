@@ -91,15 +91,13 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 					value := make([]byte, len(matches[2]))
 					copy(value, matches[2])
 					f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], string(value))
-					continue
-				}
-				if matches := mapstructDecodingErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
+				} else if matches := mapstructDecodingErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
 					key := make([]byte, len(matches[1]))
 					copy(key, matches[1])
 					f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], "decoding error: "+matches[2])
-					continue
+				} else {
+					f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
 				}
-				f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
 			}
 		}
 	}
