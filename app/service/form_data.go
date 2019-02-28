@@ -122,7 +122,10 @@ func (f *FormData) processGovalidatorErrors(err error) {
 				}
 				field, _ := currentFieldType.FieldByName(pathElement)
 				currentFieldType = field.Type
-				err.Path[pathIndex] = getJSONFieldName(field)
+				jsonName := getJSONFieldName(field)
+				if jsonName != "-" {
+					err.Path[pathIndex] = jsonName
+				}
 			}
 
 			path := strings.Join(err.Path, ".")

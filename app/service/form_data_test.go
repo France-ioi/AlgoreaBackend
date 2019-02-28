@@ -89,6 +89,9 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 					OtherStruct struct {
 						Name string `json:"name" valid:"required"`
 					} `json:"other_struct" valid:"required"`
+					OtherStruct2 struct {
+						Name string `json:"name" valid:"required"`
+					} `valid:"required"`
 				} `json:"struct" valid:"required"`
 			}{},
 			`{"id":0}`,
@@ -99,6 +102,8 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 				"struct.name":              {"non zero value required"},
 				"struct.other_struct":      {"non zero value required"},
 				"struct.other_struct.name": {"non zero value required"},
+				"struct.OtherStruct2":      {"non zero value required"},
+				"struct.OtherStruct2.name": {"non zero value required"},
 			},
 		},
 	}
