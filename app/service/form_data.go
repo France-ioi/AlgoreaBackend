@@ -114,6 +114,17 @@ func (f *FormData) processGovalidatorErrors(err error) {
 	validatorErrors := err.(govalidator.Errors)
 	for _, validatorError := range validatorErrors {
 		if err, ok := validatorError.(govalidator.Error); ok {
+
+			currentFieldType := reflect.TypeOf(f.definitionStructure)
+			for pathIndex, pathElement := range err.Path {
+				for currentFieldType.Kind() == reflect.Ptr {
+					currentFieldType = currentFieldType.Elem()
+				}
+				field, _ := currentFieldType.FieldByName(pathElement)
+				currentFieldType = field.Type
+				err.Path[pathIndex] = getJSONFieldName(field)
+			}
+
 			path := strings.Join(err.Path, ".")
 			if len(path) > 0 {
 				path += "."
@@ -187,11 +198,11 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 		if !unicode.IsUpper(firstRune) { // skip unexported fields
 			continue
 		}
-		jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
-		if len(jsonTagParts[0]) == 0 || jsonTagParts[0] == "-" { // skip fields ignored in json
+
+		jsonName := getJSONFieldName(structField)
+		if jsonName == "-" { // skip fields ignored in json
 			continue
 		}
-		jsonName := jsonTagParts[0]
 		if len(prefix) > 0 {
 			jsonName = prefix + "." + jsonName
 		}
@@ -202,4 +213,12 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 			traverseStructure(fn, field, jsonName)
 		}
 	}
+}
+
+func getJSONFieldName(structField reflect.StructField) string {
+	jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
+	if len(jsonTagParts[0]) == 0 {
+		return "-"
+	}
+	return jsonTagParts[0]
 }

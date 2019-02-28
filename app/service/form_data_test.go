@@ -94,11 +94,11 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			`{"id":0}`,
 			"invalid input data",
 			FieldErrors{
-				"id":                      {"unexpected field"},
-				"struct":                  {"non zero value required"},
-				"Struct.name":             {"non zero value required"},
-				"Struct.other_struct":     {"non zero value required"},
-				"Struct.OtherStruct.name": {"non zero value required"},
+				"id":                       {"unexpected field"},
+				"struct":                   {"non zero value required"},
+				"struct.name":              {"non zero value required"},
+				"struct.other_struct":      {"non zero value required"},
+				"struct.other_struct.name": {"non zero value required"},
 			},
 		},
 	}
