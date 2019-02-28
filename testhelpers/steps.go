@@ -32,12 +32,12 @@ type dbquery struct {
 // TestContext implements context for tests
 type TestContext struct {
 	// nolint
-	application                      *app.Application // do NOT call it directly, use `app()`
-	userID                           int64            // userID that will be used for the next requests
-	featureQueries                   []dbquery
-	lastResponse                     *http.Response
-	lastResponseBody                 string
-	inScenario                       bool
+	application      *app.Application // do NOT call it directly, use `app()`
+	userID           int64            // userID that will be used for the next requests
+	featureQueries   []dbquery
+	lastResponse     *http.Response
+	lastResponseBody string
+	inScenario       bool
 }
 
 const (
@@ -95,7 +95,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 	if err != nil {
 		return nil, "", err
 	}
-	defer func() { /* #nosec */ _ = resp.Body.Close()}()
+	defer func() { /* #nosec */ _ = resp.Body.Close() }()
 
 	return resp, string(respBody), nil
 }
@@ -130,7 +130,7 @@ func (ctx *TestContext) db() *sql.DB {
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
-	defer func() {_ = db.Close()}()
+	defer func() { _ = db.Close() }()
 
 	dbName := ctx.app().Config.Database.Connection.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
@@ -141,7 +141,7 @@ func (ctx *TestContext) emptyDB() error {
 	if err != nil {
 		return err
 	}
-	defer func() {_ = rows.Close()}()
+	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var tableName string
@@ -162,7 +162,7 @@ func (ctx *TestContext) initDB() error {
 		return err
 	}
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	for _, query := range ctx.featureQueries {
 		_, err := db.Exec(query.sql, query.values)
@@ -214,7 +214,7 @@ func dbDataTableValue(input string) interface{} {
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 
 	db := ctx.db()
-	defer func() {/* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	var fields []string
 	var marks []string
@@ -368,12 +368,12 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// Expect 'null' string in the table to check for nullness
 
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close()}()
+	defer func() { /* #nosec */ _ = db.Close() }()
 
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
-		selects = append(selects, fmt.Sprintf("CAST(IFNULL(%s,'NULL') as CHAR(50)) AS %s", cell.Value, cell.Value))
+		selects = append(selects, cell.Value)
 	}
 
 	// define 'where' condition if needed
@@ -397,7 +397,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		}
 		// Create a slice of string to represent each attribute value,
 		// and a second slice to contain pointers to each item.
-		rowValues := make([]string, len(sqlCols))
+		rowValues := make([]*string, len(sqlCols))
 		rowValPtr := make([]interface{}, len(sqlCols))
 		for i := range rowValues {
 			rowValPtr[i] = &rowValues[i]
@@ -406,13 +406,25 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		if err := sqlRows.Scan(rowValPtr...); err != nil {
 			return err
 		}
+
+		nullValue := "null"
+		pNullValue := &nullValue
 		// checking that all columns of the test data table match the SQL row
 		for iCol, dataCell := range data.Rows[iDataRow].Cells {
 			colName := dataCols[iCol].Value
 			dataValue := dataCell.Value
-			sqlValue := rowValPtr[iCol].(*string)
-			if dataValue != *sqlValue {
-				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, *sqlValue)
+			sqlValue := rowValPtr[iCol].(**string)
+
+			if *sqlValue == nil {
+				sqlValue = &pNullValue
+			}
+
+			if (dataValue == "true" && **sqlValue == "1") || (dataValue == "false" && **sqlValue == "0") {
+				continue
+			}
+
+			if dataValue != **sqlValue {
+				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, **sqlValue)
 			}
 		}
 
