@@ -83,21 +83,20 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	}
 
 	if err = decoder.Decode(rawData); err != nil {
-		if err, ok := err.(*mapstructure.Error); ok {
-			for _, fieldErrorString := range err.Errors { // Convert mapstructure's errors to our format
-				if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
-					key := make([]byte, len(matches[1]))
-					copy(key, matches[1])
-					value := make([]byte, len(matches[2]))
-					copy(value, matches[2])
-					f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], string(value))
-				} else if matches := mapstructDecodingErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
-					key := make([]byte, len(matches[1]))
-					copy(key, matches[1])
-					f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], "decoding error: "+matches[2])
-				} else {
-					f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
-				}
+		mapstructureErr := err.(*mapstructure.Error)
+		for _, fieldErrorString := range mapstructureErr.Errors { // Convert mapstructure's errors to our format
+			if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
+				key := make([]byte, len(matches[1]))
+				copy(key, matches[1])
+				value := make([]byte, len(matches[2]))
+				copy(value, matches[2])
+				f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], string(value))
+			} else if matches := mapstructDecodingErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
+				key := make([]byte, len(matches[1]))
+				copy(key, matches[1])
+				f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], "decoding error: "+matches[2])
+			} else {
+				f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
 			}
 		}
 	}
