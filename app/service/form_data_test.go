@@ -135,11 +135,14 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"simple",
 			&struct {
-				ID   int64  `json:"id"`
-				Name string `json:"name"`
+				ID           int64   `json:"id"`
+				Name         string  `json:"name"`
+				NullableName *string `json:"nullable_name"`
 			}{},
-			`{"id":123, "name":"John"}`,
-			map[string]interface{}{"ID": int64(123), "Name": "John"},
+			`{"id": 123, "name": "John", "nullable_name": "Paul"}`,
+			map[string]interface{}{
+				"ID": int64(123), "Name": "John", "NullableName": func() *string { s := "Paul"; return &s }(),
+			},
 		},
 		{
 			"sql and gorm tags",
@@ -182,11 +185,16 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			&struct {
 				Name        string  `json:"name" gorm:"column:sName"`
 				Description *string `json:"description" gorm:"column:sDescription"`
+				Text        *string `json:"text" gorm:"column:sText"`
 				Number      int64   `json:"number" gorm:"column:iNumber"`
 				Number2     *int64  `json:"number2" gorm:"column:iNumber2"`
+				Number3     *int64  `json:"number3" gorm:"column:iNumber3"`
 			}{},
-			`{"name": null, "description": null, "number": null, "number2": null}`,
-			map[string]interface{}{"sName": "", "sDescription": (*string)(nil), "iNumber": int64(0), "iNumber2": (*int64)(nil)},
+			`{"name": null, "description": null, "text": "", "number": null, "number2": null, "number3": 0}`,
+			map[string]interface{}{
+				"sName": "", "sDescription": (*string)(nil), "sText": func() *string { s := ""; return &s }(),
+				"iNumber": int64(0), "iNumber2": (*int64)(nil), "iNumber3": func() *int64 { n := int64(0); return &n }(),
+			},
 		},
 		{
 			"nested structure",
