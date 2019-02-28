@@ -27,7 +27,7 @@ func Open(dsnConfig string) (*DB, error) {
 	var dbConn *gorm.DB
 	var driverName = "mysql"
 	dbConn, err = gorm.Open(driverName, dsnConfig)
-	dbConn.LogMode(true)
+	dbConn.LogMode(false) // disable by default can configured using `SetLogger`
 
 	return newDB(dbConn), err
 }
