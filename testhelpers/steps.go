@@ -419,7 +419,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 				sqlValue = &pNullValue
 			}
 
-			if dataValue == "true" && **sqlValue == "1" || dataValue == "false" && **sqlValue == "0" {
+			if (dataValue == "true" && **sqlValue == "1") || (dataValue == "false" && **sqlValue == "0") {
 				continue
 			}
 
