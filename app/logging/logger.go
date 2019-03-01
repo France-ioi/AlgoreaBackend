@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	// Logger is the actual logrus logger which is used
+	// Logger is the global logger
+	// It should not be used directly by app which should prefer shorthands functions
 	Logger = new()
 )
 

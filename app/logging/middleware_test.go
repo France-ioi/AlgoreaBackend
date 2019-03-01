@@ -58,7 +58,7 @@ func TestMiddleware_Panic(t *testing.T) {
 
 func doRequest(logger *logrus.Logger, forcePanic bool) {
 	// setting up the server with 1 service and using the logger middleware
-	loggerMiddleware := NewStructuredLogger(logger)
+	loggerMiddleware := structuredLoggerMiddleware(logger)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogEntrySetField(r, "my_key", 42)
 		LogEntrySetFields(r, map[string]interface{}{"opt_one": 1, "foo": "bar"})

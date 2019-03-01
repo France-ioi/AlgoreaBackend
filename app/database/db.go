@@ -7,7 +7,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -31,9 +31,7 @@ func Open(dsnConfig string) (*DB, error) {
 	dbConn.LogMode(true)
 
 	// setup logging
-	if logging.Logger != nil {
-		dbConn.SetLogger(logging.Logger.WithField("module", "database"))
-	}
+	dbConn.SetLogger(log.WithField("module", "database")) // actually this is wrong, but for a transition
 
 	return newDB(dbConn), err
 }

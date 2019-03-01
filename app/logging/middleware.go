@@ -38,8 +38,12 @@ type StructuredLogger struct {
 	*logrus.Logger
 }
 
-// NewStructuredLogger implements a custom structured logrus Logger.
-func NewStructuredLogger(logger *logrus.Logger) func(next http.Handler) http.Handler {
+// NewStructuredLogger implements a custom structured logger using the global one.
+func NewStructuredLogger() func(next http.Handler) http.Handler {
+	return structuredLoggerMiddleware(Logger)
+}
+
+func structuredLoggerMiddleware(logger *logrus.Logger) func(next http.Handler) http.Handler {
 	return middleware.RequestLogger(&StructuredLogger{logger})
 }
 
