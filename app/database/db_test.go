@@ -15,14 +15,21 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectQuery("SELECT 1 AS id").
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(int64(1)))
 	mock.ExpectCommit()
 
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
-	}))
+	type resultStruct struct {
+		ID int64 `sql:"column:id"`
+	}
+	result, err := db.inTransaction(func(db *DB) (interface{}, error) {
+		var result []resultStruct
+		err := db.Raw("SELECT 1 AS id").Scan(&result).Error()
+		return result, err
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, []resultStruct{{1}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -36,9 +43,9 @@ func TestDB_inTransaction_DBError(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback()
 
-	gotError := db.inTransaction(func(db *DB) error {
+	_, gotError := db.inTransaction(func(db *DB) (interface{}, error) {
 		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
+		return nil, db.Raw("SELECT 1").Scan(&result).Error()
 	})
 	assert.Equal(t, expectedError, gotError)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -56,7 +63,7 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 
 	assert.Panics(t, func() { panic("") })
 	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
-		_ = db.inTransaction(func(db *DB) error {
+		_, _ = db.inTransaction(func(db *DB) (interface{}, error) {
 			var result []interface{}
 			db.Raw("SELECT 1").Scan(&result)
 			panic(expectedError)
@@ -77,7 +84,7 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 
 	assert.Panics(t, func() { panic("") })
 	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
-		_ = db.inTransaction(func(db *DB) error {
+		_, _ = db.inTransaction(func(db *DB) (interface{}, error) {
 			var result []interface{}
 			db.Raw("SELECT 1").Scan(&result)
 			panic(expectedError)
@@ -97,10 +104,12 @@ func TestDB_inTransaction_ErrorOnCommit(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 	mock.ExpectCommit().WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.inTransaction(func(db *DB) error {
+	_, err := db.inTransaction(func(db *DB) (interface{}, error) {
 		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
-	}))
+		return nil, db.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

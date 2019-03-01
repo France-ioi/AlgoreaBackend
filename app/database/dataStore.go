@@ -92,8 +92,8 @@ func (s *DataStore) EnsureSetID(id *types.Int64) {
 }
 
 // InTransaction executes the given function in a transaction and commits
-func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
-	return s.inTransaction(func(db *DB) error {
+func (s *DataStore) InTransaction(txFunc func(*DataStore) (interface{}, error)) (interface{}, error) {
+	return s.inTransaction(func(db *DB) (interface{}, error) {
 		return txFunc(NewDataStoreWithTable(db, s.tableName))
 	})
 }

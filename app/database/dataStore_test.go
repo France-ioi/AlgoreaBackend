@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 
@@ -90,4 +91,58 @@ func TestDataStore_ByID_ForAbstractDataStore(t *testing.T) {
 	assert.PanicsWithValue(t, "method ByID() called for abstract DataStore", func() {
 		NewDataStore(db).ByID(123)
 	})
+}
+
+func TestDataStore_InTransaction_NoErrors(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1 AS id").
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(int64(1)))
+	mock.ExpectCommit()
+
+	type resultStruct struct {
+		ID int64 `sql:"column:id"`
+	}
+
+	store := NewDataStoreWithTable(db, "myTable")
+	result, err := store.InTransaction(func(s *DataStore) (interface{}, error) {
+		assert.Equal(t, store.tableName, s.tableName)
+		assert.NotEqual(t, store, s)
+		assert.NotEqual(t, store.db, s.db)
+
+		var result []resultStruct
+		err := db.Raw("SELECT 1 AS id").Scan(&result).Error()
+		return result, err
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, []resultStruct{{1}}, result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_InTransaction_DBError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
+	mock.ExpectRollback()
+
+	store := NewDataStoreWithTable(db, "myTable")
+	result, gotError := store.InTransaction(func(s *DataStore) (interface{}, error) {
+		assert.Equal(t, store.tableName, s.tableName)
+		assert.NotEqual(t, store, s)
+		assert.NotEqual(t, store.db, s.db)
+
+		var result []interface{}
+		return "value", db.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.Equal(t, expectedError, gotError)
+	assert.Equal(t, "value", result)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

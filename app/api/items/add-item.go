@@ -121,19 +121,20 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 	srv.Store.EnsureSetID(&input.ID.Int64)
 
-	return srv.Store.InTransaction(func(store *database.DataStore) error {
+	_, err := srv.Store.InTransaction(func(store *database.DataStore) (interface{}, error) {
 		var err error
 		if err = store.Items().Insert(input.itemData()); err != nil {
-			return err
+			return nil, err
 		}
 		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
-			return err
+			return nil, err
 		}
 		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {
-			return err
+			return nil, err
 		}
-		return store.ItemItems().Insert(input.itemItemData(store.NewID()))
+		return nil, store.ItemItems().Insert(input.itemItemData(store.NewID()))
 	})
+	return err
 }
 
 func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service.APIError {

@@ -38,10 +38,10 @@ func Open(dsnConfig string) (*DB, error) {
 	return newDB(dbConn), err
 }
 
-func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
+func (conn *DB) inTransaction(txFunc func(*DB) (interface{}, error)) (result interface{}, err error) {
 	var txDB = conn.db.Begin()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -59,8 +59,8 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 			err = txDB.Error
 		}
 	}()
-	err = txFunc(newDB(txDB))
-	return err
+	result, err = txFunc(newDB(txDB))
+	return
 }
 
 // Close close current db connection.  If database connection is not an io.Closer, returns an error.
