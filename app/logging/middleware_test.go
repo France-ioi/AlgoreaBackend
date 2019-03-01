@@ -13,9 +13,10 @@ import (
 
 func TestMiddleware_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	logger, hook := test.NewNullLogger()
+	var hook *test.Hook
+	Logger, hook = test.NewNullLogger()
 
-	doRequest(logger, false)
+	doRequest(false)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -43,9 +44,10 @@ func TestMiddleware_Success(t *testing.T) {
 
 func TestMiddleware_Panic(t *testing.T) {
 	assert := assertlib.New(t)
-	logger, hook := test.NewNullLogger()
+	var hook *test.Hook
+	Logger, hook = test.NewNullLogger()
 
-	doRequest(logger, true)
+	doRequest(true)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -56,9 +58,9 @@ func TestMiddleware_Panic(t *testing.T) {
 	assert.Equal("my panic msg", entryData["panic"])
 }
 
-func doRequest(logger *logrus.Logger, forcePanic bool) {
+func doRequest(forcePanic bool) {
 	// setting up the server with 1 service and using the logger middleware
-	loggerMiddleware := structuredLoggerMiddleware(logger)
+	loggerMiddleware := NewStructuredLogger()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogEntrySetField(r, "my_key", 42)
 		LogEntrySetFields(r, map[string]interface{}{"opt_one": 1, "foo": "bar"})
