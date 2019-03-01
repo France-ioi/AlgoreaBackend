@@ -119,6 +119,15 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 				"struct.OtherStruct2.name": {"non zero value required"},
 			},
 		},
+		{
+			"rare errors (unsupported type)",
+			&struct {
+				Field chan bool `json:"field"`
+			}{},
+			`{"field":"value"}`,
+			"invalid input data",
+			FieldErrors{"": {"field: unsupported type: chan"}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
