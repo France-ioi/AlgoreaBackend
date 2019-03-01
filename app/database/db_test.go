@@ -15,14 +15,20 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectQuery("SELECT 1 AS id").
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(int64(1)))
 	mock.ExpectCommit()
 
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		var result []interface{}
-		return db.Raw("SELECT 1").Scan(&result).Error()
-	}))
+	type resultStruct struct {
+		ID int64 `sql:"column:id"`
+	}
+	var result []resultStruct
+	err := db.inTransaction(func(db *DB) error {
+		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, []resultStruct{{1}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
