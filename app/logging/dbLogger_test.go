@@ -30,7 +30,8 @@ func TestLoggerFromConfig_TextLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
 	config := config.Logging{
-		TextLogging: true,
+		Format: "text",
+		Output: "file",
 	}
 	dbLogger, _ := loggerFromConfig(config, logger)
 	assert.IsType(gorm.Logger{}, dbLogger)
@@ -40,17 +41,30 @@ func TestLoggerFromConfig_JSONLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
 	config := config.Logging{
-		TextLogging: false,
+		Format: "json",
+		Output: "file",
 	}
 	dbLogger, _ := loggerFromConfig(config, logger)
 	assert.IsType(&StructuredDBLogger{}, dbLogger)
+}
+
+func TestLoggerFromConfig_WrongFormat(t *testing.T) {
+	assert := assertlib.New(t)
+	logger := logrus.New()
+	config := config.Logging{
+		Format: "yml",
+		Output: "file",
+	}
+	assert.Panics(func() { loggerFromConfig(config, logger) })
 }
 
 func TestLoggerFromConfig_WithoutSQL(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
 	config := config.Logging{
-		LogSQL: false,
+		LogSQLQueries: false,
+		Format:        "text",
+		Output:        "file",
 	}
 	_, logMode := loggerFromConfig(config, logger)
 	assert.False(logMode)
@@ -60,7 +74,9 @@ func TestLoggerFromConfig_WithSQL(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
 	config := config.Logging{
-		LogSQL: true,
+		LogSQLQueries: true,
+		Format:        "text",
+		Output:        "file",
 	}
 	_, logMode := loggerFromConfig(config, logger)
 	assert.True(logMode)

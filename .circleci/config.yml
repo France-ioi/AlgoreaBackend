@@ -30,6 +30,10 @@ jobs:
       ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
       ALGOREA_DATABASE.CONNECTION.DBNAME: ci_db
+      ALGOREA_LOGGING.FORMAT: json
+      ALGOREA_LOGGING.OUTPUT: file
+      ALGOREA_LOGGING.LOGSQLQUERIES: 1
+      ALGOREA_LOGGING.LEVEL: debug
     steps:
       - attach_workspace:
           at: ./
@@ -57,6 +61,8 @@ jobs:
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
+      - store_artifacts:
+          path: log
       - run:
           when: on_fail
           name: On failure, run BDD tests with details

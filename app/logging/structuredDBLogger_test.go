@@ -16,8 +16,8 @@ import (
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.TEXTLOGGING", "0")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQL", "1")
+	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
+	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
 	db, mock := database.NewDBMock()
 
@@ -37,8 +37,8 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.TEXTLOGGING", "false")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQL", "true")
+	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
+	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
 	db, mock := database.NewDBMock()
 
@@ -52,8 +52,8 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.TEXTLOGGING", "false")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQL", "true")
+	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
+	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
 	db, mock := database.NewDBMock()
 

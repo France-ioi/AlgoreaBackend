@@ -79,7 +79,7 @@ func doRequest(logger *logrus.Logger, forcePanic bool) {
 	// calling web server
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", nil)
 	client := mainSrv.Client()
-	client.Do(mainRequest)
+	_, _ = client.Do(mainRequest)
 }
 
 func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {

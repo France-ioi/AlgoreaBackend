@@ -1,9 +1,6 @@
 package logging
 
 import (
-	"log"
-	"os"
-
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus"
 
@@ -30,9 +27,13 @@ func NewDBLogger() (DBLogger, bool) {
 }
 
 func loggerFromConfig(conf config.Logging, logger *logrus.Logger) (DBLogger, bool) {
-	logMode := conf.LogSQL
-	if conf.TextLogging {
-		return gorm.Logger{LogWriter: log.New(os.Stdout, "\r\n", 0)}, logMode
+	logMode := conf.LogSQLQueries
+	switch conf.Format {
+	case "text":
+		return gorm.Logger{LogWriter: logger}, logMode
+	case "json":
+		return NewStructuredDBLogger(logger), logMode
+	default:
+		panic("Logging format must be either 'text' or 'json'. Got: " + conf.Format)
 	}
-	return NewStructuredDBLogger(logger), logMode
 }
