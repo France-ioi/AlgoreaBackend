@@ -7,7 +7,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -29,10 +29,9 @@ func Open(source interface{}) (*DB, error) {
 	var dbConn *gorm.DB
 	var driverName = "mysql"
 	dbConn, err = gorm.Open(driverName, source)
-	dbConn.LogMode(true)
-
-	// setup logging
-	dbConn.SetLogger(log.WithField("module", "database")) // actually this is wrong, but for a transition
+	dbLogger, logMode := logging.NewDBLogger()
+	dbConn.LogMode(logMode)
+	dbConn.SetLogger(dbLogger)
 
 	return newDB(dbConn), err
 }

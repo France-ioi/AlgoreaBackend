@@ -12,6 +12,7 @@ database:
 logging:
   textlogging: true
   logLevel: debug # debug, info, warning, error, fatal, panic
+  logSQL: false
 
 # reverseProxy: # server to which requests which do not match any route will be sent
 #   server: "http://localhost:3000"
