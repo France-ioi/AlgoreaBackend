@@ -51,7 +51,7 @@ type Root struct {
 }
 
 var (
-	configName = "default"
+	configName = "config"
 	configDir  = configDirectory()
 )
 

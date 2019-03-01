@@ -19,3 +19,6 @@
 
 # Logs
 /log/*.log
+
+# Local config
+conf/config.yaml
