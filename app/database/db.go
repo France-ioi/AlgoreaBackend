@@ -23,11 +23,12 @@ func newDB(db *gorm.DB) *DB {
 
 // Open connects to the database and tests the connection
 // nolint: gosec
-func Open(dsnConfig string) (*DB, error) {
+func Open(source interface{}) (*DB, error) {
+
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
-	dbConn, err = gorm.Open(driverName, dsnConfig)
+	dbConn, err = gorm.Open(driverName, source)
 	dbConn.LogMode(true)
 
 	// setup logging
