@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -44,7 +45,9 @@ const (
 	noID int64 = -1
 )
 
-func (ctx *TestContext) SetupTestContext(interface{}) { // nolint
+func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
+	scenario := data.(*gherkin.Scenario)
+	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
 	ctx.application = nil
 	ctx.userID = 999 // the default for the moment
 	ctx.lastResponse = nil

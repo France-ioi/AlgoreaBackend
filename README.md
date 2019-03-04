@@ -23,10 +23,13 @@ The application needs a database (MySQL) to run and requires it for a major part
 
 To make testing and development easier, a `docker-compose` file declares a database using the default configuration. Launch `docker-compose up` to run tests without any configuration efforts.
 
-## Database Configuration
+## Configuration
 
-Database configuration currently goes in `conf/default.yml` file or using environment variables (higher priority, see `.circleci/config.yml` for examples)
-The empty dump (schema with data in it) can be loaded using the `./bin/AlgoreaBackend db-restore` followed by `./bin/AlgoreaBackend db-migrate`.
+The app configuration stands in the `conf/config.yml` file. The file `conf/config.sample.yml` is a sample configuration to start from, it is configured to work with the `docker-compose` configuration for local development. All configuration parameter can be also defined using environment variables (with an higher priority), see `.circleci/config.yml` for examples.
+
+## Seeding the database
+
+An empty dump (schema without data) can be loaded using the `./bin/AlgoreaBackend db-restore` followed by `./bin/AlgoreaBackend db-migrate`.
 
 ## Testing
 

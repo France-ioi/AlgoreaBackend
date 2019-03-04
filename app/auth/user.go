@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // User represents the context around the authenticated user making the request
@@ -46,7 +46,7 @@ func (u *User) lazyLoadData() error {
 			Scan(u.data)
 		if err = db.Error(); err != nil {
 			u.data = nil
-			logging.Logger.Errorf("Unable to load user data: %s", db.Error())
+			log.Errorf("Unable to load user data: %s", db.Error())
 		}
 	}
 	return err

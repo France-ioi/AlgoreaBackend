@@ -16,3 +16,9 @@
 
 # Tests artefacts
 /test-results
+
+# Logs
+/log/*.log
+
+# Local config
+conf/config.yaml
