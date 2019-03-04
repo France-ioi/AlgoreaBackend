@@ -18,4 +18,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/", service.AppHandler(srv.getAll).ServeHTTP)
 	router.Get("/groups/{group_id}/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
+	router.Post("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 }
