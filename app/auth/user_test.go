@@ -5,13 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/sirupsen/logrus"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 type MockUserStore struct {
@@ -55,7 +53,6 @@ func TestSelfGroupID(t *testing.T) {
 
 func TestSelfGroupIDFail(t *testing.T) {
 	assert := assertlib.New(t)
-	logging.Logger = logrus.New() // fixme: should not be required to set it in tests
 
 	db, dbMock := database.NewDBMock()
 	userStore := database.NewDataStore(db).Users()

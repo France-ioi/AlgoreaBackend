@@ -30,11 +30,16 @@ jobs:
       ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
       ALGOREA_DATABASE.CONNECTION.DBNAME: ci_db
+      ALGOREA_LOGGING.FORMAT: json
+      ALGOREA_LOGGING.OUTPUT: file
+      ALGOREA_LOGGING.LOGSQLQUERIES: 1
+      ALGOREA_LOGGING.LEVEL: debug
     steps:
       - attach_workspace:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get install mysql-client # required for db-restore
+      - run: cp conf/config.sample.yaml conf/config.yaml # as env var are not loaded for entries not in config file (bug)
       - run:
           name: Wait for MySQL
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
@@ -57,6 +62,8 @@ jobs:
       - store_test_results: &TESTPATH
           path: test-results
       - store_artifacts: *TESTPATH
+      - store_artifacts:
+          path: log
       - run:
           when: on_fail
           name: On failure, run BDD tests with details

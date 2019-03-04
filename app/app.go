@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // Application is the core state of the app
@@ -34,18 +33,15 @@ func New() (*Application, error) {
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	logger := logging.New(conf.Logging)
-	log.SetOutput(logger.Writer()) // redirect the stdlib's log to our logger
-
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {
-		logger.WithField("module", "database").Error(err)
+		log.WithField("module", "database").Error(err)
 	}
 
 	var apiCtx *api.Ctx
 	if apiCtx, err = api.NewCtx(conf, db); err != nil {
-		logger.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -58,7 +54,7 @@ func New() (*Application, error) {
 	router.Use(middleware.DefaultCompress)
 	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))
 
-	router.Use(logging.NewStructuredLogger(logger))
+	router.Use(log.NewStructuredLogger())
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain

@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jinzhu/gorm"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 )
 
 // NewDBMock generate a DB mock the database engine
@@ -16,11 +15,11 @@ func NewDBMock() (*DB, sqlmock.Sqlmock) {
 		os.Exit(1)
 	}
 
-	dbConn, err := gorm.Open("mysql", dbMock)
+	db, err := Open(dbMock)
 	if err != nil {
 		fmt.Println("Unable to create the gorm connection to the mock: ", err)
 		os.Exit(1)
 	}
 
-	return newDB(dbConn), mock
+	return db, mock
 }
