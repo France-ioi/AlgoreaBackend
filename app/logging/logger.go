@@ -32,7 +32,7 @@ func configureLogger(logger *logrus.Logger, conf config.Logging) {
 	// Format
 	switch conf.Format {
 	case "text":
-		logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true})
+		logger.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: conf.Output != "file"})
 	case "json":
 		logger.SetFormatter(&logrus.JSONFormatter{})
 	default:
