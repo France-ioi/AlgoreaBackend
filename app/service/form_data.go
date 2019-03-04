@@ -111,7 +111,6 @@ func (f *FormData) processGovalidatorErrors(err error) {
 	validatorErrors := err.(govalidator.Errors)
 	for _, validatorError := range validatorErrors {
 		if err, ok := validatorError.(govalidator.Error); ok {
-
 			currentFieldType := reflect.TypeOf(f.definitionStructure)
 			for pathIndex, pathElement := range err.Path {
 				for currentFieldType.Kind() == reflect.Ptr {
@@ -130,7 +129,9 @@ func (f *FormData) processGovalidatorErrors(err error) {
 				path += "."
 			}
 			path += err.Name
-			f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
+			if f.usedKeys[path] {
+				f.fieldErrors[path] = append(f.fieldErrors[path], err.Err.Error())
+			}
 		} else {
 			f.processGovalidatorErrors(validatorError)
 		}

@@ -85,9 +85,9 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"multiple errors",
 			&struct {
-				ID int64 `json:"id" valid:"required"`
+				ID *int64 `json:"id" valid:"required"`
 			}{},
-			`{"my_id":1, "id":0}`,
+			`{"my_id":1, "id":null}`,
 			"invalid input data",
 			FieldErrors{
 				"id":    {"non zero value required"},
@@ -99,25 +99,53 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			&struct {
 				Struct struct {
 					Name        string `json:"name" valid:"required"`
-					OtherStruct struct {
-						Name string `json:"name" valid:"required"`
+					OtherStruct *struct {
+						Name *string `json:"name" valid:"required"`
 					} `json:"other_struct" valid:"required"`
-					OtherStruct2 struct {
-						Name string `json:"name" valid:"required"`
+					OtherStruct2 *struct {
+						Name *string `json:"name" valid:"required"`
 					} `valid:"required"`
 				} `json:"struct" valid:"required"`
 			}{},
-			`{"id":0}`,
+			`{"id":null, "struct":{"other_struct":null, "OtherStruct2": null}}`,
+			"invalid input data",
+			FieldErrors{
+				"id":                  {"unexpected field"},
+				"struct.other_struct": {"non zero value required"},
+				"struct.OtherStruct2": {"non zero value required"},
+			},
+		},
+		{
+			"nested structure2",
+			&struct {
+				Struct struct {
+					Name        *string `json:"name" valid:"required"`
+					OtherStruct struct {
+						Name *string `json:"name" valid:"required"`
+					} `json:"other_struct" valid:"required"`
+					OtherStruct2 struct {
+						Name *string `json:"name" valid:"required"`
+					} `valid:"required"`
+				} `json:"struct" valid:"required"`
+			}{},
+			`{"id":null, "struct":{"name":null, "other_struct":{"name":null}, "OtherStruct2":{"name":null}}}`,
 			"invalid input data",
 			FieldErrors{
 				"id":                       {"unexpected field"},
-				"struct":                   {"non zero value required"},
 				"struct.name":              {"non zero value required"},
-				"struct.other_struct":      {"non zero value required"},
 				"struct.other_struct.name": {"non zero value required"},
-				"struct.OtherStruct2":      {"non zero value required"},
 				"struct.OtherStruct2.name": {"non zero value required"},
 			},
+		},
+		{
+			"ignores errors in fields that are not given",
+			&struct {
+				ID   *int64  `json:"id" valid:"required"`
+				Name *string `json:"name" valid:"required"`
+			}{},
+			`{}`,
+			"",
+			nil,
 		},
 		{
 			"rare errors (unsupported type)",
