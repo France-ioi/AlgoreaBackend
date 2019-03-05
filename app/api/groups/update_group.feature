@@ -21,7 +21,7 @@ Feature: Update a group (groupEdit)
       | 78 | 13            | 24           | requestSent        | 0        |
       | 79 | 14            | 22           | requestSent        | 0        |
 
-  Scenario: User is an owner of the group (all fields), updates groups_groups
+  Scenario: User is an owner of the group, all fields are not nulls, updates groups_groups
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -59,7 +59,7 @@ Feature: Update a group (groupEdit)
       | 78 | 13            | 24           | requestRefused     | 0        |
       | 79 | 14            | 22           | requestSent        | 0        |
 
-  Scenario: User is an owner of the group (null fields)
+  Scenario: User is an owner of the group, nullable fields are nulls
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -90,7 +90,7 @@ Feature: Update a group (groupEdit)
       | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Club      | null                                   | false   | false       | ybabbxnlyo | null           | null                 | false        |
       | 14 | Group C | -4     | Admin Group     | 2019-04-06T09:26:40Z | UserAdmin | null                                   | true    | false       | null       | null           | null                 | false        |
 
-  Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access is still true)
+  Scenario: User is an owner of the group, does not update groups_groups (free_access is still true)
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -128,7 +128,7 @@ Feature: Update a group (groupEdit)
       | 78 | 13            | 24           | requestSent        | 0        |
       | 79 | 14            | 22           | requestSent        | 0        |
 
-  Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access is not changed)
+  Scenario: User is an owner of the group, does not update groups_groups (free_access is not changed)
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -165,7 +165,7 @@ Feature: Update a group (groupEdit)
       | 78 | 13            | 24           | requestSent        | 0        |
       | 79 | 14            | 22           | requestSent        | 0        |
 
-  Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access changes from false to true)
+  Scenario: User is an owner of the group, does not update groups_groups (free_access changes from false to true)
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/14" with the following body:
     """
