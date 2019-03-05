@@ -2,9 +2,10 @@ package groups
 
 import (
 	"errors"
-	"github.com/go-chi/render"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -60,7 +61,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		if errInTransaction = refuseSentGroupRequestsIfNeeded(store, groupID, dbMap, previousData[0].FreeAccess); errInTransaction != nil {
-			return errInTransaction
+			return errInTransaction // rollback
 		}
 
 		// update the group
@@ -75,8 +76,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		return apiErr
 	}
 
-	if err != nil && err != apiErr.Error {
-		service.ErrUnexpected(err)
+	if err != nil {
+		return service.ErrUnexpected(err)
 	}
 
 	response := service.Response{Success: true, Message: "success"}

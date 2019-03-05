@@ -1,9 +1,22 @@
 package groups
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
+
+	"bou.ke/monkey"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-chi/chi"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func Test_validateUpdateGroupInput(t *testing.T) {
@@ -58,4 +71,67 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
+	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).WillReturnError(errors.New("error"))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(0, 1).WillReturnError(errors.New("some error"))
+		mock.ExpectRollback()
+	})
+}
+
+func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
+	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(true))
+		mock.ExpectExec("UPDATE `groups_groups` .+").WithArgs("requestRefused", 1).
+			WillReturnError(errors.New("some error"))
+		mock.ExpectRollback()
+	})
+}
+
+func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
+	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(false))
+		mock.ExpectExec("UPDATE `groups` .+").
+			WillReturnError(errors.New("some error"))
+		mock.ExpectRollback()
+	})
+}
+
+func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	setMockExpectationsFunc(mock)
+
+	base := service.Base{Store: database.NewDataStore(db), Config: nil}
+	srv := &Service{Base: base}
+	router := chi.NewRouter()
+	router.Post("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
+
+	monkey.Patch(auth.UserIDFromContext, func(context context.Context) int64 {
+		return 2
+	})
+	defer monkey.UnpatchAll()
+
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	request, _ := http.NewRequest("POST", ts.URL+"/groups/1", strings.NewReader(`{"free_access":false}`))
+	response, err := http.DefaultClient.Do(request)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 500, response.StatusCode)
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
