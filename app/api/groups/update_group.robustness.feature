@@ -97,3 +97,13 @@ Feature: Update a group (groupEdit) - robustness
       | 11 | Group A    | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
       | 13 | Group B    | -2     | Group B is here | 2019-03-06T09:26:40Z | Class     | 182529188317717610/1672978871462145461 | true    | true        | ybabbxnlyo | 01:00:00       | 2017-10-14T05:39:48Z | true         |
       | 14 | Group C    | -4     | Admin Group     | 2019-04-06T09:26:40Z | UserAdmin | null                                   | true    | true        | null       | null           | null                 | false        |
+
+  Scenario: The group ID is not a number
+    Given I am the user with ID "1"
+    When I send a POST request to "/groups/1_3" with the following body:
+    """
+    {
+    }
+    """
+    Then the response code should be 400
+    And the response error message should contain "Missing group_id"
