@@ -59,7 +59,7 @@ Feature: Update a group (groupEdit)
       | 78 | 13            | 24           | requestRefused     | 0        |
       | 79 | 14            | 22           | requestSent        | 0        |
 
-  Scenario: User is an owner of the group (null fields), updates groups_groups
+  Scenario: User is an owner of the group (null fields)
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -89,13 +89,6 @@ Feature: Update a group (groupEdit)
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
       | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Club      | null                                   | false   | false       | ybabbxnlyo | null           | null                 | false        |
       | 14 | Group C | -4     | Admin Group     | 2019-04-06T09:26:40Z | UserAdmin | null                                   | true    | false       | null       | null           | null                 | false        |
-    And the table "groups_groups" should be:
-      | ID | idGroupParent | idGroupChild | sType              | iVersion |
-      | 75 | 13            | 21           | invitationSent     | 0        |
-      | 76 | 13            | 22           | requestRefused     | 0        |
-      | 77 | 13            | 23           | invitationAccepted | 0        |
-      | 78 | 13            | 24           | requestRefused     | 0        |
-      | 79 | 14            | 22           | requestSent        | 0        |
 
   Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access is still true)
     Given I am the user with ID "1"
