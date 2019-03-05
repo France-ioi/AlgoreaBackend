@@ -38,14 +38,7 @@ Feature: Update a group (groupEdit)
       "redirect_path": "1234/5678"
     }
     """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-		"""
-		{
-      "message": "success",
-      "success": true
-		}
-    """
+    Then the response should be "updated"
     And the table "groups" should be:
       | ID | sName   | iGrade | sDescription   | sDateCreated          | sType     | sRedirectPath                          | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
@@ -76,14 +69,7 @@ Feature: Update a group (groupEdit)
       "password_timer": null
     }
     """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-		"""
-		{
-      "message": "success",
-      "success": true
-		}
-    """
+    Then the response should be "updated"
     And the table "groups" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType     | sRedirectPath                          | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
@@ -107,14 +93,7 @@ Feature: Update a group (groupEdit)
       "password_timer": null
     }
     """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-		"""
-		{
-      "message": "success",
-      "success": true
-		}
-    """
+    Then the response should be "updated"
     And the table "groups" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType     | sRedirectPath                          | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
@@ -144,14 +123,7 @@ Feature: Update a group (groupEdit)
       "password_timer": null
     }
     """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-		"""
-		{
-      "message": "success",
-      "success": true
-		}
-    """
+    Then the response should be "updated"
     And the table "groups" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType     | sRedirectPath                          | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |
@@ -173,14 +145,7 @@ Feature: Update a group (groupEdit)
       "free_access": true
     }
     """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-		"""
-		{
-      "message": "success",
-      "success": true
-		}
-    """
+    Then the response should be "updated"
     And the table "groups" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType     | sRedirectPath                          | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00       | 2017-10-13T05:39:48Z | true         |

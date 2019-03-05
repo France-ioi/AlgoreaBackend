@@ -80,7 +80,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrUnexpected(err)
 	}
 
-	response := service.Response{Success: true, Message: "success"}
+	response := service.Response{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
 	return service.NoError

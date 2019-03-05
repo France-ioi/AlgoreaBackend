@@ -361,6 +361,30 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
+func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
+	var expectedCode int
+	switch kind {
+	case "updated":
+		expectedCode = 200
+	case "created":
+		expectedCode = 201
+	default:
+		return fmt.Errorf("unknown response kind: %q", kind)
+	}
+	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
+		return err
+	}
+	if err := ctx.TheResponseBodyShouldBeJSON(&gherkin.DocString{
+		Content: `
+		{
+			"message": "` + kind + `",
+			"success": true
+		}`}); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
 	return ctx.TableAtIDShouldBe(tableName, noID, data)
 }
