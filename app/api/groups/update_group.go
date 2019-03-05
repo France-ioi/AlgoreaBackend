@@ -45,22 +45,22 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		var errInTransaction error
 		store := s.Groups()
 
-		var previousData []struct {
+		var currentGroupData []struct {
 			FreeAccess bool `sql:"column:bFreeAccess"`
 		}
 
 		if errInTransaction = store.OwnedBy(user).
 			Select("groups.bFreeAccess").
 			Set("gorm:query_option", "FOR UPDATE").
-			Where("groups.ID = ?", groupID).Limit(1).Scan(&previousData).Error(); errInTransaction != nil {
+			Where("groups.ID = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
-		if len(previousData) < 1 {
+		if len(currentGroupData) < 1 {
 			apiErr = service.ErrForbidden(errors.New("insufficient access rights"))
 			return apiErr.Error // rollback
 		}
 
-		if errInTransaction = refuseSentGroupRequestsIfNeeded(store, groupID, dbMap, previousData[0].FreeAccess); errInTransaction != nil {
+		if errInTransaction = refuseSentGroupRequestsIfNeeded(store, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
