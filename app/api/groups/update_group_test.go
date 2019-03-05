@@ -64,7 +64,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
+			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
 			_, err := validateUpdateGroupInput(r)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validateUpdateGroupInput() error = %#v, wantErr %v", err, tt.wantErr)
@@ -118,7 +118,7 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 	base := service.Base{Store: database.NewDataStore(db), Config: nil}
 	srv := &Service{Base: base}
 	router := chi.NewRouter()
-	router.Post("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
+	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 
 	monkey.Patch(auth.UserIDFromContext, func(context context.Context) int64 {
 		return 2
@@ -128,7 +128,7 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 	ts := httptest.NewServer(router)
 	defer ts.Close()
 
-	request, _ := http.NewRequest("POST", ts.URL+"/groups/1", strings.NewReader(`{"free_access":false}`))
+	request, _ := http.NewRequest("PUT", ts.URL+"/groups/1", strings.NewReader(`{"free_access":false}`))
 	response, err := http.DefaultClient.Do(request)
 
 	assert.NoError(t, err)

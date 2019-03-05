@@ -17,7 +17,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario: Should fail if the user is not an owner of the group
     Given I am the user with ID "2"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {}
     """
@@ -26,7 +26,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
     Given I am the user with ID "2"
-    When I send a POST request to "/groups/15" with the following body:
+    When I send a PUT request to "/groups/15" with the following body:
     """
     {"type":"Club"}
     """
@@ -35,7 +35,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario: User is an owner of the group, but required fields are not filled in correctly
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "type": "Root",
@@ -79,7 +79,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario: User is an owner of the group, but no fields provided
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
     }
@@ -100,7 +100,7 @@ Feature: Update a group (groupEdit) - robustness
 
   Scenario: The group ID is not a number
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/1_3" with the following body:
+    When I send a PUT request to "/groups/1_3" with the following body:
     """
     {
     }

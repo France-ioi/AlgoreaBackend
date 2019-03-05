@@ -23,7 +23,7 @@ Feature: Update a group (groupEdit)
 
   Scenario: User is an owner of the group (all fields), updates groups_groups
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "type": "Team",
@@ -61,7 +61,7 @@ Feature: Update a group (groupEdit)
 
   Scenario: User is an owner of the group (null fields), updates groups_groups
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "type": "Club",
@@ -99,7 +99,7 @@ Feature: Update a group (groupEdit)
 
   Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access is still true)
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "type": "Club",
@@ -137,7 +137,7 @@ Feature: Update a group (groupEdit)
 
   Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access is not changed)
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13" with the following body:
+    When I send a PUT request to "/groups/13" with the following body:
     """
     {
       "type": "Club",
@@ -174,7 +174,7 @@ Feature: Update a group (groupEdit)
 
   Scenario: User is an owner of the group (null fields), does not update groups_groups (free_access changes from false to true)
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/14" with the following body:
+    When I send a PUT request to "/groups/14" with the following body:
     """
     {
       "free_access": true
