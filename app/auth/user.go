@@ -32,8 +32,13 @@ type UserStore interface {
 
 // UserFromContext creates a User context from a context set by the middleware
 func UserFromContext(context context.Context, store UserStore) *User {
-	userID := context.Value(ctxUserID).(int64)
+	userID := UserIDFromContext(context)
 	return &User{userID, store, nil}
+}
+
+// UserIDFromContext returns userID from a context set by the middleware
+func UserIDFromContext(context context.Context) int64 {
+	return context.Value(ctxUserID).(int64)
 }
 
 func (u *User) lazyLoadData() error {
