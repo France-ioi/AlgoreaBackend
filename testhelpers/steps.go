@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,10 +41,11 @@ type TestContext struct {
 	lastResponse     *http.Response
 	lastResponseBody string
 	inScenario       bool
+	dbTableData      map[string]*gherkin.DataTable
 }
 
 const (
-	noID int64 = -1
+	noID int64 = math.MinInt64
 )
 
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
@@ -53,6 +56,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.lastResponse = nil
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
+	ctx.dbTableData = make(map[string]*gherkin.DataTable)
 }
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
@@ -241,7 +245,66 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 			ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
 		}
 	}
+
+	if len(data.Rows) > 1 {
+		if ctx.dbTableData[tableName] != nil {
+			ctx.dbTableData[tableName] = combineGherkinTables(ctx.dbTableData[tableName], data)
+		} else {
+			ctx.dbTableData[tableName] = data
+		}
+	}
+
 	return nil
+}
+
+func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
+	table1FieldMap := map[string]int{}
+	combinedFieldMap := map[string]bool{}
+	columnNumber := len(table1.Rows[0].Cells)
+	combinedColumnNames := make([]string, 0, columnNumber+len(table2.Rows[0].Cells))
+	for index, cell := range table1.Rows[0].Cells {
+		table1FieldMap[cell.Value] = index
+		combinedFieldMap[cell.Value] = true
+		combinedColumnNames = append(combinedColumnNames, cell.Value)
+	}
+	table2FieldMap := map[string]int{}
+	for index, cell := range table2.Rows[0].Cells {
+		table2FieldMap[cell.Value] = index
+		// only add a column if it hasn't been met in table1
+		if !combinedFieldMap[cell.Value] {
+			combinedFieldMap[cell.Value] = true
+			columnNumber++
+			combinedColumnNames = append(combinedColumnNames, cell.Value)
+		}
+	}
+
+	combinedTable := &gherkin.DataTable{}
+	combinedTable.Rows = make([]*gherkin.TableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
+
+	header := &gherkin.TableRow{Cells: make([]*gherkin.TableCell, 0, columnNumber)}
+	for _, columnName := range combinedColumnNames {
+		header.Cells = append(header.Cells, &gherkin.TableCell{Value: columnName})
+	}
+	combinedTable.Rows = append(combinedTable.Rows, header)
+
+	copyCellsIntoCombinedTable(table1, combinedColumnNames, table1FieldMap, combinedTable)
+	copyCellsIntoCombinedTable(table2, combinedColumnNames, table2FieldMap, combinedTable)
+	return combinedTable
+}
+
+func copyCellsIntoCombinedTable(sourceTable *gherkin.DataTable, combinedColumnNames []string,
+	sourceTableFieldMap map[string]int, combinedTable *gherkin.DataTable) {
+	for rowNum := 1; rowNum < len(sourceTable.Rows); rowNum++ {
+		newRow := &gherkin.TableRow{Cells: make([]*gherkin.TableCell, 0, len(combinedColumnNames))}
+		for _, column := range combinedColumnNames {
+			var newCell *gherkin.TableCell
+			if sourceColumnNumber, ok := sourceTableFieldMap[column]; ok {
+				newCell = sourceTable.Rows[rowNum].Cells[sourceColumnNumber]
+			}
+			newRow.Cells = append(newRow.Cells, newCell)
+		}
+		combinedTable.Rows = append(combinedTable.Rows, newRow)
+	}
 }
 
 func (ctx *TestContext) RunFallbackServer() error { // nolint
@@ -361,8 +424,64 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	return nil
 }
 
+func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
+	var expectedCode int
+	switch kind {
+	case "updated":
+		expectedCode = 200
+	case "created":
+		expectedCode = 201
+	default:
+		return fmt.Errorf("unknown response kind: %q", kind)
+	}
+	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
+		return err
+	}
+	if err := ctx.TheResponseBodyShouldBeJSON(&gherkin.DocString{
+		Content: `
+		{
+			"message": "` + kind + `",
+			"success": true
+		}`}); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
 	return ctx.TableAtIDShouldBe(tableName, noID, data)
+}
+
+func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
+	data := ctx.dbTableData[tableName]
+	if data == nil {
+		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
+	}
+	return ctx.TableAtIDShouldBe(tableName, noID, data)
+}
+
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, id int64) error { // nolint
+	data := ctx.dbTableData[tableName]
+	if data == nil {
+		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
+	}
+	idColumnIndex := -1
+	for index, cell := range data.Rows[0].Cells {
+		if cell.Value == "ID" {
+			idColumnIndex = index
+			break
+		}
+	}
+
+	idStringValue := strconv.FormatInt(id, 10)
+	newData := &gherkin.DataTable{Rows: make([]*gherkin.TableRow, 0, len(data.Rows))}
+	for index, row := range data.Rows {
+		if index == 0 || idColumnIndex < 0 ||
+			row.Cells[idColumnIndex] == nil || row.Cells[idColumnIndex].Value != idStringValue {
+			newData.Rows = append(newData.Rows, row)
+		}
+	}
+	return ctx.TableAtIDShouldBe(tableName, -id, newData)
 }
 
 func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gherkin.DataTable) error { // nolint
@@ -382,7 +501,11 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	// define 'where' condition if needed
 	where := ""
 	if id != noID {
-		where = fmt.Sprintf(" WHERE ID = '%d' ", id)
+		if id < 0 {
+			where = fmt.Sprintf(" WHERE ID <> %d ", -id)
+		} else {
+			where = fmt.Sprintf(" WHERE ID = %d ", id)
+		}
 	}
 
 	// exec sql
@@ -414,6 +537,9 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		pNullValue := &nullValue
 		// checking that all columns of the test data table match the SQL row
 		for iCol, dataCell := range data.Rows[iDataRow].Cells {
+			if dataCell == nil {
+				continue
+			}
 			colName := dataCols[iCol].Value
 			dataValue := dataCell.Value
 			sqlValue := rowValPtr[iCol].(**string)

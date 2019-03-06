@@ -19,10 +19,13 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response code should be (\d+)$`, ctx.TheResponseCodeShouldBe)
 	s.Step(`^the response body should be, in JSON:$`, ctx.TheResponseBodyShouldBeJSON)
 	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.TheResponseHeaderShouldBe)
+	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "([^"]*)"$`, ctx.TheResponseErrorMessageShouldContain)
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" at ID "(\d*)" should be:$`, ctx.TableAtIDShouldBe)
+	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
+	s.Step(`^the table "([^"]*)" should stay unchanged but the row with ID "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 
 	s.AfterScenario(ctx.ScenarioTeardown)
 }
