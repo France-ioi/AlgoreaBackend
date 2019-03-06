@@ -87,7 +87,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 // refuseSentGroupRequestsIfNeeded automatically switches all requests to join this group
 // from requestSent to requestRefused
-// if free_access is changed, from true to false,
+// if free_access is changed from true to false
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID int64, dbMap map[string]interface{}, previousFreeAccessValue bool) error {
 	// if bFreeAccess is going to be changed from true to false
