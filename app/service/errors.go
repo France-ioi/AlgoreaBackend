@@ -70,3 +70,10 @@ func ErrNotFound(err error) APIError {
 func ErrUnexpected(err error) APIError {
 	return APIError{http.StatusInternalServerError, err}
 }
+
+// MustNotBeError panics if the error is not nil
+func MustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

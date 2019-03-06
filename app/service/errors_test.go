@@ -96,3 +96,16 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
+
+func TestMustNotBeError_PanicsOnError(t *testing.T) {
+	expectedError := errors.New("some error")
+	assertlib.PanicsWithValue(t, expectedError, func() {
+		MustNotBeError(expectedError)
+	})
+}
+
+func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
+	assertlib.NotPanics(t, func() {
+		MustNotBeError(nil)
+	})
+}
