@@ -24,6 +24,8 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" at ID "(\d*)" should be:$`, ctx.TableAtIDShouldBe)
+	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
+	s.Step(`^the table "([^"]*)" should stay unchanged but the row with ID "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 
 	s.AfterScenario(ctx.ScenarioTeardown)
 }
