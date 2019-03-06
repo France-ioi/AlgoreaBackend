@@ -1,13 +1,18 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"unicode"
 
+	"bou.ke/monkey"
 	"github.com/go-chi/chi"
+	"github.com/sirupsen/logrus"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // QueryParamToInt64Slice extracts from the query parameter of the request a list of integer separated by commas (',')
@@ -156,4 +161,14 @@ func toSnakeCase(in string) string {
 	}
 
 	return string(out)
+}
+
+func setupLogsCaptureForTests() *bytes.Buffer {
+	logs := &bytes.Buffer{}
+	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
+		logger := logrus.New()
+		logger.SetOutput(logs)
+		return logger
+	})
+	return logs
 }

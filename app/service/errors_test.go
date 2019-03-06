@@ -1,17 +1,13 @@
 package service
 
 import (
-	"bytes"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"bou.ke/monkey"
-	"github.com/sirupsen/logrus"
 	assertlib "github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 func responseForError(e APIError) *httptest.ResponseRecorder {
@@ -82,7 +78,7 @@ func TestUnexpected(t *testing.T) {
 }
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
-	logs := setupLogsCapture()
+	logs := setupLogsCaptureForTests()
 	defer monkey.UnpatchAll()
 
 	assert := assertlib.New(t)
@@ -96,7 +92,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 }
 
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
-	logs := setupLogsCapture()
+	logs := setupLogsCaptureForTests()
 	defer monkey.UnpatchAll()
 
 	assert := assertlib.New(t)
@@ -121,14 +117,4 @@ func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
 	assertlib.NotPanics(t, func() {
 		MustNotBeError(nil)
 	})
-}
-
-func setupLogsCapture() *bytes.Buffer {
-	logs := &bytes.Buffer{}
-	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
-		logger := logrus.New()
-		logger.SetOutput(logs)
-		return logger
-	})
-	return logs
 }
