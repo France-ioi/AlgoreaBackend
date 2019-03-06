@@ -37,8 +37,6 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	dbMap := formData.ConstructMapForDB()
-
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
@@ -60,6 +58,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
+		dbMap := formData.ConstructMapForDB()
 		if errInTransaction = refuseSentGroupRequestsIfNeeded(groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
