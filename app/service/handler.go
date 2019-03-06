@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // AppHandler is a type that implements http.Handler and makes handling
@@ -22,6 +24,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			default:
 				apiErr = ErrUnexpected(fmt.Errorf("unknown error: %+v", err))
 			}
+			logging.GetLogEntry(r).Errorf("unexpected error: %s", apiErr.Error)
 		}
 		if apiErr != NoError { // apiErr is an APIError, not os.Error
 			_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails

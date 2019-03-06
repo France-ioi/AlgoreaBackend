@@ -1,12 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"bou.ke/monkey"
+	"github.com/sirupsen/logrus"
 	assertlib "github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 func responseForError(e APIError) *httptest.ResponseRecorder {
@@ -77,6 +82,9 @@ func TestUnexpected(t *testing.T) {
 }
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
+	logs := setupLogsCapture()
+	defer monkey.UnpatchAll()
+
 	assert := assertlib.New(t)
 	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
 		panic(errors.New("some error"))
@@ -84,9 +92,13 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
+	assert.Contains(logs.String(), "unexpected error: some error")
 }
 
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
+	logs := setupLogsCapture()
+	defer monkey.UnpatchAll()
+
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
 	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
@@ -95,6 +107,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
+	assert.Contains(logs.String(), "unexpected error: unknown error: some error")
 }
 
 func TestMustNotBeError_PanicsOnError(t *testing.T) {
@@ -108,4 +121,14 @@ func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
 	assertlib.NotPanics(t, func() {
 		MustNotBeError(nil)
 	})
+}
+
+func setupLogsCapture() *bytes.Buffer {
+	logs := &bytes.Buffer{}
+	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
+		logger := logrus.New()
+		logger.SetOutput(logs)
+		return logger
+	})
+	return logs
 }
