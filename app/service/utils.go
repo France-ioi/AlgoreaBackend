@@ -163,7 +163,7 @@ func toSnakeCase(in string) string {
 	return string(out)
 }
 
-func setupLogsCaptureForTests() *bytes.Buffer {
+func setupLogsCaptureForTests() *bytes.Buffer { // nolint: deadcode
 	logs := &bytes.Buffer{}
 	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
 		logger := logrus.New()
