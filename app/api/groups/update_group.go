@@ -43,13 +43,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		store := s.Groups()
+		groupStore := s.Groups()
 
 		var currentGroupData []struct {
 			FreeAccess bool `sql:"column:bFreeAccess"`
 		}
 
-		if errInTransaction = store.OwnedBy(user).
+		if errInTransaction = groupStore.OwnedBy(user).
 			Select("groups.bFreeAccess").
 			Set("gorm:query_option", "FOR UPDATE").
 			Where("groups.ID = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
@@ -60,12 +60,12 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
-		if errInTransaction = refuseSentGroupRequestsIfNeeded(store, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
+		if errInTransaction = refuseSentGroupRequestsIfNeeded(groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
 		// update the group
-		if errInTransaction = store.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
+		if errInTransaction = groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
