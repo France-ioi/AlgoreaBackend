@@ -52,24 +52,24 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response code should be 400
     And the response body should be, in JSON:
-		"""
-		{
-    	"error_text": "Invalid input data",
- 	    "errors": {
-				"description": ["expected type 'string', got unconvertible type 'float64'"],
-				"free_access": ["expected type 'bool', got unconvertible type 'float64'"],
-				"grade": ["expected type 'int64', got unconvertible type 'string'"],
-				"name": ["expected type 'string', got unconvertible type 'float64'"],
-				"open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
-				"opened": ["expected type 'bool', got unconvertible type 'string'"],
-				"password_end": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
-				"password_timer": ["expected type 'string', got unconvertible type 'float64'"],
-				"redirect_path": ["some path does not validate as matches(^(\\d+(/\\d+)*)*$)"],
-				"type": ["Root does not validate as in(Class|Team|Club|Friends|Other)"]
- 	    },
- 	    "message": "Bad Request",
+    """
+    {
+      "error_text": "Invalid input data",
+      "errors": {
+        "description": ["expected type 'string', got unconvertible type 'float64'"],
+        "free_access": ["expected type 'bool', got unconvertible type 'float64'"],
+        "grade": ["expected type 'int64', got unconvertible type 'string'"],
+        "name": ["expected type 'string', got unconvertible type 'float64'"],
+        "open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
+        "opened": ["expected type 'bool', got unconvertible type 'string'"],
+        "password_end": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
+        "password_timer": ["expected type 'string', got unconvertible type 'float64'"],
+        "redirect_path": ["some path does not validate as matches(^(\\d+(/\\d+)*)*$)"],
+        "type": ["Root does not validate as in(Class|Team|Club|Friends|Other)"]
+      },
+      "message": "Bad Request",
       "success": false
-		}
+    }
     """
     And the table "groups" should stay unchanged
 
