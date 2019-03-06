@@ -10,10 +10,13 @@ import (
 )
 
 func responseForError(e APIError) *httptest.ResponseRecorder {
-	var fn AppHandler = func(http.ResponseWriter, *http.Request) APIError {
+	return responseForHandler(func(writer http.ResponseWriter, r *http.Request) APIError {
 		return e
-	}
-	handler := http.HandlerFunc(fn.ServeHTTP)
+	})
+}
+
+func responseForHandler(appHandler AppHandler) *httptest.ResponseRecorder {
+	handler := http.HandlerFunc(appHandler.ServeHTTP)
 
 	req, _ := http.NewRequest("GET", "/dummy", nil)
 	recorder := httptest.NewRecorder()
@@ -70,5 +73,26 @@ func TestUnexpected(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(ErrUnexpected(errors.New("unexp err")))
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unexp err"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusInternalServerError, recorder.Code)
+}
+
+func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
+		panic(errors.New("some error"))
+	})
+	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
+		recorder.Body.String())
+	assert.Equal(http.StatusInternalServerError, recorder.Code)
+}
+
+func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
+	assert := assertlib.New(t)
+	expectedMessage := "some error"
+	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
+		panic(expectedMessage)
+	})
+	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
+		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
