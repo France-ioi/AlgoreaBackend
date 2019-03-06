@@ -33,7 +33,7 @@ Feature: Update a group (groupEdit)
       "description": "Team B is here",
       "opened": false,
       "password_timer": "99:59:59",
-      "password_end": "9999-12-31T23:59:59Z",
+      "password_end": "2019-12-31T23:59:59Z",
       "open_contest": false,
       "redirect_path": "1234/5678"
     }
@@ -42,7 +42,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription   | sDateCreated          | sType     | sRedirectPath | bOpened | bFreeAccess | sPassword  | sPasswordTimer | sPasswordEnd         | bOpenContest |
-      | 13 | Team B  | 10     | Team B is here  | 2019-03-06T09:26:40Z | Team      | 1234/5678     | false   | false       | ybabbxnlyo | 99:59:59       | 9999-12-31T23:59:59Z | false        |
+      | 13 | Team B  | 10     | Team B is here  | 2019-03-06T09:26:40Z | Team      | 1234/5678     | false   | false       | ybabbxnlyo | 99:59:59       | 2019-12-31T23:59:59Z | false        |
     And the table "groups_groups" should be:
       | ID | idGroupParent | idGroupChild | sType              | iVersion |
       | 75 | 13            | 21           | invitationSent     | 0        |
