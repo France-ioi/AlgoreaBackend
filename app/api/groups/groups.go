@@ -25,10 +25,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 func (srv *Service) checkThatUserOwnsTheGroup(user *auth.User, groupID int64) service.APIError {
 	var count int64
-	if err := srv.Store.GroupAncestors().OwnedByUser(user).
-		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
-		return service.ErrUnexpected(err)
-	}
+	service.MustNotBeError(
+		srv.Store.GroupAncestors().OwnedByUser(user).
+			Where("idGroupChild = ?", groupID).Count(&count).Error())
 	if count == 0 {
 		return service.ErrForbidden(errors.New("insufficient access rights"))
 	}
