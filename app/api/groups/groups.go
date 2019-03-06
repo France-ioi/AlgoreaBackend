@@ -1,6 +1,8 @@
 package groups
 
 import (
+	"errors"
+
 	"github.com/go-chi/chi"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -19,4 +21,16 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
+}
+
+func (srv *Service) checkThatUserOwnsTheGroup(user *auth.User, groupID int64) service.APIError {
+	var count int64
+	if err := srv.Store.GroupAncestors().OwnedByUser(user).
+		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
+		return service.ErrUnexpected(err)
+	}
+	if count == 0 {
+		return service.ErrForbidden(errors.New("insufficient access rights"))
+	}
+	return service.NoError
 }
