@@ -452,7 +452,7 @@ func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable)
 	return ctx.TableAtIDShouldBe(tableName, noID, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error {
+func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
@@ -460,7 +460,7 @@ func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error {
 	return ctx.TableAtIDShouldBe(tableName, noID, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, id int64) error {
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, id int64) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
