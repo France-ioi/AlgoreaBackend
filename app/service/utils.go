@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -186,11 +185,8 @@ func GetResponseForRouteWithMockedDBAndUser(
 
 	base := Base{Store: database.NewDataStore(db), Config: nil}
 	router := chi.NewRouter()
+	router.Use(auth.MockUserIDMiddleware(userID))
 	setRouterFunc(router, &base)
-
-	monkey.Patch(auth.UserIDFromContext, func(context context.Context) int64 {
-		return userID
-	})
 
 	ts := httptest.NewServer(router)
 	defer ts.Close()
