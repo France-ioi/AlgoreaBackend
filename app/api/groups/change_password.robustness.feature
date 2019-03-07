@@ -40,3 +40,9 @@ Feature: Change the password of the given group - robustness
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sRedirectPath                          | bOpened | bFreeAccess | sPassword   | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class | 182529188317717610/1672978871462145461 | true    | true        | newpassword | 01:00:00       | 2017-10-14T05:39:48Z | true         |
+
+  Scenario: The group ID is not a number
+    Given I am the user with ID "1"
+    When I send a POST request to "/groups/1_3/change_password"
+    Then the response code should be 400
+    And the response error message should contain "Missing group_id"
