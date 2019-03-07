@@ -616,17 +616,18 @@ func (ctx *TestContext) TheGeneratedGroupPasswordIs(generatedPassword string) er
 	return nil
 }
 
-var multipleStringsRegexp = regexp.MustCompile(`^"([^"]*)"(?:\s*,\s*"([^"]*)")*$`)
+var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
 
 func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string) error { // nolint
 	currentIndex := 0
-	passwords := multipleStringsRegexp.FindAllStringSubmatch(generatedPasswords, -1)
 	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) {
 		currentIndex++
-		if currentIndex >= len(generatedPasswords) {
+		password := multipleStringsRegexp.FindStringSubmatch(generatedPasswords)
+		if password == nil {
 			return "", errors.New("not enough generated passwords")
 		}
-		return passwords[0][currentIndex], nil
+		generatedPasswords = generatedPasswords[len(password[1]):]
+		return password[2], nil
 	})
 	return nil
 }

@@ -41,6 +41,15 @@ Feature: Change the password of the given group - robustness
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sRedirectPath                          | bOpened | bFreeAccess | sPassword   | sPasswordTimer | sPasswordEnd         | bOpenContest |
       | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class | 182529188317717610/1672978871462145461 | true    | true        | newpassword | 01:00:00       | 2017-10-14T05:39:48Z | true         |
 
+  Scenario: User is an admin of the group, but the generated password is not unique 3 times in a row
+    Given I am the user with ID "1"
+    And the table "groups" has a unique key "sPassword" on "sPassword"
+    And the generated group passwords are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
+    When I send a POST request to "/groups/13/change_password"
+    Then the response code should be 500
+    And the response error message should contain "The password generator is broken"
+    And the table "groups" should stay unchanged
+
   Scenario: The group ID is not a number
     Given I am the user with ID "1"
     When I send a POST request to "/groups/1_3/change_password"

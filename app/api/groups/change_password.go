@@ -2,10 +2,12 @@ package groups
 
 import (
 	"crypto/rand"
-	"github.com/go-chi/render"
+	"errors"
 	"math/big"
 	"net/http"
 	"strings"
+
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -23,16 +25,24 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 		return apiError
 	}
 
-retry:
-	newPassword, err := GenerateGroupPassword()
-	service.MustNotBeError(err)
+	var newPassword string
+	for retryCount := 1; ; retryCount++ {
+		if retryCount > 3 {
+			return service.ErrUnexpected(errors.New("the password generator is broken"))
+		}
 
-	// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
-	err = srv.Store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
-	if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
-		goto retry
+		newPassword, err = GenerateGroupPassword()
+		service.MustNotBeError(err)
+
+		// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
+		err = srv.Store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
+		if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
+			continue
+		}
+		service.MustNotBeError(err)
+
+		break
 	}
-	service.MustNotBeError(err)
 
 	render.Respond(w, r, struct {
 		Password string `json:"password"`
