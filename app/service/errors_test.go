@@ -6,8 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"bou.ke/monkey"
+	"github.com/go-chi/chi/middleware"
+	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 func responseForError(e APIError) *httptest.ResponseRecorder {
@@ -16,14 +19,22 @@ func responseForError(e APIError) *httptest.ResponseRecorder {
 	})
 }
 
-func responseForHandler(appHandler AppHandler) *httptest.ResponseRecorder {
-	handler := http.HandlerFunc(appHandler.ServeHTTP)
-
+func responseForHTTPHandler(handler http.Handler) *httptest.ResponseRecorder {
 	req, _ := http.NewRequest("GET", "/dummy", nil)
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)
 	return recorder
+}
+
+func responseForHandler(appHandler AppHandler) *httptest.ResponseRecorder {
+	return responseForHTTPHandler(appHandler)
+}
+
+func useWithLoggingMiddleware(appHandler AppHandler) (http.Handler, *test.Hook) {
+	logger, hook := test.NewNullLogger()
+	middleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
+	return middleware(appHandler), hook
 }
 
 func TestNoErrorWithAPIError(t *testing.T) {
@@ -78,32 +89,28 @@ func TestUnexpected(t *testing.T) {
 }
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
-	logs := setupLogsCaptureForTests()
-	defer monkey.UnpatchAll()
-
 	assert := assertlib.New(t)
-	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
+	handler, hook := useWithLoggingMiddleware(func(w http.ResponseWriter, r *http.Request) APIError {
 		panic(errors.New("some error"))
 	})
+	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(logs.String(), "unexpected error: some error")
+	assert.Contains(hook.Entries[1].Message, "unexpected error: some error")
 }
 
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
-	logs := setupLogsCaptureForTests()
-	defer monkey.UnpatchAll()
-
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	recorder := responseForHandler(func(w http.ResponseWriter, r *http.Request) APIError {
+	handler, hook := useWithLoggingMiddleware(func(w http.ResponseWriter, r *http.Request) APIError {
 		panic(expectedMessage)
 	})
+	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(logs.String(), "unexpected error: unknown error: some error")
+	assert.Contains(hook.Entries[1].Message, "unexpected error: unknown error: some error")
 }
 
 func TestMustNotBeError_PanicsOnError(t *testing.T) {
