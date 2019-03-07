@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -19,10 +21,12 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
+	"github.com/jinzhu/gorm"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -30,6 +34,11 @@ import (
 type dbquery struct {
 	sql    string
 	values []interface{}
+}
+
+type addedDBIndex struct {
+	Table string
+	Index string
 }
 
 // TestContext implements context for tests
@@ -42,6 +51,7 @@ type TestContext struct {
 	lastResponseBody string
 	inScenario       bool
 	dbTableData      map[string]*gherkin.DataTable
+	addedDBIndices   []*addedDBIndex
 }
 
 const (
@@ -60,6 +70,22 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 }
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
+	monkey.UnpatchAll()
+
+	db, err := gorm.Open("mysql", ctx.db())
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = db.Close() }() // nolint: gosec
+
+	for _, indexDefinition := range ctx.addedDBIndices {
+		if oneErr := db.Table(indexDefinition.Table).RemoveIndex(indexDefinition.Index).Error; oneErr != nil {
+			_ = db.AddError(oneErr) // nolint: gosec
+		}
+	}
+	if db.Error != nil {
+		panic(db.Error)
+	}
 }
 
 func (ctx *TestContext) app() *app.Application {
@@ -564,5 +590,44 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 	if iDataRow < len(data.Rows) {
 		return fmt.Errorf("there are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
 	}
+	return nil
+}
+
+func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) error { // nolint
+	db, err := gorm.Open("mysql", ctx.db())
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }() // nolint: gosec
+
+	if db.Dialect().HasIndex(tableName, indexName) {
+		return nil
+	}
+
+	if err = db.Table(tableName).AddUniqueIndex(indexName, strings.Split(columns, ",")...).Error; err != nil {
+		return err
+	}
+	ctx.addedDBIndices = append(ctx.addedDBIndices, &addedDBIndex{Table: tableName, Index: indexName})
+	return nil
+}
+
+func (ctx *TestContext) TheGeneratedGroupPasswordIs(generatedPassword string) error { // nolint
+	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) { return generatedPassword, nil })
+	return nil
+}
+
+var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
+
+func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string) error { // nolint
+	currentIndex := 0
+	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) {
+		currentIndex++
+		password := multipleStringsRegexp.FindStringSubmatch(generatedPasswords)
+		if password == nil {
+			return "", errors.New("not enough generated passwords")
+		}
+		generatedPasswords = generatedPasswords[len(password[1]):]
+		return password[2], nil
+	})
 	return nil
 }
