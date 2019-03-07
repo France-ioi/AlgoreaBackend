@@ -2,8 +2,9 @@ package groups
 
 import (
 	"errors"
-	"github.com/go-chi/render"
 	"net/http"
+
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -22,13 +23,8 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	var count int64
-	if err = srv.Store.GroupAncestors().OwnedByUser(user).
-		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
-		return service.ErrUnexpected(err)
-	}
-	if count == 0 {
-		return service.ErrForbidden(errors.New("insufficient access rights"))
+	if apiError := srv.checkThatUserOwnsTheGroup(user, groupID); apiError != service.NoError {
+		return apiError
 	}
 
 	query := srv.Store.UserAnswers().WithUsers().WithItems().
