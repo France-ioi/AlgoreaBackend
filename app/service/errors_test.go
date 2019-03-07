@@ -14,7 +14,7 @@ import (
 )
 
 func responseForError(e APIError) *httptest.ResponseRecorder {
-	return responseForHandler(func(_ http.ResponseWriter, _ *http.Request) APIError {
+	return responseForHandler(func(http.ResponseWriter, *http.Request) APIError {
 		return e
 	})
 }
@@ -90,7 +90,7 @@ func TestUnexpected(t *testing.T) {
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := withLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
+	handler, hook := withLoggingMiddleware(func(http.ResponseWriter, *http.Request) APIError {
 		panic(errors.New("some error"))
 	})
 	recorder := responseForHTTPHandler(handler)
@@ -103,7 +103,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	handler, hook := withLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
+	handler, hook := withLoggingMiddleware(func(http.ResponseWriter, *http.Request) APIError {
 		panic(expectedMessage)
 	})
 	recorder := responseForHTTPHandler(handler)
