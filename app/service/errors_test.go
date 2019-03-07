@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"errors"
@@ -6,15 +6,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
 
-func responseForError(e APIError) *httptest.ResponseRecorder {
-	return responseForHandler(func(http.ResponseWriter, *http.Request) APIError {
+func responseForError(e service.APIError) *httptest.ResponseRecorder {
+	return responseForHandler(func(http.ResponseWriter, *http.Request) service.APIError {
 		return e
 	})
 }
@@ -27,26 +26,20 @@ func responseForHTTPHandler(handler http.Handler) *httptest.ResponseRecorder {
 	return recorder
 }
 
-func responseForHandler(appHandler AppHandler) *httptest.ResponseRecorder {
+func responseForHandler(appHandler service.AppHandler) *httptest.ResponseRecorder {
 	return responseForHTTPHandler(appHandler)
-}
-
-func withLoggingMiddleware(appHandler AppHandler) (http.Handler, *test.Hook) {
-	logger, hook := test.NewNullLogger()
-	middleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
-	return middleware(appHandler), hook
 }
 
 func TestNoErrorWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
-	recorder := responseForError(APIError{http.StatusConflict, nil})
+	recorder := responseForError(service.APIError{HTTPStatusCode: http.StatusConflict, Error: nil})
 	assert.Equal(`{"success":false,"message":"Conflict"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusConflict, recorder.Code)
 }
 
 func TestInvalidRequest(t *testing.T) {
 	assert := assertlib.New(t)
-	recorder := responseForError(ErrInvalidRequest(errors.New("sample invalid req")))
+	recorder := responseForError(service.ErrInvalidRequest(errors.New("sample invalid req")))
 	assert.Equal(`{"success":false,"message":"Bad Request","error_text":"Sample invalid req"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
@@ -54,11 +47,11 @@ func TestInvalidRequest(t *testing.T) {
 func TestInvalidRequest_WithFormErrors(t *testing.T) {
 	assert := assertlib.New(t)
 
-	formErrors := make(FieldErrors)
+	formErrors := make(service.FieldErrors)
 	formErrors["name"] = []string{"is required"}
 	formErrors["phone"] = []string{"is required", "must be a phone number"}
 
-	recorder := responseForError(ErrInvalidRequest(formErrors))
+	recorder := responseForError(service.ErrInvalidRequest(formErrors))
 	assert.JSONEq(`{
 			"success":false,
 			"message":"Bad Request",
@@ -76,52 +69,52 @@ func TestInvalidRequest_WithFormErrors(t *testing.T) {
 
 func TestForbidden(t *testing.T) {
 	assert := assertlib.New(t)
-	recorder := responseForError(ErrForbidden(errors.New("sample forbidden resp")))
+	recorder := responseForError(service.ErrForbidden(errors.New("sample forbidden resp")))
 	assert.Equal(`{"success":false,"message":"Forbidden","error_text":"Sample forbidden resp"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusForbidden, recorder.Code)
 }
 
 func TestUnexpected(t *testing.T) {
 	assert := assertlib.New(t)
-	recorder := responseForError(ErrUnexpected(errors.New("unexp err")))
+	recorder := responseForError(service.ErrUnexpected(errors.New("unexp err")))
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unexp err"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := withLoggingMiddleware(func(http.ResponseWriter, *http.Request) APIError {
+	handler, hook := servicetest.WithLoggingMiddleware(func(http.ResponseWriter, *http.Request) service.APIError {
 		panic(errors.New("some error"))
 	})
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(hook.Entries[1].Message, "unexpected error: some error")
+	assert.Contains(servicetest.GetAllLogs(hook), "unexpected error: some error")
 }
 
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	handler, hook := withLoggingMiddleware(func(http.ResponseWriter, *http.Request) APIError {
+	handler, hook := servicetest.WithLoggingMiddleware(func(http.ResponseWriter, *http.Request) service.APIError {
 		panic(expectedMessage)
 	})
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(hook.Entries[1].Message, "unexpected error: unknown error: some error")
+	assert.Contains(servicetest.GetAllLogs(hook), "unexpected error: unknown error: some error")
 }
 
 func TestMustNotBeError_PanicsOnError(t *testing.T) {
 	expectedError := errors.New("some error")
 	assertlib.PanicsWithValue(t, expectedError, func() {
-		MustNotBeError(expectedError)
+		service.MustNotBeError(expectedError)
 	})
 }
 
 func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
 	assertlib.NotPanics(t, func() {
-		MustNotBeError(nil)
+		service.MustNotBeError(nil)
 	})
 }

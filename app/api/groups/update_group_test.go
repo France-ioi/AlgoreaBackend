@@ -1,22 +1,18 @@
 package groups
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
 
 func Test_validateUpdateGroupInput(t *testing.T) {
@@ -110,26 +106,13 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 }
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
-	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	setMockExpectationsFunc(mock)
-
-	base := service.Base{Store: database.NewDataStore(db), Config: nil}
-	srv := &Service{Base: base}
-	router := chi.NewRouter()
-	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
-
-	monkey.Patch(auth.UserIDFromContext, func(context context.Context) int64 {
-		return 2
-	})
-	defer monkey.UnpatchAll()
-
-	ts := httptest.NewServer(router)
-	defer ts.Close()
-
-	request, _ := http.NewRequest("PUT", ts.URL+"/groups/1", strings.NewReader(`{"free_access":false}`))
-	response, err := http.DefaultClient.Do(request)
+	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
+		"PUT", "/groups/1", `{"free_access":false}`, 2,
+		setMockExpectationsFunc,
+		func(router *chi.Mux, baseService *service.Base) {
+			srv := &Service{Base: *baseService}
+			router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
+		})
 
 	assert.NoError(t, err)
 	assert.Equal(t, 500, response.StatusCode)
