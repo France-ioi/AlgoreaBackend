@@ -1,13 +1,23 @@
 package service
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"unicode"
 
+	"bou.ke/monkey"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
+	"github.com/sirupsen/logrus"
+
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // QueryParamToInt64Slice extracts from the query parameter of the request a list of integer separated by commas (',')
@@ -156,4 +166,49 @@ func toSnakeCase(in string) string {
 	}
 
 	return string(out)
+}
+
+// GetResponseForTheRouteWithMockedDBAndUser executes a route for unit tests
+// auth.UserIDFromContext is stubbed to return the given userID.
+// The test should provide functions that prepare the router and the sql mock
+func GetResponseForTheRouteWithMockedDBAndUser(
+	method string, path string, requestBody string, userID int64,
+	setMockExpectationsFunc func(sqlmock.Sqlmock),
+	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
+
+	logs := setupLogsCaptureForTests()
+	defer monkey.UnpatchAll()
+
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }() // nolint: gosec
+
+	setMockExpectationsFunc(mock)
+
+	base := Base{Store: database.NewDataStore(db), Config: nil}
+	router := chi.NewRouter()
+	setRouterFunc(router, &base)
+
+	monkey.Patch(auth.UserIDFromContext, func(context context.Context) int64 {
+		return userID
+	})
+
+	ts := httptest.NewServer(router)
+	defer ts.Close()
+
+	request, err := http.NewRequest(method, ts.URL+path, strings.NewReader(requestBody))
+	var response *http.Response
+	if err == nil {
+		response, err = http.DefaultClient.Do(request)
+	}
+	return response, mock, logs.String(), err
+}
+
+func setupLogsCaptureForTests() *bytes.Buffer { // nolint: deadcode
+	logs := &bytes.Buffer{}
+	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
+		logger := logrus.New()
+		logger.SetOutput(logs)
+		return logger
+	})
+	return logs
 }
