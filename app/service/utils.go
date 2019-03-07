@@ -172,7 +172,7 @@ func toSnakeCase(in string) string {
 func GetResponseForRouteWithMockedDBAndUser(
 	method string, path string, requestBody string, userID int64,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
-	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, *test.Hook, error) {
+	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
 
 	logger, hook := test.NewNullLogger()
 
@@ -195,5 +195,17 @@ func GetResponseForRouteWithMockedDBAndUser(
 	if err == nil {
 		response, err = http.DefaultClient.Do(request)
 	}
-	return response, mock, hook, err
+
+	return response, mock, getAllLogs(hook), err
+}
+
+func getAllLogs(hook *test.Hook) string {
+	logs := ""
+	for _, entry := range hook.AllEntries() {
+		if len(logs) > 0 {
+			logs += "\n"
+		}
+		logs = logs + entry.Message
+	}
+	return logs
 }
