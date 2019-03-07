@@ -105,7 +105,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 }
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
-	response, mock, _, err := service.GetResponseForTheRouteWithMockedDBAndUser(
+	response, mock, _, err := service.GetResponseForRouteWithMockedDBAndUser(
 		"PUT", "/groups/1", `{"free_access":false}`, 2,
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {

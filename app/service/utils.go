@@ -168,10 +168,10 @@ func toSnakeCase(in string) string {
 	return string(out)
 }
 
-// GetResponseForTheRouteWithMockedDBAndUser executes a route for unit tests
+// GetResponseForRouteWithMockedDBAndUser executes a route for unit tests
 // auth.UserIDFromContext is stubbed to return the given userID.
 // The test should provide functions that prepare the router and the sql mock
-func GetResponseForTheRouteWithMockedDBAndUser(
+func GetResponseForRouteWithMockedDBAndUser(
 	method string, path string, requestBody string, userID int64,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
