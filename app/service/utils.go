@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -9,10 +8,10 @@ import (
 	"strings"
 	"unicode"
 
-	"bou.ke/monkey"
-	"github.com/DATA-DOG/go-sqlmock"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
-	"github.com/sirupsen/logrus"
+	"github.com/go-chi/chi/middleware"
+	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -173,10 +172,9 @@ func toSnakeCase(in string) string {
 func GetResponseForRouteWithMockedDBAndUser(
 	method string, path string, requestBody string, userID int64,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
-	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
+	setRouterFunc func(router *chi.Mux, baseService *Base)) (*http.Response, sqlmock.Sqlmock, *test.Hook, error) {
 
-	logs := setupLogsCaptureForTests()
-	defer monkey.UnpatchAll()
+	logger, hook := test.NewNullLogger()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }() // nolint: gosec
@@ -186,6 +184,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 	base := Base{Store: database.NewDataStore(db), Config: nil}
 	router := chi.NewRouter()
 	router.Use(auth.MockUserIDMiddleware(userID))
+	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))
 	setRouterFunc(router, &base)
 
 	ts := httptest.NewServer(router)
@@ -196,15 +195,5 @@ func GetResponseForRouteWithMockedDBAndUser(
 	if err == nil {
 		response, err = http.DefaultClient.Do(request)
 	}
-	return response, mock, logs.String(), err
-}
-
-func setupLogsCaptureForTests() *bytes.Buffer { // nolint: deadcode
-	logs := &bytes.Buffer{}
-	monkey.Patch(logging.GetLogEntry, func(r *http.Request) logrus.FieldLogger {
-		logger := logrus.New()
-		logger.SetOutput(logs)
-		return logger
-	})
-	return logs
+	return response, mock, hook, err
 }
