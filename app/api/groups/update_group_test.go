@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
 
 func Test_validateUpdateGroupInput(t *testing.T) {
@@ -105,7 +106,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 }
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
-	response, mock, _, err := service.GetResponseForRouteWithMockedDBAndUser(
+	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"PUT", "/groups/1", `{"free_access":false}`, 2,
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
