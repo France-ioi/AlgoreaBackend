@@ -31,7 +31,7 @@ func responseForHandler(appHandler AppHandler) *httptest.ResponseRecorder {
 	return responseForHTTPHandler(appHandler)
 }
 
-func useWithLoggingMiddleware(appHandler AppHandler) (http.Handler, *test.Hook) {
+func withLoggingMiddleware(appHandler AppHandler) (http.Handler, *test.Hook) {
 	logger, hook := test.NewNullLogger()
 	middleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
 	return middleware(appHandler), hook
@@ -90,7 +90,7 @@ func TestUnexpected(t *testing.T) {
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := useWithLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
+	handler, hook := withLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
 		panic(errors.New("some error"))
 	})
 	recorder := responseForHTTPHandler(handler)
@@ -103,7 +103,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	handler, hook := useWithLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
+	handler, hook := withLoggingMiddleware(func(_ http.ResponseWriter, _ *http.Request) APIError {
 		panic(expectedMessage)
 	})
 	recorder := responseForHTTPHandler(handler)
