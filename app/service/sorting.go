@@ -58,6 +58,9 @@ func prepareSoringRulesAndAcceptedFields(r *http.Request, acceptedFields map[str
 
 func parseSortingRules(sortingRules string,
 	acceptedFields map[string]*FieldSortingParams) (usedFields []string, fieldsDirections map[string]int, err error) {
+	if sortingRules == "" {
+		return nil, nil, nil
+	}
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
 	fieldsDirections = make(map[string]int, len(sortStatements)+1)
