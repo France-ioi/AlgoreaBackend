@@ -152,7 +152,7 @@ func getFromValueForField(r *http.Request, fieldName string,
 	case "bool":
 		return ResolveURLQueryGetBoolField(r, fromFieldName)
 	default:
-		return nil, fmt.Errorf("unsupported type '%s' for field '%s", acceptedFields[fieldName].FieldType, fieldName)
+		panic(fmt.Errorf("unsupported type %q for field %q", acceptedFields[fieldName].FieldType, fieldName))
 	}
 }
 
