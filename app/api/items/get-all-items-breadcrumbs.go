@@ -48,7 +48,7 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	ids, err := service.QueryParamToInt64Slice(r, "ids")
+	ids, err := service.ResolveURLQueryGetInt64SliceField(r, "ids")
 	if err != nil {
 		return nil, err
 	}

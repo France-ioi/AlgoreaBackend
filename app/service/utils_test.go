@@ -64,7 +64,7 @@ func TestQueryParamToInt64Slice(t *testing.T) {
 			assert := assertlib.New(t)
 
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
-			list, err := QueryParamToInt64Slice(req, "ids")
+			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(err, testCase.expectedErrMsg)
 			} else {
