@@ -219,6 +219,12 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 			expectedValue:  false,
 			expectedErrMsg: "",
 		},
+		{
+			desc:           "wrong value given",
+			queryString:    "flag=2",
+			expectedValue:  false,
+			expectedErrMsg: "flag should have a boolean value (0 or 1)",
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.desc, func(t *testing.T) {
