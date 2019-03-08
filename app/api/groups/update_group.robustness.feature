@@ -91,4 +91,4 @@ Feature: Update a group (groupEdit) - robustness
     }
     """
     Then the response code should be 400
-    And the response error message should contain "Missing group_id"
+    And the response error message should contain "Wrong value for group_id (should be int64)"

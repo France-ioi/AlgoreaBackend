@@ -31,38 +31,49 @@ func QueryParamToInt64Slice(req *http.Request, paramName string) ([]int64, error
 
 // ResolveURLQueryGetInt64Field extracts a get-parameter of type int64 from the query
 func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, error) {
+	if len(httpReq.URL.Query()[name]) == 0 {
+		return 0, fmt.Errorf("missing %s", name)
+	}
 	strValue := httpReq.URL.Query().Get(name)
 	int64Value, err := strconv.ParseInt(strValue, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("missing %s", name)
+		return 0, fmt.Errorf("wrong value for %s (should be int64)", name)
 	}
 	return int64Value, nil
 }
 
 // ResolveURLQueryGetStringField extracts a get-parameter of type string from the query, fails if the value is empty
 func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, error) {
-	strValue := httpReq.URL.Query().Get(name)
-	if strValue == "" {
+	if len(httpReq.URL.Query()[name]) == 0 {
 		return "", fmt.Errorf("missing %s", name)
 	}
-	return strValue, nil
+	return httpReq.URL.Query().Get(name), nil
 }
 
 // ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty
 func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, error) {
-	strValue := httpReq.URL.Query().Get(name)
-	if strValue == "" {
+	if len(httpReq.URL.Query()[name]) == 0 {
 		return false, fmt.Errorf("missing %s", name)
 	}
-	return strValue == "1", nil
+	strValue := httpReq.URL.Query().Get(name)
+	if strValue == "0" {
+		return false, nil
+	}
+	if strValue == "1" {
+		return true, nil
+	}
+	return false, fmt.Errorf("%s should have a boolean value (0 or 1)", name)
 }
 
 // ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query
 func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, error) {
 	strValue := chi.URLParam(httpReq, name)
+	if len(strValue) == 0 {
+		return 0, fmt.Errorf("missing %s", name)
+	}
 	int64Value, err := strconv.ParseInt(strValue, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("missing %s", name)
+		return 0, fmt.Errorf("wrong value for %s (should be int64)", name)
 	}
 	return int64Value, nil
 }

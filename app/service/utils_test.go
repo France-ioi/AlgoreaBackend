@@ -95,14 +95,14 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			routeString:    "/{id}",
 			queryString:    "/4,5",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 		{
-			desc:           "not a int64 (string)",
+			desc:           "not an int64 (string)",
 			routeString:    "/{id}",
 			queryString:    "/word",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 		{
 			desc:           "not a int64 (empty val)",
@@ -116,7 +116,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			routeString:    "/{id}",
 			queryString:    "/123456789012345678901234567890",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 	}
 	for _, testCase := range testCases {

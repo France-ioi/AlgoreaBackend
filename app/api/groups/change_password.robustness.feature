@@ -54,4 +54,4 @@ Feature: Change the password of the given group - robustness
     Given I am the user with ID "1"
     When I send a POST request to "/groups/1_3/change_password"
     Then the response code should be 400
-    And the response error message should contain "Missing group_id"
+    And the response error message should contain "Wrong value for group_id (should be int64)"
