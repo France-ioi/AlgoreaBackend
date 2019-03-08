@@ -2,12 +2,13 @@ package service
 
 import (
 	"database/sql/driver"
-	"github.com/stretchr/testify/assert"
+	"errors"
 	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
@@ -25,7 +26,7 @@ func TestApplySorting(t *testing.T) {
 		wantSQLArguments []driver.Value
 		wantAPIError     APIError
 	}{
-		{name: "sorting",
+		{name: "sorting (default rules)",
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
@@ -37,7 +38,53 @@ func TestApplySorting(t *testing.T) {
 			wantSQL:          "SELECT ID FROM `users` ORDER BY sName DESC, ID ASC",
 			wantSQLArguments: nil,
 			wantAPIError:     NoError},
-		{name: "no rules (does nothing)",
+		{name: "sorting (request rules)",
+			args: args{
+				urlParameters: "?sort=name,-id",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "string"},
+					"id":   {ColumnName: "ID", FieldType: "int64"},
+				},
+			},
+			wantSQL:          "SELECT ID FROM `users` ORDER BY sName ASC, ID DESC",
+			wantSQLArguments: nil,
+			wantAPIError:     NoError},
+		{name: "repeated field",
+			args: args{
+				urlParameters: "?sort=name,name",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "string"},
+					"id":   {ColumnName: "ID", FieldType: "int64"},
+				},
+				defaultRules: "-name,id",
+			},
+			wantSQL:          "",
+			wantSQLArguments: nil,
+			wantAPIError:     ErrInvalidRequest(errors.New(`a field cannot be a sorting parameter more than once: "name"`))},
+		{name: "unknown field",
+			args: args{
+				urlParameters: "?sort=class",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "string"},
+					"id":   {ColumnName: "ID", FieldType: "int64"},
+				},
+				defaultRules: "-name,id",
+			},
+			wantSQL:          "",
+			wantSQLArguments: nil,
+			wantAPIError:     ErrInvalidRequest(errors.New(`unknown field in sorting parameters: "class"`))},
+		{name: "add id field",
+			args: args{
+				urlParameters: "",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "string"},
+				},
+				defaultRules: "-name",
+			},
+			wantSQL:          "SELECT ID FROM `users` ORDER BY sName DESC, ID ASC",
+			wantSQLArguments: nil,
+			wantAPIError:     NoError},
+		{name: "no rules (adds id)",
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
@@ -45,7 +92,7 @@ func TestApplySorting(t *testing.T) {
 					"id":   {ColumnName: "ID", FieldType: "int64"},
 				},
 			},
-			wantSQL:          "SELECT ID FROM `users`",
+			wantSQL:          "SELECT ID FROM `users` ORDER BY ID ASC",
 			wantSQLArguments: nil,
 			wantAPIError:     NoError},
 		{name: "sorting + paging",
@@ -75,6 +122,7 @@ func TestApplySorting(t *testing.T) {
 			query := db.Table("users").Select("ID")
 			query, gotAPIError := ApplySorting(request, query, tt.args.acceptedFields, tt.args.defaultRules)
 			assert.Equal(t, tt.wantAPIError, gotAPIError)
+
 			if gotAPIError == NoError {
 				var result []struct{}
 				query.Scan(&result)
