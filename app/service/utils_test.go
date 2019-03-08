@@ -64,7 +64,7 @@ func TestQueryParamToInt64Slice(t *testing.T) {
 			assert := assertlib.New(t)
 
 			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
-			list, err := QueryParamToInt64Slice(req, "ids")
+			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
 			if testCase.expectedErrMsg != "" {
 				assert.EqualError(err, testCase.expectedErrMsg)
 			} else {
@@ -95,14 +95,14 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			routeString:    "/{id}",
 			queryString:    "/4,5",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 		{
-			desc:           "not a int64 (string)",
+			desc:           "not an int64 (string)",
 			routeString:    "/{id}",
 			queryString:    "/word",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 		{
 			desc:           "not a int64 (empty val)",
@@ -116,7 +116,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 			routeString:    "/{id}",
 			queryString:    "/123456789012345678901234567890",
 			expectedValue:  0,
-			expectedErrMsg: "missing id",
+			expectedErrMsg: "wrong value for id (should be int64)",
 		},
 	}
 	for _, testCase := range testCases {
@@ -218,6 +218,12 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 			queryString:    "flag=0",
 			expectedValue:  false,
 			expectedErrMsg: "",
+		},
+		{
+			desc:           "wrong value given",
+			queryString:    "flag=2",
+			expectedValue:  false,
+			expectedErrMsg: "flag should have a boolean value (0 or 1)",
 		},
 	}
 	for _, testCase := range testCases {
