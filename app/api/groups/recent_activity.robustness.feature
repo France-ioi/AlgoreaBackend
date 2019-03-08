@@ -46,10 +46,10 @@ Feature: Get recent activity for group_id and item_id - robustness
     Given I am the user with ID "3"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.id=1"
     Then the response code should be 400
-    And the response error message should contain "Both from.id and from.submission_date or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.submission_date, from.id) or none of them must be present"
 
   Scenario: Should fail when from.submission_date is given, but from.id is not
     Given I am the user with ID "3"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submission_date=2017-05-30T06:38:38Z"
     Then the response code should be 400
-    And the response error message should contain "Both from.id and from.submission_date or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.submission_date, from.id) or none of them must be present"

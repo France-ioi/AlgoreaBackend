@@ -1,7 +1,6 @@
 package groups
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -38,14 +37,18 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 			srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild").SubQuery()).
 		Where("users_answers.sType='Submission'").
 		WhereItemsAreVisible(user).
-		WhereUsersAreDescendantsOfGroup(groupID).
-		Order("users_answers.sSubmissionDate DESC, users_answers.ID")
+		WhereUsersAreDescendantsOfGroup(groupID)
 
 	query = service.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 
-	if query, err = srv.filterByFromSubmissionDateAndFromID(r, query); err != nil {
-		return service.ErrInvalidRequest(err)
+	query, apiError := service.ApplySorting(r, query,
+		map[string]*service.FieldSortingParams{
+			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "string"},
+			"id":              {ColumnName: "users_answers.ID", FieldType: "int64"}},
+		"-submission_date")
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	var result []map[string]interface{}
@@ -64,19 +67,4 @@ func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *data
 		query = query.Where("users_answers.bValidated = ?", validated)
 	}
 	return query
-}
-
-func (srv *Service) filterByFromSubmissionDateAndFromID(r *http.Request, query *database.DB) (*database.DB, error) {
-	fromID, fromIDError := service.ResolveURLQueryGetInt64Field(r, "from.id")
-	fromSubmissionDate, fromSubmissionDateError := service.ResolveURLQueryGetStringField(r, "from.submission_date")
-	if (fromIDError == nil) != (fromSubmissionDateError == nil) {
-		return nil, errors.New("both from.id and from.submission_date or none of them must be present")
-	}
-	if fromIDError == nil {
-		// include fromSubmissionDate, exclude fromID
-		query = query.Where(
-			"(users_answers.sSubmissionDate <= ? AND users_answers.ID > ?) OR users_answers.sSubmissionDate < ?",
-			fromSubmissionDate, fromID, fromSubmissionDate)
-	}
-	return query, nil
 }
