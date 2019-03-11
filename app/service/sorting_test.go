@@ -117,6 +117,7 @@ func TestApplySorting(t *testing.T) {
 				urlParameters: "?from.id=2",
 				acceptedFields: map[string]*FieldSortingParams{
 					"name": {ColumnName: "sName", FieldType: "string"},
+					"type": {ColumnName: "sType", FieldType: "string"},
 					"id":   {ColumnName: "ID", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
