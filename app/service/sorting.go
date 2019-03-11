@@ -20,7 +20,7 @@ type FieldSortingParams struct {
 // taking into the account the URL parameters 'from.*'
 func ApplySorting(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string) (*database.DB, APIError) {
-	sortingRules, acceptedFields := prepareSoringRulesAndAcceptedFields(r, acceptedFields, defaultRules)
+	sortingRules, acceptedFields := prepareSortingRulesAndAcceptedFields(r, acceptedFields, defaultRules)
 
 	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields)
 	if err != nil {
@@ -37,7 +37,7 @@ func ApplySorting(r *http.Request, query *database.DB, acceptedFields map[string
 	return query, NoError
 }
 
-func prepareSoringRulesAndAcceptedFields(r *http.Request, acceptedFields map[string]*FieldSortingParams,
+func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string) (string, map[string]*FieldSortingParams) {
 	newAcceptedFields := make(map[string]*FieldSortingParams, len(acceptedFields)+1)
 	for field, params := range acceptedFields {
