@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/go-chi/chi"
@@ -52,6 +53,18 @@ func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, 
 		return "", err
 	}
 	return httpReq.URL.Query().Get(name), nil
+}
+
+// ResolveURLQueryGetTimeField extracts a get-parameter of type time.Time (rfc3339) from the query
+func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time, error) {
+	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
+		return time.Time{}, err
+	}
+	result, err := time.Parse(time.RFC3339, httpReq.URL.Query().Get(name))
+	if err != nil {
+		return time.Time{}, fmt.Errorf("wrong value for %s (should be time (rfc3339))", name)
+	}
+	return result, nil
 }
 
 // ResolveURLQueryGetBoolField extracts a get-parameter of type bool (0 or 1) from the query, fails if the value is empty

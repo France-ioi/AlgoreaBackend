@@ -3,7 +3,9 @@ package service
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi"
 	assertlib "github.com/stretchr/testify/assert"
@@ -244,6 +246,46 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 				assert.NoError(err)
 			}
 			assert.Equal(testCase.expectedValue, list)
+		})
+	}
+}
+
+func TestResolveURLQueryGetTimeField(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedValue  time.Time
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no param",
+			queryString:    "",
+			expectedErrMsg: "missing time",
+		},
+		{
+			desc:        "correct value given",
+			queryString: "time=" + url.QueryEscape("2006-01-02T15:04:05+07:00"),
+			expectedValue: time.Date(2006, 1, 2, 15, 04, 05, 0,
+				time.FixedZone("+0700", 7*3600)),
+		},
+		{
+			desc:           "wrong value given",
+			queryString:    "time=2006-01-02",
+			expectedErrMsg: "wrong value for time (should be time (rfc3339))",
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			dateTime, err := ResolveURLQueryGetTimeField(req, "time")
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(err)
+			}
+			assert.True(testCase.expectedValue.Equal(dateTime))
 		})
 	}
 }
