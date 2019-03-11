@@ -42,7 +42,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	query = service.SetQueryLimit(r, query)
 	query = srv.filterByValidated(r, query)
 
-	query, apiError := service.ApplySorting(r, query,
+	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "string"},
 			"id":              {ColumnName: "users_answers.ID", FieldType: "int64"}},

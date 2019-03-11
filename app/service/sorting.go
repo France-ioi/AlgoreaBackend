@@ -16,9 +16,9 @@ type FieldSortingParams struct {
 	FieldType string
 }
 
-// ApplySorting applies ordering and paging according to given accepted fields and sorting rules
+// ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting rules
 // taking into the account the URL parameters 'from.*'
-func ApplySorting(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
+func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string) (*database.DB, APIError) {
 	sortingRules, acceptedFields := prepareSortingRulesAndAcceptedFields(r, acceptedFields, defaultRules)
 

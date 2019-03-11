@@ -157,7 +157,7 @@ func TestApplySorting(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, nil)
 			query := db.Table("users").Select("ID")
 
-			query, gotAPIError := ApplySorting(request, query, tt.args.acceptedFields, tt.args.defaultRules)
+			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules)
 			assert.Equal(t, tt.wantAPIError, gotAPIError)
 
 			if gotAPIError == NoError {
