@@ -6,7 +6,6 @@ Feature: Get group children (groupChildrenView) - robustness
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
       | 75 | 22              | 13           | 0       | 0        |
-      | 76 | 13              | 11           | 0       | 0        |
     And the database has the following table 'groups':
       | ID | sName       | iGrade | sType     | bOpened | bFreeAccess | sPassword  |
       | 11 | Group A     | -3     | Class     | true    | true        | ybqybxnlyo |
@@ -17,3 +16,15 @@ Feature: Get group children (groupChildrenView) - robustness
     When I send a GET request to "/groups/11/children"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Invalid group_id given
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/1_1/children"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for group_id (should be int64)"
+
+  Scenario: Invalid sorting rules given
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/13/children?sort=password"
+    Then the response code should be 400
+    And the response error message should contain "Unallowed field in sorting parameters: "password""
