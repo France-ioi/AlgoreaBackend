@@ -37,6 +37,10 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 	return query, NoError
 }
 
+// prepareSortingRulesAndAcceptedFields builds sorting rules and a map of accepted fields.
+// It adds the 'id' field into a copy of the given map of accepted fields if this field is not listed.
+// If urlQuery["sort"] is not present, the default sorting rules are used.
+// If sorting rules are empty, the "id" (ORDER BY ID ASC) rule is used.
 func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string) (string, map[string]*FieldSortingParams) {
 	newAcceptedFields := make(map[string]*FieldSortingParams, len(acceptedFields)+1)
@@ -59,6 +63,8 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[st
 	return sort, newAcceptedFields
 }
 
+// parseSortingRules returns a slice with used fields and a map fieldName -> direction
+// It also checks that there are no unallowed fields in the rules.
 func parseSortingRules(sortingRules string,
 	acceptedFields map[string]*FieldSortingParams) (usedFields []string, fieldsDirections map[string]int, err error) {
 	sortStatements := strings.Split(sortingRules, ",")
@@ -82,6 +88,10 @@ func parseSortingRules(sortingRules string,
 	return
 }
 
+// getFieldNameAndDirectionFromSortStatement extracts a field name and a sorting direction
+// from a given sorting statement.
+// "id"   -> ("id", 1)
+// "-name -> ("name", -1)
 func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, int) {
 	var direction int
 	if len(sortStatement) > 0 && sortStatement[0] == '-' {
@@ -94,6 +104,8 @@ func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, in
 	return fieldName, direction
 }
 
+// applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
+// the fields configuration (acceptedFields) and sorting directions
 func applyOrder(query *database.DB, usedFields []string, acceptedFields map[string]*FieldSortingParams,
 	fieldsDirections map[string]int) *database.DB {
 	usedFieldsNumber := len(usedFields)
@@ -113,6 +125,8 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 	return query
 }
 
+// parsePagingParameters returns a slice of values provided for paging in a request URL (none or all should be present)
+// The values are in the order of the 'usedFields' and converted according to 'FieldType' of 'acceptedFields'
 func parsePagingParameters(r *http.Request, usedFields []string,
 	acceptedFields map[string]*FieldSortingParams) ([]interface{}, error) {
 	fromValueSkipped := false
@@ -141,6 +155,8 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 	return fromValues, nil
 }
 
+// getFromValueForField returns a 'from' value (a paging parameter) for a given field.
+// The value is converted according to 'FieldType' of 'acceptedFields[fieldName]'
 func getFromValueForField(r *http.Request, fieldName string,
 	acceptedFields map[string]*FieldSortingParams) (interface{}, error) {
 	fromFieldName := "from." + fieldName
@@ -156,6 +172,7 @@ func getFromValueForField(r *http.Request, fieldName string,
 	}
 }
 
+// applyPagingConditions adds filtering on paging values into the query
 func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirections map[string]int,
 	acceptedFields map[string]*FieldSortingParams, fromValues []interface{}) *database.DB {
 	if len(fromValues) == 0 {
