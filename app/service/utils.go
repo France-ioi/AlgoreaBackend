@@ -48,8 +48,8 @@ func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, er
 
 // ResolveURLQueryGetStringField extracts a get-parameter of type string from the query, fails if the value is empty
 func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, error) {
-	if len(httpReq.URL.Query()[name]) == 0 {
-		return "", fmt.Errorf("missing %s", name)
+	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
+		return "", err
 	}
 	return httpReq.URL.Query().Get(name), nil
 }
