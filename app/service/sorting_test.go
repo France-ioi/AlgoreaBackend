@@ -99,7 +99,7 @@ func TestApplySorting(t *testing.T) {
 				},
 				defaultRules: "-name,id,flag",
 			},
-			wantSQL:          "SELECT ID FROM `users` WHERE ((sName < ?) OR (sName = ? AND ID > ?) OR (sName = ? AND ID = ? AND bFlag > ?)) ORDER BY sName DESC, ID ASC",
+			wantSQL:          "SELECT ID FROM `users` WHERE ((sName < ?) OR (sName = ? AND ID > ?) OR (sName = ? AND ID = ? AND bFlag > ?)) ORDER BY sName DESC, ID ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
 		{name: "wrong value in from.id field",
@@ -150,7 +150,7 @@ func TestApplySorting(t *testing.T) {
 			db, dbMock := database.NewDBMock()
 			defer func() { _ = db.Close() }()
 			if tt.wantSQL != "" {
-				dbMock.ExpectQuery(regexp.QuoteMeta(tt.wantSQL)).WithArgs(tt.wantSQLArguments...).
+				dbMock.ExpectQuery("^" + regexp.QuoteMeta(tt.wantSQL) + "$").WithArgs(tt.wantSQLArguments...).
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 			}
 
