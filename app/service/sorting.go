@@ -167,6 +167,8 @@ func getFromValueForField(r *http.Request, fieldName string,
 		return ResolveURLQueryGetInt64Field(r, fromFieldName)
 	case "bool":
 		return ResolveURLQueryGetBoolField(r, fromFieldName)
+	case "time":
+		return ResolveURLQueryGetTimeField(r, fromFieldName)
 	default:
 		panic(fmt.Errorf("unsupported type %q for field %q", acceptedFields[fieldName].FieldType, fieldName))
 	}

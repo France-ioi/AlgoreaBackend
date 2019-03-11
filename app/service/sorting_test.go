@@ -4,8 +4,10 @@ import (
 	"database/sql/driver"
 	"errors"
 	"net/http"
+	"net/url"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -133,6 +135,20 @@ func TestApplySorting(t *testing.T) {
 				defaultRules: "-name,id",
 			},
 			shouldPanic: errors.New(`unsupported type "interface{}" for field "name"`)},
+		{name: "paging by time",
+			args: args{
+				urlParameters: "?from.submission_date=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
+				acceptedFields: map[string]*FieldSortingParams{
+					"submission_date": {ColumnName: "sSubmissionDate", FieldType: "time"},
+				},
+				defaultRules: "submission_date",
+			},
+			wantSQL: "SELECT ID FROM `users`  WHERE ((sSubmissionDate > ?) OR (sSubmissionDate = ? AND ID > ?)) ORDER BY sSubmissionDate ASC, ID ASC",
+			wantSQLArguments: []driver.Value{
+				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
+				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
+				1},
+			wantAPIError: NoError},
 	}
 
 	for _, tt := range tests {
@@ -169,4 +185,22 @@ func TestApplySorting(t *testing.T) {
 			assert.NoError(t, dbMock.ExpectationsWereMet())
 		})
 	}
+}
+
+type sqlMockTime struct {
+	time.Time
+}
+
+// Match satisfies sqlmock.Argument interface
+func (a sqlMockTime) Match(v driver.Value) bool {
+	var secondValue time.Time
+	switch value := v.(type) {
+	case sqlMockTime:
+		secondValue = value.Time
+	case time.Time:
+		secondValue = value
+	default:
+		return false
+	}
+	return a.Time.Equal(secondValue)
 }
