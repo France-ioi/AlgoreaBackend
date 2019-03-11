@@ -9,7 +9,7 @@ import (
 	assertlib "github.com/stretchr/testify/assert"
 )
 
-func TestQueryParamToInt64Slice(t *testing.T) {
+func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 	testCases := []struct {
 		desc           string
 		queryString    string
