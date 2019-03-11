@@ -44,7 +44,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "string"},
+			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
 			"id":              {ColumnName: "users_answers.ID", FieldType: "int64"}},
 		"-submission_date")
 	if apiError != service.NoError {
