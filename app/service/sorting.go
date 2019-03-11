@@ -132,9 +132,10 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 	fromValueSkipped := false
 	fromValueAccepted := false
 	fromValues := make([]interface{}, 0, len(usedFields))
+	const fromPrefix = "from."
 	for _, fieldName := range usedFields {
 		var value interface{}
-		fromFieldName := "from." + fieldName
+		fromFieldName := fromPrefix + fieldName
 		if len(r.URL.Query()[fromFieldName]) > 0 {
 			var err error
 			value, err = getFromValueForField(r, fieldName, acceptedFields)
@@ -152,6 +153,20 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 		fromParameters := strings.Join(usedFields, ", from.")
 		return nil, fmt.Errorf("all 'from' parameters (from.%s) or none of them must be present", fromParameters)
 	}
+
+	var unknownFromFields []string
+	for fieldName := range r.URL.Query() {
+		if strings.HasPrefix(fieldName, fromPrefix) {
+			fieldNameSuffix := fieldName[len(fromPrefix):]
+			if acceptedFields[fieldNameSuffix] == nil {
+				unknownFromFields = append(unknownFromFields, fieldName)
+			}
+		}
+	}
+	if len(unknownFromFields) > 0 {
+		return nil, fmt.Errorf("unallowed paging parameters (%s)", strings.Join(unknownFromFields, ", "))
+	}
+
 	return fromValues, nil
 }
 

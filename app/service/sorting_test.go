@@ -135,6 +135,15 @@ func TestApplySorting(t *testing.T) {
 				defaultRules: "-name,id",
 			},
 			shouldPanic: errors.New(`unsupported type "interface{}" for field "name"`)},
+		{name: "unallowed from fields",
+			args: args{
+				urlParameters: "?from.field=Joe&from.version=2",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "interface{}"},
+				},
+				defaultRules: "-name,id",
+			},
+			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.version)`))},
 		{name: "paging by time",
 			args: args{
 				urlParameters: "?from.submission_date=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
