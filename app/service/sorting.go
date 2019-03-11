@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -164,6 +165,7 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 		}
 	}
 	if len(unknownFromFields) > 0 {
+		sort.Strings(unknownFromFields)
 		return nil, fmt.Errorf("unallowed paging parameters (%s)", strings.Join(unknownFromFields, ", "))
 	}
 
