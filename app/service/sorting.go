@@ -70,7 +70,7 @@ func parseSortingRules(sortingRules string,
 			return nil, nil, fmt.Errorf("a field cannot be a sorting parameter more than once: %q", fieldName)
 		}
 		if _, ok := acceptedFields[fieldName]; !ok {
-			return nil, nil, fmt.Errorf("unknown field in sorting parameters: %q", fieldName)
+			return nil, nil, fmt.Errorf("unallowed field in sorting parameters: %q", fieldName)
 		}
 		fieldsDirections[fieldName] = direction
 		usedFields = append(usedFields, fieldName)

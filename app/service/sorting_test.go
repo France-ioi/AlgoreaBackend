@@ -58,7 +58,7 @@ func TestApplySorting(t *testing.T) {
 				defaultRules: "-name,id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`a field cannot be a sorting parameter more than once: "name"`))},
-		{name: "unknown field",
+		{name: "unallowed field",
 			args: args{
 				urlParameters: "?sort=class",
 				acceptedFields: map[string]*FieldSortingParams{
@@ -67,7 +67,7 @@ func TestApplySorting(t *testing.T) {
 				},
 				defaultRules: "-name,id",
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`unknown field in sorting parameters: "class"`))},
+			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`))},
 		{name: "add id field",
 			args: args{
 				urlParameters: "",
