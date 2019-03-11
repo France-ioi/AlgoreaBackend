@@ -13,6 +13,10 @@ import (
 // ResolveURLQueryGetInt64SliceField extracts from the query parameter of the request a list of integer separated by commas (',')
 // returns `nil` for no IDs
 func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
+	if err := checkQueryGetFieldIsNotMissing(req, paramName); err != nil {
+		return nil, err
+	}
+
 	var ids []int64
 	paramValue := req.URL.Query().Get(paramName)
 	if paramValue == "" {
@@ -31,8 +35,8 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 
 // ResolveURLQueryGetInt64Field extracts a get-parameter of type int64 from the query
 func ResolveURLQueryGetInt64Field(httpReq *http.Request, name string) (int64, error) {
-	if len(httpReq.URL.Query()[name]) == 0 {
-		return 0, fmt.Errorf("missing %s", name)
+	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
+		return 0, err
 	}
 	strValue := httpReq.URL.Query().Get(name)
 	int64Value, err := strconv.ParseInt(strValue, 10, 64)
@@ -76,6 +80,13 @@ func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, e
 		return 0, fmt.Errorf("wrong value for %s (should be int64)", name)
 	}
 	return int64Value, nil
+}
+
+func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
+	if len(httpReq.URL.Query()[name]) == 0 {
+		return fmt.Errorf("missing %s", name)
+	}
+	return nil
 }
 
 // ConvertSliceOfMapsFromDBToJSON given a slice of maps that represents DB result data,

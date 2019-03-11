@@ -20,13 +20,19 @@ func TestQueryParamToInt64Slice(t *testing.T) {
 			desc:           "no param",
 			queryString:    "",
 			expectedList:   nil,
+			expectedErrMsg: "missing ids",
+		},
+		{
+			desc:           "empty param",
+			queryString:    "ids=",
+			expectedList:   nil,
 			expectedErrMsg: "",
 		},
 		{
 			desc:           "wrong param name",
 			queryString:    "id=1,2",
 			expectedList:   nil,
-			expectedErrMsg: "",
+			expectedErrMsg: "missing ids",
 		},
 		{
 			desc:           "single value",
