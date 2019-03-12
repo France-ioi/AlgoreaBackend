@@ -29,7 +29,7 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 	}
 	query = applyOrder(query, usedFields, acceptedFields, fieldsDirections)
 
-	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields)
+	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields, fieldsDirections)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
@@ -129,7 +129,7 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 // parsePagingParameters returns a slice of values provided for paging in a request URL (none or all should be present)
 // The values are in the order of the 'usedFields' and converted according to 'FieldType' of 'acceptedFields'
 func parsePagingParameters(r *http.Request, usedFields []string,
-	acceptedFields map[string]*FieldSortingParams) ([]interface{}, error) {
+	acceptedFields map[string]*FieldSortingParams, fieldsDirections map[string]int) ([]interface{}, error) {
 	fromValueSkipped := false
 	fromValueAccepted := false
 	fromValues := make([]interface{}, 0, len(usedFields))
@@ -159,7 +159,7 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 	for fieldName := range r.URL.Query() {
 		if strings.HasPrefix(fieldName, fromPrefix) {
 			fieldNameSuffix := fieldName[len(fromPrefix):]
-			if acceptedFields[fieldNameSuffix] == nil {
+			if fieldsDirections[fieldNameSuffix] == 0 {
 				unknownFromFields = append(unknownFromFields, fieldName)
 			}
 		}
