@@ -17,6 +17,28 @@ type FieldSortingParams struct {
 	FieldType string
 }
 
+type sortingDirection int
+
+const (
+	asc     sortingDirection = 1
+	desc    sortingDirection = -1
+	unknown sortingDirection = 0
+)
+
+func (d sortingDirection) asSQL() string {
+	if d == asc {
+		return "ASC"
+	}
+	return "DESC"
+}
+
+func (d sortingDirection) conditionSign() string {
+	if d == asc {
+		return ">"
+	}
+	return "<"
+}
+
 // ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting rules
 // taking into the account the URL parameters 'from.*'
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
@@ -29,7 +51,7 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 	}
 	query = applyOrder(query, usedFields, acceptedFields, fieldsDirections)
 
-	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields)
+	fromValues, err := parsePagingParameters(r, usedFields, acceptedFields, fieldsDirections)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
@@ -51,26 +73,26 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[st
 	if _, ok := newAcceptedFields["id"]; !ok {
 		newAcceptedFields["id"] = &FieldSortingParams{ColumnName: "ID", FieldType: "int64"}
 	}
-	var sort string
+	var sortingRules string
 	urlQuery := r.URL.Query()
 	if len(urlQuery["sort"]) > 0 {
-		sort = urlQuery["sort"][0]
+		sortingRules = urlQuery["sort"][0]
 	} else {
-		sort = defaultRules
+		sortingRules = defaultRules
 	}
-	if sort == "" {
-		sort = "id"
+	if sortingRules == "" {
+		sortingRules = "id"
 	}
-	return sort, newAcceptedFields
+	return sortingRules, newAcceptedFields
 }
 
 // parseSortingRules returns a slice with used fields and a map fieldName -> direction
 // It also checks that there are no unallowed fields in the rules.
 func parseSortingRules(sortingRules string,
-	acceptedFields map[string]*FieldSortingParams) (usedFields []string, fieldsDirections map[string]int, err error) {
+	acceptedFields map[string]*FieldSortingParams) (usedFields []string, fieldsDirections map[string]sortingDirection, err error) {
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
-	fieldsDirections = make(map[string]int, len(sortStatements)+1)
+	fieldsDirections = make(map[string]sortingDirection, len(sortStatements)+1)
 	for _, sortStatement := range sortStatements {
 		fieldName, direction := getFieldNameAndDirectionFromSortStatement(sortStatement)
 		if fieldsDirections[fieldName] != 0 {
@@ -93,13 +115,13 @@ func parseSortingRules(sortingRules string,
 // from a given sorting statement.
 // "id"   -> ("id", 1)
 // "-name -> ("name", -1)
-func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, int) {
-	var direction int
+func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, sortingDirection) {
+	var direction sortingDirection
 	if len(sortStatement) > 0 && sortStatement[0] == '-' {
 		sortStatement = sortStatement[1:]
-		direction = -1
+		direction = desc
 	} else {
-		direction = 1
+		direction = asc
 	}
 	fieldName := sortStatement
 	return fieldName, direction
@@ -108,17 +130,11 @@ func getFieldNameAndDirectionFromSortStatement(sortStatement string) (string, in
 // applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
 // the fields configuration (acceptedFields) and sorting directions
 func applyOrder(query *database.DB, usedFields []string, acceptedFields map[string]*FieldSortingParams,
-	fieldsDirections map[string]int) *database.DB {
+	fieldsDirections map[string]sortingDirection) *database.DB {
 	usedFieldsNumber := len(usedFields)
 	orderStrings := make([]string, 0, usedFieldsNumber)
 	for _, field := range usedFields {
-		var directionString string
-		if fieldsDirections[field] == 1 {
-			directionString = "ASC"
-		} else {
-			directionString = "DESC"
-		}
-		orderStrings = append(orderStrings, acceptedFields[field].ColumnName+" "+directionString)
+		orderStrings = append(orderStrings, acceptedFields[field].ColumnName+" "+fieldsDirections[field].asSQL())
 	}
 	if len(orderStrings) > 0 {
 		query = query.Order(strings.Join(orderStrings, ", "))
@@ -129,7 +145,7 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 // parsePagingParameters returns a slice of values provided for paging in a request URL (none or all should be present)
 // The values are in the order of the 'usedFields' and converted according to 'FieldType' of 'acceptedFields'
 func parsePagingParameters(r *http.Request, usedFields []string,
-	acceptedFields map[string]*FieldSortingParams) ([]interface{}, error) {
+	acceptedFields map[string]*FieldSortingParams, fieldsDirections map[string]sortingDirection) ([]interface{}, error) {
 	fromValueSkipped := false
 	fromValueAccepted := false
 	fromValues := make([]interface{}, 0, len(usedFields))
@@ -159,7 +175,7 @@ func parsePagingParameters(r *http.Request, usedFields []string,
 	for fieldName := range r.URL.Query() {
 		if strings.HasPrefix(fieldName, fromPrefix) {
 			fieldNameSuffix := fieldName[len(fromPrefix):]
-			if acceptedFields[fieldNameSuffix] == nil {
+			if fieldsDirections[fieldNameSuffix] == unknown {
 				unknownFromFields = append(unknownFromFields, fieldName)
 			}
 		}
@@ -192,7 +208,7 @@ func getFromValueForField(r *http.Request, fieldName string,
 }
 
 // applyPagingConditions adds filtering on paging values into the query
-func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirections map[string]int,
+func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirections map[string]sortingDirection,
 	acceptedFields map[string]*FieldSortingParams, fromValues []interface{}) *database.DB {
 	if len(fromValues) == 0 {
 		return query
@@ -209,12 +225,9 @@ func applyPagingConditions(query *database.DB, usedFields []string, fieldsDirect
 		if len(conditionPrefix) > 0 {
 			conditionPrefix += " AND "
 		}
-		conditionSign := ">"
-		if fieldsDirections[fieldName] == -1 {
-			conditionSign = "<"
-		}
 		conditions = append(conditions,
-			fmt.Sprintf("(%s%s %s ?)", conditionPrefix, acceptedFields[fieldName].ColumnName, conditionSign))
+			fmt.Sprintf("(%s%s %s ?)", conditionPrefix, acceptedFields[fieldName].ColumnName,
+				fieldsDirections[fieldName].conditionSign()))
 		conditionPrefix = fmt.Sprintf("%s%s = ?", conditionPrefix, acceptedFields[fieldName].ColumnName)
 
 		queryValuesPart = append(queryValuesPart, fromValues[index])
