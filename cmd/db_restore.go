@@ -75,7 +75,7 @@ func init() {
 				"-u"+conf.Database.Connection.User,
 				"-p"+conf.Database.Connection.Passwd,
 				"--protocol=TCP",
-				"-e"+"source db/schema/20181024.sql",
+				"-e"+"source db/schema/schema.sql",
 			)
 			fmt.Println("mysql importing dump...")
 			err = command.Run()
