@@ -73,17 +73,17 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[st
 	if _, ok := newAcceptedFields["id"]; !ok {
 		newAcceptedFields["id"] = &FieldSortingParams{ColumnName: "ID", FieldType: "int64"}
 	}
-	var sort string
+	var sortingRules string
 	urlQuery := r.URL.Query()
 	if len(urlQuery["sort"]) > 0 {
-		sort = urlQuery["sort"][0]
+		sortingRules = urlQuery["sort"][0]
 	} else {
-		sort = defaultRules
+		sortingRules = defaultRules
 	}
-	if sort == "" {
-		sort = "id"
+	if sortingRules == "" {
+		sortingRules = "id"
 	}
-	return sort, newAcceptedFields
+	return sortingRules, newAcceptedFields
 }
 
 // parseSortingRules returns a slice with used fields and a map fieldName -> direction
