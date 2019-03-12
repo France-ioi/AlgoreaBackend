@@ -139,7 +139,7 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.field=Joe&from.version=2&from.name=Jane",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "interface{}"},
+					"name": {ColumnName: "sName", FieldType: "string"},
 				},
 				defaultRules: "id",
 			},
