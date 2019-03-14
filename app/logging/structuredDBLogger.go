@@ -47,7 +47,9 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		   values[3] - values map
 		*/
 		valuesMap := values[3].(map[string]interface{})
-		valuesMap["duration"] = float64(valuesMap["duration"].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
+		if valuesMap["duration"] != nil {
+			valuesMap["duration"] = float64(valuesMap["duration"].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
+		}
 		logger.WithFields(valuesMap).Println(values[2])
 	} else { // level is not "sql", so typically errors
 		logger.Println(values[2:]...)

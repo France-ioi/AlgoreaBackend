@@ -1,10 +1,93 @@
 package logging
 
 import (
+	"errors"
 	"testing"
+	"time"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
+
+func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
+	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+		return nil, errors.New("config loading error")
+	})
+	defer patch.Unpatch()
+
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.False(t, logMode)
+	rawLogger.Log(nil, "some message", "err", nil)
+	assert.Contains(t, hook.GetAllLogs(), "some message map[err:<nil>]")
+}
+
+func TestNewRawDBLogger_TextLog(t *testing.T) {
+	conf := &config.Root{Logging: config.Logging{
+		Format:        "text",
+		LogSQLQueries: true,
+	}}
+
+	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+		return conf, nil
+	})
+	defer patch.Unpatch()
+
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.True(t, logMode)
+	rawLogger.Log(nil, "some message", "err", nil)
+	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
+}
+
+func TestNewRawDBLogger_JSONLog(t *testing.T) {
+	conf := &config.Root{Logging: config.Logging{
+		Format:        "json",
+		LogSQLQueries: true,
+	}}
+
+	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+		return conf, nil
+	})
+	defer patch.Unpatch()
+
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.True(t, logMode)
+	rawLogger.Log(nil, "some message", "err", nil)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
+}
+
+func TestNewRawDBLogger_JSONLog_WithDuration(t *testing.T) {
+	conf := &config.Root{Logging: config.Logging{
+		Format:        "json",
+		LogSQLQueries: true,
+	}}
+
+	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+		return conf, nil
+	})
+	defer patch.Unpatch()
+
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.True(t, logMode)
+	rawLogger.Log(nil, "some message", "duration", 1500*time.Millisecond)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
+	assert.Contains(t, hook.GetAllStructuredLogs(), `duration=1.5`)
+}
 
 func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 	tests := []struct {
