@@ -34,7 +34,7 @@ func NewRawDBLogger() (instrumentedsql.Logger, bool) {
 			return
 		}
 
-		valuesMap := prepareValuesMap(keyvals)
+		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
 		args := make([]interface{}, 0, 4)
 
 		args = append(args, "rawsql")
@@ -46,7 +46,7 @@ func NewRawDBLogger() (instrumentedsql.Logger, bool) {
 	return sqlLogger, logMode
 }
 
-func prepareValuesMap(keyvals []interface{}) map[string]interface{} {
+func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	valuesMap := make(map[string]interface{}, len(keyvals)/2)
 	for index := 0; index < len(keyvals); index += 2 {
 		valuesMap[keyvals[index].(string)] = keyvals[index+1]
