@@ -36,6 +36,9 @@ func Open(source interface{}) (*DB, error) {
 	switch src := source.(type) {
 	case string:
 		rawConnection, err = OpenRawDBConnection(src)
+		if err != nil {
+			return nil, err
+		}
 	case gorm.SQLCommon:
 		rawConnection = src
 	default:
