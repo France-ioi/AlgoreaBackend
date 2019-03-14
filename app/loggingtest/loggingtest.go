@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
+// Hook is a hook designed for dealing with logs in test scenarios. It wraps logrus/hooks/test.Hook.
 type Hook struct {
 	*test.Hook
 }
@@ -21,18 +22,24 @@ func (hook *Hook) GetAllLogs() string {
 	return logs
 }
 
+// GetAllStructuredLogs returns all the structured logs collected by the hook as a string
 func (hook *Hook) GetAllStructuredLogs() string {
 	logs := ""
 	for _, entry := range hook.AllEntries() {
 		if len(logs) > 0 {
 			logs += "\n"
 		}
-		logString, _ := entry.String()
-		logs = logs + logString
+		logString, err := entry.String()
+		if err != nil {
+			logs += err.Error()
+		} else {
+			logs = logs + logString
+		}
 	}
 	return logs
 }
 
+// NewNullLogger creates a discarding logger and installs the test hook.
 func NewNullLogger() (*logrus.Logger, *Hook) {
 	logger, hook := test.NewNullLogger()
 	return logger, &Hook{hook}

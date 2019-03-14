@@ -23,7 +23,7 @@ func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
 
 	rawLogger, logMode := NewRawDBLogger()
 	assert.False(t, logMode)
-	rawLogger.Log(nil, "some message", "err", nil)
+	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllLogs(), "some message map[err:<nil>]")
 }
 
@@ -43,7 +43,7 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 
 	rawLogger, logMode := NewRawDBLogger()
 	assert.True(t, logMode)
-	rawLogger.Log(nil, "some message", "err", nil)
+	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
 
@@ -63,7 +63,7 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 
 	rawLogger, logMode := NewRawDBLogger()
 	assert.True(t, logMode)
-	rawLogger.Log(nil, "some message", "err", nil)
+	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
 }
@@ -84,7 +84,7 @@ func TestNewRawDBLogger_JSONLog_WithDuration(t *testing.T) {
 
 	rawLogger, logMode := NewRawDBLogger()
 	assert.True(t, logMode)
-	rawLogger.Log(nil, "some message", "duration", 1500*time.Millisecond)
+	rawLogger.Log(nil, "some message", "duration", 1500*time.Millisecond) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `duration=1.5`)
 }
