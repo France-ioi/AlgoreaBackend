@@ -9,6 +9,8 @@ import (
 
 	"github.com/DATA-DOG/godog"
 	"github.com/DATA-DOG/godog/colors"
+
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 var opt = godog.Options{
@@ -19,6 +21,7 @@ var opt = godog.Options{
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package)
 func RunGodogTests(m *testing.M) {
+	config.ClearCachedConfig()
 
 	opt.Paths = featureFilesInCurrentDir()
 	godog.BindFlags("godog.", flag.CommandLine, &opt)

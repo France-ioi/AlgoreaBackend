@@ -15,6 +15,8 @@ import (
 func TestNewDBLogger_ErrorFallback(t *testing.T) {
 	assert := assertlib.New(t)
 
+	config.ClearCachedConfig()
+	defer config.ClearCachedConfig()
 	fakeFunc := func() (*config.Root, error) {
 		return nil, errors.New("config loading error")
 	}
@@ -29,55 +31,55 @@ func TestNewDBLogger_ErrorFallback(t *testing.T) {
 func TestLoggerFromConfig_TextLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
-	config := config.Logging{
+	conf := config.Logging{
 		Format: "text",
 		Output: "file",
 	}
-	dbLogger, _ := loggerFromConfig(config, logger)
+	dbLogger, _ := loggerFromConfig(conf, logger)
 	assert.IsType(gorm.Logger{}, dbLogger)
 }
 
 func TestLoggerFromConfig_JSONLog(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
-	config := config.Logging{
+	conf := config.Logging{
 		Format: "json",
 		Output: "file",
 	}
-	dbLogger, _ := loggerFromConfig(config, logger)
+	dbLogger, _ := loggerFromConfig(conf, logger)
 	assert.IsType(&StructuredDBLogger{}, dbLogger)
 }
 
 func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
-	config := config.Logging{
+	conf := config.Logging{
 		Format: "yml",
 		Output: "file",
 	}
-	assert.Panics(func() { loggerFromConfig(config, logger) })
+	assert.Panics(func() { loggerFromConfig(conf, logger) })
 }
 
 func TestLoggerFromConfig_WithoutSQL(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
-	config := config.Logging{
+	conf := config.Logging{
 		LogSQLQueries: false,
 		Format:        "text",
 		Output:        "file",
 	}
-	_, logMode := loggerFromConfig(config, logger)
+	_, logMode := loggerFromConfig(conf, logger)
 	assert.False(logMode)
 }
 
 func TestLoggerFromConfig_WithSQL(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := logrus.New()
-	config := config.Logging{
+	conf := config.Logging{
 		LogSQLQueries: true,
 		Format:        "text",
 		Output:        "file",
 	}
-	_, logMode := loggerFromConfig(config, logger)
+	_, logMode := loggerFromConfig(conf, logger)
 	assert.True(logMode)
 }

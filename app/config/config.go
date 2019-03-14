@@ -55,6 +55,8 @@ var (
 	configDir  = configDirectory()
 )
 
+var loadedConfig *Root
+
 // Load loads the app configuration from files, flags, env, ..., and maps it to the config struct
 // The precedence of config values in viper is the following:
 // 1) explicit call to Set
@@ -64,8 +66,11 @@ var (
 // 5) key/value store
 // 6) default
 func Load() (*Root, error) {
-	var err error
+	if loadedConfig != nil {
+		return loadedConfig, nil
+	}
 
+	var err error
 	var config *Root
 	setDefaults()
 
@@ -86,7 +91,13 @@ func Load() (*Root, error) {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
 		return nil, err
 	}
+	loadedConfig = config
 	return config, nil
+}
+
+// ClearCachedConfig clears the cached config (for testing purposes).
+func ClearCachedConfig() {
+	loadedConfig = nil
 }
 
 func setDefaults() {

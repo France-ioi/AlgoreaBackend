@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -16,6 +17,8 @@ import (
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
+	config.ClearCachedConfig()
+	defer config.ClearCachedConfig()
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
@@ -37,6 +40,8 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
+	config.ClearCachedConfig()
+	defer config.ClearCachedConfig()
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
@@ -52,6 +57,8 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
+	config.ClearCachedConfig()
+	defer config.ClearCachedConfig()
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
 	logging.Logger, hook = test.NewNullLogger()
