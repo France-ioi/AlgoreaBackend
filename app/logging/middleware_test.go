@@ -38,7 +38,7 @@ func TestMiddleware_Success(t *testing.T) {
 	checkCommon(assert, entryData)
 	assert.Equal("request complete", hook.AllEntries()[2].Message)
 	assert.Equal(10, entryData["resp_bytes_length"])
-	assert.True(entryData["resp_elapsed_ms"].(float64) < 0.5, "Expected <0.5s, got: %f", entryData["resp_elapsed_ms"].(float64))
+	assert.True(entryData["resp_elapsed_ms"].(float64) < 1.0, "Expected <1.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
 	assert.Equal(200, entryData["resp_status"])
 }
 
