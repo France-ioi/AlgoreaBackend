@@ -36,7 +36,7 @@ func SetupDBWithFixture(fixtureName string) *database.DB {
 	return db
 }
 
-// SetupDBWithFixture creates a new connection to the DB specified in the config
+// OpenRawDBConnection creates a new connection to the DB specified in the config
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
 	conf, err := config.Load()
