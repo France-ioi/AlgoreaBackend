@@ -29,7 +29,7 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert.Equal("SELECT '1', '2009-11-10 23:00:00', 'foo', 'bar', NULL", hook.LastEntry().Message)
 	data := hook.LastEntry().Data
 	assert.Equal("db", data["type"])
-	assert.True(data["duration"].(float64) < 0.01, "unexpected duration: %v", data["duration"])
+	assert.True(data["duration"].(float64) < 0.1, "unexpected duration: %v", data["duration"])
 	assert.NotNil(data["ts"])
 	assert.Equal(int64(0), data["rows"].(int64))
 }
