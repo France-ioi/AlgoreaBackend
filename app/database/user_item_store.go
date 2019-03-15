@@ -95,8 +95,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		var result sql.Result
 		result, err = markAsProcessingStatement.Exec()
 		mustNotBeError(err)
-		var rowsAffected int64
-		rowsAffected, err = result.RowsAffected()
 
 		/** For every object marked as 'processing', we compute all the characteristics based on the children:
 		* sLastActivityDate as the max of children's
@@ -269,6 +267,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		}
 		result, err = markAsDoneStatement.Exec()
 		mustNotBeError(err)
+		var rowsAffected int64
 		rowsAffected, err = result.RowsAffected()
 		mustNotBeError(err)
 		hasChanges = rowsAffected > 0
