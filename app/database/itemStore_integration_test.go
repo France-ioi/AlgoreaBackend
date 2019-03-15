@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func setupDB(t *testing.T) *database.DB {
+func setupDB() *database.DB {
 	return testhelpers.SetupDBWithFixture("visibility")
 }
 
@@ -22,7 +22,7 @@ type itemIdRow struct {
 
 func TestVisible(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -38,7 +38,7 @@ func TestVisible(t *testing.T) {
 
 func TestVisibleByID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -54,7 +54,7 @@ func TestVisibleByID(t *testing.T) {
 
 func TestVisibleChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -70,7 +70,7 @@ func TestVisibleChildrenOfID(t *testing.T) {
 
 func TestVisibleGrandChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
