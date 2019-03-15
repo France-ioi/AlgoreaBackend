@@ -77,6 +77,11 @@ func (s *DataStore) UserAnswers() *UserAnswerStore {
 	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}
 }
 
+// UserItems returns a UserItemStore
+func (s *DataStore) UserItems() *UserItemStore {
+	return &UserItemStore{NewDataStoreWithTable(s.DB, "users_items")}
+}
+
 // NewID generates a positive random int64 to be used as ID
 // !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
 func (s *DataStore) NewID() int64 {
