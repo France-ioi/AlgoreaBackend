@@ -73,3 +73,20 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert.NotNil(data["ts"])
 	assert.Equal(int64(0), data["rows"].(int64))
 }
+
+func TestStructuredDBLogger_Print_RawSQLWithDuration(t *testing.T) {
+	assert := assertlib.New(t)
+	logger, hook := test.NewNullLogger()
+	structuredLogger := logging.NewStructuredDBLogger(logger)
+	structuredLogger.Print("rawsql", nil, "sql-stmt-exec",
+		map[string]interface{}{
+			"query":    "SELECT 1",
+			"duration": 500 * time.Millisecond,
+		})
+
+	assert.Equal("sql-stmt-exec", hook.Entries[0].Message)
+	data := hook.Entries[0].Data
+	assert.Equal("db", data["type"])
+	assert.Equal(data["duration"].(float64), 0.5)
+	assert.NotNil(data["ts"])
+}

@@ -50,6 +50,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		if valuesMap["duration"] != nil {
 			valuesMap["duration"] = float64(valuesMap["duration"].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		}
+		valuesMap["ts"] = time.Now().Format("2006-01-02 15:04:05")
 		logger.WithFields(valuesMap).Println(values[2])
 	} else { // level is not "sql", so typically errors
 		logger.Println(values[2:]...)
