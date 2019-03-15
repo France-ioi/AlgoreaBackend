@@ -23,7 +23,7 @@ func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
 	rawLogger, logMode := NewRawDBLogger()
 	assert.False(t, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
-	assert.Contains(t, hook.GetAllLogs(), "some message map[err:<nil>]")
+	assert.Empty(t, hook.GetAllLogs())
 }
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
@@ -44,6 +44,26 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	assert.True(t, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
+}
+
+func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
+	conf := &config.Root{Logging: config.Logging{
+		Format:        "text",
+		LogSQLQueries: false,
+	}}
+
+	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+		return conf, nil
+	})
+	defer patch.Unpatch()
+
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.False(t, logMode)
+	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
+	assert.Empty(t, hook.GetAllStructuredLogs())
 }
 
 func TestNewRawDBLogger_JSONLog(t *testing.T) {

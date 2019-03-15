@@ -30,6 +30,10 @@ func NewRawDBLogger() (instrumentedsql.Logger, bool) {
 	}
 
 	sqlLogger := instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
+		if !logMode {
+			return
+		}
+
 		if ctx == nil && msg == "sql-stmt-exec" { // duplicated message
 			return
 		}
