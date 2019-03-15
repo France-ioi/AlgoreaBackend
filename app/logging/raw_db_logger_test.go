@@ -3,7 +3,6 @@ package logging
 import (
 	"errors"
 	"testing"
-	"time"
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
@@ -66,27 +65,6 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
-}
-
-func TestNewRawDBLogger_JSONLog_WithDuration(t *testing.T) {
-	conf := &config.Root{Logging: config.Logging{
-		Format:        "json",
-		LogSQLQueries: true,
-	}}
-
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
-		return conf, nil
-	})
-	defer patch.Unpatch()
-
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
-
-	rawLogger, logMode := NewRawDBLogger()
-	assert.True(t, logMode)
-	rawLogger.Log(nil, "some message", "duration", 1500*time.Millisecond) //lint:ignore SA1012 sql often uses nil context
-	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
-	assert.Contains(t, hook.GetAllStructuredLogs(), `duration=1.5`)
 }
 
 func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
