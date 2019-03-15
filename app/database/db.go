@@ -37,22 +37,18 @@ func Open(source interface{}) (*DB, error) {
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
-	var transactionStarted = false
 	var txDB = conn.db.Begin()
 	if txDB.Error != nil {
 		return txDB.Error
 	}
-	transactionStarted = true
 	defer func() {
 		if p := recover(); p != nil {
 			// ensure rollback is executed even in case of panic
-			if transactionStarted {
-				txDB.Rollback()
-			}
+			txDB.Rollback()
 			panic(p) // re-throw panic after rollback
 		} else if err != nil {
 			// do not change the err
-			if transactionStarted && txDB.Rollback().Error != nil {
+			if txDB.Rollback().Error != nil {
 				panic(err) // in case of error on rollback, panic
 			}
 		} else {
