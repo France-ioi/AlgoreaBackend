@@ -26,6 +26,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		}
 	}()
 
+	// Use a lock so that we don't execute the listener multiple times in parallel
 	var getLockResult int64
 	mustNotBeError(s.db.Raw("SELECT GET_LOCK('listener_computeAllUserItems', 1)").Row().Scan(&getLockResult))
 	if getLockResult != 1 {
@@ -33,10 +34,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	}
 
 	/*
-		// Use a lock so that we don't execute the listener multiple times in parallel
-		$stmt = $db->query("SELECT GET_LOCK('listener_computeAllUserItems', 1);");
-		if($stmt->fetchColumn() != 1) { return; }
-		// We mark as 'todo' all ancestors of objects marked as 'todo'
 		$db->exec("LOCK TABLES
 		users_items as ancestors WRITE,
 		users_items as descendants WRITE,
@@ -45,6 +42,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		history_items_ancestors READ;
 		");
 	*/
+	// We mark as 'todo' all ancestors of objects marked as 'todo'
 	mustNotBeError(s.db.Exec(
 		`UPDATE users_items AS ancestors
 			JOIN items_ancestors
@@ -92,8 +90,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			mustNotBeError(err)
 			defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
 		}
-		var result sql.Result
-		result, err = markAsProcessingStatement.Exec()
+		_, err = markAsProcessingStatement.Exec()
 		mustNotBeError(err)
 
 		/** For every object marked as 'processing', we compute all the characteristics based on the children:
@@ -265,6 +262,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			mustNotBeError(err)
 			defer func() { mustNotBeError(markAsDoneStatement.Close()) }()
 		}
+		var result sql.Result
 		result, err = markAsDoneStatement.Exec()
 		mustNotBeError(err)
 		var rowsAffected int64
