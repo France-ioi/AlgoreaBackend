@@ -67,6 +67,16 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
 }
 
+func TestRawDBLogger_ShouldSkipStmtExecWithNilContext(t *testing.T) {
+	var hook *loggingtest.Hook
+	Logger, hook = loggingtest.NewNullLogger()
+
+	rawLogger, logMode := NewRawDBLogger()
+	assert.True(t, logMode)
+	rawLogger.Log(nil, "sql-stmt-exec", "err", nil) //lint:ignore SA1012 we check the nil context here
+	assert.Empty(t, hook.GetAllStructuredLogs())
+}
+
 func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 	tests := []struct {
 		name    string
