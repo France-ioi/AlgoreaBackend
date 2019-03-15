@@ -7,31 +7,20 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
-	"github.com/luna-duclos/instrumentedsql"
 	"gopkg.in/yaml.v2"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureName string) *database.DB {
-	var err error
-
-	// needs actual config for connection to DB
-	var conf *config.Root
-	if conf, err = config.Load(); err != nil {
-		panic(err)
-	}
-
-	rawDb := OpenRawDBConnection()
+	rawDb, err := OpenRawDBConnection()
 
 	// Seed the DB
-	EmptyDB(rawDb, conf.Database.Connection.DBName)
+	EmptyDB(rawDb)
 	LoadFixture(rawDb, fixtureName)
 
 	// Return a new db connection
@@ -44,33 +33,19 @@ func SetupDBWithFixture(fixtureName string) *database.DB {
 	return db
 }
 
-// OpenRawDBConnection creates a new DB connection
-func OpenRawDBConnection() *sql.DB {
-	logger, _ := logging.NewRawDBLogger()
-	registerDriver := true
-	for _, driverName := range sql.Drivers() {
-		if driverName == "instrumented-mysql" {
-			registerDriver = false
-			break
-		}
-	}
-
+// SetupDBWithFixture creates a new connection to the DB specified in the config
+func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
-	var conf *config.Root
-	var err error
-	if conf, err = config.Load(); err != nil {
-		panic(err)
-	}
-
-	if registerDriver {
-		sql.Register("instrumented-mysql",
-			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(logger)))
-	}
-	rawDb, err := sql.Open("instrumented-mysql", conf.Database.Connection.FormatDSN())
+	conf, err := config.Load()
 	if err != nil {
 		panic(err)
 	}
-	return rawDb
+	var rawDb *sql.DB
+	rawDb, err = database.OpenRawDBConnection(conf.Database.Connection.FormatDSN())
+	if err != nil {
+		panic(err)
+	}
+	return rawDb, err
 }
 
 // LoadFixture load the fixtures from `<current_pkg_dir>/testdata/<dirname/`.
@@ -121,9 +96,8 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 
 }
 
-// EmptyDB empties all tables of the give database
 // nolint: gosec
-func EmptyDB(db *sql.DB, dbName string) {
+func emptyDB(db *sql.DB, dbName string) {
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -145,4 +119,14 @@ func EmptyDB(db *sql.DB, dbName string) {
 			panic(err)
 		}
 	}
+}
+
+// EmptyDB empties all tables of the database specified in the config
+func EmptyDB(db *sql.DB) {
+	conf, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	emptyDB(db, conf.Database.Connection.DBName)
 }
