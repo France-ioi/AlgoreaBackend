@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-var rawArgsRegexp = regexp.MustCompile(`^{\[(\w+) (.+?)\]((?:, \[\w+ .+?\])*)}$`)
+var rawArgsRegexp = regexp.MustCompile(`^{\[(<nil>|\w+) (.+?)\]((?:, \[\w+ .+?\])*)}$`)
 
 // NewRawDBLogger returns a logger for raw database actions and the `logmode`, according to the config
 func NewRawDBLogger() (instrumentedsql.Logger, bool) {
@@ -64,21 +64,38 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 			valueCopy := make([]byte, len(subMatches[2]))
 			copy(valueCopy, subMatches[2])
 			value := string(valueCopy)
-			if typeStr == "string" {
-				if unquoted, err := strconv.Unquote(value); err == nil {
-					value = unquoted
-				}
-			}
+			convertedValue := convertRawSQLArgValue(value, typeStr)
 			nextStr := subMatches[3]
 			if nextStr != "" {
 				argsString = "{" + subMatches[3][2:] + "}"
 			} else {
 				argsString = "{}"
 			}
-			argsValues = append(argsValues, value)
+			argsValues = append(argsValues, convertedValue)
 		}
 		valuesMap["query"] = fillSQLPlaceholders(valuesMap["query"].(string), argsValues)
 		delete(valuesMap, "args")
 	}
 	return valuesMap
+}
+
+func convertRawSQLArgValue(value string, typeStr string) interface{} {
+	var convertedValue interface{} = value
+	switch typeStr {
+	case "string":
+		if unquoted, err := strconv.Unquote(value); err == nil {
+			convertedValue = unquoted
+		}
+	case "int64", "int32", "int16", "int8", "int":
+		if converted, err := strconv.ParseInt(value, 10, 64); err == nil {
+			convertedValue = converted
+		}
+	case "float64", "float32":
+		if converted, err := strconv.ParseFloat(value, 64); err == nil {
+			convertedValue = converted
+		}
+	case "<nil>":
+		convertedValue = nil
+	}
+	return convertedValue
 }

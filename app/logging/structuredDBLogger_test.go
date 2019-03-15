@@ -26,7 +26,7 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	var result []interface{}
 	timeParam := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	db.Raw("SELECT $1, $2, $3, $4, $5", 1, timeParam, "foo", []byte("bar"), nil).Scan(&result)
-	assert.Equal("SELECT '1', '2009-11-10 23:00:00', 'foo', 'bar', NULL", hook.LastEntry().Message)
+	assert.Equal(`SELECT 1, '2009-11-10 23:00:00', "foo", "bar", NULL`, hook.LastEntry().Message)
 	data := hook.LastEntry().Data
 	assert.Equal("db", data["type"])
 	assert.True(data["duration"].(float64) < 0.01, "unexpected duration: %v", data["duration"])
@@ -46,7 +46,7 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 
 	var result []interface{}
 	db.Raw("SELECT ?", 1).Scan(&result)
-	assert.Equal("SELECT '1'", hook.LastEntry().Message)
+	assert.Equal("SELECT 1", hook.LastEntry().Message)
 }
 
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {

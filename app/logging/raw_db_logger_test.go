@@ -110,13 +110,39 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"args", "{[int64 1], [string \"Joe\"]}",
 			},
 			want: map[string]interface{}{
-				"query": "SELECT * FROM users WHERE users.ID='1' and users.sName='Joe'",
+				"query": `SELECT * FROM users WHERE users.ID=1 and users.sName="Joe"`,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := prepareRawDBLoggerValuesMap(tt.keyvals)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_convertRawSQLArgValue(t *testing.T) {
+	tests := []struct {
+		value   string
+		typeStr string
+		want    interface{}
+	}{
+		{value: `"some string \"' "`, typeStr: "string", want: `some string "' `},
+		{value: `1234`, typeStr: "int", want: int64(1234)},
+		{value: `1234`, typeStr: "int8", want: int64(1234)},
+		{value: `1234`, typeStr: "int16", want: int64(1234)},
+		{value: `1234`, typeStr: "int32", want: int64(1234)},
+		{value: `1234`, typeStr: "int64", want: int64(1234)},
+		{value: `1234`, typeStr: "int64", want: int64(1234)},
+		{value: `12.34`, typeStr: "float64", want: float64(12.34)},
+		{value: `12.34`, typeStr: "float32", want: float64(12.34)},
+		{value: `some_value`, typeStr: "<nil>", want: nil},
+		{value: `some_value`, typeStr: "unknown type", want: `some_value`},
+	}
+	for _, tt := range tests {
+		t.Run(tt.typeStr, func(t *testing.T) {
+			got := convertRawSQLArgValue(tt.value, tt.typeStr)
 			assert.Equal(t, tt.want, got)
 		})
 	}

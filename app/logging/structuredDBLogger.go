@@ -63,18 +63,21 @@ func fillSQLPlaceholders(query string, values []interface{}) string {
 	var formattedValues []string
 	for _, value := range values {
 		indirectValue := reflect.Indirect(reflect.ValueOf(value))
+		var formattedValue string
 		if indirectValue.IsValid() {
 			value = indirectValue.Interface()
-			if t, ok := value.(time.Time); ok {
-				formattedValues = append(formattedValues, fmt.Sprintf("'%v'", t.Format("2006-01-02 15:04:05")))
-			} else if b, ok := value.([]byte); ok {
-				formattedValues = append(formattedValues, fmt.Sprintf("'%v'", string(b)))
-			} else {
-				formattedValues = append(formattedValues, fmt.Sprintf("'%v'", value))
+			switch typedValue := value.(type) {
+			case time.Time:
+				formattedValue = fmt.Sprintf("'%v'", typedValue.Format("2006-01-02 15:04:05"))
+			case []byte, string:
+				formattedValue = fmt.Sprintf("%q", typedValue)
+			default:
+				formattedValue = fmt.Sprintf("%v", typedValue)
 			}
 		} else {
-			formattedValues = append(formattedValues, "NULL")
+			formattedValue = "NULL"
 		}
+		formattedValues = append(formattedValues, formattedValue)
 	}
 	// differentiate between $n placeholders or else treat like ?
 	if numericPlaceHolderRegexp.MatchString(query) {
