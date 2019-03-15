@@ -442,6 +442,12 @@ func TestOpen_DSN(t *testing.T) {
 	assertRawDBIsOK(t, rawDB)
 }
 
+func TestOpen_WrongSourceType(t *testing.T) {
+	db, err := Open(1234)
+	assert.Equal(t, errors.New("unknown database source type: int (1234)"), err)
+	assert.Nil(t, db)
+}
+
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	assert.Equal(t, "instrumentedsql.wrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.MySQLDriver)")
