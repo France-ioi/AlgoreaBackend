@@ -32,6 +32,22 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_inTransaction_DBErrorOnBegin(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin().WillReturnError(expectedError)
+
+	gotError := db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		return db.Raw("SELECT 1").Scan(&result).Error()
+	})
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_inTransaction_DBError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
