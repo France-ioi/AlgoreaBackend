@@ -96,11 +96,12 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback().WillReturnError(errors.New("rollback error"))
 
-	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
+	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
-			db.Raw("SELECT 1").Scan(&result)
-			panic(expectedError)
+			err := db.Raw("SELECT 1").Scan(&result).Error()
+			assert.Equal(t, expectedError, err)
+			return err
 		})
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())
