@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
@@ -445,6 +446,16 @@ func TestOpen_DSN(t *testing.T) {
 func TestOpen_WrongSourceType(t *testing.T) {
 	db, err := Open(1234)
 	assert.Equal(t, errors.New("unknown database source type: int (1234)"), err)
+	assert.Nil(t, db)
+}
+
+func TestOpen_OpenRawDBConnectionError(t *testing.T) {
+	expectedError := errors.New("some error")
+	monkey.Patch(OpenRawDBConnection, func(string) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	defer monkey.UnpatchAll()
+
+	db, err := Open("mydsn")
+	assert.Equal(t, expectedError, err)
 	assert.Nil(t, db)
 }
 
