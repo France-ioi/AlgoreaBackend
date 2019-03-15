@@ -1,7 +1,7 @@
 - { ID: 11, idItem: 1, idUser: 1, sAncestorsComputationState: todo}
 - { ID: 12, idItem: 2, idUser: 1, sAncestorsComputationState: todo}
 - { ID: 13, idItem: 3, idUser: 1, sAncestorsComputationState: todo}
-- { ID: 14, idItem: 4, idUser: 1, sAncestorsComputationState: todo}
+- { ID: 14, idItem: 4, idUser: 1, sAncestorsComputationState: todo, bKeyObtained: 1}
 - { ID: 15, idItem: 5, idUser: 1, sAncestorsComputationState: todo}
 - { ID: 21, idItem: 1, idUser: 2, sAncestorsComputationState: todo}
 - { ID: 22, idItem: 2, idUser: 2, sAncestorsComputationState: todo}
