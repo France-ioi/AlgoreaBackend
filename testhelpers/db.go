@@ -18,6 +18,9 @@ const fixtureDir = "testdata" // special directory which is not included in bina
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureName string) *database.DB {
 	rawDb, err := OpenRawDBConnection()
+	if err != nil {
+		panic(err)
+	}
 
 	// Seed the DB
 	EmptyDB(rawDb)
