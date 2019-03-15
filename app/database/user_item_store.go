@@ -18,10 +18,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			switch e := p.(type) {
 			case runtime.Error:
 				panic(e)
-			case error:
-				err = e
 			default:
-				panic(e)
+				err = p.(error)
 			}
 		}
 	}()
