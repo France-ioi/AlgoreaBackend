@@ -38,8 +38,8 @@ func Open(source interface{}) (*DB, error) {
 
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	var txDB = conn.db.Begin()
-	if err != nil {
-		return err
+	if txDB.Error != nil {
+		return txDB.Error
 	}
 	defer func() {
 		if p := recover(); p != nil {
@@ -48,13 +48,11 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 			panic(p) // re-throw panic after rollback
 		} else if err != nil {
 			// do not change the err
-			txDB = txDB.Rollback()
-			if txDB.Error != nil {
-				panic(p) // in case of error on rollback, panic
+			if txDB.Rollback().Error != nil {
+				panic(err) // in case of error on rollback, panic
 			}
 		} else {
-			txDB = txDB.Commit() // if err is nil, returns the potential error from commit
-			err = txDB.Error
+			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
 	err = txFunc(newDB(txDB))

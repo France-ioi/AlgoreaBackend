@@ -32,6 +32,22 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_inTransaction_DBErrorOnBegin(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectBegin().WillReturnError(expectedError)
+
+	gotError := db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		return db.Raw("SELECT 1").Scan(&result).Error()
+	})
+	assert.Equal(t, expectedError, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_inTransaction_DBError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -60,7 +76,6 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback()
 
-	assert.Panics(t, func() { panic("") })
 	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
@@ -81,12 +96,12 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback().WillReturnError(errors.New("rollback error"))
 
-	assert.Panics(t, func() { panic("") })
-	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
+	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
-			db.Raw("SELECT 1").Scan(&result)
-			panic(expectedError)
+			err := db.Raw("SELECT 1").Scan(&result).Error()
+			assert.Equal(t, expectedError, err)
+			return err
 		})
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())
