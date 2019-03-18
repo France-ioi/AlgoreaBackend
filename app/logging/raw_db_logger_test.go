@@ -113,6 +113,16 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"query": `SELECT * FROM users WHERE users.ID=1 and users.sName="Joe"`,
 			},
 		},
+		{
+			name: "with time",
+			keyvals: []interface{}{
+				"query", "UPDATE `users_items` SET `nbChildrenValidated` = ?, `nbTasksSolved` = ?, `nbTasksTried` = ?, `nbTasksWithHelp` = ?, `sLastActivityDate` = ? WHERE (ID=13)",
+				"args", "{[int64 8], [int64 7], [int64 5], [int64 6], [time.Time 2019-03-18 16:24:01 +0000 UTC]}",
+			},
+			want: map[string]interface{}{
+				"query": "UPDATE `users_items` SET `nbChildrenValidated` = 8, `nbTasksSolved` = 7, `nbTasksTried` = 5, `nbTasksWithHelp` = 6, `sLastActivityDate` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (ID=13)",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
