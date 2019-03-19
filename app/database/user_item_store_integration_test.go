@@ -19,7 +19,7 @@ func TestUserItemStore_ComputeAllUserItems(t *testing.T) {
 		{name: "basic", wantErr: false},
 	}
 
-	db := testhelpers.SetupDBWithFixture("users_items_propagation")
+	db := testhelpers.SetupDBWithFixture("users_items_propagation/main")
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
@@ -33,25 +33,11 @@ func TestUserItemStore_ComputeAllUserItems(t *testing.T) {
 }
 
 func TestUserItemStore_ComputeAllUserItems_Concurrent(t *testing.T) {
-	rawDB, err := testhelpers.OpenRawDBConnection()
-	if err != nil {
-		t.Errorf("Cannot connect to the DB: %s", err)
-		return
-	}
-	defer func() { _ = rawDB.Close() }()
-
-	testhelpers.EmptyDB(rawDB)
-	testhelpers.LoadFixture(rawDB, "users_items_propagation")
+	db := testhelpers.SetupDBWithFixture("users_items_propagation/main")
+	defer func() { _ = db.Close() }()
 
 	const threadsNumber = 30
 	done := make(chan bool, threadsNumber)
-
-	db, err := database.Open(rawDB)
-	if err != nil {
-		t.Errorf("Cannot create a database.DB: %s", err)
-		return
-	}
-	defer func() { _ = db.Close() }()
 
 	for i := 0; i < threadsNumber; i++ {
 		go func() {
