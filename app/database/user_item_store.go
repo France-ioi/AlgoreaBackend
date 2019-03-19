@@ -150,10 +150,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						FROM items_items
 						LEFT JOIN users_items AS task_children
 						ON items_items.idItemChild = task_children.idItem AND task_children.idUser = ? ` + // ?=idUser
-					`JOIN items ON items.ID = items_items.idItemChild
+					` JOIN items ON items.ID = items_items.idItemChild
 						WHERE items_items.idItemParent = ? AND items.sType != 'Course' AND items.bNoScore = 0 ` + // ?=idItem
 					//`FOR UPDATE`
-					`) AS task_children_data
+					` ) AS task_children_data
 					SET users_items.sLastActivityDate = children_data.sLastActivityDate,
 						users_items.nbTasksTried = children_data.nbTasksTried,
 						users_items.nbTasksWithHelp = children_data.nbTasksWithHelp,
