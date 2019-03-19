@@ -22,12 +22,13 @@ jobs:
       - image: circleci/golang:1.11
       - image: circleci/mysql:5.6
         environment:
-          MYSQL_USER: alg_ci_user
+          MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
           MYSQL_DATABASE: ci_db
+          MYSQL_ROOT_PASSWORD: root
     environment:
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
-      ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
+      ALGOREA_DATABASE.CONNECTION.USER: algorea
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
       ALGOREA_DATABASE.CONNECTION.DBNAME: ci_db
       ALGOREA_LOGGING.FORMAT: json
@@ -45,6 +46,9 @@ jobs:
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
       - run:
           name: Seed database
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: |
             go run main.go db-restore
             go run main.go db-migrate
