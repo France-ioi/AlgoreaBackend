@@ -107,6 +107,10 @@ func setDefaults(c *viper.Viper) {
 	c.SetDefault("logging.output", "file")
 	c.SetDefault("logging.level", "info")
 	c.SetDefault("logging.logSqlQueries", true)
+
+	// reverse proxy
+	c.SetDefault("reverseproxy.server", "http://localhost:3000")
+
 }
 
 func configDirectory() string {
