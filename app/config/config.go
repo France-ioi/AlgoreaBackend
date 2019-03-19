@@ -67,44 +67,50 @@ func Load() (*Root, error) {
 	var err error
 
 	var config *Root
-	setDefaults()
+	viperConfig := viper.New()
+
+	setDefaults(viperConfig)
 
 	// through env variables
-	viper.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
-	viper.AutomaticEnv()          // read in environment variables
+	viperConfig.SetEnvPrefix("algorea") // env variables must be prefixed by "ALGOREA_"
+	viperConfig.AutomaticEnv()          // read in environment variables
 
 	// through the config file
-	viper.SetConfigName(configName)
-	viper.AddConfigPath(configDir)
+	viperConfig.SetConfigName(configName)
+	viperConfig.AddConfigPath(configDir)
 
-	if err = viper.ReadInConfig(); err != nil {
+	if err = viperConfig.ReadInConfig(); err != nil {
 		log.Print("Cannot read the config file, ignoring it.")
 	}
 
 	// map the given config to a static struct
-	if err = viper.Unmarshal(&config); err != nil {
+	if err = viperConfig.Unmarshal(&config); err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
 		return nil, err
 	}
 	return config, nil
 }
 
-func setDefaults() {
+func setDefaults(c *viper.Viper) {
 
 	// root
-	viper.SetDefault("timeout", 15)
+	c.SetDefault("timeout", 15)
 
 	// server
-	viper.SetDefault("server.port", 8080)
-	viper.SetDefault("server.readTimeout", 60)  // in seconds
-	viper.SetDefault("server.writeTimeout", 60) // in seconds
-	viper.SetDefault("server.rootpath", "/")
+	c.SetDefault("server.port", 8080)
+	c.SetDefault("server.readTimeout", 60)  // in seconds
+	c.SetDefault("server.writeTimeout", 60) // in seconds
+	c.SetDefault("server.rootpath", "/")
 
 	// logging
-	viper.SetDefault("logging.format", "json")
-	viper.SetDefault("logging.output", "file")
-	viper.SetDefault("logging.level", "info")
-	viper.SetDefault("logging.logSqlQueries", true)
+	c.SetDefault("logging.format", "json")
+	c.SetDefault("logging.output", "file")
+	c.SetDefault("logging.level", "info")
+	c.SetDefault("logging.logSqlQueries", true)
+
+	// reverse proxy
+	c.SetDefault("reverseproxy.server", "http://localhost:3000")
+
 }
 
 func configDirectory() string {

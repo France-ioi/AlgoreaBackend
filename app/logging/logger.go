@@ -14,20 +14,26 @@ import (
 var (
 	// Logger is the global logger
 	// It should not be used directly by app which should prefer shorthands functions
-	Logger = new()
+	Logger = defaultGlobal()
 )
 
-func new() *logrus.Logger {
+// ConfigureGlobal applies the given logging configuration to the global logger
+func ConfigureGlobal(conf config.Logging) {
+	configure(Logger, conf)
+}
+
+// ResetGlobal reset the global logger to its default settings before its configuration
+func ResetGlobal() {
+	Logger = defaultGlobal()
+}
+
+func defaultGlobal() *logrus.Logger {
 	logger := logrus.New()
-	if conf, err := config.Load(); err == nil {
-		// If config, configure logger. Otherwise, use default logger
-		configureLogger(logger, conf.Logging)
-	}
 	log.SetOutput(logger.Writer())
 	return logger
 }
 
-func configureLogger(logger *logrus.Logger, conf config.Logging) {
+func configure(logger *logrus.Logger, conf config.Logging) {
 
 	// Format
 	switch conf.Format {

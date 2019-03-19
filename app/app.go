@@ -30,6 +30,9 @@ func New() (*Application, error) {
 		return nil, err
 	}
 
+	// Apply the config to the global logger
+	log.ConfigureGlobal(conf.Logging)
+
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 

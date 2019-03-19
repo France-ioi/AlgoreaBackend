@@ -23,7 +23,6 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/jinzhu/gorm"
 	"github.com/pmezard/go-difflib/difflib"
-	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
@@ -341,7 +340,7 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 	if err != nil {
 		return err
 	}
-	viper.Set("ReverseProxy.Server", backendURL.String())
+	_ = os.Setenv("ALGOREA_REVERSEPROXY.SERVER", backendURL.String()) // nolint
 	return nil
 }
 

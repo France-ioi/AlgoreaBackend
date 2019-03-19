@@ -43,3 +43,13 @@ func TestLoadConfig(t *testing.T) {
 	// test env
 	assert.EqualValues(999, conf.Server.WriteTimeout)
 }
+
+func TestLoadConfig_Concurrent(t *testing.T) {
+	assert := assertlib.New(t)
+	assert.NotPanics(func() {
+		_, _ = Load()
+		for i := 0; i < 1000; i++ {
+			go func() { _, _ = Load() }()
+		}
+	})
+}
