@@ -16,7 +16,7 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
-func SetupDBWithFixture(fixtureName string) *database.DB {
+func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
@@ -24,7 +24,9 @@ func SetupDBWithFixture(fixtureName string) *database.DB {
 
 	// Seed the DB
 	EmptyDB(rawDb)
-	LoadFixture(rawDb, fixtureName)
+	for _, fixtureName := range fixtureNames {
+		LoadFixture(rawDb, fixtureName)
+	}
 
 	// Return a new db connection
 	var db *database.DB
