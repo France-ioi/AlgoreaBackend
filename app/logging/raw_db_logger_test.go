@@ -19,9 +19,8 @@ func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
 
 	var hook *loggingtest.Hook
 	Logger, hook = loggingtest.NewNullLogger()
-
-	rawLogger, logMode := NewRawDBLogger()
-	assert.False(t, logMode)
+	dbLogger, logMode := NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllLogs())
 }
@@ -40,8 +39,8 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	var hook *loggingtest.Hook
 	Logger, hook = loggingtest.NewNullLogger()
 
-	rawLogger, logMode := NewRawDBLogger()
-	assert.True(t, logMode)
+	dbLogger, logMode := NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
@@ -60,8 +59,8 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	var hook *loggingtest.Hook
 	Logger, hook = loggingtest.NewNullLogger()
 
-	rawLogger, logMode := NewRawDBLogger()
-	assert.False(t, logMode)
+	dbLogger, logMode := NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
@@ -80,8 +79,8 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	var hook *loggingtest.Hook
 	Logger, hook = loggingtest.NewNullLogger()
 
-	rawLogger, logMode := NewRawDBLogger()
-	assert.True(t, logMode)
+	dbLogger, logMode := NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
@@ -91,8 +90,8 @@ func TestRawDBLogger_ShouldSkipStmtExecWithNilContext(t *testing.T) {
 	var hook *loggingtest.Hook
 	Logger, hook = loggingtest.NewNullLogger()
 
-	rawLogger, logMode := NewRawDBLogger()
-	assert.True(t, logMode)
+	dbLogger, logMode := NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "sql-stmt-exec", "err", nil) //lint:ignore SA1012 we check the nil context here
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }

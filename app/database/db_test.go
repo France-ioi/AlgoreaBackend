@@ -11,6 +11,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -442,7 +443,8 @@ func TestDB_Set(t *testing.T) {
 }
 
 func TestOpenRawDBConnection(t *testing.T) {
-	db, err := OpenRawDBConnection("mydsn")
+	logger, logMode := logging.NewDBLogger()
+	db, err := OpenRawDBConnection("mydsn", logger, logMode)
 	assert.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
 	assertRawDBIsOK(t, db)
@@ -466,7 +468,7 @@ func TestOpen_WrongSourceType(t *testing.T) {
 
 func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(OpenRawDBConnection, func(string) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	monkey.Patch(OpenRawDBConnection, func(string, logging.DBLogger, bool) (*sql.DB, error) { return &sql.DB{}, expectedError })
 	defer monkey.UnpatchAll()
 
 	db, err := Open("mydsn")

@@ -31,11 +31,12 @@ func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
+	logger, logMode := logging.NewDBLogger()
 
 	var rawConnection gorm.SQLCommon
 	switch src := source.(type) {
 	case string:
-		rawConnection, err = OpenRawDBConnection(src)
+		rawConnection, err = OpenRawDBConnection(src, logger, logMode)
 		if err != nil {
 			return nil, err
 		}
@@ -45,16 +46,16 @@ func Open(source interface{}) (*DB, error) {
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
 	dbConn, err = gorm.Open(driverName, rawConnection)
-	dbLogger, logMode := logging.NewDBLogger()
+
 	dbConn.LogMode(logMode)
-	dbConn.SetLogger(dbLogger)
+	dbConn.SetLogger(logger)
 
 	return newDB(dbConn), err
 }
 
 // OpenRawDBConnection creates a new DB connection
-func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
-	logger, _ := logging.NewRawDBLogger()
+func OpenRawDBConnection(sourceDSN string, logger logging.DBLogger, logMode bool) (*sql.DB, error) {
+	rawDBLogger := logging.NewRawDBLogger(logger, logMode)
 	registerDriver := true
 	for _, driverName := range sql.Drivers() {
 		if driverName == "instrumented-mysql" {
@@ -65,7 +66,7 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 
 	if registerDriver {
 		sql.Register("instrumented-mysql",
-			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(logger)))
+			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 	}
 	return sql.Open("instrumented-mysql", sourceDSN)
 }

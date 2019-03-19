@@ -5,31 +5,14 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/jinzhu/gorm"
 	"github.com/luna-duclos/instrumentedsql"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 var rawArgsRegexp = regexp.MustCompile(`^{\[(<nil>|[\w.]+) (.+?)\]((?:, \[(?:<nil>|[\w.]+) .+?\])*)}$`)
 
-// NewRawDBLogger returns a logger for raw database actions and the `logmode`, according to the config
-func NewRawDBLogger() (instrumentedsql.Logger, bool) {
-	var (
-		err     error
-		conf    *config.Root
-		logger  DBLogger
-		logMode bool
-	)
-
-	if conf, err = config.Load(); err != nil {
-		// if cannot parse config, log on error to stdout
-		logger = gorm.Logger{LogWriter: Logger}
-	} else {
-		logger, logMode = loggerFromConfig(conf.Logging, Logger)
-	}
-
-	sqlLogger := instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
+// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and logMode setting
+func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
+	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
 		if !logMode {
 			return
 		}
@@ -47,7 +30,6 @@ func NewRawDBLogger() (instrumentedsql.Logger, bool) {
 		args = append(args, valuesMap)
 		logger.Print(args...)
 	})
-	return sqlLogger, logMode
 }
 
 func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
