@@ -15,67 +15,74 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-func TestNew(t *testing.T) {
+func TestGlobal(t *testing.T) {
 	assert := assertlib.New(t)
-	// just verify it can load the config
-	assert.NotNil(new())
+	ResetGlobal()
+	assert.IsType(&logrus.TextFormatter{}, Logger.Formatter) // TextFormatter is logrus default
+	conf := config.Logging{
+		Format: "json",
+		Output: "file",
+	}
+	ConfigureGlobal(conf)
+	assert.IsType(&logrus.JSONFormatter{}, Logger.Formatter)
+	ResetGlobal()
 }
 
-func TestConfigureLogger_FormatText(t *testing.T) {
+func TestConfigure_FormatText(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "text",
 		Output: "file",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.IsType(&logrus.TextFormatter{}, logger.Formatter)
 }
 
-func TestConfigureLogger_FormatJson(t *testing.T) {
+func TestConfigure_FormatJson(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
 		Output: "file",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.IsType(&logrus.JSONFormatter{}, logger.Formatter)
 }
 
-func TestConfigureLogger_FormatInvalid(t *testing.T) {
+func TestConfigure_FormatInvalid(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "yml",
 		Output: "file",
 	}
 	logger := logrus.New()
-	assert.Panics(func() { configureLogger(logger, conf) })
+	assert.Panics(func() { configure(logger, conf) })
 }
 
-func TestConfigureLogger_OutputStdout(t *testing.T) {
+func TestConfigure_OutputStdout(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
 		Output: "stdout",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
 
-func TestConfigureLogger_OutputStderr(t *testing.T) {
+func TestConfigure_OutputStderr(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
 		Output: "stderr",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(os.Stderr, logger.Out)
 }
 
-func TestConfigureLogger_OutputFile(t *testing.T) {
+func TestConfigure_OutputFile(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
@@ -85,12 +92,12 @@ func TestConfigureLogger_OutputFile(t *testing.T) {
 	timestamp := time.Now().UnixNano()
 
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	logger.Errorf("logexec1 %d", timestamp)
 
 	// redo another init to check it will not override
 	logger2 := logrus.New()
-	configureLogger(logger2, conf)
+	configure(logger2, conf)
 	logger2.Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
@@ -99,7 +106,7 @@ func TestConfigureLogger_OutputFile(t *testing.T) {
 	assert.Contains(string(content), fmt.Sprintf("logexec2 %d", timestamp))
 }
 
-func TestConfigureLogger_OutputFileError(t *testing.T) {
+func TestConfigure_OutputFileError(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
@@ -111,21 +118,21 @@ func TestConfigureLogger_OutputFileError(t *testing.T) {
 	patch := monkey.Patch(os.OpenFile, fakeFunc)
 	defer patch.Unpatch()
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
 
-func TestConfigureLogger_OutputInvalid(t *testing.T) {
+func TestConfigure_OutputInvalid(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Format: "json",
 		Output: "S3",
 	}
 	logger := logrus.New()
-	assert.Panics(func() { configureLogger(logger, conf) })
+	assert.Panics(func() { configure(logger, conf) })
 }
 
-func TestConfigureLogger_LevelDefault(t *testing.T) {
+func TestConfigure_LevelDefault(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Level:  "",
@@ -133,11 +140,11 @@ func TestConfigureLogger_LevelDefault(t *testing.T) {
 		Output: "file",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }
 
-func TestConfigureLogger_LevelParsed(t *testing.T) {
+func TestConfigure_LevelParsed(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Level:  "warn",
@@ -145,11 +152,11 @@ func TestConfigureLogger_LevelParsed(t *testing.T) {
 		Output: "file",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(logrus.WarnLevel, logger.Level)
 }
 
-func TestConfigureLogger_LevelInvalid(t *testing.T) {
+func TestConfigure_LevelInvalid(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := config.Logging{
 		Level:  "invalid_level",
@@ -157,6 +164,6 @@ func TestConfigureLogger_LevelInvalid(t *testing.T) {
 		Output: "file",
 	}
 	logger := logrus.New()
-	configureLogger(logger, conf)
+	configure(logger, conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }
