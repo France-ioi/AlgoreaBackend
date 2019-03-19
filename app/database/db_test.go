@@ -1,13 +1,17 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
+	"fmt"
 	"regexp"
 	"testing"
 
+	"bou.ke/monkey"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 func TestDB_inTransaction_NoErrors(t *testing.T) {
@@ -435,4 +439,43 @@ func TestDB_Set(t *testing.T) {
 	var result []interface{}
 	assert.NoError(t, setDB.Scan(&result).Error())
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestOpenRawDBConnection(t *testing.T) {
+	db, err := OpenRawDBConnection("mydsn")
+	assert.NoError(t, err)
+	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
+	assertRawDBIsOK(t, db)
+}
+
+func TestOpen_DSN(t *testing.T) {
+	db, err := Open("mydsn")
+	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
+	assert.NotNil(t, db)
+	assert.NotNil(t, db.db)
+	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
+	rawDB := db.db.DB()
+	assertRawDBIsOK(t, rawDB)
+}
+
+func TestOpen_WrongSourceType(t *testing.T) {
+	db, err := Open(1234)
+	assert.Equal(t, errors.New("unknown database source type: int (1234)"), err)
+	assert.Nil(t, db)
+}
+
+func TestOpen_OpenRawDBConnectionError(t *testing.T) {
+	expectedError := errors.New("some error")
+	monkey.Patch(OpenRawDBConnection, func(string) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	defer monkey.UnpatchAll()
+
+	db, err := Open("mydsn")
+	assert.Equal(t, expectedError, err)
+	assert.Nil(t, db)
+}
+
+func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
+	assert.Equal(t, "instrumentedsql.wrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
+	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.MySQLDriver)")
+	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "dsn:\"mydsn\"")
 }

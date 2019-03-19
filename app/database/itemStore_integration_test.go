@@ -3,44 +3,17 @@
 package database_test
 
 import (
-	"database/sql"
 	"testing"
 
 	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func setupDB(t *testing.T) *database.DB {
-	var err error
-
-	// needs actual config for connection to DB
-	var conf *config.Root
-	if conf, err = config.Load(); err != nil {
-		t.Fatal(err)
-	}
-
-	// Seed the DB
-	var rawDb *sql.DB
-	rawDb, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() { _ = rawDb.Close() }()
-	testhelpers.EmptyDB(t, rawDb, conf.Database.Connection.DBName)
-	testhelpers.LoadFixture(t, rawDb, "visibility")
-
-	// Return a new db connection
-	var db *database.DB
-	db, err = database.Open(conf.Database.Connection.FormatDSN())
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db
+func setupDB() *database.DB {
+	return testhelpers.SetupDBWithFixture("visibility")
 }
 
 type itemIdRow struct {
@@ -49,7 +22,7 @@ type itemIdRow struct {
 
 func TestVisible(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -65,7 +38,7 @@ func TestVisible(t *testing.T) {
 
 func TestVisibleByID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -81,7 +54,7 @@ func TestVisibleByID(t *testing.T) {
 
 func TestVisibleChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)
@@ -97,7 +70,7 @@ func TestVisibleChildrenOfID(t *testing.T) {
 
 func TestVisibleGrandChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
-	db := setupDB(t)
+	db := setupDB()
 	defer func() { _ = db.Close() }()
 	user := auth.NewMockUser(1, 11, 12, 2)
 	dataStore := database.NewDataStore(db)

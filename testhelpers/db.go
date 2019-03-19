@@ -6,22 +6,60 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"testing"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
+
+	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
+
+// SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
+func SetupDBWithFixture(fixtureName string) *database.DB {
+	rawDb, err := OpenRawDBConnection()
+	if err != nil {
+		panic(err)
+	}
+
+	// Seed the DB
+	EmptyDB(rawDb)
+	LoadFixture(rawDb, fixtureName)
+
+	// Return a new db connection
+	var db *database.DB
+	db, err = database.Open(rawDb)
+	if err != nil {
+		panic(err)
+	}
+
+	return db
+}
+
+// OpenRawDBConnection creates a new connection to the DB specified in the config
+func OpenRawDBConnection() (*sql.DB, error) {
+	// needs actual config for connection to DB
+	conf, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+	var rawDb *sql.DB
+	rawDb, err = database.OpenRawDBConnection(conf.Database.Connection.FormatDSN())
+	if err != nil {
+		panic(err)
+	}
+	return rawDb, err
+}
 
 // LoadFixture load the fixtures from `<current_pkg_dir>/testdata/<dirname/`.
 // Each file in this directory mush be in yaml format and will be loaded into table
 //  with the same name as the filename (without extension)
 // Note that you should probably empty the DB before using this function.
-func LoadFixture(t *testing.T, db *sql.DB, dirName string) {
+func LoadFixture(db *sql.DB, dirName string) {
 	dirPath := filepath.Join(fixtureDir, dirName)
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
-		t.Fatalf("Unable to load fixture dir: %s", err.Error())
+		panic(fmt.Errorf("unable to load fixture dir: %s", err.Error()))
 	}
 	for _, f := range files {
 		var err error
@@ -30,19 +68,19 @@ func LoadFixture(t *testing.T, db *sql.DB, dirName string) {
 		tableName := strings.TrimSuffix(filename, filepath.Ext(filename))
 		data, err = ioutil.ReadFile(filepath.Join(fixtureDir, dirName, filename)) // nolint: gosec
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 		content := make([]map[string]interface{}, 0)
 		err = yaml.Unmarshal(data, &content)
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
-		InsertBatch(t, db, tableName, content)
+		InsertBatch(db, tableName, content)
 	}
 }
 
 // InsertBatch insert the data into the table with the name given
-func InsertBatch(t *testing.T, db *sql.DB, tableName string, data []map[string]interface{}) {
+func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	for _, row := range data {
 		var attributes []string
 		var valueMarks []string
@@ -55,15 +93,14 @@ func InsertBatch(t *testing.T, db *sql.DB, tableName string, data []map[string]i
 		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
 		_, err := db.Exec(query, values...)
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 	}
 
 }
 
-// EmptyDB empties all tables of the give database
 // nolint: gosec
-func EmptyDB(t *testing.T, db *sql.DB, dbName string) {
+func emptyDB(db *sql.DB, dbName string) {
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -71,18 +108,28 @@ func EmptyDB(t *testing.T, db *sql.DB, dbName string) {
                            AND  table_schema = '` + dbName + `'
                            AND  table_name  != 'gorp_migrations'`)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
 	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
 		var tableName string
 		if err = rows.Scan(&tableName); err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 		_, err = db.Exec("TRUNCATE TABLE " + tableName)
 		if err != nil {
-			t.Fatal(err)
+			panic(err)
 		}
 	}
+}
+
+// EmptyDB empties all tables of the database specified in the config
+func EmptyDB(db *sql.DB) {
+	conf, err := config.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	emptyDB(db, conf.Database.Connection.DBName)
 }

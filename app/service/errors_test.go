@@ -90,7 +90,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(servicetest.GetAllLogs(hook), "unexpected error: some error")
+	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
 }
 
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
@@ -103,7 +103,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(servicetest.GetAllLogs(hook), "unexpected error: unknown error: some error")
+	assert.Contains(hook.GetAllLogs(), "unexpected error: unknown error: some error")
 }
 
 func TestMustNotBeError_PanicsOnError(t *testing.T) {

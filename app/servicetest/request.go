@@ -8,11 +8,11 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -24,7 +24,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *service.Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
 
-	logger, hook := test.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }() // nolint: gosec
@@ -46,24 +46,12 @@ func GetResponseForRouteWithMockedDBAndUser(
 		response, err = http.DefaultClient.Do(request)
 	}
 
-	return response, mock, GetAllLogs(hook), err
-}
-
-// GetAllLogs returns all the logs collected by the hook as a string
-func GetAllLogs(hook *test.Hook) string {
-	logs := ""
-	for _, entry := range hook.AllEntries() {
-		if len(logs) > 0 {
-			logs += "\n"
-		}
-		logs = logs + entry.Message
-	}
-	return logs
+	return response, mock, hook.GetAllLogs(), err
 }
 
 // WithLoggingMiddleware wraps the given handler in NullLogger with hook
-func WithLoggingMiddleware(appHandler service.AppHandler) (http.Handler, *test.Hook) {
-	logger, hook := test.NewNullLogger()
+func WithLoggingMiddleware(appHandler service.AppHandler) (http.Handler, *loggingtest.Hook) {
+	logger, hook := loggingtest.NewNullLogger()
 	middleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
 	return middleware(appHandler), hook
 }
