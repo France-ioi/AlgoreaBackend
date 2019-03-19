@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-var rawArgsRegexp = regexp.MustCompile(`^{\[(<nil>|[\w\\.]+) (.+?)\]((?:, \[(?:<nil>|[\w\\.]+) .+?\])*)}$`)
+var rawArgsRegexp = regexp.MustCompile(`^{\[(<nil>|[\w\.]+) (.+?)\]((?:, \[(?:<nil>|[\w\.]+) .+?\])*)}$`)
 
 // NewRawDBLogger returns a logger for raw database actions and the `logmode`, according to the config
 func NewRawDBLogger() (instrumentedsql.Logger, bool) {

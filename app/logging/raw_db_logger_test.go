@@ -123,6 +123,16 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"query": "UPDATE `users_items` SET `nbChildrenValidated` = 8, `nbTasksSolved` = 7, `nbTasksTried` = 5, `nbTasksWithHelp` = 6, `sLastActivityDate` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (ID=13)",
 			},
 		},
+		{
+			name: "with time and nils",
+			keyvals: []interface{}{
+				"query", "UPDATE some_table SET column1 = ?, column2 = ?, column3 = ?, column4 = ?",
+				"args", "{[<nil> <nil>], [time.Time 2019-03-18 16:24:01 +0000 UTC], [<nil> <nil>], [time.Time 2018-03-18 16:24:01 +0000 UTC]}",
+			},
+			want: map[string]interface{}{
+				"query": "UPDATE some_table SET column1 = NULL, column2 = \"2019-03-18 16:24:01 +0000 UTC\", column3 = NULL, column4 = \"2018-03-18 16:24:01 +0000 UTC\"",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
