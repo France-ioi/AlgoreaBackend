@@ -159,44 +159,20 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						users_items.nbTasksWithHelp = children_data.nbTasksWithHelp,
 						users_items.nbTasksSolved = children_data.nbTasksSolved,
 						users_items.nbChildrenValidated = children_data.nbChildrenValidated,
-						users_items.bValidated =
-							IF(
-								users_items.bValidated = 1,
-								1, ` + // users_items.bValidated = 1
-					`			IF(
-									STRCMP(?, 'Categories'), ` + // ?=sValidationType
-					`				IF(
-										STRCMP(?, 'All'), ` + // ?=sValidationType
-					`					IF(
-											STRCMP(?, 'AllButOne'), ` + // ?=sValidationType
-					`						IF(
-												STRCMP(?, 'One'), ` + // ?=sValidationType
-					`							0, ` + // @sValidationType not in('Categories', 'All', 'AllButOne', 'One')
-					`							IF(
-													task_children_data.nbChildrenValidated > 0,
-													1, ` + // @sValidationType == 'One' && task_children_data.nbChildrenValidated > 0
-					`								0` + //   @sValidationType == 'One' && task_children_data.nbChildrenValidated <= 0
-					`							)
-											),
-											IF(
-												task_children_data.nbChildrenNonValidated < 2,
-												1, ` + // @sValidationType == 'AllButOne' && task_children_data.nbChildrenNonValidated < 2
-					`							0` + //   @sValidationType == 'AllButOne' && task_children_data.nbChildrenNonValidated >= 2
-					`						)
-										),
-										IF(
-											task_children_data.nbChildrenNonValidated = 0,
-											1, ` + // @sValidationType == 'All' && task_children_data.nbChildrenNonValidated == 0
-					`						0` + //   @sValidationType == 'All' && task_children_data.nbChildrenNonValidated != 0
-					`					)
-									),
-									IF(
-										task_children_data.nbChildrenCategory = 0,
-										1, ` + // @sValidationType == 'Categories' && task_children_data.nbChildrenCategory == 0
-					`					0` + //   @sValidationType == 'Categories' && task_children_data.nbChildrenCategory != 0
-					`				)
-								)
-							),
+						users_items.bValidated = CASE
+							WHEN users_items.bValidated = 1 THEN
+								1
+							WHEN STRCMP(?, 'Categories') = 0 THEN ` + // ?=sValidationType
+					`			task_children_data.nbChildrenCategory = 0
+							WHEN STRCMP(?, 'All') = 0 THEN ` + // ?=sValidationType
+					`			task_children_data.nbChildrenNonValidated = 0
+							WHEN STRCMP(?, 'AllButOne') = 0 THEN ` + // ?=sValidationType
+					`			task_children_data.nbChildrenNonValidated < 2
+							WHEN STRCMP(?, 'One') = 0 THEN ` + // ?=sValidationType
+					`			task_children_data.nbChildrenValidated > 0
+							ELSE
+								0
+							END,
 						users_items.sValidationDate =
 							IFNULL(
 								users_items.sValidationDate,
