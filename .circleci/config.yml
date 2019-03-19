@@ -25,6 +25,7 @@ jobs:
           MYSQL_USER: alg_ci_user
           MYSQL_PASSWORD: dummy_password
           MYSQL_DATABASE: ci_db
+          MYSQL_ROOT_PASSWORD: root
     environment:
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
       ALGOREA_DATABASE.CONNECTION.USER: alg_ci_user
@@ -47,7 +48,7 @@ jobs:
           name: Seed database
           environment:
             ALGOREA_DATABASE.CONNECTION.USER: root
-            ALGOREA_DATABASE.CONNECTION.PASSWD:
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: |
             go run main.go db-restore
             go run main.go db-migrate
