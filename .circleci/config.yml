@@ -45,6 +45,9 @@ jobs:
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
       - run:
           name: Seed database
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD:
           command: |
             go run main.go db-restore
             go run main.go db-migrate
