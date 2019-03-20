@@ -85,6 +85,7 @@ func LoadFixture(db *sql.DB, dirName string) {
 		if err != nil {
 			panic(err)
 		}
+		logging.Logger.Infof("Loading data into %q:\n%s", tableName, string(data))
 		InsertBatch(db, tableName, content)
 	}
 }
