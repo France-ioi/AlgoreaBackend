@@ -15,10 +15,10 @@ import (
 
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert := assertlib.New(t)
-	var hook *test.Hook
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	hook, restoreFct := logging.MockSharedLoggerHook()
+	defer restoreFct()
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -41,10 +41,10 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 
 func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	assert := assertlib.New(t)
-	var hook *test.Hook
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	hook, restoreFct := logging.MockSharedLoggerHook()
+	defer restoreFct()
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -58,10 +58,10 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert := assertlib.New(t)
-	var hook *test.Hook
 	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
 	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	hook, restoreFct := logging.MockSharedLoggerHook()
+	defer restoreFct()
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 

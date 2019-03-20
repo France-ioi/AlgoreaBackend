@@ -40,7 +40,7 @@ type StructuredLogger struct {
 
 // NewStructuredLogger implements a custom structured logger using the global one.
 func NewStructuredLogger() func(next http.Handler) http.Handler {
-	return middleware.RequestLogger(&StructuredLogger{Logger})
+	return middleware.RequestLogger(&StructuredLogger{SharedLogger.Logger})
 }
 
 // NewLogEntry sets default request log fields.

@@ -21,9 +21,9 @@ func NewDBLogger() (DBLogger, bool) {
 
 	if conf, err = config.Load(); err != nil {
 		// if cannot parse config, log on error to stdout
-		return gorm.Logger{LogWriter: Logger}, false
+		return gorm.Logger{LogWriter: SharedLogger}, false
 	}
-	return loggerFromConfig(conf.Logging, Logger)
+	return loggerFromConfig(conf.Logging, SharedLogger.Logger)
 }
 
 func loggerFromConfig(conf config.Logging, logger *logrus.Logger) (DBLogger, bool) {

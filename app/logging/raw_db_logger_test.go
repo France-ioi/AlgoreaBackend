@@ -17,8 +17,8 @@ func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
 	})
 	defer patch.Unpatch()
 
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
+	SharedLogger = &Logger{logger, nil}
 	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
@@ -36,8 +36,8 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	})
 	defer patch.Unpatch()
 
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
+	SharedLogger = &Logger{logger, &conf.Logging}
 
 	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
@@ -56,8 +56,8 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	})
 	defer patch.Unpatch()
 
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
+	SharedLogger = &Logger{logger, &conf.Logging}
 
 	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
@@ -76,8 +76,8 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	})
 	defer patch.Unpatch()
 
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
+	SharedLogger = &Logger{logger, &conf.Logging}
 
 	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
@@ -87,8 +87,8 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 }
 
 func TestRawDBLogger_ShouldSkipStmtExecWithNilContext(t *testing.T) {
-	var hook *loggingtest.Hook
-	Logger, hook = loggingtest.NewNullLogger()
+	logger, hook := loggingtest.NewNullLogger()
+	SharedLogger = &Logger{logger, nil}
 
 	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
