@@ -17,15 +17,15 @@ import (
 
 func TestGlobal(t *testing.T) {
 	assert := assertlib.New(t)
-	ResetGlobal()
-	assert.IsType(&logrus.TextFormatter{}, Logger.Formatter) // TextFormatter is logrus default
+	ResetShared()
+	assert.IsType(&logrus.TextFormatter{}, SharedLogger.Formatter) // TextFormatter is logrus default
 	conf := config.Logging{
 		Format: "json",
 		Output: "file",
 	}
-	ConfigureGlobal(conf)
-	assert.IsType(&logrus.JSONFormatter{}, Logger.Formatter)
-	ResetGlobal()
+	SharedLogger.Configure(conf)
+	assert.IsType(&logrus.JSONFormatter{}, SharedLogger.Formatter)
+	ResetShared()
 }
 
 func TestConfigure_FormatText(t *testing.T) {
@@ -34,8 +34,8 @@ func TestConfigure_FormatText(t *testing.T) {
 		Format: "text",
 		Output: "file",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.IsType(&logrus.TextFormatter{}, logger.Formatter)
 }
 
@@ -45,8 +45,8 @@ func TestConfigure_FormatJson(t *testing.T) {
 		Format: "json",
 		Output: "file",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.IsType(&logrus.JSONFormatter{}, logger.Formatter)
 }
 
@@ -56,8 +56,8 @@ func TestConfigure_FormatInvalid(t *testing.T) {
 		Format: "yml",
 		Output: "file",
 	}
-	logger := logrus.New()
-	assert.Panics(func() { configure(logger, conf) })
+	logger := new()
+	assert.Panics(func() { logger.Configure(conf) })
 }
 
 func TestConfigure_OutputStdout(t *testing.T) {
@@ -66,8 +66,8 @@ func TestConfigure_OutputStdout(t *testing.T) {
 		Format: "json",
 		Output: "stdout",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
 
@@ -77,8 +77,8 @@ func TestConfigure_OutputStderr(t *testing.T) {
 		Format: "json",
 		Output: "stderr",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(os.Stderr, logger.Out)
 }
 
@@ -91,13 +91,13 @@ func TestConfigure_OutputFile(t *testing.T) {
 	// will append time to make sure not to match a prev exec of the test
 	timestamp := time.Now().UnixNano()
 
-	logger := logrus.New()
-	configure(logger, conf)
-	logger.Errorf("logexec1 %d", timestamp)
+	logger1 := new()
+	logger1.Configure(conf)
+	logger1.Errorf("logexec1 %d", timestamp)
 
 	// redo another init to check it will not override
-	logger2 := logrus.New()
-	configure(logger2, conf)
+	logger2 := new()
+	logger2.Configure(conf)
 	logger2.Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
@@ -117,8 +117,8 @@ func TestConfigure_OutputFileError(t *testing.T) {
 	}
 	patch := monkey.Patch(os.OpenFile, fakeFunc)
 	defer patch.Unpatch()
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(os.Stdout, logger.Out)
 }
 
@@ -128,8 +128,8 @@ func TestConfigure_OutputInvalid(t *testing.T) {
 		Format: "json",
 		Output: "S3",
 	}
-	logger := logrus.New()
-	assert.Panics(func() { configure(logger, conf) })
+	logger := new()
+	assert.Panics(func() { logger.Configure(conf) })
 }
 
 func TestConfigure_LevelDefault(t *testing.T) {
@@ -139,8 +139,8 @@ func TestConfigure_LevelDefault(t *testing.T) {
 		Format: "text",
 		Output: "file",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }
 
@@ -151,8 +151,8 @@ func TestConfigure_LevelParsed(t *testing.T) {
 		Format: "text",
 		Output: "file",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(logrus.WarnLevel, logger.Level)
 }
 
@@ -163,7 +163,7 @@ func TestConfigure_LevelInvalid(t *testing.T) {
 		Format: "text",
 		Output: "file",
 	}
-	logger := logrus.New()
-	configure(logger, conf)
+	logger := new()
+	logger.Configure(conf)
 	assert.Equal(logrus.InfoLevel, logger.Level)
 }

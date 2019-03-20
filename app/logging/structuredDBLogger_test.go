@@ -2,13 +2,13 @@ package logging_test
 
 import (
 	"errors"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -16,9 +16,13 @@ import (
 func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	logging.SharedLogger, hook = logging.NewMockLogger()
+	defer func() { logging.ResetShared() }()
+	logging.SharedLogger.Configure(config.Logging{
+		Format:        "json",
+		Output:        "stdout",
+		LogSQLQueries: true,
+	})
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -42,9 +46,13 @@ func TestStructuredDBLogger_Print_SQL(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	logging.SharedLogger, hook = logging.NewMockLogger()
+	defer func() { logging.ResetShared() }()
+	logging.SharedLogger.Configure(config.Logging{
+		Format:        "json",
+		Output:        "stdout",
+		LogSQLQueries: true,
+	})
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -59,9 +67,14 @@ func TestStructuredDBLogger_Print_SQLWithInterrogationMark(t *testing.T) {
 func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert := assertlib.New(t)
 	var hook *test.Hook
-	_ = os.Setenv("ALGOREA_LOGGING.FORMAT", "json")
-	_ = os.Setenv("ALGOREA_LOGGING.LOGSQLQUERIES", "1")
-	logging.Logger, hook = test.NewNullLogger()
+	logging.SharedLogger, hook = logging.NewMockLogger()
+	defer func() { logging.ResetShared() }()
+	logging.SharedLogger.Configure(config.Logging{
+		Format:        "json",
+		Output:        "stdout",
+		Level:         "debug",
+		LogSQLQueries: true,
+	})
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 

@@ -6,14 +6,13 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_ShorthandsBasic(t *testing.T) {
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger() // replace the global logger
-	Logger.Level = logrus.DebugLevel
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
+	SharedLogger.Level = logrus.DebugLevel
 
 	fakeExit := func(int) {
 		panic("os.Exit called")
@@ -50,9 +49,9 @@ func Test_ShorthandsBasic(t *testing.T) {
 }
 
 func Test_ShorthandsFormatted(t *testing.T) {
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger() // replace the global logger
-	Logger.Level = logrus.DebugLevel
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
+	SharedLogger.Level = logrus.DebugLevel
 
 	fakeExit := func(int) {
 		panic("os.Exit called")
@@ -89,8 +88,8 @@ func Test_ShorthandsFormatted(t *testing.T) {
 }
 
 func Test_WithField(t *testing.T) {
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger() // replace the global logger
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
 	WithField("foo", "bar").Error("error msg")
 	assert.Len(t, hook.AllEntries(), 1)
 	assert.Equal(t, logrus.ErrorLevel, hook.LastEntry().Level)
@@ -99,8 +98,8 @@ func Test_WithField(t *testing.T) {
 }
 
 func Test_WithFields(t *testing.T) {
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger() // replace the global logger
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
 	WithFields(map[string]interface{}{"foo": "bar", "foo2": "bar2"}).Error("error msg")
 	assert.Len(t, hook.AllEntries(), 1)
 	assert.Equal(t, logrus.ErrorLevel, hook.LastEntry().Level)

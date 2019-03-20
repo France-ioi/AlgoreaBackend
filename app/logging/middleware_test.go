@@ -7,14 +7,13 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/test"
 	assertlib "github.com/stretchr/testify/assert"
 )
 
 func TestMiddleware_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger()
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
 
 	doRequest(false)
 
@@ -44,8 +43,8 @@ func TestMiddleware_Success(t *testing.T) {
 
 func TestMiddleware_Panic(t *testing.T) {
 	assert := assertlib.New(t)
-	var hook *test.Hook
-	Logger, hook = test.NewNullLogger()
+	hook, restoreFct := MockSharedLoggerHook()
+	defer restoreFct()
 
 	doRequest(true)
 

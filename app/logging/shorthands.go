@@ -2,64 +2,64 @@ package logging
 
 import "github.com/sirupsen/logrus"
 
-// Debug logs a message at level Debug on the standard Logger.
+// Debug logs a message at level Debug on the shared logger.
 func Debug(args ...interface{}) {
-	Logger.Debug(args...)
+	SharedLogger.Debug(args...)
 }
 
-// Info logs a message at level Info on the standard Logger.
+// Info logs a message at level Info on the shared logger.
 func Info(args ...interface{}) {
-	Logger.Info(args...)
+	SharedLogger.Info(args...)
 }
 
-// Warn logs a message at level Warn on the standard Logger.
+// Warn logs a message at level Warn on the shared logger.
 func Warn(args ...interface{}) {
-	Logger.Warn(args...)
+	SharedLogger.Warn(args...)
 }
 
-// Error logs a message at level Error on the standard Logger.
+// Error logs a message at level Error on the shared logger.
 func Error(args ...interface{}) {
-	Logger.Error(args...)
+	SharedLogger.Error(args...)
 }
 
 // Fatal logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatal(args ...interface{}) {
-	Logger.Fatal(args...)
+	SharedLogger.Fatal(args...)
 }
 
-// Panic logs a message at level Panic on the standard Logger.
+// Panic logs a message at level Panic on the shared logger.
 func Panic(args ...interface{}) {
-	Logger.Panic(args...)
+	SharedLogger.Panic(args...)
 }
 
-// Debugf logs a message at level Debug on the standard Logger.
+// Debugf logs a message at level Debug on the shared logger.
 func Debugf(format string, args ...interface{}) {
-	Logger.Debugf(format, args...)
+	SharedLogger.Debugf(format, args...)
 }
 
-// Infof logs a message at level Info on the standard Logger.
+// Infof logs a message at level Info on the shared logger.
 func Infof(format string, args ...interface{}) {
-	Logger.Infof(format, args...)
+	SharedLogger.Infof(format, args...)
 }
 
-// Warnf logs a message at level Warn on the standard Logger.
+// Warnf logs a message at level Warn on the shared logger.
 func Warnf(format string, args ...interface{}) {
-	Logger.Warnf(format, args...)
+	SharedLogger.Warnf(format, args...)
 }
 
-// Errorf logs a message at level Error on the standard Logger.
+// Errorf logs a message at level Error on the shared logger.
 func Errorf(format string, args ...interface{}) {
-	Logger.Errorf(format, args...)
+	SharedLogger.Errorf(format, args...)
 }
 
-// Panicf logs a message at level Panic on the standard Logger.
+// Panicf logs a message at level Panic on the shared logger.
 func Panicf(format string, args ...interface{}) {
-	Logger.Panicf(format, args...)
+	SharedLogger.Panicf(format, args...)
 }
 
 // Fatalf logs a message at level Fatal on the standard logger then the process will exit with status set to 1.
 func Fatalf(format string, args ...interface{}) {
-	Logger.Fatalf(format, args...)
+	SharedLogger.Fatalf(format, args...)
 }
 
 // WithField creates an entry from the standard logger and adds a field to
@@ -68,7 +68,7 @@ func Fatalf(format string, args ...interface{}) {
 // Note that it doesn't log until you call Debug, Print, Info, Warn, Fatal
 // or Panic on the Entry it returns.
 func WithField(key string, value interface{}) *logrus.Entry {
-	return Logger.WithField(key, value)
+	return SharedLogger.WithField(key, value)
 }
 
 // WithFields creates an entry from the standard logger and adds multiple
@@ -78,5 +78,5 @@ func WithField(key string, value interface{}) *logrus.Entry {
 // Note that it doesn't log until you call Debug, Print, Info, Warn, Fatal
 // or Panic on the Entry it returns.
 func WithFields(fields map[string]interface{}) *logrus.Entry {
-	return Logger.WithFields(fields)
+	return SharedLogger.WithFields(fields)
 }
