@@ -11,9 +11,17 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
+
+func init() {
+	if conf, err := config.Load(); err == nil {
+		// Apply the config to the global logger
+		logging.ConfigureGlobal(conf.Logging)
+	}
+}
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
