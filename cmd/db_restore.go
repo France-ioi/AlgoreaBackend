@@ -78,9 +78,11 @@ func init() {
 				"-e"+"source db/schema/schema.sql",
 			)
 			fmt.Println("mysql importing dump...")
-			err = command.Run()
+			var output []byte
+			output, err = command.CombinedOutput()
 			if err != nil {
-				fmt.Printf("Command finished with error: %v", err)
+				fmt.Printf("Command finished with error: %v\n", err)
+				fmt.Printf("Output:\n%s", output)
 				os.Exit(1)
 			}
 
