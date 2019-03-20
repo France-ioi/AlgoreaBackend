@@ -17,69 +17,46 @@ func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
 	})
 	defer patch.Unpatch()
 
-	logger, hook := loggingtest.NewNullLogger()
-	SharedLogger = &Logger{logger, nil}
-	dbLogger, logMode := NewDBLogger()
+	nulllogger, hook := loggingtest.NewNullLogger()
+	logger := &Logger{nulllogger, nil}
+	dbLogger, logMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllLogs())
 }
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
-	conf := &config.Root{Logging: config.Logging{
+	nulllogger, hook := loggingtest.NewNullLogger()
+	logger := &Logger{nulllogger, &config.Logging{
 		Format:        "text",
 		LogSQLQueries: true,
 	}}
+	dbLogger, logMode := logger.NewDBLogger()
 
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
-		return conf, nil
-	})
-	defer patch.Unpatch()
-
-	logger, hook := loggingtest.NewNullLogger()
-	SharedLogger = &Logger{logger, &conf.Logging}
-
-	dbLogger, logMode := NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
 
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
-	conf := &config.Root{Logging: config.Logging{
+	nulllogger, hook := loggingtest.NewNullLogger()
+	logger := &Logger{nulllogger, &config.Logging{
 		Format:        "text",
 		LogSQLQueries: false,
 	}}
-
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
-		return conf, nil
-	})
-	defer patch.Unpatch()
-
-	logger, hook := loggingtest.NewNullLogger()
-	SharedLogger = &Logger{logger, &conf.Logging}
-
-	dbLogger, logMode := NewDBLogger()
+	dbLogger, logMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
 
 func TestNewRawDBLogger_JSONLog(t *testing.T) {
-	conf := &config.Root{Logging: config.Logging{
+	nulllogger, hook := loggingtest.NewNullLogger()
+	logger := &Logger{nulllogger, &config.Logging{
 		Format:        "json",
 		LogSQLQueries: true,
 	}}
-
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
-		return conf, nil
-	})
-	defer patch.Unpatch()
-
-	logger, hook := loggingtest.NewNullLogger()
-	SharedLogger = &Logger{logger, &conf.Logging}
-
-	dbLogger, logMode := NewDBLogger()
+	dbLogger, logMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
@@ -87,10 +64,12 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 }
 
 func TestRawDBLogger_ShouldSkipStmtExecWithNilContext(t *testing.T) {
-	logger, hook := loggingtest.NewNullLogger()
-	SharedLogger = &Logger{logger, nil}
-
-	dbLogger, logMode := NewDBLogger()
+	nulllogger, hook := loggingtest.NewNullLogger()
+	logger := &Logger{nulllogger, &config.Logging{
+		Format:        "json",
+		LogSQLQueries: true,
+	}}
+	dbLogger, logMode := logger.NewDBLogger()
 	rawLogger := NewRawDBLogger(dbLogger, logMode)
 	rawLogger.Log(nil, "sql-stmt-exec", "err", nil) //lint:ignore SA1012 we check the nil context here
 	assert.Empty(t, hook.GetAllStructuredLogs())

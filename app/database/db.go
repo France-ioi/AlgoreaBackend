@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/luna-duclos/instrumentedsql"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
@@ -31,7 +31,7 @@ func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
-	logger, logMode := logging.NewDBLogger()
+	logger, logMode := log.SharedLogger.NewDBLogger()
 
 	var rawConnection gorm.SQLCommon
 	switch src := source.(type) {
@@ -54,8 +54,8 @@ func Open(source interface{}) (*DB, error) {
 }
 
 // OpenRawDBConnection creates a new DB connection
-func OpenRawDBConnection(sourceDSN string, logger logging.DBLogger, logMode bool) (*sql.DB, error) {
-	rawDBLogger := logging.NewRawDBLogger(logger, logMode)
+func OpenRawDBConnection(sourceDSN string, logger log.DBLogger, logMode bool) (*sql.DB, error) {
+	rawDBLogger := log.NewRawDBLogger(logger, logMode)
 	registerDriver := true
 	for _, driverName := range sql.Drivers() {
 		if driverName == "instrumented-mysql" {

@@ -443,7 +443,7 @@ func TestDB_Set(t *testing.T) {
 }
 
 func TestOpenRawDBConnection(t *testing.T) {
-	logger, logMode := logging.NewDBLogger()
+	logger, logMode := logging.SharedLogger.NewDBLogger()
 	db, err := OpenRawDBConnection("mydsn", logger, logMode)
 	assert.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")

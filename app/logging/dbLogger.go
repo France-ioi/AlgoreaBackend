@@ -2,9 +2,6 @@ package logging
 
 import (
 	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
-
-	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 // DBLogger is the logger interface for the DB logs
@@ -13,27 +10,19 @@ type DBLogger interface {
 }
 
 // NewDBLogger returns a logger for the database and the `logmode`, according to the config
-func NewDBLogger() (DBLogger, bool) {
-	var (
-		err  error
-		conf *config.Root
-	)
-
-	if conf, err = config.Load(); err != nil {
+func (l *Logger) NewDBLogger() (DBLogger, bool) {
+	if l.config == nil {
 		// if cannot parse config, log on error to stdout
-		return gorm.Logger{LogWriter: SharedLogger}, false
+		return gorm.Logger{LogWriter: l}, false
 	}
-	return loggerFromConfig(conf.Logging, SharedLogger.Logger)
-}
 
-func loggerFromConfig(conf config.Logging, logger *logrus.Logger) (DBLogger, bool) {
-	logMode := conf.LogSQLQueries
-	switch conf.Format {
+	logMode := l.config.LogSQLQueries
+	switch l.config.Format {
 	case "text":
-		return gorm.Logger{LogWriter: logger}, logMode
+		return gorm.Logger{LogWriter: l}, logMode
 	case "json":
-		return NewStructuredDBLogger(logger), logMode
+		return NewStructuredDBLogger(l.Logger), logMode
 	default:
-		panic("Logging format must be either 'text' or 'json'. Got: " + conf.Format)
+		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.Format)
 	}
 }

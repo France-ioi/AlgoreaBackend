@@ -47,7 +47,7 @@ func OpenRawDBConnection() (*sql.DB, error) {
 		panic(err)
 	}
 	var rawDb *sql.DB
-	logger, logMode := logging.NewDBLogger()
+	logger, logMode := logging.SharedLogger.NewDBLogger()
 	rawDb, err = database.OpenRawDBConnection(conf.Database.Connection.FormatDSN(), logger, logMode)
 	if err != nil {
 		panic(err)
