@@ -1,0 +1,3 @@
+- { ID: 11, idItem: 1, idUser: 1, sAncestorsComputationState: todo}
+- { ID: 12, idItem: 2, idUser: 1, sAncestorsComputationState: done}
+- { ID: 22, idItem: 2, idUser: 2, sAncestorsComputationState: todo}
