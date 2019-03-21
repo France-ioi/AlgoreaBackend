@@ -58,9 +58,13 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 
 }
 
+var spacesRegexp *regexp.Regexp = regexp.MustCompile(`[\s\r\n]+`)
+
 func fillSQLPlaceholders(query string, values []interface{}) string {
 	var sql string
 	var formattedValues []string
+
+	query = strings.TrimSpace(spacesRegexp.ReplaceAllString(query, " "))
 	for _, value := range values {
 		indirectValue := reflect.Indirect(reflect.ValueOf(value))
 		var formattedValue string
