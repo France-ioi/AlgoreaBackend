@@ -19,7 +19,7 @@ const fixtureDir = "testdata" // special directory which is not included in bina
 func init() {
 	if conf, err := config.Load(); err == nil {
 		// Apply the config to the global logger
-		logging.ConfigureGlobal(conf.Logging)
+		logging.SharedLogger.Configure(conf.Logging)
 	}
 }
 
@@ -85,7 +85,7 @@ func LoadFixture(db *sql.DB, dirName string) {
 		if err != nil {
 			panic(err)
 		}
-		logging.Logger.Infof("Loading data into %q:\n%s", tableName, string(data))
+		logging.SharedLogger.Infof("Loading data into %q:\n%s", tableName, string(data))
 		InsertBatch(db, tableName, content)
 	}
 }
