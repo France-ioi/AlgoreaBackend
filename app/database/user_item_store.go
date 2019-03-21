@@ -70,6 +70,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	for hasChanges {
 		// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
+		// This way we prevent infinite looping as we never process items that are ancestors of themselves
 		if markAsProcessingStatement == nil {
 			const markAsProcessingQuery = `
 				UPDATE ` + "`users_items`" + ` AS ` + "`parent`" + `
