@@ -13,6 +13,11 @@ type UserItemStore struct {
 	*DataStore
 }
 
+type groupItemPair struct {
+	idGroup int64
+	idItem  int64
+}
+
 // ComputeAllUserItems recomputes fields of users_items
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	defer func() {
@@ -61,11 +66,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	var markAsProcessingStatement, updateActiveAttemptStatement, markAsDoneStatement,
 		updateStatement *sql.Stmt
 
-	type groupItemPair struct {
-		idGroup int64
-		idItem  int64
-	}
-	groupItemsToInsert := make(map[groupItemPair]bool)
+	groupItemsToUnlock := make(map[groupItemPair]bool)
 
 	for hasChanges {
 		// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
@@ -175,34 +176,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		_, err = updateStatement.Exec()
 		mustNotBeError(err)
 
-		// Unlock items depending on bKeyObtained
-		const selectUnlocksQuery = `
-			SELECT users.idGroupSelf AS idGroup, items.idItemUnlocked as idsItems
-			FROM users_items
-			JOIN items ON users_items.idItem = items.ID
-			JOIN users ON users_items.idUser = users.ID
-			WHERE users_items.sAncestorsComputationState = 'processing' AND
-				users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
-		//ORDER BY users_items.ID`
-		//FOR UPDATE`
-
-		var unlocksResult []struct {
-			IDGroup  int64  `gorm:"column:idGroup"`
-			ItemsIds string `gorm:"column:idsItems"`
-		}
-		mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
-
-		for _, unlock := range unlocksResult {
-			groupsItemsChanged = true
-			idsItems := strings.Split(unlock.ItemsIds, ",")
-			for _, idItem := range idsItems {
-				var idItemInt64 int64
-				if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
-					panic(err)
-				}
-				groupItemsToInsert[groupItemPair{idGroup: unlock.IDGroup, idItem: idItemInt64}] = true
-			}
-		}
+		s.collectItemsToUnlock(groupItemsToUnlock)
 
 		// Objects marked as 'processing' are now marked as 'done'
 		if markAsDoneStatement == nil {
@@ -220,30 +194,66 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		hasChanges = rowsAffected > 0
 	}
 
-	if len(groupItemsToInsert) > 0 {
-		query := `
-			INSERT INTO groups_items
-			(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
-			VALUES `
-		rowsData := make([]string, 0, len(groupItemsToInsert))
-		for item := range groupItemsToInsert {
-			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
-		}
-
-		query += strings.Join(rowsData, ", ") +
-			"ON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1"
-		mustNotBeError(s.db.Exec(query).Error)
-	}
+	groupsUnlocked := s.unlockGroupItems(groupItemsToUnlock)
 
 	// Release the lock
 	mustNotBeError(s.db.Raw("SELECT RELEASE_LOCK('listener_computeAllUserItems')").Row().Scan(&getLockResult))
 
 	// If items have been unlocked, need to recompute access
-	if groupsItemsChanged {
+	if groupsUnlocked > 0 {
 		_ = groupsItemsChanged // stub
 		//Listeners::groupsItemsAfter($db);
 	}
 	return nil
+}
+
+func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
+	// Unlock items depending on bKeyObtained
+	const selectUnlocksQuery = `
+					SELECT users.idGroupSelf AS idGroup, items.idItemUnlocked as idsItems
+					FROM users_items
+					JOIN items ON users_items.idItem = items.ID
+					JOIN users ON users_items.idUser = users.ID
+					WHERE users_items.sAncestorsComputationState = 'processing' AND
+						users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
+	//ORDER BY users_items.ID`
+	//FOR UPDATE`
+	var err error
+	var unlocksResult []struct {
+		IDGroup  int64  `gorm:"column:idGroup"`
+		ItemsIds string `gorm:"column:idsItems"`
+	}
+	mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
+	for _, unlock := range unlocksResult {
+		idsItems := strings.Split(unlock.ItemsIds, ",")
+		for _, idItem := range idsItems {
+			var idItemInt64 int64
+			if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
+				panic(err)
+			}
+			groupItemsToUnlock[groupItemPair{idGroup: unlock.IDGroup, idItem: idItemInt64}] = true
+		}
+	}
+}
+
+func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
+	if len(groupItemsToUnlock) > 0 {
+		query := `
+						INSERT INTO groups_items
+						(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
+						VALUES `
+		rowsData := make([]string, 0, len(groupItemsToUnlock))
+		for item := range groupItemsToUnlock {
+			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
+		}
+
+		query += strings.Join(rowsData, ", ") +
+			"ON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1"
+		result := s.db.Exec(query)
+		mustNotBeError(result.Error)
+		return result.RowsAffected
+	}
+	return 0
 }
 
 func mustNotBeError(err error) {
