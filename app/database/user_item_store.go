@@ -61,10 +61,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	//$db->exec("UNLOCK TABLES;");
 	hasChanges := true
-	groupsItemsChanged := false
 
 	var markAsProcessingStatement, markAsDoneStatement, updateStatement *sql.Stmt
-
 	groupItemsToUnlock := make(map[groupItemPair]bool)
 
 	for hasChanges {
@@ -135,14 +133,14 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, CASE
 							WHEN users_items.bValidated = 1 THEN
 								1
-							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN ` + // ?=sValidationType
-				`				task_children_data.nbChildrenCategory = 0
-							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN ` + // ?=sValidationType
-				`				task_children_data.nbChildrenNonValidated = 0
-							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN ` + // ?=sValidationType
-				`				task_children_data.nbChildrenNonValidated < 2
-							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN ` + // ?=sValidationType
-				`				task_children_data.nbChildrenValidated > 0
+							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN
+								task_children_data.nbChildrenCategory = 0
+							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN
+								task_children_data.nbChildrenNonValidated = 0
+							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN
+								task_children_data.nbChildrenNonValidated < 2
+							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN
+								task_children_data.nbChildrenValidated > 0
 							ELSE
 								0
 							END, users_items.bValidated),
@@ -191,7 +189,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		_ = groupsItemsChanged // stub
+		_ = groupsUnlocked // stub
 		//Listeners::groupsItemsAfter($db);
 	}
 	return nil
