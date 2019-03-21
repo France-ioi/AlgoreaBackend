@@ -56,16 +56,43 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	err := userItemStore.ComputeAllUserItems()
 	assert.NoError(t, err)
 
-	var result []aggregatesResultRow
-	assert.NoError(t, userItemStore.
-		Select("ID, sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, sAncestorsComputationState").
-		Scan(&result).Error())
-	assert.Equal(t, []aggregatesResultRow{
+	expected := []aggregatesResultRow{
 		{ID: 11, LastActivityDate: &oldDate, TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4, AncestorsComputationState: "done"},
 		{ID: 12, LastActivityDate: &currentDate, TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11, ChildrenValidated: 2, AncestorsComputationState: "done"},
 		{ID: 13, LastActivityDate: &currentDate, TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8, AncestorsComputationState: "done"},
 		{ID: 14, LastActivityDate: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, LastActivityDate: nil, AncestorsComputationState: "done"},
-	}, result)
+	}
+
+	assertAggregatesEqual(t, userItemStore, expected)
+}
+
+func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
+	defer func() { _ = db.Close() }()
+
+	userItemStore := database.NewDataStore(db).UserItems()
+	err := userItemStore.ComputeAllUserItems()
+	assert.NoError(t, err)
+
+	var result []aggregatesResultRow
+	assert.NoError(t, userItemStore.
+		Select("ID, sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, sAncestorsComputationState").
+		Scan(&result).Error())
+
+	expected := []aggregatesResultRow{
+		{ID: 11, AncestorsComputationState: "done"},
+		{ID: 12, AncestorsComputationState: "done"},
+		{ID: 22, AncestorsComputationState: "done"},
+	}
+	assertAggregatesEqual(t, userItemStore, expected)
+}
+
+func assertAggregatesEqual(t *testing.T, userItemStore *database.UserItemStore, expected []aggregatesResultRow) {
+	var result []aggregatesResultRow
+	assert.NoError(t, userItemStore.
+		Select("ID, sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, sAncestorsComputationState").
+		Scan(&result).Error())
+	assert.Equal(t, expected, result)
 }
