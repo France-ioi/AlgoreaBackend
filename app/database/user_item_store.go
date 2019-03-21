@@ -187,7 +187,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		//FOR UPDATE`
 
 		var unlocksResult []struct {
-			IdGroup  int64  `gorm:"column:idGroup"`
+			IDGroup  int64  `gorm:"column:idGroup"`
 			ItemsIds string `gorm:"column:idsItems"`
 		}
 		mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
@@ -200,7 +200,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 				if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
 					panic(err)
 				}
-				groupItemsToInsert[groupItemPair{idGroup: unlock.IdGroup, idItem: idItemInt64}] = true
+				groupItemsToInsert[groupItemPair{idGroup: unlock.IDGroup, idItem: idItemInt64}] = true
 			}
 		}
 
@@ -230,9 +230,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
 		}
 
-		query = fmt.Sprintf(
-			"%s%sON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1",
-			query, strings.Join(rowsData, ", "))
+		query += strings.Join(rowsData, ", ") +
+			"ON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1"
 		mustNotBeError(s.db.Exec(query).Error)
 	}
 
