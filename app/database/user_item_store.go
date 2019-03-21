@@ -110,51 +110,26 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		_, err = updateActiveAttemptStatement.Exec()
 		mustNotBeError(err)
 
-		// query only user_items with children
-		const selectNewUsersItemsQuery = `
-			SELECT DISTINCT
-			` + "`users_items`.`ID`, `users_items`.`idUser`, `users_items`.`idItem`, `items`.`sValidationType`" + `
-			FROM users_items
-			JOIN items_items ON items_items.idItemParent = users_items.idItem
-			JOIN items ON ` + "`items`.`ID` = `users_items`.`idItem`" + `
-			WHERE ` + "`users_items`.`sAncestorsComputationState`" + ` = 'processing'`
-		//ORDER BY ID`
-		//FOR UPDATE`
-
-		var rows []map[string]interface{}
-		mustNotBeError(s.Raw(selectNewUsersItemsQuery).ScanIntoSliceOfMaps(&rows).Error())
-
-		for _, row := range rows {
-			if updateStatement == nil {
-				const updateQuery = `
+		if updateStatement == nil {
+			const updateQuery = `
 					UPDATE users_items
-					JOIN
+					LEFT JOIN
 						(SELECT MAX(children.sLastActivityDate) AS sLastActivityDate,
-							SUM(children.nbTasksTried) AS nbTasksTried, Sum(children.nbTasksWithHelp) AS nbTasksWithHelp,
-							SUM(children.nbTasksSolved) AS nbTasksSolved, SUM(bValidated) AS nbChildrenValidated
+							SUM(children.nbTasksTried) AS nbTasksTried, SUM(children.nbTasksWithHelp) AS nbTasksWithHelp,
+							SUM(children.nbTasksSolved) AS nbTasksSolved, SUM(bValidated) AS nbChildrenValidated,
+							children.idUser AS idUser, items_items.idItemParent AS idItem
 						FROM users_items AS children 
 						JOIN items_items ON items_items.idItemChild = children.idItem
-						WHERE children.idUser = ? AND items_items.idItemParent = ? ` + // ?=idUser, ?=idItem
-					//`FOR UPDATE`
-					`) AS children_data
-					JOIN
-						(SELECT
-							SUM(IF(task_children.ID IS NOT NULL AND task_children.bValidated, 1, 0)) AS nbChildrenValidated,
-							SUM(IF(task_children.ID IS NOT NULL AND task_children.bValidated, 0, 1)) AS nbChildrenNonValidated,
-							SUM(
-								IF(items_items.sCategory = 'Validation' AND
-									(task_children.ID IS NULL OR task_children.bValidated = 0), 1, 0)
-							) AS nbChildrenCategory,
-							MAX(task_children.sValidationDate) AS maxValidationDate,
-							MAX(IF(items_items.sCategory = 'Validation', task_children.sValidationDate, NULL)) AS maxValidationDateCategories
-						FROM items_items
-						LEFT JOIN users_items AS task_children
-						ON items_items.idItemChild = task_children.idItem AND task_children.idUser = ? ` + // ?=idUser
-					` JOIN items ON items.ID = items_items.idItemChild
-						WHERE items_items.idItemParent = ? AND items.sType != 'Course' AND items.bNoScore = 0 ` + // ?=idItem
-					//`FOR UPDATE`
-					` ) AS task_children_data
-					SET users_items.sLastActivityDate = children_data.sLastActivityDate,
+						GROUP BY children.idUser, items_items.idItemParent ` +
+				//`FOR UPDATE`
+				` ) AS children_data
+					ON users_items.idUser = children_data.idUser AND children_data.idItem = users_items.idItem
+					JOIN task_children_data_view AS task_children_data
+						ON task_children_data.idUserItem = users_items.ID
+					JOIN items ON users_items.idItem = items.ID
+					JOIN items_items ON items_items.idItemParent = users_items.idItem
+					SET
+						users_items.sLastActivityDate = children_data.sLastActivityDate,
 						users_items.nbTasksTried = children_data.nbTasksTried,
 						users_items.nbTasksWithHelp = children_data.nbTasksWithHelp,
 						users_items.nbTasksSolved = children_data.nbTasksSolved,
@@ -162,14 +137,14 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						users_items.bValidated = CASE
 							WHEN users_items.bValidated = 1 THEN
 								1
-							WHEN STRCMP(?, 'Categories') = 0 THEN ` + // ?=sValidationType
-					`			task_children_data.nbChildrenCategory = 0
-							WHEN STRCMP(?, 'All') = 0 THEN ` + // ?=sValidationType
-					`			task_children_data.nbChildrenNonValidated = 0
-							WHEN STRCMP(?, 'AllButOne') = 0 THEN ` + // ?=sValidationType
-					`			task_children_data.nbChildrenNonValidated < 2
-							WHEN STRCMP(?, 'One') = 0 THEN ` + // ?=sValidationType
-					`			task_children_data.nbChildrenValidated > 0
+							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN ` + // ?=sValidationType
+				`			IFNULL(task_children_data.nbChildrenCategory, 0) = 0
+							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN ` + // ?=sValidationType
+				`			IFNULL(task_children_data.nbChildrenNonValidated, 0) = 0
+							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN ` + // ?=sValidationType
+				`			IFNULL(task_children_data.nbChildrenNonValidated, 0) < 2
+							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN ` + // ?=sValidationType
+				`			IFNULL(task_children_data.nbChildrenValidated, 0) > 0
 							ELSE
 								0
 							END,
@@ -177,23 +152,20 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							IFNULL(
 								users_items.sValidationDate,
 								IF(
-									STRCMP(?, 'Categories'), ` + // ?=sValidationType
-					// 			users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
-					`				task_children_data.maxValidationDate, ` +
-					// 			users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
-					`				task_children_data.maxValidationDateCategories
+									STRCMP(items.sValidationType, 'Categories'), ` +
+				// 			users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
+				`				task_children_data.maxValidationDate, ` +
+				// 			users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
+				`				task_children_data.maxValidationDateCategories
 								)
 							)
-					WHERE users_items.ID = ?` // ?=ID
-				updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
-				mustNotBeError(err)
-				defer func() { mustNotBeError(updateStatement.Close()) }()
-			}
-			_, err = updateStatement.Exec(row["idUser"], row["idItem"], row["idUser"], row["idItem"],
-				row["sValidationType"], row["sValidationType"], row["sValidationType"], row["sValidationType"],
-				row["sValidationType"], row["ID"])
+					WHERE users_items.sAncestorsComputationState = 'processing'`
+			updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
 			mustNotBeError(err)
+			defer func() { mustNotBeError(updateStatement.Close()) }()
 		}
+		_, err = updateStatement.Exec()
+		mustNotBeError(err)
 
 		// Unlock items depending on bKeyObtained
 		const selectUnlocksQuery = `
