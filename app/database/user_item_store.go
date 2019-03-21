@@ -186,22 +186,21 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		//ORDER BY users_items.ID`
 		//FOR UPDATE`
 
-		var unlocks []map[string]interface{}
-		mustNotBeError(s.Raw(selectUnlocksQuery).ScanIntoSliceOfMaps(&unlocks).Error())
+		var unlocksResult []struct {
+			IdGroup  int64  `gorm:"column:idGroup"`
+			ItemsIds string `gorm:"column:idsItems"`
+		}
+		mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
 
-		for _, unlock := range unlocks {
+		for _, unlock := range unlocksResult {
 			groupsItemsChanged = true
-			var idGroupInt64 int64
-			if idGroupInt64, err = strconv.ParseInt(unlock["idGroup"].(string), 10, 64); err != nil {
-				panic(err)
-			}
-			idsItems := strings.Split(unlock["idsItems"].(string), ",")
+			idsItems := strings.Split(unlock.ItemsIds, ",")
 			for _, idItem := range idsItems {
 				var idItemInt64 int64
 				if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
 					panic(err)
 				}
-				groupItemsToInsert[groupItemPair{idGroup: idGroupInt64, idItem: idItemInt64}] = true
+				groupItemsToInsert[groupItemPair{idGroup: unlock.IdGroup, idItem: idItemInt64}] = true
 			}
 		}
 
