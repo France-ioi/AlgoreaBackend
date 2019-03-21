@@ -63,8 +63,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	hasChanges := true
 	groupsItemsChanged := false
 
-	var markAsProcessingStatement, updateActiveAttemptStatement, markAsDoneStatement,
-		updateStatement *sql.Stmt
+	var markAsProcessingStatement, markAsDoneStatement, updateStatement *sql.Stmt
 
 	groupItemsToUnlock := make(map[groupItemPair]bool)
 
@@ -107,18 +106,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		* nbChildrenValidated as the sum of children with bValidated == 1
 		* bValidated, depending on the items_items.sCategory and items.sValidationType
 		 */
-		if updateActiveAttemptStatement == nil {
-			const updateActiveAttemptQuery = `
-				UPDATE users_items
-				JOIN groups_attempts ON groups_attempts.ID = users_items.idAttemptActive
-				SET users_items.sHintsRequested = groups_attempts.sHintsRequested
-				WHERE users_items.sAncestorsComputationState = 'processing'`
-			updateActiveAttemptStatement, err = s.db.CommonDB().Prepare(updateActiveAttemptQuery)
-			mustNotBeError(err)
-			defer func() { mustNotBeError(updateActiveAttemptStatement.Close()) }()
-		}
-		_, err = updateActiveAttemptStatement.Exec()
-		mustNotBeError(err)
 
 		if updateStatement == nil {
 			const updateQuery = `
@@ -134,31 +121,32 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 				//`FOR UPDATE`
 				` ) AS children_data
 					ON users_items.idUser = children_data.idUser AND children_data.idItem = users_items.idItem
-					JOIN task_children_data_view AS task_children_data
+					LEFT JOIN task_children_data_view AS task_children_data
 						ON task_children_data.idUserItem = users_items.ID
 					JOIN items ON users_items.idItem = items.ID
-					JOIN items_items ON items_items.idItemParent = users_items.idItem
+					LEFT JOIN items_items ON items_items.idItemParent = users_items.idItem
+					LEFT JOIN groups_attempts ON groups_attempts.ID = users_items.idAttemptActive
 					SET
-						users_items.sLastActivityDate = children_data.sLastActivityDate,
-						users_items.nbTasksTried = children_data.nbTasksTried,
-						users_items.nbTasksWithHelp = children_data.nbTasksWithHelp,
-						users_items.nbTasksSolved = children_data.nbTasksSolved,
-						users_items.nbChildrenValidated = children_data.nbChildrenValidated,
-						users_items.bValidated = CASE
+						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.sLastActivityDate, users_items.sLastActivityDate),
+						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksTried, users_items.nbTasksTried),
+						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksWithHelp, users_items.nbTasksWithHelp),
+						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksSolved, users_items.nbTasksSolved),
+						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbChildrenValidated, users_items.nbChildrenValidated),
+						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, CASE
 							WHEN users_items.bValidated = 1 THEN
 								1
 							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN ` + // ?=sValidationType
-				`				IFNULL(task_children_data.nbChildrenCategory, 0) = 0
+				`				task_children_data.nbChildrenCategory = 0
 							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN ` + // ?=sValidationType
-				`				IFNULL(task_children_data.nbChildrenNonValidated, 0) = 0
+				`				task_children_data.nbChildrenNonValidated = 0
 							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN ` + // ?=sValidationType
-				`				IFNULL(task_children_data.nbChildrenNonValidated, 0) < 2
+				`				task_children_data.nbChildrenNonValidated < 2
 							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN ` + // ?=sValidationType
-				`				IFNULL(task_children_data.nbChildrenValidated, 0) > 0
+				`				task_children_data.nbChildrenValidated > 0
 							ELSE
 								0
-							END,
-						users_items.sValidationDate =
+							END, users_items.bValidated),
+						users_items.sValidationDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							IFNULL(
 								users_items.sValidationDate,
 								IF(
@@ -168,7 +156,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 				//				users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
 				`					task_children_data.maxValidationDateCategories
 								)
-							)
+							), users_items.sValidationDate),
+						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested)
 					WHERE users_items.sAncestorsComputationState = 'processing'`
 			updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
 			mustNotBeError(err)
