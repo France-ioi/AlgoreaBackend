@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -57,7 +59,13 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	groupsItemsChanged := false
 
 	var markAsProcessingStatement, updateActiveAttemptStatement, markAsDoneStatement,
-		updateStatement, insertUnlocksStatement *sql.Stmt
+		updateStatement *sql.Stmt
+
+	type groupItemPair struct {
+		idGroup int64
+		idItem  int64
+	}
+	groupItemsToInsert := make(map[groupItemPair]bool)
 
 	for hasChanges {
 		// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
@@ -181,23 +189,19 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		var unlocks []map[string]interface{}
 		mustNotBeError(s.Raw(selectUnlocksQuery).ScanIntoSliceOfMaps(&unlocks).Error())
 
-		if insertUnlocksStatement == nil {
-			const insertUnlocksQuery = `
-				INSERT INTO groups_items
-				(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
-				VALUES(?, ?, NOW(), NOW(), 1)
-				ON DUPLICATE KEY UPDATE
-				sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1`
-			insertUnlocksStatement, err = s.db.CommonDB().Prepare(insertUnlocksQuery)
-			mustNotBeError(err)
-			defer func() { mustNotBeError(insertUnlocksStatement.Close()) }()
-		}
 		for _, unlock := range unlocks {
 			groupsItemsChanged = true
+			var idGroupInt64 int64
+			if idGroupInt64, err = strconv.ParseInt(unlock["idGroup"].(string), 10, 64); err != nil {
+				panic(err)
+			}
 			idsItems := strings.Split(unlock["idsItems"].(string), ",")
 			for _, idItem := range idsItems {
-				_, err = insertUnlocksStatement.Exec(unlock["idGroup"], idItem)
-				mustNotBeError(err)
+				var idItemInt64 int64
+				if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
+					panic(err)
+				}
+				groupItemsToInsert[groupItemPair{idGroup: idGroupInt64, idItem: idItemInt64}] = true
 			}
 		}
 
@@ -215,6 +219,22 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		rowsAffected, err = result.RowsAffected()
 		mustNotBeError(err)
 		hasChanges = rowsAffected > 0
+	}
+
+	if len(groupItemsToInsert) > 0 {
+		query := `
+			INSERT INTO groups_items
+			(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
+			VALUES `
+		rowsData := make([]string, 0, len(groupItemsToInsert))
+		for item := range groupItemsToInsert {
+			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
+		}
+
+		query = fmt.Sprintf(
+			"%s%sON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1",
+			query, strings.Join(rowsData, ", "))
+		mustNotBeError(s.db.Exec(query).Error)
 	}
 
 	// Release the lock
