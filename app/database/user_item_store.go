@@ -79,7 +79,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							)
 							ORDER BY parent.ID
 							` + //FOR UPDATE
-				`) AS tmp2
+				`	) AS tmp2
 				) AS tmp
 				SET sAncestorsComputationState = 'processing'
 				WHERE tmp.ID = parent.ID
@@ -138,13 +138,13 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							WHEN users_items.bValidated = 1 THEN
 								1
 							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN ` + // ?=sValidationType
-				`			IFNULL(task_children_data.nbChildrenCategory, 0) = 0
+				`				IFNULL(task_children_data.nbChildrenCategory, 0) = 0
 							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN ` + // ?=sValidationType
-				`			IFNULL(task_children_data.nbChildrenNonValidated, 0) = 0
+				`				IFNULL(task_children_data.nbChildrenNonValidated, 0) = 0
 							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN ` + // ?=sValidationType
-				`			IFNULL(task_children_data.nbChildrenNonValidated, 0) < 2
+				`				IFNULL(task_children_data.nbChildrenNonValidated, 0) < 2
 							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN ` + // ?=sValidationType
-				`			IFNULL(task_children_data.nbChildrenValidated, 0) > 0
+				`				IFNULL(task_children_data.nbChildrenValidated, 0) > 0
 							ELSE
 								0
 							END,
@@ -153,10 +153,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								users_items.sValidationDate,
 								IF(
 									STRCMP(items.sValidationType, 'Categories'), ` +
-				// 			users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
-				`				task_children_data.maxValidationDate, ` +
-				// 			users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
-				`				task_children_data.maxValidationDateCategories
+				//				users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
+				`					task_children_data.maxValidationDate, ` +
+				//				users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
+				`					task_children_data.maxValidationDateCategories
 								)
 							)
 					WHERE users_items.sAncestorsComputationState = 'processing'`
