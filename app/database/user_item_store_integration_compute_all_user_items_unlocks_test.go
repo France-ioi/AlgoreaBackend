@@ -35,6 +35,25 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_UpdatesOldRecords(t *testing.
 	testUnlocks(db, t)
 }
 
+func TestUserItemStore_ComputeAllUserItems_Unlocks_PanicsWhenIdIsNotInteger(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture(
+		"users_items_propagation/_common",
+		"users_items_propagation/unlocks",
+	)
+	defer func() { _ = db.Close() }()
+
+	userItemStore := database.NewDataStore(db).UserItems()
+	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn(
+		"bKeyObtained", 1,
+	).Error())
+	itemStore := database.NewDataStore(db).Items()
+	assert.NoError(t, itemStore.Where("ID=1").UpdateColumn(
+		"idItemUnlocked", "1001,abc",
+	).Error())
+
+	assert.Panics(t, func() { _ = userItemStore.ComputeAllUserItems() })
+}
+
 func testUnlocks(db *database.DB, t *testing.T) {
 	userItemStore := database.NewDataStore(db).UserItems()
 	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn(

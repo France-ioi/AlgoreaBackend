@@ -18,7 +18,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			switch e := p.(type) {
-			case runtime.Error:
+			case runtime.Error, *strconv.NumError:
 				panic(e)
 			default:
 				err = p.(error)
