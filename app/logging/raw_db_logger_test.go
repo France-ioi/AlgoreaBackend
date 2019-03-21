@@ -1,29 +1,13 @@
 package logging
 
 import (
-	"errors"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
-
-func TestNewRawDBLogger_ErrorFallback(t *testing.T) {
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
-		return nil, errors.New("config loading error")
-	})
-	defer patch.Unpatch()
-
-	nulllogger, hook := loggingtest.NewNullLogger()
-	logger := &Logger{nulllogger, nil}
-	dbLogger, logMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, logMode)
-	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
-	assert.Empty(t, hook.GetAllLogs())
-}
 
 func TestNewRawDBLogger_TextLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
