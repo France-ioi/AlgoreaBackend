@@ -179,8 +179,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		_ = groupsUnlocked // stub
-		//Listeners::groupsItemsAfter($db);
+		s.GroupItems().after()
 	}
 	return nil
 }
