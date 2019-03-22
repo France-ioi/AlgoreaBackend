@@ -62,7 +62,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	//$db->exec("UNLOCK TABLES;");
 	hasChanges := true
 
-	var markAsProcessingStatement, markAsDoneStatement, updateStatement *sql.Stmt
+	var markAsProcessingStatement, updateStatement *sql.Stmt
 	groupItemsToUnlock := make(map[groupItemPair]bool)
 
 	for hasChanges {
@@ -97,6 +97,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		}
 		_, err = markAsProcessingStatement.Exec()
 		mustNotBeError(err)
+
+		s.collectItemsToUnlock(groupItemsToUnlock)
 
 		/** For every object marked as 'processing', we compute all the characteristics based on the children:
 		* sLastActivityDate as the max of children's
@@ -155,26 +157,16 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 				`					task_children_data.maxValidationDateCategories
 								)
 							), users_items.sValidationDate),
-						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested)
+						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested),
+						users_items.sAncestorsComputationState = 'done'
 					WHERE users_items.sAncestorsComputationState = 'processing'`
 			updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
 			mustNotBeError(err)
 			defer func() { mustNotBeError(updateStatement.Close()) }()
 		}
-		_, err = updateStatement.Exec()
-		mustNotBeError(err)
 
-		s.collectItemsToUnlock(groupItemsToUnlock)
-
-		// Objects marked as 'processing' are now marked as 'done'
-		if markAsDoneStatement == nil {
-			const markAsDoneQuery = "UPDATE `users_items` SET `sAncestorsComputationState` = 'done' WHERE `sAncestorsComputationState` = 'processing'"
-			markAsDoneStatement, err = s.db.CommonDB().Prepare(markAsDoneQuery)
-			mustNotBeError(err)
-			defer func() { mustNotBeError(markAsDoneStatement.Close()) }()
-		}
 		var result sql.Result
-		result, err = markAsDoneStatement.Exec()
+		result, err = updateStatement.Exec()
 		mustNotBeError(err)
 		var rowsAffected int64
 		rowsAffected, err = result.RowsAffected()
