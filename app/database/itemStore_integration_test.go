@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"regexp"
 	"testing"
 
 	assertlib "github.com/stretchr/testify/assert"
@@ -82,4 +83,21 @@ func TestVisibleGrandChildrenOfID(t *testing.T) {
 
 	expected := []itemIdRow{{ID: 19000}, {ID: 19001}, {ID: 19002}}
 	assert.Equal(expected, result)
+}
+
+func TestItemStore_AccessRights(t *testing.T) {
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mockUser := auth.NewMockUser(1, 2, 3, 4)
+
+	mock.ExpectQuery("^" + regexp.QuoteMeta(
+		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions FROM `groups_items` JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor GROUP BY idItem") + "$").
+		WithArgs(2).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	var result []interface{}
+	err := database.NewDataStore(db).Items().AccessRights(mockUser).Scan(&result).Error()
+	assertlib.NoError(t, err)
+	assertlib.NoError(t, mock.ExpectationsWereMet())
 }
