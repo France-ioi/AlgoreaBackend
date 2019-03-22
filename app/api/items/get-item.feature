@@ -55,14 +55,14 @@ Feature: Get item view information
       | 9  | 4      | 210    | 100             | 12342  | 12                    | true        | true      | true         | 11            | 2019-01-30T09:26:42Z | 2019-02-01T09:26:42Z | 2019-01-31T09:26:42Z | 2019-02-01T06:26:42Z | Some state | null        | 0        |
       | 10 | 4      | 220    | 100             | 12344  | 14                    | true        | true      | true         | 11            | 2019-01-30T09:26:44Z | 2019-02-01T09:26:44Z | 2019-01-31T09:26:44Z | 2019-02-01T06:26:44Z | Some state | null        | 0        |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | bCachedAccessSolutions | idUserCreated | iVersion |
-      | 43 | 13      | 200    | null            | true              | true                 | true                | true                   | 0             | 0        |
-      | 44 | 13      | 210    | null            | true              | true                 | true                | true                   | 0             | 0        |
-      | 45 | 13      | 220    | null            | true              | true                 | true                | true                   | 0             | 0        |
-      | 46 | 15      | 210    | null            | true              | true                 | true                | false                  | 0             | 0        |
-      | 47 | 26      | 200    | null            | true              | true                 | true                | true                   | 0             | 0        |
-      | 48 | 26      | 210    | null            | false             | false                | true                | true                   | 0             | 0        |
-      | 49 | 26      | 220    | null            | false             | false                | true                | true                   | 0             | 0        |
+      | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedAccessSolutionsDate | idUserCreated | iVersion |
+      | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
+      | 44 | 13      | 210    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
+      | 45 | 13      | 220    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
+      | 46 | 15      | 210    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 3017-05-29T06:38:38Z       | 0             | 0        |
+      | 47 | 26      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
+      | 48 | 26      | 210    | 3017-05-29T06:38:38Z  | 3017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
+      | 49 | 26      | 220    | 3017-05-29T06:38:38Z  | 3017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 2017-05-29T06:38:38Z       | 0             | 0        |
     And the database has the following table 'languages':
       | ID | sCode |
       | 2  | fr    |

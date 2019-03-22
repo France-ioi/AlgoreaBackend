@@ -4,7 +4,7 @@ package database
 func (conn *DB) WhereItemsAreVisible(user AuthUser) *DB {
 	groupItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().
 		MatchingUserAncestors(user).
-		Select("idItem, MAX(bCachedFullAccess) AS fullAccess, MAX(bCachedPartialAccess) AS partialAccess, MAX(bCachedGrayedAccess) AS grayedAccess").
+		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
 		Group("idItem")
 
 	return conn.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).

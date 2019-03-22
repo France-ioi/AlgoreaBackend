@@ -241,10 +241,10 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 func (s *ItemStore) AccessRights(user AuthUser) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
-			"idItem, MAX(bCachedFullAccess) AS fullAccess, " +
-				"MAX(bCachedPartialAccess) AS partialAccess, " +
-				"MAX(bCachedGrayedAccess) AS grayedAccess, " +
-				"MAX(bCachedAccessSolutions) AS accessSolutions").
+			"idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
+				"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, " +
+				"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, " +
+				"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions").
 		Group("idItem")
 }
 
