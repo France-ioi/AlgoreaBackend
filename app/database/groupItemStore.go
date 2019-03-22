@@ -42,7 +42,7 @@ func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
 
 func (s *GroupItemStore) after() {
 	s.computeAllAccess()
-	s.computeCached()
+	s.ComputeCached()
 }
 
 func (s *GroupItemStore) computeAllAccess() {
@@ -185,7 +185,9 @@ func (s *GroupItemStore) computeAllAccess() {
 	*/
 }
 
-func (s *GroupItemStore) computeCached() {
+// ComputeCached updates bCached*Access* columns according to corresponding sCached*Access*Date columns.
+// The formula is sCached*Access*Date <= NOW().
+func (s *GroupItemStore) ComputeCached() {
 	listFields := map[string]string{
 		"bCachedFullAccess":      "sCachedFullAccessDate",
 		"bCachedPartialAccess":   "sCachedPartialAccessDate",
