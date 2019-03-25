@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -17,6 +18,9 @@ type groupItemPair struct {
 	idGroup int64
 	idItem  int64
 }
+
+// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock
+var ErrLockWaitTimeoutExceeded = errors.New("Lock wait timeout exceeded")
 
 // ComputeAllUserItems recomputes fields of users_items
 // For users_items marked with sAncestorsComputationState = 'todo':
@@ -45,7 +49,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	var getLockResult int64
 	mustNotBeError(s.db.Raw("SELECT GET_LOCK('listener_computeAllUserItems', 1)").Row().Scan(&getLockResult))
 	if getLockResult != 1 {
-		return nil
+		return ErrLockWaitTimeoutExceeded
 	}
 
 	/*

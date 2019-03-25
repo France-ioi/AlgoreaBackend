@@ -37,11 +37,11 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 	assert.Equal(t, "runtime error: invalid memory address or nil pointer dereference", panicValue.(error).Error())
 }
 
-func TestUserItemStore_ComputeAllUserItems_ReturnsSilentlyWhenGetLockTimeouts(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
 	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT GET_LOCK('listener_computeAllUserItems', 1)") + "$").
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllUserItems', 1)"}).AddRow(int64(0)))
 	err := NewDataStore(db).UserItems().ComputeAllUserItems()
-	assert.Nil(t, err)
+	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
