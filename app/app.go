@@ -55,7 +55,6 @@ func New() (*Application, error) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.DefaultCompress)
-	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))
 
 	router.Use(log.NewStructuredLogger())
 	router.Use(render.SetContentType(render.ContentTypeJSON))

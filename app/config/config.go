@@ -45,7 +45,6 @@ type Root struct {
 	Server       Server
 	Database     Database
 	ReverseProxy ReverseProxy
-	Timeout      int32
 	Logging      Logging
 	Auth         Auth
 }
@@ -92,9 +91,6 @@ func Load() (*Root, error) {
 }
 
 func setDefaults(c *viper.Viper) {
-
-	// root
-	c.SetDefault("timeout", 15)
 
 	// server
 	c.SetDefault("server.port", 8080)
