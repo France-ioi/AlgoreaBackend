@@ -19,6 +19,16 @@ type groupItemPair struct {
 }
 
 // ComputeAllUserItems recomputes fields of users_items
+// For users_items marked with sAncestorsComputationState = 'todo':
+// 1. We mark all their ancestors in users_items as 'todo'
+//  (we consider a row in users_items as an ancestor if it has the same value in idUser and
+//  its idItem is an ancestor of the original row's idItem).
+// 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
+//  Then we copy sHintsRequested from related groups_attempts for them.
+//  If an object has children, we update
+//    sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, bValidated, sValidationDate.
+//  This step is repeated until no records are updated.
+// 3. We insert new groups_items for each processed row with bKeyObtained=1 according to corresponding items.idItemUnlocked.
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	defer func() {
 		if p := recover(); p != nil {
