@@ -20,7 +20,7 @@ type groupItemPair struct {
 }
 
 // ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock
-var ErrLockWaitTimeoutExceeded = errors.New("Lock wait timeout exceeded")
+var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
 // ComputeAllUserItems recomputes fields of users_items
 // For users_items marked with sAncestorsComputationState = 'todo':
