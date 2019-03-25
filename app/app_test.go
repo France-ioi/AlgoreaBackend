@@ -2,6 +2,9 @@ package app
 
 import (
 	"errors"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"bou.ke/monkey"
@@ -22,7 +25,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Config)
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
-	assert.Len(app.HTTPHandler.Middlewares(), 8)
+	assert.Len(app.HTTPHandler.Middlewares(), 6)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 }
 
@@ -63,4 +66,74 @@ func TestNew_APIErr(t *testing.T) {
 	app, err := New()
 	assert.Nil(app)
 	assert.EqualError(err, "api creation error")
+}
+
+// The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves
+// but their interaction (impacted by the order of definition)
+
+func TestMiddlewares_OnPanic(t *testing.T) {
+	assert := assertlib.New(t)
+	hook, restoreFct := logging.MockSharedLoggerHook()
+	defer restoreFct()
+	app, _ := New()
+	router := app.HTTPHandler
+	router.Get("/dummy", func(http.ResponseWriter, *http.Request) {
+		panic("error in service")
+	})
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	nbLogsBeforeRequest := len(hook.AllEntries())
+	request, _ := http.NewRequest("GET", srv.URL+"/dummy", nil)
+	request.Header.Set("X-Forwarded-For", "1.1.1.1")
+	response, _ := http.DefaultClient.Do(request)
+	respBody, _ := ioutil.ReadAll(response.Body)
+
+	// check that the error has been handled by the recover
+	assert.Equal(http.StatusInternalServerError, response.StatusCode)
+	assert.Equal("Internal Server Error\n", string(respBody))
+	assert.Equal("text/plain; charset=utf-8", response.Header.Get("Content-type"))
+	allLogs := hook.AllEntries()
+	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)
+	// check that the req id is correct
+	assert.Equal(allLogs[len(allLogs)-1].Data["req_id"], allLogs[len(allLogs)-2].Data["req_id"])
+	// check that the recovere put the error info in the logs
+	assert.Equal("error in service", hook.LastEntry().Data["panic"])
+	assert.NotNil(hook.LastEntry().Data["stack"])
+	// check that the real IP is used in the logs
+	assert.Equal("1.1.1.1", allLogs[len(allLogs)-1].Data["remote_addr"])
+	assert.Equal("1.1.1.1", allLogs[len(allLogs)-2].Data["remote_addr"])
+}
+
+func TestMiddlewares_OnSuccess(t *testing.T) {
+	assert := assertlib.New(t)
+	hook, restoreFct := logging.MockSharedLoggerHook()
+	defer restoreFct()
+	app, _ := New()
+	router := app.HTTPHandler
+	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("{\"data\":\"datadatadata\"}"))
+	})
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	nbLogsBeforeRequest := len(hook.AllEntries())
+	request, _ := http.NewRequest("GET", srv.URL+"/dummy", nil)
+	request.Header.Set("X-Real-IP", "1.1.1.1")
+	request.Header.Set("Accept-Encoding", "gzip, deflate")
+	response, _ := http.DefaultClient.Do(request)
+	assert.NotNil(response.Header.Get("Content-type"))
+	assert.Equal("application/json", response.Header.Get("Content-Type"))
+	allLogs := hook.AllEntries()
+	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)
+	// check that the req id is correct
+	assert.Equal(allLogs[len(allLogs)-1].Data["req_id"], allLogs[len(allLogs)-2].Data["req_id"])
+	// check that the real IP is used in the logs
+	assert.Equal("1.1.1.1", allLogs[len(allLogs)-1].Data["remote_addr"])
+	assert.Equal("1.1.1.1", allLogs[len(allLogs)-2].Data["remote_addr"])
+	// check that the compression has been applied but the length in the logs is not altered by compression i
+	assert.Equal(23, hook.LastEntry().Data["resp_bytes_length"])
+	assert.Equal("gzip", response.Header.Get("Content-Encoding"))
 }
