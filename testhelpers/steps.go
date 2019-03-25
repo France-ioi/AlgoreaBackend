@@ -390,6 +390,11 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 	var expected, actual []byte
 	var exp, act interface{}
 
+	// verify the content type
+	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
+		return
+	}
+
 	// re-encode expected response
 	if err = json.Unmarshal([]byte(body.Content), &exp); err != nil {
 		return
