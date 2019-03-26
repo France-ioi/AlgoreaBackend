@@ -19,7 +19,7 @@ func (hook *Hook) GetAllLogs() string {
 		if len(logs) > 0 {
 			logs += "\n"
 		}
-		logs = logs + entry.Message
+		logs = logs + strings.TrimSpace(entry.Message)
 	}
 	return logs
 }
