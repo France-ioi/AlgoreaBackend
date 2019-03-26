@@ -2,10 +2,13 @@ package database
 
 import (
 	"errors"
+	"reflect"
 	"regexp"
 	"runtime"
 	"testing"
+	"time"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,6 +34,12 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
 	dbMock.ExpectRollback()
+	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "WithNamedLock", func(*DataStore, string, time.Duration, func(*DataStore) error) error {
+		var a []int
+		a[0]++ // runtime error
+		return nil
+	})
+	defer monkey.UnpatchAll()
 
 	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
 		defer func() {
@@ -39,15 +48,17 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 				panicValue = p
 			}
 		}()
+
 		_ = NewDataStore(db).InTransaction(func(s *DataStore) error {
-			return NewDataStore(nil).UserItems().ComputeAllUserItems()
+			return s.UserItems().ComputeAllUserItems()
 		})
+
 		return false, nil
 	}()
 
 	assert.True(t, didPanic)
 	assert.Implements(t, (*runtime.Error)(nil), panicValue)
-	assert.Equal(t, "runtime error: invalid memory address or nil pointer dereference", panicValue.(error).Error())
+	assert.Equal(t, "runtime error: index out of range", panicValue.(error).Error())
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
