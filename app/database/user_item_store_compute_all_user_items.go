@@ -96,61 +96,55 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 			s.collectItemsToUnlock(groupItemsToUnlock)
 
-			/** For every object marked as 'processing', we compute all the characteristics based on the children:
-			* sLastActivityDate as the max of children's
-			* nbTasksWithHelp, nbTasksTried, nbTaskSolved as the sum of children's field
-			* nbChildrenValidated as the sum of children with bValidated == 1
-			* bValidated, depending on the items_items.sCategory and items.sValidationType
-			 */
-
+			// For every object marked as 'processing', we compute all the characteristics based on the children:
+			//  - sLastActivityDate as the max of children's
+			//  - nbTasksWithHelp, nbTasksTried, nbTaskSolved as the sum of children's field
+			//  - nbChildrenValidated as the sum of children with bValidated == 1
+			//  - bValidated, depending on the items_items.sCategory and items.sValidationType
 			if updateStatement == nil {
 				const updateQuery = `
 					UPDATE users_items
-					LEFT JOIN
-						(SELECT MAX(children.sLastActivityDate) AS sLastActivityDate,
-							SUM(children.nbTasksTried) AS nbTasksTried, SUM(children.nbTasksWithHelp) AS nbTasksWithHelp,
-							SUM(children.nbTasksSolved) AS nbTasksSolved, SUM(bValidated) AS nbChildrenValidated,
-							children.idUser AS idUser, items_items.idItemParent AS idItem
+					LEFT JOIN (
+						SELECT
+							MAX(children.sLastActivityDate) AS sLastActivityDate,
+							SUM(children.nbTasksTried) AS nbTasksTried,
+							SUM(children.nbTasksWithHelp) AS nbTasksWithHelp,
+							SUM(children.nbTasksSolved) AS nbTasksSolved,
+							SUM(bValidated) AS nbChildrenValidated,
+							children.idUser AS idUser,
+							items_items.idItemParent AS idItem
 						FROM users_items AS children 
 						JOIN items_items ON items_items.idItemChild = children.idItem
 						GROUP BY children.idUser, items_items.idItemParent
 					) AS children_data
-					ON users_items.idUser = children_data.idUser AND children_data.idItem = users_items.idItem
+						USING(idUser, idItem)
 					LEFT JOIN task_children_data_view AS task_children_data
 						ON task_children_data.idUserItem = users_items.ID
-					JOIN items ON users_items.idItem = items.ID
-					LEFT JOIN items_items ON items_items.idItemParent = users_items.idItem
-					LEFT JOIN groups_attempts ON groups_attempts.ID = users_items.idAttemptActive
+					JOIN items
+						ON users_items.idItem = items.ID
+					LEFT JOIN items_items
+						ON items_items.idItemParent = users_items.idItem
+					LEFT JOIN groups_attempts
+						ON groups_attempts.ID = users_items.idAttemptActive
 					SET
 						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.sLastActivityDate, users_items.sLastActivityDate),
 						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksTried, users_items.nbTasksTried),
 						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksWithHelp, users_items.nbTasksWithHelp),
 						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksSolved, users_items.nbTasksSolved),
 						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbChildrenValidated, users_items.nbChildrenValidated),
-						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, CASE
-							WHEN users_items.bValidated = 1 THEN
-								1
-							WHEN STRCMP(items.sValidationType, 'Categories') = 0 THEN
-								task_children_data.nbChildrenCategory = 0
-							WHEN STRCMP(items.sValidationType, 'All') = 0 THEN
-								task_children_data.nbChildrenNonValidated = 0
-							WHEN STRCMP(items.sValidationType, 'AllButOne') = 0 THEN
-								task_children_data.nbChildrenNonValidated < 2
-							WHEN STRCMP(items.sValidationType, 'One') = 0 THEN
-								task_children_data.nbChildrenValidated > 0
-							ELSE
-								0
+						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							CASE
+								WHEN users_items.bValidated = 1 THEN 1
+								WHEN items.sValidationType = 'Categories' THEN task_children_data.nbChildrenCategory = 0
+								WHEN items.sValidationType = 'All' THEN task_children_data.nbChildrenNonValidated = 0
+								WHEN items.sValidationType = 'AllButOne' THEN task_children_data.nbChildrenNonValidated < 2
+								WHEN items.sValidationType = 'One' THEN task_children_data.nbChildrenValidated > 0
+								ELSE 0
 							END, users_items.bValidated),
 						users_items.sValidationDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							IFNULL(
 								users_items.sValidationDate,
-								IF(
-									STRCMP(items.sValidationType, 'Categories'), ` +
-					//				users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
-					`					task_children_data.maxValidationDate, ` +
-					//				users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
-					`					task_children_data.maxValidationDateCategories
-								)
+								IF(items.sValidationType = 'Categories', task_children_data.maxValidationDateCategories, task_children_data.maxValidationDate)
 							), users_items.sValidationDate),
 						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested),
 						users_items.sAncestorsComputationState = 'done'
@@ -184,14 +178,13 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
 	// Unlock items depending on bKeyObtained
 	const selectUnlocksQuery = `
-					SELECT users.idGroupSelf AS idGroup, items.idItemUnlocked as idsItems
-					FROM users_items
-					JOIN items ON users_items.idItem = items.ID
-					JOIN users ON users_items.idUser = users.ID
-					WHERE users_items.sAncestorsComputationState = 'processing' AND
-						users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
-	//ORDER BY users_items.ID`
-	//FOR UPDATE`
+		SELECT
+			users.idGroupSelf AS idGroup, items.idItemUnlocked as idsItems
+		FROM users_items
+		JOIN items ON users_items.idItem = items.ID
+		JOIN users ON users_items.idUser = users.ID
+		WHERE users_items.sAncestorsComputationState = 'processing' AND
+			users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
 		IDGroup  int64  `gorm:"column:idGroup"`
@@ -213,9 +206,9 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
 	if len(groupItemsToUnlock) > 0 {
 		query := `
-						INSERT INTO groups_items
-						(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
-						VALUES `
+			INSERT INTO groups_items
+				(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
+			VALUES `
 		rowsData := make([]string, 0, len(groupItemsToUnlock))
 		for item := range groupItemsToUnlock {
 			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
