@@ -15,7 +15,7 @@ ifndef BIN_DIR # to allow BIN_DIR to be given as args (see CI)
 	BIN_DIR=$(FIRSTGOPATH)/bin
 endif
 GODOG=$(BIN_DIR)/godog
-GOMETALINTER=$(LOCAL_BIN_DIR)/gometalinter
+GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
 
 # extract AWS_PROFILE if given
 ifdef AWS_PROFILE
@@ -44,8 +44,8 @@ test-unit:
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) .
-lint: $(GOMETALINTER)
-	PATH=$(LOCAL_BIN_DIR):$(PATH) GO111MODULE=off $(GOMETALINTER) ./... --deadline=90s
+lint: $(GOLANGCILINT)
+	PATH=$(LOCAL_BIN_DIR):$(PATH) GO111MODULE=on $(GOLANGCILINT) run
 clean:
 	$(GOCLEAN)
 	$(GOCLEAN) -testcache
@@ -65,5 +65,5 @@ $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GODOG):
 	$(GOGET) -u github.com/DATA-DOG/godog/cmd/godog
-$(GOMETALINTER):
-	curl -L https://git.io/vp6lP | sh /dev/stdin -b $(LOCAL_BIN_DIR)
+$(GOLANGCILINT):
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.15.0
