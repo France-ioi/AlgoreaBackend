@@ -53,12 +53,14 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
 		mustNotBeError(s.db.Exec(
 			`UPDATE users_items AS ancestors
-			JOIN items_ancestors
-			ON (ancestors.idItem = items_ancestors.idItemAncestor AND
-				items_ancestors.idItemAncestor != items_ancestors.idItemChild)
-			JOIN users_items AS descendants
-			ON (descendants.idItem = items_ancestors.idItemChild AND 
-				descendants.idUser = ancestors.idUser)
+			JOIN items_ancestors ON (
+				ancestors.idItem = items_ancestors.idItemAncestor AND
+				items_ancestors.idItemAncestor != items_ancestors.idItemChild
+			)
+			JOIN users_items AS descendants ON (
+				descendants.idItem = items_ancestors.idItemChild AND
+				descendants.idUser = ancestors.idUser
+			)
 			SET ancestors.sAncestorsComputationState = 'todo'
 			WHERE descendants.sAncestorsComputationState = 'todo'`).Error)
 
@@ -192,7 +194,7 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 		JOIN items ON users_items.idItem = items.ID
 		JOIN users ON users_items.idUser = users.ID
 		WHERE users_items.sAncestorsComputationState = 'processing' AND
-			users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
+			users_items.bKeyObtained AND items.idItemUnlocked IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
 		IDItem   int64  `gorm:"column:idItem"`
