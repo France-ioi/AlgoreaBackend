@@ -327,3 +327,9 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.db.Set(name, value))
 }
+
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
