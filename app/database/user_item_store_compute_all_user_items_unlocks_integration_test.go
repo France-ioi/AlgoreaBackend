@@ -3,12 +3,15 @@
 package database_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -37,12 +40,15 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_UpdatesOldRecords(t *testing.
 	testUnlocks(db, t)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks_PanicsWhenIdIsNotInteger(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
 		"users_items_propagation/_common",
 		"users_items_propagation/unlocks",
 	)
 	defer func() { _ = db.Close() }()
+
+	hook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
 
 	userItemStore := database.NewDataStore(db).UserItems()
 	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn(
@@ -53,7 +59,15 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_PanicsWhenIdIsNotInteger(t *t
 		"idItemUnlocked", "1001,abc",
 	).Error())
 
-	assert.Panics(t, func() { _ = userItemStore.ComputeAllUserItems() })
+	assert.NoError(t, userItemStore.ComputeAllUserItems())
+
+	logs := strings.Split((&loggingtest.Hook{hook}).GetAllStructuredLogs(), "\n")
+	assert.Len(t, logs, 1)
+	assert.Contains(t, logs[0], `level=warning`)
+	assert.Contains(t, logs[0], `msg="cannot parse items.idItemUnlocked"`)
+	assert.Contains(t, logs[0], `error="strconv.ParseInt: parsing \"abc\": invalid syntax"`)
+	assert.Contains(t, logs[0], `items.ID=1`)
+	assert.Contains(t, logs[0], `items.idItemUnlocked="1001,abc"`)
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {

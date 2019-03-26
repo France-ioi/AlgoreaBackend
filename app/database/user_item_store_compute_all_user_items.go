@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 type groupItemPair struct {
@@ -31,7 +33,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			switch e := p.(type) {
-			case runtime.Error, *strconv.NumError:
+			case runtime.Error:
 				panic(e)
 			default:
 				err = p.(error)
@@ -178,7 +180,9 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 	// Unlock items depending on bKeyObtained
 	const selectUnlocksQuery = `
 		SELECT
-			users.idGroupSelf AS idGroup, items.idItemUnlocked as idsItems
+			items.ID AS idItem,
+			users.idGroupSelf AS idGroup,
+			items.idItemUnlocked as idsItems
 		FROM users_items
 		JOIN items ON users_items.idItem = items.ID
 		JOIN users ON users_items.idUser = users.ID
@@ -186,6 +190,7 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 			users_items.bKeyObtained = 1 AND items.idItemUnlocked IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
+		IDItem   int64  `gorm:"column:idItem"`
 		IDGroup  int64  `gorm:"column:idGroup"`
 		ItemsIds string `gorm:"column:idsItems"`
 	}
@@ -195,9 +200,14 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 		for _, idItem := range idsItems {
 			var idItemInt64 int64
 			if idItemInt64, err = strconv.ParseInt(idItem, 10, 64); err != nil {
-				panic(err)
+				logging.SharedLogger.WithFields(map[string]interface{}{
+					"items.ID":             unlock.IDItem,
+					"items.idItemUnlocked": unlock.ItemsIds,
+					"error":                err,
+				}).Warn("cannot parse items.idItemUnlocked")
+			} else {
+				groupItemsToUnlock[groupItemPair{idGroup: unlock.IDGroup, idItem: idItemInt64}] = true
 			}
-			groupItemsToUnlock[groupItemPair{idGroup: unlock.IDGroup, idItem: idItemInt64}] = true
 		}
 	}
 }
