@@ -17,7 +17,7 @@ CREATE ALGORITHM=UNDEFINED
       (ISNULL(`task_children`.`ID`) OR `task_children`.`bValidated` != 1), 1, 0)) AS `nbChildrenCategory`,
     MAX(`task_children`.`sValidationDate`) AS `maxValidationDate`,
     MAX(IF(`items_items`.`sCategory` = 'Validation', `task_children`.`sValidationDate`, NULL)) AS `maxValidationDateCategories`
-  FROM `users_items` `parent_users_items`
+  FROM `users_items` AS `parent_users_items`
   JOIN `items_items` ON(
     `parent_users_items`.`idItem` = `items_items`.`idItemParent`
   )
