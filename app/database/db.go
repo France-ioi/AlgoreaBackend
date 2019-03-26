@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -98,6 +99,13 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	}()
 	err = txFunc(newDB(txDB))
 	return err
+}
+
+func (conn *DB) isInTransaction() bool {
+	if _, ok := interface{}(conn.db.CommonDB()).(driver.Tx); ok {
+		return true
+	}
+	return false
 }
 
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {

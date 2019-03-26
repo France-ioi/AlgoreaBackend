@@ -24,8 +24,10 @@ func TestUserItemStore_ComputeAllUserItems(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := database.NewDataStore(db).UserItems()
-			if err := s.ComputeAllUserItems(); (err != nil) != tt.wantErr {
+			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
+				return s.UserItems().ComputeAllUserItems()
+			})
+			if (err != nil) != tt.wantErr {
 				t.Errorf("UserItemStore.computeAllUserItems() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

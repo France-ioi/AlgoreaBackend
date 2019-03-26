@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"runtime"
 	"strconv"
 	"strings"
@@ -40,6 +41,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			}
 		}
 	}()
+
+	if !s.isInTransaction() {
+		panic(errors.New("should be executed in a transaction"))
+	}
 
 	var groupsUnlocked int64
 

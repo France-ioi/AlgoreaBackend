@@ -19,8 +19,9 @@ func TestUserItemStore_ComputeAllUserItems_CopiesHintsRequestedFromGroupAttempts
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/hints_requested")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
-	err := userItemStore.ComputeAllUserItems()
+	err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	expected := []hintsRequestedResultRow{
@@ -29,7 +30,7 @@ func TestUserItemStore_ComputeAllUserItems_CopiesHintsRequestedFromGroupAttempts
 		{ID: 22, HintsRequested: ptrString("old value"), AncestorsComputationState: "done"},
 	}
 	var result []hintsRequestedResultRow
-	assert.NoError(t, userItemStore.
+	assert.NoError(t, database.NewDataStore(db).UserItems().
 		Select("ID, sHintsRequested, sAncestorsComputationState").
 		Scan(&result).Error())
 	assert.Equal(t, expected, result)

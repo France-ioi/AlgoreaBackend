@@ -55,7 +55,9 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		"bValidated":          1,
 	}).Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	expected := []aggregatesResultRow{
@@ -75,7 +77,9 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 	defer func() { _ = db.Close() }()
 
 	userItemStore := database.NewDataStore(db).UserItems()
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []aggregatesResultRow

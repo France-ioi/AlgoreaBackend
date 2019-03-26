@@ -59,7 +59,10 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 		"idItemUnlocked", "1001,abc",
 	).Error())
 
-	assert.NoError(t, userItemStore.ComputeAllUserItems())
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
+	assert.NoError(t, err)
 
 	logs := strings.Split((&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), "\n")
 	assert.Len(t, logs, 1)
@@ -91,8 +94,12 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	assert.NoError(t, itemStore.Where("ID=4").UpdateColumn(
 		"idItemUnlocked", "4001,4002",
 	).Error())
-	err := userItemStore.ComputeAllUserItems()
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []unlocksResultRow
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
 		Select("idGroup, idItem, bCachedPartialAccess").

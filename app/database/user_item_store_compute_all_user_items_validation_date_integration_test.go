@@ -30,7 +30,9 @@ func TestUserItemStore_ComputeAllUserItems_ValidationDateStaysTheSameIfItWasNotN
 	assert.NoError(t, userItemStore.Where("ID=12").UpdateColumn("sValidationDate", expectedOldDate).Error())
 	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn("sValidationDate", expectedDate).Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
@@ -55,7 +57,9 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidationDateToMax
 	assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn("sValidationDate", oldDate).Error())
 	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn("sValidationDate", expectedDate).Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
@@ -85,7 +89,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 		t, database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "Categories").
 			Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
@@ -116,7 +122,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 			Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
@@ -153,7 +161,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 		"bNoScore": true,
 	}).Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow

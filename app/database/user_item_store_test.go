@@ -13,9 +13,13 @@ import (
 func TestUserItemStore_ComputeAllUserItems_RecoverError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	expectedError := errors.New("some error")
+	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("listener_computeAllUserItems", 1).WillReturnError(expectedError)
-	err := NewDataStore(db).UserItems().ComputeAllUserItems()
+	dbMock.ExpectRollback()
+	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
@@ -28,7 +32,9 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 				panicValue = p
 			}
 		}()
-		_ = (&UserItemStore{}).ComputeAllUserItems()
+		_ = (&UserItemStore{}).InTransaction(func(s *DataStore) error {
+			return s.UserItems().ComputeAllUserItems()
+		})
 		return false, nil
 	}()
 
@@ -39,10 +45,14 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 
 func TestUserItemStore_ComputeAllUserItems_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
+	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("listener_computeAllUserItems", 1).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllUserItems', 1)"}).AddRow(int64(0)))
-	err := NewDataStore(db).UserItems().ComputeAllUserItems()
+	dbMock.ExpectRollback()
+	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

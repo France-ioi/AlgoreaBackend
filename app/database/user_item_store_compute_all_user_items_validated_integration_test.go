@@ -34,16 +34,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysValidated(t *testing.T
 			db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 			defer func() { _ = db.Close() }()
 
-			s := database.NewDataStore(db).UserItems()
+			userItemStore := database.NewDataStore(db).UserItems()
 
 			assert.NoError(t,
 				database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", tt.name).
 					Error())
-			assert.NoError(t, s.Where("ID=12").UpdateColumn("bValidated", true).Error())
-			err := s.ComputeAllUserItems()
+			assert.NoError(t, userItemStore.Where("ID=12").UpdateColumn("bValidated", true).Error())
+
+			err := userItemStore.InTransaction(func(s *database.DataStore) error {
+				return s.UserItems().ComputeAllUserItems()
+			})
 			assert.NoError(t, err)
+
 			var result []validatedResultRow
-			assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+			assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 			assert.Equal(t, []validatedResultRow{
 				{ID: 11, Validated: false, AncestorsComputationState: "done"},
 				{ID: 12, Validated: true, AncestorsComputationState: "done"},
@@ -67,16 +71,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysNonValidatedFor(t *tes
 			db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 			defer func() { _ = db.Close() }()
 
-			s := database.NewDataStore(db).UserItems()
+			userItemStore := database.NewDataStore(db).UserItems()
 
 			assert.NoError(t,
 				database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", tt.name).
 					Error())
-			assert.NoError(t, s.Where("ID=11").UpdateColumn("bValidated", true).Error())
-			err := s.ComputeAllUserItems()
+			assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn("bValidated", true).Error())
+
+			err := userItemStore.InTransaction(func(s *database.DataStore) error {
+				return s.UserItems().ComputeAllUserItems()
+			})
 			assert.NoError(t, err)
+
 			var result []validatedResultRow
-			assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+			assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 			assert.Equal(t, []validatedResultRow{
 				{ID: 11, Validated: true, AncestorsComputationState: "done"},
 				{ID: 12, Validated: false, AncestorsComputationState: "done"},
@@ -91,16 +99,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneStaysN
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/one")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "One").
 			Error())
-	assert.NoError(t, s.Where("ID=13").UpdateColumn("bValidated", true).Error())
-	err := s.ComputeAllUserItems()
+	assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn("bValidated", true).Error())
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: false, AncestorsComputationState: "done"},
 		{ID: 12, Validated: true, AncestorsComputationState: "done"},
@@ -114,15 +126,19 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneBecome
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/one")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "One").
 			Error())
-	err := s.ComputeAllUserItems()
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: false, AncestorsComputationState: "done"},
 		{ID: 12, Validated: false, AncestorsComputationState: "done"},
@@ -136,16 +152,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOne
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "AllButOne").
 			Error())
-	assert.NoError(t, s.Where("ID=13").UpdateColumn("bValidated", true).Error())
-	err := s.ComputeAllUserItems()
+	assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn("bValidated", true).Error())
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: false, AncestorsComputationState: "done"},
 		{ID: 12, Validated: false, AncestorsComputationState: "done"},
@@ -160,16 +180,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOne
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "AllButOne").
 			Error())
-	assert.NoError(t, s.Where("ID IN (11, 13)").UpdateColumn("bValidated", true).Error())
-	err := s.ComputeAllUserItems()
+	assert.NoError(t, userItemStore.Where("ID IN (11, 13)").UpdateColumn("bValidated", true).Error())
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: true, AncestorsComputationState: "done"},
 		{ID: 12, Validated: true, AncestorsComputationState: "done"},
@@ -184,16 +208,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllStaysN
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "All").
 			Error())
-	assert.NoError(t, s.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
-	err := s.ComputeAllUserItems()
+	assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: true, AncestorsComputationState: "done"},
 		{ID: 12, Validated: false, AncestorsComputationState: "done"},
@@ -208,16 +236,20 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllBecome
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "All").
 			Error())
-	assert.NoError(t, s.Where("ID IN (11,13,14)").UpdateColumn("bValidated", true).Error())
-	err := s.ComputeAllUserItems()
+	assert.NoError(t, userItemStore.Where("ID IN (11,13,14)").UpdateColumn("bValidated", true).Error())
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: true, AncestorsComputationState: "done"},
 		{ID: 12, Validated: true, AncestorsComputationState: "done"},
@@ -232,17 +264,21 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db).UserItems()
+	userItemStore := database.NewDataStore(db).UserItems()
 
 	assert.NoError(t,
 		database.NewDataStore(db).Items().Where("ID=2").UpdateColumn("sValidationType", "Categories").
 			Error())
-	assert.NoError(t, s.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
+	assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
-	err := s.ComputeAllUserItems()
+
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
-	assert.NoError(t, s.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
 		{ID: 11, Validated: true, AncestorsComputationState: "done"},
 		{ID: 12, Validated: false, AncestorsComputationState: "done"},
@@ -265,8 +301,11 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
 	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
@@ -291,8 +330,11 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
+
 	var result []validatedResultRow
 	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validatedResultRow{
@@ -317,7 +359,9 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	assert.NoError(t, userItemStore.Where("ID IN (13,14)").UpdateColumn("bValidated", true).Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
 
-	err := userItemStore.ComputeAllUserItems()
+	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+		return s.UserItems().ComputeAllUserItems()
+	})
 	assert.NoError(t, err)
 
 	var result []validatedResultRow
