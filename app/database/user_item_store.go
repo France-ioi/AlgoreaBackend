@@ -71,27 +71,27 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			// This way we prevent infinite looping as we never process items that are ancestors of themselves
 			if markAsProcessingStatement == nil {
 				const markAsProcessingQuery = `
-				UPDATE ` + "`users_items`" + ` AS ` + "`parent`" + `
-				JOIN (
-					SELECT * FROM (
-						SELECT ` + "`parent`.`ID`" + ` FROM ` + "`users_items`" + ` AS ` + "`parent`" + `
-						WHERE ` + "`sAncestorsComputationState`" + ` = 'todo'
-							AND NOT EXISTS (
-								SELECT ` + "`items_items`.`idItemChild`" + `
-								FROM ` + "`items_items`" + `
-								JOIN ` + "`users_items`" + ` AS ` + "`children`" + `
-								ON (` + "`children`.`idItem` = `items_items`.`idItemChild`" + `)
-								WHERE ` + "`items_items`.`idItemParent` = `parent`.`idItem`" + ` AND
-									` + "`children`.`sAncestorsComputationState`" + ` <> 'done' AND
-									` + "`children`.`idUser` = `parent`.`idUser`" + `
-							)
-							ORDER BY parent.ID
-							` + //FOR UPDATE
-					`	) AS tmp2
-				) AS tmp
-				SET sAncestorsComputationState = 'processing'
-				WHERE tmp.ID = parent.ID
-`
+					UPDATE users_items AS parent
+					JOIN (
+						SELECT *
+						FROM (
+							SELECT inner_parent.ID
+							FROM users_items AS inner_parent
+							WHERE sAncestorsComputationState = 'todo'
+								AND NOT EXISTS (
+									SELECT items_items.idItemChild
+									FROM items_items
+									JOIN users_items AS children
+										ON children.idItem = items_items.idItemChild
+									WHERE items_items.idItemParent = inner_parent.idItem AND
+										children.sAncestorsComputationState <> 'done' AND
+										children.idUser = inner_parent.idUser
+								)
+							) AS tmp2
+					) AS tmp
+						ON tmp.ID = parent.ID
+					SET sAncestorsComputationState = 'processing'`
+
 				markAsProcessingStatement, err = s.db.CommonDB().Prepare(markAsProcessingQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
@@ -118,9 +118,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							children.idUser AS idUser, items_items.idItemParent AS idItem
 						FROM users_items AS children 
 						JOIN items_items ON items_items.idItemChild = children.idItem
-						GROUP BY children.idUser, items_items.idItemParent ` +
-					//`FOR UPDATE`
-					` ) AS children_data
+						GROUP BY children.idUser, items_items.idItemParent
+					) AS children_data
 					ON users_items.idUser = children_data.idUser AND children_data.idItem = users_items.idItem
 					LEFT JOIN task_children_data_view AS task_children_data
 						ON task_children_data.idUserItem = users_items.ID
