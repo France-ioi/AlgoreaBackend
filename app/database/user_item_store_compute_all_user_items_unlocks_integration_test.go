@@ -61,7 +61,7 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 
 	assert.NoError(t, userItemStore.ComputeAllUserItems())
 
-	logs := strings.Split((&loggingtest.Hook{hook}).GetAllStructuredLogs(), "\n")
+	logs := strings.Split((&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), "\n")
 	assert.Len(t, logs, 1)
 	assert.Contains(t, logs[0], `level=warning`)
 	assert.Contains(t, logs[0], `msg="cannot parse items.idItemUnlocked"`)
