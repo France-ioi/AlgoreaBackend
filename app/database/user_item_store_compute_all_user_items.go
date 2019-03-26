@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"runtime"
 	"strconv"
 	"strings"
@@ -204,21 +203,22 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 }
 
 func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
-	if len(groupItemsToUnlock) > 0 {
-		query := `
-			INSERT INTO groups_items
-				(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
-			VALUES `
-		rowsData := make([]string, 0, len(groupItemsToUnlock))
-		for item := range groupItemsToUnlock {
-			rowsData = append(rowsData, fmt.Sprintf("(%d, %d, NOW(), NOW(), 1)", item.idGroup, item.idItem))
-		}
-
-		query += strings.Join(rowsData, ", ") +
-			"ON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1"
-		result := s.db.Exec(query)
-		mustNotBeError(result.Error)
-		return result.RowsAffected
+	if len(groupItemsToUnlock) <= 0 {
+		return 0
 	}
-	return 0
+	query := `
+		INSERT INTO groups_items
+			(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
+		VALUES (?, ?, NOW(), NOW(), 1)`
+	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
+	valuesTemplate := ", (?, ?, NOW(), NOW(), 1)"
+	for item := range groupItemsToUnlock {
+		values = append(values, item.idGroup, item.idItem)
+	}
+
+	query += strings.Repeat(valuesTemplate, len(groupItemsToUnlock)-1) +
+		" ON DUPLICATE KEY UPDATE sPartialAccessDate = NOW(), sCachedPartialAccessDate = NOW(), bCachedPartialAccess = 1"
+	result := s.db.Exec(query, values...)
+	mustNotBeError(result.Error)
+	return result.RowsAffected
 }
