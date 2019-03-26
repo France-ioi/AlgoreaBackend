@@ -52,15 +52,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		return ErrLockWaitTimeoutExceeded
 	}
 
-	/*
-		$db->exec("LOCK TABLES
-		users_items as ancestors WRITE,
-		users_items as descendants WRITE,
-		history_users_items WRITE,
-		items_ancestors READ,
-		history_items_ancestors READ;
-		");
-	*/
 	// We mark as 'todo' all ancestors of objects marked as 'todo'
 	mustNotBeError(s.db.Exec(
 		`UPDATE users_items AS ancestors
@@ -73,7 +64,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			SET ancestors.sAncestorsComputationState = 'todo'
 			WHERE descendants.sAncestorsComputationState = 'todo'`).Error)
 
-	//$db->exec("UNLOCK TABLES;");
 	hasChanges := true
 
 	var markAsProcessingStatement, updateStatement *sql.Stmt
