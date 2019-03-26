@@ -50,8 +50,8 @@ jobs:
             ALGOREA_DATABASE.CONNECTION.USER: root
             ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: |
-            go run main.go db-restore
-            go run main.go db-migrate
+            make db-restore
+            make db-migrate
       - run:
           name: Prepare for report
           command: |
@@ -59,7 +59,7 @@ jobs:
             go get -u github.com/jstemmer/go-junit-report
       - run:
           name: Run tests (make verbosity disabled)
-          command: NOTVERBOSE=1 make test 2>&1 | go-junit-report > test-results/junit.xml
+          command: NOECHO=1 make test 2>&1 | go-junit-report > test-results/junit.xml
       - run:
           name: Upload test coverage results to Codecov
           command: bash <(curl -s https://codecov.io/bash)
@@ -72,33 +72,14 @@ jobs:
           when: on_fail
           name: On failure, run BDD tests with details
           command: make test-bdd
-  # The "lint" job is still complex as it cannot use Go modules.
-  # It can be simplify to a few as soon as `gometalinter` supports Go modules
   lint:
     docker:
       - image: circleci/golang:1.11
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
-    environment:
-      GOPATH: /go:/tmp/go
-      GO111MODULE: "off"
     steps:
-      # prepare
-      - checkout
-      - run: make print-deps > /tmp/deps.txt
-      - restore_cache: &CACHEKEYNOMOD
-          key: go-deps-nomod@{{ checksum "/tmp/deps.txt" }}
-      - run: make deps
-      # lint
+      - attach_workspace:
+          at: ./
+      - restore_cache: *CACHEKEYMOD
       - run: make lint
-      # cache of deps for the next `lint` jobs
-      - run:
-          name: Do not cache anything about this repo
-          command: rm -rf * /go/bin/AlgoreaBackend /go/pkg/*/github.com/France-ioi/AlgoreaBackend
-      - run: sudo cp -r /go /tmp/
-      - save_cache:
-          <<: *CACHEKEYNOMOD
-          paths:
-          - /tmp/go
 workflows:
   version: 2
   build_test:
@@ -107,4 +88,6 @@ workflows:
       - tests:
           requires:
           - deps
-      - lint
+      - lint:
+          requires:
+          - deps
