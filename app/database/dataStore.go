@@ -2,6 +2,7 @@ package database
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -99,6 +100,13 @@ func (s *DataStore) EnsureSetID(id *types.Int64) {
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	return s.inTransaction(func(db *DB) error {
+		return txFunc(NewDataStoreWithTable(db, s.tableName))
+	})
+}
+
+// WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+	return s.withNamedLock(lockName, timeout, func(db *DB) error {
 		return txFunc(NewDataStoreWithTable(db, s.tableName))
 	})
 }

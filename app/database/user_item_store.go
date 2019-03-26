@@ -2,11 +2,11 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // UserItemStore implements database operations on `users_items`
@@ -18,9 +18,6 @@ type groupItemPair struct {
 	idGroup int64
 	idItem  int64
 }
-
-// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock
-var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
 // ComputeAllUserItems recomputes fields of users_items
 // For users_items marked with sAncestorsComputationState = 'todo':
@@ -45,16 +42,13 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		}
 	}()
 
-	// Use a lock so that we don't execute the listener multiple times in parallel
-	var getLockResult int64
-	mustNotBeError(s.db.Raw("SELECT GET_LOCK('listener_computeAllUserItems', 1)").Row().Scan(&getLockResult))
-	if getLockResult != 1 {
-		return ErrLockWaitTimeoutExceeded
-	}
+	var groupsUnlocked int64
 
-	// We mark as 'todo' all ancestors of objects marked as 'todo'
-	mustNotBeError(s.db.Exec(
-		`UPDATE users_items AS ancestors
+	// Use a lock so that we don't execute the listener multiple times in parallel
+	mustNotBeError(s.WithNamedLock("listener_computeAllUserItems", time.Second, func(ds *DataStore) error {
+		// We mark as 'todo' all ancestors of objects marked as 'todo'
+		mustNotBeError(s.db.Exec(
+			`UPDATE users_items AS ancestors
 			JOIN items_ancestors
 			ON (ancestors.idItem = items_ancestors.idItemAncestor AND
 				items_ancestors.idItemAncestor != items_ancestors.idItemChild)
@@ -64,16 +58,16 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			SET ancestors.sAncestorsComputationState = 'todo'
 			WHERE descendants.sAncestorsComputationState = 'todo'`).Error)
 
-	hasChanges := true
+		hasChanges := true
 
-	var markAsProcessingStatement, updateStatement *sql.Stmt
-	groupItemsToUnlock := make(map[groupItemPair]bool)
+		var markAsProcessingStatement, updateStatement *sql.Stmt
+		groupItemsToUnlock := make(map[groupItemPair]bool)
 
-	for hasChanges {
-		// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
-		// This way we prevent infinite looping as we never process items that are ancestors of themselves
-		if markAsProcessingStatement == nil {
-			const markAsProcessingQuery = `
+		for hasChanges {
+			// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
+			// This way we prevent infinite looping as we never process items that are ancestors of themselves
+			if markAsProcessingStatement == nil {
+				const markAsProcessingQuery = `
 				UPDATE ` + "`users_items`" + ` AS ` + "`parent`" + `
 				JOIN (
 					SELECT * FROM (
@@ -90,29 +84,29 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							)
 							ORDER BY parent.ID
 							` + //FOR UPDATE
-				`	) AS tmp2
+					`	) AS tmp2
 				) AS tmp
 				SET sAncestorsComputationState = 'processing'
 				WHERE tmp.ID = parent.ID
 `
-			markAsProcessingStatement, err = s.db.CommonDB().Prepare(markAsProcessingQuery)
+				markAsProcessingStatement, err = s.db.CommonDB().Prepare(markAsProcessingQuery)
+				mustNotBeError(err)
+				defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
+			}
+			_, err = markAsProcessingStatement.Exec()
 			mustNotBeError(err)
-			defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
-		}
-		_, err = markAsProcessingStatement.Exec()
-		mustNotBeError(err)
 
-		s.collectItemsToUnlock(groupItemsToUnlock)
+			s.collectItemsToUnlock(groupItemsToUnlock)
 
-		/** For every object marked as 'processing', we compute all the characteristics based on the children:
-		* sLastActivityDate as the max of children's
-		* nbTasksWithHelp, nbTasksTried, nbTaskSolved as the sum of children's field
-		* nbChildrenValidated as the sum of children with bValidated == 1
-		* bValidated, depending on the items_items.sCategory and items.sValidationType
-		 */
+			/** For every object marked as 'processing', we compute all the characteristics based on the children:
+			* sLastActivityDate as the max of children's
+			* nbTasksWithHelp, nbTasksTried, nbTaskSolved as the sum of children's field
+			* nbChildrenValidated as the sum of children with bValidated == 1
+			* bValidated, depending on the items_items.sCategory and items.sValidationType
+			 */
 
-		if updateStatement == nil {
-			const updateQuery = `
+			if updateStatement == nil {
+				const updateQuery = `
 					UPDATE users_items
 					LEFT JOIN
 						(SELECT MAX(children.sLastActivityDate) AS sLastActivityDate,
@@ -122,8 +116,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						FROM users_items AS children 
 						JOIN items_items ON items_items.idItemChild = children.idItem
 						GROUP BY children.idUser, items_items.idItemParent ` +
-				//`FOR UPDATE`
-				` ) AS children_data
+					//`FOR UPDATE`
+					` ) AS children_data
 					ON users_items.idUser = children_data.idUser AND children_data.idItem = users_items.idItem
 					LEFT JOIN task_children_data_view AS task_children_data
 						ON task_children_data.idUserItem = users_items.ID
@@ -155,33 +149,32 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								users_items.sValidationDate,
 								IF(
 									STRCMP(items.sValidationType, 'Categories'), ` +
-				//				users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
-				`					task_children_data.maxValidationDate, ` +
-				//				users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
-				`					task_children_data.maxValidationDateCategories
+					//				users_items.sValidationDate IS NULL && @sValidationType != 'Categories'
+					`					task_children_data.maxValidationDate, ` +
+					//				users_items.sValidationDate IS NULL && @sValidationType == 'Categories'
+					`					task_children_data.maxValidationDateCategories
 								)
 							), users_items.sValidationDate),
 						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested),
 						users_items.sAncestorsComputationState = 'done'
 					WHERE users_items.sAncestorsComputationState = 'processing'`
-			updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
+				updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
+				mustNotBeError(err)
+				defer func() { mustNotBeError(updateStatement.Close()) }()
+			}
+
+			var result sql.Result
+			result, err = updateStatement.Exec()
 			mustNotBeError(err)
-			defer func() { mustNotBeError(updateStatement.Close()) }()
+			var rowsAffected int64
+			rowsAffected, err = result.RowsAffected()
+			mustNotBeError(err)
+			hasChanges = rowsAffected > 0
 		}
 
-		var result sql.Result
-		result, err = updateStatement.Exec()
-		mustNotBeError(err)
-		var rowsAffected int64
-		rowsAffected, err = result.RowsAffected()
-		mustNotBeError(err)
-		hasChanges = rowsAffected > 0
-	}
-
-	groupsUnlocked := s.unlockGroupItems(groupItemsToUnlock)
-
-	// Release the lock
-	mustNotBeError(s.db.Raw("SELECT RELEASE_LOCK('listener_computeAllUserItems')").Row().Scan(&getLockResult))
+		groupsUnlocked = s.unlockGroupItems(groupItemsToUnlock)
+		return nil
+	}))
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {

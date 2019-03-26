@@ -2,9 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -18,6 +20,9 @@ import (
 type DB struct {
 	db *gorm.DB
 }
+
+// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock
+var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB
 func newDB(db *gorm.DB) *DB {
@@ -93,6 +98,23 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	}()
 	err = txFunc(newDB(txDB))
 	return err
+}
+
+func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
+	// Use a lock so that we don't execute the listener multiple times in parallel
+	var getLockResult int64
+	mustNotBeError(conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, timeout/time.Second).Row().Scan(&getLockResult))
+	if getLockResult != 1 {
+		return ErrLockWaitTimeoutExceeded
+	}
+	defer func() {
+		releaseErr := conn.db.Exec("SELECT RELEASE_LOCK(?)", lockName).Error
+		if err == nil {
+			err = releaseErr
+		}
+	}()
+	err = txFunc(conn)
+	return
 }
 
 // Close close current db connection.  If database connection is not an io.Closer, returns an error.
