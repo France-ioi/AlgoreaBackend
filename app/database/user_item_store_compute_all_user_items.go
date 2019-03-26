@@ -90,7 +90,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								)
 							) AS tmp2
 					) AS tmp
-						ON tmp.ID = parent.ID
+						USING(ID)
 					SET sAncestorsComputationState = 'processing'`
 
 				markAsProcessingStatement, err = s.db.CommonDB().Prepare(markAsProcessingQuery)
