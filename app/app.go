@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -51,14 +50,11 @@ func New() (*Application, error) {
 	// Set up middlewares
 	router := chi.NewRouter()
 
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.DefaultCompress)
-	router.Use(middleware.Timeout(time.Duration(conf.Timeout) * time.Second))
-
-	router.Use(log.NewStructuredLogger())
-	router.Use(render.SetContentType(render.ContentTypeJSON))
+	router.Use(middleware.RealIP)          // must be before logger or any middleware using remote IP
+	router.Use(middleware.DefaultCompress) // apply last on response
+	router.Use(middleware.RequestID)       // must be before any middleware using the request id (the logger and the recoverer do)
+	router.Use(log.NewStructuredLogger())  //
+	router.Use(middleware.Recoverer)       // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
 
