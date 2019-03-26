@@ -49,7 +49,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	var groupsUnlocked int64
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(computeAllUserItemsLockName, computeAllUserItemsLockTimeout, func(ds *DataStore) error {
+	mustNotBeError(s.WithNamedLock(computeAllUserItemsLockName, computeAllUserItemsLockTimeout, func() error {
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
 		mustNotBeError(s.db.Exec(
 			`UPDATE users_items AS ancestors
