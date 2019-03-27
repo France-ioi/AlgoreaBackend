@@ -16,7 +16,7 @@ func TestGroupItemStore_ComputeCached(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	groupItemStore := database.NewDataStore(db).GroupItems()
-	groupItemStore.ComputeCached()
+	assert.NoError(t, groupItemStore.ComputeCached())
 
 	type groupItemCachedResult struct {
 		ID                    int64 `gorm:"column:ID"`
