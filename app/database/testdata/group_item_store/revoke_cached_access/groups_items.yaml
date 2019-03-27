@@ -1,0 +1,5 @@
+# true stays true because there are no related rows in groups_items_propagate
+- {ID: 71, idGroup: 7, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 72, idGroup: 7, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 73, idGroup: 7, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2037-01-01T21:30:55Z}
+- {ID: 74, idGroup: 7, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2037-01-01T21:30:55Z}

@@ -1,10 +1,8 @@
 package database
 
-// ComputeCached updates bCached*Access* columns according to corresponding sCached*Access*Date columns.
+// grantCachedAccessWhereNeeded sets bCached*Access* columns to true where needed according to corresponding sCached*Access*Date columns.
 // The formula is sCached*Access*Date <= NOW().
-func (s *GroupItemStore) ComputeCached() (err error) {
-	defer recoverPanics(&err)
-
+func (s *GroupItemStore) grantCachedAccessWhereNeeded() {
 	listFields := map[string]string{
 		"bCachedFullAccess":      "sCachedFullAccessDate",
 		"bCachedPartialAccess":   "sCachedPartialAccessDate",
@@ -16,14 +14,7 @@ func (s *GroupItemStore) ComputeCached() (err error) {
 		query := "UPDATE `groups_items` " +
 			"SET `" + bAccessField + "` = true " +
 			"WHERE `" + bAccessField + "` = false " +
-			"AND `" + sAccessDateField + "` IS NOT NULL AND `" + sAccessDateField + "` <= NOW()"
-		mustNotBeError(s.db.Exec(query).Error)
-
-		query = "UPDATE `groups_items` " +
-			"SET `" + bAccessField + "` = false " +
-			"WHERE `" + bAccessField + "` = true " +
-			"AND (`" + sAccessDateField + "` IS NULL OR `" + sAccessDateField + "` > NOW())"
+			"AND `" + sAccessDateField + "` <= NOW()"
 		mustNotBeError(s.db.Exec(query).Error)
 	}
-	return nil
 }

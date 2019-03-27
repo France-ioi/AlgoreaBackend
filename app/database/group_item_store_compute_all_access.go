@@ -161,6 +161,8 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
 
+	s.revokeCachedAccessWhereNeeded()
+
 	// marking 'self' groups_items as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
@@ -217,4 +219,24 @@ func (s *GroupItemStore) computeAllAccess() {
 			"and `sAccessReason` = ''"
 		//mustNotBeError(s.db.Exec(queryDeleteDefaultGI).Error)
 	*/
+}
+
+func (s *GroupItemStore) revokeCachedAccessWhereNeeded() {
+	listFields := map[string]string{
+		"bCachedFullAccess":      "sCachedFullAccessDate",
+		"bCachedPartialAccess":   "sCachedPartialAccessDate",
+		"bCachedAccessSolutions": "sCachedAccessSolutionsDate",
+		"bCachedGrayedAccess":    "sCachedGrayedAccessDate",
+	}
+
+	for bAccessField, sAccessDateField := range listFields {
+		query := `
+			UPDATE groups_items
+			JOIN groups_items_propagate USING(ID)
+			SET ` + bAccessField + ` = false
+			WHERE ` + bAccessField + ` = true
+			AND groups_items_propagate.sPropagateAccess = 'self'
+			AND (` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`
+		mustNotBeError(s.db.Exec(query).Error)
+	}
 }
