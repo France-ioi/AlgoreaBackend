@@ -2,13 +2,13 @@ package database
 
 // ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
-	// MAX(groups_items.bCachedFullAccess)
+	// MIN(groups_items.sCachedFullAccessDate) <= NOW()
 	FullAccess bool `sql:"column:fullAccess" json:"full_access"`
-	// MAX(groups_items.bCachedPartialAccess)
+	// MIN(groups_items.sCachedPartialAccessDate) <= NOW()
 	PartialAccess bool `sql:"column:partialAccess" json:"partial_access"`
-	// MAX(groups_items.bCachedGrayAccess)
+	// MIN(groups_items.sCachedGrayAccessDate) <= NOW()
 	GrayedAccess bool `sql:"column:grayedAccess" json:"grayed_access"`
-	// MAX(groups_items.bCachedAccessSolutions)
+	// MIN(groups_items.sCachedAccessSolutionsDate) <= NOW()
 	AccessSolutions bool `sql:"column:accessSolutions" json:"access_solutions"`
 }
 

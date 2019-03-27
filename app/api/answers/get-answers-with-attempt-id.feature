@@ -26,11 +26,11 @@ Background:
     | 200 | Category | false          | false    | 1234,2345      | true               | 0        |
     | 210 | Category | false          | false    | 1234,2345      | true               | 0        |
   And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-    | 42 | 13      | 190    | null            | false             | false                | false               | 0             | 0        |
-    | 43 | 13      | 200    | null            | true              | true                 | true                | 0             | 0        |
-    | 44 | 13      | 210    | null            | false             | false                | true                | 0             | 0        |
-    | 45 | 41      | 200    | null            | true              | true                 | true                | 0             | 0        |
+    | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
+    | 42 | 13      | 190    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+    | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+    | 44 | 13      | 210    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+    | 45 | 41      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
   And the database has the following table 'users_answers':
     | ID | idUser | idItem | idAttempt | sName            | sType      | sState  | sLangProg | sSubmissionDate     | iScore | bValidated |
     | 1  | 1      | 200    | 100       | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |

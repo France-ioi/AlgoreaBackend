@@ -1,38 +1,38 @@
 # lev1 items
-- { ID: 41, idGroup: 11, idItem: 190, bCachedFullAccess: true, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 42, idGroup: 11, idItem: 191, bCachedFullAccess: false, bCachedPartialAccess: true, bCachedGrayedAccess: false }
-- { ID: 43, idGroup: 11, idItem: 192, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: true }
-- { ID: 44, idGroup: 11, idItem: 193, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 41, idGroup: 11, idItem: 190, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 42, idGroup: 11, idItem: 191, sCachedPartialAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 43, idGroup: 11, idItem: 192, sCachedGrayedAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 44, idGroup: 11, idItem: 193 }
 # group 12 does not get any access to items
-- { ID: 45, idGroup: 12, idItem: 190, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 46, idGroup: 12, idItem: 191, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 47, idGroup: 12, idItem: 192, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 48, idGroup: 12, idItem: 193, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 45, idGroup: 12, idItem: 190 }
+- { ID: 46, idGroup: 12, idItem: 191 }
+- { ID: 47, idGroup: 12, idItem: 192 }
+- { ID: 48, idGroup: 12, idItem: 193 }
 # group 19 should have no impact on our user
-- { ID: 49, idGroup: 19, idItem: 194, bCachedFullAccess: true, bCachedPartialAccess: true, bCachedGrayedAccess: true }
+- { ID: 49, idGroup: 19, idItem: 194, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
 
 # lev 2
-- { ID: 401, idGroup: 11, idItem: 1900, bCachedFullAccess: true, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 402, idGroup: 11, idItem: 1901, bCachedFullAccess: false, bCachedPartialAccess: true, bCachedGrayedAccess: false }
-- { ID: 403, idGroup: 11, idItem: 1902, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: true }
-- { ID: 404, idGroup: 11, idItem: 1903, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 401, idGroup: 11, idItem: 1900, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 402, idGroup: 11, idItem: 1901, sCachedPartialAccessDate: 2018-03-22T08:00:00Z }
+- { ID: 403, idGroup: 11, idItem: 1902, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
+- { ID: 404, idGroup: 11, idItem: 1903 }
 # group 12 does not get any access to items
-- { ID: 405, idGroup: 12, idItem: 1900, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 406, idGroup: 12, idItem: 1901, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 407, idGroup: 12, idItem: 1902, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 408, idGroup: 12, idItem: 1903, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 405, idGroup: 12, idItem: 1900 }
+- { ID: 406, idGroup: 12, idItem: 1901 }
+- { ID: 407, idGroup: 12, idItem: 1902 }
+- { ID: 408, idGroup: 12, idItem: 1903 }
 # group 19 should have no impact on our user
-- { ID: 409, idGroup: 19, idItem: 1904, bCachedFullAccess: true, bCachedPartialAccess: true, bCachedGrayedAccess: true }
+- { ID: 409, idGroup: 19, idItem: 1904, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
 
 # lev 3
-- { ID: 4001, idGroup: 11, idItem: 19000, bCachedFullAccess: true, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 4002, idGroup: 11, idItem: 19001, bCachedFullAccess: false, bCachedPartialAccess: true, bCachedGrayedAccess: false }
-- { ID: 4003, idGroup: 11, idItem: 19002, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: true }
-- { ID: 4004, idGroup: 11, idItem: 19003, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 4001, idGroup: 11, idItem: 19000, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 4002, idGroup: 11, idItem: 19001, sCachedPartialAccessDate: 2018-03-22T08:00:00Z }
+- { ID: 4003, idGroup: 11, idItem: 19002, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
+- { ID: 4004, idGroup: 11, idItem: 19003 }
 # group 12 does not get any access to items
-- { ID: 4005, idGroup: 12, idItem: 19000, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 4006, idGroup: 12, idItem: 19001, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 4007, idGroup: 12, idItem: 19002, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
-- { ID: 4008, idGroup: 12, idItem: 19003, bCachedFullAccess: false, bCachedPartialAccess: false, bCachedGrayedAccess: false }
+- { ID: 4005, idGroup: 12, idItem: 19000 }
+- { ID: 4006, idGroup: 12, idItem: 19001 }
+- { ID: 4007, idGroup: 12, idItem: 19002 }
+- { ID: 4008, idGroup: 12, idItem: 19003 }
 # group 19 should have no impact on our user
-- { ID: 4009, idGroup: 19, idItem: 19004, bCachedFullAccess: true, bCachedPartialAccess: true, bCachedGrayedAccess: true }
+- { ID: 4009, idGroup: 19, idItem: 19004, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2019-03-22T08:00:00Z }

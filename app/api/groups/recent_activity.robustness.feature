@@ -20,9 +20,9 @@ Feature: Get recent activity for group_id and item_id - robustness
       | ID  | sType    | bTeamsEditable | bNoScore | idItemUnlocked | bTransparentFolder | iVersion |
       | 200 | Category | false          | false    | 1234,2345      | true               | 0        |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | sFullAccessDate | bCachedFullAccess | bCachedPartialAccess | bCachedGrayedAccess | idUserCreated | iVersion |
-      | 43 | 21      | 200    | null            | true              | true                 | true                | 0             | 0        |
-      | 44 | 23      | 200    | null            | false             | false                | false               | 0             | 0        |
+      | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
+      | 43 | 21      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+      | 44 | 23      | 200    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
     And the database has the following table 'items_ancestors':
       | ID | idItemAncestor | idItemChild | iVersion |
       | 1  | 200            | 200         | 0        |
