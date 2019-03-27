@@ -105,9 +105,9 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 }
 
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK
-func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func() error) error {
-	return s.withNamedLock(lockName, timeout, func() error {
-		return txFunc()
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+	return s.withNamedLock(lockName, timeout, func(db *DB) error {
+		return txFunc(NewDataStoreWithTable(db, s.tableName))
 	})
 }
 

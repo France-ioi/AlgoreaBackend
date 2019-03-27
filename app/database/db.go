@@ -108,7 +108,7 @@ func (conn *DB) isInTransaction() bool {
 	return false
 }
 
-func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func() error) (err error) {
+func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	var getLockResult int64
 	if err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, timeout/time.Second).Row().Scan(&getLockResult); err != nil {
@@ -123,7 +123,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc fun
 			err = releaseErr
 		}
 	}()
-	err = txFunc()
+	err = txFunc(conn)
 	return
 }
 
