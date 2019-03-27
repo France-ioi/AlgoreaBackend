@@ -1,5 +1,7 @@
 package database
 
+import "database/sql"
+
 func (s *GroupItemStore) computeAllAccess() {
 	// Lock all tables during computation to avoid issues
 	/*
@@ -18,6 +20,10 @@ func (s *GroupItemStore) computeAllAccess() {
 		$queryUnlockTables = "UNLOCK TABLES;";
 	*/
 
+	var stmtInsertMissingPropagate, stmtUpdatePropagateAccess, stmtInsertMissingChildren, stmtMarkDoNotPropagate,
+		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
+	var err error
+
 	// inserting missing groups_items_propagate
 	const queryInsertMissingPropagate = `
 		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
@@ -27,9 +33,15 @@ func (s *GroupItemStore) computeAllAccess() {
 		FROM groups_items
 		WHERE sPropagateAccess='self'
 		ON DUPLICATE KEY UPDATE sPropagateAccess='self'`
+	stmtInsertMissingPropagate, err = s.db.CommonDB().Prepare(queryInsertMissingPropagate)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtInsertMissingPropagate.Close()) }()
 
 	// Set groups_items as set up for propagation
 	const queryUpdatePropagateAccess = "UPDATE `groups_items` SET `sPropagateAccess`='done' WHERE `sPropagateAccess`='self'"
+	stmtUpdatePropagateAccess, err = s.db.CommonDB().Prepare(queryUpdatePropagateAccess)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtUpdatePropagateAccess.Close()) }()
 
 	// inserting missing children of groups_items marked as 'children'
 	const queryInsertMissingChildren = `
@@ -45,6 +57,9 @@ func (s *GroupItemStore) computeAllAccess() {
 			ON parents.idItem = items_items.idItemParent
 		JOIN groups_items_propagate AS parents_propagate
 			ON parents.ID = parents_propagate.ID AND parents_propagate.sPropagateAccess = 'children'`
+	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
 
 	// mark as 'done' items that shouldn't propagate
 	const queryMarkDoNotPropagate = `
@@ -56,6 +71,9 @@ func (s *GroupItemStore) computeAllAccess() {
 		JOIN items
 			ON groups_items.idItem = items.ID AND items.bCustomChapter
 		ON DUPLICATE KEY UPDATE sPropagateAccess='done'`
+	stmtMarkDoNotPropagate, err = s.db.CommonDB().Prepare(queryMarkDoNotPropagate)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtMarkDoNotPropagate.Close()) }()
 
 	// marking 'self' groups_items sons of groups_items marked as 'children'
 	const queryMarkExistingChildren = `
@@ -71,12 +89,18 @@ func (s *GroupItemStore) computeAllAccess() {
 		JOIN groups_items_propagate AS parents_propagate
 			ON parents_propagate.ID = parents.ID AND parents_propagate.sPropagateAccess = 'children'
 		ON DUPLICATE KEY UPDATE sPropagateAccess='self'`
+	stmtMarkExistingChildren, err = s.db.CommonDB().Prepare(queryMarkExistingChildren)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtMarkExistingChildren.Close()) }()
 
 	// marking 'children' groups_items as 'done'
 	const queryMarkFinishedItems = `
 		UPDATE groups_items_propagate
 		SET sPropagateAccess = 'done'
 		WHERE sPropagateAccess = 'children'`
+	stmtMarkFinishedItems, err = s.db.CommonDB().Prepare(queryMarkFinishedItems)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtMarkFinishedItems.Close()) }()
 
 	// computation for groups_items marked as 'self'.
 	// It also marks 'self' groups_items as 'children'
@@ -133,26 +157,44 @@ func (s *GroupItemStore) computeAllAccess() {
 			groups_items.sCachedGrayedAccessDate = new_data.sCachedGrayedAccessDate,
 			groups_items.sCachedAccessReason = new_data.sAccessReasonAncestors
 		WHERE groups_items_propagate.sPropagateAccess = 'self'`
+	stmtUpdateGroupItems, err = s.db.CommonDB().Prepare(queryUpdateGroupItems)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
 
 	// marking 'self' groups_items as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
 		SET sPropagateAccess = 'children'
 		WHERE sPropagateAccess = 'self'`
+	stmtMarkChildrenItems, err = s.db.CommonDB().Prepare(queryMarkChildrenItems)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtMarkChildrenItems.Close()) }()
 
 	hasChanges := true
 	for hasChanges {
 		//mustNotBeError(s.db.Exec(queryLockTables).Error)
-		mustNotBeError(s.db.Exec(queryInsertMissingChildren).Error)
-		mustNotBeError(s.db.Exec(queryInsertMissingPropagate).Error)
-		mustNotBeError(s.db.Exec(queryUpdatePropagateAccess).Error)
-		mustNotBeError(s.db.Exec(queryMarkDoNotPropagate).Error)
-		mustNotBeError(s.db.Exec(queryMarkExistingChildren).Error)
-		mustNotBeError(s.db.Exec(queryMarkFinishedItems).Error)
-		mustNotBeError(s.db.Exec(queryUpdateGroupItems).Error)
-		result := s.db.Exec(queryMarkChildrenItems)
-		mustNotBeError(result.Error)
-		hasChanges = result.RowsAffected > 0
+		_, err = stmtInsertMissingChildren.Exec()
+		mustNotBeError(err)
+		_, err = stmtInsertMissingPropagate.Exec()
+		mustNotBeError(err)
+		_, err = stmtUpdatePropagateAccess.Exec()
+		mustNotBeError(err)
+		_, err = stmtMarkDoNotPropagate.Exec()
+		mustNotBeError(err)
+		_, err = stmtMarkExistingChildren.Exec()
+		mustNotBeError(err)
+		_, err = stmtMarkFinishedItems.Exec()
+		mustNotBeError(err)
+		_, err = stmtUpdateGroupItems.Exec()
+		mustNotBeError(err)
+
+		var result sql.Result
+		result, err = stmtMarkChildrenItems.Exec()
+		mustNotBeError(err)
+		var rowsAffected int64
+		rowsAffected, err = result.RowsAffected()
+		mustNotBeError(err)
+		hasChanges = rowsAffected > 0
 		//mustNotBeError(s.db.Exec(queryUnlockTables).Error)
 	}
 
