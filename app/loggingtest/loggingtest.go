@@ -1,6 +1,8 @@
 package loggingtest
 
 import (
+	"strings"
+
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
 )
@@ -17,7 +19,7 @@ func (hook *Hook) GetAllLogs() string {
 		if len(logs) > 0 {
 			logs += "\n"
 		}
-		logs = logs + entry.Message
+		logs = logs + strings.TrimSpace(entry.Message)
 	}
 	return logs
 }
@@ -31,9 +33,9 @@ func (hook *Hook) GetAllStructuredLogs() string {
 		}
 		logString, err := entry.String()
 		if err != nil {
-			logs += err.Error()
+			logs += strings.TrimSpace(err.Error())
 		} else {
-			logs = logs + logString
+			logs += strings.TrimSpace(logString)
 		}
 	}
 	return logs

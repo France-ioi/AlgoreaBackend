@@ -479,3 +479,25 @@ func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.MySQLDriver)")
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "dsn:\"mydsn\"")
 }
+
+func TestDB_isInTransaction_ReturnsTrue(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		assert.True(t, db.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_isInTransaction_ReturnsFalse(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, db.isInTransaction())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

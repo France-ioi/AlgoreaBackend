@@ -2,6 +2,7 @@ package database
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
@@ -77,6 +78,11 @@ func (s *DataStore) UserAnswers() *UserAnswerStore {
 	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}
 }
 
+// UserItems returns a UserItemStore
+func (s *DataStore) UserItems() *UserItemStore {
+	return &UserItemStore{NewDataStoreWithTable(s.DB, "users_items")}
+}
+
 // NewID generates a positive random int64 to be used as ID
 // !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
 func (s *DataStore) NewID() int64 {
@@ -94,6 +100,13 @@ func (s *DataStore) EnsureSetID(id *types.Int64) {
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	return s.inTransaction(func(db *DB) error {
+		return txFunc(NewDataStoreWithTable(db, s.tableName))
+	})
+}
+
+// WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+	return s.withNamedLock(lockName, timeout, func(db *DB) error {
 		return txFunc(NewDataStoreWithTable(db, s.tableName))
 	})
 }
