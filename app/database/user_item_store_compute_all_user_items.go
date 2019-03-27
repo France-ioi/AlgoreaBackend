@@ -50,8 +50,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(computeAllUserItemsLockName, computeAllUserItemsLockTimeout, func(ds *DataStore) error {
+		userItemStore := ds.UserItems()
+
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
-		mustNotBeError(s.db.Exec(
+		mustNotBeError(userItemStore.db.Exec(
 			`UPDATE users_items AS ancestors
 			JOIN items_ancestors ON (
 				ancestors.idItem = items_ancestors.idItemAncestor AND
@@ -95,14 +97,14 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						USING(ID)
 					SET sAncestorsComputationState = 'processing'`
 
-				markAsProcessingStatement, err = s.db.CommonDB().Prepare(markAsProcessingQuery)
+				markAsProcessingStatement, err = userItemStore.db.CommonDB().Prepare(markAsProcessingQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
 			}
 			_, err = markAsProcessingStatement.Exec()
 			mustNotBeError(err)
 
-			s.collectItemsToUnlock(groupItemsToUnlock)
+			userItemStore.collectItemsToUnlock(groupItemsToUnlock)
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
 			//  - sLastActivityDate as the max of children's
@@ -157,7 +159,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested),
 						users_items.sAncestorsComputationState = 'done'
 					WHERE users_items.sAncestorsComputationState = 'processing'`
-				updateStatement, err = s.db.CommonDB().Prepare(updateQuery)
+				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
 			}
@@ -171,7 +173,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			hasChanges = rowsAffected > 0
 		}
 
-		groupsUnlocked = s.unlockGroupItems(groupItemsToUnlock)
+		groupsUnlocked = userItemStore.unlockGroupItems(groupItemsToUnlock)
 		return nil
 	}))
 
