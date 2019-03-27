@@ -2,7 +2,9 @@ package database
 
 // ComputeCached updates bCached*Access* columns according to corresponding sCached*Access*Date columns.
 // The formula is sCached*Access*Date <= NOW().
-func (s *GroupItemStore) ComputeCached() {
+func (s *GroupItemStore) ComputeCached() (err error) {
+	defer recoverPanics(&err)
+
 	listFields := map[string]string{
 		"bCachedFullAccess":      "sCachedFullAccessDate",
 		"bCachedPartialAccess":   "sCachedPartialAccessDate",
@@ -23,4 +25,5 @@ func (s *GroupItemStore) ComputeCached() {
 			"AND (`" + sAccessDateField + "` IS NULL OR `" + sAccessDateField + "` > NOW())"
 		mustNotBeError(s.db.Exec(query).Error)
 	}
+	return nil
 }

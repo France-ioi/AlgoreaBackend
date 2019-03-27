@@ -42,5 +42,5 @@ func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
 
 func (s *GroupItemStore) after() {
 	s.computeAllAccess()
-	s.ComputeCached()
+	mustNotBeError(s.ComputeCached())
 }
