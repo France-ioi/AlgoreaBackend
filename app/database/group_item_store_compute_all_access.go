@@ -3,6 +3,8 @@ package database
 import "database/sql"
 
 func (s *GroupItemStore) computeAllAccess() {
+	s.mustBeInTransaction()
+
 	// Lock all tables during computation to avoid issues
 	/*
 		$queryLockTables = "LOCK TABLES
