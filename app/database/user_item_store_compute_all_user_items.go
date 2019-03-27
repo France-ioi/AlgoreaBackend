@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -35,16 +34,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		panic(errors.New("should be executed in a transaction"))
 	}
 
-	defer func() {
-		if p := recover(); p != nil {
-			switch e := p.(type) {
-			case runtime.Error:
-				panic(e)
-			default:
-				err = p.(error)
-			}
-		}
-	}()
+	defer recoverPanics(&err)
 
 	var groupsUnlocked int64
 

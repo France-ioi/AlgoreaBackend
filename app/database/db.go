@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"strings"
 	"time"
 
@@ -341,5 +342,16 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func recoverPanics(returnErr *error) {
+	if p := recover(); p != nil {
+		switch e := p.(type) {
+		case runtime.Error:
+			panic(e)
+		default:
+			(*returnErr) = p.(error)
+		}
 	}
 }
