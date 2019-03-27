@@ -163,8 +163,6 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
 
-	s.revokeCachedAccessWhereNeeded()
-
 	// marking 'self' groups_items as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
@@ -191,6 +189,8 @@ func (s *GroupItemStore) computeAllAccess() {
 		mustNotBeError(err)
 		_, err = stmtUpdateGroupItems.Exec()
 		mustNotBeError(err)
+
+		s.revokeCachedAccessWhereNeeded()
 
 		var result sql.Result
 		result, err = stmtMarkChildrenItems.Exec()
