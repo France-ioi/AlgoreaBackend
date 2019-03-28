@@ -80,6 +80,16 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
+	return conn.inTransactionWithCount(txFunc, 0)
+}
+
+const transactionRetriesLimit = 30
+
+func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err error) {
+	if count > transactionRetriesLimit {
+		return errors.New("transaction retries limit exceeded")
+	}
+
 	var txDB = conn.db.Begin()
 	if txDB.Error != nil {
 		return txDB.Error
@@ -87,11 +97,28 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 	defer func() {
 		if p := recover(); p != nil {
 			// ensure rollback is executed even in case of panic
-			txDB.Rollback()
+			rollbackErr := txDB.Rollback().Error
+			if e, ok := p.(*mysql.MySQLError); ok && e.Number == 1213 { // Error 1213: Deadlock found when trying to get lock; try restarting transaction
+				if rollbackErr != nil {
+					panic(rollbackErr)
+				}
+				// retry
+				err = conn.inTransactionWithCount(txFunc, count+1)
+				return
+			}
 			panic(p) // re-throw panic after rollback
 		} else if err != nil {
 			// do not change the err
-			if txDB.Rollback().Error != nil {
+			rollbackErr := txDB.Rollback().Error
+			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1213 { // Error 1213: Deadlock found when trying to get lock; try restarting transaction
+				if rollbackErr != nil {
+					panic(rollbackErr)
+				}
+				// retry
+				err = conn.inTransactionWithCount(txFunc, count+1)
+				return
+			}
+			if rollbackErr != nil {
 				panic(err) // in case of error on rollback, panic
 			}
 		} else {
