@@ -2,31 +2,32 @@ package database
 
 import "database/sql"
 
+// computeAllAccess recomputes fields of groups_items.
+//
+// It starts from groups_items marked with sPropagateAccess = 'self'.
+//
+// 1. sCachedFullAccessDate, sCachedPartialAccessDate, bCachedManagerAccess,
+// sCachedAccessSolutionsDate, sCachedGrayedAccessDate, and sCachedAccessReason are updated.
+//
+// 2. bCachedFullAccess, bCachedPartialAccess, bCachedAccessSolutions, bCachedGrayedAccess
+// are zeroed for rows where the calculation revealed access rights revocation.
+//
+// 3. Then the loop repeats from step 1 for all children (from items_items) of the processed group_items.
+//
+// Notes:
+//  - Items having bCustomChapter=1 are always skipped.
+//  - Processed groups_items are marked with sPropagateAccess = 'done'
+//  - The function may loop endlessly if items_items is a cyclic graph
+//
 func (s *GroupItemStore) computeAllAccess() {
 	s.mustBeInTransaction()
-
-	// Lock all tables during computation to avoid issues
-	/*
-		$queryLockTables = "LOCK TABLES
-			groups_items WRITE,
-			groups_items AS parents READ,
-			groups_items AS children READ,
-			groups_items AS parent READ,
-			groups_items AS child READ,
-			groups_items AS new_data READ,
-			history_groups_items WRITE,
-			groups_items_propagate WRITE,
-			groups_items_propagate AS parents_propagate READ,
-			items READ,
-			items_items READ;";
-		$queryUnlockTables = "UNLOCK TABLES;";
-	*/
 
 	var stmtInsertMissingPropagate, stmtUpdatePropagateAccess, stmtInsertMissingChildren, stmtMarkDoNotPropagate,
 		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
 	var err error
 
-	// inserting missing groups_items_propagate
+	// inserting missing (or set sPropagateAccess='self' to existing) groups_items_propagate
+	// for groups_items having sPropagateAccess='self'
 	const queryInsertMissingPropagate = `
 		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
 		SELECT
@@ -40,12 +41,17 @@ func (s *GroupItemStore) computeAllAccess() {
 	defer func() { mustNotBeError(stmtInsertMissingPropagate.Close()) }()
 
 	// Set groups_items as set up for propagation
-	const queryUpdatePropagateAccess = "UPDATE `groups_items` SET `sPropagateAccess`='done' WHERE `sPropagateAccess`='self'"
+	// (switch groups_items.sPropagateAccess from 'self' to 'done')
+	const queryUpdatePropagateAccess = `
+		UPDATE groups_items
+		SET sPropagateAccess='done'
+		WHERE sPropagateAccess='self'`
 	stmtUpdatePropagateAccess, err = s.db.CommonDB().Prepare(queryUpdatePropagateAccess)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdatePropagateAccess.Close()) }()
 
-	// inserting missing children of groups_items marked as 'children'
+	// inserting missing children of groups_items into groups_items
+	// for groups_items_propagate having sPropagateAccess = 'children'
 	const queryInsertMissingChildren = `
 		INSERT IGNORE INTO groups_items (idGroup, idItem, idUserCreated, sCachedAccessReason, sAccessReason)
 		SELECT
@@ -63,9 +69,9 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
 
-	// mark as 'done' items that shouldn't propagate
+	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.bCustomChapter=1)
 	const queryMarkDoNotPropagate = `
-		INSERT IGNORE INTO groups_items_propagate (ID, sPropagateAccess)
+		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
 		SELECT
 			groups_items.ID AS ID,
 			'done' as sPropagateAccess
@@ -77,9 +83,10 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkDoNotPropagate.Close()) }()
 
-	// marking 'self' groups_items sons of groups_items marked as 'children'
+	// marking 'self' groups_items sons of groups_items in groups_items_propagate
+	// whose parents are marked with groups_items_propagate.sPropagateAccess='children'
 	const queryMarkExistingChildren = `
-		INSERT IGNORE INTO groups_items_propagate (ID, sPropagateAccess)
+		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
 		SELECT
 			children.ID AS ID,
 			'self' as sPropagateAccess
@@ -95,7 +102,7 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkExistingChildren.Close()) }()
 
-	// marking 'children' groups_items as 'done'
+	// marking 'children' groups_items_propagate as 'done'
 	const queryMarkFinishedItems = `
 		UPDATE groups_items_propagate
 		SET sPropagateAccess = 'done'
@@ -104,8 +111,7 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkFinishedItems.Close()) }()
 
-	// computation for groups_items marked as 'self'.
-	// It also marks 'self' groups_items as 'children'
+	// computation for groups_items marked as 'self' in groups_items_propagate.
 	const queryUpdateGroupItems = `
 		UPDATE groups_items
 		LEFT JOIN (
@@ -163,7 +169,7 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
 
-	// marking 'self' groups_items as 'children'
+	// marking 'self' groups_items_propagate as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
 		SET sPropagateAccess = 'children'
@@ -174,7 +180,6 @@ func (s *GroupItemStore) computeAllAccess() {
 
 	hasChanges := true
 	for hasChanges {
-		//mustNotBeError(s.db.Exec(queryLockTables).Error)
 		_, err = stmtInsertMissingChildren.Exec()
 		mustNotBeError(err)
 		_, err = stmtInsertMissingPropagate.Exec()
@@ -199,28 +204,7 @@ func (s *GroupItemStore) computeAllAccess() {
 		rowsAffected, err = result.RowsAffected()
 		mustNotBeError(err)
 		hasChanges = rowsAffected > 0
-		//mustNotBeError(s.db.Exec(queryUnlockTables).Error)
 	}
-
-	/*
-		// commented out in the PHP code
-		// remove default groups_items (veeeery slow)
-		// TODO :: maybe move to some cleaning cron
-		const queryDeleteDefaultGI = "delete from `groups_items` where " +
-			"    `sCachedAccessSolutionsDate` is null " +
-			"and `sCachedPartialAccessDate` is null " +
-			"and `sCachedFullAccessDate` is null " +
-			"and `sCachedGrayedAccessDate` is null " +
-			"and `sCachedAccessReason` = '' " +
-			"and `sFullAccessDate` is null " +
-			"and `sPartialAccessDate` is null " +
-			"and `sAccessSolutionsDate` is null " +
-			"and `bCachedManagerAccess` = 0 " +
-			"and `bManagerAccess` = 0 " +
-			"and `bOwnerAccess` = 0 " +
-			"and `sAccessReason` = ''"
-		//mustNotBeError(s.db.Exec(queryDeleteDefaultGI).Error)
-	*/
 }
 
 func (s *GroupItemStore) revokeCachedAccessWhereNeeded() {
