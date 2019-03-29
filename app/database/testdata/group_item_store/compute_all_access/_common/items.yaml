@@ -1,0 +1,6 @@
+- {ID: 1}
+- {ID: 2}
+- {ID: 3}
+- {ID: 4, bCustomChapter: 1} # should be skipped
+- {ID: 11}
+- {ID: 12}
