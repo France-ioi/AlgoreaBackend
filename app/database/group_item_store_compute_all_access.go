@@ -134,17 +134,17 @@ func (s *GroupItemStore) computeAllAccess() {
 				ON groups_items_propagate.ID = child.ID
 			JOIN groups_items AS parent
 				ON parent.idItem = items_items.idItemParent AND parent.idGroup = child.idGroup
+			JOIN items AS parent_item
+				ON parent_item.ID = items_items.idItemParent
 			WHERE
 				(groups_items_propagate.sPropagateAccess = 'self' OR groups_items_propagate.ID IS NULL) AND
 				(
 					parent.sCachedFullAccessDate IS NOT NULL OR
-					parent.sCachedPartialAccessDate IS NOT NULL OR
+					(parent.sCachedPartialAccessDate IS NOT NULL AND (items_items.bAccessRestricted = 0 OR items_items.bAlwaysVisible)) OR
 					parent.sCachedAccessSolutionsDate IS NOT NULL OR
-					parent.sFullAccessDate IS NOT NULL OR
-					parent.sPartialAccessDate IS NOT NULL OR
-					parent.sAccessSolutionsDate IS NOT NULL OR
-					parent.bManagerAccess
-				)
+					parent.bCachedManagerAccess
+				) AND
+				parent_item.bCustomChapter = 0
 			GROUP BY child.ID
 		) AS new_data
 			USING(ID)
