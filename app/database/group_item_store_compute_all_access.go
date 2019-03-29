@@ -58,8 +58,8 @@ func (s *GroupItemStore) computeAllAccess() {
 			parents.idGroup AS idGroup,
 			items_items.idItemChild AS idItem,
 			parents.idUserCreated AS idUserCreated,
-			'' AS sCachedAccessReason,
-			'' AS sAccessReason
+			NULL AS sCachedAccessReason,
+			NULL AS sAccessReason
 		FROM items_items
 		JOIN groups_items AS parents
 			ON parents.idItem = items_items.idItemParent
@@ -122,7 +122,11 @@ func (s *GroupItemStore) computeAllAccess() {
 				MAX(parent.bCachedManagerAccess) AS bCachedManagerAccess,
 				MIN(IF(items_items.bAccessRestricted AND items_items.bAlwaysVisible, parent.sCachedPartialAccessDate, NULL)) AS sCachedGrayedAccessDate,
 				MIN(parent.sCachedAccessSolutionsDate) AS sCachedAccessSolutionsDate,
-				CONCAT('From ancestor group(s) ', GROUP_CONCAT(parent.sAccessReason, ', ')) AS sAccessReasonAncestors
+				CONCAT('From ancestor group(s) ', GROUP_CONCAT(
+					DISTINCT IF(parent.sAccessReason = '', NULL, parent.sAccessReason)
+					ORDER BY parent_item.ID
+					SEPARATOR ', '
+				)) AS sAccessReasonAncestors
 			FROM groups_items AS child
 			JOIN items_items
 				ON items_items.idItemChild = child.idItem
