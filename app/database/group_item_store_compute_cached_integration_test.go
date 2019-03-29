@@ -69,7 +69,17 @@ func TestGroupItemStore_RevokeCachedAccessWhereNeeded(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	groupItemStore := database.NewDataStore(db).GroupItems()
-	groupItemStore.RevokeCachedAccessWhereNeeded()
+	statements := groupItemStore.PrepareStatementsForRevokingCachedAccessWhereNeeded()
+	defer func() {
+		for _, statement := range statements {
+			_ = statement.Close()
+		}
+	}()
+
+	for _, statement := range statements {
+		_, err := statement.Exec()
+		assert.NoError(t, err)
+	}
 
 	type groupItemCachedResult struct {
 		ID                    int64 `gorm:"column:ID"`

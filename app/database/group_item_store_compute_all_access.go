@@ -169,6 +169,13 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
 
+	revokeCachedAccessStatements := s.prepareStatementsForRevokingCachedAccessWhereNeeded()
+	defer func() {
+		for _, statement := range revokeCachedAccessStatements {
+			mustNotBeError(statement.Close())
+		}
+	}()
+
 	// marking 'self' groups_items_propagate as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
@@ -195,7 +202,10 @@ func (s *GroupItemStore) computeAllAccess() {
 		_, err = stmtUpdateGroupItems.Exec()
 		mustNotBeError(err)
 
-		s.revokeCachedAccessWhereNeeded()
+		for _, statement := range revokeCachedAccessStatements {
+			_, err = statement.Exec()
+			mustNotBeError(err)
+		}
 
 		var result sql.Result
 		result, err = stmtMarkChildrenItems.Exec()
@@ -207,7 +217,7 @@ func (s *GroupItemStore) computeAllAccess() {
 	}
 }
 
-func (s *GroupItemStore) revokeCachedAccessWhereNeeded() {
+func (s *GroupItemStore) prepareStatementsForRevokingCachedAccessWhereNeeded() []*sql.Stmt {
 	listFields := map[string]string{
 		"bCachedFullAccess":      "sCachedFullAccessDate",
 		"bCachedPartialAccess":   "sCachedPartialAccessDate",
@@ -215,14 +225,17 @@ func (s *GroupItemStore) revokeCachedAccessWhereNeeded() {
 		"bCachedGrayedAccess":    "sCachedGrayedAccessDate",
 	}
 
+	statements := make([]*sql.Stmt, 0, len(listFields))
 	for bAccessField, sAccessDateField := range listFields {
-		query := `
+		statement, err := s.db.CommonDB().Prepare(`
 			UPDATE groups_items
 			JOIN groups_items_propagate USING(ID)
 			SET ` + bAccessField + ` = false
-			WHERE ` + bAccessField + ` = true
-			AND groups_items_propagate.sPropagateAccess = 'self'
-			AND (` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`
-		mustNotBeError(s.db.Exec(query).Error)
+			WHERE ` + bAccessField + ` = true AND
+				groups_items_propagate.sPropagateAccess = 'self' AND
+				(` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`)
+		mustNotBeError(err)
+		statements = append(statements, statement)
 	}
+	return statements
 }
