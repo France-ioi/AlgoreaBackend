@@ -38,23 +38,11 @@ func TestUserItemStore_ComputeAllUserItems_Concurrent(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/main")
 	defer func() { _ = db.Close() }()
 
-	const threadsNumber = 30
-	done := make(chan bool, threadsNumber)
-
-	for i := 0; i < threadsNumber; i++ {
-		go func() {
-			defer func() {
-				done <- true
-			}()
-
-			s := database.NewDataStore(db)
-			err := s.InTransaction(func(st *database.DataStore) error {
-				return st.UserItems().ComputeAllUserItems()
-			})
-			assert.NoError(t, err)
-		}()
-	}
-	for i := 0; i < threadsNumber; i++ {
-		<-done
-	}
+	testhelpers.RunConcurrently(func() {
+		s := database.NewDataStore(db)
+		err := s.InTransaction(func(st *database.DataStore) error {
+			return st.UserItems().ComputeAllUserItems()
+		})
+		assert.NoError(t, err)
+	}, 30)
 }
