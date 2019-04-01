@@ -30,3 +30,7 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 		NewDataStoreWithTable(s.Where("items_items.idItemParent=?", parentID), s.tableName),
 	}
 }
+
+func (s *ItemItemStore) createNewAncestors() {
+	s.DataStore.createNewAncestors("items", "Item")
+}
