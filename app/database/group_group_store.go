@@ -12,3 +12,7 @@ type GroupGroupStore struct {
 func (s *GroupGroupStore) WhereUserIsMember(user AuthUser) *DB {
 	return s.Where("groups_groups.idGroupChild = ? AND groups_groups.sType='direct'", user.SelfGroupID())
 }
+
+func (s *GroupGroupStore) createNewAncestors() {
+	s.DataStore.createNewAncestors("groups", "Group")
+}
