@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"runtime"
+	"strconv"
 	"testing"
 	"time"
 
@@ -706,4 +708,181 @@ func TestDB_isInTransaction_ReturnsFalse(t *testing.T) {
 
 	assert.False(t, db.isInTransaction())
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_mustBeInTransaction_DoesNothingInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		assert.NotPanics(t, func() { db.mustBeInTransaction() })
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_mustBeInTransaction_PanicWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { db.mustBeInTransaction() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_recoverPanics_RecoversError(t *testing.T) {
+	expectedError := errors.New("some error")
+	err := func() (err error) {
+		defer recoverPanics(&err)
+		panic(expectedError)
+	}()
+	assert.Equal(t, expectedError, err)
+}
+
+func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
+	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
+		defer func() {
+			if p := recover(); p != nil {
+				didPanic = true
+				panicValue = p
+			}
+		}()
+
+		_ = func() (err error) {
+			defer recoverPanics(&err)
+			var a []int
+			a[0]++ //nolint:govet // runtime error
+			return nil
+		}()
+
+		return false, nil
+	}()
+
+	assert.True(t, didPanic)
+	assert.Implements(t, (*runtime.Error)(nil), panicValue)
+	assert.Equal(t, "runtime error: index out of range", panicValue.(error).Error())
+}
+
+func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('" + lockName + "', " + strconv.Itoa(expectedTimeout) + ")"}).AddRow(int64(0)))
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return nil
+	})
+	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_withNamedLock_ReturnsErrorWhenDBFails(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedError := errors.New("some error")
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnError(expectedError)
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return nil
+	})
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedError := errors.New("some error")
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName)
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return expectedError
+	})
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedError := errors.New("some error")
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+
+	assert.PanicsWithValue(t, expectedError, func() {
+		_ = db.withNamedLock(lockName, timeout, func(*DB) error {
+			panic(expectedError)
+		})
+	})
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedError := errors.New("some error")
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).WillReturnError(expectedError)
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return nil
+	})
+
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

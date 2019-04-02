@@ -371,9 +371,11 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.db.Set(name, value))
 }
 
+var ErrNoTransaction = errors.New("should be executed in a transaction")
+
 func (conn *DB) mustBeInTransaction() {
 	if !conn.isInTransaction() {
-		panic(errors.New("should be executed in a transaction"))
+		panic(ErrNoTransaction)
 	}
 }
 
