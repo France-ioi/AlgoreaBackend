@@ -846,3 +846,34 @@ func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestDB_WithWriteLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR UPDATE").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	db = db.Table("myTable")
+	err := db.inTransaction(func(db *DB) error {
+		newDB := db.WithWriteLock()
+		assert.NotEqual(t, newDB, db)
+		assert.NoError(t, newDB.Error())
+		var result []interface{}
+		assert.NoError(t, newDB.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_WithWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { db.WithWriteLock() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

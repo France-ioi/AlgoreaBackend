@@ -374,6 +374,12 @@ func (conn *DB) mustBeInTransaction() {
 	}
 }
 
+// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement
+func (conn *DB) WithWriteLock() *DB {
+	conn.mustBeInTransaction()
+	return conn.Set("gorm:query_option", "FOR UPDATE")
+}
+
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
