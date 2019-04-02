@@ -48,8 +48,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		if errInTransaction = groupStore.OwnedBy(user).
-			Select("groups.bFreeAccess").
-			Set("gorm:query_option", "FOR UPDATE").
+			Select("groups.bFreeAccess").WithWriteLock().
 			Where("groups.ID = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
