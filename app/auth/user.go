@@ -23,6 +23,7 @@ type userData struct {
 	SelfGroupID       int64  `sql:"column:idGroupSelf"`
 	OwnedGroupID      int64  `sql:"column:idGroupOwned"`
 	AccessGroupID     int64  `sql:"column:idGroupAccess"`
+	AllowSubgroups    bool   `sql:"column:allowSubgroups"`
 }
 
 // UserStore is an interface to the store for `users`
@@ -79,4 +80,12 @@ func (u *User) OwnedGroupID() int64 {
 		return 0
 	}
 	return u.data.OwnedGroupID
+}
+
+// AllowSubgroups returns if the user allowed to create subgroups
+func (u *User) AllowSubgroups() bool {
+	if u.lazyLoadData() != nil {
+		return false
+	}
+	return u.data.AllowSubgroups
 }
