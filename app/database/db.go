@@ -385,6 +385,23 @@ func (conn *DB) WithWriteLock() *DB {
 	return conn.Set("gorm:query_option", "FOR UPDATE")
 }
 
+const idTriesCount = 10
+
+func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
+	i := 0
+	for ; i < idTriesCount; i++ {
+		err := f(conn)
+		if err != nil {
+			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, "for key 'PRIMARY'") {
+				continue // retry with a new ID
+			}
+			return err
+		}
+		return nil
+	}
+	return errors.New("cannot generate a new ID")
+}
+
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
