@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"strings"
 	"time"
@@ -91,7 +92,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	}
 
 	if count > 0 {
-		time.Sleep(transactionDelayBetweenRetries)
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
 
 	var txDB = conn.db.Begin()
