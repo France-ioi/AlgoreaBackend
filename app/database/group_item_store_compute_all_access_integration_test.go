@@ -22,22 +22,12 @@ func TestGroupItemStore_ComputeAllAccess_Concurrency(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
-	const threadsNumber = 30
-	done := make(chan bool, threadsNumber)
-	for i := 0; i < threadsNumber; i++ {
-		go func() {
-			defer func() {
-				done <- true
-			}()
-			assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-				ds.GroupItems().ComputeAllAccess()
-				return nil
-			}))
-		}()
-	}
-	for i := 0; i < threadsNumber; i++ {
-		<-done
-	}
+	testhelpers.RunConcurrently(func() {
+		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
+			ds.GroupItems().ComputeAllAccess()
+			return nil
+		}))
+	}, 30)
 
 	groupItemStore := dataStore.GroupItems()
 	var result []groupItemsResultRow

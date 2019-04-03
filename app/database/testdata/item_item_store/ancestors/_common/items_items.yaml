@@ -1,0 +1,8 @@
+- {idItemParent: 1, idItemChild: 2}
+- {idItemParent: 1, idItemChild: 3}
+- {idItemParent: 1, idItemChild: 4}
+
+- {idItemParent: 2, idItemChild: 3}
+- {idItemParent: 2, idItemChild: 4}
+
+- {idItemParent: 3, idItemChild: 4}
