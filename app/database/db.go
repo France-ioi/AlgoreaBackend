@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"runtime"
 	"strings"
@@ -84,10 +85,15 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 }
 
 const transactionRetriesLimit = 30
+const transactionDelayBetweenRetries = 100 * time.Millisecond
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err error) {
 	if count > transactionRetriesLimit {
 		return errors.New("transaction retries limit exceeded")
+	}
+
+	if count > 0 {
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
 
 	var txDB = conn.db.Begin()

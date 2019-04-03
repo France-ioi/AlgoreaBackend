@@ -137,6 +137,10 @@ func TestDB_inTransaction_RetriesOnDeadLockError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
+
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT 1").
 		WillReturnError(&mysql.MySQLError{Number: 1213})
@@ -150,6 +154,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError(t *testing.T) {
 		var result []interface{}
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	}))
+	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -157,6 +162,10 @@ func TestDB_inTransaction_RetriesOnDeadLockErrorAndPanicsOnRollbackError(t *test
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
+
 	expectedError := errors.New("rollback error")
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT 1").
@@ -169,12 +178,17 @@ func TestDB_inTransaction_RetriesOnDeadLockErrorAndPanicsOnRollbackError(t *test
 			return db.Raw("SELECT 1").Scan(&result).Error()
 		})
 	})
+	assert.Zero(t, duration)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesOnDeadLockPanic(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT 1").
@@ -190,12 +204,17 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic(t *testing.T) {
 		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 		return nil
 	}))
+	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesOnDeadLockPanicAndPanicsOnRollbackError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	expectedError := errors.New("rollback error")
 	mock.ExpectBegin()
@@ -210,12 +229,17 @@ func TestDB_inTransaction_RetriesOnDeadLockPanicAndPanicsOnRollbackError(t *test
 			return nil
 		})
 	})
+	assert.Zero(t, duration)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	for i := 0; i < transactionRetriesLimit; i++ {
 		mock.ExpectBegin()
@@ -233,12 +257,17 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 		return nil
 	}))
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	for i := 0; i < transactionRetriesLimit; i++ {
 		mock.ExpectBegin()
@@ -255,12 +284,17 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 		var result []interface{}
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	}))
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	for i := 0; i < transactionRetriesLimit+1; i++ {
 		mock.ExpectBegin()
@@ -275,12 +309,17 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 			mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 			return nil
 		}))
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	var duration time.Duration
+	monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+	defer monkey.UnpatchAll()
 
 	for i := 0; i < transactionRetriesLimit+1; i++ {
 		mock.ExpectBegin()
@@ -294,6 +333,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 			var result []interface{}
 			return db.Raw("SELECT 1").Scan(&result).Error()
 		}))
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
