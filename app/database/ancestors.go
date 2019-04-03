@@ -2,12 +2,10 @@ package database
 
 import "database/sql"
 
-// createNewAncestors creates inserts new rows into
+// createNewAncestors inserts new rows into
 // the objectName_ancestors table (items_ancestors or groups_ancestor)
 // for all rows marked with sAncestorsComputationState="todo" in objectName_propagate
 // (items_propagate or groups_propagate) and their descendants
-//
-//
 func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 	// We mark as 'todo' all descendants of objects marked as 'todo'
 	query := `
@@ -15,13 +13,9 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 		SELECT descendants.ID, 'todo'
 		FROM ` + objectName + ` as descendants
 		JOIN ` + objectName + `_ancestors
-		ON (
-			descendants.ID = ` + objectName + `_ancestors.id` + upObjectName + `Child
-		)
+			ON descendants.ID = ` + objectName + `_ancestors.id` + upObjectName + `Child
 		JOIN ` + objectName + `_propagate AS ancestors
-		ON (
-			ancestors.ID = ` + objectName + `_ancestors.id` + upObjectName + `Ancestor
-		)
+			ON ancestors.ID = ` + objectName + `_ancestors.id` + upObjectName + `Ancestor
 		WHERE ancestors.sAncestorsComputationState = 'todo'
 		ON DUPLICATE KEY UPDATE sAncestorsComputationState = 'todo'`
 
@@ -56,9 +50,8 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 						FROM (
 							SELECT ` + relationsTable + `.id` + upObjectName + `Child
 							FROM ` + relationsTable + `
-							JOIN ` + objectName + `_propagate AS parents ON (
-								parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent
-							)
+							JOIN ` + objectName + `_propagate AS parents
+								ON parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent
 							WHERE parents.sAncestorsComputationState <> 'done'` + groupsAcceptedCondition + `
 						) AS notready
 					)`
@@ -72,15 +65,15 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 				MIN(parents.sAncestorsComputationState) AS min_parents_state,
 				MAX(parents.sAncestorsComputationState) AS max_parents_state
 			FROM ` + relationsTable + `
-			JOIN ` + objectName + `_propagate AS parents ON (
-				parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent
-			) WHERE 1` + groupsAcceptedCondition + `
+			JOIN ` + objectName + `_propagate AS parents
+				ON parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent
+			WHERE 1` + groupsAcceptedCondition + `
 			GROUP BY id` + upObjectName + `Child
 		) AS not_ready ON (
 			not_ready.id` + upObjectName + `Child=children.ID AND
 			(
 				not_ready.min_parents_state <> 'done' OR
-				not_ready.max_parents_state <>'done'
+				not_ready.max_parents_state <> 'done'
 			)
 		)
 		SET sAncestorsComputationState = 'processing'
