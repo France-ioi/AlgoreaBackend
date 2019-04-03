@@ -1,7 +1,7 @@
 package database
 
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
-func (conn *DB) WhereItemsAreVisible(user AuthUser) *DB {
+func (conn *DB) WhereItemsAreVisible(user *User) *DB {
 	groupItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().
 		MatchingUserAncestors(user).
 		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
@@ -13,7 +13,7 @@ func (conn *DB) WhereItemsAreVisible(user AuthUser) *DB {
 
 // JoinsUserAndDefaultItemStrings joins items_strings with the given view twice
 // (as default_strings for item's default language and as user_strings for the user's default language)
-func (conn *DB) JoinsUserAndDefaultItemStrings(user AuthUser) *DB {
+func (conn *DB) JoinsUserAndDefaultItemStrings(user *User) *DB {
 	return conn.
 		Joins(
 			`LEFT JOIN items_strings default_strings FORCE INDEX (idItem)

@@ -9,7 +9,7 @@ type GroupGroupStore struct {
 
 // WhereUserIsMember returns a composable query of direct ancestors of user's self group,
 // i.e. groups of which he is a direct member
-func (s *GroupGroupStore) WhereUserIsMember(user AuthUser) *DB {
+func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	return s.Where("groups_groups.idGroupChild = ? AND groups_groups.sType='direct'", user.SelfGroupID())
 }
 

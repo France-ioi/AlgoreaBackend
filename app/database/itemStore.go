@@ -27,17 +27,17 @@ func (s *ItemStore) tableName() string {
 }
 
 // Visible returns a view of the visible items for the given user
-func (s *ItemStore) Visible(user AuthUser) *DB {
+func (s *ItemStore) Visible(user *User) *DB {
 	return s.WhereItemsAreVisible(user)
 }
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user
-func (s *ItemStore) VisibleByID(user AuthUser, itemID int64) *DB {
+func (s *ItemStore) VisibleByID(user *User, itemID int64) *DB {
 	return s.Visible(user).Where("items.ID = ?", itemID)
 }
 
 // VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) *DB {
+func (s *ItemStore) VisibleChildrenOfID(user *User, itemID int64) *DB {
 	return s.
 		Visible(user).
 		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().SubQuery()).
@@ -45,7 +45,7 @@ func (s *ItemStore) VisibleChildrenOfID(user AuthUser, itemID int64) *DB {
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
-func (s *ItemStore) VisibleGrandChildrenOfID(user AuthUser, itemID int64) *DB {
+func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 	return s.
 		Visible(user).                                                                       // visible items are the leaves (potential grandChildren)
 		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().SubQuery()).         // get their parents' IDs (ii1)
@@ -117,7 +117,7 @@ type RawItem struct {
 }
 
 // GetRawItemData reads data needed by the getItem service from the DB and returns an array of RawItem's
-func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user AuthUser) (*[]RawItem, error) {
+func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user *User) (*[]RawItem, error) {
 	var result []RawItem
 
 	commonColumns := `items.ID AS ID,
@@ -238,7 +238,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user Au
 
 // AccessRights returns a composable query for getting
 // (idItem, fullAccess, partialAccess, grayedAccess, accessSolutions) for the given user
-func (s *ItemStore) AccessRights(user AuthUser) *DB {
+func (s *ItemStore) AccessRights(user *User) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
 			"idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
@@ -255,7 +255,7 @@ func (s *ItemStore) Insert(data *Item) error {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user AuthUser, itemID int64) (found bool, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemID int64) (found bool, allowed bool, err error) {
 
 	var dbRes []struct {
 		ItemID        int64 `sql:"column:idItem"`
@@ -295,7 +295,7 @@ func (s *ItemStore) IsValidHierarchy(ids []int64) (bool, error) {
 }
 
 // ValidateUserAccess gets a set of item ids and returns whether the given user is authorized to see them all
-func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, error) {
+func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error) {
 	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		log.Infof("User access rights loading failed: %v", err)
@@ -311,7 +311,7 @@ func (s *ItemStore) ValidateUserAccess(user AuthUser, itemIDs []int64) (bool, er
 }
 
 // GetAccessDetailsForIDs returns access details for given item IDs and the given user
-func (s *ItemStore) GetAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
+func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
 	var accessDetails []ItemAccessDetailsWithID
 	db := s.AccessRights(user).
 		Where("groups_items.idItem IN (?)", itemIDs).
@@ -323,7 +323,7 @@ func (s *ItemStore) GetAccessDetailsForIDs(user AuthUser, itemIDs []int64) ([]It
 }
 
 // GetAccessDetailsMapForIDs returns access details for given item IDs and the given user as a map (item_id->details)
-func (s *ItemStore) GetAccessDetailsMapForIDs(user AuthUser, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
+func (s *ItemStore) GetAccessDetailsMapForIDs(user *User, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
 	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
 	if err != nil {
 		return nil, err
