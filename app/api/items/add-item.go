@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
@@ -118,7 +117,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
-func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
+func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error {
 	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
@@ -136,7 +135,7 @@ func (srv *Service) insertItem(user *auth.User, input *NewItemRequest) error {
 	})
 }
 
-func (srv *Service) checkPermission(user *auth.User, parentItemID int64) service.APIError {
+func (srv *Service) checkPermission(user *database.User, parentItemID int64) service.APIError {
 	// can add a parent only if manager of that parent
 	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
 	if err != nil {

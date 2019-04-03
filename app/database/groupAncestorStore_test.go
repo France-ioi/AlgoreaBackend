@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
@@ -14,7 +13,7 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := auth.NewMockUser(1, 2, 11, 0)
+	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 11, DefaultLanguageID: 0})
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupAncestor=?")).
 		WithArgs(mockUser.OwnedGroupID()).

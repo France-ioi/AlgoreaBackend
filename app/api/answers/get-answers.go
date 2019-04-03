@@ -3,7 +3,7 @@ package answers
 import (
 	"errors"
 	"fmt"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/go-chi/render"
 	"net/http"
 
@@ -105,7 +105,7 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	return &responseData
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *auth.User) service.APIError {
+func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
 		Having("fullAccess>0 OR partialAccess>0").SubQuery()
@@ -123,7 +123,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	return service.NoError
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *auth.User) service.APIError {
+func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
 	if userID != user.UserID {
 		count := 0
 		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf").SubQuery()

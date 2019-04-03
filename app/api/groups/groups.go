@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -27,7 +28,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 }
 
-func (srv *Service) checkThatUserOwnsTheGroup(user *auth.User, groupID int64) service.APIError {
+func (srv *Service) checkThatUserOwnsTheGroup(user *database.User, groupID int64) service.APIError {
 	var count int64
 	service.MustNotBeError(
 		srv.Store.GroupAncestors().OwnedByUser(user).

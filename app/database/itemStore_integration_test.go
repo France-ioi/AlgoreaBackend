@@ -8,7 +8,6 @@ import (
 
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
@@ -25,7 +24,7 @@ func TestVisible(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB()
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12, 2)
+	user := database.NewMockUser(1, &database.UserData{SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2})
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -41,7 +40,7 @@ func TestVisibleByID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB()
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12, 2)
+	user := database.NewMockUser(1, &database.UserData{SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2})
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -57,7 +56,7 @@ func TestVisibleChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB()
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12, 2)
+	user := database.NewMockUser(1, &database.UserData{SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2})
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -73,7 +72,7 @@ func TestVisibleGrandChildrenOfID(t *testing.T) {
 	assert := assertlib.New(t)
 	db := setupDB()
 	defer func() { _ = db.Close() }()
-	user := auth.NewMockUser(1, 11, 12, 2)
+	user := database.NewMockUser(1, &database.UserData{SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2})
 	dataStore := database.NewDataStore(db)
 	itemStore := dataStore.Items()
 
@@ -89,7 +88,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := auth.NewMockUser(1, 2, 3, 4)
+	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions FROM `groups_items` JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor GROUP BY idItem") + "$").

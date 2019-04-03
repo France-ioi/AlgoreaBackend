@@ -6,7 +6,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
@@ -14,7 +13,7 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := auth.NewMockUser(1, 2, 3, 4)
+	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (idItem) ON default_strings.idItem = items.ID AND default_strings.idLanguage = items.idDefaultLanguage LEFT JOIN items_strings user_strings ON user_strings.idItem=items.ID AND user_strings.idLanguage = ?")).

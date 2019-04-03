@@ -1,7 +1,6 @@
 package items
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
@@ -36,7 +35,7 @@ type rawNavigationItem struct {
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
-func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *auth.User) (*[]rawNavigationItem, error) {
+func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *database.User) (*[]rawNavigationItem, error) {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
