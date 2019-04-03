@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"runtime"
 	"strings"
 	"time"
 
@@ -371,8 +372,27 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.db.Set(name, value))
 }
 
+var ErrNoTransaction = errors.New("should be executed in a transaction")
+
+func (conn *DB) mustBeInTransaction() {
+	if !conn.isInTransaction() {
+		panic(ErrNoTransaction)
+	}
+}
+
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func recoverPanics(returnErr *error) {
+	if p := recover(); p != nil {
+		switch e := p.(type) {
+		case runtime.Error:
+			panic(e)
+		default:
+			(*returnErr) = p.(error)
+		}
 	}
 }

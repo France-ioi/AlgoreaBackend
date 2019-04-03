@@ -2,8 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -31,20 +29,8 @@ const computeAllUserItemsLockTimeout = 1 * time.Second
 //  This step is repeated until no records are updated.
 // 3. We insert new groups_items for each processed row with bKeyObtained=1 according to corresponding items.idItemUnlocked.
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
-	if !s.isInTransaction() {
-		panic(errors.New("should be executed in a transaction"))
-	}
-
-	defer func() {
-		if p := recover(); p != nil {
-			switch e := p.(type) {
-			case runtime.Error:
-				panic(e)
-			default:
-				err = p.(error)
-			}
-		}
-	}()
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
 
 	var groupsUnlocked int64
 
@@ -179,8 +165,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		_ = groupsUnlocked // stub
-		//Listeners::groupsItemsAfter($db);
+		s.GroupItems().after()
 	}
 	return nil
 }

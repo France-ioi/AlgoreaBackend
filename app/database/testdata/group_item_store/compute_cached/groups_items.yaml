@@ -1,0 +1,35 @@
+# false becomes true
+- {ID: 11, idGroup: 1, idItem: 1, bCachedFullAccess: false, sCachedFullAccessDate: 2019-03-22T08:44:55Z}
+- {ID: 12, idGroup: 1, idItem: 2, bCachedPartialAccess: false, sCachedPartialAccessDate: 2019-03-22T08:44:55Z}
+- {ID: 13, idGroup: 1, idItem: 3, bCachedAccessSolutions: false, sCachedAccessSolutionsDate: 2019-03-22T08:44:55Z}
+- {ID: 14, idGroup: 1, idItem: 4, bCachedGrayedAccess: false, sCachedGrayedAccessDate: 2019-03-22T08:44:55Z}
+
+# true becomes false
+- {ID: 21, idGroup: 2, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 22, idGroup: 2, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 23, idGroup: 2, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2037-01-01T21:30:55Z}
+- {ID: 24, idGroup: 2, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2037-01-01T21:30:55Z}
+
+# true becomes false because of nil dates
+- {ID: 31, idGroup: 3, idItem: 1, bCachedFullAccess: true}
+- {ID: 32, idGroup: 3, idItem: 2, bCachedPartialAccess: true}
+- {ID: 33, idGroup: 3, idItem: 3, bCachedAccessSolutions: true}
+- {ID: 34, idGroup: 3, idItem: 4, bCachedGrayedAccess: true}
+
+# false stays false
+- {ID: 41, idGroup: 4, idItem: 1, bCachedFullAccess: false, sCachedFullAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 42, idGroup: 4, idItem: 2, bCachedPartialAccess: false, sCachedPartialAccessDate: 2037-01-01T21:30:55Z}
+- {ID: 43, idGroup: 4, idItem: 3, bCachedAccessSolutions: false, sCachedAccessSolutionsDate: 2037-01-01T21:30:55Z}
+- {ID: 44, idGroup: 4, idItem: 4, bCachedGrayedAccess: false, sCachedGrayedAccessDate: 2037-01-01T21:30:55Z}
+
+# false stays false because of nil dates
+- {ID: 51, idGroup: 5, idItem: 1, bCachedFullAccess: false}
+- {ID: 52, idGroup: 5, idItem: 2, bCachedPartialAccess: false}
+- {ID: 53, idGroup: 5, idItem: 3, bCachedAccessSolutions: false}
+- {ID: 54, idGroup: 5, idItem: 4, bCachedGrayedAccess: false}
+
+# true stays true
+- {ID: 61, idGroup: 6, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2018-03-22T10:44:55Z}
+- {ID: 62, idGroup: 6, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2018-03-22T10:44:55Z}
+- {ID: 63, idGroup: 6, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2018-03-22T10:44:55Z}
+- {ID: 64, idGroup: 6, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2018-03-22T10:44:55Z}

@@ -1,0 +1,12 @@
+- {ID: 11, idGroup: 1, idItem: 1, sPropagateAccess: self}
+- {ID: 12, idGroup: 1, idItem: 2, sPropagateAccess: done}
+- {ID: 13, idGroup: 1, idItem: 3, sPropagateAccess: done}
+- {ID: 14, idGroup: 1, idItem: 4, sPropagateAccess: self, sFullAccessDate: 2017-01-01-12:13:14Z,
+   sCachedFullAccessDate: 2017-01-01-12:13:14Z, bCachedFullAccess: 1,
+   sPartialAccessDate: 2017-01-01-12:13:14Z, sCachedPartialAccessDate: 2017-01-01-12:13:14Z,
+   bCachedPartialAccess: 1, bManagerAccess: 1, bCachedManagerAccess: 1,
+   sAccessSolutionsDate: 2017-01-01-12:13:14Z, sCachedAccessSolutionsDate: 2017-01-01-12:13:14Z,
+   bCachedAccessSolutions: 1, sCachedGrayedAccessDate: 2017-01-01-12:13:14Z,
+   bCachedGrayedAccess: 1, sAccessReason: some reason, sCachedAccessReason: some cached reason}
+- {ID: 21, idGroup: 2, idItem: 1, sPropagateAccess: self}
+- {ID: 22, idGroup: 2, idItem: 11, sPropagateAccess: self}

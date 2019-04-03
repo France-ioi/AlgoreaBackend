@@ -4,7 +4,9 @@ import (
 	"errors"
 	"regexp"
 	"testing"
+	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -145,4 +147,32 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 
 	assert.Equal(t, expectedError, gotError)
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithNamedLock(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	lockName := "some name"
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(lockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectQuery("SELECT 1 AS id").
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
+	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+
+	store := NewDataStoreWithTable(db, "tableName")
+	err := store.WithNamedLock(lockName, timeout, func(s *DataStore) error {
+		assert.Equal(t, store.tableName, s.tableName)
+		assert.Equal(t, store, s)
+		assert.Equal(t, store.db, s.db)
+		var result []interface{}
+		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
+	})
+	assert.NoError(t, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

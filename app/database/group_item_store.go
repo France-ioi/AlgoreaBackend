@@ -39,3 +39,8 @@ func (s *GroupItemStore) MatchingUserAncestors(user AuthUser) *DB {
 	userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
 	return s.Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }
+
+func (s *GroupItemStore) after() {
+	s.computeAllAccess()
+	s.grantCachedAccessWhereNeeded()
+}
