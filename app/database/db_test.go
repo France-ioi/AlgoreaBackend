@@ -478,6 +478,24 @@ func TestDB_Count(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_Count_DoesNothingIfDBContainsError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	db = db.Table("myTable")
+	_ = db.db.AddError(expectedError)
+
+	var result int
+	countDB := db.Count(&result)
+
+	assert.Equal(t, countDB, db)
+	assert.Equal(t, expectedError, countDB.Error())
+	assert.Zero(t, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Take(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

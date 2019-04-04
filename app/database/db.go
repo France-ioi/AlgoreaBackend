@@ -305,6 +305,9 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 
 // Count gets how many records for a model
 func (conn *DB) Count(dest interface{}) *DB {
+	if conn.Error() != nil {
+		return conn
+	}
 	return newDB(conn.db.Count(dest))
 }
 
