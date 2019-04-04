@@ -93,12 +93,10 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 
 	user := srv.GetUser(httpReq)
 	userDefaultLanguageID, err := user.DefaultLanguageID()
-	if err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
 	rawData, err := srv.Store.Items().GetRawItemData(req.ID, user.UserID, userDefaultLanguageID, user)
 	if err != nil {

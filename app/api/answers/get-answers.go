@@ -120,17 +120,12 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
 	service.MustNotBeError(groupsWhereUserIsMember.Error())
 
-	if err := srv.Store.GroupAttempts().ByID(attemptID).
+	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
 		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess.SubQuery()).
 		Where("((groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?))",
 			groupsOwnedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery()).
-		Count(&count).Error(); err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
-	}
+		Count(&count).Error())
 	if count == 0 {
 		return service.InsufficientAccessRightsError
 	}
