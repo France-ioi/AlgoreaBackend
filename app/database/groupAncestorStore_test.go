@@ -24,3 +24,35 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGroupAncestorStore_OwnedByUser_HandlesUserError(t *testing.T) {
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT users.*, l.ID as idDefaultLanguage FROM `users`")).
+		WithArgs(123).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	user := database.NewUser(123, database.NewDataStore(db).Users(), nil)
+
+	var result []interface{}
+	err := database.NewDataStore(db).GroupAncestors().OwnedByUser(user).Scan(&result).Error()
+	assert.Equal(t, database.ErrUserNotFound, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGroupAncestorStore_UserAncestors_HandlesUserError(t *testing.T) {
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT users.*, l.ID as idDefaultLanguage FROM `users`")).
+		WithArgs(123).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	user := database.NewUser(123, database.NewDataStore(db).Users(), nil)
+
+	var result []interface{}
+	err := database.NewDataStore(db).GroupAncestors().UserAncestors(user).Scan(&result).Error()
+	assert.Equal(t, database.ErrUserNotFound, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

@@ -125,10 +125,7 @@ func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error
 		if err = store.Items().Insert(input.itemData()); err != nil {
 			return err
 		}
-		userSelfGroupID, err := user.SelfGroupID()
-		if err != nil {
-			return err
-		}
+		userSelfGroupID, _ := user.SelfGroupID() // the user has been already loaded in checkPermission()
 		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, userSelfGroupID)); err != nil {
 			return err
 		}

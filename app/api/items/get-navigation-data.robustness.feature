@@ -39,6 +39,12 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item id"
 
+  Scenario: Should fail when the user doesn't exist
+    Given I am the user with ID "10"
+    When I send a GET request to "/items/190/as-nav-tree"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
   Scenario: Should fail when the user doesn't have access to the root item (for a user with a non-existent group)
     Given I am the user with ID "2"
     When I send a GET request to "/items/200/as-nav-tree"
