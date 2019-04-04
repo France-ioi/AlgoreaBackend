@@ -21,9 +21,8 @@ func TestService_checkThatUserOwnsTheGroup_HandlesError(t *testing.T) {
 		WillReturnError(expectedError)
 
 	user := database.NewUser(1, database.NewDataStore(db).Users(), nil)
-	srv := Service{service.Base{Store: database.NewDataStore(db)}}
 
-	apiErr := srv.checkThatUserOwnsTheGroup(user, 123)
+	apiErr := checkThatUserOwnsTheGroup(database.NewDataStore(db), user, 123)
 
 	assert.Equal(t, service.ErrUnexpected(expectedError), apiErr)
 	assert.NoError(t, mock.ExpectationsWereMet())
