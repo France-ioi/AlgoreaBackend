@@ -177,5 +177,5 @@ func TestUser_AllowSubgroups_UserNotFound(t *testing.T) {
 	got, err := user.AllowSubgroups()
 	assert.False(t, got)
 	assert.Equal(t, ErrUserNotFound, err)
-	assert.NotNil(t, user.data)
+	assert.Nil(t, user.data)
 }
