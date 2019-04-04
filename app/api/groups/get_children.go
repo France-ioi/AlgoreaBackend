@@ -16,7 +16,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := srv.checkThatUserOwnsTheGroup(user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
