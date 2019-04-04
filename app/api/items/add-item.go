@@ -121,17 +121,10 @@ func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error
 	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
-		var err error
-		if err = store.Items().Insert(input.itemData()); err != nil {
-			return err
-		}
+		service.MustNotBeError(store.Items().Insert(input.itemData()))
 		userSelfGroupID, _ := user.SelfGroupID() // the user has been already loaded in checkPermission()
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, userSelfGroupID)); err != nil {
-			return err
-		}
-		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {
-			return err
-		}
+		service.MustNotBeError(store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, userSelfGroupID)))
+		service.MustNotBeError(store.ItemStrings().Insert(input.stringData(store.NewID())))
 		return store.ItemItems().Insert(input.itemItemData(store.NewID()))
 	})
 }
