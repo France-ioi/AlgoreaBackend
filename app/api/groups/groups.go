@@ -1,8 +1,6 @@
 package groups
 
 import (
-	"errors"
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
@@ -30,11 +28,15 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	var count int64
-	service.MustNotBeError(
-		store.GroupAncestors().OwnedByUser(user).
-			Where("idGroupChild = ?", groupID).Count(&count).Error())
+	if err := store.GroupAncestors().OwnedByUser(user).
+		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
+		return service.ErrUnexpected(err)
+	}
 	if count == 0 {
-		return service.ErrForbidden(errors.New("insufficient access rights"))
+		return service.InsufficientAccessRightsError
 	}
 	return service.NoError
 }

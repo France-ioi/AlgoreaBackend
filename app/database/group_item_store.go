@@ -36,7 +36,11 @@ func (s *GroupItemStore) Insert(data *GroupItem) error {
 
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
 func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
-	userAncestors := s.GroupAncestors().UserAncestors(user).SubQuery()
+	db := s.GroupAncestors().UserAncestors(user)
+	if db.Error() != nil {
+		return db
+	}
+	userAncestors := db.SubQuery()
 	return s.Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }
 

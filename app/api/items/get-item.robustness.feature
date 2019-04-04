@@ -59,6 +59,12 @@ Background:
     Then the response code should be 404
     And the response error message should contain "Insufficient access rights on the given item id"
 
+  Scenario: Should fail when the user doesn't exist
+    Given I am the user with ID "4"
+    When I send a GET request to "/items/200"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
   Scenario: Should fail when the user has only grayed access rights to the root item
     Given I am the user with ID "3"
     When I send a GET request to "/items/190"

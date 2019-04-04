@@ -26,7 +26,9 @@ func TestBase_GetUser(t *testing.T) {
 		srv := &Base{Store: database.NewDataStore(db)}
 		user := srv.GetUser(r)
 		assert.Equal(t, int64(42), user.UserID)
-		assert.Equal(t, int64(2), user.OwnedGroupID())
+		userOwnedGroupID, err := user.OwnedGroupID()
+		assert.Equal(t, int64(2), userOwnedGroupID)
+		assert.NoError(t, err)
 	})))
 	defer ts.Close()
 

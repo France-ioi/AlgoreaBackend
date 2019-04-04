@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -23,6 +24,8 @@ type APIError struct {
 
 // NoError is an APIError to be returned when there is no error
 var NoError = APIError{0, nil}
+
+var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e APIError) httpResponse() render.Renderer {
 	response := Response{

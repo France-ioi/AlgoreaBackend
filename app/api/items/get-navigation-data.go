@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -84,6 +85,9 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	user := srv.GetUser(httpReq)
 	rawData, err := getRawNavigationData(srv.Store, req.ID, user)
 	if err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	}
 
