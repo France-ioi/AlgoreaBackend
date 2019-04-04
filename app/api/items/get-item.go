@@ -191,9 +191,7 @@ func getRawItemData(s *database.ItemStore, rootID, userID, userLanguageID int64,
 	var result []rawItem
 
 	accessRights := s.AccessRights(user)
-	if accessRights.Error() != nil {
-		return nil, accessRights.Error()
-	}
+	service.MustNotBeError(accessRights.Error()) // we have already checked that the user exists in getItem()
 
 	commonColumns := `items.ID AS ID,
 		items.sType,
@@ -305,9 +303,7 @@ func getRawItemData(s *database.ItemStore, rootID, userID, userLanguageID int64,
 			accessRights.SubQuery()).
 		Order("iChildOrder")
 
-	if err := query.Scan(&result).Error(); err != nil {
-		return nil, err
-	}
+	service.MustNotBeError(query.Scan(&result).Error())
 	return &result, nil
 }
 
