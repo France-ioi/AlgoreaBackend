@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -30,7 +31,9 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
 			if retryCount > 3 {
-				return errors.New("the password generator is broken")
+				err := errors.New("the password generator is broken")
+				logging.GetLogEntry(r).Error(err)
+				return err
 			}
 
 			newPassword, err = GenerateGroupPassword()
