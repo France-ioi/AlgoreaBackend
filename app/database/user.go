@@ -26,9 +26,8 @@ type UserData struct {
 }
 
 // NewUser creates a User instance
-func NewUser(userID int64, store ByIDer, data *UserData) *User {
-	result := &User{UserID: userID, store: store, data: data}
-	return result
+func NewUser(userID int64, userStore *UserStore, data *UserData) *User {
+	return &User{UserID: userID, store: userStore, data: data}
 }
 
 func (u *User) lazyLoadData() error {
