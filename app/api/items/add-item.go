@@ -125,7 +125,11 @@ func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error
 		if err = store.Items().Insert(input.itemData()); err != nil {
 			return err
 		}
-		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, user.SelfGroupID())); err != nil {
+		userSelfGroupID, err := user.SelfGroupID()
+		if err != nil {
+			return err
+		}
+		if err = store.GroupItems().Insert(input.groupItemData(store.NewID(), user.UserID, userSelfGroupID)); err != nil {
 			return err
 		}
 		if err = store.ItemStrings().Insert(input.stringData(store.NewID())); err != nil {
@@ -139,6 +143,9 @@ func (srv *Service) checkPermission(user *database.User, parentItemID int64) ser
 	// can add a parent only if manager of that parent
 	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
 	if err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	}
 	if !found {

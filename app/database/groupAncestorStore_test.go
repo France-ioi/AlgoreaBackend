@@ -16,7 +16,7 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 11, DefaultLanguageID: 0})
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupAncestor=?")).
-		WithArgs(mockUser.OwnedGroupID()).
+		WithArgs(11).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	var result []interface{}

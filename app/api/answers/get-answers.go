@@ -115,10 +115,13 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 			srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild").SubQuery(),
 			srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent").SubQuery()).
 		Count(&count).Error(); err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {
-		return service.ErrForbidden(errors.New("insufficient access rights"))
+		return service.InsufficientAccessRightsError
 	}
 	return service.NoError
 }
@@ -130,15 +133,21 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		if err := srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild=?", givenUserSelfGroup).
 			Count(&count).Error(); err != nil {
+			if err == database.ErrUserNotFound {
+				return service.InsufficientAccessRightsError
+			}
 			return service.ErrUnexpected(err)
 		}
 		if count == 0 {
-			return service.ErrForbidden(errors.New("insufficient access rights"))
+			return service.InsufficientAccessRightsError
 		}
 	}
 
 	accessDetails, err := srv.Store.Items().GetAccessDetailsForIDs(user, []int64{itemID})
 	if err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
@@ -15,7 +16,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` WHERE (groups_groups.idGroupChild = ? AND groups_groups.sType='direct')")).
-		WithArgs(mockUser.SelfGroupID()).
+		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	var result []interface{}

@@ -1,6 +1,8 @@
 package database
 
 import (
+	"errors"
+
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
@@ -25,6 +27,8 @@ type UserData struct {
 	AllowSubgroups    bool   `sql:"column:allowSubgroups"`
 }
 
+var ErrUserNotFound = errors.New("user not found")
+
 // NewUser creates a User instance
 func NewUser(userID int64, userStore *UserStore, data *UserData) *User {
 	return &User{UserID: userID, store: userStore, data: data}
@@ -38,42 +42,48 @@ func (u *User) lazyLoadData() error {
 			Joins("LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode)").
 			Select("users.*, l.ID as idDefaultLanguage").
 			Scan(u.data)
+		if db.db.RecordNotFound() {
+			return ErrUserNotFound
+		}
 		if err = db.Error(); err != nil {
 			u.data = nil
 			log.Errorf("Unable to load user data: %s", db.Error())
+		}
+		if db.db.RecordNotFound() {
+			return ErrUserNotFound
 		}
 	}
 	return err
 }
 
 // SelfGroupID return the group_id of the user used for his group ownership
-func (u *User) SelfGroupID() int64 {
-	if u.lazyLoadData() != nil {
-		return 0
+func (u *User) SelfGroupID() (int64, error) {
+	if err := u.lazyLoadData(); err != nil {
+		return 0, err
 	}
-	return u.data.SelfGroupID
+	return u.data.SelfGroupID, nil
 }
 
 // DefaultLanguageID return the idDefaultLanguage of the user
-func (u *User) DefaultLanguageID() int64 {
-	if u.lazyLoadData() != nil {
-		return 0
+func (u *User) DefaultLanguageID() (int64, error) {
+	if err := u.lazyLoadData(); err != nil {
+		return 0, err
 	}
-	return u.data.DefaultLanguageID
+	return u.data.DefaultLanguageID, nil
 }
 
 // OwnedGroupID returns ID of the group that will contain groups this user manages
-func (u *User) OwnedGroupID() int64 {
-	if u.lazyLoadData() != nil {
-		return 0
+func (u *User) OwnedGroupID() (int64, error) {
+	if err := u.lazyLoadData(); err != nil {
+		return 0, err
 	}
-	return u.data.OwnedGroupID
+	return u.data.OwnedGroupID, nil
 }
 
 // AllowSubgroups returns if the user allowed to create subgroups
-func (u *User) AllowSubgroups() bool {
-	if u.lazyLoadData() != nil {
-		return false
+func (u *User) AllowSubgroups() (bool, error) {
+	if err := u.lazyLoadData(); err != nil {
+		return false, err
 	}
-	return u.data.AllowSubgroups
+	return u.data.AllowSubgroups, nil
 }
