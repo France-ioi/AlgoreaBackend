@@ -42,9 +42,6 @@ func (u *User) lazyLoadData() error {
 			Joins("LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode)").
 			Select("users.*, l.ID as idDefaultLanguage").
 			Scan(u.data)
-		if db.db.RecordNotFound() {
-			return ErrUserNotFound
-		}
 		if err = db.Error(); err != nil {
 			u.data = nil
 			log.Errorf("Unable to load user data: %s", db.Error())
