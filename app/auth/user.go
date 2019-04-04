@@ -7,7 +7,7 @@ import (
 )
 
 // UserFromContext creates a User context from a context set by the middleware
-func UserFromContext(context context.Context, store database.ByIDer) *database.User {
+func UserFromContext(context context.Context, store *database.UserStore) *database.User {
 	userID := UserIDFromContext(context)
 	return database.NewUser(userID, store, nil)
 }

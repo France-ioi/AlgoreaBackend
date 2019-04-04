@@ -4,15 +4,11 @@ import (
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
-type ByIDer interface {
-	ByID(userID int64) *DB
-}
-
 // User represents the context around the authenticated user making the request
 // the data is loaded lazily
 type User struct {
 	UserID int64
-	store  ByIDer
+	store  *UserStore
 	data   *UserData
 }
 
