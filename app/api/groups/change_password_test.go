@@ -43,9 +43,11 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
 			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
+		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'sPassword'"))
 		mock.ExpectExec("UPDATE `groups` .+").WillReturnResult(sqlmock.NewResult(-1, 1))
+		mock.ExpectCommit()
 	})
 	assert.Equal(t, 200, response.StatusCode, logs)
 }

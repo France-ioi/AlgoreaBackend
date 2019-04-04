@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -26,23 +27,26 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	var newPassword string
-	for retryCount := 1; ; retryCount++ {
-		if retryCount > 3 {
-			return service.ErrUnexpected(errors.New("the password generator is broken"))
+	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+		for retryCount := 1; ; retryCount++ {
+			if retryCount > 3 {
+				return errors.New("the password generator is broken")
+			}
+
+			newPassword, err = GenerateGroupPassword()
+			service.MustNotBeError(err)
+
+			// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
+			err = store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
+			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
+				continue
+			}
+			service.MustNotBeError(err)
+
+			break
 		}
-
-		newPassword, err = GenerateGroupPassword()
-		service.MustNotBeError(err)
-
-		// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
-		err = srv.Store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
-		if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
-			continue
-		}
-		service.MustNotBeError(err)
-
-		break
-	}
+		return nil
+	}))
 
 	render.Respond(w, r, struct {
 		Password string `json:"password"`
