@@ -139,12 +139,10 @@ func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error
 func (srv *Service) checkPermission(user *database.User, parentItemID int64) service.APIError {
 	// can add a parent only if manager of that parent
 	found, hasAccess, err := srv.Store.Items().HasManagerAccess(user, parentItemID)
-	if err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 	if !found {
 		return service.ErrForbidden(errors.New("cannot find the parent item"))
 	}

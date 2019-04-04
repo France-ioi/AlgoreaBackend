@@ -109,12 +109,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
 		Having("fullAccess>0 OR partialAccess>0")
-	if itemsUserCanAccess.Error() != nil {
-		if itemsUserCanAccess.Error() == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(itemsUserCanAccess.Error())
+	if itemsUserCanAccess.Error() == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(itemsUserCanAccess.Error())
 
 	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild")
 	service.MustNotBeError(groupsOwnedByUser.Error())
@@ -144,26 +142,23 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		count := 0
 		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf")
 		service.MustNotBeError(givenUserSelfGroup.Error())
-		if err := srv.Store.GroupAncestors().OwnedByUser(user).
+		err := srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild=?", givenUserSelfGroup.SubQuery()).
-			Count(&count).Error(); err != nil {
-			if err == database.ErrUserNotFound {
-				return service.InsufficientAccessRightsError
-			}
-			return service.ErrUnexpected(err)
+			Count(&count).Error()
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
 		}
+		service.MustNotBeError(err)
 		if count == 0 {
 			return service.InsufficientAccessRightsError
 		}
 	}
 
 	accessDetails, err := srv.Store.Items().GetAccessDetailsForIDs(user, []int64{itemID})
-	if err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
 	if len(accessDetails) == 0 || accessDetails[0].IsForbidden() {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
