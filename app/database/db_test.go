@@ -154,7 +154,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError(t *testing.T) {
 		var result []interface{}
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	}))
-	assert.Equal(t, transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -204,7 +204,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic(t *testing.T) {
 		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 		return nil
 	}))
-	assert.Equal(t, transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -257,7 +257,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 		return nil
 	}))
-	assert.Equal(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -284,7 +284,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 		var result []interface{}
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	}))
-	assert.Equal(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -309,7 +309,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 			mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 			return nil
 		}))
-	assert.Equal(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -333,7 +333,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 			var result []interface{}
 			return db.Raw("SELECT 1").Scan(&result).Error()
 		}))
-	assert.Equal(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration)
+	assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -474,6 +474,24 @@ func TestDB_Count(t *testing.T) {
 	assert.NotEqual(t, countDB, db)
 	assert.NoError(t, countDB.Error())
 	assert.Equal(t, 1, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Count_DoesNothingIfDBContainsError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	db = db.Table("myTable")
+	_ = db.db.AddError(expectedError)
+
+	var result int
+	countDB := db.Count(&result)
+
+	assert.Equal(t, countDB, db)
+	assert.Equal(t, expectedError, countDB.Error())
+	assert.Zero(t, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

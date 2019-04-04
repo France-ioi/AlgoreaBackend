@@ -1,11 +1,11 @@
 package groups
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -25,10 +25,13 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	var result []map[string]interface{}
 	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	}
 	if len(result) == 0 {
-		return service.ErrForbidden(errors.New("insufficient access rights"))
+		return service.InsufficientAccessRightsError
 	}
 	render.Respond(w, r, service.ConvertMapFromDBToJSON(result[0]))
 

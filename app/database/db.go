@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"math/rand"
 	"reflect"
 	"runtime"
 	"strings"
@@ -92,7 +93,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	}
 
 	if count > 0 {
-		time.Sleep(transactionDelayBetweenRetries)
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
 
 	var txDB = conn.db.Begin()
@@ -244,11 +245,13 @@ func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
 
 // SubQuery returns the query as sub query
 func (conn *DB) SubQuery() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.SubQuery()
 }
 
 // QueryExpr returns the query as expr object
 func (conn *DB) QueryExpr() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.QueryExpr()
 }
 
@@ -302,6 +305,9 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 
 // Count gets how many records for a model
 func (conn *DB) Count(dest interface{}) *DB {
+	if conn.Error() != nil {
+		return conn
+	}
 	return newDB(conn.db.Count(dest))
 }
 

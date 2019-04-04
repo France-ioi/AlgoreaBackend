@@ -24,6 +24,15 @@ Feature: Update a group (groupEdit) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Should fail if the user is not found
+    Given I am the user with ID "3"
+    When I send a PUT request to "/groups/13" with the following body:
+    """
+    {}
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
   Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
     Given I am the user with ID "2"
     When I send a PUT request to "/groups/15" with the following body:

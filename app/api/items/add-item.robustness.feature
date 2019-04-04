@@ -137,3 +137,24 @@ When I send a POST request to "/items/" with the following body:
   """
 Then the response code should be 403
 And the response error message should contain "Insufficient access on the parent item"
+
+Scenario: The user doesn't exist
+  And the database has the following table 'items':
+    | ID | bTeamsEditable | bNoScore | iVersion |
+    | 21 | false          | false    | 0        |
+  And I am the user with ID "121"
+  When I send a POST request to "/items/" with the following body:
+  """
+  {
+    "id": 2,
+    "type": "Course",
+    "strings": [
+      { "language_id": 3, "title": "my title" }
+    ],
+    "parents": [
+      { "id": 21, "order": 100 }
+    ]
+  }
+  """
+  Then the response code should be 403
+  And the response error message should contain "Insufficient access rights"

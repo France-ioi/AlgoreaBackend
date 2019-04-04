@@ -39,6 +39,12 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Should fail when the user doesn't exist
+    Given I am the user with ID "10"
+    When I send a GET request to "/answers?attempt_id=110"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
   Scenario: Should fail when the user doesn't have access to the item
     Given I am the user with ID "1"
     When I send a GET request to "/answers?attempt_id=100"

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -19,6 +20,9 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 	// Validate that the user can see the item IDs.
 	user := srv.GetUser(r)
 	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
+		if err == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
 		return service.ErrUnexpected(err)
 	} else if !valid {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item ids"))
