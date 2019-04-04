@@ -245,11 +245,13 @@ func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
 
 // SubQuery returns the query as sub query
 func (conn *DB) SubQuery() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.SubQuery()
 }
 
 // QueryExpr returns the query as expr object
 func (conn *DB) QueryExpr() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.QueryExpr()
 }
 

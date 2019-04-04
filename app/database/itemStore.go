@@ -120,6 +120,11 @@ type RawItem struct {
 func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user *User) (*[]RawItem, error) {
 	var result []RawItem
 
+	accessRights := s.AccessRights(user)
+	if accessRights.Error() != nil {
+		return nil, accessRights.Error()
+	}
+
 	commonColumns := `items.ID AS ID,
 		items.sType,
 		items.bDisplayDetailsInParent,
@@ -227,7 +232,7 @@ func (s *ItemStore) GetRawItemData(rootID, userID, userLanguageID int64, user *U
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
 		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
-			s.AccessRights(user).SubQuery()).
+			accessRights.SubQuery()).
 		Order("iChildOrder")
 
 	if err := query.Scan(&result).Error(); err != nil {

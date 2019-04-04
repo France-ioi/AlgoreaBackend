@@ -2,6 +2,7 @@ package items
 
 import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // rawNavigationItem represents one row of a navigation subtree returned from the DB
@@ -43,9 +44,16 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 
 	commonAttributes := "items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, fullAccess, partialAccess, grayedAccess"
 	itemQ := items.VisibleByID(user, rootID).Select(commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
+	if itemQ.Error() == database.ErrUserNotFound {
+		return nil, database.ErrUserNotFound
+	}
+	service.MustNotBeError(itemQ.Error())
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
+	service.MustNotBeError(childrenQ.Error())
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
+	service.MustNotBeError(gChildrenQ.Error())
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
+	service.MustNotBeError(itemThreeGenQ.Error())
 
 	query := dataStore.Raw(`
 		SELECT items.ID, items.sType, items.bTransparentFolder,

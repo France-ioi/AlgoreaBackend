@@ -108,12 +108,25 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
-		Having("fullAccess>0 OR partialAccess>0").SubQuery()
+		Having("fullAccess>0 OR partialAccess>0")
+	if itemsUserCanAccess.Error() != nil {
+		if itemsUserCanAccess.Error() == database.ErrUserNotFound {
+			return service.InsufficientAccessRightsError
+		}
+		return service.ErrUnexpected(itemsUserCanAccess.Error())
+	}
+
+	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild")
+	service.MustNotBeError(groupsOwnedByUser.Error())
+
+	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
+	service.MustNotBeError(groupsWhereUserIsMember.Error())
+
 	if err := srv.Store.GroupAttempts().ByID(attemptID).
-		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess).
+		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess.SubQuery()).
 		Where("((groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?))",
-			srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild").SubQuery(),
-			srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent").SubQuery()).
+			groupsOwnedByUser.SubQuery(),
+			groupsWhereUserIsMember.SubQuery()).
 		Count(&count).Error(); err != nil {
 		if err == database.ErrUserNotFound {
 			return service.InsufficientAccessRightsError
@@ -129,9 +142,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
 	if userID != user.UserID {
 		count := 0
-		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf").SubQuery()
+		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf")
+		service.MustNotBeError(givenUserSelfGroup.Error())
 		if err := srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("idGroupChild=?", givenUserSelfGroup).
+			Where("idGroupChild=?", givenUserSelfGroup.SubQuery()).
 			Count(&count).Error(); err != nil {
 			if err == database.ErrUserNotFound {
 				return service.InsufficientAccessRightsError

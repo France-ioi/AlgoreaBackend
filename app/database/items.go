@@ -7,6 +7,9 @@ func (conn *DB) WhereItemsAreVisible(user *User) *DB {
 		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
 		Group("idItem")
 
+	if groupItemsPerms.Error() != nil {
+		return groupItemsPerms
+	}
 	return conn.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
 		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
 }
