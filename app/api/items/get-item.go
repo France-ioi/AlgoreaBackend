@@ -30,36 +30,36 @@ type itemUser struct {
 	Finished            *bool    `json:"finished,omitempty"`
 	KeyObtained         *bool    `json:"key_obtained,omitempty"`
 	HintsCached         *int64   `json:"hints_cached,omitempty"`
-	StartDate           *string  `json:"start_date,omitempty"` // iso8601 str
-	ValidationDate      *string  `json:"validation_date,omitempty"` // iso8601 str
-	FinishDate          *string  `json:"finish_date,omitempty"` // iso8601 str
+	StartDate           *string  `json:"start_date,omitempty"`         // iso8601 str
+	ValidationDate      *string  `json:"validation_date,omitempty"`    // iso8601 str
+	FinishDate          *string  `json:"finish_date,omitempty"`        // iso8601 str
 	ContestStartDate    *string  `json:"contest_start_date,omitempty"` // iso8601 str
 
 	// only if not a chapter
-	State               *string  `json:"state,omitempty"`
-	Answer              *string  `json:"answer,omitempty"`
+	State  *string `json:"state,omitempty"`
+	Answer *string `json:"answer,omitempty"`
 }
 
 type itemCommonFields struct {
 	// items
-	ID                		 int64    `json:"id"`
-	Type              		 string   `json:"type"`
-	DisplayDetailsInParent bool	    `json:"display_details_in_parent"`
-	ValidationType         string   `json:"validation_type"`
-	HasUnlockedItems  		 bool     `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int64    `json:"score_min_unlock"`
-	TeamMode               string   `json:"team_mode"`
-	TeamsEditable          bool	    `json:"teams_editable"`
-	TeamMaxMembers         int64    `json:"team_max_members"`
-	HasAttempts            bool	    `json:"has_attempts"`
-	AccessOpenDate         string   `json:"access_open_date"` // iso8601 str
-	Duration               string   `json:"duration"`
-	EndContestDate         string   `json:"end_contest_date"` // iso8601 str
-	NoScore                bool     `json:"no_score"`
-	GroupCodeEnter         bool     `json:"group_code_enter"`
+	ID                     int64  `json:"id"`
+	Type                   string `json:"type"`
+	DisplayDetailsInParent bool   `json:"display_details_in_parent"`
+	ValidationType         string `json:"validation_type"`
+	HasUnlockedItems       bool   `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int64  `json:"score_min_unlock"`
+	TeamMode               string `json:"team_mode"`
+	TeamsEditable          bool   `json:"teams_editable"`
+	TeamMaxMembers         int64  `json:"team_max_members"`
+	HasAttempts            bool   `json:"has_attempts"`
+	AccessOpenDate         string `json:"access_open_date"` // iso8601 str
+	Duration               string `json:"duration"`
+	EndContestDate         string `json:"end_contest_date"` // iso8601 str
+	NoScore                bool   `json:"no_score"`
+	GroupCodeEnter         bool   `json:"group_code_enter"`
 
-	String                 itemString `json:"string"`
-	User                   itemUser   `json:"user,omitempty"`
+	String itemString `json:"string"`
+	User   itemUser   `json:"user,omitempty"`
 
 	// root node only
 	TitleBarVisible *bool   `json:"title_bar_visible,omitempty"`
@@ -74,15 +74,15 @@ type itemCommonFields struct {
 	HintsAllowed    *bool   `json:"hints_allowed,omitempty"` // only if not a chapter
 
 	// items_items (child nodes only)
-	Order 						    *int64 	 `json:"order,omitempty"`
-	Category 						  *string  `json:"category,omitempty"`
-	AlwaysVisible 				*bool    `json:"always_visible,omitempty"`
-	AccessRestricted 			*bool    `json:"access_restricted,omitempty"`
+	Order            *int64  `json:"order,omitempty"`
+	Category         *string `json:"category,omitempty"`
+	AlwaysVisible    *bool   `json:"always_visible,omitempty"`
+	AccessRestricted *bool   `json:"access_restricted,omitempty"`
 }
 
 type itemResponse struct {
 	*itemCommonFields
-	Children							[]itemCommonFields `json:"children,omitempty"`
+	Children []itemCommonFields `json:"children,omitempty"`
 }
 
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
@@ -145,21 +145,21 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]database.R
 
 func (srv *Service) fillItemCommonFieldsWithDBData(rawData *database.RawItem) *itemCommonFields {
 	result := itemCommonFields{
-		ID: rawData.ID,
-		Type: rawData.Type,
+		ID:                     rawData.ID,
+		Type:                   rawData.Type,
 		DisplayDetailsInParent: rawData.DisplayDetailsInParent,
-		ValidationType: rawData.ValidationType,
-		HasUnlockedItems: rawData.HasUnlockedItems,
-		ScoreMinUnlock: rawData.ScoreMinUnlock,
-		TeamMode: rawData.TeamMode,
-		TeamsEditable: rawData.TeamsEditable,
-		TeamMaxMembers: rawData.TeamMaxMembers,
-		HasAttempts: rawData.HasAttempts,
-		AccessOpenDate: rawData.AccessOpenDate,
-		Duration: rawData.Duration,
-		EndContestDate: rawData.EndContestDate,
-		NoScore: rawData.NoScore,
-		GroupCodeEnter: rawData.GroupCodeEnter,
+		ValidationType:         rawData.ValidationType,
+		HasUnlockedItems:       rawData.HasUnlockedItems,
+		ScoreMinUnlock:         rawData.ScoreMinUnlock,
+		TeamMode:               rawData.TeamMode,
+		TeamsEditable:          rawData.TeamsEditable,
+		TeamMaxMembers:         rawData.TeamMaxMembers,
+		HasAttempts:            rawData.HasAttempts,
+		AccessOpenDate:         rawData.AccessOpenDate,
+		Duration:               rawData.Duration,
+		EndContestDate:         rawData.EndContestDate,
+		NoScore:                rawData.NoScore,
+		GroupCodeEnter:         rawData.GroupCodeEnter,
 
 		String: itemString{
 			LanguageID: rawData.StringLanguageID,
