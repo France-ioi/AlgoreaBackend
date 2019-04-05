@@ -271,12 +271,10 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 		}
 	}
 
-	if len(data.Rows) > 1 {
-		if ctx.dbTableData[tableName] != nil {
-			ctx.dbTableData[tableName] = combineGherkinTables(ctx.dbTableData[tableName], data)
-		} else {
-			ctx.dbTableData[tableName] = data
-		}
+	if ctx.dbTableData[tableName] == nil {
+		ctx.dbTableData[tableName] = data
+	} else if len(data.Rows) > 1 {
+		ctx.dbTableData[tableName] = combineGherkinTables(ctx.dbTableData[tableName], data)
 	}
 
 	return nil
@@ -538,8 +536,10 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		}
 	}
 
+	selectsJoined := strings.Join(selects, ", ")
+
 	// exec sql
-	query := fmt.Sprintf("SELECT %s FROM `%s` %s", strings.Join(selects, ", "), tableName, where) // nolint: gosec
+	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
 	sqlRows, err := db.Query(query)
 	if err != nil {
 		return err
