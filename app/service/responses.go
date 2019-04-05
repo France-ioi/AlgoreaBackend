@@ -28,6 +28,7 @@ func CreationSuccess(data interface{}) render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusCreated,
 		Success:        true,
+		Message:        "created",
 		Data:           data,
 	}
 }

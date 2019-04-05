@@ -31,6 +31,6 @@ func TestCreationSuccess(t *testing.T) {
 	}{42}
 
 	recorder := httpResponseForResponse(CreationSuccess(data))
-	assert.Equal(`{"success":true,"message":"success","data":{"ID":42}}`+"\n", recorder.Body.String())
+	assert.Equal(`{"success":true,"message":"created","data":{"ID":42}}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusCreated, recorder.Code)
 }
