@@ -14,3 +14,9 @@ Feature: Get group by groupID (groupView) - robustness
     When I send a GET request to "/groups/13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Should fail when the user doesn't exist
+    Given I am the user with ID "10"
+    When I send a GET request to "/groups/13"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"

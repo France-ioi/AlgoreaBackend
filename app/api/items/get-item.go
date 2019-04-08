@@ -30,36 +30,36 @@ type itemUser struct {
 	Finished            *bool    `json:"finished,omitempty"`
 	KeyObtained         *bool    `json:"key_obtained,omitempty"`
 	HintsCached         *int64   `json:"hints_cached,omitempty"`
-	StartDate           *string  `json:"start_date,omitempty"` // iso8601 str
-	ValidationDate      *string  `json:"validation_date,omitempty"` // iso8601 str
-	FinishDate          *string  `json:"finish_date,omitempty"` // iso8601 str
+	StartDate           *string  `json:"start_date,omitempty"`         // iso8601 str
+	ValidationDate      *string  `json:"validation_date,omitempty"`    // iso8601 str
+	FinishDate          *string  `json:"finish_date,omitempty"`        // iso8601 str
 	ContestStartDate    *string  `json:"contest_start_date,omitempty"` // iso8601 str
 
 	// only if not a chapter
-	State               *string  `json:"state,omitempty"`
-	Answer              *string  `json:"answer,omitempty"`
+	State  *string `json:"state,omitempty"`
+	Answer *string `json:"answer,omitempty"`
 }
 
 type itemCommonFields struct {
 	// items
-	ID                		 int64    `json:"id"`
-	Type              		 string   `json:"type"`
-	DisplayDetailsInParent bool	    `json:"display_details_in_parent"`
-	ValidationType         string   `json:"validation_type"`
-	HasUnlockedItems  		 bool     `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int64    `json:"score_min_unlock"`
-	TeamMode               string   `json:"team_mode"`
-	TeamsEditable          bool	    `json:"teams_editable"`
-	TeamMaxMembers         int64    `json:"team_max_members"`
-	HasAttempts            bool	    `json:"has_attempts"`
-	AccessOpenDate         string   `json:"access_open_date"` // iso8601 str
-	Duration               string   `json:"duration"`
-	EndContestDate         string   `json:"end_contest_date"` // iso8601 str
-	NoScore                bool     `json:"no_score"`
-	GroupCodeEnter         bool     `json:"group_code_enter"`
+	ID                     int64  `json:"id"`
+	Type                   string `json:"type"`
+	DisplayDetailsInParent bool   `json:"display_details_in_parent"`
+	ValidationType         string `json:"validation_type"`
+	HasUnlockedItems       bool   `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int64  `json:"score_min_unlock"`
+	TeamMode               string `json:"team_mode"`
+	TeamsEditable          bool   `json:"teams_editable"`
+	TeamMaxMembers         int64  `json:"team_max_members"`
+	HasAttempts            bool   `json:"has_attempts"`
+	AccessOpenDate         string `json:"access_open_date"` // iso8601 str
+	Duration               string `json:"duration"`
+	EndContestDate         string `json:"end_contest_date"` // iso8601 str
+	NoScore                bool   `json:"no_score"`
+	GroupCodeEnter         bool   `json:"group_code_enter"`
 
-	String                 itemString `json:"string"`
-	User                   itemUser   `json:"user,omitempty"`
+	String itemString `json:"string"`
+	User   itemUser   `json:"user,omitempty"`
 
 	// root node only
 	TitleBarVisible *bool   `json:"title_bar_visible,omitempty"`
@@ -74,15 +74,15 @@ type itemCommonFields struct {
 	HintsAllowed    *bool   `json:"hints_allowed,omitempty"` // only if not a chapter
 
 	// items_items (child nodes only)
-	Order 						    *int64 	 `json:"order,omitempty"`
-	Category 						  *string  `json:"category,omitempty"`
-	AlwaysVisible 				*bool    `json:"always_visible,omitempty"`
-	AccessRestricted 			*bool    `json:"access_restricted,omitempty"`
+	Order            *int64  `json:"order,omitempty"`
+	Category         *string `json:"category,omitempty"`
+	AlwaysVisible    *bool   `json:"always_visible,omitempty"`
+	AccessRestricted *bool   `json:"access_restricted,omitempty"`
 }
 
 type itemResponse struct {
 	*itemCommonFields
-	Children							[]itemCommonFields `json:"children,omitempty"`
+	Children []itemCommonFields `json:"children,omitempty"`
 }
 
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
@@ -92,7 +92,13 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	rawData, err := srv.Store.Items().GetRawItemData(req.ID, user.UserID, user.DefaultLanguageID(), user)
+	userDefaultLanguageID, err := user.DefaultLanguageID()
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	rawData, err := getRawItemData(srv.Store.Items(), req.ID, user.UserID, userDefaultLanguageID, user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -117,7 +123,191 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	return service.NoError
 }
 
-func setItemResponseRootNodeFields(response *itemResponse, rawData *[]database.RawItem) {
+// rawItem represents one row of the getItem service data returned from the DB
+type rawItem struct {
+	// items
+	ID                     int64  `sql:"column:ID"`
+	Type                   string `sql:"column:sType"`
+	DisplayDetailsInParent bool   `sql:"column:bDisplayDetailsInParent"`
+	ValidationType         string `sql:"column:sValidationType"`
+	HasUnlockedItems       bool   `sql:"column:hasUnlockedItems"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int64  `sql:"column:iScoreMinUnlock"`
+	TeamMode               string `sql:"column:sTeamMode"`
+	TeamsEditable          bool   `sql:"column:bTeamsEditable"`
+	TeamMaxMembers         int64  `sql:"column:iTeamMaxMembers"`
+	HasAttempts            bool   `sql:"column:bHasAttempts"`
+	AccessOpenDate         string `sql:"column:sAccessOpenDate"` // iso8601 str
+	Duration               string `sql:"column:sDuration"`
+	EndContestDate         string `sql:"column:sEndContestDate"` // iso8601 str
+	NoScore                bool   `sql:"column:bNoScore"`
+	GroupCodeEnter         bool   `sql:"column:groupCodeEnter"`
+
+	// root node only
+	TitleBarVisible *bool   `sql:"column:bTitleBarVisible"`
+	ReadOnly        *bool   `sql:"column:bReadOnly"`
+	FullScreen      *string `sql:"column:sFullScreen"`
+	ShowSource      *bool   `sql:"column:bShowSource"`
+	ValidationMin   *int64  `sql:"column:iValidationMin"`
+	ShowUserInfos   *bool   `sql:"column:bShowUserInfos"`
+	ContestPhase    *string `sql:"column:sContestPhase"`
+	URL             *string `sql:"column:sUrl"`          // only if not a chapter
+	UsesAPI         *bool   `sql:"column:bUsesAPI"`      // only if not a chapter
+	HintsAllowed    *bool   `sql:"column:bHintsAllowed"` // only if not a chapter
+
+	// from items_strings: in the user’s default language or (if not available) default language of the item
+	StringLanguageID  int64  `sql:"column:idLanguage"`
+	StringTitle       string `sql:"column:sTitle"`
+	StringImageURL    string `sql:"column:sImageUrl"`
+	StringSubtitle    string `sql:"column:sSubtitle"`
+	StringDescription string `sql:"column:sDescription"`
+	StringEduComment  string `sql:"column:sEduComment"`
+
+	// from users_items for current user
+	UserActiveAttemptID     int64   `sql:"column:idAttemptActive"`
+	UserScore               float32 `sql:"column:iScore"`
+	UserSubmissionsAttempts int64   `sql:"column:nbSubmissionsAttempts"`
+	UserValidated           bool    `sql:"column:bValidated"`
+	UserFinished            bool    `sql:"column:bFinished"`
+	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
+	UserHintsCached         int64   `sql:"column:nbHintsCached"`
+	UserStartDate           string  `sql:"column:sStartDate"`        // iso8601 str
+	UserValidationDate      string  `sql:"column:sValidationDate"`   // iso8601 str
+	UserFinishDate          string  `sql:"column:sFinishDate"`       // iso8601 str
+	UserContestStartDate    string  `sql:"column:sContestStartDate"` // iso8601 str
+	UserState               *string `sql:"column:sState"`            // only if not a chapter
+	UserAnswer              *string `sql:"column:sAnswer"`           // only if not a chapter
+
+	// items_items
+	Order            int64   `sql:"column:iChildOrder"`
+	Category         *string `sql:"column:sCategory"`
+	AlwaysVisible    *bool   `sql:"column:bAlwaysVisible"`
+	AccessRestricted *bool   `sql:"column:bAccessRestricted"`
+
+	*database.ItemAccessDetails
+}
+
+// getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
+func getRawItemData(s *database.ItemStore, rootID, userID, userLanguageID int64, user *database.User) (*[]rawItem, error) {
+	var result []rawItem
+
+	accessRights := s.AccessRights(user)
+	service.MustNotBeError(accessRights.Error()) // we have already checked that the user exists in getItem()
+
+	commonColumns := `items.ID AS ID,
+		items.sType,
+		items.bDisplayDetailsInParent,
+		items.sValidationType,
+		items.idItemUnlocked,
+		items.iScoreMinUnlock,
+		items.sTeamMode,
+		items.bTeamsEditable,
+		items.iTeamMaxMembers,
+		items.bHasAttempts,
+		items.sAccessOpenDate,
+		items.sDuration,
+		items.sEndContestDate,
+		items.bNoScore,
+		items.idDefaultLanguage,
+		items.groupCodeEnter, `
+
+	rootItemQuery := s.ByID(rootID).Select(
+		commonColumns + `items.bTitleBarVisible,
+		items.bReadOnly,
+		items.sFullScreen,
+		items.bShowSource,
+		items.iValidationMin,
+		items.bShowUserInfos,
+		items.sContestPhase,
+		items.sUrl,
+		IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI,
+		IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed,
+		NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted`)
+
+	childrenQuery := s.Select(
+		commonColumns+`NULL AS bTitleBarVisible,
+		NULL AS bReadOnly,
+		NULL AS sFullScreen,
+		NULL AS bShowSource,
+		NULL AS iValidationMin,
+		NULL AS bShowUserInfos,
+		NULL AS sContestPhase,
+		NULL AS sUrl,
+		NULL AS bUsesAPI,
+		NULL AS bHintsAllowed,
+		iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted`).
+		Joins("JOIN items_items ON items.ID=idItemChild AND idItemParent=?", rootID)
+
+	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
+	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
+	query := s.Raw(`
+    SELECT
+		  items.ID,
+      items.sType,
+		  items.bDisplayDetailsInParent,
+      items.sValidationType,`+
+		// idItemUnlocked is a comma-separated list of item IDs which will be unlocked if this item is validated
+		// Here we consider both NULL and an empty string as FALSE
+		` COALESCE(items.idItemUnlocked, '')<>'' as hasUnlockedItems,
+			items.iScoreMinUnlock,
+			items.sTeamMode,
+			items.bTeamsEditable,
+			items.iTeamMaxMembers,
+			items.bHasAttempts,
+			items.sAccessOpenDate,
+			items.sDuration,
+			items.sEndContestDate,
+			items.bNoScore,
+			items.groupCodeEnter,
+
+			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguage,
+			IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS sTitle,
+			IF(user_strings.idLanguage IS NULL, default_strings.sImageUrl, user_strings.sImageUrl) AS sImageUrl,
+			IF(user_strings.idLanguage IS NULL, default_strings.sSubtitle, user_strings.sSubtitle) AS sSubtitle,
+			IF(user_strings.idLanguage IS NULL, default_strings.sDescription, user_strings.sDescription) AS sDescription,
+			IF(user_strings.idLanguage IS NULL, default_strings.sEduComment, user_strings.sEduComment) AS sEduComment,
+
+			users_items.idAttemptActive AS idAttemptActive,
+			users_items.iScore AS iScore,
+			users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts,
+			users_items.bValidated AS bValidated,
+			users_items.bFinished AS bFinished,
+			users_items.bKeyObtained AS bKeyObtained,
+			users_items.nbHintsCached AS nbHintsCached,
+			users_items.sStartDate AS sStartDate,
+			users_items.sValidationDate AS sValidationDate,
+			users_items.sFinishDate AS sFinishDate,
+			users_items.sContestStartDate AS sContestStartDate,
+			IF(items.sType <> 'Chapter', users_items.sState, NULL) as sState,
+			users_items.sAnswer,
+
+			items.iChildOrder AS iChildOrder,
+			items.sCategory AS sCategory,
+			items.bAlwaysVisible,
+			items.bAccessRestricted, `+
+		// inputItem only
+		` items.bTitleBarVisible,
+			items.bReadOnly,
+			items.sFullScreen,
+			items.bShowSource,
+			items.iValidationMin,
+			items.bShowUserInfos,
+			items.sContestPhase,
+			items.sUrl,
+			items.bUsesAPI,
+			items.bHintsAllowed,
+			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
+    FROM ? items `, unionQuery.SubQuery()).
+		JoinsUserAndDefaultItemStrings(user).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
+		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
+			accessRights.SubQuery()).
+		Order("iChildOrder")
+
+	service.MustNotBeError(query.Scan(&result).Error())
+	return &result, nil
+}
+
+func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {
 	if (*rawData)[0].AccessSolutions {
 		response.String.EduComment = &((*rawData)[0].StringEduComment)
 	}
@@ -135,23 +325,23 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]database.R
 	response.HintsAllowed = (*rawData)[0].HintsAllowed
 }
 
-func (srv *Service) fillItemCommonFieldsWithDBData(rawData *database.RawItem) *itemCommonFields {
+func (srv *Service) fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 	result := itemCommonFields{
-		ID: rawData.ID,
-		Type: rawData.Type,
+		ID:                     rawData.ID,
+		Type:                   rawData.Type,
 		DisplayDetailsInParent: rawData.DisplayDetailsInParent,
-		ValidationType: rawData.ValidationType,
-		HasUnlockedItems: rawData.HasUnlockedItems,
-		ScoreMinUnlock: rawData.ScoreMinUnlock,
-		TeamMode: rawData.TeamMode,
-		TeamsEditable: rawData.TeamsEditable,
-		TeamMaxMembers: rawData.TeamMaxMembers,
-		HasAttempts: rawData.HasAttempts,
-		AccessOpenDate: rawData.AccessOpenDate,
-		Duration: rawData.Duration,
-		EndContestDate: rawData.EndContestDate,
-		NoScore: rawData.NoScore,
-		GroupCodeEnter: rawData.GroupCodeEnter,
+		ValidationType:         rawData.ValidationType,
+		HasUnlockedItems:       rawData.HasUnlockedItems,
+		ScoreMinUnlock:         rawData.ScoreMinUnlock,
+		TeamMode:               rawData.TeamMode,
+		TeamsEditable:          rawData.TeamsEditable,
+		TeamMaxMembers:         rawData.TeamMaxMembers,
+		HasAttempts:            rawData.HasAttempts,
+		AccessOpenDate:         rawData.AccessOpenDate,
+		Duration:               rawData.Duration,
+		EndContestDate:         rawData.EndContestDate,
+		NoScore:                rawData.NoScore,
+		GroupCodeEnter:         rawData.GroupCodeEnter,
 
 		String: itemString{
 			LanguageID: rawData.StringLanguageID,
@@ -178,7 +368,7 @@ func (srv *Service) fillItemCommonFieldsWithDBData(rawData *database.RawItem) *i
 	return &result
 }
 
-func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]database.RawItem) {
+func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]rawItem) {
 	for index := range *rawData {
 		if index == 0 {
 			continue

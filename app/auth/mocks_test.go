@@ -10,16 +10,6 @@ import (
 	assertlib "github.com/stretchr/testify/assert"
 )
 
-func TestUserMock(t *testing.T) {
-	assert := assertlib.New(t)
-	user := NewMockUser(1, 2, 3, 4)
-	assert.Equal(int64(1), user.UserID)
-	assert.Equal(int64(1), user.data.ID)
-	assert.Equal(int64(2), user.data.SelfGroupID)
-	assert.Equal(int64(3), user.data.OwnedGroupID)
-	assert.Equal(int64(4), user.data.DefaultLanguageID)
-}
-
 func TestMiddlewareMock(t *testing.T) {
 	assert := assertlib.New(t)
 	middleware := MockUserIDMiddleware(42)

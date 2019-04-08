@@ -245,11 +245,13 @@ func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
 
 // SubQuery returns the query as sub query
 func (conn *DB) SubQuery() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.SubQuery()
 }
 
 // QueryExpr returns the query as expr object
 func (conn *DB) QueryExpr() interface{} {
+	mustNotBeError(conn.Error())
 	return conn.db.QueryExpr()
 }
 
@@ -303,6 +305,9 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 
 // Count gets how many records for a model
 func (conn *DB) Count(dest interface{}) *DB {
+	if conn.Error() != nil {
+		return conn
+	}
 	return newDB(conn.db.Count(dest))
 }
 
