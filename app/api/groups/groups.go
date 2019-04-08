@@ -26,9 +26,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 }
 
-func (srv *Service) checkThatUserOwnsTheGroup(user *database.User, groupID int64) service.APIError {
+func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	var count int64
-	if err := srv.Store.GroupAncestors().OwnedByUser(user).
+	if err := store.GroupAncestors().OwnedByUser(user).
 		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
 		if err == database.ErrUserNotFound {
 			return service.InsufficientAccessRightsError
