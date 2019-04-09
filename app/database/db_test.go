@@ -507,11 +507,29 @@ func TestDB_Take(t *testing.T) {
 
 	type resultType struct{ ID int }
 	var result resultType
-	countDB := db.Take(&result, "ID = 1")
+	takeDB := db.Take(&result, "ID = 1")
 
-	assert.NotEqual(t, countDB, db)
-	assert.NoError(t, countDB.Error())
+	assert.NotEqual(t, takeDB, db)
+	assert.NoError(t, takeDB.Error())
 	assert.Equal(t, resultType{1}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Delete(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
+		regexp.QuoteMeta("WHERE (ID = 1)")).
+		WillReturnResult(sqlmock.NewResult(-1, 1))
+
+	db = db.Table("myTable")
+
+	deleteDB := db.Delete(nil, "ID = 1")
+
+	assert.NotEqual(t, deleteDB, db)
+	assert.NoError(t, deleteDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

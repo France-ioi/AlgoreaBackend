@@ -316,6 +316,11 @@ func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))
 }
 
+// Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition
+func (conn *DB) Delete(value interface{}, where ...interface{}) *DB {
+	return newDB(conn.db.Delete(value, where...))
+}
+
 // Error returns current errors
 func (conn *DB) Error() error {
 	return conn.db.Error
