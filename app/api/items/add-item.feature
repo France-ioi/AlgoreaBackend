@@ -38,7 +38,7 @@ Scenario: Valid, id is given
   """
   {
     "success": true,
-    "message": "success",
+    "message": "created",
     "data": { "ID": 2 }
   }
   """

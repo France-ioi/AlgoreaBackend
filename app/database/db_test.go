@@ -507,11 +507,29 @@ func TestDB_Take(t *testing.T) {
 
 	type resultType struct{ ID int }
 	var result resultType
-	countDB := db.Take(&result, "ID = 1")
+	takeDB := db.Take(&result, "ID = 1")
 
-	assert.NotEqual(t, countDB, db)
-	assert.NoError(t, countDB.Error())
+	assert.NotEqual(t, takeDB, db)
+	assert.NoError(t, takeDB.Error())
 	assert.Equal(t, resultType{1}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Delete(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
+		regexp.QuoteMeta("WHERE (ID = 1)")).
+		WillReturnResult(sqlmock.NewResult(-1, 1))
+
+	db = db.Table("myTable")
+
+	deleteDB := db.Delete("ID = 1")
+
+	assert.NotEqual(t, deleteDB, db)
+	assert.NoError(t, deleteDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -933,5 +951,75 @@ func TestDB_WithWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() { db.WithWriteLock() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (ID) VALUES (?)") + "$"
+
+func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	for i := 1; i < idTriesCount; i++ {
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
+	}
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(idTriesCount).
+		WillReturnResult(sqlmock.NewResult(idTriesCount, 1))
+
+	retryCount := 0
+	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		retryCount++
+		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+	})
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	for i := 1; i < idTriesCount+1; i++ {
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
+	}
+
+	retryCount := 0
+	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		retryCount++
+		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+	})
+	assert.Equal(t, errors.New("cannot generate a new ID"), err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := &mysql.MySQLError{Number: 1062, Message: "Duplicate entry '' for key 'name'"}
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+		WillReturnError(expectedError)
+
+	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
+	})
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors2(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := &mysql.MySQLError{Number: 1063, Message: "Duplicate entry '1' for key 'PRIMARY'"}
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+		WillReturnError(expectedError)
+
+	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
+	})
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

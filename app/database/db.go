@@ -316,6 +316,11 @@ func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))
 }
 
+// Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition
+func (conn *DB) Delete(where ...interface{}) *DB {
+	return newDB(conn.db.Delete(nil, where...))
+}
+
 // Error returns current errors
 func (conn *DB) Error() error {
 	return conn.db.Error
@@ -389,6 +394,25 @@ func (conn *DB) mustBeInTransaction() {
 func (conn *DB) WithWriteLock() *DB {
 	conn.mustBeInTransaction()
 	return conn.Set("gorm:query_option", "FOR UPDATE")
+}
+
+const idTriesCount = 10
+
+func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
+	i := 0
+	for ; i < idTriesCount; i++ {
+		err := f(conn)
+		if err != nil {
+			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, "for key 'PRIMARY'") {
+				continue // retry with a new ID
+			}
+			return err
+		}
+		return nil
+	}
+	err := errors.New("cannot generate a new ID")
+	log.Error(err)
+	return err
 }
 
 func mustNotBeError(err error) {
