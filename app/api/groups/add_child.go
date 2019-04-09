@@ -58,10 +58,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 		}
 
 		errInTransaction = groupStore.GroupGroups().CreateRelation(parentGroupID, childGroupID)
-		switch errInTransaction {
-		case database.ErrRelationAlreadyExists:
-			apiErr = service.ErrInvalidRequest(errInTransaction)
-		case database.ErrRelationCycle:
+		if errInTransaction == database.ErrRelationCycle {
 			apiErr = service.ErrForbidden(errInTransaction)
 		}
 		return errInTransaction

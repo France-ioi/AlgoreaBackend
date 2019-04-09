@@ -56,9 +56,9 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT ID FROM `groups_groups`  WHERE (idGroupChild = ? AND idGroupParent = ?) LIMIT 1 FOR UPDATE")+"$").
+	mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `groups_groups`  WHERE (idGroupChild = ? AND idGroupParent = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"ID"}))
+		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT ID FROM `groups_ancestors`  WHERE (idGroupChild = ? AND idGroupAncestor = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnRows(sqlmock.NewRows([]string{"ID"}))
@@ -104,35 +104,6 @@ func TestGroupGroupStore_CreateRelation_MustBeRunInTransaction(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupGroupStore_CreateRelation_ChecksThatRelationNotExist(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	const (
-		parentGroupID = 1
-		childGroupID  = 2
-	)
-
-	mock.ExpectBegin()
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
-		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT ID FROM `groups_groups`  WHERE (idGroupChild = ? AND idGroupParent = ?) LIMIT 1 FOR UPDATE")+"$").
-		WithArgs(childGroupID, parentGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"ID"}).AddRow(int64(1)))
-	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs("groups_groups").
-		WillReturnResult(sqlmock.NewResult(-1, 0))
-	mock.ExpectRollback()
-
-	err := db.inTransaction(func(db *DB) error {
-		groupGroupStore := NewDataStore(db).GroupGroups()
-		return groupGroupStore.CreateRelation(1, 2)
-	})
-	assert.Equal(t, ErrRelationAlreadyExists, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -146,9 +117,9 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT ID FROM `groups_groups`  WHERE (idGroupChild = ? AND idGroupParent = ?) LIMIT 1 FOR UPDATE")+"$").
+	mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `groups_groups`  WHERE (idGroupChild = ? AND idGroupParent = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"ID"}))
+		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT ID FROM `groups_ancestors`  WHERE (idGroupChild = ? AND idGroupAncestor = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
 		WillReturnRows(sqlmock.NewRows([]string{"ID"}).AddRow(int64(1)))

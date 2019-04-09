@@ -28,7 +28,6 @@ func (s *GroupGroupStore) createNewAncestors() {
 	s.DataStore.createNewAncestors("groups", "Group")
 }
 
-var ErrRelationAlreadyExists = errors.New("the relation already exists")
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
@@ -38,16 +37,10 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
-		var rows []interface{}
-		mustNotBeError(s.WithWriteLock().
-			Select("ID").
-			Where("idGroupChild = ? AND idGroupParent = ?", childGroupID, parentGroupID).
-			Limit(1).
-			Scan(&rows).Error())
-		if len(rows) > 0 {
-			return ErrRelationAlreadyExists
-		}
+		mustNotBeError(store.GroupGroups().
+			db.Delete(nil, "idGroupChild = ? AND idGroupParent = ?", childGroupID, parentGroupID).Error)
 
+		var rows []interface{}
 		mustNotBeError(store.GroupAncestors().
 			WithWriteLock().
 			Select("ID").

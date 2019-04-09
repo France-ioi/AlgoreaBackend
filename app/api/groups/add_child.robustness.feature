@@ -123,14 +123,6 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Relation already exists
-    Given I am the user with ID "4"
-    When I send a POST request to "/groups/13/add_child/11"
-    Then the response code should be 400
-    And the response error message should contain "The relation already exists"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
   Scenario: A group cannot become an ancestor of itself
     Given I am the user with ID "4"
     When I send a POST request to "/groups/11/add_child/13"

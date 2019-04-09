@@ -83,3 +83,19 @@ Feature: Add a parent-child relation between two groups
       | 22              | 13           | 0       |
       | 22              | 14           | 0       |
       | 22              | 22           | 1       |
+    When I send a POST request to "/groups/13/add_child/11"
+    Then the response code should be 201
+    And the response body should be, in JSON:
+    """
+    {
+      "success": true,
+      "message": "created"
+    }
+    """
+    And the table "groups_groups" should be:
+      | idGroupParent | idGroupChild | iChildOrder | sType  | sRole  |
+      | 13            | 11           | 3           | direct | member |
+      | 13            | 14           | 2           | direct | member |
+      | 22            | 11           | 1           | direct | member |
+      | 22            | 13           | 1           | direct | member |
+      | 22            | 14           | 1           | direct | member |
