@@ -241,6 +241,19 @@ func dbDataTableValue(input string) interface{} {
 	}
 }
 
+var prepareValRegexp = regexp.MustCompile(`^\s*([\w]+)\s*\(\s*(.*)\)\s*$`)
+
+func prepareVal(input string) string {
+	if match := prepareValRegexp.FindStringSubmatch(input); match != nil && match[1] == "relativeTime" {
+		duration, err := time.ParseDuration(match[2])
+		if err != nil {
+			panic(err)
+		}
+		return time.Now().UTC().Add(duration).Format(time.RFC3339)
+	}
+	return input
+}
+
 /** Steps **/
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
@@ -248,9 +261,9 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	db := ctx.db()
 	defer func() { /* #nosec */ _ = db.Close() }()
 
-	var fields []string
-	var marks []string
 	head := data.Rows[0].Cells
+	fields := make([]string, 0, len(head))
+	marks := make([]string, 0, len(head))
 	for _, cell := range head {
 		fields = append(fields, cell.Value)
 		marks = append(marks, "?")
@@ -259,6 +272,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	for i := 1; i < len(data.Rows); i++ {
 		var vals []interface{}
 		for _, cell := range data.Rows[i].Cells {
+			cell.Value = prepareVal(cell.Value)
 			vals = append(vals, dbDataTableValue(cell.Value))
 		}
 		if ctx.inScenario {
@@ -384,6 +398,8 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
 	return nil
 }
 
+var jsonPrepareRegexp = regexp.MustCompile(`{\s*(\w+)\[(\d+)]\[(\w+)]}`)
+
 func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (err error) { // nolint
 	var expected, actual []byte
 	var exp, act interface{}
@@ -393,8 +409,28 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 		return
 	}
 
+	expectedBody := body.Content
+	for match := jsonPrepareRegexp.FindStringSubmatch(expectedBody); match != nil; match = jsonPrepareRegexp.FindStringSubmatch(expectedBody) {
+		gherkinTable := ctx.dbTableData[match[1]]
+		neededColumnNumber := -1
+		for columnNumber, cell := range gherkinTable.Rows[0].Cells {
+			if cell.Value == match[3] {
+				neededColumnNumber = columnNumber
+				break
+			}
+		}
+		if neededColumnNumber == -1 {
+			panic(fmt.Errorf("Cannot find column %q in table %q", match[3], match[1]))
+		}
+		rowNumber, err := strconv.Atoi(match[2])
+		if err != nil {
+			panic(err)
+		}
+		expectedBody = strings.Replace(expectedBody, match[0], gherkinTable.Rows[rowNumber].Cells[neededColumnNumber].Value, -1)
+	}
+
 	// re-encode expected response
-	if err = json.Unmarshal([]byte(body.Content), &exp); err != nil {
+	if err = json.Unmarshal([]byte(expectedBody), &exp); err != nil {
 		return
 	}
 	if expected, err = json.MarshalIndent(exp, "", "\t"); err != nil {
@@ -414,8 +450,8 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 
 	if sExpected != sActual {
 		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
-			A:        difflib.SplitLines(string(expected)),
-			B:        difflib.SplitLines(string(actual)),
+			A:        difflib.SplitLines(sExpected),
+			B:        difflib.SplitLines(sActual),
 			FromFile: "Expected",
 			FromDate: "",
 			ToFile:   "Actual",

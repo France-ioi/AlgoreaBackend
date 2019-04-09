@@ -13,7 +13,7 @@ import (
 type FieldSortingParams struct {
 	// ColumnName is a DB column name (may contain a table name as a prefix, e.g. "groups.ID")
 	ColumnName string
-	// FieldType is one of "int64", "bool", "string"
+	// FieldType is one of "int64", "bool", "string", "time"
 	FieldType string
 }
 
