@@ -47,7 +47,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		query = query.Where(`
 			groups_groups.sType IN ('invitationSent', 'requestSent') OR
 			groups_groups.sStatusDate IS NULL OR
-			DATE_SUB(NOW(), INTERVAL ? WEEK) < groups_groups.sStatusDate`, oldRejectionsWeeks)
+			NOW() - INTERVAL ? WEEK < groups_groups.sStatusDate`, oldRejectionsWeeks)
 	}
 
 	query = service.SetQueryLimit(r, query)
