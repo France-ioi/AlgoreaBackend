@@ -520,13 +520,13 @@ func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
+	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `my_tables`") + `\s+` +
 		regexp.QuoteMeta("WHERE (ID = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
-	db = db.Table("myTable")
+	type myTable struct{}
 
-	deleteDB := db.Delete(nil, "ID = 1")
+	deleteDB := db.Delete(&myTable{}, "ID = 1")
 
 	assert.NotEqual(t, deleteDB, db)
 	assert.NoError(t, deleteDB.Error())
