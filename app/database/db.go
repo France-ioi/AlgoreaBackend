@@ -405,7 +405,9 @@ func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
 		}
 		return nil
 	}
-	return errors.New("cannot generate a new ID")
+	err := errors.New("cannot generate a new ID")
+	log.Error(err)
+	return err
 }
 
 func mustNotBeError(err error) {
