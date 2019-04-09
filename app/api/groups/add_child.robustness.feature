@@ -132,9 +132,9 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent and child are the same
-    Given I am the user with ID "1"
+    Given I am the user with ID "4"
     When I send a POST request to "/groups/13/add_child/13"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 400
+    And the response error message should contain "A group cannot become its own parent"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

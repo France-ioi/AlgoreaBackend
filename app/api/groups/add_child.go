@@ -20,6 +20,10 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 		return service.ErrInvalidRequest(err)
 	}
 
+	if parentGroupID == childGroupID {
+		return service.ErrInvalidRequest(errors.New("a group cannot become its own parent"))
+	}
+
 	user := srv.GetUser(r)
 	userAllowSubgroups, err := user.AllowSubgroups()
 	if err == database.ErrUserNotFound || !userAllowSubgroups {
