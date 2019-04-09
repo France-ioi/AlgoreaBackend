@@ -267,7 +267,7 @@ Feature: Get requests for group_id
 
   Scenario: User is an admin of the group; filter out old rejections
     Given I am the user with ID "1"
-    When I send a GET request to "/groups/13/requests?old_rejections_weeks=1"
+    When I send a GET request to "/groups/13/requests?rejections_within_weeks=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

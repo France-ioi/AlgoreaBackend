@@ -24,11 +24,11 @@ Feature: Get requests for group_id - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
-  Scenario: old_rejections_weeks is incorrect
+  Scenario: rejections_within_weeks is incorrect
     Given I am the user with ID "1"
-    When I send a GET request to "/groups/13/requests?old_rejections_weeks=abc"
+    When I send a GET request to "/groups/13/requests?rejections_within_weeks=abc"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for old_rejections_weeks (should be int64)"
+    And the response error message should contain "Wrong value for rejections_within_weeks (should be int64)"
 
   Scenario: sort is incorrect
     Given I am the user with ID "1"

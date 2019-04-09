@@ -39,8 +39,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		Where("groups_groups.sType IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
 		Where("groups_groups.idGroupParent = ?", groupID)
 
-	if len(r.URL.Query()["old_rejections_weeks"]) > 0 {
-		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "old_rejections_weeks")
+	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
+		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
