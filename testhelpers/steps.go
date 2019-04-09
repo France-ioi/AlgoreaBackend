@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -52,10 +51,6 @@ type TestContext struct {
 	dbTableData      map[string]*gherkin.DataTable
 	addedDBIndices   []*addedDBIndex
 }
-
-const (
-	noID int64 = math.MinInt64
-)
 
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	scenario := data.(*gherkin.Scenario)
@@ -420,7 +415,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 			}
 		}
 		if neededColumnNumber == -1 {
-			panic(fmt.Errorf("Cannot find column %q in table %q", match[3], match[1]))
+			panic(fmt.Errorf("cannot find column %q in table %q", match[3], match[1]))
 		}
 		rowNumber, err := strconv.Atoi(match[2])
 		if err != nil {
@@ -513,7 +508,7 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error { // nolint
 }
 
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
-	return ctx.TableAtIDShouldBe(tableName, noID, data)
+	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
 }
 
 func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
@@ -521,34 +516,35 @@ func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // no
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
 	}
-	return ctx.TableAtIDShouldBe(tableName, noID, data)
+	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, id int64) error { // nolint
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, ids string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
 	}
-	idColumnIndex := -1
-	for index, cell := range data.Rows[0].Cells {
-		if cell.Value == "ID" {
-			idColumnIndex = index
-			break
-		}
-	}
-
-	idStringValue := strconv.FormatInt(id, 10)
-	newData := &gherkin.DataTable{Rows: make([]*gherkin.TableRow, 0, len(data.Rows))}
-	for index, row := range data.Rows {
-		if index == 0 || idColumnIndex < 0 ||
-			row.Cells[idColumnIndex] == nil || row.Cells[idColumnIndex].Value != idStringValue {
-			newData.Rows = append(newData.Rows, row)
-		}
-	}
-	return ctx.TableAtIDShouldBe(tableName, -id, newData)
+	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), true, data)
 }
 
-func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gherkin.DataTable) error { // nolint
+func parseMultipleIDString(idsString string) []int64 {
+	split := strings.Split(idsString, ",")
+	ids := make([]int64, 0, len(split))
+	for _, idString := range split {
+		id, err := strconv.ParseInt(idString, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gherkin.DataTable) error { // nolint
+	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false, data)
+}
+
+func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
@@ -562,13 +558,22 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		selects = append(selects, cell.Value)
 	}
 
+	idsMap := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		idsMap[strconv.FormatInt(id, 10)] = true
+	}
+	idsStrings := make([]string, 0, len(ids))
+	for idString := range idsMap {
+		idsStrings = append(idsStrings, idString)
+	}
+	idsString := strings.Join(idsStrings, ",")
 	// define 'where' condition if needed
 	where := ""
-	if id != noID {
-		if id < 0 {
-			where = fmt.Sprintf(" WHERE ID <> %d ", -id)
+	if len(ids) > 0 {
+		if excludeIDs {
+			where = fmt.Sprintf(" WHERE ID NOT IN (%s) ", idsString)
 		} else {
-			where = fmt.Sprintf(" WHERE ID = %d ", id)
+			where = fmt.Sprintf(" WHERE ID IN (%s) ", idsString)
 		}
 	}
 
@@ -581,9 +586,20 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 		return err
 	}
 	dataCols := data.Rows[0].Cells
+	idColumnIndex := -1
+	for index, cell := range dataCols {
+		if cell.Value == "ID" {
+			idColumnIndex = index
+			break
+		}
+	}
+
 	iDataRow := 1
 	sqlCols, _ := sqlRows.Columns() // nolint: gosec
 	for sqlRows.Next() {
+		for excludeIDs && iDataRow < len(data.Rows) && idsMap[data.Rows[iDataRow].Cells[idColumnIndex].Value] {
+			iDataRow++
+		}
 		if iDataRow >= len(data.Rows) {
 			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
 		}
@@ -607,7 +623,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 				continue
 			}
 			colName := dataCols[iCol].Value
-			dataValue := dataCell.Value
+			dataValue := prepareVal(dataCell.Value)
 			sqlValue := rowValPtr[iCol].(**string)
 
 			if *sqlValue == nil {
@@ -619,16 +635,20 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, id int64, data *gher
 			}
 
 			if dataValue != **sqlValue {
-				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow-1, colName, dataValue, **sqlValue)
+				return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'", iDataRow, colName, dataValue, **sqlValue)
 			}
 		}
 
 		iDataRow++
 	}
 
+	for excludeIDs && iDataRow < len(data.Rows) && idsMap[data.Rows[iDataRow].Cells[idColumnIndex].Value] {
+		iDataRow++
+	}
+
 	// check that no row in the test data table has not been uncheck (if less rows in SQL result)
 	if iDataRow < len(data.Rows) {
-		return fmt.Errorf("there are less rows in the SQL results than expected. SQL: %d, expected: %d", iDataRow-1, len(data.Rows)-1)
+		return fmt.Errorf("there are less rows in the SQL results than expected")
 	}
 	return nil
 }
