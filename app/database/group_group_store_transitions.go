@@ -265,9 +265,9 @@ func (s *GroupGroupStore) transition(action GroupGroupTransitionAction, parentGr
 				}
 			}
 			const updateQuery = `
-			UPDATE groups_groups
-			SET sType = ?, sStatusDate = NOW()
-			WHERE idGroupParent = ? AND idGroupChild IN (?)`
+				UPDATE groups_groups
+				SET sType = ?, sStatusDate = NOW()
+				WHERE idGroupParent = ? AND idGroupChild IN (?)`
 			for toType, ids := range updateData {
 				mustNotBeError(s.db.Exec(updateQuery, toType, parentGroupID, ids).Error)
 			}
