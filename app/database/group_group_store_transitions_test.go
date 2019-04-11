@@ -1,11 +1,11 @@
 package database
 
 import (
-	"github.com/DATA-DOG/go-sqlmock"
 	"regexp"
 	"testing"
 	"time"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
