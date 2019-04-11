@@ -145,7 +145,7 @@ func (conn *DB) isInTransaction() bool {
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	var getLockResult int64
-	if err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, timeout/time.Second).Row().Scan(&getLockResult); err != nil {
+	if err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Row().Scan(&getLockResult); err != nil {
 		return err
 	}
 	if getLockResult != 1 {
