@@ -254,22 +254,21 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 			}
 		}
 
+		shouldCreateNewAncestors := false
 		if len(idsToDelete) > 0 {
 			idsToDeleteSlice := make([]int64, 0, len(idsToDelete))
 			for id := range idsToDelete {
 				idsToDeleteSlice = append(idsToDeleteSlice, id)
 			}
 			mustNotBeError(s.Delete("idGroupParent = ? AND idGroupChild IN (?)", parentGroupID, idsToDeleteSlice).Error())
+			shouldCreateNewAncestors = true
 		}
 
-		shouldCreateNewAncestors := false
 		if len(idsToUpdate) > 0 {
 			updateData := map[GroupGroupType][]int64{}
 			for id, toType := range idsToUpdate {
 				updateData[toType] = append(updateData[toType], id)
-				if toType.IsActive() {
-					shouldCreateNewAncestors = true
-				}
+				shouldCreateNewAncestors = true
 			}
 			const updateQuery = `
 				UPDATE groups_groups
@@ -294,9 +293,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 				for id, toType := range idsToInsert {
 					maxChildOrder.MaxChildOrder++
 					values = append(values, s.NewID(), parentGroupID, id, toType, maxChildOrder.MaxChildOrder)
-					if toType.IsActive() {
-						shouldCreateNewAncestors = true
-					}
+					shouldCreateNewAncestors = true
 				}
 				return s.db.Exec(insertQuery, values...).Error
 			}))
