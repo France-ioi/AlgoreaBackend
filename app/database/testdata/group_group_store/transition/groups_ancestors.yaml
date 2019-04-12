@@ -1,0 +1,19 @@
+- {ID: 1, idGroupAncestor: 1, idGroupChild: 1, bIsSelf: 1}
+- {ID: 2, idGroupAncestor: 2, idGroupChild: 2, bIsSelf: 1}
+- {ID: 3, idGroupAncestor: 3, idGroupChild: 3, bIsSelf: 1}
+- {ID: 4, idGroupAncestor: 4, idGroupChild: 4, bIsSelf: 1}
+- {ID: 5, idGroupAncestor: 5, idGroupChild: 5, bIsSelf: 1}
+- {ID: 6, idGroupAncestor: 6, idGroupChild: 6, bIsSelf: 1}
+- {ID: 7, idGroupAncestor: 7, idGroupChild: 7, bIsSelf: 1}
+- {ID: 8, idGroupAncestor: 8, idGroupChild: 8, bIsSelf: 1}
+- {ID: 9, idGroupAncestor: 9, idGroupChild: 9, bIsSelf: 1}
+- {ID: 10, idGroupAncestor: 10, idGroupChild: 10, bIsSelf: 1}
+- {ID: 23, idGroupAncestor: 20, idGroupChild: 4}
+- {ID: 24, idGroupAncestor: 20, idGroupChild: 5}
+- {ID: 25, idGroupAncestor: 20, idGroupChild: 10}
+- {ID: 26, idGroupAncestor: 20, idGroupChild: 20, bIsSelf: 1}
+- {ID: 27, idGroupAncestor: 30, idGroupChild: 4}
+- {ID: 28, idGroupAncestor: 30, idGroupChild: 5}
+- {ID: 29, idGroupAncestor: 30, idGroupChild: 10}
+- {ID: 30, idGroupAncestor: 30, idGroupChild: 20}
+- {ID: 31, idGroupAncestor: 30, idGroupChild: 30, bIsSelf: 1}
