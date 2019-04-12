@@ -36,16 +36,23 @@ const (
 	AdminAcceptsRequest
 	UserRefusesInvitation
 	AdminRefusesRequest
+	// This action marks relations as "removed". It doesn't check if a child is a user or not.
 	AdminRemovesChild
 	AdminCancelsInvitation
 	UserLeavesGroup
 	UserCancelsRequest
+	// This action creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
 )
 
 type groupGroupTransitionRule struct {
+	// If a "from" type is listed in "Transitions", but not listed in "UpdateFromType",
+	// then a relation is overwritten instead of updating.
+	// This field has "GroupGroupType->true" format.
 	UpdateFromType map[GroupGroupType]bool
-	Transitions    map[GroupGroupType]GroupGroupType
+	// Transitions defines all possible transitions for the action. The format is "FromType->ToType".
+	// Relations that have "from" type not listed here are considered as invalid for the action.
+	Transitions map[GroupGroupType]GroupGroupType
 }
 
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
