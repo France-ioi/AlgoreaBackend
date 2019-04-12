@@ -464,10 +464,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			}
 			var result *database.GroupGroupTransitionResults
 			err := dataStore.InTransaction(func(store *database.DataStore) error {
-				result = store.GroupGroups().Transition(
+				var err error
+				result, err = store.GroupGroups().Transition(
 					tt.action, 20, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30},
 				)
-				return nil
+				return err
 			})
 
 			assert.NoError(t, err)

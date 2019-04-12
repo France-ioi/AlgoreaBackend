@@ -14,7 +14,7 @@ func TestGroupGroupStore_transition_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		NewDataStore(db).GroupGroups().Transition(
+		_, _ = NewDataStore(db).GroupGroups().Transition(
 			AdminCreatesInvitation, 20, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		)
 	})
@@ -33,11 +33,10 @@ func TestGroupGroupStore_transition_UsesNamedLock(t *testing.T) {
 	dbMock.ExpectRollback()
 
 	_ = NewDataStore(db).InTransaction(func(dataStore *DataStore) (err error) {
-		defer recoverPanics(&err)
-		dataStore.GroupGroups().Transition(
+		_, err = dataStore.GroupGroups().Transition(
 			AdminCreatesInvitation, 20, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 		)
-		return nil
+		return
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
