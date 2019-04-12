@@ -283,7 +283,7 @@ func (s *GroupGroupStore) transition(action GroupGroupTransitionAction, parentGr
 				strings.Repeat("(?, ?, ?, ?, ?, NOW()), ", len(idsToInsert)-1) +
 				"(?, ?, ?, ?, ?, NOW())"
 			mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-				values := make([]interface{}, 0, len(idsToInsert)*4)
+				values := make([]interface{}, 0, len(idsToInsert)*5)
 				for id, toType := range idsToInsert {
 					maxChildOrder.MaxChildOrder++
 					values = append(values, s.NewID(), parentGroupID, id, toType, maxChildOrder.MaxChildOrder)
