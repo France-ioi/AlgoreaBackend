@@ -167,10 +167,10 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 }
 
 type GroupGroupTransitionResults struct {
-	Success   map[int64]bool `json:"success,omitempty"`
-	Unchanged map[int64]bool `json:"unchanged,omitempty"`
-	Invalid   map[int64]bool `json:"invalid,omitempty"`
-	Cycle     map[int64]bool `json:"cycle,omitempty"`
+	Success   map[int64]bool
+	Unchanged map[int64]bool
+	Invalid   map[int64]bool
+	Cycle     map[int64]bool
 }
 
 func (s *GroupGroupStore) transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) *GroupGroupTransitionResults {
