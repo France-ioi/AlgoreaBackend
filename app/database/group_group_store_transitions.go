@@ -37,12 +37,13 @@ const (
 	UserRefusesInvitation
 	AdminRefusesRequest
 	// This action marks relations as "removed". It doesn't check if a child is a user or not.
-	AdminRemovesChild
+	AdminRemovesUser
 	AdminCancelsInvitation
 	UserLeavesGroup
 	UserCancelsRequest
 	// This action creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
+	AdminRemovesDirectRelation
 )
 
 type groupGroupTransitionRule struct {
@@ -106,25 +107,18 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			RequestRefused: RequestRefused,
 		},
 	},
-	AdminRemovesChild: {
+	AdminRemovesUser: {
 		UpdateFromType: map[GroupGroupType]bool{
 			InvitationAccepted: true,
 			RequestAccepted:    true,
-			InvitationRefused:  true,
-			RequestRefused:     true,
-			Direct:             true,
 		},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationAccepted: Removed,
 			RequestAccepted:    Removed,
-			InvitationRefused:  Removed,
-			RequestRefused:     Removed,
 			Removed:            Removed,
-			Direct:             Removed,
 		},
 	},
 	AdminCancelsInvitation: {
-		UpdateFromType: map[GroupGroupType]bool{InvitationSent: true},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationSent: NoRelation,
 		},
@@ -143,7 +137,6 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 		},
 	},
 	UserCancelsRequest: {
-		UpdateFromType: map[GroupGroupType]bool{RequestSent: true},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			RequestSent: NoRelation,
 		},
@@ -162,6 +155,12 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			Removed:            Direct,
 			Left:               Direct,
 			Direct:             Direct,
+		},
+	},
+	AdminRemovesDirectRelation: {
+		Transitions: map[GroupGroupType]GroupGroupType{
+			Direct:     NoRelation,
+			NoRelation: NoRelation,
 		},
 	},
 }
