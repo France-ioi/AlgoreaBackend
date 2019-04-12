@@ -173,8 +173,9 @@ type GroupGroupTransitionResults struct {
 	Cycle     map[int64]bool
 }
 
-func (s *GroupGroupStore) transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) *GroupGroupTransitionResults {
+func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) (result *GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
+	defer recoverPanics(&err)
 
 	results := GroupGroupTransitionResults{
 		Success:   make(map[int64]bool, len(childGroupIDs)),
@@ -307,5 +308,5 @@ func (s *GroupGroupStore) transition(action GroupGroupTransitionAction, parentGr
 		}
 		return nil
 	}))
-	return &results
+	return &results, nil
 }

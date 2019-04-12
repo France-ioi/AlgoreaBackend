@@ -1,12 +1,12 @@
 package database
 
 import (
-	"github.com/go-sql-driver/mysql"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
 
