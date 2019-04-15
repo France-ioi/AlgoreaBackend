@@ -57,16 +57,12 @@ Feature: Reject group requests
     """
     {
       "data": {
-        "success": {
-          "141": true,
-          "31": true
-        },
-        "invalid": {
-          "11": true,
-          "13": true,
-          "21": true,
-          "22": true
-        }
+        "141": "success",
+        "31": "success",
+        "11": "invalid",
+        "13": "invalid",
+        "21": "invalid",
+        "22": "invalid"
       },
       "message": "updated",
       "success": true

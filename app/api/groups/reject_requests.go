@@ -23,7 +23,7 @@ func (srv *Service) rejectRequests(w http.ResponseWriter, r *http.Request) servi
 		return apiErr
 	}
 
-	var results *database.GroupGroupTransitionResults
+	var results database.GroupGroupTransitionResults
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
 			results, err = store.GroupGroups().Transition(database.AdminRefusesRequest, parentGroupID, groupIDs)
