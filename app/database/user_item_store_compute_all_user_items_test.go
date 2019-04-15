@@ -20,7 +20,7 @@ func TestUserItemStore_ComputeAllUserItems_RecoverError(t *testing.T) {
 	expectedError := errors.New("some error")
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllUserItems", 1).WillReturnError(expectedError)
+		WithArgs("listener_computeAllUserItems", 10).WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
@@ -67,7 +67,7 @@ func TestUserItemStore_ComputeAllUserItems_ReturnsErrLockWaitTimeoutExceededWhen
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllUserItems", 1).
+		WithArgs("listener_computeAllUserItems", 10).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllUserItems', 1)"}).AddRow(int64(0)))
 	dbMock.ExpectRollback()
 
