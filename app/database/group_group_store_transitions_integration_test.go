@@ -522,6 +522,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			assert.NoError(t, dataStore.GroupAncestors().Select("idGroupAncestor, idGroupChild, bIsSelf").
 				Order("idGroupAncestor, idGroupChild").Scan(&groupAncestors).Error())
 			assert.Equal(t, tt.wantGroupAncestors, groupAncestors)
+
+			var count int64
+			assert.NoError(t, dataStore.Table("groups_propagate").
+				Where("sAncestorsComputationState != 'done'").Count(&count).Error())
+			assert.Zero(t, count)
 		})
 	}
 }
