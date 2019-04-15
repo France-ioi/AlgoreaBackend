@@ -272,23 +272,23 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			wantGroupAncestors: groupAncestorsUnchanged,
 		},
 		{
-			name:   "AdminRemovesChild",
-			action: database.AdminRemovesChild,
+			name:   "AdminRemovesUser",
+			action: database.AdminRemovesUser,
 			wantResult: database.GroupGroupTransitionResults{
-				4: "success", 5: "success", 6: "success", 7: "success", 10: "success",
+				4: "success", 5: "success",
 				8: "unchanged",
-				1: "invalid", 2: "invalid", 3: "invalid", 9: "invalid", 20: "invalid", 30: "invalid",
+				1: "invalid", 2: "invalid", 3: "invalid", 6: "invalid", 7: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
 				{ParentGroupID: 20, ChildGroupID: 3, Type: "requestSent", ChildOrder: 0, StatusDate: nil},
 				{ParentGroupID: 20, ChildGroupID: 4, Type: "removed", ChildOrder: 0, StatusDate: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 5, Type: "removed", ChildOrder: 0, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 6, Type: "removed", ChildOrder: 0, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 7, Type: "removed", ChildOrder: 0, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 6, Type: "invitationRefused", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 7, Type: "requestRefused", ChildOrder: 0, StatusDate: nil},
 				{ParentGroupID: 20, ChildGroupID: 8, Type: "removed", ChildOrder: 0, StatusDate: nil},
 				{ParentGroupID: 20, ChildGroupID: 9, Type: "left", ChildOrder: 0, StatusDate: nil},
-				{ParentGroupID: 20, ChildGroupID: 10, Type: "removed", ChildOrder: 0, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 10, Type: "direct", ChildOrder: 0, StatusDate: nil},
 				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct", ChildOrder: 0, StatusDate: nil},
 			},
 			wantGroupAncestors: []groupAncestor{
@@ -302,7 +302,9 @@ func TestGroupGroupStore_transition(t *testing.T) {
 				{AncestorGroupID: 8, ChildGroupID: 8, IsSelf: true},
 				{AncestorGroupID: 9, ChildGroupID: 9, IsSelf: true},
 				{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
+				{AncestorGroupID: 20, ChildGroupID: 10},
 				{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
+				{AncestorGroupID: 30, ChildGroupID: 10},
 				{AncestorGroupID: 30, ChildGroupID: 20},
 				{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
 			},
@@ -441,6 +443,45 @@ func TestGroupGroupStore_transition(t *testing.T) {
 				{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
 			},
 		},
+		{
+			name:   "AdminRemovesDirectRelation",
+			action: database.AdminRemovesDirectRelation,
+			wantResult: database.GroupGroupTransitionResults{
+				10: "success",
+				1:  "unchanged", 30: "unchanged",
+				2: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 20: "invalid",
+			},
+			wantGroupGroups: []groupGroup{
+				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 3, Type: "requestSent", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 4, Type: "invitationAccepted", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 5, Type: "requestAccepted", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 6, Type: "invitationRefused", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 7, Type: "requestRefused", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 8, Type: "removed", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 20, ChildGroupID: 9, Type: "left", ChildOrder: 0, StatusDate: nil},
+				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct", ChildOrder: 0, StatusDate: nil},
+			},
+			wantGroupAncestors: []groupAncestor{
+				{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
+				{AncestorGroupID: 2, ChildGroupID: 2, IsSelf: true},
+				{AncestorGroupID: 3, ChildGroupID: 3, IsSelf: true},
+				{AncestorGroupID: 4, ChildGroupID: 4, IsSelf: true},
+				{AncestorGroupID: 5, ChildGroupID: 5, IsSelf: true},
+				{AncestorGroupID: 6, ChildGroupID: 6, IsSelf: true},
+				{AncestorGroupID: 7, ChildGroupID: 7, IsSelf: true},
+				{AncestorGroupID: 8, ChildGroupID: 8, IsSelf: true},
+				{AncestorGroupID: 9, ChildGroupID: 9, IsSelf: true},
+				{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
+				{AncestorGroupID: 20, ChildGroupID: 4},
+				{AncestorGroupID: 20, ChildGroupID: 5},
+				{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
+				{AncestorGroupID: 30, ChildGroupID: 4},
+				{AncestorGroupID: 30, ChildGroupID: 5},
+				{AncestorGroupID: 30, ChildGroupID: 20},
+				{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(string(tt.name), func(t *testing.T) {
@@ -472,6 +513,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			assert.NoError(t, dataStore.GroupAncestors().Select("idGroupAncestor, idGroupChild, bIsSelf").
 				Order("idGroupAncestor, idGroupChild").Scan(&groupAncestors).Error())
 			assert.Equal(t, tt.wantGroupAncestors, groupAncestors)
+
+			var count int64
+			assert.NoError(t, dataStore.Table("groups_propagate").
+				Where("sAncestorsComputationState != 'done'").Count(&count).Error())
+			assert.Zero(t, count)
 		})
 	}
 }

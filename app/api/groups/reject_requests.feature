@@ -28,11 +28,16 @@ Feature: Reject group requests
       | 21              | 21           | 1       |
       | 22              | 13           | 0       |
       | 22              | 22           | 1       |
+      | 22              | 111          | 0       |
+      | 22              | 121          | 0       |
+      | 22              | 123          | 0       |
       | 31              | 31           | 1       |
       | 111             | 111          | 1       |
       | 121             | 121          | 1       |
       | 122             | 122          | 1       |
       | 123             | 123          | 1       |
+      | 131             | 131          | 1       |
+      | 141             | 141          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
       | 1  | 13            | 21           | invitationSent     | relativeTime(-170h)  |

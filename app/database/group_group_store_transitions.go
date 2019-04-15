@@ -37,12 +37,13 @@ const (
 	UserRefusesInvitation
 	AdminRefusesRequest
 	// This action marks relations as "removed". It doesn't check if a child is a user or not.
-	AdminRemovesChild
+	AdminRemovesUser
 	AdminCancelsInvitation
 	UserLeavesGroup
 	UserCancelsRequest
 	// This action creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
+	AdminRemovesDirectRelation
 )
 
 type groupGroupTransitionRule struct {
@@ -106,25 +107,18 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			RequestRefused: RequestRefused,
 		},
 	},
-	AdminRemovesChild: {
+	AdminRemovesUser: {
 		UpdateFromType: map[GroupGroupType]bool{
 			InvitationAccepted: true,
 			RequestAccepted:    true,
-			InvitationRefused:  true,
-			RequestRefused:     true,
-			Direct:             true,
 		},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationAccepted: Removed,
 			RequestAccepted:    Removed,
-			InvitationRefused:  Removed,
-			RequestRefused:     Removed,
 			Removed:            Removed,
-			Direct:             Removed,
 		},
 	},
 	AdminCancelsInvitation: {
-		UpdateFromType: map[GroupGroupType]bool{InvitationSent: true},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationSent: NoRelation,
 		},
@@ -143,7 +137,6 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 		},
 	},
 	UserCancelsRequest: {
-		UpdateFromType: map[GroupGroupType]bool{RequestSent: true},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			RequestSent: NoRelation,
 		},
@@ -162,6 +155,12 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			Removed:            Direct,
 			Left:               Direct,
 			Direct:             Direct,
+		},
+	},
+	AdminRemovesDirectRelation: {
+		Transitions: map[GroupGroupType]GroupGroupType{
+			Direct:     NoRelation,
+			NoRelation: NoRelation,
 		},
 	},
 }
@@ -253,22 +252,21 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 			}
 		}
 
+		shouldCreateNewAncestors := false
 		if len(idsToDelete) > 0 {
 			idsToDeleteSlice := make([]int64, 0, len(idsToDelete))
 			for id := range idsToDelete {
 				idsToDeleteSlice = append(idsToDeleteSlice, id)
 			}
 			mustNotBeError(s.Delete("idGroupParent = ? AND idGroupChild IN (?)", parentGroupID, idsToDeleteSlice).Error())
+			shouldCreateNewAncestors = true
 		}
 
-		shouldCreateNewAncestors := false
 		if len(idsToUpdate) > 0 {
 			updateData := map[GroupGroupType][]int64{}
 			for id, toType := range idsToUpdate {
 				updateData[toType] = append(updateData[toType], id)
-				if toType.IsActive() {
-					shouldCreateNewAncestors = true
-				}
+				shouldCreateNewAncestors = true
 			}
 			const updateQuery = `
 				UPDATE groups_groups
@@ -293,9 +291,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 				for id, toType := range idsToInsert {
 					maxChildOrder.MaxChildOrder++
 					values = append(values, s.NewID(), parentGroupID, id, toType, maxChildOrder.MaxChildOrder)
-					if toType.IsActive() {
-						shouldCreateNewAncestors = true
-					}
+					shouldCreateNewAncestors = true
 				}
 				return s.db.Exec(insertQuery, values...).Error
 			}))
