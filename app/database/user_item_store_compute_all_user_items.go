@@ -15,7 +15,7 @@ type groupItemPair struct {
 }
 
 const computeAllUserItemsLockName = "listener_computeAllUserItems"
-const computeAllUserItemsLockTimeout = 1 * time.Second
+const computeAllUserItemsLockTimeout = 10 * time.Second
 
 // ComputeAllUserItems recomputes fields of users_items
 // For users_items marked with sAncestorsComputationState = 'todo':
