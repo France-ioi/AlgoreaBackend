@@ -54,7 +54,7 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		name                string
 		action              database.GroupGroupTransitionAction
 		createCycleWithType database.GroupGroupType
-		wantResult          *database.GroupGroupTransitionResults
+		wantResult          database.GroupGroupTransitionResults
 		wantGroupGroups     []groupGroup
 		wantGroupAncestors  []groupAncestor
 	}{
@@ -62,11 +62,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			name:                "AdminCreatesInvitation",
 			action:              database.AdminCreatesInvitation,
 			createCycleWithType: database.RequestSent,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{1: true, 3: true, 6: true, 7: true, 8: true, 9: true},
-				Unchanged: map[int64]bool{2: true},
-				Invalid:   map[int64]bool{4: true, 5: true, 10: true, 20: true},
-				Cycle:     map[int64]bool{30: true},
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 3: "success", 6: "success", 7: "success", 8: "success", 9: "success",
+				2: "unchanged",
+				4: "invalid", 5: "invalid", 10: "invalid", 20: "invalid",
+				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 1, Type: "invitationSent", ChildOrder: 1, StatusDate: currentTimePtr},
@@ -110,11 +110,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "UserCreatesRequest",
 			action: database.UserCreatesRequest,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{1: true, 6: true, 7: true, 8: true, 9: true},
-				Unchanged: map[int64]bool{3: true},
-				Invalid:   map[int64]bool{2: true, 4: true, 5: true, 10: true, 20: true},
-				Cycle:     map[int64]bool{30: true},
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 6: "success", 7: "success", 8: "success", 9: "success",
+				3: "unchanged",
+				2: "invalid", 4: "invalid", 5: "invalid", 10: "invalid", 20: "invalid",
+				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 1, Type: "requestSent", ChildOrder: 1, StatusDate: currentTimePtr},
@@ -135,11 +135,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			name:                "UserAcceptsInvitation",
 			action:              database.UserAcceptsInvitation,
 			createCycleWithType: database.InvitationSent,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{2: true},
-				Unchanged: map[int64]bool{4: true},
-				Invalid:   map[int64]bool{1: true, 3: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 20: true},
-				Cycle:     map[int64]bool{30: true},
+			wantResult: database.GroupGroupTransitionResults{
+				2: "success",
+				4: "unchanged",
+				1: "invalid", 3: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid",
+				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationAccepted", ChildOrder: 0, StatusDate: currentTimePtr},
@@ -183,11 +183,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 			name:                "AdminAcceptsRequest",
 			action:              database.AdminAcceptsRequest,
 			createCycleWithType: database.RequestSent,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{3: true},
-				Unchanged: map[int64]bool{5: true},
-				Invalid:   map[int64]bool{1: true, 2: true, 4: true, 6: true, 7: true, 8: true, 9: true, 10: true, 20: true},
-				Cycle:     map[int64]bool{30: true},
+			wantResult: database.GroupGroupTransitionResults{
+				3: "success",
+				5: "unchanged",
+				1: "invalid", 2: "invalid", 4: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid",
+				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -230,11 +230,10 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "UserRefusesInvitation",
 			action: database.UserRefusesInvitation,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{2: true},
-				Unchanged: map[int64]bool{6: true},
-				Invalid:   map[int64]bool{1: true, 3: true, 4: true, 5: true, 7: true, 8: true, 9: true, 10: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				2: "success",
+				6: "unchanged",
+				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationRefused", ChildOrder: 0, StatusDate: currentTimePtr},
@@ -253,11 +252,10 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "AdminRefusesRequest",
 			action: database.AdminRefusesRequest,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{3: true},
-				Unchanged: map[int64]bool{7: true},
-				Invalid:   map[int64]bool{1: true, 2: true, 4: true, 5: true, 6: true, 8: true, 9: true, 10: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				3: "success",
+				7: "unchanged",
+				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -276,11 +274,10 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "AdminRemovesUser",
 			action: database.AdminRemovesUser,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{4: true, 5: true},
-				Unchanged: map[int64]bool{8: true},
-				Invalid:   map[int64]bool{1: true, 2: true, 3: true, 6: true, 7: true, 9: true, 10: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				4: "success", 5: "success",
+				8: "unchanged",
+				1: "invalid", 2: "invalid", 3: "invalid", 6: "invalid", 7: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -315,11 +312,9 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "AdminCancelsInvitation",
 			action: database.AdminCancelsInvitation,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{2: true},
-				Unchanged: map[int64]bool{},
-				Invalid:   map[int64]bool{1: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				2: "success",
+				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 3, Type: "requestSent", ChildOrder: 0, StatusDate: nil},
@@ -337,11 +332,10 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "UserLeavesGroup",
 			action: database.UserLeavesGroup,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{4: true, 5: true, 10: true},
-				Unchanged: map[int64]bool{9: true},
-				Invalid:   map[int64]bool{1: true, 2: true, 3: true, 6: true, 7: true, 8: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				4: "success", 5: "success", 10: "success",
+				9: "unchanged",
+				1: "invalid", 2: "invalid", 3: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -374,11 +368,9 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "UserCancelsRequest",
 			action: database.UserCancelsRequest,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{3: true},
-				Unchanged: map[int64]bool{},
-				Invalid:   map[int64]bool{1: true, 2: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 10: true, 20: true, 30: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				3: "success",
+				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -396,11 +388,11 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "AdminAddsDirectRelation",
 			action: database.AdminAddsDirectRelation,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true},
-				Unchanged: map[int64]bool{10: true},
-				Invalid:   map[int64]bool{20: true},
-				Cycle:     map[int64]bool{30: true},
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 2: "success", 3: "success", 4: "success", 5: "success", 6: "success", 7: "success", 8: "success", 9: "success",
+				10: "unchanged",
+				20: "invalid",
+				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 1, Type: "direct", ChildOrder: 1, StatusDate: currentTimePtr},
@@ -454,11 +446,10 @@ func TestGroupGroupStore_transition(t *testing.T) {
 		{
 			name:   "AdminRemovesDirectRelation",
 			action: database.AdminRemovesDirectRelation,
-			wantResult: &database.GroupGroupTransitionResults{
-				Success:   map[int64]bool{10: true},
-				Unchanged: map[int64]bool{1: true, 30: true},
-				Invalid:   map[int64]bool{2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true, 9: true, 20: true},
-				Cycle:     map[int64]bool{},
+			wantResult: database.GroupGroupTransitionResults{
+				10: "success",
+				1:  "unchanged", 30: "unchanged",
+				2: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 20: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -504,7 +495,7 @@ func TestGroupGroupStore_transition(t *testing.T) {
 				assert.NoError(t, dataStore.Exec(
 					"INSERT INTO groups_groups (idGroupParent, idGroupChild, sType) VALUES (20, 20, ?)", tt.createCycleWithType).Error())
 			}
-			var result *database.GroupGroupTransitionResults
+			var result database.GroupGroupTransitionResults
 			err := dataStore.InTransaction(func(store *database.DataStore) error {
 				var err error
 				result, err = store.GroupGroups().Transition(

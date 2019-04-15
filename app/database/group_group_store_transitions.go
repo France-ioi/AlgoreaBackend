@@ -165,23 +165,22 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 }
 
-type GroupGroupTransitionResults struct {
-	Success   map[int64]bool
-	Unchanged map[int64]bool
-	Invalid   map[int64]bool
-	Cycle     map[int64]bool
-}
+type GroupGroupTransitionResult string
 
-func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) (result *GroupGroupTransitionResults, err error) {
+const (
+	Cycle     GroupGroupTransitionResult = "cycle"
+	Invalid   GroupGroupTransitionResult = "invalid"
+	Success   GroupGroupTransitionResult = "success"
+	Unchanged GroupGroupTransitionResult = "unchanged"
+)
+
+type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
+
+func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) (result GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	results := GroupGroupTransitionResults{
-		Success:   make(map[int64]bool, len(childGroupIDs)),
-		Unchanged: make(map[int64]bool),
-		Invalid:   make(map[int64]bool),
-		Cycle:     make(map[int64]bool),
-	}
+	results := GroupGroupTransitionResults(make(map[int64]GroupGroupTransitionResult, len(childGroupIDs)))
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(dataStore *DataStore) error {
 		type idWithType struct {
@@ -205,7 +204,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 		idsToInsert := make(map[int64]GroupGroupType, len(childGroupIDs))
 		for _, id := range childGroupIDs {
 			if id == parentGroupID {
-				results.Invalid[id] = true
+				results[id] = Invalid
 				continue
 			}
 			oldType := oldTypesMap[id]
@@ -221,15 +220,15 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 					} else {
 						idsToUpdate[id] = toType
 					}
-					results.Success[id] = true
+					results[id] = Success
 					if toType.IsActive() || oldType == NoRelation {
 						idsToCheckCycle[id] = true
 					}
 				} else {
-					results.Unchanged[id] = true
+					results[id] = Unchanged
 				}
 			} else {
-				results.Invalid[id] = true
+				results[id] = Invalid
 			}
 		}
 
@@ -247,10 +246,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 
 			for _, cycleID := range cycleIDs {
 				idGroup := cycleID["idGroup"].(int64)
-				delete(results.Success, idGroup)
+				results[idGroup] = Cycle
 				delete(idsToUpdate, idGroup)
 				delete(idsToInsert, idGroup)
-				results.Cycle[idGroup] = true
 			}
 		}
 
@@ -304,5 +302,5 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 		}
 		return nil
 	}))
-	return &results, nil
+	return results, nil
 }
