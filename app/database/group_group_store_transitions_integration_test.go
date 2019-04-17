@@ -26,7 +26,7 @@ type groupAncestor struct {
 	IsSelf          bool  `gorm:"column:bIsSelf"`
 }
 
-func TestGroupGroupStore_transition(t *testing.T) {
+func TestGroupGroupStore_Transition(t *testing.T) {
 	currentTimePtr := ptrTime(time.Now().UTC())
 	groupAncestorsUnchanged := []groupAncestor{
 		{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
