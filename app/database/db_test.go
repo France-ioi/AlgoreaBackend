@@ -620,7 +620,7 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(
 			mock.NewRows([]string{"ID", "Field"}).
-				AddRow(1, "value").AddRow(2, "another value").AddRow(3, nil))
+				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
 	db = db.Table("myTable")
 
@@ -634,7 +634,7 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	assert.Equal(t, []map[string]interface{}{
 		{"ID": int64(1), "Field": "value"},
 		{"ID": int64(2), "Field": "another value"},
-		{"ID": int64(3), "Field": nil},
+		{"ID": "3", "Field": nil},
 	}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
