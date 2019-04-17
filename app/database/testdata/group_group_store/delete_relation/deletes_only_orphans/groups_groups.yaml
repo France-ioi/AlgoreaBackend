@@ -1,0 +1,7 @@
+- {idGroupParent: 1, idGroupChild: 2}
+- {idGroupParent: 2, idGroupChild: 3}
+- {idGroupParent: 2, idGroupChild: 4}
+- {idGroupParent: 4, idGroupChild: 5}
+
+- {idGroupParent: 10, idGroupChild: 3}
+- {idGroupParent: 10, idGroupChild: 5}

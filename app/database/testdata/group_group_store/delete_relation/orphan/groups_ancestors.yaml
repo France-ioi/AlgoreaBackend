@@ -1,0 +1,3 @@
+- {idGroupAncestor: 1, idGroupChild: 1, bIsSelf: 1}
+- {idGroupAncestor: 1, idGroupChild: 2}
+- {idGroupAncestor: 2, idGroupChild: 2, bIsSelf: 1}

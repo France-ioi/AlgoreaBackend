@@ -1,0 +1,7 @@
+- {ID: 1}
+- {ID: 2, sType: "Class"}
+- {ID: 3, sType: "Team"}
+- {ID: 4, sType: "Club"}
+- {ID: 5, sType: "Friends"}
+
+- {ID: 10, sType: "Other"}
