@@ -314,14 +314,17 @@ func (conn *DB) Count(dest interface{}) *DB {
 	return newDB(conn.db.Count(dest))
 }
 
-// Pluck used to query single column from a model as a map
-//     var ages []int64
-//     db.Find(&users).Pluck("age", &ages)
+// Pluck is used to query a single column into a slice of values
+//     var ids []int64
+//     db.Table("users").Pluck("ID", &ids)
 func (conn *DB) Pluck(column string, value interface{}) *DB {
+	// If 'value' is not empty, wipe its content by replacing it with an empty slice.
+	// Otherwise we would get new values mixed with old values.
 	reflectValue := reflect.ValueOf(value).Elem()
 	if reflectValue.Len() > 0 {
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
 	}
+
 	return newDB(conn.db.Pluck(column, value))
 }
 
