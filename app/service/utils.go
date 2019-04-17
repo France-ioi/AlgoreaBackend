@@ -79,7 +79,7 @@ func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, erro
 	if strValue == "1" {
 		return true, nil
 	}
-	return false, fmt.Errorf("%s should have a boolean value (0 or 1)", name)
+	return false, fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", name)
 }
 
 // ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query
