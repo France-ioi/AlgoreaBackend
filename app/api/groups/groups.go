@@ -44,3 +44,35 @@ func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, g
 	}
 	return service.NoError
 }
+
+func checkThatUserHasRightsForDirectRelation(store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
+	groupStore := store.Groups()
+
+	var groupData []struct {
+		ID   int64  `gorm:"column:ID"`
+		Type string `gorm:"column:sType"`
+	}
+
+	err := groupStore.OwnedBy(user).
+		WithWriteLock().
+		Select("groups.ID, sType").
+		Where("groups.ID IN(?, ?)", parentGroupID, childGroupID).
+		Scan(&groupData).Error()
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	if len(groupData) < 2 {
+		return service.InsufficientAccessRightsError
+	}
+
+	for _, groupRow := range groupData {
+		if (groupRow.ID == parentGroupID && groupRow.Type == "UserSelf") ||
+			(groupRow.ID == childGroupID &&
+				map[string]bool{"Root": true, "RootSelf": true, "RootAdmin": true, "UserAdmin": true}[groupRow.Type]) {
+			return service.InsufficientAccessRightsError
+		}
+	}
+	return service.NoError
+}
