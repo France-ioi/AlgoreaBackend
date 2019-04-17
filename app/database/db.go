@@ -314,6 +314,17 @@ func (conn *DB) Count(dest interface{}) *DB {
 	return newDB(conn.db.Count(dest))
 }
 
+// Pluck used to query single column from a model as a map
+//     var ages []int64
+//     db.Find(&users).Pluck("age", &ages)
+func (conn *DB) Pluck(column string, value interface{}) *DB {
+	reflectValue := reflect.ValueOf(value).Elem()
+	if reflectValue.Len() > 0 {
+		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
+	}
+	return newDB(conn.db.Pluck(column, value))
+}
+
 // Take returns a record that match given conditions, the order will depend on the database implementation
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))

@@ -516,6 +516,25 @@ func TestDB_Take(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_Pluck(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable`")).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	result := []int64{1, 2, 3}
+	pluckDB := db.Pluck("ID", &result)
+
+	assert.NotEqual(t, pluckDB, db)
+	assert.NoError(t, pluckDB.Error())
+	assert.Equal(t, []int64{1}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
