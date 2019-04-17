@@ -263,6 +263,8 @@ func (conn *DB) Scan(dest interface{}) *DB {
 
 // ScanIntoSliceOfMaps scans value into a slice of maps
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
+	*dest = *new([]map[string]interface{})
+
 	rows, err := conn.db.Rows()
 	if conn.db.AddError(err) != nil {
 		return conn

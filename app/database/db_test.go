@@ -605,7 +605,9 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 
 	db = db.Table("myTable")
 
-	var result []map[string]interface{}
+	result := []map[string]interface{}{
+		{"column": "value"},
+	}
 	dbScan := db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, dbScan, db)
 	assert.NoError(t, dbScan.Error())
