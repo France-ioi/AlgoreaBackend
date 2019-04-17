@@ -32,6 +32,7 @@ var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
 
+// CreateRelation creates a direct relation between two groups
 func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
