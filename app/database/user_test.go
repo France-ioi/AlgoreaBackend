@@ -10,9 +10,10 @@ import (
 )
 
 // NewMockUser creates a mock user, to be used for testing
-//func NewMockUser(id, selfGroupID, ownedGroupID, defaultLanguageID int64) *User {
 func NewMockUser(id int64, userData *UserData) *User {
-	userData.ID = id
+	if userData != nil {
+		userData.ID = id
+	}
 	return NewUser(id, nil, userData)
 }
 

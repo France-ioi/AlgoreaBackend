@@ -34,34 +34,12 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		groupStore := s.Groups()
-
-		var groupData []struct {
-			ID   int64  `gorm:"column:ID"`
-			Type string `gorm:"column:sType"`
-		}
-
-		service.MustNotBeError(groupStore.OwnedBy(user).
-			WithWriteLock().
-			Select("groups.ID, sType").
-			Where("groups.ID IN(?, ?)", parentGroupID, childGroupID).
-			Scan(&groupData).Error())
-
-		if len(groupData) < 2 {
-			apiErr = service.ErrForbidden(errors.New("insufficient access rights"))
+		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
+		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
 
-		for _, groupRow := range groupData {
-			if (groupRow.ID == parentGroupID && groupRow.Type == "UserSelf") ||
-				(groupRow.ID == childGroupID &&
-					map[string]bool{"Root": true, "RootSelf": true, "RootAdmin": true, "UserAdmin": true}[groupRow.Type]) {
-				apiErr = service.ErrForbidden(errors.New("insufficient access rights"))
-				return apiErr.Error // rollback
-			}
-		}
-
-		errInTransaction = groupStore.GroupGroups().CreateRelation(parentGroupID, childGroupID)
+		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)
 		if errInTransaction == database.ErrRelationCycle {
 			apiErr = service.ErrForbidden(errInTransaction)
 		}

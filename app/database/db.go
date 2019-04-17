@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -262,6 +263,8 @@ func (conn *DB) Scan(dest interface{}) *DB {
 
 // ScanIntoSliceOfMaps scans value into a slice of maps
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
+	*dest = *new([]map[string]interface{})
+
 	rows, err := conn.db.Rows()
 	if conn.db.AddError(err) != nil {
 		return conn
@@ -293,7 +296,7 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 		rowMap := make(map[string]interface{})
 		for i, columnName := range cols {
 			if value, ok := columns[i].([]byte); ok {
-				columns[i] = string(value)
+				columns[i] = *(*string)(unsafe.Pointer(&value))
 			}
 			rowMap[columnName] = columns[i]
 		}
@@ -309,6 +312,20 @@ func (conn *DB) Count(dest interface{}) *DB {
 		return conn
 	}
 	return newDB(conn.db.Count(dest))
+}
+
+// Pluck is used to query a single column into a slice of values
+//     var ids []int64
+//     db.Table("users").Pluck("ID", &ids)
+func (conn *DB) Pluck(column string, value interface{}) *DB {
+	// If 'value' is not empty, wipe its content by replacing it with an empty slice.
+	// Otherwise we would get new values mixed with old values.
+	reflectValue := reflect.ValueOf(value).Elem()
+	if reflectValue.Len() > 0 {
+		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
+	}
+
+	return newDB(conn.db.Pluck(column, value))
 }
 
 // Take returns a record that match given conditions, the order will depend on the database implementation

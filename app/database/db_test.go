@@ -516,6 +516,25 @@ func TestDB_Take(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_Pluck(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable`")).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	result := []int64{1, 2, 3}
+	pluckDB := db.Pluck("ID", &result)
+
+	assert.NotEqual(t, pluckDB, db)
+	assert.NoError(t, pluckDB.Error())
+	assert.Equal(t, []int64{1}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -601,11 +620,13 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(
 			mock.NewRows([]string{"ID", "Field"}).
-				AddRow(1, "value").AddRow(2, "another value").AddRow(3, nil))
+				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
 	db = db.Table("myTable")
 
-	var result []map[string]interface{}
+	result := []map[string]interface{}{
+		{"column": "value"},
+	}
 	dbScan := db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, dbScan, db)
 	assert.NoError(t, dbScan.Error())
@@ -613,7 +634,7 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	assert.Equal(t, []map[string]interface{}{
 		{"ID": int64(1), "Field": "value"},
 		{"ID": int64(2), "Field": "another value"},
-		{"ID": int64(3), "Field": nil},
+		{"ID": "3", "Field": nil},
 	}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
