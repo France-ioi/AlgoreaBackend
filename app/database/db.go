@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -293,7 +294,7 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 		rowMap := make(map[string]interface{})
 		for i, columnName := range cols {
 			if value, ok := columns[i].([]byte); ok {
-				columns[i] = string(value)
+				columns[i] = *(*string)(unsafe.Pointer(&value))
 			}
 			rowMap[columnName] = columns[i]
 		}
