@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 )
 
 // StructuredLogger is a structured logrus Logger.

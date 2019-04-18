@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"

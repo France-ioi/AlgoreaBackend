@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 	assertlib "github.com/stretchr/testify/assert"
 )
 

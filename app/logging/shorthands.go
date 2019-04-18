@@ -1,6 +1,6 @@
 package logging
 
-import "github.com/sirupsen/logrus"
+import "github.com/sirupsen/logrus" //nolint:depguard
 
 // Debug logs a message at level Debug on the shared logger.
 func Debug(args ...interface{}) {
