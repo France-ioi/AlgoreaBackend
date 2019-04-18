@@ -91,16 +91,16 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		return service.ErrUnexpected(err)
 	}
 
-	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID {
+	if len(rawData) == 0 || rawData[0].ID != req.ID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
 	response := navigationDataResponse{
-		srv.fillNavigationCommonFieldsWithDBData(&(*rawData)[0]),
+		srv.fillNavigationCommonFieldsWithDBData(&rawData[0]),
 	}
 	idMap := map[int64]*rawNavigationItem{}
-	for index := range *rawData {
-		idMap[(*rawData)[index].ID] = &(*rawData)[index]
+	for index := range rawData {
+		idMap[rawData[index].ID] = &rawData[index]
 	}
 	idsToResponseData := map[int64]*navigationItemCommonFields{req.ID: response.navigationItemCommonFields}
 	srv.fillNavigationSubtreeWithChildren(rawData, idMap, idsToResponseData)
@@ -109,10 +109,10 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	return service.NoError
 }
 
-func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]rawNavigationItem,
+func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationItem,
 	idMap map[int64]*rawNavigationItem,
 	idsToResponseData map[int64]*navigationItemCommonFields) {
-	for index, item := range *rawData {
+	for index, item := range rawData {
 		if index == 0 {
 			continue
 		}

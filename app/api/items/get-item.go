@@ -92,32 +92,32 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	userDefaultLanguageID, err := user.DefaultLanguageID()
+	_, err := user.DefaultLanguageID() // check that the user exists
 	if err == database.ErrUserNotFound {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	rawData, err := getRawItemData(srv.Store.Items(), req.ID, user.UserID, userDefaultLanguageID, user)
+	rawData, err := getRawItemData(srv.Store.Items(), req.ID, user)
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}
 
-	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID {
+	if len(rawData) == 0 || rawData[0].ID != req.ID {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if !(*rawData)[0].FullAccess && !(*rawData)[0].PartialAccess {
+	if !rawData[0].FullAccess && !rawData[0].PartialAccess {
 		return service.ErrForbidden(errors.New("the item is grayed"))
 	}
 
 	response := itemResponse{
-		srv.fillItemCommonFieldsWithDBData(&(*rawData)[0]),
+		srv.fillItemCommonFieldsWithDBData(&rawData[0]),
 		nil,
 	}
 
-	setItemResponseRootNodeFields(&response, rawData)
-	srv.fillItemResponseWithChildren(&response, rawData)
+	setItemResponseRootNodeFields(&response, &rawData)
+	srv.fillItemResponseWithChildren(&response, &rawData)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -187,7 +187,7 @@ type rawItem struct {
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID, userID, userLanguageID int64, user *database.User) (*[]rawItem, error) {
+func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) ([]rawItem, error) {
 	var result []rawItem
 
 	accessRights := s.AccessRights(user)
@@ -298,13 +298,13 @@ func getRawItemData(s *database.ItemStore, rootID, userID, userLanguageID int64,
 			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", userID).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
 		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
 			accessRights.SubQuery()).
 		Order("iChildOrder")
 
 	service.MustNotBeError(query.Scan(&result).Error())
-	return &result, nil
+	return result, nil
 }
 
 func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {

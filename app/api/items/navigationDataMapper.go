@@ -23,20 +23,20 @@ type rawNavigationItem struct {
 	UserValidated           bool    `sql:"column:bValidated"`
 	UserFinished            bool    `sql:"column:bFinished"`
 	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
-	UserSubmissionsAttempts int64   `sql:"column:nbSubmissionsAttempts"`
+	UserSubmissionsAttempts int32   `sql:"column:nbSubmissionsAttempts"`
 	UserStartDate           string  `sql:"column:sStartDate"`      // iso8601 str
 	UserValidationDate      string  `sql:"column:sValidationDate"` // iso8601 str
 	UserFinishDate          string  `sql:"column:sFinishDate"`     // iso8601 str
 
 	// items_items
 	IDItemParent int64 `sql:"column:idItemParent"`
-	Order        int64 `sql:"column:iChildOrder"`
+	Order        int32 `sql:"column:iChildOrder"`
 
 	*database.ItemAccessDetails
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
-func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *database.User) (*[]rawNavigationItem, error) {
+func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *database.User) ([]rawNavigationItem, error) {
 	var result []rawNavigationItem
 	items := dataStore.Items()
 
@@ -76,5 +76,5 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return result, nil
 }
