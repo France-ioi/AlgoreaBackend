@@ -3,7 +3,7 @@ package loggingtest
 import (
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
