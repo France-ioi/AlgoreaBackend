@@ -19,7 +19,7 @@ Feature: Get group by groupID (groupView)
     And the response body should be, in JSON:
     """
     {
-      "id": 13,
+      "id": "13",
       "name": "Group B",
       "description": "Group B is here",
       "type": "Class",

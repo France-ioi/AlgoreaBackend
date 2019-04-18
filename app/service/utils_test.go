@@ -301,22 +301,22 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			[]map[string]interface{}{{
 				"User__ID":            int64(1),
 				"Item__String__Title": "Chapter 1",
-				"Item__String__ID":    int64(2),
+				"Item__String__ID":    "2",
 			}},
 			[]map[string]interface{}{
 				{
-					"user": map[string]interface{}{"id": int64(1)},
-					"item": map[string]interface{}{"string": map[string]interface{}{"title": "Chapter 1", "id": int64(2)}},
+					"user": map[string]interface{}{"id": "1"},
+					"item": map[string]interface{}{"string": map[string]interface{}{"title": "Chapter 1", "id": "2"}},
 				},
 			},
 		},
 		{
 			"converts to snake case",
 			[]map[string]interface{}{{
-				"TheGreatestUser": "root", "MyID": int64(1), "ID": int64(2),
+				"TheGreatestUser": "root", "MyID": int64(1), "ID": "2",
 			}}, // gorm returns numbers as int64
 			[]map[string]interface{}{{
-				"the_greatest_user": "root", "my_id": int64(1), "id": int64(2),
+				"the_greatest_user": "root", "my_id": "1", "id": "2",
 			}},
 		},
 		{
@@ -331,8 +331,8 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"sString":     "value",
 			}}, // gorm returns numbers as int64
 			[]map[string]interface{}{{
-				"id":           int64(123),
-				"user_id":      int64(1),
+				"id":           "123",
+				"user_id":      "1",
 				"true_flag":    true,
 				"false_flag":   false,
 				"false_flag_2": false,
@@ -344,6 +344,21 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			"skips nil fields",
 			[]map[string]interface{}{{"TheGreatestUser": nil}}, // gorm returns numbers as int64
 			[]map[string]interface{}{{}},
+		},
+		{
+			"converts int64 into string",
+			[]map[string]interface{}{{
+				"int64":             int64(123),
+				"int32":             int32(1234),
+				"nbCorrectionsRead": int64(12345),
+				"iGrade":            int64(-1),
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"int_64":           "123",
+				"int_32":           int32(1234),
+				"corrections_read": int32(12345),
+				"grade":            int32(-1),
+			}},
 		},
 	}
 	for _, tt := range tests {

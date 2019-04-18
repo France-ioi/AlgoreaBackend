@@ -74,7 +74,7 @@ Feature: Get item view information
     And the response body should be, in JSON:
     """
     {
-      "id": 200,
+      "id": "200",
       "type": "Category",
       "display_details_in_parent": true,
       "validation_type": "All",
@@ -102,7 +102,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": 1,
+        "language_id": "1",
         "title": "Category 1",
         "image_url": "http://example.com/my0.jpg",
         "subtitle": "Subtitle 0",
@@ -111,7 +111,7 @@ Feature: Get item view information
       },
 
       "user": {
-        "active_attempt_id": 100,
+        "active_attempt_id": "100",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -129,7 +129,7 @@ Feature: Get item view information
 
       "children": [
         {
-          "id": 220,
+          "id": "220",
           "order": 1,
           "category": "Discovery",
           "always_visible": true,
@@ -151,7 +151,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 1,
+            "language_id": "1",
             "title": "Chapter B",
             "image_url": "http://example.com/my2.jpg",
             "subtitle": "Subtitle 2",
@@ -159,7 +159,7 @@ Feature: Get item view information
           },
 
           "user": {
-            "active_attempt_id": 100,
+            "active_attempt_id": "100",
             "score": 12344,
             "submissions_attempts": 14,
             "validated": true,
@@ -173,7 +173,7 @@ Feature: Get item view information
           }
         },
         {
-          "id": 210,
+          "id": "210",
 
           "order": 2,
           "category": "Discovery",
@@ -196,7 +196,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 1,
+            "language_id": "1",
             "title": "Chapter A",
             "image_url": "http://example.com/my1.jpg",
             "subtitle": "Subtitle 1",
@@ -204,7 +204,7 @@ Feature: Get item view information
           },
 
           "user": {
-            "active_attempt_id": 100,
+            "active_attempt_id": "100",
             "score": 12342,
             "submissions_attempts": 12,
             "validated": true,
@@ -228,7 +228,7 @@ Feature: Get item view information
     And the response body should be, in JSON:
     """
     {
-      "id": 210,
+      "id": "210",
       "type": "Chapter",
       "display_details_in_parent": true,
       "validation_type": "All",
@@ -253,7 +253,7 @@ Feature: Get item view information
       "contest_phase": "Running",
 
       "string": {
-        "language_id": 1,
+        "language_id": "1",
         "title": "Chapter A",
         "image_url": "http://example.com/my1.jpg",
         "subtitle": "Subtitle 1",
@@ -262,7 +262,7 @@ Feature: Get item view information
       },
 
       "user": {
-        "active_attempt_id": 100,
+        "active_attempt_id": "100",
         "score": 12342,
         "submissions_attempts": 12,
         "validated": true,
@@ -284,7 +284,7 @@ Feature: Get item view information
     And the response body should be, in JSON:
     """
     {
-      "id": 210,
+      "id": "210",
       "type": "Chapter",
       "display_details_in_parent": true,
       "validation_type": "All",
@@ -309,7 +309,7 @@ Feature: Get item view information
       "contest_phase": "Running",
 
       "string": {
-        "language_id": 1,
+        "language_id": "1",
         "title": "Chapter A",
         "image_url": "http://example.com/my1.jpg",
         "subtitle": "Subtitle 1",
@@ -317,7 +317,7 @@ Feature: Get item view information
       },
 
       "user": {
-        "active_attempt_id": 100,
+        "active_attempt_id": "100",
         "score": 12342,
         "submissions_attempts": 12,
         "validated": true,
@@ -339,7 +339,7 @@ Feature: Get item view information
     And the response body should be, in JSON:
     """
     {
-      "id": 200,
+      "id": "200",
       "type": "Category",
       "display_details_in_parent": true,
       "validation_type": "All",
@@ -367,7 +367,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": 2,
+        "language_id": "2",
         "title": "Catégorie 1",
         "image_url": "http://example.com/mf0.jpg",
         "subtitle": "Sous-titre 0",
@@ -376,7 +376,7 @@ Feature: Get item view information
       },
 
       "user": {
-        "active_attempt_id": 100,
+        "active_attempt_id": "100",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -394,7 +394,7 @@ Feature: Get item view information
 
       "children": [
         {
-          "id": 220,
+          "id": "220",
           "order": 1,
           "category": "Discovery",
           "always_visible": true,
@@ -416,7 +416,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 2,
+            "language_id": "2",
             "title": "Chapitre B",
             "image_url": "http://example.com/mf2.jpg",
             "subtitle": "Sous-titre 2",
@@ -424,7 +424,7 @@ Feature: Get item view information
           },
 
           "user": {
-            "active_attempt_id": 100,
+            "active_attempt_id": "100",
             "score": 12344,
             "submissions_attempts": 14,
             "validated": true,
@@ -438,7 +438,7 @@ Feature: Get item view information
           }
         },
         {
-          "id": 210,
+          "id": "210",
 
           "order": 2,
           "category": "Discovery",
@@ -461,7 +461,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 2,
+            "language_id": "2",
             "title": "Chapitre A",
             "image_url": "http://example.com/mf1.jpg",
             "subtitle": "Sous-titre 1",
@@ -469,7 +469,7 @@ Feature: Get item view information
           },
 
           "user": {
-            "active_attempt_id": 100,
+            "active_attempt_id": "100",
             "score": 12342,
             "submissions_attempts": 12,
             "validated": true,
@@ -493,7 +493,7 @@ Feature: Get item view information
     And the response body should be, in JSON:
     """
     {
-      "id": 200,
+      "id": "200",
       "type": "Category",
       "display_details_in_parent": true,
       "validation_type": "All",
@@ -521,7 +521,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": 1,
+        "language_id": "1",
         "title": "Category 1",
         "image_url": "http://example.com/my0.jpg",
         "subtitle": "Subtitle 0",
@@ -530,7 +530,7 @@ Feature: Get item view information
       },
 
       "user": {
-        "active_attempt_id": 100,
+        "active_attempt_id": "100",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -548,7 +548,7 @@ Feature: Get item view information
 
       "children": [
         {
-          "id": 220,
+          "id": "220",
           "order": 1,
           "category": "Discovery",
           "always_visible": true,
@@ -570,7 +570,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 1,
+            "language_id": "1",
             "title": "Chapter B",
             "image_url": "http://example.com/my2.jpg"
           },
@@ -579,7 +579,7 @@ Feature: Get item view information
           }
         },
         {
-          "id": 210,
+          "id": "210",
 
           "order": 2,
           "category": "Discovery",
@@ -602,7 +602,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": 1,
+            "language_id": "1",
             "title": "Chapter A",
             "image_url": "http://example.com/my1.jpg"
           },

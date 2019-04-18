@@ -48,7 +48,7 @@ Background:
     """
     [
       {
-        "id": 1,
+        "id": "1",
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
@@ -62,7 +62,7 @@ Background:
         "validated": true
       },
       {
-        "id": 2,
+        "id": "2",
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,
@@ -87,7 +87,7 @@ Background:
     """
     [
       {
-        "id": 1,
+        "id": "1",
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
@@ -101,7 +101,7 @@ Background:
         "validated": true
       },
       {
-        "id": 2,
+        "id": "2",
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,

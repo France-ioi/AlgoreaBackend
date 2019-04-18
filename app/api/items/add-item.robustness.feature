@@ -4,12 +4,12 @@ Scenario: Missing required attribute
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
-      { "id": 4, "order": 100 }
+      { "id": "4", "order": 100 }
     ]
   }
   """
@@ -20,12 +20,12 @@ Scenario: No strings given
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
     ],
     "parents": [
-      { "id": 4, "order": 100 }
+      { "id": "4", "order": 100 }
     ]
   }
   """
@@ -36,14 +36,14 @@ Scenario: More than one string given
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" },
-      { "language_id": 1, "title": "mon titre" }
+      { "language_id": "3", "title": "my title" },
+      { "language_id": "1", "title": "mon titre" }
     ],
     "parents": [
-      { "id": 4, "order": 100 }
+      { "id": "4", "order": 100 }
     ]
   }
   """
@@ -54,10 +54,10 @@ Scenario: No parents given
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
     ]
@@ -70,14 +70,14 @@ Scenario: More than 1 parent given
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
-      { "id": 4, "order": 100 },
-      { "id": 3, "order": 101 }
+      { "id": "4", "order": 100 },
+      { "id": "3", "order": 101 }
     ]
   }
   """
@@ -92,13 +92,13 @@ And I am the user with ID "1"
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
-      { "id": 21, "order": 100 }
+      { "id": "21", "order": 100 }
     ]
   }
   """
@@ -125,13 +125,13 @@ And I am the user with ID "1"
 When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
-      { "id": 21, "order": 100 }
+      { "id": "21", "order": 100 }
     ]
   }
   """
@@ -146,13 +146,13 @@ Scenario: The user doesn't exist
   When I send a POST request to "/items/" with the following body:
   """
   {
-    "id": 2,
+    "id": "2",
     "type": "Course",
     "strings": [
-      { "language_id": 3, "title": "my title" }
+      { "language_id": "3", "title": "my title" }
     ],
     "parents": [
-      { "id": 21, "order": 100 }
+      { "id": "21", "order": 100 }
     ]
   }
   """

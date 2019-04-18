@@ -23,7 +23,7 @@ type navigationItemUser struct {
 	Validated           bool    `json:"validated"`
 	Finished            bool    `json:"finished"`
 	KeyObtained         bool    `json:"key_obtained"`
-	SubmissionsAttempts int64   `json:"submissions_attempts"`
+	SubmissionsAttempts int32   `json:"submissions_attempts"`
 	StartDate           string  `json:"start_date"`      // iso8601 str
 	ValidationDate      string  `json:"validation_date"` // iso8601 str
 	FinishDate          string  `json:"finish_date"`     // iso8601 str
@@ -41,7 +41,7 @@ type navigationItemString struct {
 }
 
 type navigationItemCommonFields struct {
-	ID                int64  `json:"id"`
+	ID                int64  `json:"id,string"`
 	Type              string `json:"type"`
 	TransparentFolder bool   `json:"transparent_folder"`
 	// whether items.idItemUnlocked is empty
@@ -61,7 +61,7 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order            int64 `json:"order"`
+	Order            int32 `json:"order"`
 	AccessRestricted bool  `json:"access_restricted"`
 }
 

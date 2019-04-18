@@ -11,7 +11,7 @@ import (
 func (srv *Service) getAll(w http.ResponseWriter, r *http.Request) service.APIError {
 
 	var groups []struct {
-		ID   int    `json:"id"   sql:"column:ID"`
+		ID   int64  `json:"id,string" sql:"column:ID"`
 		Name string `json:"name" sql:"column:sName"`
 	}
 

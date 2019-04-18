@@ -111,7 +111,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 200,
+        "id": "200",
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -135,7 +135,7 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 230,
+            "id": "230",
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
@@ -161,7 +161,7 @@ Feature: Get item for tree navigation
             },
             "children": [
               {
-                "id": 232,
+                "id": "232",
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
@@ -187,7 +187,7 @@ Feature: Get item for tree navigation
                 }
               },
               {
-                "id": 231,
+                "id": "231",
                 "order": 2,
                 "access_restricted": true,
                 "type": "Task",
@@ -215,7 +215,7 @@ Feature: Get item for tree navigation
             ]
           },
           {
-            "id": 220,
+            "id": "220",
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
@@ -241,7 +241,7 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 210,
+            "id": "210",
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
@@ -267,7 +267,7 @@ Feature: Get item for tree navigation
             },
             "children": [
               {
-                "id": 211,
+                "id": "211",
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
@@ -305,7 +305,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 232,
+        "id": "232",
         "type": "Task",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -337,7 +337,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 230,
+        "id": "230",
         "type": "Chapter",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -361,7 +361,7 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 232,
+            "id": "232",
             "order": 1,
             "access_restricted": true,
             "type": "Task",
@@ -387,7 +387,7 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 231,
+            "id": "231",
             "order": 2,
             "access_restricted": true,
             "type": "Task",
@@ -423,7 +423,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 200,
+        "id": "200",
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -455,7 +455,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 200,
+        "id": "200",
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -479,7 +479,7 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 230,
+            "id": "230",
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
@@ -505,7 +505,7 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 220,
+            "id": "220",
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
@@ -531,7 +531,7 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 210,
+            "id": "210",
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
@@ -567,7 +567,7 @@ Feature: Get item for tree navigation
     And the response body should be, in JSON:
       """
       {
-        "id": 200,
+        "id": "200",
         "type": "Category",
         "transparent_folder": true,
         "has_unlocked_items": true,
@@ -591,7 +591,7 @@ Feature: Get item for tree navigation
         },
         "children": [
           {
-            "id": 230,
+            "id": "230",
             "order": 1,
             "access_restricted": true,
             "type": "Chapter",
@@ -617,7 +617,7 @@ Feature: Get item for tree navigation
             },
             "children": [
               {
-                "id": 232,
+                "id": "232",
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",
@@ -643,7 +643,7 @@ Feature: Get item for tree navigation
                 }
               },
               {
-                "id": 231,
+                "id": "231",
                 "order": 2,
                 "access_restricted": true,
                 "type": "Task",
@@ -671,7 +671,7 @@ Feature: Get item for tree navigation
             ]
           },
           {
-            "id": 220,
+            "id": "220",
             "order": 2,
             "access_restricted": true,
             "type": "Chapter",
@@ -697,7 +697,7 @@ Feature: Get item for tree navigation
             }
           },
           {
-            "id": 210,
+            "id": "210",
             "order": 3,
             "access_restricted": true,
             "type": "Chapter",
@@ -723,7 +723,7 @@ Feature: Get item for tree navigation
             },
             "children": [
               {
-                "id": 211,
+                "id": "211",
                 "order": 1,
                 "access_restricted": true,
                 "type": "Task",

@@ -35,10 +35,10 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": 4,
+        "id": "4",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
@@ -47,17 +47,17 @@ Feature: Get requests for group_id
         "type": "requestRefused"
       },
       {
-        "id": 3,
+        "id": "3",
         "inviting_user": {
           "first_name": "Jean-Michel",
-          "id": 1,
+          "id": "1",
           "last_name": "Blanquer",
           "login": "owner"
         },
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
@@ -65,32 +65,32 @@ Feature: Get requests for group_id
         "type": "requestSent"
       },
       {
-        "id": 2,
+        "id": "2",
         "inviting_user": {
           "first_name": "Jane",
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
         "joining_user": {
           "grade": 1,
-          "id": 2,
+          "id": "2",
           "login": "user"
         },
         "status_date": "{groups_groups[2][sStatusDate]}",
         "type": "invitationRefused"
       },
       {
-        "id": 1,
+        "id": "1",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
         "joining_user": {
           "grade": 3,
-          "id": 1,
+          "id": "1",
           "login": "owner"
         },
         "status_date": "{groups_groups[1][sStatusDate]}",
@@ -107,33 +107,33 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": 1,
+        "id": "1",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
         "joining_user": {
           "grade": 3,
-          "id": 1,
+          "id": "1",
           "login": "owner"
         },
         "status_date": "{groups_groups[1][sStatusDate]}",
         "type": "invitationSent"
       },
       {
-        "id": 3,
+        "id": "3",
         "inviting_user": {
           "first_name": "Jean-Michel",
-          "id": 1,
+          "id": "1",
           "last_name": "Blanquer",
           "login": "owner"
         },
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
@@ -141,26 +141,26 @@ Feature: Get requests for group_id
         "type": "requestSent"
       },
       {
-        "id": 2,
+        "id": "2",
         "inviting_user": {
           "first_name": "Jane",
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
         "joining_user": {
           "grade": 1,
-          "id": 2,
+          "id": "2",
           "login": "user"
         },
         "status_date": "{groups_groups[2][sStatusDate]}",
         "type": "invitationRefused"
       },
       {
-        "id": 4,
+        "id": "4",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
@@ -179,10 +179,10 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": 4,
+        "id": "4",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
@@ -191,17 +191,17 @@ Feature: Get requests for group_id
         "type": "requestRefused"
       },
       {
-        "id": 3,
+        "id": "3",
         "inviting_user": {
           "first_name": "Jean-Michel",
-          "id": 1,
+          "id": "1",
           "last_name": "Blanquer",
           "login": "owner"
         },
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
@@ -209,32 +209,32 @@ Feature: Get requests for group_id
         "type": "requestSent"
       },
       {
-        "id": 1,
+        "id": "1",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
         "joining_user": {
           "grade": 3,
-          "id": 1,
+          "id": "1",
           "login": "owner"
         },
         "status_date": "{groups_groups[1][sStatusDate]}",
         "type": "invitationSent"
       },
       {
-        "id": 2,
+        "id": "2",
         "inviting_user": {
           "first_name": "Jane",
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
         "joining_user": {
           "grade": 1,
-          "id": 2,
+          "id": "2",
           "login": "user"
         },
         "status_date": "{groups_groups[2][sStatusDate]}",
@@ -251,10 +251,10 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": 4,
+        "id": "4",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
@@ -273,10 +273,10 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": 4,
+        "id": "4",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
@@ -285,17 +285,17 @@ Feature: Get requests for group_id
         "type": "requestRefused"
       },
       {
-        "id": 3,
+        "id": "3",
         "inviting_user": {
           "first_name": "Jean-Michel",
-          "id": 1,
+          "id": "1",
           "last_name": "Blanquer",
           "login": "owner"
         },
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
-          "id": 3,
+          "id": "3",
           "last_name": "Doe",
           "login": "jane"
         },
@@ -303,16 +303,16 @@ Feature: Get requests for group_id
         "type": "requestSent"
       },
       {
-        "id": 1,
+        "id": "1",
         "inviting_user": {
           "first_name": "John",
-          "id": 2,
+          "id": "2",
           "last_name": "Doe",
           "login": "user"
         },
         "joining_user": {
           "grade": 3,
-          "id": 1,
+          "id": "1",
           "login": "owner"
         },
         "status_date": "{groups_groups[1][sStatusDate]}",

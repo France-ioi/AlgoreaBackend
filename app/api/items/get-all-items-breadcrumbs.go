@@ -35,19 +35,12 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(errors.New("the IDs chain is corrupt"))
 	}
 
-	// Build response
-	// Fetch the requested items
-	var items []struct {
-		ItemID   int64  `json:"item_id"     sql:"column:idItem"`
-		Title    string `json:"title"       sql:"column:sTitle"`
-		Language int64  `json:"language_id" sql:"column:idLanguage"`
-	}
-	db := srv.Store.ItemStrings().Where("idItem IN (?)", ids).Scan(&items)
-	if db.Error() != nil {
-		return service.ErrUnexpected(db.Error())
-	}
+	var result []map[string]interface{}
+	service.MustNotBeError(srv.Store.ItemStrings().Select("idItem, sTitle, idLanguage").
+		Where("idItem IN (?)", ids).
+		ScanIntoSliceOfMaps(&result).Error())
 
-	render.Respond(w, r, items)
+	render.Respond(w, r, service.ConvertSliceOfMapsFromDBToJSON(result))
 	return service.NoError
 }
 

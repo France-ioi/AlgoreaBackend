@@ -73,7 +73,7 @@ type answersResponseAnswerUser struct {
 }
 
 type answersResponseAnswer struct {
-	ID             int64    `json:"id"`
+	ID             int64    `json:"id,string"`
 	Name           *string  `json:"name,omitempty"`
 	Type           string   `json:"type"`
 	LangProg       *string  `json:"lang_prog,omitempty"`
