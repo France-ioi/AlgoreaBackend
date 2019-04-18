@@ -525,12 +525,132 @@ func TestDB_Pluck(t *testing.T) {
 
 	db = db.Table("myTable")
 
-	result := []int64{1, 2, 3}
+	var result []int64
 	pluckDB := db.Pluck("ID", &result)
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
 	assert.Equal(t, []int64{1}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Pluck_WipesOldData(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable`")).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	result := []int64{1, 2, 3}
+	db.Pluck("ID", &result)
+
+	assert.Equal(t, []int64{1}, result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Pluck_NonSlicePointer(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db = db.Table("myTable")
+
+	result := 1
+	assert.PanicsWithValue(t, "values should be a pointer to a slice, not a pointer to int", func() {
+		db.Pluck("ID", &result)
+	})
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Pluck_NonPointer(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db = db.Table("myTable")
+
+	result := 1
+	assert.PanicsWithValue(t, "values should be a pointer to a slice, not int", func() {
+		db.Pluck("ID", result)
+	})
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Scan(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
+		WillReturnRows(mock.NewRows([]string{"ID", "value"}).AddRow(int64(1), "value"))
+
+	db = db.Table("myTable")
+
+	type resultType struct {
+		ID    int64  `gorm:"column:ID"`
+		Value string `gorm:"column:value"`
+	}
+	var result []resultType
+	scanDB := db.Scan(&result)
+
+	assert.NotEqual(t, scanDB, db)
+	assert.NoError(t, scanDB.Error())
+	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Scan_WipesOldData(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
+		WillReturnRows(mock.NewRows([]string{"ID", "value"}).AddRow(int64(1), "value"))
+
+	db = db.Table("myTable")
+
+	type resultType struct {
+		ID    int64  `gorm:"column:ID"`
+		Value string `gorm:"column:value"`
+	}
+	result := []resultType{{ID: 2, Value: "another value"}, {ID: 3, Value: "third value"}}
+	scanDB := db.Scan(&result)
+
+	assert.NoError(t, scanDB.Error())
+	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Scan_NonSlicePointer(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db = db.Table("myTable")
+
+	result := 1
+	scanDB := db.Scan(&result)
+
+	assert.EqualError(t, scanDB.Error(), "unsupported destination, should be slice or struct")
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_Scan_NonPointer(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db = db.Table("myTable")
+
+	type resultType struct {
+		ID    int64  `gorm:"column:ID"`
+		Value string `gorm:"column:value"`
+	}
+	var result []resultType
+	assert.Panics(t, func() {
+		db.Scan(result)
+	})
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -624,13 +744,34 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 
 	db = db.Table("myTable")
 
-	result := []map[string]interface{}{
-		{"column": "value"},
-	}
+	var result []map[string]interface{}
 	dbScan := db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, dbScan, db)
 	assert.NoError(t, dbScan.Error())
 
+	assert.Equal(t, []map[string]interface{}{
+		{"ID": int64(1), "Field": "value"},
+		{"ID": int64(2), "Field": "another value"},
+		{"ID": "3", "Field": nil},
+	}, result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
+		WillReturnRows(
+			mock.NewRows([]string{"ID", "Field"}).
+				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
+
+	db = db.Table("myTable")
+
+	result := []map[string]interface{}{
+		{"column": "value"},
+	}
+	db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, []map[string]interface{}{
 		{"ID": int64(1), "Field": "value"},
 		{"ID": int64(2), "Field": "another value"},
