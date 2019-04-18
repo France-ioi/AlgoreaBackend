@@ -317,15 +317,22 @@ func (conn *DB) Count(dest interface{}) *DB {
 // Pluck is used to query a single column into a slice of values
 //     var ids []int64
 //     db.Table("users").Pluck("ID", &ids)
-func (conn *DB) Pluck(column string, value interface{}) *DB {
-	// If 'value' is not empty, wipe its content by replacing it with an empty slice.
+// The 'values' parameter should be a pointer to a slice
+func (conn *DB) Pluck(column string, values interface{}) *DB {
+	// If 'values' is not empty, wipe its content by replacing it with an empty slice.
 	// Otherwise we would get new values mixed with old values.
-	reflectValue := reflect.ValueOf(value).Elem()
+	reflectPtr := reflect.ValueOf(values)
+	if reflectPtr.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("values should be a pointer to a slice, not %s", reflectPtr.Kind()))
+	}
+	reflectValue := reflectPtr.Elem()
+	if reflectValue.Kind() != reflect.Slice {
+		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
+	}
 	if reflectValue.Len() > 0 {
 		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
 	}
-
-	return newDB(conn.db.Pluck(column, value))
+	return newDB(conn.db.Pluck(column, values))
 }
 
 // Take returns a record that match given conditions, the order will depend on the database implementation
