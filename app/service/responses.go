@@ -32,3 +32,13 @@ func CreationSuccess(data interface{}) render.Renderer {
 		Data:           data,
 	}
 }
+
+// DeletionSuccess generated a success response for a DELETE deletion
+func DeletionSuccess(data interface{}) render.Renderer {
+	return &Response{
+		HTTPStatusCode: http.StatusOK,
+		Success:        true,
+		Message:        "deleted",
+		Data:           data,
+	}
+}

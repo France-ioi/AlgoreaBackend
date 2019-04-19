@@ -60,10 +60,6 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, &service.Response{
-		HTTPStatusCode: http.StatusOK,
-		Success:        true,
-		Message:        "deleted",
-	}))
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
 	return service.NoError
 }
