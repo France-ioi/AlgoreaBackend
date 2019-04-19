@@ -9,6 +9,6 @@ Then the response code should be 200
 And the response body should be, in JSON:
   """
   [
-    { "id": 1, "name": "testGroup" }
+    { "id": "1", "name": "testGroup" }
   ]
   """

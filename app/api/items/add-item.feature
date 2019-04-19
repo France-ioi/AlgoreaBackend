@@ -23,13 +23,13 @@ Scenario: Valid, id is given
   When I send a POST request to "/items/" with the following body:
     """
     {
-      "id": 2,
+      "id": "2",
       "type": "Course",
       "strings": [
-        { "language_id": 3, "title": "my title", "image_url":"http://bit.ly/1234", "subtitle": "hard task", "description": "the goal of this task is ..." }
+        { "language_id": "3", "title": "my title", "image_url":"http://bit.ly/1234", "subtitle": "hard task", "description": "the goal of this task is ..." }
       ],
       "parents": [
-        { "id": 21, "order": 100 }
+        { "id": "21", "order": 100 }
       ]
     }
     """
@@ -39,7 +39,7 @@ Scenario: Valid, id is given
   {
     "success": true,
     "message": "created",
-    "data": { "ID": 2 }
+    "data": { "ID": "2" }
   }
   """
   And the table "items" at ID "2" should be:
@@ -62,10 +62,10 @@ Scenario: Id not given
     {
       "type": "Course",
       "strings": [
-        { "language_id": 3, "title": "my title" }
+        { "language_id": "3", "title": "my title" }
       ],
       "parents": [
-        { "id": 21, "order": 100 }
+        { "id": "21", "order": 100 }
       ]
     }
     """

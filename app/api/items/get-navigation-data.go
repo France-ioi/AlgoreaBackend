@@ -23,7 +23,7 @@ type navigationItemUser struct {
 	Validated           bool    `json:"validated"`
 	Finished            bool    `json:"finished"`
 	KeyObtained         bool    `json:"key_obtained"`
-	SubmissionsAttempts int64   `json:"submissions_attempts"`
+	SubmissionsAttempts int32   `json:"submissions_attempts"`
 	StartDate           string  `json:"start_date"`      // iso8601 str
 	ValidationDate      string  `json:"validation_date"` // iso8601 str
 	FinishDate          string  `json:"finish_date"`     // iso8601 str
@@ -41,7 +41,7 @@ type navigationItemString struct {
 }
 
 type navigationItemCommonFields struct {
-	ID                int64  `json:"id"`
+	ID                int64  `json:"id,string"`
 	Type              string `json:"type"`
 	TransparentFolder bool   `json:"transparent_folder"`
 	// whether items.idItemUnlocked is empty
@@ -61,7 +61,7 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order            int64 `json:"order"`
+	Order            int32 `json:"order"`
 	AccessRestricted bool  `json:"access_restricted"`
 }
 
@@ -91,16 +91,16 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 		return service.ErrUnexpected(err)
 	}
 
-	if len(*rawData) == 0 || (*rawData)[0].ID != req.ID {
+	if len(rawData) == 0 || rawData[0].ID != req.ID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
 	}
 
 	response := navigationDataResponse{
-		srv.fillNavigationCommonFieldsWithDBData(&(*rawData)[0]),
+		srv.fillNavigationCommonFieldsWithDBData(&rawData[0]),
 	}
 	idMap := map[int64]*rawNavigationItem{}
-	for index := range *rawData {
-		idMap[(*rawData)[index].ID] = &(*rawData)[index]
+	for index := range rawData {
+		idMap[rawData[index].ID] = &rawData[index]
 	}
 	idsToResponseData := map[int64]*navigationItemCommonFields{req.ID: response.navigationItemCommonFields}
 	srv.fillNavigationSubtreeWithChildren(rawData, idMap, idsToResponseData)
@@ -109,10 +109,10 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 	return service.NoError
 }
 
-func (srv *Service) fillNavigationSubtreeWithChildren(rawData *[]rawNavigationItem,
+func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationItem,
 	idMap map[int64]*rawNavigationItem,
 	idsToResponseData map[int64]*navigationItemCommonFields) {
-	for index, item := range *rawData {
+	for index, item := range rawData {
 		if index == 0 {
 			continue
 		}

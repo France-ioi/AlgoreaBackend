@@ -14,8 +14,8 @@ type ItemItem struct {
 	ID           types.Int64 `sql:"column:ID"`
 	ParentItemID types.Int64 `sql:"column:idItemParent"`
 	ChildItemID  types.Int64 `sql:"column:idItemChild"`
-	Order        types.Int64 `sql:"column:iChildOrder"`
-	Difficulty   int64       `sql:"column:iDifficulty"` // use Go default in DB (to be fixed)
+	Order        types.Int32 `sql:"column:iChildOrder"`
+	Difficulty   int32       `sql:"column:iDifficulty"` // use Go default in DB (to be fixed)
 	Version      int64       `sql:"column:iVersion"`    // use Go default in DB (to be fixed)
 }
 

@@ -30,6 +30,37 @@ var expectedLazyLoadDataQueryRegexp = "^" + regexp.QuoteMeta(
 	"SELECT users.*, l.ID as idDefaultLanguage FROM `users` LEFT JOIN languages l ON (users.sDefaultLanguage = l.sCode) WHERE (users.ID = ?)",
 ) + "$"
 
+func TestUser_Load(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	userStore := NewDataStore(db).Users()
+	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnRows(
+		sqlmock.
+			NewRows([]string{"ID"}).AddRow(int64(43)),
+	)
+	user := User{42, userStore, nil}
+
+	err := user.Load()
+	assert.NotNil(t, user.data)
+	assert.EqualValues(t, 43, user.data.ID)
+	assert.NoError(t, err)
+}
+
+func TestUser_Load_Fail(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("db error")
+	userStore := NewDataStore(db).Users()
+	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnError(expectedError)
+	user := User{42, userStore, nil}
+
+	err := user.Load()
+	assert.Equal(t, expectedError, err)
+	assert.Nil(t, user.data)
+}
+
 func TestUser_SelfGroupID(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()

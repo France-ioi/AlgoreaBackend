@@ -155,25 +155,32 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 		return
 	}
 
-	if valueName == "ID" {
-		result["id"] = value.(int64)
-		return
+	snakeCaseName := toSnakeCase(valueName)
+	if valueName[:2] == "id" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_' {
+		snakeCaseName = snakeCaseName[3:] + "_id"
+	} else if valueName[:2] == "nb" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_' {
+		value = int32(value.(int64))
+		snakeCaseName = snakeCaseName[3:]
+	} else if len(snakeCaseName) > 1 && snakeCaseName[1] == '_' {
+		switch valueName[0] {
+		case 'b':
+			value = value == int64(1)
+			snakeCaseName = snakeCaseName[2:]
+		case 's':
+			snakeCaseName = snakeCaseName[2:]
+		case 'i':
+			if _, ok := value.(int64); ok {
+				value = int32(value.(int64))
+			}
+			snakeCaseName = snakeCaseName[2:]
+		}
 	}
 
-	if valueName[:2] == "id" {
-		valueName = toSnakeCase(valueName[2:]) + "_id"
-		result[valueName] = value.(int64)
-		return
+	if valueInt64, ok := value.(int64); ok {
+		value = strconv.FormatInt(valueInt64, 10)
 	}
 
-	switch valueName[0] {
-	case 'b':
-		value = value == int64(1)
-		fallthrough
-	case 's', 'i':
-		valueName = valueName[1:]
-	}
-	result[toSnakeCase(valueName)] = value
+	result[snakeCaseName] = value
 }
 
 // toSnakeCase convert the given string to snake case following the Golang format:

@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
 	"unsafe"
 )
 
@@ -14,25 +13,25 @@ import (
 // For failing on optional, it has be done at the struct validation level
 
 type (
-	// Int64 is an integer which can be set/not-set and null/not-null
-	Int64 struct {
-		Value int64
+	// Int32 is an integer which can be set/not-set and null/not-null
+	Int32 struct {
+		Value int32
 		Set   bool
 		Null  bool
 	}
-	// RequiredInt64 must be set and not null
-	RequiredInt64 struct{ Int64 }
-	// NullableInt64 must be set and can be null
-	NullableInt64 struct{ Int64 }
-	// OptionalInt64 can be not set. If set, cannot be null.
-	OptionalInt64 struct{ Int64 }
-	// OptNullInt64 can be not set or null
-	OptNullInt64 struct{ Int64 }
+	// RequiredInt32 must be set and not null
+	RequiredInt32 struct{ Int32 }
+	// NullableInt32 must be set and can be null
+	NullableInt32 struct{ Int32 }
+	// OptionalInt32 can be not set. If set, cannot be null.
+	OptionalInt32 struct{ Int32 }
+	// OptNullInt32 can be not set or null
+	OptNullInt32 struct{ Int32 }
 )
 
-// NewInt64 creates a Int64 which is not-null and set with the given value
-func NewInt64(v int64) *Int64 {
-	n := &Int64{}
+// NewInt32 creates a Int32 which is not-null and set with the given value
+func NewInt32(v int32) *Int32 {
+	n := &Int32{}
 	n.Value = v
 	n.Set = true
 	n.Null = false
@@ -40,27 +39,24 @@ func NewInt64(v int64) *Int64 {
 }
 
 // UnmarshalJSON parse JSON data to the type
-func (i *Int64) UnmarshalJSON(data []byte) (err error) {
+func (i *Int32) UnmarshalJSON(data []byte) (err error) {
 	i.Set = true // If this method was called, the value was set.
 	i.Null = *(*string)(unsafe.Pointer(&data)) == jsonNull
-	if i.Null {
-		return
-	}
-	var temp string
+	var temp int32
 	err = json.Unmarshal(data, &temp)
 	if err == nil {
-		i.Value, err = strconv.ParseInt(temp, 10, 64)
+		i.Value = temp
 	}
 	return
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
-func (i Int64) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+func (i Int32) AllAttributes() (value interface{}, isNull bool, isSet bool) {
 	return i.Value, i.Null, i.Set
 }
 
 // Validate checks that the subject matches "required" (set and not-null)
-func (i *RequiredInt64) Validate() error {
+func (i *RequiredInt32) Validate() error {
 	if !i.Set || i.Null {
 		return errors.New("must be given and not null")
 	}
@@ -68,7 +64,7 @@ func (i *RequiredInt64) Validate() error {
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
-func (i *NullableInt64) Validate() error {
+func (i *NullableInt32) Validate() error {
 	if !i.Set {
 		return errors.New("must be given")
 	}
@@ -76,7 +72,7 @@ func (i *NullableInt64) Validate() error {
 }
 
 // Validate checks that the subject matches "optional" (not-null)
-func (i *OptionalInt64) Validate() error {
+func (i *OptionalInt32) Validate() error {
 	if i.Null {
 		return errors.New("must not be null")
 	}
@@ -84,6 +80,6 @@ func (i *OptionalInt64) Validate() error {
 }
 
 // Validate checks that the subject matches "optnull" (always true)
-func (i *OptNullInt64) Validate() error {
+func (i *OptNullInt32) Validate() error {
 	return nil
 }

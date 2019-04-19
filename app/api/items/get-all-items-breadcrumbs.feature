@@ -47,10 +47,10 @@ Scenario: Full access on all breadcrumb
   And the response body should be, in JSON:
   """
   [
-  { "item_id": 21, "language_id": 1, "title": "Graph: Methods" },
-  { "item_id": 22, "language_id": 1, "title": "DFS" },
-  { "item_id": 23, "language_id": 1, "title": "Reduce Graph" },
-  { "item_id": 21, "language_id": 2, "title": "Graphe: Methodes" }
+  { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
+  { "item_id": "22", "language_id": "1", "title": "DFS" },
+  { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
+  { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
   ]
   """
 
@@ -70,10 +70,10 @@ Scenario: Partial access on all breadcrumb
   And the response body should be, in JSON:
     """
     [
-    { "item_id": 21, "language_id": 1, "title": "Graph: Methods" },
-    { "item_id": 22, "language_id": 1, "title": "DFS" },
-    { "item_id": 23, "language_id": 1, "title": "Reduce Graph" },
-    { "item_id": 21, "language_id": 2, "title": "Graphe: Methodes" }
+    { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
+    { "item_id": "22", "language_id": "1", "title": "DFS" },
+    { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
+    { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
     ]
     """
 
@@ -93,10 +93,10 @@ Scenario: Partial access to all items except for last which is greyed
   And the response body should be, in JSON:
     """
     [
-    { "item_id": 21, "language_id": 1, "title": "Graph: Methods" },
-    { "item_id": 22, "language_id": 1, "title": "DFS" },
-    { "item_id": 23, "language_id": 1, "title": "Reduce Graph" },
-    { "item_id": 21, "language_id": 2, "title": "Graphe: Methodes" }
+    { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
+    { "item_id": "22", "language_id": "1", "title": "DFS" },
+    { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
+    { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
     ]
     """
 

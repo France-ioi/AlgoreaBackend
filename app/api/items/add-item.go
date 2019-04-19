@@ -27,7 +27,7 @@ type NewItemRequest struct {
 
 	Parents []struct {
 		ID    types.RequiredInt64 `json:"id"`
-		Order types.RequiredInt64 `json:"order"`
+		Order types.RequiredInt32 `json:"order"`
 	} `json:"parents"`
 }
 
@@ -39,7 +39,8 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Parents) != 1 {
 		return errors.New("exactly one parent item is supported at the moment")
 	}
-	return types.Validate([]string{"id", "type"}, &in.ID, &in.Type)
+	return types.Validate([]string{"id", "type", "strings[0].language_id", "parents[0].id"},
+		&in.ID, &in.Type, &in.Strings[0].LanguageID, &in.Parents[0].ID)
 }
 
 func (in *NewItemRequest) itemData() *database.Item {
@@ -82,7 +83,7 @@ func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
 	return &database.ItemItem{
 		ID:           *types.NewInt64(id),
 		ChildItemID:  in.ID.Int64,
-		Order:        in.Parents[0].Order.Int64,
+		Order:        in.Parents[0].Order.Int32,
 		ParentItemID: in.Parents[0].ID.Int64,
 	}
 }
@@ -109,7 +110,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 
 	// response
 	response := struct {
-		ItemID int64 `json:"ID"`
+		ItemID int64 `json:"ID,string"`
 	}{input.ID.Value}
 	if err = render.Render(w, r, service.CreationSuccess(&response)); err != nil {
 		return service.ErrUnexpected(err)

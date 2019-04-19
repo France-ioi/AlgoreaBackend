@@ -50,9 +50,9 @@ Feature: Get recent activity for group_id and item_id
 		"""
 		[
 			{
-				"id": 3,
+				"id": "3",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -68,9 +68,9 @@ Feature: Get recent activity for group_id and item_id
 				"validated": true
 			},
 			{
-				"id": 1,
+				"id": "1",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -86,9 +86,9 @@ Feature: Get recent activity for group_id and item_id
 				"validated": false
 			},
 			{
-				"id": 2,
+				"id": "2",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -114,9 +114,9 @@ Feature: Get recent activity for group_id and item_id
 		"""
 		[
 			{
-				"id": 3,
+				"id": "3",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -142,9 +142,9 @@ Feature: Get recent activity for group_id and item_id
 		"""
 		[
 			{
-				"id": 1,
+				"id": "1",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -160,9 +160,9 @@ Feature: Get recent activity for group_id and item_id
 				"validated": false
 			},
 			{
-				"id": 2,
+				"id": "2",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -188,9 +188,9 @@ Feature: Get recent activity for group_id and item_id
 		"""
 		[
 			{
-				"id": 2,
+				"id": "2",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -216,9 +216,9 @@ Feature: Get recent activity for group_id and item_id
 		"""
 		[
 			{
-				"id": 3,
+				"id": "3",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
@@ -234,9 +234,9 @@ Feature: Get recent activity for group_id and item_id
 				"validated": true
 			},
 			{
-				"id": 2,
+				"id": "2",
 				"item": {
-					"id": 200,
+					"id": "200",
 					"string": {
 						"title": "Catégorie 1"
 					},
