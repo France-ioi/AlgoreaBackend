@@ -161,10 +161,12 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 					Where("ancestors.idGroupChild IS NULL").
 					Pluck("groups.ID", &idsToDelete).Error())
 
-				deleteResult := s.db.Exec(deleteGroupsQuery, idsToDelete)
-				mustNotBeError(deleteResult.Error)
-				if deleteResult.RowsAffected > 0 {
-					s.GroupGroups().createNewAncestors()
+				if len(idsToDelete) > 0 {
+					deleteResult := s.db.Exec(deleteGroupsQuery, idsToDelete)
+					mustNotBeError(deleteResult.Error)
+					if deleteResult.RowsAffected > 0 {
+						s.GroupGroups().createNewAncestors()
+					}
 				}
 			}
 
