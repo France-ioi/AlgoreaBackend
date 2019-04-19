@@ -168,7 +168,7 @@ Feature: Add item - robustness
       | 21 | false          | false    | 0        |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | bManagerAccess | idUserCreated | iVersion |
-      | 41 | 11      | 21     | false           | 0             | 0        |
+      | 41 | 11      | 21     | false          | 0             | 0        |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
       | 71 | 11              | 11           | 1       | 0        |
