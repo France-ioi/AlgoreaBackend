@@ -82,5 +82,4 @@ Feature: Remove a direct parent-child relation between two groups
       | 22              | 14           | 0       |
       | 22              | 22           | 1       |
     And the table "groups" should stay unchanged but the row with ID "13"
-    And the table "groups" at ID "13" should be:
-      | ID |
+    And the table "groups" should not contain ID "13"

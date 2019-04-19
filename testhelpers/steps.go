@@ -544,6 +544,11 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gh
 	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false, data)
 }
 
+func (ctx *TestContext) TableShouldNotContainID(tableName string, ids string) error { // nolint
+	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false,
+		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "ID"}}}}})
+}
+
 func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
