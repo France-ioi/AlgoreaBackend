@@ -92,7 +92,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	_, err := user.DefaultLanguageID() // check that the user exists
+	err := user.Load() // check that the user exists
 	if err == database.ErrUserNotFound {
 		return service.InsufficientAccessRightsError
 	}
