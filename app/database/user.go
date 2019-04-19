@@ -53,6 +53,11 @@ func (u *User) lazyLoadData() error {
 	return err
 }
 
+// Load loads the user data from the DB if it has not been loaded yet
+func (u *User) Load() error {
+	return u.lazyLoadData()
+}
+
 // SelfGroupID return the group_id of the user used for his group ownership
 func (u *User) SelfGroupID() (int64, error) {
 	if err := u.lazyLoadData(); err != nil {
