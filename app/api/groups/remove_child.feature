@@ -32,7 +32,7 @@ Feature: Remove a direct parent-child relation between two groups
 
   Scenario: User deletes a relation
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/remove_child/11"
+    When I send a DELETE request to "/group-relations/13/11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -60,7 +60,7 @@ Feature: Remove a direct parent-child relation between two groups
 
   Scenario: User deletes a relation and an orphaned child group
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/22/remove_child/13?delete_orphans=1"
+    When I send a DELETE request to "/group-relations/22/13?delete_orphans=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

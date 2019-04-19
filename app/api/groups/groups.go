@@ -24,11 +24,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 	router.Post("/groups/{group_id}/change_password", service.AppHandler(srv.changePassword).ServeHTTP)
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
-	router.Post("/groups/{parent_group_id}/add_child/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
-	router.Post("/groups/{parent_group_id}/remove_child/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/accept_requests", service.AppHandler(srv.acceptRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/reject_requests", service.AppHandler(srv.rejectRequests).ServeHTTP)
+
+	router.Post("/group-relations/{parent_group_id}/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
+	router.Delete("/group-relations/{parent_group_id}/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
 }
 
 func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
