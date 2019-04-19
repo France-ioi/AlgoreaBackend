@@ -3,7 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/go-chi/render"
@@ -15,11 +14,11 @@ import (
 
 // NewItemRequest is the expected input for new created item
 type NewItemRequest struct {
-	ID   types.OptionalString `json:"id"`
+	ID   types.OptionalInt64  `json:"id"`
 	Type types.RequiredString `json:"type"`
 
 	Strings []struct {
-		LanguageID  types.RequiredString `json:"language_id"`
+		LanguageID  types.RequiredInt64  `json:"language_id"`
 		Title       types.RequiredString `json:"title"`
 		ImageURL    types.OptNullString  `json:"image_url"`
 		Subtitle    types.OptNullString  `json:"subtitle"`
@@ -27,8 +26,8 @@ type NewItemRequest struct {
 	} `json:"strings"`
 
 	Parents []struct {
-		ID    types.RequiredString `json:"id"`
-		Order types.RequiredInt64  `json:"order"` // actually it should be int32
+		ID    types.RequiredInt64 `json:"id"`
+		Order types.RequiredInt32 `json:"order"`
 	} `json:"parents"`
 }
 
@@ -40,43 +39,24 @@ func (in *NewItemRequest) Bind(r *http.Request) error {
 	if len(in.Parents) != 1 {
 		return errors.New("exactly one parent item is supported at the moment")
 	}
-	if err := types.Validate([]string{"id", "type"}, &in.ID, &in.Type); err != nil {
-		return err
-	}
-	if in.ID.Set {
-		if _, err := strconv.ParseInt(in.ID.Value, 10, 64); err != nil {
-			return errors.New("'id' should be a number")
-		}
-	}
-	if _, err := strconv.ParseInt(in.Strings[0].LanguageID.Value, 10, 64); err != nil {
-		return errors.New("'strings[0].language_id' should be a number")
-	}
-	if _, err := strconv.ParseInt(in.Parents[0].ID.Value, 10, 64); err != nil {
-		return errors.New("'parents[0].id' should be a number")
-	}
-	return nil
+	return types.Validate([]string{"id", "type", "strings[0].language_id", "parents[0].id"},
+		&in.ID, &in.Type, &in.Strings[0].LanguageID, &in.Parents[0].ID)
 }
 
 func (in *NewItemRequest) itemData() *database.Item {
-	id, err := strconv.ParseInt(in.ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
-	languageID, err := strconv.ParseInt(in.Strings[0].LanguageID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
 	return &database.Item{
-		ID:                *types.NewInt64(id),
+		ID:                in.ID.Int64,
 		Type:              in.Type.String,
-		DefaultLanguageID: *types.NewInt64(languageID),
+		DefaultLanguageID: in.Strings[0].LanguageID.Int64,
 		TeamsEditable:     *types.NewBool(false), // has no db default at the moment, so must be set
 		NoScore:           *types.NewBool(false), // has no db default at the moment, so must be set
 	}
 }
 
 func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *database.GroupItem {
-	itemID, err := strconv.ParseInt(in.ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
-		ItemID:         *types.NewInt64(itemID),
+		ItemID:         in.ID.Int64,
 		GroupID:        *types.NewInt64(groupID),
 		CreatorUserID:  *types.NewInt64(userID),
 		FullAccessDate: *types.NewDatetime(time.Now()),
@@ -89,14 +69,10 @@ func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *
 }
 
 func (in *NewItemRequest) stringData(id int64) *database.ItemString {
-	itemID, err := strconv.ParseInt(in.ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
-	languageID, err := strconv.ParseInt(in.Strings[0].LanguageID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
 	return &database.ItemString{
 		ID:          *types.NewInt64(id),
-		ItemID:      *types.NewInt64(itemID),
-		LanguageID:  *types.NewInt64(languageID),
+		ItemID:      in.ID.Int64,
+		LanguageID:  in.Strings[0].LanguageID.Int64,
 		Title:       in.Strings[0].Title.String,
 		ImageURL:    in.Strings[0].ImageURL.String,
 		Subtitle:    in.Strings[0].Subtitle.String,
@@ -104,15 +80,11 @@ func (in *NewItemRequest) stringData(id int64) *database.ItemString {
 	}
 }
 func (in *NewItemRequest) itemItemData(id int64) *database.ItemItem {
-	itemID, err := strconv.ParseInt(in.ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
-	parentItemID, err := strconv.ParseInt(in.Parents[0].ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
 	return &database.ItemItem{
 		ID:           *types.NewInt64(id),
-		ChildItemID:  *types.NewInt64(itemID),
-		Order:        in.Parents[0].Order.Int64,
-		ParentItemID: *types.NewInt64(parentItemID),
+		ChildItemID:  in.ID.Int64,
+		Order:        in.Parents[0].Order.Int32,
+		ParentItemID: in.Parents[0].ID.Int64,
 	}
 }
 
@@ -125,11 +97,9 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	if err = render.Bind(r, input); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	parentItemID, err := strconv.ParseInt(input.Parents[0].ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
 
 	// check permissions
-	if ret := srv.checkPermission(user, parentItemID); ret != service.NoError {
+	if ret := srv.checkPermission(user, input.Parents[0].ID.Value); ret != service.NoError {
 		return ret
 	}
 
@@ -138,13 +108,10 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
-	id, err := strconv.ParseInt(input.ID.Value, 10, 64)
-	service.MustNotBeError(err) // we have checked this in Bind()
-
 	// response
 	response := struct {
-		ItemID string `json:"ID"`
-	}{strconv.FormatInt(id, 10)}
+		ItemID int64 `json:"ID,string"`
+	}{input.ID.Value}
 	if err = render.Render(w, r, service.CreationSuccess(&response)); err != nil {
 		return service.ErrUnexpected(err)
 	}
@@ -152,11 +119,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 func (srv *Service) insertItem(user *database.User, input *NewItemRequest) error {
-	if !input.ID.Set {
-		input.ID.Value = strconv.FormatInt(srv.Store.NewID(), 10)
-		input.ID.Set = true
-		input.ID.Null = false
-	}
+	srv.Store.EnsureSetID(&input.ID.Int64)
 
 	return srv.Store.InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Items().Insert(input.itemData()))

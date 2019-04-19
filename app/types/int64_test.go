@@ -35,7 +35,7 @@ func TestNewInt(t *testing.T) {
 func TestIntValid(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": 2147483645, "ChildID": 22, "Order": -1, "ParentID": 7 }`
+	jsonInput := `{ "ID": "2147483645", "ChildID": "22", "Order": "-1", "ParentID": "7" }`
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.EqualValues(2147483645, input.ID.Value)
@@ -48,7 +48,7 @@ func TestIntValid(t *testing.T) {
 func TestIntWithNonInt(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": "not an int", "ChildID": 22, "Order": -1, "ParentID": 7 }`
+	jsonInput := `{ "ID": "not an int", "ChildID": "22", "Order": "-1", "ParentID": "7" }`
 	input := &SampleIntInput{}
 	assert.Error(json.Unmarshal([]byte(jsonInput), &input))
 }
@@ -56,7 +56,7 @@ func TestIntWithNonInt(t *testing.T) {
 func TestIntWithDefault(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": 0, "ChildID": 0, "Order": 0, "ParentID": 0 }`
+	jsonInput := `{ "ID": "0", "ChildID": "0", "Order": "0", "ParentID": "0" }`
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.NoError(input.validate())

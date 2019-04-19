@@ -3,6 +3,8 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
+	"unsafe"
 )
 
 // Important notes on all these custom types:
@@ -40,11 +42,14 @@ func NewInt64(v int64) *Int64 {
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 	i.Set = true // If this method was called, the value was set.
-	i.Null = string(data) == jsonNull
-	var temp int64
+	i.Null = *(*string)(unsafe.Pointer(&data)) == jsonNull
+	if i.Null {
+		return
+	}
+	var temp string
 	err = json.Unmarshal(data, &temp)
 	if err == nil {
-		i.Value = temp
+		i.Value, err = strconv.ParseInt(temp, 10, 64)
 	}
 	return
 }

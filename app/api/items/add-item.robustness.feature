@@ -31,7 +31,7 @@ Feature: Add item - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "'id' should be a number"
+    And the response error message should contain "Strconv.ParseInt: parsing "2asdf": invalid syntax"
 
   Scenario: language_id is not a number
     When I send a POST request to "/items/" with the following body:
@@ -48,7 +48,7 @@ Feature: Add item - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "'strings[0].language_id' should be a number"
+    And the response error message should contain "Strconv.ParseInt: parsing "sewrwer3": invalid syntax"
 
   Scenario: parents[0].id is not a number
     When I send a POST request to "/items/" with the following body:
@@ -65,7 +65,7 @@ Feature: Add item - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "'parents[0].id' should be a number"
+    And the response error message should contain "Strconv.ParseInt: parsing "sfaewr20": invalid syntax"
 
   Scenario: No strings given
     When I send a POST request to "/items/" with the following body:
