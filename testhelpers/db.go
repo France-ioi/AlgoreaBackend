@@ -128,7 +128,8 @@ func emptyDB(db *sql.DB, dbName string) {
 		if err = rows.Scan(&tableName); err != nil {
 			panic(err)
 		}
-		_, err = db.Exec("TRUNCATE TABLE " + tableName)
+		// DELETE is MUCH faster than TRUNCATE on empty tables
+		_, err = db.Exec("DELETE FROM " + tableName)
 		if err != nil {
 			panic(err)
 		}

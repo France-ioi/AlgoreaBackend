@@ -185,7 +185,8 @@ func (ctx *TestContext) emptyDB() error {
 		if err = rows.Scan(&tableName); err != nil {
 			return err
 		}
-		_, err = db.Exec("TRUNCATE TABLE " + tableName)
+		// DELETE is MUCH faster than TRUNCATE on empty tables
+		_, err := db.Exec("DELETE FROM " + tableName)
 		if err != nil {
 			return err
 		}
