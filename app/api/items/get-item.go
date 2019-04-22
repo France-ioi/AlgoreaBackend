@@ -98,10 +98,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 	service.MustNotBeError(err)
 
-	rawData, err := getRawItemData(srv.Store.Items(), req.ID, user)
-	if err != nil {
-		return service.ErrUnexpected(err)
-	}
+	rawData := getRawItemData(srv.Store.Items(), req.ID, user)
 
 	if len(rawData) == 0 || rawData[0].ID != req.ID {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
@@ -187,7 +184,7 @@ type rawItem struct {
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
-func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) ([]rawItem, error) {
+func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []rawItem {
 	var result []rawItem
 
 	accessRights := s.AccessRights(user)
@@ -304,7 +301,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) ([
 		Order("iChildOrder")
 
 	service.MustNotBeError(query.Scan(&result).Error())
-	return result, nil
+	return result
 }
 
 func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {

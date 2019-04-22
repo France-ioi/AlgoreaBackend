@@ -2,11 +2,13 @@ package database
 
 import "database/sql"
 
+const groups = "groups"
+
 // createNewAncestors inserts new rows into
 // the objectName_ancestors table (items_ancestors or groups_ancestor)
 // for all rows marked with sAncestorsComputationState="todo" in objectName_propagate
 // (items_propagate or groups_propagate) and their descendants
-func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
+func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #nosec */
 	// We mark as 'todo' all descendants of objects marked as 'todo'
 	query := `
 		INSERT INTO  ` + objectName + `_propagate (ID, sAncestorsComputationState)
@@ -23,7 +25,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 	hasChanges := true
 
 	groupsAcceptedCondition := ""
-	if objectName == "groups" {
+	if objectName == groups {
 		groupsAcceptedCondition = ` AND (
 			groups_groups.sType = 'invitationAccepted' OR
 			groups_groups.sType = 'requestAccepted' OR
@@ -57,6 +59,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 					)`
 	*/
 
+	/* #nosec */
 	query = `
 		UPDATE ` + objectName + `_propagate AS children
 		LEFT JOIN (
@@ -86,7 +89,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 
 	bIsSelfColumn := ""
 	bIsSelfValue := ""
-	if objectName == "groups" {
+	if objectName == groups {
 		bIsSelfColumn = ", bIsSelf"
 		bIsSelfValue = ", '0' AS bIsSelf"
 	}
@@ -124,8 +127,8 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 			` + relationsTable + `_join.id` + upObjectName + `Child = ` + objectName + `_propagate.ID
 		)
 		WHERE 
-			` + objectName + `_propagate.sAncestorsComputationState = 'processing'`
-	if objectName == "groups" {
+			` + objectName + `_propagate.sAncestorsComputationState = 'processing'` // #nosec
+	if objectName == groups {
 		query += `
 			AND (
 				groups_groups_join.sType = 'invitationAccepted' OR
@@ -149,7 +152,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) {
 	query = `
 		UPDATE ` + objectName + `_propagate
 		SET sAncestorsComputationState = 'done'
-		WHERE sAncestorsComputationState = 'processing'`
+		WHERE sAncestorsComputationState = 'processing'` // #nosec
 	markAsDone, err := s.db.CommonDB().Prepare(query)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsDone.Close()) }()

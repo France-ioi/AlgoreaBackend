@@ -61,12 +61,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		dbMap := formData.ConstructMapForDB()
-		if errInTransaction = refuseSentGroupRequestsIfNeeded(groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
+		if errInTransaction := refuseSentGroupRequestsIfNeeded(
+			groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
 		// update the group
-		if errInTransaction = groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
+		if errInTransaction := groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 

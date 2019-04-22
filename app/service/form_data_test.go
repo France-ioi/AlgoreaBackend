@@ -1,11 +1,12 @@
 package service
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFormData_ParseJSONRequestData(t *testing.T) {
@@ -158,6 +159,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
@@ -295,6 +297,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))

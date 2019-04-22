@@ -55,7 +55,7 @@ func (i *Int64) UnmarshalJSON(data []byte) (err error) {
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
-func (i Int64) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+func (i Int64) AllAttributes() (value interface{}, isNull, isSet bool) {
 	return i.Value, i.Null, i.Set
 }
 

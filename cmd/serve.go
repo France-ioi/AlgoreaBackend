@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app"
 )
 
-func init() {
+func init() { // nolint:gochecknoinits
 
 	var serveCmd = &cobra.Command{
 		Use:   "serve",

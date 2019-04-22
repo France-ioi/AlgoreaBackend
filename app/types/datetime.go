@@ -47,7 +47,7 @@ func (t *Datetime) UnmarshalJSON(data []byte) (err error) {
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
-func (t Datetime) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+func (t Datetime) AllAttributes() (value interface{}, isNull, isSet bool) {
 	return t.Value, t.Null, t.Set
 }
 

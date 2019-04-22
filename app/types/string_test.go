@@ -35,7 +35,8 @@ func TestNewString(t *testing.T) {
 func TestStrValid(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "Title": "The Pragmatic Programmer", "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
+	jsonInput := `{ "Title": "The Pragmatic Programmer", "Description": "From Journeyman to Master", ` +
+		`"Author": "Andy Hunt", "LastReader": "John Doe" }`
 	input := &SampleStrInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.Equal("The Pragmatic Programmer", input.Title.Value)
@@ -78,7 +79,7 @@ func TestStrWithNull(t *testing.T) {
 func TestStrWithNotSet(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{}`
+	jsonInput := emptyJSONStruct
 	input := &SampleStrInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.Error(input.Title.Validate())

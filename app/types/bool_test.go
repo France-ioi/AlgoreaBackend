@@ -7,6 +7,8 @@ import (
 	assertlib "github.com/stretchr/testify/assert"
 )
 
+const emptyJSONStruct = `{}`
+
 type SampleBoolInput struct {
 	Enabled             RequiredBool
 	Deletable           NullableBool
@@ -78,7 +80,7 @@ func TestBoolWithNull(t *testing.T) {
 func TestBoolWithNotSet(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{}`
+	jsonInput := emptyJSONStruct
 	input := &SampleBoolInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.Error(input.Enabled.Validate())

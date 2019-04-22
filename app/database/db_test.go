@@ -18,6 +18,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
+const someName = "some name"
+
 func TestDB_inTransaction_NoErrors(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -803,11 +805,11 @@ func TestDB_Updates(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `id` = ?, `name` = ?")).
-		WithArgs(1, "some name").
+		WithArgs(1, someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	db = db.Table("myTable")
-	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": "some name"})
+	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": someName})
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
 
@@ -819,11 +821,11 @@ func TestDB_UpdateColumn(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `name` = ?")).
-		WithArgs("some name").
+		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	db = db.Table("myTable")
-	updateDB := db.UpdateColumn("name", "some name")
+	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
 
@@ -951,7 +953,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ //nolint:govet // runtime error
+			a[0]++ // nolint:govet // runtime error
 			return nil
 		}()
 
@@ -966,7 +968,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := "lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 
@@ -984,7 +986,7 @@ func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t
 func TestDB_withNamedLock_ReturnsErrorWhenDBFails(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 	expectedError := errors.New("some error")
@@ -1003,7 +1005,7 @@ func TestDB_withNamedLock_ReturnsErrorWhenDBFails(t *testing.T) {
 func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 
@@ -1023,7 +1025,7 @@ func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 	expectedError := errors.New("some error")
@@ -1044,7 +1046,7 @@ func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 	expectedError := errors.New("some error")
@@ -1066,7 +1068,7 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
-	lockName := "some name"
+	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 	expectedError := errors.New("some error")

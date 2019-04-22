@@ -19,7 +19,8 @@ type authResp struct {
 	Error  string `json:"error"`
 }
 
-func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.ResponseWriter, r *http.Request), wrongURL bool) (bool, *http.Response) {
+func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.ResponseWriter, r *http.Request),
+	wrongURL bool) (bool, *http.Response) {
 	// setup auth backend
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -32,7 +33,7 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
 	backendURL, _ := url.Parse(backend.URL)
 	backendURLStr := backendURL.String()
 	if wrongURL {
-		backendURLStr = backendURLStr + "9"
+		backendURLStr += "9"
 	}
 
 	// dummy server using the middleware
@@ -67,7 +68,7 @@ func TestValid(t *testing.T) {
 		dataJSON, _ := json.Marshal(&authResp{id, ""})
 		_, _ = w.Write(dataJSON)
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(200, resp.StatusCode)
 	assert.True(didService)
@@ -78,7 +79,7 @@ func TestMissingSession(t *testing.T) {
 	assert := assertlib.New(t)
 
 	didService, resp := callAuthThroughMiddleware("", func(w http.ResponseWriter, r *http.Request) {}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -101,9 +102,9 @@ func TestInvalidResponseFormat1(t *testing.T) {
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal([]invalidAuthResp{{"duh?"}}) // unexpected format
-		_, _ = w.Write(dataJSON)                                        // nolint
+		_, _ = w.Write(dataJSON)                                 // nolint
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -118,9 +119,9 @@ func TestInvalidResponseFormat2(t *testing.T) {
 
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		dataJSON, _ := json.Marshal(invalidAuthResp{"duh?"}) // unexpected format
-		_, _ = w.Write(dataJSON)                                    // nolint
+		_, _ = w.Write(dataJSON)                             // nolint
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -134,7 +135,7 @@ func TestInvalidJSON(t *testing.T) {
 	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("this is invalid json"))
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)
@@ -149,7 +150,7 @@ func TestAuthError(t *testing.T) {
 		dataJSON, _ := json.Marshal(&authResp{-1, "invalid token error"})
 		_, _ = w.Write(dataJSON)
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -164,7 +165,7 @@ func TestAuthErrorPositiveID(t *testing.T) {
 		dataJSON, _ := json.Marshal(&authResp{99, "invalid token error"})
 		_, _ = w.Write(dataJSON)
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(401, resp.StatusCode)
 	assert.False(didService)
@@ -179,7 +180,7 @@ func TestInvalidID(t *testing.T) {
 		dataJSON, _ := json.Marshal(&authResp{-1, ""}) // unexpected resp from the auth server
 		_, _ = w.Write(dataJSON)
 	}, false)
-	defer func() {_ = resp.Body.Close()}()
+	defer func() { _ = resp.Body.Close() }()
 	bodyBytes, _ := ioutil.ReadAll(resp.Body)
 	assert.Equal(502, resp.StatusCode)
 	assert.False(didService)

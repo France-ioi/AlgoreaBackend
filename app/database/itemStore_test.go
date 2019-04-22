@@ -65,6 +65,7 @@ func TestCheckAccess(t *testing.T) {
 		},
 	}
 	for _, tC := range testCases {
+		tC := tC
 		t.Run(tC.desc, func(t *testing.T) {
 			err := checkAccess(tC.itemIDs, tC.itemAccessDetails)
 			if err != nil {

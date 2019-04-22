@@ -41,7 +41,8 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, _ := assertMockedChangePasswordRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
+			"WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
 			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
@@ -52,7 +53,8 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 	assert.Equal(t, 200, response.StatusCode, logs)
 }
 
-func assertMockedChangePasswordRequest(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) (*http.Response, sqlmock.Sqlmock, string, error) {
+func assertMockedChangePasswordRequest(t *testing.T,
+	setMockExpectationsFunc func(sqlmock.Sqlmock)) (*http.Response, sqlmock.Sqlmock, string, error) {
 	response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"POST", "/groups/1/change_password", ``, 2,
 		setMockExpectationsFunc,

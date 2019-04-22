@@ -85,7 +85,7 @@ func ResolveURLQueryGetBoolField(httpReq *http.Request, name string) (bool, erro
 // ResolveURLQueryPathInt64Field extracts a path element of type int64 from the query
 func ResolveURLQueryPathInt64Field(httpReq *http.Request, name string) (int64, error) {
 	strValue := chi.URLParam(httpReq, name)
-	if len(strValue) == 0 {
+	if strValue == "" {
 		return 0, fmt.Errorf("missing %s", name)
 	}
 	int64Value, err := strconv.ParseInt(strValue, 10, 64)
@@ -156,12 +156,13 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 	}
 
 	snakeCaseName := toSnakeCase(valueName)
-	if valueName[:2] == "id" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_' {
+	switch {
+	case valueName[:2] == "id" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_':
 		snakeCaseName = snakeCaseName[3:] + "_id"
-	} else if valueName[:2] == "nb" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_' {
+	case valueName[:2] == "nb" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_':
 		value = int32(value.(int64))
 		snakeCaseName = snakeCaseName[3:]
-	} else if len(snakeCaseName) > 1 && snakeCaseName[1] == '_' {
+	case len(snakeCaseName) > 1 && snakeCaseName[1] == '_':
 		switch valueName[0] {
 		case 'b':
 			value = value == int64(1)

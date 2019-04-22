@@ -59,6 +59,7 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		{"sRedirectPath=1234567890/1234567890/1", `{"redirect_path":"1234567890/1234567890/1"}`, false},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(tt.json))
 			_, err := validateUpdateGroupInput(r)
@@ -82,7 +83,9 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
+			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
+			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(true))
 		mock.ExpectExec("UPDATE `groups_groups` .+").WithArgs("requestRefused", 1).
 			WillReturnError(errors.New("some error"))
@@ -95,7 +98,9 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
+			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
+			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))

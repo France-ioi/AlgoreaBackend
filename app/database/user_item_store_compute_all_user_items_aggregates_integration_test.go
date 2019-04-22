@@ -61,10 +61,14 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := []aggregatesResultRow{
-		{ID: 11, LastActivityDate: &oldDate, TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4, AncestorsComputationState: "done"},
-		{ID: 12, LastActivityDate: &currentDate, TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11, ChildrenValidated: 2, AncestorsComputationState: "done"},
-		{ID: 13, LastActivityDate: &currentDate, TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8, AncestorsComputationState: "done"},
-		{ID: 14, LastActivityDate: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12, AncestorsComputationState: "done"},
+		{ID: 11, LastActivityDate: &oldDate, TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4,
+			AncestorsComputationState: "done"},
+		{ID: 12, LastActivityDate: &currentDate, TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11,
+			ChildrenValidated: 2, AncestorsComputationState: "done"},
+		{ID: 13, LastActivityDate: &currentDate, TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
+			AncestorsComputationState: "done"},
+		{ID: 14, LastActivityDate: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
+			AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, LastActivityDate: nil, AncestorsComputationState: "done"},
 	}

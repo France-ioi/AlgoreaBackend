@@ -46,7 +46,7 @@ func (s *Bool) UnmarshalJSON(data []byte) (err error) {
 }
 
 // AllAttributes unwrap the wrapped value and its attributes
-func (s Bool) AllAttributes() (value interface{}, isNull bool, isSet bool) {
+func (s Bool) AllAttributes() (value interface{}, isNull, isSet bool) {
 	return s.Value, s.Null, s.Set
 }
 

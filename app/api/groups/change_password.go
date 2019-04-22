@@ -31,9 +31,9 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
 			if retryCount > 3 {
-				err := errors.New("the password generator is broken")
-				logging.GetLogEntry(r).Error(err)
-				return err
+				generatorErr := errors.New("the password generator is broken")
+				logging.GetLogEntry(r).Error(generatorErr)
+				return generatorErr
 			}
 
 			newPassword, err = GenerateGroupPassword()

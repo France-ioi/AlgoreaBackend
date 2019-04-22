@@ -4,7 +4,9 @@ package database
 func (conn *DB) WhereItemsAreVisible(user *User) *DB {
 	groupItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().
 		MatchingUserAncestors(user).
-		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
+		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
+			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, " +
+			"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
 		Group("idItem")
 
 	if groupItemsPerms.Error() != nil {

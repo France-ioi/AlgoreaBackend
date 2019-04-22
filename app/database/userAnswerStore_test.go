@@ -29,7 +29,8 @@ func TestUserAnswerStore_WithGroupAttempts(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT `users_answers`.* FROM `users_answers` JOIN groups_attempts ON groups_attempts.ID = users_answers.idAttempt")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT `users_answers`.* FROM `users_answers` " +
+		"JOIN groups_attempts ON groups_attempts.ID = users_answers.idAttempt")).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	store := NewDataStore(db).UserAnswers()

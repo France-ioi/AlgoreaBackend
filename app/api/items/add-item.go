@@ -53,7 +53,7 @@ func (in *NewItemRequest) itemData() *database.Item {
 	}
 }
 
-func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *database.GroupItem {
+func (in *NewItemRequest) groupItemData(id, userID, groupID int64) *database.GroupItem {
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,

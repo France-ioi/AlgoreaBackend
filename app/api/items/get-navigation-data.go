@@ -13,7 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GetItemRequest .
+// GetItemRequest wraps the ID parameter
 type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
@@ -65,7 +65,7 @@ type navigationItemChild struct {
 	AccessRestricted bool  `json:"access_restricted"`
 }
 
-// Bind .
+// Bind binds req.ID to URLParam("itemID")
 func (req *GetItemRequest) Bind(r *http.Request) error {
 	strItemID := chi.URLParam(r, "itemID")
 	itemID, err := strconv.ParseInt(strItemID, 10, 64)
@@ -112,22 +112,22 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationItem,
 	idMap map[int64]*rawNavigationItem,
 	idsToResponseData map[int64]*navigationItemCommonFields) {
-	for index, item := range rawData {
+	for index := range rawData {
 		if index == 0 {
 			continue
 		}
 
-		parentItem, hasParentItem := idMap[item.IDItemParent]
+		parentItem, hasParentItem := idMap[rawData[index].IDItemParent]
 		if !hasParentItem ||
 			(!parentItem.FullAccess && !parentItem.PartialAccess) {
 			continue // The parent item is grayed
 		}
 
-		if parentItemCommonFields, ok := idsToResponseData[item.IDItemParent]; ok {
+		if parentItemCommonFields, ok := idsToResponseData[rawData[index].IDItemParent]; ok {
 			child := navigationItemChild{
-				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&item),
-				Order:                      item.Order,
-				AccessRestricted:           item.AccessRestricted,
+				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
+				Order:                      rawData[index].Order,
+				AccessRestricted:           rawData[index].AccessRestricted,
 			}
 			idsToResponseData[child.ID] = child.navigationItemCommonFields
 			parentItemCommonFields.Children = append(parentItemCommonFields.Children, child)

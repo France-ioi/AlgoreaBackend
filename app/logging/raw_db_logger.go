@@ -24,10 +24,7 @@ func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
 		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
 		args := make([]interface{}, 0, 4)
 
-		args = append(args, "rawsql")
-		args = append(args, ctx)
-		args = append(args, msg)
-		args = append(args, valuesMap)
+		args = append(args, "rawsql", ctx, msg, valuesMap)
 		logger.Print(args...)
 	})
 }
@@ -40,7 +37,8 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	if valuesMap["query"] != nil && valuesMap["args"] != nil {
 		argsString := valuesMap["args"].(string)
 		var argsValues []interface{}
-		for argsString != "{}" {
+		const emptyMapString = "{}"
+		for argsString != emptyMapString {
 			subMatches := rawArgsRegexp.FindStringSubmatch(argsString)
 			typeStr := subMatches[1]
 			valueCopy := make([]byte, len(subMatches[2]))
@@ -51,7 +49,7 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 			if nextStr != "" {
 				argsString = "{" + subMatches[3][2:] + "}"
 			} else {
-				argsString = "{}"
+				argsString = emptyMapString
 			}
 			argsValues = append(argsValues, convertedValue)
 		}
@@ -61,7 +59,7 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	return valuesMap
 }
 
-func convertRawSQLArgValue(value string, typeStr string) interface{} {
+func convertRawSQLArgValue(value, typeStr string) interface{} {
 	var convertedValue interface{} = value
 	switch typeStr {
 	case "string":

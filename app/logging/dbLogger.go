@@ -18,9 +18,9 @@ func (l *Logger) NewDBLogger() (DBLogger, bool) {
 
 	logMode := l.config.LogSQLQueries
 	switch l.config.Format {
-	case "text":
+	case formatText:
 		return gorm.Logger{LogWriter: l}, logMode
-	case "json":
+	case formatJSON:
 		return NewStructuredDBLogger(l.Logger), logMode
 	default:
 		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.Format)

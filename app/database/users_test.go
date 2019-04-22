@@ -13,7 +13,8 @@ func TestDB_WhereUsersAreDescendantsOfGroup(t *testing.T) {
 
 	const groupID = 123
 	mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT `users`.* FROM `users` JOIN groups_ancestors ON groups_ancestors.idGroupChild=users.idGroupSelf WHERE (groups_ancestors.idGroupAncestor = ?)")).
+		"SELECT `users`.* FROM `users` JOIN groups_ancestors ON groups_ancestors.idGroupChild=users.idGroupSelf " +
+			"WHERE (groups_ancestors.idGroupAncestor = ?)")).
 		WithArgs(groupID).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 

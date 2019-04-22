@@ -16,7 +16,7 @@ import (
 
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
-func init() {
+func init() { // nolint:gochecknoinits
 	if conf, err := config.Load(); err == nil {
 		// Apply the config to the global logger
 		logging.SharedLogger.Configure(conf.Logging)
@@ -101,7 +101,9 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 			valueMarks = append(valueMarks, "?")
 			values = append(values, v)
 		}
-		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
+		// nolint:gosec
+		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
+			tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
 		_, err := db.Exec(query, values...)
 		if err != nil {
 			panic(err)

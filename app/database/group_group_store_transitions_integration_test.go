@@ -233,7 +233,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantResult: database.GroupGroupTransitionResults{
 				2: "success",
 				6: "unchanged",
-				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
+
+				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 7: "invalid", 8: "invalid", 9: "invalid",
+				10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationRefused", ChildOrder: 0, StatusDate: currentTimePtr},
@@ -255,7 +257,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantResult: database.GroupGroupTransitionResults{
 				3: "success",
 				7: "unchanged",
-				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
+
+				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 8: "invalid", 9: "invalid",
+				10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -314,7 +318,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action: database.AdminCancelsInvitation,
 			wantResult: database.GroupGroupTransitionResults{
 				2: "success",
-				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
+
+				1: "invalid", 3: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid",
+				10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 3, Type: "requestSent", ChildOrder: 0, StatusDate: nil},
@@ -370,7 +376,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action: database.UserCancelsRequest,
 			wantResult: database.GroupGroupTransitionResults{
 				3: "success",
-				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid", 10: "invalid", 20: "invalid", 30: "invalid",
+
+				1: "invalid", 2: "invalid", 4: "invalid", 5: "invalid", 6: "invalid", 7: "invalid", 8: "invalid", 9: "invalid",
+				10: "invalid", 20: "invalid", 30: "invalid",
 			},
 			wantGroupGroups: []groupGroup{
 				{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent", ChildOrder: 0, StatusDate: nil},
@@ -389,7 +397,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			name:   "AdminAddsDirectRelation",
 			action: database.AdminAddsDirectRelation,
 			wantResult: database.GroupGroupTransitionResults{
-				1: "success", 2: "success", 3: "success", 4: "success", 5: "success", 6: "success", 7: "success", 8: "success", 9: "success",
+				1: "success", 2: "success", 3: "success", 4: "success", 5: "success", 6: "success", 7: "success", 8: "success",
+				9: "success",
+
 				10: "unchanged",
 				20: "invalid",
 				30: "cycle",
@@ -484,7 +494,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(string(tt.name), func(t *testing.T) {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixture("group_group_store/transition/")
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)

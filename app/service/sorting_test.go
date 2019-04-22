@@ -101,7 +101,9 @@ func TestApplySorting(t *testing.T) {
 				},
 				defaultRules: "-name,id,flag",
 			},
-			wantSQL:          "SELECT ID FROM `users` WHERE ((sName < ?) OR (sName = ? AND ID > ?) OR (sName = ? AND ID = ? AND bFlag > ?)) ORDER BY sName DESC, ID ASC, bFlag ASC",
+			wantSQL: "SELECT ID FROM `users` " +
+				"WHERE ((sName < ?) OR (sName = ? AND ID > ?) OR (sName = ? AND ID = ? AND bFlag > ?)) " +
+				"ORDER BY sName DESC, ID ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
 		{name: "wrong value in from.id field",
@@ -152,7 +154,8 @@ func TestApplySorting(t *testing.T) {
 				},
 				defaultRules: "submission_date",
 			},
-			wantSQL: "SELECT ID FROM `users`  WHERE ((sSubmissionDate > ?) OR (sSubmissionDate = ? AND ID > ?)) ORDER BY sSubmissionDate ASC, ID ASC",
+			wantSQL: "SELECT ID FROM `users`  WHERE ((sSubmissionDate > ?) OR (sSubmissionDate = ? AND ID > ?)) " +
+				"ORDER BY sSubmissionDate ASC, ID ASC",
 			wantSQLArguments: []driver.Value{
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
@@ -161,6 +164,7 @@ func TestApplySorting(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			defer func() {
 				if p := recover(); p != nil {

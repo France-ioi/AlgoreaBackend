@@ -68,6 +68,7 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			assert := assertlib.New(t)
 
@@ -128,6 +129,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			assert := assertlib.New(t)
 
@@ -181,6 +183,7 @@ func TestResolveURLQueryGetStringField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			assert := assertlib.New(t)
 
@@ -235,6 +238,7 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			assert := assertlib.New(t)
 
@@ -265,7 +269,7 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 		{
 			desc:        "correct value given",
 			queryString: "time=" + url.QueryEscape("2006-01-02T15:04:05+07:00"),
-			expectedValue: time.Date(2006, 1, 2, 15, 04, 05, 0,
+			expectedValue: time.Date(2006, 1, 2, 15, 4, 5, 0,
 				time.FixedZone("+0700", 7*3600)),
 		},
 		{
@@ -275,6 +279,7 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			assert := assertlib.New(t)
 
@@ -362,6 +367,7 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := ConvertSliceOfMapsFromDBToJSON(tt.dbMap)
 			assertlib.Equal(t, tt.want, got)

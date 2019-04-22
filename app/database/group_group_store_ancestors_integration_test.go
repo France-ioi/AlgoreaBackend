@@ -96,7 +96,8 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 
 	for i := 1; i <= 4; i++ {
 		assert.NoError(t, groupGroupStore.Exec(
-			"INSERT INTO groups_propagate (ID, sAncestorsComputationState) VALUES (?, 'done') ON DUPLICATE KEY UPDATE sAncestorsComputationState='done'", i).
+			"INSERT INTO groups_propagate (ID, sAncestorsComputationState) VALUES (?, 'done') "+
+				"ON DUPLICATE KEY UPDATE sAncestorsComputationState='done'", i).
 			Error())
 	}
 

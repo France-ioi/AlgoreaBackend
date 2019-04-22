@@ -30,6 +30,7 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysValidated(t *testing.T
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 			defer func() { _ = db.Close() }()
@@ -67,6 +68,7 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysNonValidatedFor(t *tes
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 			defer func() { _ = db.Close() }()
@@ -122,7 +124,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneStaysN
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/one")
 	defer func() { _ = db.Close() }()
 
@@ -148,7 +151,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneBecome
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOneStaysNonValidatedWhenThereAreTwoNonValidatedChildren(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOneStaysNonValidatedWhenThereAreTwoNonValidatedChildren(
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -176,7 +180,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOne
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOneBecomesValidatedWhenThereAreLessThanTwoNonValidatedChildren(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOneBecomesValidatedWhenThereAreLessThanTwoNonValidatedChildren(
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -204,7 +209,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllButOne
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllStaysNonValidatedWhenThereIsAtLeastOneNonValidatedChild(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllStaysNonValidatedWhenThereIsAtLeastOneNonValidatedChild(
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -260,7 +266,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeAllBecome
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesStaysNonValidatedWhenThereIsAtLeastOneNonValidatedChildWithCategoryValidation(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesStaysNonValidatedWhenThereIsAtLeastOneNonValidatedChildWithCategoryValidation( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -289,7 +296,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated_IgnoresItemsWithTypeCourse(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated_IgnoresItemsWithTypeCourse( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -318,7 +326,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated_IgnoresItemsWithNoScore(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated_IgnoresItemsWithNoScore( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 
@@ -347,7 +356,8 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategorie
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeCategoriesBecomesValidatedWhenAllChildrenWithCategoryValidationAreValidated( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category")
 	defer func() { _ = db.Close() }()
 

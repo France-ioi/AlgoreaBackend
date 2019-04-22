@@ -208,16 +208,17 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 				continue
 			}
 			oldType := oldTypesMap[id]
-			if toType, toTypeOK := groupGroupTransitionRules[action].Transitions[GroupGroupType(oldType)]; toTypeOK {
+			if toType, toTypeOK := groupGroupTransitionRules[action].Transitions[oldType]; toTypeOK {
 				if toType != oldType {
 					if !groupGroupTransitionRules[action].UpdateFromType[oldType] {
 						idsToDelete[id] = true
 					}
-					if toType == NoRelation {
+					switch {
+					case toType == NoRelation:
 						idsToDelete[id] = true
-					} else if idsToDelete[id] {
+					case idsToDelete[id]:
 						idsToInsert[id] = toType
-					} else {
+					default:
 						idsToUpdate[id] = toType
 					}
 					results[id] = Success
@@ -285,7 +286,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 
 			insertQuery := "INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, sType, iChildOrder, sStatusDate) VALUES " +
 				strings.Repeat("(?, ?, ?, ?, ?, NOW()), ", len(idsToInsert)-1) +
-				"(?, ?, ?, ?, ?, NOW())"
+				"(?, ?, ?, ?, ?, NOW())" // #nosec
 			mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 				values := make([]interface{}, 0, len(idsToInsert)*5)
 				for id, toType := range idsToInsert {

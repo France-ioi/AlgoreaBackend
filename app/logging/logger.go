@@ -23,15 +23,22 @@ var (
 	SharedLogger = new()
 )
 
+const formatJSON = "json"
+const formatText = "text"
+
+const outputStdout = "stdout"
+const outputStderr = "stderr"
+const outputFile = "file"
+
 // Configure applies the given logging configuration to the logger
 func (l *Logger) Configure(conf config.Logging) {
 	l.config = &conf
 
 	// Format
 	switch conf.Format {
-	case "text":
-		l.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: conf.Output != "file"})
-	case "json":
+	case formatText:
+		l.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: conf.Output != outputFile})
+	case formatJSON:
 		l.SetFormatter(&logrus.JSONFormatter{})
 	default:
 		panic("Logging format must be either 'text' or 'json'. Got: " + conf.Format)
@@ -39,11 +46,11 @@ func (l *Logger) Configure(conf config.Logging) {
 
 	// Output
 	switch conf.Output {
-	case "stdout":
+	case outputStdout:
 		l.SetOutput(os.Stdout)
-	case "stderr":
+	case outputStderr:
 		l.SetOutput(os.Stderr)
-	case "file":
+	case outputFile:
 		_, codeFilePath, _, _ := runtime.Caller(0)
 		codeDir := filepath.Dir(codeFilePath)
 		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)

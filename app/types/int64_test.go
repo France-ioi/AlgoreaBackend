@@ -78,7 +78,7 @@ func TestIntWithNull(t *testing.T) {
 func TestIntWithNotSet(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{}`
+	jsonInput := emptyJSONStruct
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.Error(input.ID.Validate())         // should NOT be valid
