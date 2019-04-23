@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"regexp"
@@ -339,126 +340,86 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_Limit(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+func TestDB_QueryConstructors(t *testing.T) {
+	tests := []struct {
+		name              string
+		funcToPrepare     func(*DB) *DB
+		funcToCall        func(*DB) (*DB, []*DB)
+		expectedQuery     string
+		expectedQueryArgs []driver.Value
+	}{
+		{
+			name:          "Limit",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Limit(1), nil },
+			expectedQuery: "SELECT * FROM `myTable` LIMIT 1",
+		},
+		{
+			name:              "Or",
+			funcToPrepare:     func(db *DB) *DB { return db.Where("ID = ?", 1) },
+			funcToCall:        func(db *DB) (*DB, []*DB) { return db.Or("otherID = ?", 2), nil },
+			expectedQuery:     "SELECT * FROM `myTable` WHERE (ID = ?) OR (otherID = ?)",
+			expectedQueryArgs: []driver.Value{1, 2},
+		},
+		{
+			name:          "Order",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Order("ID"), nil },
+			expectedQuery: "SELECT * FROM `myTable` ORDER BY `ID`",
+		},
+		{
+			name:          "Having",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Having("ID > 0"), nil },
+			expectedQuery: "SELECT * FROM `myTable` HAVING (ID > 0)",
+		},
+		{
+			name:          "Raw",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Raw("SELECT 1"), nil },
+			expectedQuery: "SELECT 1",
+		},
+		{
+			name: "Union",
+			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
+				dbTwo := db.Table("otherTable")
+				dbs = append(dbs, dbTwo)
+				return db.Union(dbTwo.QueryExpr()), dbs
+			},
+			expectedQuery: "SELECT * FROM `myTable` UNION SELECT * FROM `otherTable`",
+		},
+		{
+			name: "UnionAll",
+			funcToCall: func(db *DB) (newDB *DB, dbs []*DB) {
+				dbTwo := db.Table("otherTable")
+				dbs = append(dbs, dbTwo)
+				return db.UnionAll(dbTwo.QueryExpr()), dbs
+			},
+			expectedQuery: "SELECT * FROM `myTable` UNION ALL SELECT * FROM `otherTable`",
+		},
+	}
+	for _, testCase := range tests {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery("SELECT \\* FROM `myTable` LIMIT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+			mock.ExpectQuery("^" + regexp.QuoteMeta(testCase.expectedQuery) + "$").
+				WithArgs(testCase.expectedQueryArgs...).
+				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
-	db = db.Table("myTable")
-	limitedDB := db.Limit(1)
-	assert.NotEqual(t, limitedDB, db)
-	assert.NoError(t, limitedDB.Error())
+			db = db.Table("myTable")
+			if testCase.funcToPrepare != nil {
+				db = testCase.funcToPrepare(db)
+			}
+			resultDB, oldDBObjects := testCase.funcToCall(db)
+			assert.NotEqual(t, resultDB, db)
+			for _, oldDBObject := range oldDBObjects {
+				assert.NotEqual(t, oldDBObject, db)
+			}
+			assert.NoError(t, resultDB.Error())
 
-	var result []interface{}
-	assert.NoError(t, limitedDB.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_Or(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (ID = ?) OR (otherID = ?)")).
-		WithArgs(1, 2).
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	db = db.Table("myTable").Where("ID = ?", 1)
-	dbOr := db.Or("otherID = ?", 2)
-	assert.NotEqual(t, dbOr, db)
-	assert.NoError(t, dbOr.Error())
-
-	var result []interface{}
-	assert.NoError(t, dbOr.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_Order(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` ORDER BY `ID`")).
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	db = db.Table("myTable")
-	dbOrder := db.Order("ID")
-	assert.NotEqual(t, dbOrder, db)
-	assert.NoError(t, dbOrder.Error())
-
-	var result []interface{}
-	assert.NoError(t, dbOrder.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_Having(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` HAVING (ID > 0)")).
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	db = db.Table("myTable")
-	dbHaving := db.Having("ID > 0")
-	assert.NotEqual(t, dbHaving, db)
-	assert.NoError(t, dbHaving.Error())
-
-	var result []interface{}
-	assert.NoError(t, dbHaving.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_Union(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` UNION SELECT * FROM `otherTable`")).
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	db = db.Table("myTable")
-	dbTwo := db.Table("otherTable")
-	dbUnion := db.Union(dbTwo.QueryExpr())
-	assert.NotEqual(t, dbUnion, db)
-	assert.NotEqual(t, dbUnion, dbTwo)
-	assert.NoError(t, dbUnion.Error())
-
-	var result []interface{}
-	assert.NoError(t, dbUnion.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_UnionAll(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` UNION ALL SELECT * FROM `otherTable`")).
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	db = db.Table("myTable")
-	dbTwo := db.Table("otherTable")
-	dbUnionAll := db.UnionAll(dbTwo.QueryExpr())
-	assert.NotEqual(t, dbUnionAll, db)
-	assert.NotEqual(t, dbUnionAll, dbTwo)
-	assert.NoError(t, dbUnionAll.Error())
-
-	var result []interface{}
-	assert.NoError(t, dbUnionAll.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_Raw(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery("SELECT 1").
-		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
-
-	dbRaw := db.Raw("SELECT 1")
-	assert.NotEqual(t, dbRaw, db)
-
-	var result []interface{}
-	assert.NoError(t, dbRaw.Scan(&result).Error())
-	assert.NoError(t, mock.ExpectationsWereMet())
+			var result []interface{}
+			assert.NoError(t, resultDB.Scan(&result).Error())
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }
 
 func TestDB_Count(t *testing.T) {
@@ -1159,31 +1120,33 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T
 }
 
 func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	tests := []struct {
+		name          string
+		expectedError *mysql.MySQLError
+	}{
+		{
+			name:          "non-primary key duplicate",
+			expectedError: &mysql.MySQLError{Number: 1062, Message: "Duplicate entry '' for key 'name'"},
+		},
+		{
+			name:          "error code != 1062",
+			expectedError: &mysql.MySQLError{Number: 1063, Message: "Duplicate entry '1' for key 'PRIMARY'"},
+		},
+	}
+	for _, testCase := range tests {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	expectedError := &mysql.MySQLError{Number: 1062, Message: "Duplicate entry '' for key 'name'"}
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
-		WillReturnError(expectedError)
+			mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+				WillReturnError(testCase.expectedError)
 
-	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-		return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
-	})
-	assert.Equal(t, expectedError, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors2(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	expectedError := &mysql.MySQLError{Number: 1063, Message: "Duplicate entry '1' for key 'PRIMARY'"}
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
-		WillReturnError(expectedError)
-
-	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-		return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
-	})
-	assert.Equal(t, expectedError, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
+			err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+				return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
+			})
+			assert.Equal(t, testCase.expectedError, err)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }

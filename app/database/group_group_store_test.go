@@ -28,19 +28,12 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 }
 
 func TestGroupGroupStore_WhereUserIsMember_HandlesError(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT users.*, l.ID as idDefaultLanguage FROM `users`")).
-		WithArgs(1).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
-
-	user := NewUser(1, NewDataStore(db).Users(), nil)
-
-	var result []interface{}
-	err := NewDataStore(db).GroupGroups().WhereUserIsMember(user).Scan(&result).Error()
-	assert.Equal(t, ErrUserNotFound, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	testMethodHandlesUserNotFoundError(t, func(db *DB, user *User) []interface{} {
+		var result []interface{}
+		return []interface{}{
+			NewDataStore(db).GroupGroups().WhereUserIsMember(user).Scan(&result).Error(),
+		}
+	}, []interface{}{ErrUserNotFound})
 }
 
 func TestGroupGroupStore_CreateRelation(t *testing.T) {

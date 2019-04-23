@@ -8,15 +8,15 @@ import (
 )
 
 type SampleIntInput struct {
-	ID       RequiredInt64
-	ChildID  NullableInt64
-	Order    OptionalInt64
-	ParentID OptNullInt64
+	Required         RequiredInt64
+	Nullable         NullableInt64
+	Optional         OptionalInt64
+	OptionalNullable OptNullInt64
 }
 
 func (v *SampleIntInput) validate() error {
-	return Validate([]string{"ID", "childID", "order", "parentID"},
-		&v.ID, &v.ChildID, &v.Order, &v.ParentID)
+	return Validate([]string{"Required", "Nullable", "Optional", "OptionalNullable"},
+		&v.Required, &v.Nullable, &v.Optional, &v.OptionalNullable)
 }
 
 func TestNewInt(t *testing.T) {
@@ -35,20 +35,20 @@ func TestNewInt(t *testing.T) {
 func TestIntValid(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": "2147483645", "ChildID": "22", "Order": "-1", "ParentID": "7" }`
+	jsonInput := `{ "Required": "2147483645", "Nullable": "22", "Optional": "-1", "OptionalNullable": "7" }`
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.EqualValues(2147483645, input.ID.Value)
-	assert.EqualValues(22, input.ChildID.Value)
-	assert.EqualValues(-1, input.Order.Value)
-	assert.EqualValues(7, input.ParentID.Value)
+	assert.EqualValues(2147483645, input.Required.Value)
+	assert.EqualValues(22, input.Nullable.Value)
+	assert.EqualValues(-1, input.Optional.Value)
+	assert.EqualValues(7, input.OptionalNullable.Value)
 	assert.NoError(input.validate())
 }
 
 func TestIntWithNonInt(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": "not an int", "ChildID": "22", "Order": "-1", "ParentID": "7" }`
+	jsonInput := `{ "Required": "not an int", "Nullable": "22", "Optional": "-1", "OptionalNullable": "7" }`
 	input := &SampleIntInput{}
 	assert.Error(json.Unmarshal([]byte(jsonInput), &input))
 }
@@ -56,7 +56,7 @@ func TestIntWithNonInt(t *testing.T) {
 func TestIntWithDefault(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": "0", "ChildID": "0", "Order": "0", "ParentID": "0" }`
+	jsonInput := `{ "Required": "0", "Nullable": "0", "Optional": "0", "OptionalNullable": "0" }`
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
 	assert.NoError(input.validate())
@@ -65,13 +65,13 @@ func TestIntWithDefault(t *testing.T) {
 func TestIntWithNull(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "ID": null, "ChildID": null, "Order": null, "ParentID": null }`
+	jsonInput := `{ "Required": null, "Nullable": null, "Optional": null, "OptionalNullable": null }`
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.Error(input.ID.Validate(), "was expecting a validation error")
-	assert.NoError(input.ChildID.Validate())  // should be valid
-	assert.Error(input.Order.Validate())      // should NOT be valid
-	assert.NoError(input.ParentID.Validate()) // should be valid
+	assert.Error(input.Required.Validate(), "was expecting a validation error")
+	assert.NoError(input.Nullable.Validate())         // should be valid
+	assert.Error(input.Optional.Validate())           // should NOT be valid
+	assert.NoError(input.OptionalNullable.Validate()) // should be valid
 	assert.Error(input.validate())
 }
 
@@ -81,9 +81,9 @@ func TestIntWithNotSet(t *testing.T) {
 	jsonInput := emptyJSONStruct
 	input := &SampleIntInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.Error(input.ID.Validate())         // should NOT be valid
-	assert.Error(input.ChildID.Validate())    // should NOT be valid
-	assert.NoError(input.Order.Validate())    // should be valid
-	assert.NoError(input.ParentID.Validate()) // should be valid
+	assert.Error(input.Required.Validate())           // should NOT be valid
+	assert.Error(input.Nullable.Validate())           // should NOT be valid
+	assert.NoError(input.Optional.Validate())         // should be valid
+	assert.NoError(input.OptionalNullable.Validate()) // should be valid
 	assert.Error(input.validate())
 }

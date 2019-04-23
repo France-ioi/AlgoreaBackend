@@ -32,8 +32,7 @@ func TestGroupItemStore_ComputeAllAccess_Concurrency(t *testing.T) {
 	groupItemStore := dataStore.GroupItems()
 	var result []groupItemsResultRow
 
-	assert.NoError(t, groupItemStore.Order("idGroup, idItem").Scan(&result).Error())
-	assert.Equal(t, []groupItemsResultRow{
+	allDone := []groupItemsResultRow{
 		{GroupID: 1, ItemID: 1, PropagateAccess: "done"},
 		{GroupID: 1, ItemID: 2, PropagateAccess: "done"},
 		{GroupID: 1, ItemID: 3, PropagateAccess: "done"},
@@ -43,19 +42,12 @@ func TestGroupItemStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		{GroupID: 2, ItemID: 1, PropagateAccess: "done"},
 		{GroupID: 2, ItemID: 11, PropagateAccess: "done"},
 		{GroupID: 2, ItemID: 12, PropagateAccess: "done"},
-	}, result)
+	}
+
+	assert.NoError(t, groupItemStore.Order("idGroup, idItem").Scan(&result).Error())
+	assert.Equal(t, allDone, result)
 
 	assert.NoError(t, groupItemStore.Table("groups_items_propagate").Joins("LEFT JOIN groups_items USING(ID)").
 		Order("idGroup, idItem").Select("idGroup, idItem, groups_items_propagate.sPropagateAccess").Scan(&result).Error())
-	assert.Equal(t, []groupItemsResultRow{
-		{GroupID: 1, ItemID: 1, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 2, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 3, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 4, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 11, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 12, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 1, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 11, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 12, PropagateAccess: "done"},
-	}, result)
+	assert.Equal(t, allDone, result)
 }
