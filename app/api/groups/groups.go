@@ -49,8 +49,8 @@ func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, g
 	return service.NoError
 }
 
-func checkThatUserHasRightsForDirectRelation(store *database.DataStore, user *database.User,
-	parentGroupID, childGroupID int64) service.APIError {
+func checkThatUserHasRightsForDirectRelation(
+	store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
 	groupStore := store.Groups()
 
 	var groupData []struct {
