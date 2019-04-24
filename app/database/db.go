@@ -107,26 +107,14 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			// Error 1213: Deadlock found when trying to get lock; try restarting transaction
-			if e, ok := p.(*mysql.MySQLError); ok && e.Number == 1213 {
-				if rollbackErr != nil {
-					panic(rollbackErr)
-				}
-				// retry
-				err = conn.inTransactionWithCount(txFunc, count+1)
+			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
 		case err != nil:
 			// do not change the err
 			rollbackErr := txDB.Rollback().Error
-			// Error 1213: Deadlock found when trying to get lock; try restarting transaction
-			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1213 {
-				if rollbackErr != nil {
-					panic(rollbackErr)
-				}
-				// retry
-				err = conn.inTransactionWithCount(txFunc, count+1)
+			if conn.handleDeadLock(txFunc, count, err, rollbackErr, &err) {
 				return
 			}
 			if rollbackErr != nil {
@@ -138,6 +126,20 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 	}()
 	err = txFunc(newDB(txDB))
 	return err
+}
+
+func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{},
+	rollbackErr error, returnErr *error) bool { //nolint:gocritic
+	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
+	if e, ok := errToHandle.(*mysql.MySQLError); ok && e.Number == 1213 {
+		if rollbackErr != nil {
+			panic(rollbackErr)
+		}
+		// retry
+		*returnErr = conn.inTransactionWithCount(txFunc, count+1)
+		return true
+	}
+	return false
 }
 
 func (conn *DB) isInTransaction() bool {
