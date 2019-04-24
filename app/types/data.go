@@ -26,7 +26,7 @@ func (d Data) AllAttributes() (value interface{}, isNull, isSet bool) {
 
 // unmarshalJSON parse JSON data to the type fields
 func unmarshalJSON(data []byte, isSet, isNull *bool, value interface{}, valueType reflect.Type) (err error) {
-	*isSet = true
+	*isSet = true // If this method was called, the value was set.
 	*isNull = string(data) == "null"
 
 	temp := reflect.New(valueType).Interface()
