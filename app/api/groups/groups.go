@@ -82,8 +82,15 @@ func checkThatUserHasRightsForDirectRelation(store *database.DataStore, user *da
 	return service.NoError
 }
 
+type acceptOrRejectRequestsAction string
+
+const (
+	acceptRequestsAction acceptOrRejectRequestsAction = "accept"
+	rejectRequestsAction acceptOrRejectRequestsAction = "reject"
+)
+
 func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
-	action database.GroupGroupTransitionAction) service.APIError {
+	action acceptOrRejectRequestsAction) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -102,7 +109,11 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 	var results database.GroupGroupTransitionResults
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			results, err = store.GroupGroups().Transition(action, parentGroupID, groupIDs)
+			results, err = store.GroupGroups().Transition(
+				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
+					acceptRequestsAction: database.AdminAcceptsRequest,
+					rejectRequestsAction: database.AdminRefusesRequest,
+				}[action], parentGroupID, groupIDs)
 			return err
 		})
 	}

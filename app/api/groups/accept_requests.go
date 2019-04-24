@@ -3,10 +3,9 @@ package groups
 import (
 	"net/http"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) acceptRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.acceptOrRejectRequests(w, r, database.AdminAcceptsRequest)
+	return srv.acceptOrRejectRequests(w, r, acceptRequestsAction)
 }
