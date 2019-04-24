@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// Doc is mainly in the "value" file :-)
-
 type (
 	// Datetime is a date+time format which can be set/not-set and null/not-null
 	Datetime struct{ Data }
