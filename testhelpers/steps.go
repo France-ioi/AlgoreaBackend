@@ -52,15 +52,43 @@ type TestContext struct {
 	addedDBIndices   []*addedDBIndex
 }
 
+var db *sql.DB
+
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	scenario := data.(*gherkin.Scenario)
 	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
-	ctx.application = nil
+	ctx.setupApp()
 	ctx.userID = 999 // the default for the moment
 	ctx.lastResponse = nil
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
 	ctx.dbTableData = make(map[string]*gherkin.DataTable)
+
+	// reset the seed to get predictable results on PRNG for tests
+	rand.Seed(1)
+
+	err := ctx.initDB()
+	if err != nil {
+		fmt.Println("Unable to empty db")
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) setupApp() {
+	var err error
+	ctx.tearDownApp()
+	ctx.application, err = app.New()
+	if err != nil {
+		fmt.Println("Unable to load app")
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) tearDownApp() {
+	if ctx.application != nil {
+		_ = ctx.application.Database.Close()
+	}
+	ctx.application = nil
 }
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
@@ -70,7 +98,6 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	if err != nil {
 		panic(err)
 	}
-	defer func() { _ = db.Close() }() // nolint: gosec
 
 	for _, indexDefinition := range ctx.addedDBIndices {
 		if oneErr := db.Table(indexDefinition.Table).RemoveIndex(indexDefinition.Index).Error; oneErr != nil {
@@ -80,27 +107,8 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	if db.Error != nil {
 		panic(db.Error)
 	}
-}
 
-func (ctx *TestContext) app() *app.Application {
-
-	if ctx.application == nil {
-		var err error
-		ctx.application, err = app.New()
-		if err != nil {
-			fmt.Println("Unable to load app")
-			panic(err)
-		}
-		// reset the seed to get predictable results on PRNG for tests
-		rand.Seed(1)
-
-		err = ctx.initDB()
-		if err != nil {
-			fmt.Println("Unable to empty db")
-			panic(err)
-		}
-	}
-	return ctx.application
+	ctx.tearDownApp()
 }
 
 func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string, error) {
@@ -138,28 +146,30 @@ func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
 
 	// put the backend URL into the config
 	backendURL, _ := url.Parse(backend.URL) // nolint
-	ctx.app().Config.Auth.ProxyURL = backendURL.String()
+	ctx.application.Config.Auth.ProxyURL = backendURL.String()
 
 	return backend
 }
 
 func (ctx *TestContext) db() *sql.DB {
-	conf := ctx.app().Config
-	conn, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
-	if err != nil {
-		fmt.Println("Unable to connect to the database: ", err)
-		os.Exit(1)
+	if db == nil {
+		conf := ctx.application.Config
+		var err error
+		db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
+		if err != nil {
+			fmt.Println("Unable to connect to the database: ", err)
+			os.Exit(1)
+		}
 	}
-	return conn
+	return db
 }
 
 // nolint: gosec
 func (ctx *TestContext) emptyDB() error {
 
 	db := ctx.db()
-	defer func() { _ = db.Close() }()
 
-	dbName := ctx.app().Config.Database.Connection.DBName
+	dbName := ctx.application.Config.Database.Connection.DBName
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
@@ -175,7 +185,8 @@ func (ctx *TestContext) emptyDB() error {
 		if err = rows.Scan(&tableName); err != nil {
 			return err
 		}
-		_, err = db.Exec("TRUNCATE TABLE " + tableName)
+		// DELETE is MUCH faster than TRUNCATE on empty tables
+		_, err := db.Exec("DELETE FROM " + tableName)
 		if err != nil {
 			return err
 		}
@@ -189,7 +200,6 @@ func (ctx *TestContext) initDB() error {
 		return err
 	}
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close() }()
 
 	for _, query := range ctx.featureQueries {
 		_, err := db.Exec(query.sql, query.values)
@@ -203,7 +213,7 @@ func (ctx *TestContext) initDB() error {
 
 func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody string) error {
 	// app server
-	testServer := httptest.NewServer(ctx.app().HTTPHandler)
+	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
 
 	// auth proxy server
@@ -252,9 +262,7 @@ func prepareVal(input string) string {
 /** Steps **/
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
-
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close() }()
 
 	head := data.Rows[0].Cells
 	fields := make([]string, 0, len(head))
@@ -347,7 +355,9 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 	if err != nil {
 		return err
 	}
+
 	_ = os.Setenv("ALGOREA_REVERSEPROXY.SERVER", backendURL.String()) // nolint
+	ctx.setupApp()
 	return nil
 }
 
@@ -550,7 +560,6 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	// Expect 'null' string in the table to check for nullness
 
 	db := ctx.db()
-	defer func() { /* #nosec */ _ = db.Close() }()
 
 	var selects []string
 	head := data.Rows[0].Cells
@@ -658,7 +667,6 @@ func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) 
 	if err != nil {
 		return err
 	}
-	defer func() { _ = db.Close() }() // nolint: gosec
 
 	if db.Dialect().HasIndex(tableName, indexName) {
 		return nil
