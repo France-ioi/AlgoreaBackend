@@ -31,7 +31,7 @@ linters-settings:
     list-type: blacklist
     packages:
       # logging is allowed only by logutils.Log, logrus
-      # is allowed to use only in logutils package
+      # is allowed to be used only in logutils package
       - github.com/sirupsen/logrus
   misspell:
     locale: US
@@ -56,7 +56,9 @@ linters:
 
 run:
   skip-dirs:
-    - test/testdata_etc
+    - db
+    - app/database/testdata
+    - test-results
     - pkg/golinters/goanalysis/(checker|passes)
 
 issues:
