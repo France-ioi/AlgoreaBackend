@@ -2,7 +2,9 @@ package database
 
 import (
 	"errors"
+	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -61,21 +63,46 @@ func TestUser_Load_Fail(t *testing.T) {
 	assert.Nil(t, user.data)
 }
 
-func TestUser_SelfGroupID(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
+func TestUser_Method(t *testing.T) {
+	tests := []struct {
+		name          string
+		methodToCall  string
+		dbColumn      string
+		dbValue       interface{}
+		expectedValue interface{}
+	}{
+		{methodToCall: "SelfGroupID", dbColumn: "idGroupSelf", dbValue: int64(43), expectedValue: int64(43)},
+		{methodToCall: "DefaultLanguageID", dbColumn: "idDefaultLanguage", dbValue: int64(2), expectedValue: int64(2)},
+		{methodToCall: "OwnedGroupID", dbColumn: "idGroupOwned", dbValue: int64(44), expectedValue: int64(44)},
+		{name: "true", methodToCall: "AllowSubgroups", dbColumn: "allowSubgroups", dbValue: int64(1), expectedValue: true},
+		{name: "false", methodToCall: "AllowSubgroups", dbColumn: "allowSubgroups", dbValue: int64(0), expectedValue: false},
+	}
+	for _, testCase := range tests {
+		testCase := testCase
+		t.Run(strings.Join([]string{testCase.methodToCall, testCase.name}, " "), func(t *testing.T) {
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnRows(
-		sqlmock.
-			NewRows([]string{"idGroupSelf"}).AddRow(int64(43)),
-	)
-	user := User{42, userStore, nil}
+			userStore := NewDataStore(db).Users()
+			dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnRows(
+				sqlmock.
+					NewRows([]string{testCase.dbColumn}).AddRow(testCase.dbValue),
+			)
+			user := &User{42, userStore, nil}
 
-	got, err := user.SelfGroupID()
-	assert.EqualValues(t, 43, got)
-	assert.NoError(t, err)
-	assert.NotNil(t, user.data)
+			results := reflect.ValueOf(user).MethodByName(testCase.methodToCall).Call(nil)
+			got, gotErr := results[0].Interface(), results[1].Interface()
+			var err error
+			if gotErr == nil {
+				err = error(nil)
+			} else {
+				err = gotErr.(error)
+			}
+			assert.EqualValues(t, testCase.expectedValue, got)
+			assert.NoError(t, err)
+			assert.NotNil(t, user.data)
+		})
+	}
 }
 
 func TestUser_SelfGroupID_Fail(t *testing.T) {
@@ -93,23 +120,6 @@ func TestUser_SelfGroupID_Fail(t *testing.T) {
 	assert.Nil(t, user.data)
 }
 
-func TestUser_DefaultLanguageID(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnRows(
-		sqlmock.
-			NewRows([]string{"idDefaultLanguage"}).AddRow(int64(2)),
-	)
-	user := User{42, userStore, nil}
-
-	got, err := user.DefaultLanguageID()
-	assert.EqualValues(t, 2, got)
-	assert.NoError(t, err)
-	assert.NotNil(t, user.data)
-}
-
 func TestUser_DefaultLanguageID_Fail(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -123,23 +133,6 @@ func TestUser_DefaultLanguageID_Fail(t *testing.T) {
 	assert.Zero(t, got)
 	assert.Equal(t, expectedError, err)
 	assert.Nil(t, user.data)
-}
-
-func TestUser_OwnedGroupID(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnRows(
-		sqlmock.
-			NewRows([]string{"idGroupOwned"}).AddRow(int64(43)),
-	)
-	user := User{42, userStore, nil}
-
-	got, err := user.OwnedGroupID()
-	assert.EqualValues(t, 43, got)
-	assert.NoError(t, err)
-	assert.NotNil(t, user.data)
 }
 
 func TestUser_OwnedGroupID_Fail(t *testing.T) {
@@ -157,23 +150,9 @@ func TestUser_OwnedGroupID_Fail(t *testing.T) {
 	assert.Nil(t, user.data)
 }
 
-func TestUser_AllowSubgroups(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).
-		WillReturnRows(sqlmock.NewRows([]string{"allowSubgroups"}).AddRow(int64(1)))
-	user := User{42, userStore, nil}
-
-	got, err := user.AllowSubgroups()
-	assert.True(t, got)
-	assert.NoError(t, err)
-	assert.NotNil(t, user.data)
-}
-
 func TestUser_AllowSubgroups_Fail(t *testing.T) {
 	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
 
 	userStore := NewDataStore(db).Users()
 	expectedError := errors.New("db error")
@@ -186,28 +165,24 @@ func TestUser_AllowSubgroups_Fail(t *testing.T) {
 	assert.Nil(t, user.data)
 }
 
-func TestUser_AllowSubgroups_False(t *testing.T) {
-	db, dbMock := NewDBMock()
-	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).
-		WillReturnRows(sqlmock.NewRows([]string{"allowSubgroups"}).AddRow(int64(0)))
-	user := User{42, userStore, nil}
-
-	got, err := user.AllowSubgroups()
-	assert.False(t, got)
-	assert.NoError(t, err)
-	assert.NotNil(t, user.data)
+func TestUser_AllowSubgroups_UserNotFound(t *testing.T) {
+	testMethodHandlesUserNotFoundError(t, func(db *DB, user *User) []interface{} {
+		got, err := user.AllowSubgroups()
+		return []interface{}{got, err}
+	}, []interface{}{false, ErrUserNotFound})
 }
 
-func TestUser_AllowSubgroups_UserNotFound(t *testing.T) {
+func testMethodHandlesUserNotFoundError(t *testing.T,
+	funcToCall func(*DB, *User) []interface{}, expectedResults []interface{}) {
 	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
 	userStore := NewDataStore(db).Users()
-	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).
-		WillReturnRows(sqlmock.NewRows([]string{"allowSubgroups"}))
 	user := User{42, userStore, nil}
 
-	got, err := user.AllowSubgroups()
-	assert.False(t, got)
-	assert.Equal(t, ErrUserNotFound, err)
-	assert.Nil(t, user.data)
+	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).
+		WillReturnRows(sqlmock.NewRows([]string{"ID"}))
+
+	results := funcToCall(db, &user)
+	assert.Equal(t, expectedResults, results)
 }

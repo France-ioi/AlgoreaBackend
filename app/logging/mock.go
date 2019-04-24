@@ -1,7 +1,7 @@
 package logging
 
 import (
-	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 )
 
 // NewMockLogger creates a null/mock logger and return the logger and the hook
@@ -11,11 +11,10 @@ func NewMockLogger() (*Logger, *test.Hook) {
 }
 
 // MockSharedLoggerHook set a null/mock logger as shared and return the hook and the function restoring the initial logger
-func MockSharedLoggerHook() (*test.Hook, func()) {
-	var h *test.Hook
+func MockSharedLoggerHook() (hook *test.Hook, restoreFunc func()) {
 	previousShared := SharedLogger
-	SharedLogger, h = NewMockLogger()
-	return h, func() {
+	SharedLogger, hook = NewMockLogger()
+	return hook, func() {
 		SharedLogger = previousShared
 	}
 }

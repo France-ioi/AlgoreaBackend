@@ -5,13 +5,6 @@ import (
 	"fmt"
 )
 
-const jsonNull = "null"
-
-// NullableOptional is a generic interface for all set/null information about these custom types
-type NullableOptional interface {
-	AllAttributes() (value interface{}, isNull bool, isSet bool)
-}
-
 // NOTE: to be probably replace by JSON schema validation and remove
 
 // Validatable is the interface indicating the type implementing it supports data validation.
@@ -29,6 +22,30 @@ func Validate(names []string, values ...validatable) error {
 		if err := value.Validate(); err != nil {
 			return fmt.Errorf("wrong value for '%s': %s", names[index], err.Error())
 		}
+	}
+	return nil
+}
+
+// validateRequired checks that the subject matches "required" (set and not-null)
+func validateRequired(isSet, isNull bool) error {
+	if !isSet || isNull {
+		return errors.New("must be given and not null")
+	}
+	return nil
+}
+
+// validateNullable checks that the subject matches "nullable" (must be set)
+func validateNullable(isSet bool) error {
+	if !isSet {
+		return errors.New("must be given")
+	}
+	return nil
+}
+
+// validateOptional checks that the subject matches "optional" (not-null)
+func validateOptional(isNull bool) error {
+	if isNull {
+		return errors.New("must not be null")
 	}
 	return nil
 }

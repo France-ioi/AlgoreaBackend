@@ -182,8 +182,8 @@ func (ctx *TestContext) emptyDB() error {
 
 	for rows.Next() {
 		var tableName string
-		if err = rows.Scan(&tableName); err != nil {
-			return err
+		if scanErr := rows.Scan(&tableName); scanErr != nil {
+			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err := db.Exec("DELETE FROM " + tableName)
@@ -211,7 +211,7 @@ func (ctx *TestContext) initDB() error {
 	return nil
 }
 
-func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody string) error {
+func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error {
 	// app server
 	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
@@ -231,15 +231,19 @@ func (ctx *TestContext) iSendrequestGeneric(method string, path string, reqBody 
 	return nil
 }
 
+const tableValueFalse = "false"
+const tableValueTrue = "true"
+const tableValueNull = "null"
+
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
 // e.g., the string "null" means the SQL `NULL`
 func dbDataTableValue(input string) interface{} {
 	switch input {
-	case "false":
+	case tableValueFalse:
 		return false
-	case "true":
+	case tableValueTrue:
 		return true
-	case "null":
+	case tableValueNull:
 		return nil
 	default:
 		return input
@@ -249,7 +253,7 @@ func dbDataTableValue(input string) interface{} {
 var prepareValRegexp = regexp.MustCompile(`^\s*([\w]+)\s*\(\s*(.*)\)\s*$`)
 
 func prepareVal(input string) string {
-	if match := prepareValRegexp.FindStringSubmatch(input); match != nil && match[1] == "relativeTime" {
+	if match := prepareValRegexp.FindStringSubmatch(input); len(match) == 3 && match[1] == "relativeTime" {
 		duration, err := time.ParseDuration(match[2])
 		if err != nil {
 			panic(err)
@@ -427,9 +431,9 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 		if neededColumnNumber == -1 {
 			panic(fmt.Errorf("cannot find column %q in table %q", match[3], match[1]))
 		}
-		rowNumber, err := strconv.Atoi(match[2])
-		if err != nil {
-			panic(err)
+		rowNumber, conversionErr := strconv.Atoi(match[2])
+		if conversionErr != nil {
+			panic(conversionErr)
 		}
 		expectedBody = strings.Replace(expectedBody, match[0], gherkinTable.Rows[rowNumber].Cells[neededColumnNumber].Value, -1)
 	}
@@ -469,12 +473,13 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 			diff,
 		)
 	}
-	return
+	return err
 }
 
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
 	if ctx.lastResponse.Header.Get(headerName) != headerValue {
-		return fmt.Errorf("headers %s different from expected. Expected: %s, got: %s", headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
+		return fmt.Errorf("headers %s different from expected. Expected: %s, got: %s",
+			headerName, headerValue, ctx.lastResponse.Header.Get(headerName))
 	}
 	return nil
 }
@@ -585,9 +590,9 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	where := ""
 	if len(ids) > 0 {
 		if excludeIDs {
-			where = fmt.Sprintf(" WHERE ID NOT IN (%s) ", idsString)
+			where = fmt.Sprintf(" WHERE ID NOT IN (%s) ", idsString) // #nosec
 		} else {
-			where = fmt.Sprintf(" WHERE ID IN (%s) ", idsString)
+			where = fmt.Sprintf(" WHERE ID IN (%s) ", idsString) // #nosec
 		}
 	}
 
@@ -629,7 +634,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 			return err
 		}
 
-		nullValue := "null"
+		nullValue := tableValueNull
 		pNullValue := &nullValue
 		// checking that all columns of the test data table match the SQL row
 		for iCol, dataCell := range data.Rows[iDataRow].Cells {
@@ -644,7 +649,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 				sqlValue = &pNullValue
 			}
 
-			if (dataValue == "true" && **sqlValue == "1") || (dataValue == "false" && **sqlValue == "0") {
+			if (dataValue == tableValueTrue && **sqlValue == "1") || (dataValue == tableValueFalse && **sqlValue == "0") {
 				continue
 			}
 
@@ -677,7 +682,7 @@ func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) 
 		return nil
 	}
 
-	if err = db.Table(tableName).AddUniqueIndex(indexName, strings.Split(columns, ",")...).Error; err != nil {
+	if err := db.Table(tableName).AddUniqueIndex(indexName, strings.Split(columns, ",")...).Error; err != nil {
 		return err
 	}
 	ctx.addedDBIndices = append(ctx.addedDBIndices, &addedDBIndex{Table: tableName, Index: indexName})

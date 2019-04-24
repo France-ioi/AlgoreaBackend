@@ -96,6 +96,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixture("group_group_store/delete_relation/" + tt.fixture)
 			defer func() { _ = db.Close() }()
@@ -113,8 +114,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 }
 
 func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
-	remainingGroupIDs []int64, remainingGroupsGroups []map[string]interface{},
-	remainingGroupsAncestors []map[string]interface{}) {
+	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{}) {
 	var rows []map[string]interface{}
 	var ids []int64
 	assert.NoError(t, dataStore.Groups().Order("ID").Pluck("ID", &ids).Error())

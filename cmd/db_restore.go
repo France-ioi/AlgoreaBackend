@@ -12,8 +12,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-// nolint: gosec
-func init() {
+// nolint:gosec
+func init() { // nolint:gochecknoinits
 
 	var restoreCmd = &cobra.Command{
 		Use:   "db-restore",

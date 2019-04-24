@@ -237,7 +237,7 @@ func (s *GroupItemStore) prepareStatementsForRevokingCachedAccessWhereNeeded() [
 			SET ` + bAccessField + ` = false
 			WHERE ` + bAccessField + ` = true AND
 				groups_items_propagate.sPropagateAccess = 'self' AND
-				(` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`)
+				(` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`) // #nosec
 		mustNotBeError(err)
 		statements = append(statements, statement)
 	}

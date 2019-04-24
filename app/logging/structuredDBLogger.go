@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 )
 
 // StructuredDBLogger is a database structured logger
@@ -31,7 +31,8 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 	level := values[0]
 	logger := l.logger.WithField("type", "db")
 
-	if level == "sql" {
+	switch level {
+	case "sql":
 		duration := float64(values[2].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		sql := fillSQLPlaceholders(values[3].(string), values[4].([]interface{}))
 		logger.WithFields(map[string]interface{}{
@@ -39,7 +40,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 			"ts":       time.Now().Format("2006-01-02 15:04:05"),
 			"rows":     values[5].(int64),
 		}).Println(strings.TrimSpace(sql))
-	} else if level == "rawsql" {
+	case "rawsql":
 		/*
 		   values[0] - level (rawsql)
 		   values[1] - ctx
@@ -52,13 +53,12 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		}
 		valuesMap["ts"] = time.Now().Format("2006-01-02 15:04:05")
 		logger.WithFields(valuesMap).Println(values[2])
-	} else { // level is not "sql", so typically errors
+	default: // level is not "sql"/"rawsql", so typically errors
 		logger.Println(values[2:]...)
 	}
-
 }
 
-var spacesRegexp *regexp.Regexp = regexp.MustCompile(`[\s\r\n]+`)
+var spacesRegexp = regexp.MustCompile(`[\s\r\n]+`)
 
 func fillSQLPlaceholders(query string, values []interface{}) string {
 	var sql string

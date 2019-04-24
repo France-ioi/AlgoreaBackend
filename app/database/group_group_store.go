@@ -68,7 +68,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		groupGroupStore.createNewAncestors()
 		return nil
 	}))
-	return
+	return err
 }
 
 var ErrGroupBecomesOrphan = errors.New("a group cannot become an orphan")

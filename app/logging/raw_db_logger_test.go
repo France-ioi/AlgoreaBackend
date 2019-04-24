@@ -78,11 +78,13 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 		{
 			name: "with time",
 			keyvals: []interface{}{
-				"query", "UPDATE `users_items` SET `nbChildrenValidated` = ?, `nbTasksSolved` = ?, `nbTasksTried` = ?, `nbTasksWithHelp` = ?, `sLastActivityDate` = ? WHERE (ID=13)",
+				"query", "UPDATE `users_items` SET `nbChildrenValidated` = ?, `nbTasksSolved` = ?, `nbTasksTried` = ?, " +
+					"`nbTasksWithHelp` = ?, `sLastActivityDate` = ? WHERE (ID=13)",
 				"args", "{[int64 8], [int64 7], [int64 5], [int64 6], [time.Time 2019-03-18 16:24:01 +0000 UTC]}",
 			},
 			want: map[string]interface{}{
-				"query": "UPDATE `users_items` SET `nbChildrenValidated` = 8, `nbTasksSolved` = 7, `nbTasksTried` = 5, `nbTasksWithHelp` = 6, `sLastActivityDate` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (ID=13)",
+				"query": "UPDATE `users_items` SET `nbChildrenValidated` = 8, `nbTasksSolved` = 7, `nbTasksTried` = 5, " +
+					"`nbTasksWithHelp` = 6, `sLastActivityDate` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (ID=13)",
 			},
 		},
 		{
@@ -92,11 +94,13 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"args", "{[<nil> <nil>], [time.Time 2019-03-18 16:24:01 +0000 UTC], [<nil> <nil>], [time.Time 2018-03-18 16:24:01 +0000 UTC]}",
 			},
 			want: map[string]interface{}{
-				"query": "UPDATE some_table SET column1 = NULL, column2 = \"2019-03-18 16:24:01 +0000 UTC\", column3 = NULL, column4 = \"2018-03-18 16:24:01 +0000 UTC\"",
+				"query": "UPDATE some_table SET column1 = NULL, column2 = \"2019-03-18 16:24:01 +0000 UTC\", column3 = NULL, " +
+					"column4 = \"2018-03-18 16:24:01 +0000 UTC\"",
 			},
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := prepareRawDBLoggerValuesMap(tt.keyvals)
 			assert.Equal(t, tt.want, got)
@@ -123,6 +127,7 @@ func Test_convertRawSQLArgValue(t *testing.T) {
 		{value: `some_value`, typeStr: "unknown type", want: `some_value`},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.typeStr, func(t *testing.T) {
 			got := convertRawSQLArgValue(tt.value, tt.typeStr)
 			assert.Equal(t, tt.want, got)

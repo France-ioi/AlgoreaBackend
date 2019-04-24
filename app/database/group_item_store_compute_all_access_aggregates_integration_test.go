@@ -113,13 +113,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			GroupID:              1,
 			ItemID:               11,
 			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
-			CachedFullAccess:     false,                                   // since it is a new record and we do not set bCachedFullAccess=1 in ComputeAllAccess()
-			PropagateAccess:      "done",
+
+			CachedFullAccess: false, // since it is a new record and we do not set bCachedFullAccess=1 in ComputeAllAccess()
+			PropagateAccess:  "done",
 		},
 		{
 			GroupID:              1,
 			ItemID:               12,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), //least(1_1, 1_2, 1_11)
+			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_2, 1_11)
 			PropagateAccess:      "done",
 		},
 		{
@@ -207,8 +208,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			GroupID:                 1,
 			ItemID:                  11,
 			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
-			CachedPartialAccess:     false,                                   // since it is a new record and we do not set bCachedPartialAccess=1 in ComputeAllAccess()
-			PropagateAccess:         "done",
+
+			CachedPartialAccess: false, // since it is a new record and we do not set bCachedPartialAccess=1 in ComputeAllAccess()
+			PropagateAccess:     "done",
 		},
 		{
 			GroupID:                 1,
@@ -388,18 +390,22 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		{
 			GroupID:                 1,
 			ItemID:                  11,
-			CachedPartialAccessDate: nil,                                     // since bAccessRestricted = 1
-			CachedGrayedAccessDate:  ptrTime(currentDate.AddDate(0, 0, -10)), // least sCachedPartialAccessDate(1_1, 1_3)
-			CachedGrayedAccess:      false,                                   // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
-			PropagateAccess:         "done",
+			CachedPartialAccessDate: nil, // since bAccessRestricted = 1
+
+			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least sCachedPartialAccessDate(1_1, 1_3)
+
+			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
+			PropagateAccess:    "done",
 		},
 		{
 			GroupID:                 1,
 			ItemID:                  12,
-			CachedPartialAccessDate: nil,                                    // since bAccessRestricted=1
-			CachedGrayedAccessDate:  ptrTime(currentDate.AddDate(0, 0, -8)), // from 1_1
-			CachedGrayedAccess:      false,                                  // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
-			PropagateAccess:         "done",
+			CachedPartialAccessDate: nil, // since bAccessRestricted=1
+
+			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)), // from 1_1
+
+			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
+			PropagateAccess:    "done",
 		},
 		{
 			GroupID:                 2,
@@ -414,16 +420,20 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)),
 			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
 			CachedGrayedAccessDate:  ptrTime(currentDate.AddDate(0, 0, -11)), // from 2_1
-			CachedGrayedAccess:      false,                                   // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
-			PropagateAccess:         "done",
+
+			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
+			PropagateAccess:    "done",
 		},
 		{
-			GroupID:                 2,
-			ItemID:                  12,
-			CachedPartialAccessDate: nil,                                     // since bAccessRestricted=1
-			CachedGrayedAccessDate:  ptrTime(currentDate.AddDate(0, 0, -12)), // from 2_11
-			CachedGrayedAccess:      false,                                   // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
-			PropagateAccess:         "done",
+			GroupID: 2,
+			ItemID:  12,
+
+			CachedPartialAccessDate: nil, // since bAccessRestricted=1
+
+			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)), // from 2_11
+
+			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
+			PropagateAccess:    "done",
 		},
 	}, result)
 }
@@ -487,15 +497,17 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			GroupID:                   1,
 			ItemID:                    11,
 			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
-			CachedAccessSolutions:     false,                                   // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
-			PropagateAccess:           "done",
+
+			CachedAccessSolutions: false, // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
+			PropagateAccess:       "done",
 		},
 		{
 			GroupID:                   1,
 			ItemID:                    12,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), //least(1_1, 1_2, 1_11)
-			CachedAccessSolutions:     false,                                   // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
-			PropagateAccess:           "done",
+			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_2, 1_11)
+
+			CachedAccessSolutions: false, // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
+			PropagateAccess:       "done",
 		},
 		{
 			GroupID:                   2,

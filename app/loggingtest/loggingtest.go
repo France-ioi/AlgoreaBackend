@@ -3,8 +3,8 @@ package loggingtest
 import (
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/sirupsen/logrus"            //nolint:depguard
+	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 )
 
 // Hook is a hook designed for dealing with logs in test scenarios. It wraps logrus/hooks/test.Hook.
@@ -12,14 +12,16 @@ type Hook struct {
 	*test.Hook
 }
 
+const newLine = "\n"
+
 // GetAllLogs returns all the logs collected by the hook as a string
 func (hook *Hook) GetAllLogs() string {
 	logs := ""
 	for _, entry := range hook.AllEntries() {
 		if len(logs) > 0 {
-			logs += "\n"
+			logs += newLine
 		}
-		logs = logs + strings.TrimSpace(entry.Message)
+		logs += strings.TrimSpace(entry.Message)
 	}
 	return logs
 }
@@ -29,7 +31,7 @@ func (hook *Hook) GetAllStructuredLogs() string {
 	logs := ""
 	for _, entry := range hook.AllEntries() {
 		if len(logs) > 0 {
-			logs += "\n"
+			logs += newLine
 		}
 		logString, err := entry.String()
 		if err != nil {

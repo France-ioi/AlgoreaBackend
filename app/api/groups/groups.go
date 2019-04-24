@@ -1,6 +1,8 @@
 package groups
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
@@ -47,7 +49,8 @@ func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, g
 	return service.NoError
 }
 
-func checkThatUserHasRightsForDirectRelation(store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
+func checkThatUserHasRightsForDirectRelation(
+	store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
 	groupStore := store.Groups()
 
 	var groupData []struct {
@@ -76,5 +79,47 @@ func checkThatUserHasRightsForDirectRelation(store *database.DataStore, user *da
 			return service.InsufficientAccessRightsError
 		}
 	}
+	return service.NoError
+}
+
+type acceptOrRejectRequestsAction string
+
+const (
+	acceptRequestsAction acceptOrRejectRequestsAction = "accept"
+	rejectRequestsAction acceptOrRejectRequestsAction = "reject"
+)
+
+func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
+	action acceptOrRejectRequestsAction) service.APIError {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	groupIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "group_ids")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	user := srv.GetUser(r)
+	if apiErr := checkThatUserOwnsTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
+		return apiErr
+	}
+
+	var results database.GroupGroupTransitionResults
+	if len(groupIDs) > 0 {
+		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+			results, err = store.GroupGroups().Transition(
+				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
+					acceptRequestsAction: database.AdminAcceptsRequest,
+					rejectRequestsAction: database.AdminRefusesRequest,
+				}[action], parentGroupID, groupIDs)
+			return err
+		})
+	}
+
+	service.MustNotBeError(err)
+
+	renderGroupGroupTransitionResults(w, r, results)
 	return service.NoError
 }

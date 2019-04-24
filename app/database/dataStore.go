@@ -113,7 +113,7 @@ func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc
 
 // ByID returns a composable query for filtering by _table_.ID
 func (s *DataStore) ByID(id int64) *DB {
-	if len(s.tableName) == 0 {
+	if s.tableName == "" {
 		panic("method ByID() called for abstract DataStore")
 	}
 	return s.Where(s.tableName+".ID = ?", id)

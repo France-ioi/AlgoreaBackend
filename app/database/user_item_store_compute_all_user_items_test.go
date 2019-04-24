@@ -34,11 +34,12 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
 	dbMock.ExpectRollback()
-	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "WithNamedLock", func(*DataStore, string, time.Duration, func(*DataStore) error) error {
-		var a []int
-		a[0]++ // runtime error
-		return nil
-	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "WithNamedLock",
+		func(*DataStore, string, time.Duration, func(*DataStore) error) error {
+			var a []int
+			a[0]++ // runtime error
+			return nil
+		})
 	defer monkey.UnpatchAll()
 
 	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {

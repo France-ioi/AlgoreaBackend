@@ -176,7 +176,8 @@ const (
 
 type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 
-func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGroupID int64, childGroupIDs []int64) (result GroupGroupTransitionResults, err error) {
+func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
+	parentGroupID int64, childGroupIDs []int64) (result GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -198,59 +199,10 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 			oldTypesMap[oldType.ChildGroupID] = oldType.Type
 		}
 
-		idsToUpdate := make(map[int64]GroupGroupType, len(childGroupIDs))
-		idsToCheckCycle := make(map[int64]bool, len(childGroupIDs))
-		idsToDelete := make(map[int64]bool, len(childGroupIDs))
-		idsToInsert := make(map[int64]GroupGroupType, len(childGroupIDs))
-		for _, id := range childGroupIDs {
-			if id == parentGroupID {
-				results[id] = Invalid
-				continue
-			}
-			oldType := oldTypesMap[id]
-			if toType, toTypeOK := groupGroupTransitionRules[action].Transitions[GroupGroupType(oldType)]; toTypeOK {
-				if toType != oldType {
-					if !groupGroupTransitionRules[action].UpdateFromType[oldType] {
-						idsToDelete[id] = true
-					}
-					if toType == NoRelation {
-						idsToDelete[id] = true
-					} else if idsToDelete[id] {
-						idsToInsert[id] = toType
-					} else {
-						idsToUpdate[id] = toType
-					}
-					results[id] = Success
-					if toType.IsActive() || oldType == NoRelation {
-						idsToCheckCycle[id] = true
-					}
-				} else {
-					results[id] = Unchanged
-				}
-			} else {
-				results[id] = Invalid
-			}
-		}
+		idsToInsert, idsToUpdate, idsToCheckCycle, idsToDelete := buildTransitionsPlan(
+			parentGroupID, childGroupIDs, results, oldTypesMap, action)
 
-		if len(idsToCheckCycle) > 0 {
-			idsToCheckCycleSlice := make([]int64, 0, len(idsToCheckCycle))
-			for id := range idsToCheckCycle {
-				idsToCheckCycleSlice = append(idsToCheckCycleSlice, id)
-			}
-			var cycleIDs []map[string]interface{}
-			mustNotBeError(s.GroupAncestors().
-				WithWriteLock().
-				Select("idGroupAncestor AS idGroup").
-				Where("idGroupChild = ? AND idGroupAncestor IN (?)", parentGroupID, idsToCheckCycleSlice).
-				ScanIntoSliceOfMaps(&cycleIDs).Error())
-
-			for _, cycleID := range cycleIDs {
-				idGroup := cycleID["idGroup"].(int64)
-				results[idGroup] = Cycle
-				delete(idsToUpdate, idGroup)
-				delete(idsToInsert, idGroup)
-			}
-		}
+		performCyclesChecking(s.DataStore, idsToCheckCycle, parentGroupID, results, idsToInsert, idsToUpdate)
 
 		shouldCreateNewAncestors := false
 		if len(idsToDelete) > 0 {
@@ -285,7 +237,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 
 			insertQuery := "INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, sType, iChildOrder, sStatusDate) VALUES " +
 				strings.Repeat("(?, ?, ?, ?, ?, NOW()), ", len(idsToInsert)-1) +
-				"(?, ?, ?, ?, ?, NOW())"
+				"(?, ?, ?, ?, ?, NOW())" // #nosec
 			mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 				values := make([]interface{}, 0, len(idsToInsert)*5)
 				for id, toType := range idsToInsert {
@@ -303,4 +255,71 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction, parentGr
 		return nil
 	}))
 	return results, nil
+}
+
+func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentGroupID int64,
+	results GroupGroupTransitionResults, idsToInsert, idsToUpdate map[int64]GroupGroupType) {
+	if len(idsToCheckCycle) > 0 {
+		idsToCheckCycleSlice := make([]int64, 0, len(idsToCheckCycle))
+		for id := range idsToCheckCycle {
+			idsToCheckCycleSlice = append(idsToCheckCycleSlice, id)
+		}
+		var cycleIDs []map[string]interface{}
+		mustNotBeError(s.GroupAncestors().
+			WithWriteLock().
+			Select("idGroupAncestor AS idGroup").
+			Where("idGroupChild = ? AND idGroupAncestor IN (?)", parentGroupID, idsToCheckCycleSlice).
+			ScanIntoSliceOfMaps(&cycleIDs).Error())
+
+		for _, cycleID := range cycleIDs {
+			idGroup := cycleID["idGroup"].(int64)
+			results[idGroup] = Cycle
+			delete(idsToUpdate, idGroup)
+			delete(idsToInsert, idGroup)
+		}
+	}
+}
+
+func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results GroupGroupTransitionResults,
+	oldTypesMap map[int64]GroupGroupType, action GroupGroupTransitionAction,
+) (idsToInsert, idsToUpdate map[int64]GroupGroupType, idsToCheckCycle, idsToDelete map[int64]bool) {
+	idsToUpdate = make(map[int64]GroupGroupType, len(childGroupIDs))
+	idsToCheckCycle = make(map[int64]bool, len(childGroupIDs))
+	idsToDelete = make(map[int64]bool, len(childGroupIDs))
+	idsToInsert = make(map[int64]GroupGroupType, len(childGroupIDs))
+	for _, id := range childGroupIDs {
+		results[id] = Invalid
+		if id == parentGroupID {
+			continue
+		}
+		oldType := oldTypesMap[id]
+		if toType, toTypeOK := groupGroupTransitionRules[action].Transitions[oldType]; toTypeOK {
+			buildOneTransition(id, oldType, toType, action, results, idsToInsert, idsToUpdate, idsToCheckCycle, idsToDelete)
+		}
+	}
+	return idsToInsert, idsToUpdate, idsToCheckCycle, idsToDelete
+}
+
+func buildOneTransition(id int64, oldType, toType GroupGroupType, action GroupGroupTransitionAction,
+	results GroupGroupTransitionResults,
+	idsToInsert, idsToUpdate map[int64]GroupGroupType, idsToCheckCycle, idsToDelete map[int64]bool) {
+	if toType != oldType {
+		results[id] = Success
+		if !groupGroupTransitionRules[action].UpdateFromType[oldType] {
+			idsToDelete[id] = true
+		}
+		switch {
+		case toType == NoRelation:
+			idsToDelete[id] = true
+		case idsToDelete[id]:
+			idsToInsert[id] = toType
+		default:
+			idsToUpdate[id] = toType
+		}
+		if toType.IsActive() || oldType == NoRelation {
+			idsToCheckCycle[id] = true
+		}
+	} else {
+		results[id] = Unchanged
+	}
 }

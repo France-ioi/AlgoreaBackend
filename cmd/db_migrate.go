@@ -6,13 +6,13 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
-	"github.com/rubenv/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-func init() {
+func init() { // nolint:gochecknoinits
 
 	var migrateCmd = &cobra.Command{
 		Use:   "db-migrate",
@@ -41,11 +41,12 @@ func init() {
 			// migrate
 			var n int
 			n, err = migrate.Exec(db, "mysql", migrations, migrate.Up)
-			if err != nil {
+			switch {
+			case err != nil:
 				fmt.Println("Unable to apply migration:", err)
-			} else if n == 0 {
+			case n == 0:
 				fmt.Println("No migrations to apply!")
-			} else {
+			default:
 				fmt.Printf("%d migration(s) applied successfully!\n", n)
 			}
 

@@ -23,6 +23,7 @@ func TestUserItemStore_ComputeAllUserItems(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
 				return s.UserItems().ComputeAllUserItems()

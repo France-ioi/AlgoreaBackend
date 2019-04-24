@@ -53,7 +53,7 @@ func (in *NewItemRequest) itemData() *database.Item {
 	}
 }
 
-func (in *NewItemRequest) groupItemData(id int64, userID int64, groupID int64) *database.GroupItem {
+func (in *NewItemRequest) groupItemData(id, userID, groupID int64) *database.GroupItem {
 	return &database.GroupItem{
 		ID:             *types.NewInt64(id),
 		ItemID:         in.ID.Int64,
@@ -99,7 +99,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	}
 
 	// check permissions
-	if ret := srv.checkPermission(user, input.Parents[0].ID.Value); ret != service.NoError {
+	if ret := srv.checkPermission(user, input.Parents[0].ID.Value.(int64)); ret != service.NoError {
 		return ret
 	}
 
@@ -111,7 +111,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	// response
 	response := struct {
 		ItemID int64 `json:"ID,string"`
-	}{input.ID.Value}
+	}{input.ID.Value.(int64)}
 	if err = render.Render(w, r, service.CreationSuccess(&response)); err != nil {
 		return service.ErrUnexpected(err)
 	}

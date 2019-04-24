@@ -123,11 +123,16 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					LEFT JOIN groups_attempts
 						ON groups_attempts.ID = users_items.idAttemptActive
 					SET
-						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.sLastActivityDate, users_items.sLastActivityDate),
-						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksTried, users_items.nbTasksTried),
-						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksWithHelp, users_items.nbTasksWithHelp),
-						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbTasksSolved, users_items.nbTasksSolved),
-						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL, children_data.nbChildrenValidated, users_items.nbChildrenValidated),
+						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							children_data.sLastActivityDate, users_items.sLastActivityDate),
+						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							children_data.nbTasksTried, users_items.nbTasksTried),
+						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							children_data.nbTasksWithHelp, users_items.nbTasksWithHelp),
+						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							children_data.nbTasksSolved, users_items.nbTasksSolved),
+						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+							children_data.nbChildrenValidated, users_items.nbChildrenValidated),
 						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							CASE
 								WHEN users_items.bValidated = 1 THEN 1
@@ -140,9 +145,11 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						users_items.sValidationDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							IFNULL(
 								users_items.sValidationDate,
-								IF(items.sValidationType = 'Categories', task_children_data.maxValidationDateCategories, task_children_data.maxValidationDate)
+								IF(items.sValidationType = 'Categories',
+									task_children_data.maxValidationDateCategories, task_children_data.maxValidationDate)
 							), users_items.sValidationDate),
-						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL, groups_attempts.sHintsRequested, users_items.sHintsRequested),
+						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL,
+							groups_attempts.sHintsRequested, users_items.sHintsRequested),
 						users_items.sAncestorsComputationState = 'done'
 					WHERE users_items.sAncestorsComputationState = 'processing'`
 				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
@@ -207,7 +214,7 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 }
 
 func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
-	if len(groupItemsToUnlock) <= 0 {
+	if len(groupItemsToUnlock) == 0 {
 		return 0
 	}
 	query := `

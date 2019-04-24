@@ -74,7 +74,8 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidationDateToMax
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation_NoSuitableChildren(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/sValidationDate")
 	defer func() { _ = db.Close() }()
 
@@ -106,7 +107,8 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation(
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/sValidationDate")
 	defer func() { _ = db.Close() }()
 
@@ -139,7 +141,8 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation_IgnoresCoursesAndNoScoreItems(t *testing.T) {
+func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfValidationDatesOfChildrenWithCategoryValidation_IgnoresCoursesAndNoScoreItems( // nolint:lll
+	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/sValidationDate")
 	defer func() { _ = db.Close() }()
 

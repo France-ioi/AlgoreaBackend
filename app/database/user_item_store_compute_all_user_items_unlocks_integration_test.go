@@ -16,8 +16,8 @@ import (
 )
 
 type unlocksResultRow struct {
-	IdGroup                 int64      `gorm:"column:idGroup"`
-	IdItem                  int64      `gorm:"column:idItem"`
+	GroupID                 int64      `gorm:"column:idGroup"`
+	ItemID                  int64      `gorm:"column:idItem"`
 	PartialAccessDate       *time.Time `gorm:"column:sPartialAccessDate"`
 	CachedPartialAccessDate *time.Time `gorm:"column:sCachedPartialAccessDate"`
 	CachedPartialAccess     bool       `gorm:"column:bCachedPartialAccess"`
@@ -106,12 +106,12 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		Order("idGroup, idItem").
 		Scan(&result).Error())
 	assert.Equal(t, []unlocksResultRow{
-		{IdGroup: 101, IdItem: 1001, CachedPartialAccess: true},
-		{IdGroup: 101, IdItem: 1002, CachedPartialAccess: true},
-		{IdGroup: 101, IdItem: 2001, CachedPartialAccess: true},
-		{IdGroup: 101, IdItem: 2002, CachedPartialAccess: true},
-		{IdGroup: 101, IdItem: 4001, CachedPartialAccess: true},
-		{IdGroup: 101, IdItem: 4002, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 1001, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 1002, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 2001, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 2002, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 4001, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 4002, CachedPartialAccess: true},
 	}, result)
 	var count int64
 	assert.NoError(t, database.NewDataStore(db).GroupItems().

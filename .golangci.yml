@@ -1,0 +1,73 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Debugf
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Infof
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Warnf
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Errorf
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Panicf
+          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Fatalf
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Debugf
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Infof
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Warnf
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Errorf
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Panicf
+          - github.com/France-ioi/AlgoreaBackend/app/logging.Fatalf
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 10
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  depguard:
+    list-type: blacklist
+    packages:
+      # logging is allowed only by logutils.Log, logrus
+      # is allowed to be used only in logutils package
+      - github.com/sirupsen/logrus
+  misspell:
+    locale: US
+  lll:
+    line-length: 140
+  goimports:
+    local-prefixes: github.com/France-ioi/AlgoreaBackend
+  gocritic:
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+    disabled-checks:
+      - wrapperFunc
+
+linters:
+  enable-all: true
+  disable:
+    - maligned
+    - prealloc
+    - gochecknoglobals
+
+run:
+  skip-dirs:
+    - db
+    - app/database/testdata
+    - test-results
+    - pkg/golinters/goanalysis/(checker|passes)
+
+issues:
+  exclude-rules:
+    - text: "weak cryptographic primitive"
+      linters:
+        - gosec
+
+# golangci.com configuration
+# https://github.com/golangci/golangci/wiki/Configuration
+service:
+  golangci-lint-version: 1.15.x # use the fixed version to not introduce new linters unexpectedly

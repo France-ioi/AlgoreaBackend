@@ -57,8 +57,8 @@ var mapstructDecodingErrorRegexp = regexp.MustCompile(`^error decoding '([^']*)'
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	var rawData map[string]interface{}
-	var err error
-	if err = json.NewDecoder(r.Body).Decode(&rawData); err != nil {
+	err := json.NewDecoder(r.Body).Decode(&rawData)
+	if err != nil {
 		return err
 	}
 
@@ -118,7 +118,7 @@ func (f *FormData) processGovalidatorErrors(err error) {
 				}
 				field, _ := currentFieldType.FieldByName(pathElement)
 				currentFieldType = field.Type
-				jsonName := getJSONFieldName(field)
+				jsonName := getJSONFieldName(&field)
 				if jsonName != "-" {
 					err.Path[pathIndex] = jsonName
 				}
@@ -182,7 +182,7 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 		}
 
 		return true
-	}, reflValue, "")
+	}, reflValue, prefix)
 }
 
 func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.StructField, jsonName string) bool,
@@ -200,7 +200,7 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 			continue
 		}
 
-		jsonName := getJSONFieldName(structField)
+		jsonName := getJSONFieldName(&structField)
 		if jsonName == "-" { // skip fields ignored in json
 			continue
 		}
@@ -216,9 +216,9 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 	}
 }
 
-func getJSONFieldName(structField reflect.StructField) string {
+func getJSONFieldName(structField *reflect.StructField) string {
 	jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
-	if len(jsonTagParts[0]) == 0 {
+	if jsonTagParts[0] == "" {
 		return "-"
 	}
 	return jsonTagParts[0]

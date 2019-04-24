@@ -14,7 +14,7 @@ type groupUpdateInput struct {
 	// Nullable fields are of pointer types
 	Type          string     `json:"type" sql:"column:sType" valid:"in(Class|Team|Club|Friends|Other)"`
 	Name          string     `json:"name" sql:"column:sName"`
-	Grade         int64      `json:"grade" sql:"column:iGrade"`
+	Grade         int32      `json:"grade" sql:"column:iGrade"`
 	Description   *string    `json:"description" sql:"column:sDescription"`
 	Opened        bool       `json:"opened" sql:"column:bOpened"`
 	FreeAccess    bool       `json:"free_access" sql:"column:bFreeAccess"`
@@ -61,12 +61,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		dbMap := formData.ConstructMapForDB()
-		if errInTransaction = refuseSentGroupRequestsIfNeeded(groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
+		if errInTransaction := refuseSentGroupRequestsIfNeeded(
+			groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
 		// update the group
-		if errInTransaction = groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
+		if errInTransaction := groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 

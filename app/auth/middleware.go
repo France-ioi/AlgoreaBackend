@@ -16,7 +16,7 @@ const (
 
 // UserIDMiddleware is a middleware retrieving user ID from the request content
 // Created by giving the reverse proxy used for getting the auth info
-func UserIDMiddleware(config *config.Auth) func(next http.Handler) http.Handler {
+func UserIDMiddleware(conf *config.Auth) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -32,7 +32,7 @@ func UserIDMiddleware(config *config.Auth) func(next http.Handler) http.Handler 
 			// create a new url from the raw RequestURI sent by the client
 			cookieParam := "?sessionid=" + authCookie.Value
 			var authRequest *http.Request
-			if authRequest, err = http.NewRequest("GET", config.ProxyURL+cookieParam, nil); err != nil {
+			if authRequest, err = http.NewRequest("GET", conf.ProxyURL+cookieParam, nil); err != nil {
 				http.Error(w, "Unable to parse create request to auth server: "+err.Error(), http.StatusBadGateway)
 				return
 			}

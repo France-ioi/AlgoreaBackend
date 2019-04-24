@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"bou.ke/monkey"
-	"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus" //nolint:depguard
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,6 +34,7 @@ func Test_ShorthandsBasic(t *testing.T) {
 		{"Panic", Panic, logrus.PanicLevel, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			hook.Reset()
 			if tt.panic {
@@ -73,6 +74,7 @@ func Test_ShorthandsFormatted(t *testing.T) {
 		{"Panicf", Panicf, logrus.PanicLevel, true},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			hook.Reset()
 			if tt.panic {

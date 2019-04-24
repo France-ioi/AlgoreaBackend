@@ -30,11 +30,12 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"UserItems", func(store *DataStore) *DB { return store.UserItems().Where("") }, "users_items"},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
-			mock.ExpectQuery("SELECT \\* FROM `" + tt.wantTable + "`").
-				WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
+			mock.ExpectQuery("SELECT \\* FROM `" + tt.wantTable + "`"). // nolint:gosec
+											WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
 
 			var result []interface{}
 			assert.NoError(t, tt.function(NewDataStore(db)).Scan(&result).Error())
@@ -63,6 +64,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"UserItems", func(store *DataStore) interface{} { return store.UserItems() }, &UserItemStore{}},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db, _ := NewDBMock()
 			defer func() { _ = db.Close() }()
@@ -153,7 +155,7 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	lockName := "some name"
+	lockName := "some lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
 

@@ -83,9 +83,9 @@ func TestUnexpected(t *testing.T) {
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := servicetest.WithLoggingMiddleware(func(http.ResponseWriter, *http.Request) service.APIError {
+	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
 		panic(errors.New("some error"))
-	})
+	}))
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
@@ -96,9 +96,9 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	handler, hook := servicetest.WithLoggingMiddleware(func(http.ResponseWriter, *http.Request) service.APIError {
+	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
 		panic(expectedMessage)
-	})
+	}))
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())

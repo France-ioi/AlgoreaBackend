@@ -47,9 +47,12 @@ func (s *ItemStore) VisibleChildrenOfID(user *User, itemID int64) *DB {
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
 func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 	return s.
-		Visible(user).                                                                       // visible items are the leaves (potential grandChildren)
-		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().SubQuery()).         // get their parents' IDs (ii1)
-		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().SubQuery()). // get their grand parents' IDs (ii2)
+		// visible items are the leaves (potential grandChildren)
+		Visible(user).
+		// get their parents' IDs (ii1)
+		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().SubQuery()).
+		// get their grand parents' IDs (ii2)
+		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().SubQuery()).
 		Where("ii2.idItemParent = ?", itemID)
 }
 
@@ -72,7 +75,7 @@ func (s *ItemStore) Insert(data *Item) error {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemID int64) (found bool, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemID int64) (found, allowed bool, err error) {
 
 	var dbRes []struct {
 		ItemID        int64 `sql:"column:idItem"`

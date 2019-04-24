@@ -62,6 +62,7 @@ func TestBase_SetQueryLimit(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			r := chi.NewRouter()
 			called := false

@@ -89,7 +89,8 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 
 	for i := 1; i <= 4; i++ {
 		assert.NoError(t, itemItemStore.Exec(
-			"INSERT INTO items_propagate (ID, sAncestorsComputationState) VALUES (?, 'done') ON DUPLICATE KEY UPDATE sAncestorsComputationState='done'", i).
+			"INSERT INTO items_propagate (ID, sAncestorsComputationState) VALUES (?, 'done') "+
+				"ON DUPLICATE KEY UPDATE sAncestorsComputationState='done'", i).
 			Error())
 	}
 

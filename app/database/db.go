@@ -102,38 +102,44 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err
 		return txDB.Error
 	}
 	defer func() {
-		if p := recover(); p != nil {
+		p := recover()
+		switch {
+		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
-			if e, ok := p.(*mysql.MySQLError); ok && e.Number == 1213 { // Error 1213: Deadlock found when trying to get lock; try restarting transaction
-				if rollbackErr != nil {
-					panic(rollbackErr)
-				}
-				// retry
-				err = conn.inTransactionWithCount(txFunc, count+1)
+			if conn.handleDeadLock(txFunc, count, p, rollbackErr, &err) {
 				return
 			}
 			panic(p) // re-throw panic after rollback
-		} else if err != nil {
+		case err != nil:
 			// do not change the err
 			rollbackErr := txDB.Rollback().Error
-			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1213 { // Error 1213: Deadlock found when trying to get lock; try restarting transaction
-				if rollbackErr != nil {
-					panic(rollbackErr)
-				}
-				// retry
-				err = conn.inTransactionWithCount(txFunc, count+1)
+			if conn.handleDeadLock(txFunc, count, err, rollbackErr, &err) {
 				return
 			}
 			if rollbackErr != nil {
 				panic(err) // in case of error on rollback, panic
 			}
-		} else {
+		default:
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
 	err = txFunc(newDB(txDB))
 	return err
+}
+
+func (conn *DB) handleDeadLock(txFunc func(*DB) error, count int64, errToHandle interface{},
+	rollbackErr error, returnErr *error) bool { //nolint:gocritic
+	// Error 1213: Deadlock found when trying to get lock; try restarting transaction
+	if e, ok := errToHandle.(*mysql.MySQLError); ok && e.Number == 1213 {
+		if rollbackErr != nil {
+			panic(rollbackErr)
+		}
+		// retry
+		*returnErr = conn.inTransactionWithCount(txFunc, count+1)
+		return true
+	}
+	return false
 }
 
 func (conn *DB) isInTransaction() bool {
@@ -146,7 +152,8 @@ func (conn *DB) isInTransaction() bool {
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	var getLockResult int64
-	if err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Row().Scan(&getLockResult); err != nil {
+	err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Row().Scan(&getLockResult)
+	if err != nil {
 		return err
 	}
 	if getLockResult != 1 {
@@ -172,7 +179,8 @@ func (conn *DB) Limit(limit interface{}) *DB {
 	return newDB(conn.db.Limit(limit))
 }
 
-// Where returns a new relation, filters records with given conditions, accepts `map`, `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
+// Where returns a new relation, filters records with given conditions, accepts `map`,
+// `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
 	return newDB(conn.db.Where(query, args...))
 }
@@ -380,7 +388,7 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 		if len(sqlParam) == 2 && sqlParam[0] == "column" {
 			attrName := sqlParam[1]
 			value, null, set := dataV.Field(i).Interface(), false, true
-			if val, ok := value.(types.NullableOptional); ok {
+			if val, ok := value.(types.AllAttributeser); ok {
 				value, null, set = val.AllAttributes()
 			}
 
@@ -397,7 +405,10 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 			}
 		}
 	}
-	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", ")) // nolint: gosec
+	// nolint:gosec
+	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
+		strings.Join(attributes, ", "),
+		strings.Join(valueMarks, ", "))
 	return conn.db.Exec(query, values...).Error
 }
 
@@ -445,13 +456,13 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) {
+func recoverPanics(returnErr *error) { // nolint:gocritic
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:
 			panic(e)
 		default:
-			(*returnErr) = p.(error)
+			*returnErr = p.(error)
 		}
 	}
 }

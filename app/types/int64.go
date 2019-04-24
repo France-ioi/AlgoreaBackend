@@ -1,10 +1,8 @@
 package types
 
 import (
-	"encoding/json"
-	"errors"
+	"reflect"
 	"strconv"
-	"unsafe"
 )
 
 // Important notes on all these custom types:
@@ -15,11 +13,7 @@ import (
 
 type (
 	// Int64 is an integer which can be set/not-set and null/not-null
-	Int64 struct {
-		Value int64
-		Set   bool
-		Null  bool
-	}
+	Int64 struct{ Data }
 	// RequiredInt64 must be set and not null
 	RequiredInt64 struct{ Int64 }
 	// NullableInt64 must be set and can be null
@@ -32,55 +26,33 @@ type (
 
 // NewInt64 creates a Int64 which is not-null and set with the given value
 func NewInt64(v int64) *Int64 {
-	n := &Int64{}
-	n.Value = v
-	n.Set = true
-	n.Null = false
+	n := &Int64{Data{Value: v, Set: true, Null: false}}
 	return n
 }
 
 // UnmarshalJSON parse JSON data to the type
 func (i *Int64) UnmarshalJSON(data []byte) (err error) {
-	i.Set = true // If this method was called, the value was set.
-	i.Null = *(*string)(unsafe.Pointer(&data)) == jsonNull
-	if i.Null {
-		return
-	}
 	var temp string
-	err = json.Unmarshal(data, &temp)
-	if err == nil {
+	err = unmarshalJSON(data, &i.Set, &i.Null, &temp, reflect.TypeOf(""))
+	if err == nil && !i.Null {
 		i.Value, err = strconv.ParseInt(temp, 10, 64)
 	}
 	return
 }
 
-// AllAttributes unwrap the wrapped value and its attributes
-func (i Int64) AllAttributes() (value interface{}, isNull bool, isSet bool) {
-	return i.Value, i.Null, i.Set
-}
-
 // Validate checks that the subject matches "required" (set and not-null)
 func (i *RequiredInt64) Validate() error {
-	if !i.Set || i.Null {
-		return errors.New("must be given and not null")
-	}
-	return nil
+	return validateRequired(i.Set, i.Null)
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
 func (i *NullableInt64) Validate() error {
-	if !i.Set {
-		return errors.New("must be given")
-	}
-	return nil
+	return validateNullable(i.Set)
 }
 
 // Validate checks that the subject matches "optional" (not-null)
 func (i *OptionalInt64) Validate() error {
-	if i.Null {
-		return errors.New("must not be null")
-	}
-	return nil
+	return validateOptional(i.Null)
 }
 
 // Validate checks that the subject matches "optnull" (always true)
