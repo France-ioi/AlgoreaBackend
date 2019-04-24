@@ -14,7 +14,7 @@ type groupUpdateInput struct {
 	// Nullable fields are of pointer types
 	Type          string     `json:"type" sql:"column:sType" valid:"in(Class|Team|Club|Friends|Other)"`
 	Name          string     `json:"name" sql:"column:sName"`
-	Grade         int64      `json:"grade" sql:"column:iGrade"`
+	Grade         int32      `json:"grade" sql:"column:iGrade"`
 	Description   *string    `json:"description" sql:"column:sDescription"`
 	Opened        bool       `json:"opened" sql:"column:bOpened"`
 	FreeAccess    bool       `json:"free_access" sql:"column:bFreeAccess"`

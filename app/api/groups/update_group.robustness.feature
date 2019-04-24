@@ -67,7 +67,7 @@ Feature: Update a group (groupEdit) - robustness
       "errors": {
         "description": ["expected type 'string', got unconvertible type 'float64'"],
         "free_access": ["expected type 'bool', got unconvertible type 'float64'"],
-        "grade": ["expected type 'int64', got unconvertible type 'string'"],
+        "grade": ["expected type 'int32', got unconvertible type 'string'"],
         "name": ["expected type 'string', got unconvertible type 'float64'"],
         "open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
         "opened": ["expected type 'bool', got unconvertible type 'string'"],
