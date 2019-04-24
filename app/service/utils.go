@@ -156,25 +156,26 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 	}
 
 	snakeCaseName := toSnakeCase(valueName)
-	switch {
-	case valueName[:2] == "id" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_':
+	underscoreIndex := strings.IndexByte(snakeCaseName, '_')
+	prefix := ""
+	if underscoreIndex > 0 {
+		prefix = snakeCaseName[:underscoreIndex]
+	}
+
+	switch prefix {
+	case "id":
 		snakeCaseName = snakeCaseName[3:] + "_id"
-	case valueName[:2] == "nb" && len(snakeCaseName) > 2 && snakeCaseName[2] == '_':
+	case "nb":
 		value = int32(value.(int64))
-		snakeCaseName = snakeCaseName[3:]
-	case len(snakeCaseName) > 1 && snakeCaseName[1] == '_':
-		switch valueName[0] {
-		case 'b':
-			value = value == int64(1)
-			snakeCaseName = snakeCaseName[2:]
-		case 's':
-			snakeCaseName = snakeCaseName[2:]
-		case 'i':
-			if _, ok := value.(int64); ok {
-				value = int32(value.(int64))
-			}
-			snakeCaseName = snakeCaseName[2:]
+	case "b":
+		value = value == int64(1)
+	case "i":
+		if _, ok := value.(int64); ok {
+			value = int32(value.(int64))
 		}
+	}
+	if map[string]bool{"nb": true, "b": true, "i": true, "s": true}[prefix] {
+		snakeCaseName = snakeCaseName[underscoreIndex+1:]
 	}
 
 	if valueInt64, ok := value.(int64); ok {
