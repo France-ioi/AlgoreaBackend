@@ -1,19 +1,12 @@
 package types
 
-import (
-	"encoding/json"
-	"errors"
-)
+import "reflect"
 
 // Doc is mainly in the "int64" file :-)
 
 type (
 	// Bool is a bool which can be set/not-set and null/not-null
-	Bool struct {
-		Value bool
-		Set   bool
-		Null  bool
-	}
+	Bool struct{ Data }
 	// RequiredBool must be set and not null
 	RequiredBool struct{ Bool }
 	// NullableBool must be set and can be null
@@ -24,54 +17,30 @@ type (
 	OptNullBool struct{ Bool }
 )
 
-// NewBool creates a Bool which is not-null and set with the given value
+// NewBool creates a Bool which is not-null and set with the given Value
 func NewBool(s bool) *Bool {
-	n := &Bool{}
-	n.Value = s
-	n.Set = true
-	n.Null = false
+	n := &Bool{Data{Value: s, Set: true, Null: false}}
 	return n
 }
 
 // UnmarshalJSON parse JSON data to the type
 func (s *Bool) UnmarshalJSON(data []byte) (err error) {
-	s.Set = true // If this method was called, the value was set.
-	s.Null = string(data) == jsonNull
-	var temp bool
-	err = json.Unmarshal(data, &temp)
-	if err == nil {
-		s.Value = temp
-	}
-	return
-}
-
-// AllAttributes unwrap the wrapped value and its attributes
-func (s Bool) AllAttributes() (value interface{}, isNull, isSet bool) {
-	return s.Value, s.Null, s.Set
+	return unmarshalJSON(data, &s.Set, &s.Null, &s.Value, reflect.TypeOf(true))
 }
 
 // Validate checks that the subject matches "required" (set and not-null)
 func (s *RequiredBool) Validate() error {
-	if !s.Set || s.Null {
-		return errors.New("must be given and not null")
-	}
-	return nil
+	return validateRequired(s.Set, s.Null)
 }
 
 // Validate checks that the subject matches "nullable" (must be set)
 func (s *NullableBool) Validate() error {
-	if !s.Set {
-		return errors.New("must be given")
-	}
-	return nil
+	return validateNullable(s.Set)
 }
 
 // Validate checks that the subject matches "optional" (not-null)
 func (s *OptionalBool) Validate() error {
-	if s.Null {
-		return errors.New("must not be null")
-	}
-	return nil
+	return validateOptional(s.Null)
 }
 
 // Validate checks that the subject matches "optnull" (always true)

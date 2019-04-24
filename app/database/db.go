@@ -386,7 +386,7 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 		if len(sqlParam) == 2 && sqlParam[0] == "column" {
 			attrName := sqlParam[1]
 			value, null, set := dataV.Field(i).Interface(), false, true
-			if val, ok := value.(types.NullableOptional); ok {
+			if val, ok := value.(types.AllAttributeser); ok {
 				value, null, set = val.AllAttributes()
 			}
 

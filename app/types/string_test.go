@@ -8,15 +8,15 @@ import (
 )
 
 type SampleStrInput struct {
-	Title       RequiredString
-	Description NullableString
-	Author      OptionalString
-	LastReader  OptNullString
+	Required         RequiredString
+	Nullable         NullableString
+	Optional         OptionalString
+	OptionalNullable OptNullString
 }
 
-func (v *SampleStrInput) validate() error {
-	return Validate([]string{"title", "description", "author", "lastReader"},
-		&v.Title, &v.Description, &v.Author, &v.LastReader)
+func (v *SampleStrInput) Validate() error {
+	return Validate([]string{"Required", "Nullable", "Optional", "OptionalNullable"},
+		&v.Required, &v.Nullable, &v.Optional, &v.OptionalNullable)
 }
 
 func TestNewString(t *testing.T) {
@@ -35,56 +35,13 @@ func TestNewString(t *testing.T) {
 func TestStrValid(t *testing.T) {
 	assert := assertlib.New(t)
 
-	jsonInput := `{ "Title": "The Pragmatic Programmer", "Description": "From Journeyman to Master", ` +
-		`"Author": "Andy Hunt", "LastReader": "John Doe" }`
+	jsonInput := `{ "Required": "The Pragmatic Programmer", "Nullable": "From Journeyman to Master", ` +
+		`"Optional": "Andy Hunt", "OptionalNullable": "John Doe" }`
 	input := &SampleStrInput{}
 	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.Equal("The Pragmatic Programmer", input.Title.Value)
-	assert.Equal("From Journeyman to Master", input.Description.Value)
-	assert.Equal("Andy Hunt", input.Author.Value)
-	assert.Equal("John Doe", input.LastReader.Value)
-	assert.NoError(input.validate())
-}
-
-func TestStrWithNonStr(t *testing.T) {
-	assert := assertlib.New(t)
-
-	jsonInput := `{ "Title": 1234, "Description": "From Journeyman to Master", "Author": "Andy Hunt", "LastReader": "John Doe" }`
-	input := &SampleStrInput{}
-	assert.Error(json.Unmarshal([]byte(jsonInput), &input))
-}
-
-func TestStrWithDefault(t *testing.T) {
-	assert := assertlib.New(t)
-
-	jsonInput := `{ "Title": "", "Description": "", "Author": "", "LastReader": "" }`
-	input := &SampleStrInput{}
-	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.NoError(input.validate())
-}
-
-func TestStrWithNull(t *testing.T) {
-	assert := assertlib.New(t)
-
-	jsonInput := `{ "Title": null, "Description": null, "Author": null, "LastReader": null }`
-	input := &SampleStrInput{}
-	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.Error(input.Title.Validate())
-	assert.NoError(input.Description.Validate())
-	assert.Error(input.Author.Validate())
-	assert.NoError(input.LastReader.Validate())
-	assert.Error(input.validate())
-}
-
-func TestStrWithNotSet(t *testing.T) {
-	assert := assertlib.New(t)
-
-	jsonInput := emptyJSONStruct
-	input := &SampleStrInput{}
-	assert.NoError(json.Unmarshal([]byte(jsonInput), &input))
-	assert.Error(input.Title.Validate())
-	assert.Error(input.Description.Validate())
-	assert.NoError(input.Author.Validate())
-	assert.NoError(input.LastReader.Validate())
-	assert.Error(input.validate())
+	assert.Equal("The Pragmatic Programmer", input.Required.Value)
+	assert.Equal("From Journeyman to Master", input.Nullable.Value)
+	assert.Equal("Andy Hunt", input.Optional.Value)
+	assert.Equal("John Doe", input.OptionalNullable.Value)
+	assert.NoError(input.Validate())
 }

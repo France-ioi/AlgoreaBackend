@@ -10,9 +10,9 @@ func TestValidateErrorMsg(t *testing.T) {
 	assert := assertlib.New(t)
 	listSizeErrorMsg := "the number of names should match the number of values for validation"
 
-	exists := RequiredBool{Bool{true, true, false}}
-	name := OptionalString{String{"John Doe", true, false}}
-	wrongExists := RequiredBool{Bool{true, false, false}}
+	exists := RequiredBool{Bool{Data{true, true, false}}}
+	name := OptionalString{String{Data{"John Doe", true, false}}}
+	wrongExists := RequiredBool{Bool{Data{true, false, false}}}
 
 	assert.EqualError(Validate([]string{"exists"}, &exists, &name), listSizeErrorMsg)
 	assert.EqualError(Validate([]string{"exists", "name", "address"}, &exists, &name), listSizeErrorMsg)
