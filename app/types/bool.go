@@ -2,8 +2,6 @@ package types
 
 import "reflect"
 
-// Doc is mainly in the "int64" file :-)
-
 type (
 	// Bool is a bool which can be set/not-set and null/not-null
 	Bool struct{ Data }
