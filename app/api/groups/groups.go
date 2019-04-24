@@ -29,6 +29,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/accept_requests", service.AppHandler(srv.acceptRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/reject_requests", service.AppHandler(srv.rejectRequests).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/invite_users", service.AppHandler(srv.inviteUsers).ServeHTTP)
 
 	router.Post("/group-relations/{parent_group_id}/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
 	router.Delete("/group-relations/{parent_group_id}/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
@@ -113,7 +114,7 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
 					acceptRequestsAction: database.AdminAcceptsRequest,
 					rejectRequestsAction: database.AdminRefusesRequest,
-				}[action], parentGroupID, groupIDs)
+				}[action], parentGroupID, groupIDs, user.UserID)
 			return err
 		})
 	}
