@@ -17,7 +17,7 @@ type (
 	OptNullBool struct{ Bool }
 )
 
-// NewBool creates a Bool which is not-null and set with the given Value
+// NewBool creates a Bool which is not-null and set with the given value
 func NewBool(s bool) *Bool {
 	n := &Bool{Data{Value: s, Set: true, Null: false}}
 	return n

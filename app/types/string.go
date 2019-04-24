@@ -17,7 +17,7 @@ type (
 	OptNullString struct{ String }
 )
 
-// NewString creates a String which is not-null and set with the given Value
+// NewString creates a String which is not-null and set with the given value
 func NewString(s string) *String {
 	n := &String{Data{Value: s, Set: true, Null: false}}
 	return n

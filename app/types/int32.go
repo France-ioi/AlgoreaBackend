@@ -4,7 +4,7 @@ import "reflect"
 
 // Important notes on all these custom types:
 // All types here are optional because you cannot ask the Go unmarshaller
-// to fail on Value not set. However the 'set' flag will be not set if the Value has
+// to fail on value not set. However the 'set' flag will be not set if the value has
 // not been given.
 // For failing on optional, it has be done at the struct validation level
 
@@ -21,7 +21,7 @@ type (
 	OptNullInt32 struct{ Int32 }
 )
 
-// NewInt32 creates a Int32 which is not-null and set with the given Value
+// NewInt32 creates a Int32 which is not-null and set with the given value
 func NewInt32(v int32) *Int32 {
 	n := &Int32{Data{Value: v, Set: true, Null: false}}
 	return n

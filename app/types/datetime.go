@@ -20,7 +20,7 @@ type (
 	OptNullDatetime struct{ Datetime }
 )
 
-// NewDatetime creates a Datetime which is not-null and set with the given Value
+// NewDatetime creates a Datetime which is not-null and set with the given value
 func NewDatetime(t time.Time) *Datetime {
 	n := &Datetime{Data{Value: t, Set: true, Null: false}}
 	return n

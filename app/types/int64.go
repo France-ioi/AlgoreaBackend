@@ -7,7 +7,7 @@ import (
 
 // Important notes on all these custom types:
 // All types here are optional because you cannot ask the Go unmarshaller
-// to fail on Value not set. However the 'set' flag will be not set if the Value has
+// to fail on value not set. However the 'set' flag will be not set if the value has
 // not been given.
 // For failing on optional, it has be done at the struct validation level
 
@@ -24,7 +24,7 @@ type (
 	OptNullInt64 struct{ Int64 }
 )
 
-// NewInt64 creates a Int64 which is not-null and set with the given Value
+// NewInt64 creates a Int64 which is not-null and set with the given value
 func NewInt64(v int64) *Int64 {
 	n := &Int64{Data{Value: v, Set: true, Null: false}}
 	return n
