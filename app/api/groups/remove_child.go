@@ -2,8 +2,9 @@ package groups
 
 import (
 	"fmt"
-	"github.com/go-chi/render"
 	"net/http"
+
+	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
