@@ -10,6 +10,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// for each login a result can be one of:
+// "not_found" - login not found
+// "invalid"   - when user is already a group member
+//               (or there is a direct relation between the user
+//                and the group... which should not happen)
+// "unchanged" - if an invitation has been already sent
+// "success"   - all other cases (note: user requests become accepted if any)
+
 func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
