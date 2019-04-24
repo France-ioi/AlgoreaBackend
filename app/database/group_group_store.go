@@ -70,3 +70,113 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	}))
 	return
 }
+
+var ErrGroupBecomesOrphan = errors.New("a group cannot become an orphan")
+
+// DeleteRelation deletes a relation between two groups. It can also delete orphaned groups.
+func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shouldDeleteOrphans bool) (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
+		// check if idGroupParent is the only parent of idGroupChild
+		shouldDeleteChildGroup := false
+		var result []interface{}
+		mustNotBeError(s.GroupGroups().WithWriteLock().
+			Select("1").
+			Where("idGroupChild = ?", childGroupID).
+			Where("idGroupParent != ?", parentGroupID).
+			Limit(1).Scan(&result).Error())
+		if len(result) == 0 {
+			shouldDeleteChildGroup = true
+			if !shouldDeleteOrphans {
+				return ErrGroupBecomesOrphan
+			}
+		}
+
+		var candidatesForDeletion []int64
+		if shouldDeleteChildGroup {
+			// Candidates for deletion are all groups that are descendants of childGroupID filtered by sType
+			mustNotBeError(s.Groups().WithWriteLock().
+				Joins(`
+					JOIN groups_ancestors AS ancestors ON
+						ancestors.idGroupChild = groups.ID AND
+						ancestors.bIsSelf = 0 AND
+						ancestors.idGroupAncestor = ?`, childGroupID).
+				Where("groups.sType NOT IN('Root', 'RootSelf', 'RootAdmin', 'UserAdmin', 'UserSelf')").
+				Pluck("groups.ID", &candidatesForDeletion).Error())
+		}
+
+		// triggers delete from groups_ancestors (all except self-links),
+		// groups_propagate & groups_items_propagate as well,
+		// but the `before_delete_groups_groups` trigger inserts into groups_propagate again :(
+		const deleteGroupsQuery = `
+			DELETE groups, group_children, group_parents, groups_attempts,
+						 groups_items, groups_login_prefixes, filters
+			FROM groups
+			LEFT JOIN groups_groups AS group_children
+				ON group_children.idGroupParent = groups.ID
+			LEFT JOIN groups_groups AS group_parents
+				ON group_parents.idGroupChild = groups.ID
+			LEFT JOIN groups_attempts
+				ON groups_attempts.idGroup = groups.ID
+			LEFT JOIN groups_items
+				ON groups_items.idGroup = groups.ID
+			LEFT JOIN groups_login_prefixes
+				ON groups_login_prefixes.idGroup = groups.ID
+			LEFT JOIN filters
+				ON filters.idGroup = groups.ID
+			WHERE groups.ID IN(?)`
+
+		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+		mustNotBeError(s.GroupGroups().Delete("idGroupParent = ? AND idGroupChild = ?", parentGroupID, childGroupID).Error())
+
+		if shouldDeleteChildGroup {
+			// we delete the orphan here in order to recalculate new ancestors correctly
+			mustNotBeError(s.db.Exec(deleteGroupsQuery, []int64{childGroupID}).Error)
+		}
+		// recalculate relations
+		s.GroupGroups().createNewAncestors()
+
+		if shouldDeleteChildGroup {
+			var idsToDelete []int64
+			// besides the group with ID = childGroupID, we also want to delete its descendants
+			// whose ancestors list consists only of childGroupID descendants
+			// (since they would become orphans)
+			if len(candidatesForDeletion) > 0 {
+				mustNotBeError(s.Groups().WithWriteLock().
+					Joins(`
+						LEFT JOIN(
+							SELECT groups_ancestors.idGroupChild
+							FROM groups_ancestors
+							WHERE
+								groups_ancestors.idGroupAncestor NOT IN(?) AND
+								groups_ancestors.idGroupChild IN(?) AND
+								groups_ancestors.bIsSelf = 0
+							GROUP BY groups_ancestors.idGroupChild
+							FOR UPDATE
+						) AS ancestors
+						ON ancestors.idGroupChild = groups.ID`, candidatesForDeletion, candidatesForDeletion).
+					Where("groups.ID IN (?)", candidatesForDeletion).
+					Where("ancestors.idGroupChild IS NULL").
+					Pluck("groups.ID", &idsToDelete).Error())
+
+				if len(idsToDelete) > 0 {
+					deleteResult := s.db.Exec(deleteGroupsQuery, idsToDelete)
+					mustNotBeError(deleteResult.Error)
+					if deleteResult.RowsAffected > 0 {
+						s.GroupGroups().createNewAncestors()
+					}
+				}
+			}
+
+			idsToDelete = append(idsToDelete, childGroupID)
+			// delete self relations of the removed groups
+			mustNotBeError(s.GroupAncestors().Delete("idGroupAncestor IN (?)", idsToDelete).Error())
+			// delete removed groups from groups_propagate
+			mustNotBeError(s.Table("groups_propagate").Delete("ID IN (?)", idsToDelete).Error())
+		}
+		return nil
+	}))
+	return nil
+}

@@ -29,7 +29,7 @@ Feature: Add a parent-child relation between two groups
 
   Scenario: User is an owner of the two groups and is allowed to create sub-groups
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/add_child/11"
+    When I send a POST request to "/group-relations/13/11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -55,7 +55,7 @@ Feature: Add a parent-child relation between two groups
       | 22              | 13           | 0       |
       | 22              | 14           | 0       |
       | 22              | 22           | 1       |
-    When I send a POST request to "/groups/13/add_child/14"
+    When I send a POST request to "/group-relations/13/14"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -83,7 +83,7 @@ Feature: Add a parent-child relation between two groups
       | 22              | 13           | 0       |
       | 22              | 14           | 0       |
       | 22              | 22           | 1       |
-    When I send a POST request to "/groups/13/add_child/11"
+    When I send a POST request to "/group-relations/13/11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """

@@ -135,3 +135,32 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 	assert.Equal(t, ErrRelationCycle, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGroupGroupStore_DeleteRelation_MustBeRunInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	groupGroupStore := NewDataStore(db).GroupGroups()
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_ = groupGroupStore.DeleteRelation(1, 2, true)
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGroupGroupStore_DeleteRelation_ShouldUseNamedLock(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
+		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(0)))
+	mock.ExpectRollback()
+
+	store := NewDataStore(db)
+	_ = store.InTransaction(func(store *DataStore) error {
+		return store.GroupGroups().DeleteRelation(1, 2, true)
+	})
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
