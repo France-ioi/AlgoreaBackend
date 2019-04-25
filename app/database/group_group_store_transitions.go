@@ -53,7 +53,8 @@ type groupGroupTransitionRule struct {
 	UpdateFromType map[GroupGroupType]bool
 	// Transitions defines all possible transitions for the action. The format is "FromType->ToType".
 	// Relations that have "from" type not listed here are considered as invalid for the action.
-	Transitions map[GroupGroupType]GroupGroupType
+	Transitions       map[GroupGroupType]GroupGroupType
+	SetIDUserInviting bool
 }
 
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
@@ -68,6 +69,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			Removed:           InvitationSent,
 			Left:              InvitationSent,
 		},
+		SetIDUserInviting: true,
 	},
 	UserCreatesRequest: {
 		Transitions: map[GroupGroupType]GroupGroupType{
@@ -177,7 +179,7 @@ const (
 type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 
 func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
-	parentGroupID int64, childGroupIDs []int64) (result GroupGroupTransitionResults, err error) {
+	parentGroupID int64, childGroupIDs []int64, performedByUserID int64) (result GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -204,6 +206,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 		performCyclesChecking(s.DataStore, idsToCheckCycle, parentGroupID, results, idsToInsert, idsToUpdate)
 
+		setIDUserInviting := groupGroupTransitionRules[action].SetIDUserInviting
 		shouldCreateNewAncestors := false
 		if len(idsToDelete) > 0 {
 			idsToDeleteSlice := make([]int64, 0, len(idsToDelete))
@@ -214,20 +217,8 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			shouldCreateNewAncestors = true
 		}
 
-		if len(idsToUpdate) > 0 {
-			updateData := map[GroupGroupType][]int64{}
-			for id, toType := range idsToUpdate {
-				updateData[toType] = append(updateData[toType], id)
-				shouldCreateNewAncestors = true
-			}
-			const updateQuery = `
-				UPDATE groups_groups
-				SET sType = ?, sStatusDate = NOW()
-				WHERE idGroupParent = ? AND idGroupChild IN (?)`
-			for toType, ids := range updateData {
-				mustNotBeError(s.db.Exec(updateQuery, toType, parentGroupID, ids).Error)
-			}
-		}
+		shouldCreateNewAncestors = performTransitionUpdate(s, idsToUpdate, parentGroupID, setIDUserInviting, performedByUserID) ||
+			shouldCreateNewAncestors
 
 		if len(idsToInsert) > 0 {
 			var maxChildOrder struct{ MaxChildOrder int64 }
@@ -235,14 +226,26 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				Select("IFNULL(MAX(iChildOrder), 0)").
 				Where("idGroupParent = ?", parentGroupID).Scan(&maxChildOrder).Error())
 
-			insertQuery := "INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, sType, iChildOrder, sStatusDate) VALUES " +
-				strings.Repeat("(?, ?, ?, ?, ?, NOW()), ", len(idsToInsert)-1) +
-				"(?, ?, ?, ?, ?, NOW())" // #nosec
+			insertQuery := "INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, sType, iChildOrder, sStatusDate"
+			valuesTemplate := "(?, ?, ?, ?, ?, NOW()"
+			paramsCount := 5
+			if setIDUserInviting {
+				insertQuery += ", idUserInviting"
+				valuesTemplate += ", ?"
+				paramsCount++
+			}
+			valuesTemplate += ")"
+			insertQuery += ") VALUES " +
+				strings.Repeat(valuesTemplate+", ", len(idsToInsert)-1) +
+				valuesTemplate // #nosec
 			mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-				values := make([]interface{}, 0, len(idsToInsert)*5)
+				values := make([]interface{}, 0, len(idsToInsert)*paramsCount)
 				for id, toType := range idsToInsert {
 					maxChildOrder.MaxChildOrder++
 					values = append(values, s.NewID(), parentGroupID, id, toType, maxChildOrder.MaxChildOrder)
+					if setIDUserInviting {
+						values = append(values, performedByUserID)
+					}
 					shouldCreateNewAncestors = true
 				}
 				return s.db.Exec(insertQuery, values...).Error
@@ -278,6 +281,36 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 			delete(idsToInsert, idGroup)
 		}
 	}
+}
+
+func performTransitionUpdate(
+	s *GroupGroupStore, idsToUpdate map[int64]GroupGroupType, parentGroupID int64,
+	setIDUserInviting bool, performedByUserID int64) (shouldCreateNewAncestors bool) {
+	if len(idsToUpdate) > 0 {
+		updateData := map[GroupGroupType][]int64{}
+		for id, toType := range idsToUpdate {
+			updateData[toType] = append(updateData[toType], id)
+			shouldCreateNewAncestors = true
+		}
+
+		updateQuery := `
+			UPDATE groups_groups
+			SET sType = ?, sStatusDate = NOW()`
+		if setIDUserInviting {
+			updateQuery += ", idUserInviting = ?"
+		}
+		updateQuery += "\nWHERE idGroupParent = ? AND idGroupChild IN (?)"
+		for toType, ids := range updateData {
+			parameters := make([]interface{}, 0, 5)
+			parameters = append(parameters, toType)
+			if setIDUserInviting {
+				parameters = append(parameters, performedByUserID)
+			}
+			parameters = append(parameters, parentGroupID, ids)
+			mustNotBeError(s.db.Exec(updateQuery, parameters...).Error)
+		}
+	}
+	return shouldCreateNewAncestors
 }
 
 func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results GroupGroupTransitionResults,

@@ -57,7 +57,7 @@ Feature: Reject group requests
 
   Scenario: Reject requests
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/reject_requests?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22"
     And the response body should be, in JSON:
     """
     {

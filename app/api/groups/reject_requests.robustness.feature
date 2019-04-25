@@ -53,7 +53,7 @@ Feature: Reject group requests - robustness
 
   Scenario: Fails when the user is not an owner of the parent group
     Given I am the user with ID "2"
-    When I send a POST request to "/groups/13/reject_requests?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -61,7 +61,7 @@ Feature: Reject group requests - robustness
 
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/abc/reject_requests?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/abc/requests/reject?group_ids=31,141,21,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
@@ -69,7 +69,7 @@ Feature: Reject group requests - robustness
 
   Scenario: Fails when group_ids is wrong
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/reject_requests?group_ids=31,abc,11,13,22"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,abc,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integer given as query arg (value: 'abc', param: 'group_ids')"
     And the table "groups_groups" should stay unchanged
