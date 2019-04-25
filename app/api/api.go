@@ -9,6 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
+	"github.com/France-ioi/AlgoreaBackend/app/api/user"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -40,6 +41,7 @@ func (ctx *Ctx) Router() *chi.Mux {
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
 	r.Group((&answers.Service{Base: base}).SetRoutes)
+	r.Group((&user.Service{Base: base}).SetRoutes)
 	r.Get("/status", ctx.status)
 	r.NotFound(ctx.notFound)
 	return r
