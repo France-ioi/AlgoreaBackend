@@ -35,7 +35,7 @@ Feature: Invite users
 
   Scenario: Accept requests
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/invite_users" with the following body:
+    When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
         "logins": ["john", "jane", "owner", "barack"]

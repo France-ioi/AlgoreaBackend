@@ -25,7 +25,7 @@ Feature: Invite users - robustness
 
   Scenario: Fails when the user is not an owner of the parent group
     Given I am the user with ID "2"
-    When I send a POST request to "/groups/13/invite_users" with the following body:
+    When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
         "logins": ["john", "jane", "owner", "barack"]
@@ -38,7 +38,7 @@ Feature: Invite users - robustness
 
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/abc/invite_users" with the following body:
+    When I send a POST request to "/groups/abc/invitations" with the following body:
       """
       {
         "logins": ["john", "jane", "owner", "barack"]
@@ -51,7 +51,7 @@ Feature: Invite users - robustness
 
   Scenario: Fails when logins are wrong
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/invite_users" with the following body:
+    When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
         "logins": [1, 2, 3]
@@ -64,7 +64,7 @@ Feature: Invite users - robustness
 
   Scenario: Fails when logins are not present
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/invite_users" with the following body:
+    When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
       }
@@ -76,7 +76,7 @@ Feature: Invite users - robustness
 
   Scenario: Fails when logins are empty
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/invite_users" with the following body:
+    When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
         "logins": []
