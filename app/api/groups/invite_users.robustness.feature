@@ -87,3 +87,27 @@ Feature: Invite users - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Fails when too many logins
+    Given I am the user with ID "1"
+    When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": [
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1","2","3","4","5","6","7","8","9","10",
+          "1"
+        ]
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "There should be no more than 100 logins"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged

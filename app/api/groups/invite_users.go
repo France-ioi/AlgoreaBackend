@@ -2,6 +2,7 @@ package groups
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -18,6 +19,8 @@ import (
 // "unchanged" - if an invitation has been already sent
 // "success"   - all other cases (note: user requests become accepted if any)
 
+const maxAllowedLoginsToInvite = 100
+
 func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
@@ -33,6 +36,9 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	}
 	if len(requestData.Logins) == 0 {
 		return service.ErrInvalidRequest(errors.New("there should be at least one login listed"))
+	}
+	if len(requestData.Logins) > maxAllowedLoginsToInvite {
+		return service.ErrInvalidRequest(fmt.Errorf("there should be no more than %d logins", maxAllowedLoginsToInvite))
 	}
 
 	user := srv.GetUser(r)
