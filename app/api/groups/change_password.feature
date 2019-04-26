@@ -19,7 +19,7 @@ Feature: Change the password of the given group
   Scenario: User is an admin of the group
     Given I am the user with ID "1"
     And the generated group password is "newpassword"
-    When I send a POST request to "/groups/13/change_password"
+    When I send a POST request to "/groups/13/password"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

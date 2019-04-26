@@ -21,7 +21,7 @@ Feature: Change the password of the given group - robustness
   Scenario: User is not an admin of the group
     Given I am the user with ID "2"
     And the generated group password is "newpassword"
-    When I send a POST request to "/groups/13/change_password"
+    When I send a POST request to "/groups/13/password"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
@@ -30,7 +30,7 @@ Feature: Change the password of the given group - robustness
     Given I am the user with ID "1"
     And the table "groups" has a unique key "sPassword" on "sPassword"
     And the generated group passwords are "ybqybxnlyo","newpassword"
-    When I send a POST request to "/groups/13/change_password"
+    When I send a POST request to "/groups/13/password"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -45,13 +45,13 @@ Feature: Change the password of the given group - robustness
     Given I am the user with ID "1"
     And the table "groups" has a unique key "sPassword" on "sPassword"
     And the generated group passwords are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
-    When I send a POST request to "/groups/13/change_password"
+    When I send a POST request to "/groups/13/password"
     Then the response code should be 500
     And the response error message should contain "The password generator is broken"
     And the table "groups" should stay unchanged
 
   Scenario: The group ID is not a number
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/1_3/change_password"
+    When I send a POST request to "/groups/1_3/password"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
