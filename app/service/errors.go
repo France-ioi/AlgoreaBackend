@@ -68,6 +68,12 @@ func ErrNotFound(err error) APIError {
 	return APIError{http.StatusNotFound, err}
 }
 
+// ErrUnprocessableEntity is for errors caused by our inability to perform data modifications for some reason
+// It results in a 422 Unprocessable Entity
+func ErrUnprocessableEntity(err error) APIError {
+	return APIError{http.StatusUnprocessableEntity, err}
+}
+
 // ErrUnexpected is for internal errors (not supposed to fail) not directly caused by the user input
 // It results in a 500 Internal Server Error response
 func ErrUnexpected(err error) APIError {

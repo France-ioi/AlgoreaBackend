@@ -47,6 +47,14 @@ func TestDeletionSuccess(t *testing.T) {
 	assert.Equal(http.StatusOK, recorder.Code)
 }
 
+func TestNotChangedSuccess(t *testing.T) {
+	assert := assertlib.New(t)
+
+	recorder := httpResponseForResponse(NotChangedSuccess())
+	assert.Equal(`{"success":true,"message":"not changed"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusResetContent, recorder.Code)
+}
+
 func TestResponse_Render(t *testing.T) {
 	response := &Response{HTTPStatusCode: http.StatusOK, Message: "", Success: true}
 	recorder := httpResponseForResponse(response)
