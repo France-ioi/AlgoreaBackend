@@ -1,4 +1,4 @@
-package user
+package currentuser
 
 import (
 	"github.com/go-chi/chi"
@@ -17,5 +17,5 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
-	router.Get("/user/invitations", service.AppHandler(srv.getInvitations).ServeHTTP)
+	router.Get("/current-user/invitations", service.AppHandler(srv.getInvitations).ServeHTTP)
 }

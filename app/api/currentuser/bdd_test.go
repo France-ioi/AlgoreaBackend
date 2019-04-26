@@ -1,6 +1,6 @@
 // +build !unit
 
-package user_test
+package currentuser_test
 
 import (
 	"testing"
