@@ -24,7 +24,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
+
 	router.Post("/groups/{group_id}/password", service.AppHandler(srv.changePassword).ServeHTTP)
+	router.Delete("/groups/{group_id}/password", service.AppHandler(srv.discardPassword).ServeHTTP)
 
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
