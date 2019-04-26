@@ -34,7 +34,7 @@ Feature: Get group memberships for the current user
 
   Scenario: Show all invitations
     Given I am the user with ID "1"
-    When I send a GET request to "/user/memberships"
+    When I send a GET request to "/current-user/memberships"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -77,7 +77,7 @@ Feature: Get group memberships for the current user
 
   Scenario: Request the first row
     Given I am the user with ID "1"
-    When I send a GET request to "/user/memberships?limit=1"
+    When I send a GET request to "/current-user/memberships?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
