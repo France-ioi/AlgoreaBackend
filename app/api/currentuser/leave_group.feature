@@ -34,8 +34,8 @@ Feature: User leaves a group
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
     And the table "groups_groups" at ID "1" should be:
-      | ID | idGroupParent | idGroupChild | sType | (sStatusDate IS NOT NULL) AND (NOW() - sStatusDate < 3) |
-      | 1  | 11            | 21           | left  | 1                                                       |
+      | ID | idGroupParent | idGroupChild | sType | (sStatusDate IS NOT NULL) AND (ABS(NOW() - sStatusDate) < 3) |
+      | 1  | 11            | 21           | left  | 1                                                            |
     And the table "groups_ancestors" should stay unchanged but the row with ID "2"
     And the table "groups_ancestors" should not contain ID "2"
 

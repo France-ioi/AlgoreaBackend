@@ -75,7 +75,7 @@ Feature: Reject group requests
     """
     And the table "groups_groups" should stay unchanged but the row with ID "3,14"
     And the table "groups_groups" at ID "3,14" should be:
-      | ID | idGroupParent | idGroupChild | sType          | (sStatusDate IS NOT NULL) AND (NOW() - sStatusDate < 3) |
-      | 3  | 13            | 31           | requestRefused | 1                                                       |
-      | 14 | 13            | 141          | requestRefused | 1                                                       |
+      | ID | idGroupParent | idGroupChild | sType          | (sStatusDate IS NOT NULL) AND (ABS(NOW() - sStatusDate) < 3) |
+      | 3  | 13            | 31           | requestRefused | 1                                                            |
+      | 14 | 13            | 141          | requestRefused | 1                                                            |
     And the table "groups_ancestors" should stay unchanged

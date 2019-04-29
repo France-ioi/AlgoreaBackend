@@ -32,9 +32,9 @@ Feature: User sends a request to join a group
     }
     """
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType       | (sStatusDate IS NOT NULL) AND (NOW() - sStatusDate < 3) |
-      | 11            | 21           | requestSent | 1                                                       |
-      | 14            | 21           | requestSent | 0                                                       |
+      | idGroupParent | idGroupChild | sType       | (sStatusDate IS NOT NULL) AND (ABS(NOW() - sStatusDate) < 3) |
+      | 11            | 21           | requestSent | 1                                                            |
+      | 14            | 21           | requestSent | 0                                                            |
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
