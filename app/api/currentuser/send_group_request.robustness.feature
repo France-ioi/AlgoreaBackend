@@ -26,7 +26,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: User tries to create a cycle in the group relations graph
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/requests/13"
+    When I send a POST request to "/current-user/group-requests/13"
     Then the response code should be 422
     And the response body should be, in JSON:
     """
@@ -41,7 +41,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: User tries to send another conflicting relation exists
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/requests/11"
+    When I send a POST request to "/current-user/group-requests/11"
     Then the response code should be 422
     And the response body should be, in JSON:
     """
@@ -56,7 +56,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: Fails when the group ID is wrong
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/requests/abc"
+    When I send a POST request to "/current-user/group-requests/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
@@ -64,7 +64,7 @@ Feature: User sends a request to join a group - robustness
 
   Scenario: Fails if the user doesn't exist
     Given I am the user with ID "4"
-    When I send a POST request to "/current-user/requests/14"
+    When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

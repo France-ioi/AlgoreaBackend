@@ -22,7 +22,7 @@ Feature: User sends a request to join a group
 
   Scenario: Successfully send a request
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/requests/11"
+    When I send a POST request to "/current-user/group-requests/11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -39,7 +39,7 @@ Feature: User sends a request to join a group
 
   Scenario: Try to recreate a request that already exists
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/requests/14"
+    When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 205
     And the response body should be, in JSON:
     """

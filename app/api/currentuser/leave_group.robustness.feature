@@ -23,7 +23,7 @@ Feature: User leaves a group - robustness
 
   Scenario: User tries to leave a group (s)he is not a member of
     Given I am the user with ID "1"
-    When I send a DELETE request to "/current-user/memberships/11"
+    When I send a DELETE request to "/current-user/group-memberships/11"
     Then the response code should be 404
     And the response body should be, in JSON:
     """
@@ -38,7 +38,7 @@ Feature: User leaves a group - robustness
 
   Scenario: Fails when the group ID is wrong
     Given I am the user with ID "1"
-    When I send a DELETE request to "/current-user/memberships/abc"
+    When I send a DELETE request to "/current-user/group-memberships/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
@@ -46,7 +46,7 @@ Feature: User leaves a group - robustness
 
   Scenario: Fails if the user doesn't exist
     Given I am the user with ID "4"
-    When I send a DELETE request to "/current-user/memberships/14"
+    When I send a DELETE request to "/current-user/group-memberships/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

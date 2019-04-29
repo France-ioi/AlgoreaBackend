@@ -21,14 +21,14 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
 
-	router.Get("/current-user/invitations", service.AppHandler(srv.getInvitations).ServeHTTP)
-	router.Post("/current-user/invitations/{group_id}/accept", service.AppHandler(srv.acceptInvitation).ServeHTTP)
-	router.Post("/current-user/invitations/{group_id}/reject", service.AppHandler(srv.rejectInvitation).ServeHTTP)
+	router.Get("/current-user/group-invitations", service.AppHandler(srv.getGroupInvitations).ServeHTTP)
+	router.Post("/current-user/group-invitations/{group_id}/accept", service.AppHandler(srv.acceptGroupInvitation).ServeHTTP)
+	router.Post("/current-user/group-invitations/{group_id}/reject", service.AppHandler(srv.rejectGroupInvitation).ServeHTTP)
 
-	router.Post("/current-user/requests/{group_id}", service.AppHandler(srv.sendRequest).ServeHTTP)
+	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
 
-	router.Get("/current-user/memberships", service.AppHandler(srv.getMemberships).ServeHTTP)
-	router.Delete("/current-user/memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
+	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
+	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 }
 
 type userGroupRelationAction string

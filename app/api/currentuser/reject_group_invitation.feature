@@ -1,4 +1,4 @@
-Feature: User rejects an invitation
+Feature: User rejects an invitation to join a group
   Background:
     Given the database has the following table 'users':
       | ID | idGroupSelf | idGroupOwned |
@@ -22,7 +22,7 @@ Feature: User rejects an invitation
 
   Scenario: Successfully reject an invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/invitations/11/reject"
+    When I send a POST request to "/current-user/group-invitations/11/reject"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -39,7 +39,7 @@ Feature: User rejects an invitation
 
   Scenario: Reject an already rejected invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/invitations/14/reject"
+    When I send a POST request to "/current-user/group-invitations/14/reject"
     Then the response code should be 205
     And the response body should be, in JSON:
     """

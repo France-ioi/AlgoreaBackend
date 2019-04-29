@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-func (srv *Service) getInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	err := user.Load()
 	if err == database.ErrUserNotFound {

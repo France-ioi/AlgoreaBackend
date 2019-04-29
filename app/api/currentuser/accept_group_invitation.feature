@@ -1,4 +1,4 @@
-Feature: User accepts an invitation
+Feature: User accepts an invitation to join a group
   Background:
     Given the database has the following table 'users':
       | ID | idGroupSelf | idGroupOwned |
@@ -23,7 +23,7 @@ Feature: User accepts an invitation
 
   Scenario: Successfully accept an invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/invitations/11/accept"
+    When I send a POST request to "/current-user/group-invitations/11/accept"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -47,7 +47,7 @@ Feature: User accepts an invitation
 
   Scenario: Accept an already accepted invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/invitations/14/accept"
+    When I send a POST request to "/current-user/group-invitations/14/accept"
     Then the response code should be 205
     And the response body should be, in JSON:
     """

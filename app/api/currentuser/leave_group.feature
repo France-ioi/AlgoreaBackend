@@ -23,7 +23,7 @@ Feature: User leaves a group
 
   Scenario: Successfully leave a group
     Given I am the user with ID "1"
-    When I send a DELETE request to "/current-user/memberships/11"
+    When I send a DELETE request to "/current-user/group-memberships/11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -41,7 +41,7 @@ Feature: User leaves a group
 
   Scenario: Leave a group that already have been left
     Given I am the user with ID "1"
-    When I send a DELETE request to "/current-user/memberships/14"
+    When I send a DELETE request to "/current-user/group-memberships/14"
     Then the response code should be 205
     And the response body should be, in JSON:
     """
