@@ -17,6 +17,9 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
+
+	router.Get("/current-user", service.AppHandler(srv.getInfo).ServeHTTP)
+
 	router.Get("/current-user/invitations", service.AppHandler(srv.getInvitations).ServeHTTP)
 	router.Get("/current-user/memberships", service.AppHandler(srv.getMemberships).ServeHTTP)
 }
