@@ -1,4 +1,4 @@
-Feature: Change the password of the given group
+Feature: Discard the password of the given group
 
   Background:
     Given the database has the following table 'users':
@@ -18,14 +18,16 @@ Feature: Change the password of the given group
 
   Scenario: User is an admin of the group
     Given I am the user with ID "1"
-    And the generated group password is "newpassword"
-    When I send a POST request to "/groups/13/password"
+    When I send a DELETE request to "/groups/13/password"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    {"password":"newpassword"}
+    {
+      "success": true,
+      "message": "deleted"
+    }
     """
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sPassword   | sPasswordTimer | sPasswordEnd         |
-      | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class | newpassword | 01:00:00       | 2017-10-14T05:39:48Z |
+      | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class | null        | 01:00:00       | 2017-10-14T05:39:48Z |
