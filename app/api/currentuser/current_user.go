@@ -1,10 +1,13 @@
 package currentuser
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -20,6 +23,50 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/current-user", service.AppHandler(srv.getInfo).ServeHTTP)
 
-	router.Get("/current-user/invitations", service.AppHandler(srv.getInvitations).ServeHTTP)
-	router.Get("/current-user/memberships", service.AppHandler(srv.getMemberships).ServeHTTP)
+	router.Get("/current-user/group-invitations", service.AppHandler(srv.getGroupInvitations).ServeHTTP)
+	router.Post("/current-user/group-invitations/{group_id}/accept", service.AppHandler(srv.acceptGroupInvitation).ServeHTTP)
+	router.Post("/current-user/group-invitations/{group_id}/reject", service.AppHandler(srv.rejectGroupInvitation).ServeHTTP)
+
+	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
+
+	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
+	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
+}
+
+type userGroupRelationAction string
+
+const (
+	acceptInvitationAction   userGroupRelationAction = "acceptInvitation"
+	rejectInvitationAction   userGroupRelationAction = "rejectInvitation"
+	createGroupRequestAction userGroupRelationAction = "createRequest"
+	leaveGroupAction         userGroupRelationAction = "leaveGroup"
+)
+
+func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
+	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
+	user := srv.GetUser(r)
+	selfGroupID, err := user.SelfGroupID()
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	var results database.GroupGroupTransitionResults
+	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+		results, err = store.GroupGroups().Transition(
+			map[userGroupRelationAction]database.GroupGroupTransitionAction{
+				acceptInvitationAction:   database.UserAcceptsInvitation,
+				rejectInvitationAction:   database.UserRefusesInvitation,
+				createGroupRequestAction: database.UserCreatesRequest,
+				leaveGroupAction:         database.UserLeavesGroup,
+			}[action], groupID, []int64{selfGroupID}, user.UserID)
+		return err
+	}))
+
+	return service.RenderGroupGroupTransitionResult(w, r, results[selfGroupID],
+		action == createGroupRequestAction, action == leaveGroupAction)
 }

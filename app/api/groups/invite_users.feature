@@ -56,11 +56,11 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType              | sRole  | idUserInviting | iChildOrder = 0 | (sStatusDate IS NOT NULL) AND (NOW() - sStatusDate < 3) |
-      | 13            | 21           | invitationSent     | member | 1              | 0               | 1                                                       |
-      | 13            | 101          | invitationSent     | member | 1              | 0               | 1                                                       |
-      | 13            | 102          | invitationSent     | member | 1              | 0               | 1                                                       |
-      | 22            | 13           | direct             | member | null           | 1               | 0                                                       |
+      | idGroupParent | idGroupChild | sType              | sRole  | idUserInviting | iChildOrder = 0 | (sStatusDate IS NOT NULL) AND (ABS(NOW() - sStatusDate) < 3) |
+      | 13            | 21           | invitationSent     | member | 1              | 0               | 1                                                            |
+      | 13            | 101          | invitationSent     | member | 1              | 0               | 1                                                            |
+      | 13            | 102          | invitationSent     | member | 1              | 0               | 1                                                            |
+      | 22            | 13           | direct             | member | null           | 1               | 0                                                            |
     And the table "groups_groups" should be:
       | iChildOrder |
       | 0           |

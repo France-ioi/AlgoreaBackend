@@ -44,6 +44,13 @@ func TestInvalidRequest(t *testing.T) {
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
 
+func TestUnprocessableEntityRequest(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForError(service.ErrUnprocessableEntity(errors.New("some error")))
+	assert.Equal(`{"success":false,"message":"Unprocessable Entity","error_text":"Some error"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusUnprocessableEntity, recorder.Code)
+}
+
 func TestInvalidRequest_WithFormErrors(t *testing.T) {
 	assert := assertlib.New(t)
 
