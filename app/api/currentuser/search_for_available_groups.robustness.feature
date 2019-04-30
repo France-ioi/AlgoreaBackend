@@ -10,7 +10,7 @@ Feature: Search for groups available to the current user - robustness
     Then the response code should be 400
     And the response error message should contain "Missing search"
 
-  Scenario: Should fail if the search string is too small
+  Scenario: Should fail if the search string is too small (search for "  中国  ")
     Given I am the user with ID "1"
     When I send a GET request to "/current-user/available-groups?search=%20%20%E4%B8%AD%E5%9B%BD%20%20"
     Then the response code should be 400

@@ -84,7 +84,7 @@ Feature: Search for groups available to the current user
     ]
     """
 
-  Scenario: Search for groups with percent signs
+  Scenario: Search for groups with percent signs ("%%%")
     Given I am the user with ID "1"
     When I send a GET request to "/current-user/available-groups?search=%25%25%25"
     Then the response code should be 200
@@ -122,7 +122,7 @@ Feature: Search for groups available to the current user
     ]
     """
 
-  Scenario: Search for groups with pipe signs
+  Scenario: Search for groups with pipe signs ("|||")
     Given I am the user with ID "1"
     When I send a GET request to "/current-user/available-groups?search=%7C%7C%7C"
     Then the response code should be 200
@@ -138,7 +138,7 @@ Feature: Search for groups available to the current user
     ]
     """
 
-  Scenario: Search with percent sign and slashes
+  Scenario: Search with percent sign and slashes ("\\\%\\%\")
     Given I am the user with ID "1"
     When I send a GET request to "/current-user/available-groups?search=%5C%5C%5C%25%5C%5C%25%5C"
     Then the response code should be 200
