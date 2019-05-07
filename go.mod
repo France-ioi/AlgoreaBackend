@@ -14,6 +14,7 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
+	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v0.0.0-20181127104832-b7d587d28109
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0
