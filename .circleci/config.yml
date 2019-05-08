@@ -41,6 +41,7 @@ jobs:
       - restore_cache: *CACHEKEYMOD
       - run: sudo apt-get install mysql-client # required for db-restore
       - run: cp conf/config.sample.yaml conf/config.yaml # as env var are not loaded for entries not in config file (bug)
+      - run: make gen-keys
       - run:
           name: Wait for MySQL
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
