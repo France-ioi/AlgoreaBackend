@@ -40,6 +40,13 @@ type Auth struct {
 	ProxyURL string
 }
 
+// Platform is the part of the config related to the platform
+type Platform struct {
+	Name           string
+	PublicKeyFile  string
+	PrivateKeyFile string
+}
+
 // Root is the root of the app configuration
 type Root struct {
 	Server       Server
@@ -47,6 +54,7 @@ type Root struct {
 	ReverseProxy ReverseProxy
 	Logging      Logging
 	Auth         Auth
+	Platform     Platform
 }
 
 var (

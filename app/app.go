@@ -11,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // Application is the core state of the app
@@ -43,6 +44,11 @@ func New() (*Application, error) {
 
 	var apiCtx *api.Ctx
 	if apiCtx, err = api.NewCtx(conf, db); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	if err = token.Initialize(conf); err != nil {
 		log.Error(err)
 		return nil, err
 	}

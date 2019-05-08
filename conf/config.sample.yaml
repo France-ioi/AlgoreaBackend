@@ -1,6 +1,10 @@
 server:
   port: 8080
   rootpath: "/" # the path at which the router is mounted
+platform:
+  name: algrorea_backend
+  publicKeyFile: public_key.pem
+  privateKeyFile: private_key.pem
 database:
   connection:
     user: algorea
