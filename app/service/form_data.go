@@ -40,10 +40,7 @@ func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 
 // ParseMapData parses and validates map[string]interface{} according to the structure definition
 func (f *FormData) ParseMapData(m map[string]interface{}) error {
-	if err := f.decodeMapIntoStruct(m); err != nil {
-		return err
-	}
-
+	f.decodeMapIntoStruct(m)
 	return f.checkAndValidate()
 }
 
@@ -74,10 +71,11 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	return f.decodeMapIntoStruct(rawData)
+	f.decodeMapIntoStruct(rawData)
+	return nil
 }
 
-func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) error {
+func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	f.fieldErrors = make(FieldErrors)
 	f.usedKeys = map[string]bool{}
 
@@ -116,7 +114,6 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) error {
 			}
 		}
 	}
-	return nil
 }
 
 func (f *FormData) validateFieldValues() {
