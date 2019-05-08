@@ -35,6 +35,19 @@ func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 		return err
 	}
 
+	return f.checkAndValidate()
+}
+
+// ParseMapData parses and validates map[string]interface{} according to the structure definition
+func (f *FormData) ParseMapData(m map[string]interface{}) error {
+	if err := f.decodeMapIntoStruct(m); err != nil {
+		return err
+	}
+
+	return f.checkAndValidate()
+}
+
+func (f *FormData) checkAndValidate() error {
 	f.checkProvidedFields()
 	f.validateFieldValues()
 
@@ -61,14 +74,19 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	return f.decodeMapIntoStruct(rawData)
+}
 
+func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) error {
 	f.fieldErrors = make(FieldErrors)
 	f.usedKeys = map[string]bool{}
 
 	var decoder *mapstructure.Decoder
-	decoder, err = mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:           f.definitionStructure,
-		DecodeHook:       mapstructure.StringToTimeHookFunc(time.RFC3339),
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		Result: f.definitionStructure,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeHookFunc(time.RFC3339),
+		),
 		ErrorUnused:      false, // we will check this on our own
 		Metadata:         &f.metadata,
 		TagName:          "json",
@@ -80,7 +98,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 		panic(err) // this error can only be caused by bugs in the code
 	}
 
-	if err = decoder.Decode(rawData); err != nil {
+	if err = decoder.Decode(m); err != nil {
 		mapstructureErr := err.(*mapstructure.Error)
 		for _, fieldErrorString := range mapstructureErr.Errors { // Convert mapstructure's errors to our format
 			if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
