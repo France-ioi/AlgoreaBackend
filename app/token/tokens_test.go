@@ -18,25 +18,33 @@ import (
 
 func Test_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
-		name                string
-		structType          reflect.Type
-		token               []byte
-		expectedPayloadMap  map[string]interface{}
-		expectedPayloadType reflect.Type
+		name                 string
+		structType           reflect.Type
+		token                []byte
+		expectedPayloadMap   map[string]interface{}
+		expectedPayloadType  reflect.Type
+		expectedErrorMessage string
 	}{
 		{
 			name:                "task token",
 			structType:          reflect.TypeOf(TaskToken{}),
-			token:               taskTokenFromAlgoreaPlatform,
+			token:               []byte(fmt.Sprintf("%q", taskTokenFromAlgoreaPlatform)),
 			expectedPayloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
 			expectedPayloadType: reflect.TypeOf(payloads.TaskTokenPayload{}),
 		},
 		{
 			name:                "answer token",
 			structType:          reflect.TypeOf(AnswerToken{}),
-			token:               answerTokenFromAlgoreaPlatform,
+			token:               []byte(fmt.Sprintf("%q", answerTokenFromAlgoreaPlatform)),
 			expectedPayloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			expectedPayloadType: reflect.TypeOf(payloads.AnswerTokenPayload{}),
+		},
+		{
+			name:                 "invalid JSON string",
+			structType:           reflect.TypeOf(AnswerToken{}),
+			token:                []byte(""),
+			expectedErrorMessage: "unexpected end of JSON input",
+			expectedPayloadType:  reflect.TypeOf(payloads.AnswerTokenPayload{}),
 		},
 	}
 
@@ -56,8 +64,16 @@ func Test_UnmarshalJSON(t *testing.T) {
 			assert.NoError(t, payloads.ParseMap(test.expectedPayloadMap, expectedPayload))
 
 			payload := reflect.New(test.structType).Interface().(json.Unmarshaler)
-			err = payload.UnmarshalJSON([]byte(fmt.Sprintf("%q", test.token)))
-			assert.NoError(t, err)
+			err = payload.UnmarshalJSON(test.token)
+			if test.expectedErrorMessage == "" {
+				assert.NoError(t, err)
+			} else {
+				errMessage := ""
+				if err != nil {
+					errMessage = err.Error()
+				}
+				assert.Equal(t, test.expectedErrorMessage, errMessage)
+			}
 			assert.Equal(t, expectedPayload,
 				reflect.ValueOf(payload).Convert(reflect.PtrTo(test.expectedPayloadType)).Interface())
 		})
