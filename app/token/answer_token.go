@@ -7,7 +7,7 @@ import (
 )
 
 // AnswerToken represents an answer token
-type AnswerToken payloads.AnswerTokenPayload
+type AnswerToken payloads.AnswerToken
 
 // UnmarshalJSON unmarshals the answer token from JSON
 func (tt *AnswerToken) UnmarshalJSON(raw []byte) error {

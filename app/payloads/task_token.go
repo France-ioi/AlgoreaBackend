@@ -1,7 +1,7 @@
 package payloads
 
-// TaskTokenPayload represents data inside a task token
-type TaskTokenPayload struct {
+// TaskToken represents data inside a task token
+type TaskToken struct {
 	// Nullable fields are of pointer types
 	Date               string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
 	UserID             string  `json:"idUser"`

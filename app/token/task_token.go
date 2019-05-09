@@ -7,7 +7,7 @@ import (
 )
 
 // TaskToken represents a task token
-type TaskToken payloads.TaskTokenPayload
+type TaskToken payloads.TaskToken
 
 // UnmarshalJSON unmarshals the task token from JSON
 func (tt *TaskToken) UnmarshalJSON(raw []byte) error {

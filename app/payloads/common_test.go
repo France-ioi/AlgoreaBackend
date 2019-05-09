@@ -20,7 +20,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		{
 			name: "task token",
 			raw:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			want: &TaskTokenPayload{
+			want: &TaskToken{
 				Date:               "02-05-2019",
 				UserID:             "556371821693219925",
 				ItemURL:            "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -41,7 +41,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		{
 			name: "answer token",
 			raw:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
-			want: &AnswerTokenPayload{
+			want: &AnswerToken{
 				Date:         "02-05-2019",
 				UserID:       "556371821693219925",
 				ItemURL:      "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -57,9 +57,9 @@ func TestPayloads_ParseMap(t *testing.T) {
 		{
 			name: "invalid task token",
 			raw:  map[string]interface{}{"date": "abcdef"},
-			want: &TaskTokenPayload{Date: "abcdef"},
+			want: &TaskToken{Date: "abcdef"},
 			wantError: errors.New(
-				"invalid TaskTokenPayload"),
+				"invalid TaskToken"),
 		},
 	}
 	for _, tt := range tests {

@@ -1,7 +1,7 @@
 package payloads
 
-// AnswerTokenPayload represents data inside an answer token
-type AnswerTokenPayload struct {
+// AnswerToken represents data inside an answer token
+type AnswerToken struct {
 	// Nullable fields are of pointer types
 	Date           string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
 	UserID         string  `json:"idUser"`
