@@ -27,21 +27,21 @@ func Test_UnmarshalJSON(t *testing.T) {
 	}{
 		{
 			name:                "task token",
-			structType:          reflect.TypeOf(TaskToken{}),
+			structType:          reflect.TypeOf(Task{}),
 			token:               []byte(fmt.Sprintf("%q", taskTokenFromAlgoreaPlatform)),
 			expectedPayloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
 			expectedPayloadType: reflect.TypeOf(payloads.TaskToken{}),
 		},
 		{
 			name:                "answer token",
-			structType:          reflect.TypeOf(AnswerToken{}),
+			structType:          reflect.TypeOf(Answer{}),
 			token:               []byte(fmt.Sprintf("%q", answerTokenFromAlgoreaPlatform)),
 			expectedPayloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			expectedPayloadType: reflect.TypeOf(payloads.AnswerToken{}),
 		},
 		{
 			name:                 "invalid JSON string",
-			structType:           reflect.TypeOf(AnswerToken{}),
+			structType:           reflect.TypeOf(Answer{}),
 			token:                []byte(""),
 			expectedErrorMessage: "invalid token: unexpected end of JSON input",
 			expectedPayloadType:  reflect.TypeOf(payloads.AnswerToken{}),
@@ -89,13 +89,13 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 	}{
 		{
 			name:        "task token",
-			structType:  reflect.TypeOf(TaskToken{}),
+			structType:  reflect.TypeOf(Task{}),
 			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
 			payloadType: reflect.TypeOf(payloads.TaskToken{}),
 		},
 		{
 			name:        "answer token",
-			structType:  reflect.TypeOf(AnswerToken{}),
+			structType:  reflect.TypeOf(Answer{}),
 			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
 		},
@@ -124,5 +124,5 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 }
 
 func TestAbstract_UnmarshalJSON_HandlesError(t *testing.T) {
-	assert.Equal(t, errors.New("invalid token: not a compact JWS"), (&TaskToken{}).UnmarshalJSON([]byte(`""`)))
+	assert.Equal(t, errors.New("invalid token: not a compact JWS"), (&Task{}).UnmarshalJSON([]byte(`""`)))
 }

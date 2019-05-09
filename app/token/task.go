@@ -6,19 +6,19 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 )
 
-// TaskToken represents a task token
-type TaskToken payloads.TaskToken
+// Task represents a task token
+type Task payloads.TaskToken
 
 // UnmarshalJSON unmarshals the task token from JSON
-func (tt *TaskToken) UnmarshalJSON(raw []byte) error {
+func (tt *Task) UnmarshalJSON(raw []byte) error {
 	return (&abstract{tt}).UnmarshalJSON(raw)
 }
 
-var _ json.Unmarshaler = (*TaskToken)(nil)
+var _ json.Unmarshaler = (*Task)(nil)
 
 // MarshalJSON marshals the task token into JSON
-func (tt *TaskToken) MarshalJSON() ([]byte, error) {
+func (tt *Task) MarshalJSON() ([]byte, error) {
 	return (&abstract{tt}).MarshalJSON()
 }
 
-var _ json.Marshaler = (*TaskToken)(nil)
+var _ json.Marshaler = (*Task)(nil)

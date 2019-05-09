@@ -6,19 +6,19 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 )
 
-// AnswerToken represents an answer token
-type AnswerToken payloads.AnswerToken
+// Answer represents an answer token
+type Answer payloads.AnswerToken
 
 // UnmarshalJSON unmarshals the answer token from JSON
-func (tt *AnswerToken) UnmarshalJSON(raw []byte) error {
+func (tt *Answer) UnmarshalJSON(raw []byte) error {
 	return (&abstract{tt}).UnmarshalJSON(raw)
 }
 
-var _ json.Unmarshaler = (*AnswerToken)(nil)
+var _ json.Unmarshaler = (*Answer)(nil)
 
 // MarshalJSON marshals the answer token into JSON
-func (tt *AnswerToken) MarshalJSON() ([]byte, error) {
+func (tt *Answer) MarshalJSON() ([]byte, error) {
 	return (&abstract{tt}).MarshalJSON()
 }
 
-var _ json.Marshaler = (*AnswerToken)(nil)
+var _ json.Marshaler = (*Answer)(nil)
