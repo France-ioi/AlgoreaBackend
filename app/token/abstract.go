@@ -17,12 +17,12 @@ func (t *abstract) UnmarshalJSON(raw []byte) error {
 	var buffer string
 	err = json.Unmarshal(raw, &buffer)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid token: %s", err)
 	}
 
 	tokenPayload, err := ParseAndValidate([]byte(buffer))
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid token: %s", err)
 	}
 
 	return payloads.ParseMap(tokenPayload, t.Payload)

@@ -43,7 +43,7 @@ func Test_UnmarshalJSON(t *testing.T) {
 			name:                 "invalid JSON string",
 			structType:           reflect.TypeOf(AnswerToken{}),
 			token:                []byte(""),
-			expectedErrorMessage: "unexpected end of JSON input",
+			expectedErrorMessage: "invalid token: unexpected end of JSON input",
 			expectedPayloadType:  reflect.TypeOf(payloads.AnswerTokenPayload{}),
 		},
 	}
@@ -124,5 +124,5 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 }
 
 func TestAbstract_UnmarshalJSON_HandlesError(t *testing.T) {
-	assert.Equal(t, errors.New("not a compact JWS"), (&TaskToken{}).UnmarshalJSON([]byte(`""`)))
+	assert.Equal(t, errors.New("invalid token: not a compact JWS"), (&TaskToken{}).UnmarshalJSON([]byte(`""`)))
 }

@@ -59,8 +59,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 			raw:  map[string]interface{}{"date": "abcdef"},
 			want: &TaskTokenPayload{Date: "abcdef"},
 			wantError: errors.New(
-				"invalid *payloads.TaskTokenPayload: map[%!e(string=date):" +
-					"[%!e(string=abcdef does not validate as matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$))]]"),
+				"invalid TaskTokenPayload"),
 		},
 	}
 	for _, tt := range tests {

@@ -64,7 +64,7 @@ func ParseAndValidate(token []byte) (map[string]interface{}, error) {
 
 	// Validate token
 	if err = jwt.Validate(platformPublicKey, crypto.SigningMethodRS512); err != nil {
-		return nil, fmt.Errorf("invalid token: %e", err)
+		return nil, fmt.Errorf("invalid token: %s", err)
 	}
 
 	today := time.Now().UTC()

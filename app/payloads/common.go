@@ -11,7 +11,8 @@ import (
 // ParseMap converts a map into a structure and validates fields
 func ParseMap(raw map[string]interface{}, target interface{}) error {
 	if err := service.NewFormData(target).ParseMapData(raw); err != nil {
-		return fmt.Errorf("invalid %T: %e", target, err)
+		typeName := reflect.TypeOf(target).Elem().Name()
+		return fmt.Errorf("invalid %s", typeName)
 	}
 	return nil
 }

@@ -124,7 +124,7 @@ func TestParseAndValidate(t *testing.T) {
 				"5NDAzMDM4MjUzMjc0NSIsInBsYXRmb3JtTmFtZSI6Imh0dHA6XC9cL2FsZ29yZWEucGVtLmRldiIsImRhdGUiOiIwMi0" +
 				"wNS0yMDE5In0.2Ay1D3adWMhKLldMSWoVftE8584HGkKzSNMFHx-YgCC8TsFSnIANGYCH2VGwbubt5tw8EMif4NMqplM" +
 				"e1ROK81N6nk-wPH-cxW-N9qwZvGFFh7PfgDBIQiuYbk-DHid9gGTf4oIOkb-6lD9GjPe4QNZM9zhVWarC-5xzTbWbdUg"),
-			wantError: errors.New("invalid token: &{%!e(string=crypto/rsa: verification error)}"),
+			wantError: errors.New("invalid token: crypto/rsa: verification error"),
 		},
 	}
 	for _, tt := range tests {
