@@ -31,3 +31,18 @@ func (s *UserAnswerStore) WithItems() *UserAnswerStore {
 		),
 	}
 }
+
+// SubmitNewAnswer inserts a new row with sType='Submission', bValidated=0, sSubmissionDate=NOW()
+// into the `users_answers` table.
+func (s *UserAnswerStore) SubmitNewAnswer(userID, itemID int64, attemptID *int64, answer string) (int64, error) {
+	var userAnswerID int64
+	err := s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		store := NewDataStore(db)
+		userAnswerID = store.NewID()
+		return db.db.Exec(`
+				INSERT INTO users_answers (ID, idUser, idItem, idAttempt, sAnswer, sSubmissionDate, bValidated)
+				VALUES (?, ?, ?, ?, ?, NOW(), 0)`,
+			userAnswerID, userID, itemID, attemptID, answer).Error
+	})
+	return userAnswerID, err
+}

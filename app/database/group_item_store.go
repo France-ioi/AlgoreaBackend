@@ -48,3 +48,12 @@ func (s *GroupItemStore) after() {
 	s.computeAllAccess()
 	s.grantCachedAccessWhereNeeded()
 }
+
+func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {
+	mustNotBeError(s.Where("idItem = ? AND idGroup = ? AND bManagerAccess = 0", itemID, groupID).
+		UpdateColumn(map[string]interface{}{
+			"sPartialAccessDate":       nil,
+			"sCachedPartialAccessDate": nil,
+			"bCachedPartialAccess":     0,
+		}).Error())
+}

@@ -47,3 +47,25 @@ func TestUserItemStore_ComputeAllUserItems_Concurrent(t *testing.T) {
 		assert.NoError(t, err)
 	}, 30)
 }
+
+func TestUserItemStore_CreateIfMissing(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture()
+
+	userItemStore := database.NewDataStore(db).UserItems()
+	userItemStore.CreateIfMissing(12, 34)
+
+	type userItem struct {
+		UserID                    int64  `gorm:"column:idUser"`
+		ItemID                    int64  `gorm:"column:idItem"`
+		AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+	}
+	var insertedUserItem userItem
+	assert.NoError(t,
+		userItemStore.Select("idUser, idItem, sAncestorsComputationState").
+			Scan(&insertedUserItem).Error())
+	assert.Equal(t, userItem{
+		UserID:                    12,
+		ItemID:                    34,
+		AncestorsComputationState: "todo",
+	}, insertedUserItem)
+}
