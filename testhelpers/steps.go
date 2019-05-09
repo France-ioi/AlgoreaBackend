@@ -92,7 +92,7 @@ func (ctx *TestContext) setupApp() {
 
 func (ctx *TestContext) tearDownApp() {
 	if ctx.application != nil {
-		_ = ctx.application.Database.Close()
+		_ = ctx.application.Database.Close() // nolint:gosec
 	}
 	ctx.application = nil
 }
@@ -143,7 +143,7 @@ func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*htt
 
 func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
 	// set the auth proxy server up
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		dataJSON := fmt.Sprintf(`{"userID": %d, "error":""}`, ctx.userID)
@@ -726,7 +726,7 @@ func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) 
 }
 
 func (ctx *TestContext) TheGeneratedGroupPasswordIs(generatedPassword string) error { // nolint
-	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) { return generatedPassword, nil })
+	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) { return generatedPassword, nil }) // nolint:unparam
 	return nil
 }
 
