@@ -27,6 +27,7 @@ type APIError struct {
 // NoError is an APIError to be returned when there is no error
 var NoError = APIError{0, nil}
 
+// InsufficientAccessRightsError is an APIError to be returned when the has no access rights to perform an action
 var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e APIError) httpResponse() render.Renderer {

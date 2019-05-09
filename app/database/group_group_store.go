@@ -28,6 +28,8 @@ func (s *GroupGroupStore) createNewAncestors() {
 	s.DataStore.createNewAncestors("groups", "Group")
 }
 
+// ErrRelationCycle is returned by CreateRelation() if the relation is impossible because it would
+// create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
@@ -71,6 +73,9 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	return err
 }
 
+// ErrGroupBecomesOrphan is to be returned if a group is going to become an orphan
+// after the relation is deleted. DeleteRelation() returns this error to inform
+// the caller that a confirmation is needed (shouldDeleteOrphans should be true).
 var ErrGroupBecomesOrphan = errors.New("a group cannot become an orphan")
 
 // DeleteRelation deletes a relation between two groups. It can also delete orphaned groups.

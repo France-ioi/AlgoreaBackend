@@ -98,5 +98,5 @@ func escapeLikeString(v string, escapeCharacter byte) string {
 	}
 
 	result := buf[:pos]
-	return *(*string)(unsafe.Pointer(&result))
+	return *(*string)(unsafe.Pointer(&result)) // nolint:gosec
 }
