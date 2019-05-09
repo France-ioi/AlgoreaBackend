@@ -67,6 +67,10 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)
 
+	// fix the current time
+	currentTime := time.Now()
+	monkey.Patch(time.Now, func() time.Time { return currentTime })
+
 	err := ctx.initDB()
 	if err != nil {
 		fmt.Println("Unable to empty db")
