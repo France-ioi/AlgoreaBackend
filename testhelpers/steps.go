@@ -533,7 +533,9 @@ func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable)
 func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
+		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{
+			{Cells: []*gherkin.TableCell{{Value: "1"}}}},
+		}
 	}
 	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
 }
