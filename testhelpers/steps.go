@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
@@ -26,6 +27,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -224,6 +226,11 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	authProxyServer := ctx.setupAuthProxyServer()
 	defer authProxyServer.Close()
 
+	reqBody, err := ctx.preprocessJSONBody(reqBody)
+	if err != nil {
+		return err
+	}
+
 	// do request
 	response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
 	if err != nil {
@@ -386,6 +393,26 @@ func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body 
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
+func (ctx *TestContext) ISendrequestToWithEncodedBody(method, path, requestType string, body *gherkin.DocString) error { // nolint
+	var payload map[string]interface{}
+	if err := json.Unmarshal(*(*[]byte)(unsafe.Pointer(&body.Content)), &payload); err != nil { // nolint:gosec
+		return err
+	}
+	structPayload, err := getZeroStructPtr(requestType)
+	if err != nil {
+		return err
+	}
+	err = payloads.ParseMap(payload, structPayload)
+	if err != nil {
+		return err
+	}
+	encoded, err := json.Marshal(structPayload)
+	if err != nil {
+		return err
+	}
+	return ctx.iSendrequestGeneric(method, path, string(encoded))
+}
+
 func (ctx *TestContext) ISendrequestTo(method string, path string) error { // nolint
 	return ctx.iSendrequestGeneric(method, path, "")
 }
@@ -411,60 +438,63 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { // nolint
 	return nil
 }
 
-var jsonPrepareRegexp = regexp.MustCompile(`{\s*(\w+)\[(\d+)]\[(\w+)]}`)
-
 func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (err error) { // nolint
-	var expected, actual []byte
-	var exp, act interface{}
+	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
+}
 
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *gherkin.DocString) (err error) { // nolint
 	// verify the content type
 	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
 		return
 	}
 
-	expectedBody := body.Content
-	for match := jsonPrepareRegexp.FindStringSubmatch(expectedBody); match != nil; match = jsonPrepareRegexp.FindStringSubmatch(expectedBody) {
-		gherkinTable := ctx.dbTableData[match[1]]
-		neededColumnNumber := -1
-		for columnNumber, cell := range gherkinTable.Rows[0].Cells {
-			if cell.Value == match[3] {
-				neededColumnNumber = columnNumber
-				break
-			}
-		}
-		if neededColumnNumber == -1 {
-			panic(fmt.Errorf("cannot find column %q in table %q", match[3], match[1]))
-		}
-		rowNumber, conversionErr := strconv.Atoi(match[2])
-		if conversionErr != nil {
-			panic(conversionErr)
-		}
-		expectedBody = strings.Replace(expectedBody, match[0], gherkinTable.Rows[rowNumber].Cells[neededColumnNumber].Value, -1)
+	expectedBody, err := ctx.preprocessJSONBody(body.Content)
+	if err != nil {
+		return err
 	}
 
 	// re-encode expected response
-	if err = json.Unmarshal([]byte(expectedBody), &exp); err != nil {
-		return
+	var exp interface{}
+	err = json.Unmarshal([]byte(expectedBody), &exp)
+	if err != nil {
+		return err
 	}
-	if expected, err = json.MarshalIndent(exp, "", "\t"); err != nil {
-		return
+	var expected, actual []byte
+	if expected, err = json.MarshalIndent(&exp, "", "\t"); err != nil {
+		return err
+	}
+
+	var act interface{}
+	if responseType == "" {
+		var value interface{}
+		act = &value
+	} else {
+		act, err = getZeroStructPtr(responseType)
+		if err != nil {
+			return err
+		}
 	}
 
 	// re-encode actual response too
-	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &act); err != nil {
+	if err = json.Unmarshal([]byte(ctx.lastResponseBody), act); err != nil {
 		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+	}
+
+	if responseType != "" {
+		act = payloads.ConvertIntoMap(act)
 	}
 	if actual, err = json.MarshalIndent(act, "", "\t"); err != nil {
 		return
 	}
 
-	sExpected := string(expected)
-	sActual := string(actual)
+	return compareStrings(string(expected), string(actual))
+}
 
-	if sExpected != sActual {
+func compareStrings(expected, actual string) error {
+	if expected != actual {
 		diff, _ := difflib.GetUnifiedDiffString(difflib.UnifiedDiff{ // nolint: gosec
-			A:        difflib.SplitLines(sExpected),
-			B:        difflib.SplitLines(sActual),
+			A:        difflib.SplitLines(expected),
+			B:        difflib.SplitLines(actual),
 			FromFile: "Expected",
 			FromDate: "",
 			ToFile:   "Actual",
@@ -477,7 +507,7 @@ func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *gherkin.DocString) (er
 			diff,
 		)
 	}
-	return err
+	return nil
 }
 
 func (ctx *TestContext) TheResponseHeaderShouldBe(headerName string, headerValue string) (err error) { // nolint
