@@ -5,13 +5,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
-	tests := []struct {
+	var tests = []struct {
 		name      string
 		raw       map[string]interface{}
 		want      interface{}
@@ -36,6 +36,10 @@ func TestPayloads_ParseMap(t *testing.T) {
 				SubmissionPossible: true,
 				SupportedLangProg:  "*",
 				IsAdmin:            "0",
+				Converted: TaskTokenConverted{
+					UserID:      556371821693219925,
+					LocalItemID: 901756573345831409,
+				},
 			},
 		},
 		{
@@ -59,7 +63,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 			raw:  map[string]interface{}{"date": "abcdef"},
 			want: &TaskToken{Date: "abcdef"},
 			wantError: errors.New(
-				"invalid TaskToken"),
+				"invalid TaskToken: invalid input data"),
 		},
 	}
 	for _, tt := range tests {

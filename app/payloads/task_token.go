@@ -1,6 +1,10 @@
 package payloads
 
-import "crypto/rsa"
+import (
+	"crypto/rsa"
+	"errors"
+	"strconv"
+)
 
 // TaskToken represents data inside a task token
 type TaskToken struct {
@@ -25,6 +29,40 @@ type TaskToken struct {
 	SupportedLangProg  string  `json:"sSupportedLangProg"`
 	IsAdmin            string  `json:"bIsAdmin"` // "0" or "1"
 
+	Converted TaskTokenConverted
+
 	PublicKey  *rsa.PublicKey
 	PrivateKey *rsa.PrivateKey
 }
+
+// TaskTokenConverted contains converted field values of TaskToken payload
+type TaskTokenConverted struct {
+	UserID      int64
+	LocalItemID int64
+	AttemptID   *int64
+}
+
+// Bind validates a task token and converts some needed field values.
+func (tt *TaskToken) Bind() error {
+	var err error
+	tt.Converted.UserID, err = strconv.ParseInt(tt.UserID, 10, 64)
+	if err != nil {
+		return errors.New("wrong idUser")
+	}
+	tt.Converted.LocalItemID, err = strconv.ParseInt(tt.LocalItemID, 10, 64)
+	if err != nil {
+		return errors.New("wrong idItemLocal")
+	}
+
+	if tt.AttemptID != nil {
+		var attemptID int64
+		attemptID, err = strconv.ParseInt(*tt.AttemptID, 10, 64)
+		if err != nil {
+			return errors.New("wrong idAttempt")
+		}
+		tt.Converted.AttemptID = &attemptID
+	}
+	return nil
+}
+
+var _ Binder = (*TaskToken)(nil)

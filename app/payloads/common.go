@@ -8,12 +8,22 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// Binder is an interface for managing payloads.
+type Binder interface {
+	Bind() error
+}
+
 // ParseMap converts a map into a structure and validates fields
 func ParseMap(raw map[string]interface{}, target interface{}) error {
 	if err := service.NewFormData(target).ParseMapData(raw); err != nil {
 		typeName := reflect.TypeOf(target).Elem().Name()
-		return fmt.Errorf("invalid %s", typeName)
+		return fmt.Errorf("invalid %s: %s", typeName, err.Error())
 	}
+
+	if binder, ok := target.(Binder); ok {
+		return binder.Bind()
+	}
+
 	return nil
 }
 

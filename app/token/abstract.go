@@ -45,3 +45,25 @@ func (t *abstract) MarshalJSON() ([]byte, error) {
 }
 
 var _ json.Marshaler = (*abstract)(nil)
+
+// UnmarshalStringer is the interface implemented by types
+// that can unmarshal a string description of themselves.
+// For example, a token's string description is `{ENCODED_TOKEN}`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`
+type UnmarshalStringer interface {
+	UnmarshalString(string) error
+}
+
+var _ UnmarshalStringer = (*abstract)(nil)
+
+func marshalJSON(payload interface{}) ([]byte, error) {
+	return (&abstract{Payload: payload}).MarshalJSON()
+}
+
+func unmarshalJSON(data []byte, payload interface{}) error {
+	return (&abstract{Payload: payload}).UnmarshalJSON(data)
+}
+
+func unmarshalString(data string, payload interface{}) error {
+	return (&abstract{Payload: payload}).UnmarshalString(data)
+}
