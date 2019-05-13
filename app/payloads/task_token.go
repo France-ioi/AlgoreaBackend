@@ -21,7 +21,7 @@ type TaskToken struct {
 	HintsAllowed       string  `json:"bHintsAllowed"` // "0" or "1"
 	HintPossible       bool    `json:"bHintPossible"`
 	HintsRequested     *string `json:"sHintsRequested"`
-	HintsGiven         string  `json:"nbHintsGiven"`
+	HintsGivenCount    string  `json:"nbHintsGiven"`
 	AccessSolutions    string  `json:"bAccessSolutions"` // "0" or "1"
 	ReadAnswers        bool    `json:"bReadAnswers"`
 	Login              string  `json:"sLogin"`
