@@ -15,34 +15,27 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
-var (
-	platformPublicKey  *rsa.PublicKey
-	platformPrivateKey *rsa.PrivateKey
-	platformName       string
-)
+// Initialize loads keys from the config and resolves the platform name
+func Initialize(conf *config.Platform) (publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, platformName string, err error) {
+	platformName = conf.Name
 
-// Initialize loads keys from the config and sets the platform name
-func Initialize(conf *config.Root) error {
-	platformName = conf.Platform.Name
-
-	var err error
-	bytes, err := ioutil.ReadFile(prepareFileName(conf.Platform.PublicKeyFile))
+	bytes, err := ioutil.ReadFile(prepareFileName(conf.PublicKeyFile))
 	if err != nil {
-		return err
+		return
 	}
-	platformPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
+	publicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
 	if err != nil {
-		return err
+		return
 	}
-	bytes, err = ioutil.ReadFile(prepareFileName(conf.Platform.PrivateKeyFile))
+	bytes, err = ioutil.ReadFile(prepareFileName(conf.PrivateKeyFile))
 	if err != nil {
-		return err
+		return
 	}
-	platformPrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
+	privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
 func prepareFileName(fileName string) string {
@@ -56,14 +49,14 @@ func prepareFileName(fileName string) string {
 }
 
 // ParseAndValidate parses a token and validates its signature and date
-func ParseAndValidate(token []byte) (map[string]interface{}, error) {
+func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interface{}, error) {
 	jwt, err := jws.ParseJWT(token)
 	if err != nil {
 		return nil, err
 	}
 
 	// Validate token
-	if err = jwt.Validate(platformPublicKey, crypto.SigningMethodRS512); err != nil {
+	if err = jwt.Validate(publicKey, crypto.SigningMethodRS512); err != nil {
 		return nil, fmt.Errorf("invalid token: %s", err)
 	}
 
@@ -85,11 +78,10 @@ func ParseAndValidate(token []byte) (map[string]interface{}, error) {
 }
 
 // Generate generates a signed token for a payload
-func Generate(payload map[string]interface{}) []byte {
+func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte {
 	payload["date"] = time.Now().UTC().Format("02-01-2006")
-	payload["platformName"] = platformName
 
-	token, err := jws.NewJWT(payload, crypto.SigningMethodRS512).Serialize(platformPrivateKey)
+	token, err := jws.NewJWT(payload, crypto.SigningMethodRS512).Serialize(privateKey)
 	if err != nil {
 		panic(err)
 	}

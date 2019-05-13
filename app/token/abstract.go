@@ -1,8 +1,10 @@
 package token
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 )
@@ -17,12 +19,19 @@ func (t *abstract) UnmarshalJSON(raw []byte) error {
 	var buffer string
 	err = json.Unmarshal(raw, &buffer)
 	if err != nil {
-		return fmt.Errorf("invalid token: %s", err)
+		return err
 	}
 
-	tokenPayload, err := ParseAndValidate([]byte(buffer))
+	return t.UnmarshalString(buffer)
+}
+
+func (t *abstract) UnmarshalString(raw string) error {
+	var err error
+
+	publicKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PublicKey").Interface().(*rsa.PublicKey)
+	tokenPayload, err := ParseAndValidate([]byte(raw), publicKey)
 	if err != nil {
-		return fmt.Errorf("invalid token: %s", err)
+		return err
 	}
 
 	return payloads.ParseMap(tokenPayload, t.Payload)
@@ -31,7 +40,8 @@ func (t *abstract) UnmarshalJSON(raw []byte) error {
 var _ json.Unmarshaler = (*abstract)(nil)
 
 func (t *abstract) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload)))), nil
+	privateKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PrivateKey").Interface().(*rsa.PrivateKey)
+	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), privateKey))), nil
 }
 
 var _ json.Marshaler = (*abstract)(nil)

@@ -1,5 +1,7 @@
 package payloads
 
+import "crypto/rsa"
+
 // TaskToken represents data inside a task token
 type TaskToken struct {
 	// Nullable fields are of pointer types
@@ -22,4 +24,7 @@ type TaskToken struct {
 	SubmissionPossible bool    `json:"bSubmissionPossible"`
 	SupportedLangProg  string  `json:"sSupportedLangProg"`
 	IsAdmin            string  `json:"bIsAdmin"` // "0" or "1"
+
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }

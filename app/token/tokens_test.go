@@ -14,6 +14,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
 func Test_UnmarshalJSON(t *testing.T) {
@@ -43,7 +44,7 @@ func Test_UnmarshalJSON(t *testing.T) {
 			name:                 "invalid JSON string",
 			structType:           reflect.TypeOf(Answer{}),
 			token:                []byte(""),
-			expectedErrorMessage: "invalid token: unexpected end of JSON input",
+			expectedErrorMessage: "unexpected end of JSON input",
 			expectedPayloadType:  reflect.TypeOf(payloads.AnswerToken{}),
 		},
 	}
@@ -55,15 +56,17 @@ func Test_UnmarshalJSON(t *testing.T) {
 				func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
 			defer monkey.UnpatchAll()
 
-			var err error
-			platformPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(algoreaPlatformPublicKey)
-			platformName = testPlatformName
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
 
-			expectedPayload := reflect.New(test.expectedPayloadType).Interface()
+			expectedPayloadRefl := reflect.New(test.expectedPayloadType)
+			expectedPayloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			expectedPayload := expectedPayloadRefl.Interface()
 			assert.NoError(t, payloads.ParseMap(test.expectedPayloadMap, expectedPayload))
 
-			payload := reflect.New(test.structType).Interface().(json.Unmarshaler)
+			payloadRefl := reflect.New(test.structType)
+			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			payload := payloadRefl.Interface().(json.Unmarshaler)
 			err = payload.UnmarshalJSON(test.token)
 			if test.expectedErrorMessage == "" {
 				assert.NoError(t, err)
@@ -105,24 +108,30 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
 			defer monkey.UnpatchAll()
-			var err error
-			platformPrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(algoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
 			assert.NoError(t, err)
-			platformName = "test_dmitry"
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			assert.NoError(t, err)
 
-			payload := reflect.New(test.payloadType).Interface()
+			payloadRefl := reflect.New(test.payloadType)
+			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			payloadRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			payload := payloadRefl.Interface()
 			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
 			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface().(json.Marshaler)
 			token, err := tokenStruct.MarshalJSON()
 			assert.NoError(t, err)
 
-			result := reflect.New(test.structType).Interface().(json.Unmarshaler)
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(json.Unmarshaler)
 			assert.NoError(t, result.UnmarshalJSON(token))
-			assert.Equal(t, result, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface())
+			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
 		})
 	}
 }
 
 func TestAbstract_UnmarshalJSON_HandlesError(t *testing.T) {
-	assert.Equal(t, errors.New("invalid token: not a compact JWS"), (&Task{}).UnmarshalJSON([]byte(`""`)))
+	assert.Equal(t, errors.New("not a compact JWS"), (&Task{}).UnmarshalJSON([]byte(`""`)))
 }

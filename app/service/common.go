@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/rsa"
 	"net/http"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -10,8 +11,11 @@ import (
 
 // Base is the common service context data
 type Base struct {
-	Store  *database.DataStore
-	Config *config.Root
+	Store        *database.DataStore
+	Config       *config.Root
+	PublicKey    *rsa.PublicKey
+	PrivateKey   *rsa.PrivateKey
+	PlatformName string
 }
 
 // GetUser returns the authenticated user data from context

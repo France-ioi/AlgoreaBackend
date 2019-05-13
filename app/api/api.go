@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/rsa"
 	"net/http/httputil"
 	"net/url"
 
@@ -20,10 +21,13 @@ type Ctx struct {
 	config       *config.Root
 	db           *database.DB
 	reverseProxy *httputil.ReverseProxy
+	publicKey    *rsa.PublicKey
+	privateKey   *rsa.PrivateKey
+	platformName string
 }
 
 // NewCtx creates a API context
-func NewCtx(conf *config.Root, db *database.DB) (*Ctx, error) {
+func NewCtx(conf *config.Root, db *database.DB, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, platformName string) (*Ctx, error) {
 	var err error
 	var proxyURL *url.URL
 
@@ -31,13 +35,19 @@ func NewCtx(conf *config.Root, db *database.DB) (*Ctx, error) {
 		return nil, err
 	}
 	proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-	return &Ctx{conf, db, proxy}, nil
+	return &Ctx{config: conf, db: db, reverseProxy: proxy, publicKey: publicKey, privateKey: privateKey, platformName: platformName}, nil
 }
 
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
-	base := service.Base{Store: database.NewDataStore(ctx.db), Config: ctx.config}
+	base := service.Base{
+		Store:        database.NewDataStore(ctx.db),
+		Config:       ctx.config,
+		PublicKey:    ctx.publicKey,
+		PrivateKey:   ctx.privateKey,
+		PlatformName: ctx.platformName,
+	}
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
 	r.Group((&answers.Service{Base: base}).SetRoutes)

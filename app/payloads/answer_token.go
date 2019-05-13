@@ -1,5 +1,7 @@
 package payloads
 
+import "crypto/rsa"
+
 // AnswerToken represents data inside an answer token
 type AnswerToken struct {
 	// Nullable fields are of pointer types
@@ -15,4 +17,7 @@ type AnswerToken struct {
 	HintsGiven     string  `json:"nbHintsGiven"`
 	Answer         string  `json:"sAnswer"`
 	UserAnswerID   string  `json:"idUserAnswer"`
+
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }

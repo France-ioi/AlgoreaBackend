@@ -1,6 +1,7 @@
 package app
 
 import (
+	"crypto/rsa"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -60,9 +61,11 @@ func TestNew_DBErr(t *testing.T) {
 
 func TestNew_APIErr(t *testing.T) {
 	assert := assertlib.New(t)
-	patch := monkey.Patch(api.NewCtx, func(*config.Root, *database.DB) (*api.Ctx, error) {
-		return nil, errors.New("api creation error")
-	})
+	patch := monkey.Patch(api.NewCtx,
+		func(conf *config.Root, db *database.DB, publicKey *rsa.PublicKey,
+			privateKey *rsa.PrivateKey, platformName string) (*api.Ctx, error) {
+			return nil, errors.New("api creation error")
+		})
 	defer patch.Unpatch()
 	app, err := New()
 	assert.Nil(app)
@@ -71,8 +74,8 @@ func TestNew_APIErr(t *testing.T) {
 
 func TestNew_TokenErr(t *testing.T) {
 	assert := assertlib.New(t)
-	patch := monkey.Patch(token.Initialize, func(*config.Root) error {
-		return errors.New("keys loading error")
+	patch := monkey.Patch(token.Initialize, func(*config.Platform) (*rsa.PublicKey, *rsa.PrivateKey, string, error) {
+		return nil, nil, "", errors.New("keys loading error")
 	})
 	defer patch.Unpatch()
 	app, err := New()

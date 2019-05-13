@@ -16,6 +16,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
 var taskTokenFromAlgoreaPlatform = []byte(
@@ -47,31 +48,6 @@ var answerTokenFromAlgoreaPlatform = []byte(
 		"tMjAxOSJ9.GriSv4nj0M0CHPuUSAWs31Wv-VPAm494rGL6RrAnrmg5Q5DNBhT8_RGua" +
 		"pU5rhaTUHuWr3iwWZYEVqWVrFbuDbKmkKrwCCA6-j6NinWqzGG61EaunxpKXYDQjFOn" +
 		"uH8E1PWMKrC6OLk-5J4NUE5qGn87WKbOpbzuzwcUdWJV77o")
-
-var algoreaPlatformPublicKey = []byte(
-	"-----BEGIN PUBLIC KEY-----\n" +
-		"MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDfsh3Rj/IAQ75LB7c8riFTYrgS\n" +
-		"0FCDwZhYIPYgmqVWGPK7JX5KnrcTYqxr0e6nqD5e4anMIVyMUn7g+W9ULLa5QrFr\n" +
-		"aJw7il+r1XPyadsPGe2C+YVqbSv33TRxTL03mzvlsLL+JlNvM7j0iJ/KGclLPHUz\n" +
-		"fiE7YZDILwmultaYFQIDAQAB\n" +
-		"-----END PUBLIC KEY-----")
-
-var algoreaPlatformPrivateKey = []byte(
-	"-----BEGIN RSA PRIVATE KEY-----\n" +
-		"MIICXAIBAAKBgQDfsh3Rj/IAQ75LB7c8riFTYrgS0FCDwZhYIPYgmqVWGPK7JX5K\n" +
-		"nrcTYqxr0e6nqD5e4anMIVyMUn7g+W9ULLa5QrFraJw7il+r1XPyadsPGe2C+YVq\n" +
-		"bSv33TRxTL03mzvlsLL+JlNvM7j0iJ/KGclLPHUzfiE7YZDILwmultaYFQIDAQAB\n" +
-		"AoGALEiomonykJbYnyXh4oNeWZGbey3+Inc634d28jFrNcYul1nuzHrrJ01LcPTY\n" +
-		"WBx4bHQkFyMrnSPftk3q+jD34wpCEiBMFJmZk/Exj8ypRvN9K4+oJtMjvx3tcuyB\n" +
-		"fnFRvf1J2sTL7F499xv+/UHAIGfyIvyYHLg/SV+aBaHDJmkCQQD3VqeDRTiMul5p\n" +
-		"hDc4RbNLgWS3u1KT2U615OcTJZsFVzHuL6LhkxKLsc+rUWNurY0vOkwz4Bra2CpZ\n" +
-		"klb/pVFvAkEA54eCYQ3UHUq+HUGFAX7fPokunjf9V+khU5PfvkzFI1O6DbvT5VCe\n" +
-		"H4RVzM787lOy17TyIMvGqSIcLbf1hyekuwJAbUT6IlM9ZWaceS8xGgoo6K2Uals2\n" +
-		"Yxz42gDzWREfCF/6Lgkbg15vLgny/fOp4uaHXhr6OVzDYHVpWEL/bleBvwJADwAS\n" +
-		"jGMu+O7cvlx+V4h2wkB1Cr8p5MYv6JBOELA8nXtRNI6UveipNfWG8Yv/ixlVHvCU\n" +
-		"N1e8eTzCgpvGhokk/QJBAJv1h/9jNOB9H9GIf3sB0cRLzH6po6aQX1gEYRZP6hIw\n" +
-		"KGHLOGPIBt1FHY5Z0WtQ4vaFtwOEPj5BCPLGP9cvLIs=\n" +
-		"-----END RSA PRIVATE KEY-----")
 
 const testPlatformName = "test_dmitry"
 
@@ -132,11 +108,9 @@ func TestParseAndValidate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
-			var err error
-			platformPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(algoreaPlatformPublicKey)
-			platformName = testPlatformName
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			payload, apiErr := ParseAndValidate(tt.token)
+			payload, apiErr := ParseAndValidate(tt.token, publicKey)
 			assert.Equal(t, tt.wantError, apiErr)
 			assert.Equal(t, tt.wantPayload, payload)
 		})
@@ -174,16 +148,14 @@ func Test_GenerateToken(t *testing.T) {
 				patchedPayload[k] = tt.payload[k]
 			}
 			delete(patchedPayload, "date")
-			delete(patchedPayload, "platformName")
 
 			var err error
-			platformPrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(algoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
 			assert.NoError(t, err)
-			platformPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(algoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			platformName = tt.platformName
-			token := Generate(patchedPayload)
-			payload, err := ParseAndValidate(token)
+			token := Generate(patchedPayload, privateKey)
+			payload, err := ParseAndValidate(token, publicKey)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.payload, payload)
 		})
@@ -191,78 +163,75 @@ func Test_GenerateToken(t *testing.T) {
 }
 
 func Test_GenerateToken_PanicsOnError(t *testing.T) {
-	platformPrivateKey = &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
+	privateKey := &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
 	defer func() {
 		e := recover()
 		assert.Equal(t, errors.New("crypto/rsa: message too long for RSA public key size"), e)
 	}()
-	Generate(map[string]interface{}{})
+	Generate(map[string]interface{}{}, privateKey)
 }
 
 func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(algoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
 	assert.NoError(t, err)
 
-	tmpFilePrivate, err := createTmpPrivateKeyFile(algoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
 	assert.NoError(t, err)
 
-	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(algoreaPlatformPrivateKey)
+	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
 	assert.NoError(t, err)
-	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(algoreaPlatformPublicKey)
+	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 	assert.NoError(t, err)
 
-	platformPrivateKey = nil
-	platformPublicKey = nil
-	platformName = ""
-	err = Initialize(&config.Root{Platform: config.Platform{
+	publicKey, privateKey, platformName, err := Initialize(&config.Platform{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
 		Name:           "my platform",
-	}})
+	})
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPrivateKey, platformPrivateKey)
-	assert.Equal(t, expectedPublicKey, platformPublicKey)
+	assert.Equal(t, expectedPrivateKey, privateKey)
+	assert.Equal(t, expectedPublicKey, publicKey)
 	assert.Equal(t, platformName, "my platform")
 }
 
 func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(algoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
 	assert.NoError(t, err)
 
-	err = Initialize(&config.Root{Platform: config.Platform{
+	_, _, _, err = Initialize(&config.Platform{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  "nosuchfile.pem",
 		Name:           "my platform",
-	}})
+	})
 	assert.IsType(t, &os.PathError{}, err)
 }
 
 func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(algoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
 	assert.NoError(t, err)
 
-	err = Initialize(&config.Root{Platform: config.Platform{
+	_, _, _, err = Initialize(&config.Platform{
 		PrivateKeyFile: "nosuchfile.pem",
 		PublicKeyFile:  tmpFilePublic.Name(),
 		Name:           "my platform",
-	}})
+	})
 	assert.IsType(t, &os.PathError{}, err)
 }
 
 func Test_Initialize_CannotParsePublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(algoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
@@ -274,11 +243,11 @@ func Test_Initialize_CannotParsePublicKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	err = Initialize(&config.Root{Platform: config.Platform{
+	_, _, _, err = Initialize(&config.Platform{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
 		Name:           "my platform",
-	}})
+	})
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
@@ -289,17 +258,17 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	tmpFilePublic, err := createTmpPublicKeyFile(algoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
 	assert.NoError(t, err)
 
-	err = Initialize(&config.Root{Platform: config.Platform{
+	_, _, _, err = Initialize(&config.Platform{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
 		Name:           "my platform",
-	}})
+	})
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
