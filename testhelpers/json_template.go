@@ -2,6 +2,8 @@ package testhelpers
 
 import (
 	"bytes"
+	"crypto/rsa"
+	"fmt"
 	"io"
 	"reflect"
 	"regexp"
@@ -9,6 +11,8 @@ import (
 	"time"
 
 	"github.com/CloudyKit/jet"
+
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
@@ -20,6 +24,15 @@ func (ctx *TestContext) preprocessJSONBody(jsonBody string) (string, error) {
 	set.AddGlobalFunc("currentTimeInFormat", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("currentTimeInFormat", 1, 1)
 		return reflect.ValueOf(time.Now().UTC().Format(a.Get(0).Interface().(string)))
+	})
+	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("generateToken", 2, 2)
+		return reflect.ValueOf(
+			fmt.Sprintf("%q", token.Generate(a.Get(0).Interface().(map[string]interface{}),
+				a.Get(1).Addr().Interface().(*rsa.PrivateKey))))
+	})
+	set.AddGlobalFunc("app", func(a jet.Arguments) reflect.Value {
+		return reflect.ValueOf(ctx.application)
 	})
 	set.AddGlobalFunc("db", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("db", 1, 1)

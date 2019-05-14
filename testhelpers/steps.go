@@ -12,11 +12,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
@@ -393,26 +393,6 @@ func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body 
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
-func (ctx *TestContext) ISendrequestToWithEncodedBody(method, path, requestType string, body *gherkin.DocString) error { // nolint
-	var payload map[string]interface{}
-	if err := json.Unmarshal(*(*[]byte)(unsafe.Pointer(&body.Content)), &payload); err != nil { // nolint:gosec
-		return err
-	}
-	structPayload, err := getZeroStructPtr(requestType)
-	if err != nil {
-		return err
-	}
-	err = payloads.ParseMap(payload, structPayload)
-	if err != nil {
-		return err
-	}
-	encoded, err := json.Marshal(structPayload)
-	if err != nil {
-		return err
-	}
-	return ctx.iSendrequestGeneric(method, path, string(encoded))
-}
-
 func (ctx *TestContext) ISendrequestTo(method string, path string) error { // nolint
 	return ctx.iSendrequestGeneric(method, path, "")
 }
@@ -473,6 +453,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		if err != nil {
 			return err
 		}
+		reflect.ValueOf(act).Elem().FieldByName("PublicKey").Set(reflect.ValueOf(ctx.application.TokenConfig.PublicKey))
 	}
 
 	// re-encode actual response too
