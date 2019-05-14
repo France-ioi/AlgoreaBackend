@@ -8,6 +8,7 @@ import (
 
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
@@ -54,7 +55,7 @@ func TestUnprocessableEntityRequest(t *testing.T) {
 func TestInvalidRequest_WithFormErrors(t *testing.T) {
 	assert := assertlib.New(t)
 
-	formErrors := make(service.FieldErrors)
+	formErrors := make(formdata.FieldErrors)
 	formErrors["name"] = []string{"is required"}
 	formErrors["phone"] = []string{"is required", "must be a phone number"}
 

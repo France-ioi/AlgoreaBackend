@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -104,7 +105,7 @@ func refuseSentGroupRequestsIfNeeded(
 	return nil
 }
 
-func validateUpdateGroupInput(r *http.Request) (*service.FormData, error) {
-	formData := service.NewFormData(&groupUpdateInput{})
+func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
+	formData := formdata.NewFormData(&groupUpdateInput{})
 	return formData, formData.ParseJSONRequestData(r)
 }

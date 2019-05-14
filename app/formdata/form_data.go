@@ -1,4 +1,4 @@
-package service
+package formdata
 
 import (
 	"encoding/json"

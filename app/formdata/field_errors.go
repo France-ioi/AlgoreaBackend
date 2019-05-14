@@ -1,4 +1,4 @@
-package service
+package formdata
 
 // FieldErrors represents multiple errors for form fields
 type FieldErrors map[string][]string

@@ -1,4 +1,4 @@
-package service
+package formdata
 
 import (
 	"net/http"
