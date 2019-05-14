@@ -1,6 +1,8 @@
 package testhelpers
 
 import (
+	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -14,6 +16,30 @@ type answersSubmitResponse struct {
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
+
+	PublicKey *rsa.PublicKey
+}
+
+type answersSubmitResponseWrapper struct {
+	Data struct {
+		AnswerToken *string `json:"answer_token"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+func (resp *answersSubmitResponse) UnmarshalJSON(raw []byte) error {
+	wrapper := answersSubmitResponseWrapper{}
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return err
+	}
+	resp.Message = wrapper.Message
+	resp.Success = wrapper.Success
+	if wrapper.Data.AnswerToken != nil {
+		resp.Data.AnswerToken.PublicKey = resp.PublicKey
+		return (&resp.Data.AnswerToken).UnmarshalString(*wrapper.Data.AnswerToken)
+	}
+	return nil
 }
 
 var knownTypes = map[string]reflect.Type{

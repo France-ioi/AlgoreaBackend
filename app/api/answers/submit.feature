@@ -21,13 +21,14 @@ Feature: Submit a new answer
 
   Scenario: User is able to submit a new answer
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "10",
-          "idItemLocal": "50"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print 1"
       }
       """
@@ -64,18 +65,19 @@ Feature: Submit a new answer
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idItem": "50",
-          "idUser": "10",
-          "idItemLocal": "50",
-          "idAttempt": "100",
-          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "idItemLocal": "50",
-          "randomSeed": "100"
-        },
+        "task_token": {{generateToken(map(
+          "idItem", "50",
+          "idUser", "10",
+          "idItemLocal", "50",
+          "idAttempt", "100",
+          "itemUrl", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "idItemLocal", "50",
+          "randomSeed", "100",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(2)"
       }
       """

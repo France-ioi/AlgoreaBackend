@@ -19,6 +19,17 @@ Feature: Submit a new answer - robustness
       | idUser | idItem | sHintsRequested                 | nbHintsCached |
       | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            |
 
+  Scenario: Wrong JSON in request
+    Given I am the user with ID "10"
+    When I send a POST request to "/answers" with the following body:
+      """
+      []
+      """
+    Then the response code should be 400
+    And the response error message should contain "Json: cannot unmarshal array into Go value of type answers.submitRequestWrapper"
+    And the table "users_items" should stay unchanged
+    And the table "users_answers" should stay unchanged
+
   Scenario: No task_token
     Given I am the user with ID "10"
     When I send a POST request to "/answers" with the following body:
@@ -42,19 +53,20 @@ Feature: Submit a new answer - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Invalid token: illegal base64 data at input byte 8"
+    And the response error message should contain "Invalid task_token: illegal base64 data at input byte 8"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing answer
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "10",
-          "idItemLocal": "50"
-        }
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}}
       }
       """
     Then the response code should be 400
@@ -64,64 +76,68 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idUser
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "",
-          "idItemLocal": "50"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idUser in the token"
+    And the response error message should contain "Invalid task_token: wrong idUser"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idItemLocal
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "10"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idItemLocal in the token"
+    And the response error message should contain "Invalid task_token: wrong idItemLocal"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idAttempt
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "10",
-          "idItemLocal": "50",
-          "idAttempt": "abc"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "idAttempt", "abc",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong idAttempt in the token"
+    And the response error message should contain "Invalid task_token: wrong idAttempt"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: idUser doesn't match the user's ID
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "20",
-          "idItemLocal": "50"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "20",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """
@@ -132,13 +148,14 @@ Feature: Submit a new answer - robustness
 
   Scenario: User not found
     Given I am the user with ID "404"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "404",
-          "idItemLocal": "50"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "404",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """
@@ -149,13 +166,14 @@ Feature: Submit a new answer - robustness
 
   Scenario: No submission rights
     Given I am the user with ID "10"
-    When I send a POST request to "/answers" with the following body encoded as "AnswersSubmitRequest":
+    When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {
-          "idUser": "10",
-          "idItemLocal": "50"
-        },
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
         "answer": "print(1)"
       }
       """

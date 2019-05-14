@@ -1,6 +1,8 @@
 package answers
 
 import (
+	"crypto/rsa"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,7 +17,7 @@ import (
 )
 
 func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	requestData := SubmitRequest{}
+	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
 	var err error
 	if err = render.Bind(httpReq, &requestData); err != nil {
@@ -28,10 +30,10 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	}
 	service.MustNotBeError(err)
 
-	if user.UserID != requestData.converted.UserID {
+	if user.UserID != requestData.TaskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.converted.UserID, user.UserID))
+			requestData.TaskToken.Converted.UserID, user.UserID))
 	}
 
 	var userAnswerID int64
@@ -44,7 +46,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
-		hasAccess, reason, err = store.Items().CheckSubmissionRights(requestData.converted.ItemID, user)
+		hasAccess, reason, err = store.Items().CheckSubmissionRights(requestData.TaskToken.Converted.LocalItemID, user)
 		service.MustNotBeError(err)
 
 		if !hasAccess {
@@ -53,10 +55,10 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		}
 
 		userItemStore := store.UserItems()
-		userItemStore.CreateIfMissing(user.UserID, requestData.converted.ItemID)
+		userItemStore.CreateIfMissing(user.UserID, requestData.TaskToken.Converted.LocalItemID)
 
 		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
-			user.UserID, requestData.converted.ItemID, requestData.converted.AttemptID, *requestData.Answer)
+			user.UserID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
 		scope := userItemStore.Where("idUser = ? AND idItem = ?", user.UserID, requestData.TaskToken.LocalItemID)
@@ -74,16 +76,19 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
 		"answer_token": &token.Answer{
-			Answer:         *requestData.Answer,
-			UserID:         requestData.TaskToken.UserID,
-			ItemID:         requestData.TaskToken.ItemID,
-			ItemURL:        requestData.TaskToken.ItemURL,
-			LocalItemID:    requestData.TaskToken.LocalItemID,
-			UserAnswerID:   strconv.FormatInt(userAnswerID, 10),
-			RandomSeed:     requestData.TaskToken.RandomSeed,
-			HintsRequested: hintsInfo.HintsRequested,
-			HintsGiven:     strconv.FormatInt(int64(hintsInfo.HintsCached), 10),
-			AttemptID:      requestData.TaskToken.AttemptID,
+			Answer:          *requestData.Answer,
+			UserID:          requestData.TaskToken.UserID,
+			ItemID:          requestData.TaskToken.ItemID,
+			ItemURL:         requestData.TaskToken.ItemURL,
+			LocalItemID:     requestData.TaskToken.LocalItemID,
+			UserAnswerID:    strconv.FormatInt(userAnswerID, 10),
+			RandomSeed:      requestData.TaskToken.RandomSeed,
+			HintsRequested:  hintsInfo.HintsRequested,
+			HintsGivenCount: strconv.FormatInt(int64(hintsInfo.HintsCached), 10),
+			AttemptID:       requestData.TaskToken.AttemptID,
+			PlatformName:    srv.TokenConfig.PlatformName,
+
+			PrivateKey: srv.TokenConfig.PrivateKey,
 		},
 	})))
 	return service.NoError
@@ -94,11 +99,28 @@ type SubmitRequest struct {
 	TaskToken *token.Task `json:"task_token"`
 	Answer    *string     `json:"answer"`
 
-	converted struct {
-		UserID    int64
-		ItemID    int64
-		AttemptID *int64
+	PublicKey *rsa.PublicKey
+}
+
+type submitRequestWrapper struct {
+	TaskToken *string `json:"task_token"`
+	Answer    *string `json:"answer"`
+}
+
+// UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken
+func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
+	var wrapper submitRequestWrapper
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return err
 	}
+	if wrapper.TaskToken != nil {
+		requestData.TaskToken = &token.Task{PublicKey: requestData.PublicKey}
+		if err := requestData.TaskToken.UnmarshalString(*wrapper.TaskToken); err != nil {
+			return fmt.Errorf("invalid task_token: %s", err.Error())
+		}
+	}
+	requestData.Answer = wrapper.Answer
+	return nil
 }
 
 // Bind checks that all the needed request parameters (task_token & answer) are present and
@@ -112,25 +134,6 @@ func (requestData *SubmitRequest) Bind(r *http.Request) error {
 		return errors.New("missing answer")
 	}
 
-	var err error
-	requestData.converted.UserID, err = strconv.ParseInt(requestData.TaskToken.UserID, 10, 64)
-	if err != nil {
-		return errors.New("wrong idUser in the token")
-	}
-
-	requestData.converted.ItemID, err = strconv.ParseInt(requestData.TaskToken.LocalItemID, 10, 64)
-	if err != nil {
-		return errors.New("wrong idItemLocal in the token")
-	}
-
-	if requestData.TaskToken.AttemptID != nil {
-		var attemptIDValue int64
-		attemptIDValue, err = strconv.ParseInt(*requestData.TaskToken.AttemptID, 10, 64)
-		if err != nil {
-			return errors.New("wrong idAttempt in the token")
-		}
-		requestData.converted.AttemptID = &attemptIDValue
-	}
 	return nil
 }
 
