@@ -15,15 +15,22 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
+// Config contains parsed keys and PlatformName
+type Config struct {
+	PublicKey    *rsa.PublicKey
+	PrivateKey   *rsa.PrivateKey
+	PlatformName string
+}
+
 // Initialize loads keys from the config and resolves the platform name
-func Initialize(conf *config.Platform) (publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, platformName string, err error) {
-	platformName = conf.Name
+func Initialize(conf *config.Token) (tokenConfig *Config, err error) {
+	tokenConfig = &Config{PlatformName: conf.PlatformName}
 
 	bytes, err := ioutil.ReadFile(prepareFileName(conf.PublicKeyFile))
 	if err != nil {
 		return
 	}
-	publicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
+	tokenConfig.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
 	if err != nil {
 		return
 	}
@@ -31,7 +38,7 @@ func Initialize(conf *config.Platform) (publicKey *rsa.PublicKey, privateKey *rs
 	if err != nil {
 		return
 	}
-	privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
+	tokenConfig.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
 	if err != nil {
 		return
 	}

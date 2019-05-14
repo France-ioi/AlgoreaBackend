@@ -40,9 +40,9 @@ type Auth struct {
 	ProxyURL string
 }
 
-// Platform is the part of the config related to the platform
-type Platform struct {
-	Name           string
+// Token is the part of the config related to tokens
+type Token struct {
+	PlatformName   string
 	PublicKeyFile  string
 	PrivateKeyFile string
 }
@@ -54,7 +54,7 @@ type Root struct {
 	ReverseProxy ReverseProxy
 	Logging      Logging
 	Auth         Auth
-	Platform     Platform
+	Token        Token
 }
 
 var (

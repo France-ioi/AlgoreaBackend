@@ -189,15 +189,17 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 	assert.NoError(t, err)
 
-	publicKey, privateKey, platformName, err := Initialize(&config.Platform{
+	tokenConfig, err := Initialize(&config.Token{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
-		Name:           "my platform",
+		PlatformName:   "my platform",
 	})
 	assert.NoError(t, err)
-	assert.Equal(t, expectedPrivateKey, privateKey)
-	assert.Equal(t, expectedPublicKey, publicKey)
-	assert.Equal(t, platformName, "my platform")
+	assert.Equal(t, &Config{
+		PrivateKey:   expectedPrivateKey,
+		PublicKey:    expectedPublicKey,
+		PlatformName: "my platform",
+	}, tokenConfig)
 }
 
 func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
@@ -207,10 +209,10 @@ func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, _, _, err = Initialize(&config.Platform{
+	_, err = Initialize(&config.Token{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  "nosuchfile.pem",
-		Name:           "my platform",
+		PlatformName:   "my platform",
 	})
 	assert.IsType(t, &os.PathError{}, err)
 }
@@ -222,10 +224,10 @@ func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, _, _, err = Initialize(&config.Platform{
+	_, err = Initialize(&config.Token{
 		PrivateKeyFile: "nosuchfile.pem",
 		PublicKeyFile:  tmpFilePublic.Name(),
-		Name:           "my platform",
+		PlatformName:   "my platform",
 	})
 	assert.IsType(t, &os.PathError{}, err)
 }
@@ -243,10 +245,10 @@ func Test_Initialize_CannotParsePublicKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, _, _, err = Initialize(&config.Platform{
+	_, err = Initialize(&config.Token{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
-		Name:           "my platform",
+		PlatformName:   "my platform",
 	})
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
@@ -264,10 +266,10 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	}
 	assert.NoError(t, err)
 
-	_, _, _, err = Initialize(&config.Platform{
+	_, err = Initialize(&config.Token{
 		PrivateKeyFile: tmpFilePrivate.Name(),
 		PublicKeyFile:  tmpFilePublic.Name(),
-		Name:           "my platform",
+		PlatformName:   "my platform",
 	})
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }

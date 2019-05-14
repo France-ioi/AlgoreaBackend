@@ -1,7 +1,6 @@
 package api
 
 import (
-	"crypto/rsa"
 	"net/http/httputil"
 	"net/url"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // Ctx is the context of the root of the API
@@ -21,13 +21,11 @@ type Ctx struct {
 	config       *config.Root
 	db           *database.DB
 	reverseProxy *httputil.ReverseProxy
-	publicKey    *rsa.PublicKey
-	privateKey   *rsa.PrivateKey
-	platformName string
+	tokenConfig  *token.Config
 }
 
 // NewCtx creates a API context
-func NewCtx(conf *config.Root, db *database.DB, publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey, platformName string) (*Ctx, error) {
+func NewCtx(conf *config.Root, db *database.DB, tokenConfig *token.Config) (*Ctx, error) {
 	var err error
 	var proxyURL *url.URL
 
@@ -35,18 +33,16 @@ func NewCtx(conf *config.Root, db *database.DB, publicKey *rsa.PublicKey, privat
 		return nil, err
 	}
 	proxy := httputil.NewSingleHostReverseProxy(proxyURL)
-	return &Ctx{config: conf, db: db, reverseProxy: proxy, publicKey: publicKey, privateKey: privateKey, platformName: platformName}, nil
+	return &Ctx{config: conf, db: db, reverseProxy: proxy, tokenConfig: tokenConfig}, nil
 }
 
 // Router provides routes for the whole API
 func (ctx *Ctx) Router() *chi.Mux {
 	r := chi.NewRouter()
 	base := service.Base{
-		Store:        database.NewDataStore(ctx.db),
-		Config:       ctx.config,
-		PublicKey:    ctx.publicKey,
-		PrivateKey:   ctx.privateKey,
-		PlatformName: ctx.platformName,
+		Store:       database.NewDataStore(ctx.db),
+		Config:      ctx.config,
+		TokenConfig: ctx.tokenConfig,
 	}
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)

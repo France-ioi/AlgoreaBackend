@@ -1,7 +1,6 @@
 package app
 
 import (
-	"crypto/rsa"
 	"math/rand"
 	"time"
 
@@ -17,12 +16,10 @@ import (
 
 // Application is the core state of the app
 type Application struct {
-	HTTPHandler  *chi.Mux
-	Config       *config.Root
-	Database     *database.DB
-	PrivateKey   *rsa.PrivateKey
-	PublicKey    *rsa.PublicKey
-	PlatformName string
+	HTTPHandler *chi.Mux
+	Config      *config.Root
+	Database    *database.DB
+	TokenConfig *token.Config
 }
 
 // New configures application resources and routes.
@@ -46,14 +43,14 @@ func New() (*Application, error) {
 		log.WithField("module", "database").Error(err)
 	}
 
-	publicKey, privateKey, platformName, err := token.Initialize(&conf.Platform)
+	tokenConfig, err := token.Initialize(&conf.Token)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 
 	var apiCtx *api.Ctx
-	if apiCtx, err = api.NewCtx(conf, db, publicKey, privateKey, platformName); err != nil {
+	if apiCtx, err = api.NewCtx(conf, db, tokenConfig); err != nil {
 		log.Error(err)
 		return nil, err
 	}
@@ -72,11 +69,9 @@ func New() (*Application, error) {
 	router.Mount(conf.Server.RootPath, apiCtx.Router())
 
 	return &Application{
-		HTTPHandler:  router,
-		Config:       conf,
-		Database:     db,
-		PublicKey:    publicKey,
-		PrivateKey:   privateKey,
-		PlatformName: platformName,
+		HTTPHandler: router,
+		Config:      conf,
+		Database:    db,
+		TokenConfig: tokenConfig,
 	}, nil
 }
