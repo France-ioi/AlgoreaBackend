@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/lithammer/dedent"
 	"gopkg.in/yaml.v2"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
@@ -46,6 +48,28 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	return db
 }
 
+// SetupDBWithFixtureString creates a new DB connection, empties the DB,
+// and loads fixtures from the string (yaml with a tableName->[]dataRow map)
+func SetupDBWithFixtureString(fixture string) *database.DB {
+	rawDb, err := OpenRawDBConnection()
+	if err != nil {
+		panic(err)
+	}
+
+	// Seed the DB
+	EmptyDB(rawDb)
+	loadFixtureChainFromString(rawDb, fixture)
+
+	// Return a new db connection
+	var db *database.DB
+	db, err = database.Open(rawDb)
+	if err != nil {
+		panic(err)
+	}
+
+	return db
+}
+
 // OpenRawDBConnection creates a new connection to the DB specified in the config
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
@@ -61,32 +85,66 @@ func OpenRawDBConnection() (*sql.DB, error) {
 	return rawDb, err
 }
 
-// LoadFixture load the fixtures from `<current_pkg_dir>/testdata/<dirname/`.
-// Each file in this directory mush be in yaml format and will be loaded into table
-//  with the same name as the filename (without extension)
+// LoadFixture loads fixtures from `<current_pkg_dir>/testdata/<fileName>/` directory
+// or `<current_pkg_dir>/testdata/<fileName>` file.
+// Each file in this directory must be in yaml format.
+// If a file name satisfies '*.chain.yaml' mask, the file is treated as a tableName->[]dataRow map.
+// Otherwise, data will be loaded into table with the same name as the filename (without extension).
 // Note that you should probably empty the DB before using this function.
-func LoadFixture(db *sql.DB, dirName string) {
-	dirPath := filepath.Join(fixtureDir, dirName)
-	files, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		panic(fmt.Errorf("unable to load fixture dir: %s", err.Error()))
+func LoadFixture(db *sql.DB, fileName string) {
+	var files []os.FileInfo
+	var err error
+	filePath := filepath.Join(fixtureDir, fileName)
+	stat, err := os.Stat(filePath)
+	if err == nil && stat.IsDir() {
+		files, err = ioutil.ReadDir(filePath)
+		if err != nil {
+			panic(fmt.Errorf("unable to load fixture dir: %s", err.Error()))
+		}
+	} else {
+		file, err := os.Lstat(filePath)
+		if err != nil {
+			panic(fmt.Errorf("unable to load fixture file: %s", err.Error()))
+		}
+		filePath = filepath.Dir(filePath)
+		files = []os.FileInfo{file}
 	}
 	for _, f := range files {
 		var err error
 		var data []byte
 		filename := f.Name()
-		tableName := strings.TrimSuffix(filename, filepath.Ext(filename))
-		data, err = ioutil.ReadFile(filepath.Join(fixtureDir, dirName, filename)) // nolint: gosec
+		data, err = ioutil.ReadFile(filepath.Join(filePath, filename)) // nolint: gosec
 		if err != nil {
 			panic(err)
 		}
-		content := make([]map[string]interface{}, 0)
-		err = yaml.Unmarshal(data, &content)
-		if err != nil {
-			panic(err)
+		name := strings.TrimSuffix(filename, filepath.Ext(filename))
+		if strings.HasSuffix(name, ".chain") {
+			loadFixtureChainFromString(db, string(data))
+		} else {
+			var content []map[string]interface{}
+			err = yaml.Unmarshal(data, &content)
+			if err != nil {
+				panic(err)
+			}
+			tableName := name
+			logging.SharedLogger.Infof("Loading data into %q:\n%s", tableName, string(data))
+			InsertBatch(db, tableName, content)
 		}
-		logging.SharedLogger.Infof("Loading data into %q:\n%s", tableName, string(data))
-		InsertBatch(db, tableName, content)
+	}
+}
+
+func loadFixtureChainFromString(db *sql.DB, fixture string) {
+	var content map[string][]map[string]interface{}
+	fixture = dedent.Dedent(fixture)
+	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
+	bytesFixture := []byte(fixture)
+	logging.SharedLogger.Infof("Loading data chain:\n%s", bytesFixture)
+	err := yaml.Unmarshal(bytesFixture, &content)
+	if err != nil {
+		panic(err)
+	}
+	for tableName, tableData := range content {
+		InsertBatch(db, tableName, tableData)
 	}
 }
 
