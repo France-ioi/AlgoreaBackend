@@ -248,10 +248,10 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 // CheckSubmissionRights checks if the user can submit an answer for the given item (task):
 // 1. If the task is inside a time-limited chapter, the method checks that the task is a part of
 //    the user's active contest (or the user has full access to one of the task's chapters)
-// 2. The method also check that the item (task) exists and is not read-only.
+// 2. The method also checks that the item (task) exists and is not read-only.
 //
 // Note: This method doesn't check if the user has access to the item.
-// Note 2: This method also can close the user's active contest (or the user's active team contest).
+// Note 2: This method may also close the user's active contest (or the user's active team contest).
 func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess bool, reason, err error) {
 	s.mustBeInTransaction() // because it may close a contest
 	recoverPanics(&err)
@@ -276,7 +276,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	// TODO: handle case where the item is both in a contest and in a non-contest chapter the user has access to
 
 	// ItemID & FullAccess for time-limited ancestors of the item
-	// for that the user has at least grayed access.
+	// to which the user has at least grayed access.
 	// Note that while an answer is always related to a task,
 	// tasks cannot be time-limited, only chapters can.
 	// So, actually here we select time-limited chapters that are ancestors of the task.
@@ -293,14 +293,12 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 		Group("items.ID").Scan(&contestItems).Error())
 
 	// The item is not time-limited itself and it doesn't have time-limited ancestors the user has access to.
-	// Or maybe the user doesn't have access to the item at all... But we believe in the item token.
-	// Actually, the token's lifetime is two days long, and the access rights might be changed during this time
-	// which is a problem.
+	// Or maybe the user doesn't have access to the item at all... We ignore this possibility here
 	if len(contestItems) == 0 {
 		return true, nil // The user can submit an answer
 	}
 
-	activeContestErr := errors.New("the contest has not been started yet or has been already finished")
+	activeContestErr := errors.New("the contest has not started yet or has already finished")
 
 	activeContest := s.getActiveContestInfoForUser(user)
 	if activeContest == nil {
