@@ -343,6 +343,28 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	return newDB(conn.db.Pluck(column, values))
 }
 
+// PluckFirst is used to query a single column and take the first value
+//     var id int64
+//     db.Table("users").PluckFirst("ID", &id)
+// The 'values' parameter should be a pointer to a value
+func (conn *DB) PluckFirst(column string, value interface{}) *DB {
+	valuesReflValue := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(value).Elem()), 0, 1)
+	valuesPtrReflValue := reflect.New(reflect.SliceOf(reflect.TypeOf(value).Elem()))
+	valuesPtrReflValue.Elem().Set(valuesReflValue)
+	valuesReflValue = valuesPtrReflValue.Elem()
+	values := valuesPtrReflValue.Interface()
+	result := newDB(conn.db.Limit(1).Pluck(column, values))
+	if result.Error() != nil {
+		return result
+	}
+	if valuesReflValue.Len() == 0 {
+		_ = result.db.AddError(gorm.ErrRecordNotFound) // nolint:gosec
+		return result
+	}
+	reflect.ValueOf(value).Elem().Set(valuesReflValue.Index(0))
+	return result
+}
+
 // Take returns a record that match given conditions, the order will depend on the database implementation
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))

@@ -14,6 +14,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/types"
@@ -538,6 +539,62 @@ func TestDB_Pluck_NonPointer(t *testing.T) {
 	assert.PanicsWithValue(t, "values should be a pointer to a slice, not int", func() {
 		db.Pluck("ID", result)
 	})
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_PluckFirst(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	var result int64
+	pluckFirstDB := db.PluckFirst("ID", &result)
+
+	assert.NotEqual(t, pluckFirstDB, db)
+	assert.NoError(t, pluckFirstDB.Error())
+	assert.Equal(t, int64(1), result)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_PluckFirst_NotFound(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"id"}))
+
+	db = db.Table("myTable")
+
+	var result int64
+	pluckFirstDB := db.PluckFirst("ID", &result)
+
+	assert.NotEqual(t, pluckFirstDB, db)
+	assert.Equal(t, gorm.ErrRecordNotFound, pluckFirstDB.Error())
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_PluckFirst_Error(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+		WillReturnError(expectedError)
+
+	db = db.Table("myTable")
+
+	var result int64
+	pluckFirstDB := db.PluckFirst("ID", &result)
+
+	assert.NotEqual(t, pluckFirstDB, db)
+	assert.Equal(t, expectedError, pluckFirstDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
