@@ -15,6 +15,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
 	s.Step(`^I am the user with ID "([^"]*)"$`, ctx.IAmUserWithID)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
+	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group password is "([^"]*)"$`, ctx.TheGeneratedGroupPasswordIs)
 	s.Step(`^the generated group passwords are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupPasswordsAre)
 

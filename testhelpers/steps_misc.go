@@ -41,6 +41,12 @@ func (ctx *TestContext) TimeNow(timeStr string) error { // nolint
 	return err
 }
 
+func (ctx *TestContext) TimeIsFrozen() error { // nolint
+	currentTime := time.Now()
+	monkey.Patch(time.Now, func() time.Time { return currentTime })
+	return nil
+}
+
 func (ctx *TestContext) TheGeneratedGroupPasswordIs(generatedPassword string) error { // nolint
 	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) { return generatedPassword, nil }) // nolint:unparam
 	return nil
