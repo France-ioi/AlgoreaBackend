@@ -52,7 +52,8 @@ func TestUserItemStore_CreateIfMissing(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture()
 
 	userItemStore := database.NewDataStore(db).UserItems()
-	userItemStore.CreateIfMissing(12, 34)
+	err := userItemStore.CreateIfMissing(12, 34)
+	assert.NoError(t, err)
 
 	type userItem struct {
 		UserID                    int64  `gorm:"column:idUser"`

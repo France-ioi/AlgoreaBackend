@@ -6,11 +6,11 @@ type UserItemStore struct {
 }
 
 // CreateIfMissing inserts a new userID-itemID pair into `users_items` if it doesn't exist.
-func (s *UserItemStore) CreateIfMissing(userID, itemID int64) {
-	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+func (s *UserItemStore) CreateIfMissing(userID, itemID int64) error {
+	return s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		userItemID := NewDataStore(db).NewID()
 		return db.db.Exec(`
 			INSERT IGNORE INTO users_items (ID, idUser, idItem, sAncestorsComputationState)
 			VALUES (?, ?, ?, 'todo')`, userItemID, userID, itemID).Error
-	}))
+	})
 }

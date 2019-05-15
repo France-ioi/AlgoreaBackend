@@ -55,7 +55,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		}
 
 		userItemStore := store.UserItems()
-		userItemStore.CreateIfMissing(user.UserID, requestData.TaskToken.Converted.LocalItemID)
+		err = userItemStore.CreateIfMissing(user.UserID, requestData.TaskToken.Converted.LocalItemID)
+		service.MustNotBeError(err)
 
 		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
 			user.UserID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
