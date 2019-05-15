@@ -363,11 +363,14 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		Joins(`
 			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
 				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.UserID).
-		Order("users_items.sContestStartDate DESC").
-		Limit(1).Scan(&results).Error())
+		Order("users_items.sContestStartDate DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
+	}
+
+	if len(results) > 1 {
+		log.Warnf("User with ID = %d has %d (>1) active contests", user.UserID, len(results))
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds

@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -195,18 +197,22 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {ID: 3, sLogin: 3}
 			- {ID: 4, sLogin: 4}
 			- {ID: 5, sLogin: 5}
+			- {ID: 6, sLogin: 6}
 		items: [{ID: 12}, {ID: 13}, {ID: 14, sDuration: 10:00:00}, {ID: 15, sTeamMode: "None"}]
 		users_items:
 			- {idUser: 2, idItem: 12} # not started
 			- {idUser: 3, idItem: 13, sContestStartDate: 2019-03-22T08:44:55Z, sFinishDate: 2019-03-23T08:44:55Z} #finished
 			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z, sAdditionalTime: 0000-00-00 00:01:00} # ok
-			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22T08:44:55Z} # ok with team mode`)
+			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22T08:44:55Z} # ok with team mode
+			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z, sAdditionalTime: 0000-00-00 00:01:00} # multiple
+			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22T08:43:55Z, sAdditionalTime: 0000-00-00 00:01:00} # multiple`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
-		name   string
-		userID int64
-		want   *database.ActiveContestInfo
+		name    string
+		userID  int64
+		want    *database.ActiveContestInfo
+		wantLog string
 	}{
 		{name: "no item", userID: 1, want: nil},
 		{name: "not started", userID: 2, want: nil},
@@ -226,12 +232,24 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			StartTime:         time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
 			TeamMode:          ptrString("None"),
 		}},
+		{
+			name: "ok with multiple active contests", userID: 6, want: &database.ActiveContestInfo{
+				ItemID:            14,
+				UserID:            6,
+				DurationInSeconds: 36060,
+				EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
+				StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+			},
+			wantLog: "User with ID = 6 has 2 (>1) active contests",
+		},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			store := database.NewDataStore(db)
 			user := database.NewUser(test.userID, store.Users(), nil)
+			hook, restoreLogFunc := logging.MockSharedLoggerHook()
+			defer restoreLogFunc()
 
 			got := store.Items().GetActiveContestInfoForUser(user)
 			if got != nil && test.want != nil {
@@ -241,6 +259,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				got.Now = test.want.Now
 			}
 			assert.Equal(t, test.want, got)
+			assert.Equal(t, test.wantLog, (&loggingtest.Hook{hook}).GetAllLogs())
 		})
 	}
 }
