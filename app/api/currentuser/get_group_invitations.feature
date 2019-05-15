@@ -53,7 +53,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
       {
@@ -70,7 +70,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       },
       {
@@ -82,7 +82,7 @@ Feature: Get group invitations for the current user
           "description": "Our class group",
           "type": "Class"
         },
-        "status_date": "{groups_groups[1][sStatusDate]}",
+        "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
         "type": "invitationSent"
       }
     ]
@@ -109,7 +109,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       }
     ]
@@ -136,7 +136,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
       {
@@ -153,7 +153,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       }
     ]

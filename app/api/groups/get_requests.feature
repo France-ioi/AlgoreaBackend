@@ -43,7 +43,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {},
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
       {
@@ -61,7 +61,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       },
       {
@@ -77,7 +77,7 @@ Feature: Get requests for group_id
           "id": "2",
           "login": "user"
         },
-        "status_date": "{groups_groups[2][sStatusDate]}",
+        "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
         "type": "invitationRefused"
       },
       {
@@ -93,7 +93,7 @@ Feature: Get requests for group_id
           "id": "1",
           "login": "owner"
         },
-        "status_date": "{groups_groups[1][sStatusDate]}",
+        "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
         "type": "invitationSent"
       }
     ]
@@ -119,7 +119,7 @@ Feature: Get requests for group_id
           "id": "1",
           "login": "owner"
         },
-        "status_date": "{groups_groups[1][sStatusDate]}",
+        "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
         "type": "invitationSent"
       },
       {
@@ -137,7 +137,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       },
       {
@@ -153,7 +153,7 @@ Feature: Get requests for group_id
           "id": "2",
           "login": "user"
         },
-        "status_date": "{groups_groups[2][sStatusDate]}",
+        "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
         "type": "invitationRefused"
       },
       {
@@ -165,7 +165,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {},
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       }
     ]
@@ -187,7 +187,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {},
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
       {
@@ -205,7 +205,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       },
       {
@@ -221,7 +221,7 @@ Feature: Get requests for group_id
           "id": "1",
           "login": "owner"
         },
-        "status_date": "{groups_groups[1][sStatusDate]}",
+        "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
         "type": "invitationSent"
       },
       {
@@ -237,7 +237,7 @@ Feature: Get requests for group_id
           "id": "2",
           "login": "user"
         },
-        "status_date": "{groups_groups[2][sStatusDate]}",
+        "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
         "type": "invitationRefused"
       }
     ]
@@ -259,7 +259,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {},
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       }
     ]
@@ -281,7 +281,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {},
-        "status_date": "{groups_groups[4][sStatusDate]}",
+        "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
       {
@@ -299,7 +299,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{groups_groups[3][sStatusDate]}",
+        "status_date": "{{db("groups_groups[3][sStatusDate]")}}",
         "type": "requestSent"
       },
       {
@@ -315,7 +315,7 @@ Feature: Get requests for group_id
           "id": "1",
           "login": "owner"
         },
-        "status_date": "{groups_groups[1][sStatusDate]}",
+        "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
         "type": "invitationSent"
       }
     ]

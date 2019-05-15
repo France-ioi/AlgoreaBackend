@@ -15,6 +15,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
 	s.Step(`^I am the user with ID "([^"]*)"$`, ctx.IAmUserWithID)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
+	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group password is "([^"]*)"$`, ctx.TheGeneratedGroupPasswordIs)
 	s.Step(`^the generated group passwords are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupPasswordsAre)
 
@@ -22,6 +23,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.TheResponseCodeShouldBe)
 	s.Step(`^the response body should be, in JSON:$`, ctx.TheResponseBodyShouldBeJSON)
+	s.Step(`^the response body decoded as "([^"]+)" should be, in JSON:$`, ctx.TheResponseDecodedBodyShouldBeJSON)
 	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.TheResponseHeaderShouldBe)
 	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
