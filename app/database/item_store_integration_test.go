@@ -96,7 +96,7 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 		{name: "read-only", itemID: 12, wantHasAccess: false, wantReason: errors.New("item is read-only"), wantError: nil},
 		{name: "not found", itemID: 10, wantHasAccess: false, wantReason: errors.New("no such item"), wantError: nil},
 		{name: "finished time-limited", itemID: 14, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished"), wantError: nil},
+			wantReason: errors.New("the contest has not started yet or has already finished"), wantError: nil},
 	}
 	for _, test := range tests {
 		test := test
@@ -127,15 +127,15 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 	}{
 		{name: "no items", itemID: 404, userID: 1, wantHasAccess: true, wantReason: nil},
 		{name: "user has no active contest", itemID: 14, userID: 1, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished")},
+			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active team contest has expired", itemID: 14, userID: 2, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished")},
+			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active team contest has expired (again)", itemID: 14, userID: 2, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished")},
+			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest has expired", itemID: 15, userID: 3, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished")},
+			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest has expired (again)", itemID: 15, userID: 3, wantHasAccess: false,
-			wantReason: errors.New("the contest has not been started yet or has been already finished")},
+			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).UserItems().
