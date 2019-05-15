@@ -305,7 +305,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 		return false, activeContestErr
 	}
 
-	if !activeContest.EndTime.After(activeContest.Now) {
+	if activeContest.IsOver() {
 		if activeContest.TeamMode != nil {
 			s.closeTeamContest(activeContest.ItemID, user)
 		} else {
@@ -334,6 +334,10 @@ type activeContestInfo struct {
 	DurationInSeconds int32
 	EndTime           time.Time
 	StartTime         time.Time
+}
+
+func (contest *activeContestInfo) IsOver() bool {
+	return contest.Now.After(contest.EndTime) || contest.Now.Equal(contest.EndTime)
 }
 
 // Closes the time-limited contest if needed or returns time stats
