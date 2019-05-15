@@ -1,3 +1,4 @@
+// Package items provides API services for items managing
 package items
 
 import (

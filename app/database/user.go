@@ -27,6 +27,7 @@ type UserData struct {
 	AllowSubgroups    bool   `sql:"column:allowSubgroups"`
 }
 
+// ErrUserNotFound is returned when database.User cannot find the user in the DB
 var ErrUserNotFound = errors.New("user not found")
 
 // NewUser creates a User instance

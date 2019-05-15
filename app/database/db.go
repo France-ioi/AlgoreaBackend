@@ -304,7 +304,7 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 		rowMap := make(map[string]interface{})
 		for i, columnName := range cols {
 			if value, ok := columns[i].([]byte); ok {
-				columns[i] = *(*string)(unsafe.Pointer(&value))
+				columns[i] = *(*string)(unsafe.Pointer(&value)) // nolint:gosec
 			}
 			rowMap[columnName] = columns[i]
 		}
@@ -417,6 +417,7 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 	return newDB(conn.db.Set(name, value))
 }
 
+// ErrNoTransaction means that a called method/function cannot work outside of a transaction
 var ErrNoTransaction = errors.New("should be executed in a transaction")
 
 func (conn *DB) mustBeInTransaction() {

@@ -1,3 +1,4 @@
+// Package answers provides API services for task answers managing
 package answers
 
 import (

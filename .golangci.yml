@@ -62,10 +62,14 @@ run:
     - pkg/golinters/goanalysis/(checker|passes)
 
 issues:
+  exclude-use-default: false
   exclude-rules:
     - text: "weak cryptographic primitive"
       linters:
         - gosec
+    - text: "should have a package comment, unless it's in another file for this package"
+      linters:
+        - golint
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

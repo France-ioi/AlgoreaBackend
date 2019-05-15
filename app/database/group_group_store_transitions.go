@@ -4,22 +4,33 @@ import (
 	"strings"
 )
 
+// GroupGroupType represents a type of relation between two groups
 type GroupGroupType string
 
 const (
-	InvitationSent     GroupGroupType = "invitationSent"
-	RequestSent        GroupGroupType = "requestSent"
+	// InvitationSent means there is a pending group admin's invitation for user to join a group
+	InvitationSent GroupGroupType = "invitationSent"
+	// RequestSent means there is a pending user's request to join a group
+	RequestSent GroupGroupType = "requestSent"
+	// InvitationAccepted means a user is a member of a group since he has accepted an invitation
 	InvitationAccepted GroupGroupType = "invitationAccepted"
-	RequestAccepted    GroupGroupType = "requestAccepted"
-	InvitationRefused  GroupGroupType = "invitationRefused"
-	RequestRefused     GroupGroupType = "requestRefused"
-	Removed            GroupGroupType = "removed"
-	Left               GroupGroupType = "left"
-	Direct             GroupGroupType = "direct"
-	NoRelation         GroupGroupType = ""
+	// RequestAccepted means a user is a member of a group since a group admin has accepted his request
+	RequestAccepted GroupGroupType = "requestAccepted"
+	// InvitationRefused means a user refused an invitation to join a group
+	InvitationRefused GroupGroupType = "invitationRefused"
+	// RequestRefused means an admin refused a user's request to join a group
+	RequestRefused GroupGroupType = "requestRefused"
+	// Removed means a user was removed from a group
+	Removed GroupGroupType = "removed"
+	// Left means a user left a group
+	Left GroupGroupType = "left"
+	// Direct means a direct relation between groups
+	Direct GroupGroupType = "direct"
+	// NoRelation means there is no row for the group pair in the groups_groups table
+	NoRelation GroupGroupType = ""
 )
 
-func (groupType GroupGroupType) IsActive() bool {
+func (groupType GroupGroupType) isActive() bool {
 	switch groupType {
 	case InvitationAccepted, RequestAccepted, Direct:
 		return true
@@ -27,22 +38,35 @@ func (groupType GroupGroupType) IsActive() bool {
 	return false
 }
 
+// GroupGroupTransitionAction represents a groups_groups relation transition action
 type GroupGroupTransitionAction int
 
 const (
+	// AdminCreatesInvitation means a group admin invites new users to the group
 	AdminCreatesInvitation GroupGroupTransitionAction = iota
+	// UserCreatesRequest means a user sends request to become a group member
 	UserCreatesRequest
+	// UserAcceptsInvitation means a user accepts a group invitation
 	UserAcceptsInvitation
+	// AdminAcceptsRequest means a group admin accepts a request
 	AdminAcceptsRequest
+	// UserRefusesInvitation means a user refuses a group invitation
 	UserRefusesInvitation
+	// AdminRefusesRequest means a group admin refuses a request to join the group
 	AdminRefusesRequest
-	// This action marks relations as "removed". It doesn't check if a child is a user or not.
+	// AdminRemovesUser means a group admin removes a user from a group. It marks relations as "removed".
+	// It doesn't check if a child is a user or not.
 	AdminRemovesUser
+	// AdminCancelsInvitation means a group admin cancels an invitation
 	AdminCancelsInvitation
+	// UserLeavesGroup means a user leaves a group
 	UserLeavesGroup
+	// UserCancelsRequest means a user cancels his request to join a group
 	UserCancelsRequest
-	// This action creates a new direct relation. It doesn't check if a child is a user or not.
+	// AdminAddsDirectRelation means a group admin creates a direct relation between groups.
+	// It creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
+	// AdminRemovesDirectRelation removes a direct relation
 	AdminRemovesDirectRelation
 )
 
@@ -167,17 +191,24 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 }
 
+// GroupGroupTransitionResult is an enum{Cycle, Invalid, Success, Unchanged}
 type GroupGroupTransitionResult string
 
 const (
-	Cycle     GroupGroupTransitionResult = "cycle"
-	Invalid   GroupGroupTransitionResult = "invalid"
-	Success   GroupGroupTransitionResult = "success"
+	// Cycle means that the transition wasn't performed because it would create a cycle in groups_groups graph
+	Cycle GroupGroupTransitionResult = "cycle"
+	// Invalid means that the transition is impossible
+	Invalid GroupGroupTransitionResult = "invalid"
+	// Success means that the transition was performed successfully
+	Success GroupGroupTransitionResult = "success"
+	// Unchanged means that the transition has been already performed
 	Unchanged GroupGroupTransitionResult = "unchanged"
 )
 
+// GroupGroupTransitionResults represents results of mass transition (format: map{ id -> GroupGroupTransitionResult })
 type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 
+// Transition performs a groups_groups relation transition according to groupGroupTransitionRules
 func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	parentGroupID int64, childGroupIDs []int64, performedByUserID int64) (result GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
@@ -349,7 +380,7 @@ func buildOneTransition(id int64, oldType, toType GroupGroupType, action GroupGr
 		default:
 			idsToUpdate[id] = toType
 		}
-		if toType.IsActive() || oldType == NoRelation {
+		if toType.isActive() || oldType == NoRelation {
 			idsToCheckCycle[id] = true
 		}
 	} else {

@@ -6,7 +6,7 @@ import (
 )
 
 type (
-	// Int64 is an integer which can be set/not-set and null/not-null
+	// Data is a value which can be set/not-set and null/not-null
 	Data struct {
 		Value interface{}
 		Set   bool
