@@ -144,7 +144,7 @@ func Test_UnmarshalString(t *testing.T) {
 	}
 }
 
-func TestTaskToken_MarshalJSON(t *testing.T) {
+func TestToken_MarshalJSON(t *testing.T) {
 	tests := []struct {
 		name        string
 		structType  reflect.Type
@@ -188,6 +188,107 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
 			result := resultRefl.Interface().(json.Unmarshaler)
 			assert.NoError(t, result.UnmarshalJSON(token))
+			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
+		})
+	}
+}
+
+func TestToken_Sign(t *testing.T) {
+	tests := []struct {
+		name        string
+		structType  reflect.Type
+		payloadMap  map[string]interface{}
+		payloadType reflect.Type
+	}{
+		{
+			name:        "task token",
+			structType:  reflect.TypeOf(Task{}),
+			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+			payloadType: reflect.TypeOf(payloads.TaskToken{}),
+		},
+		{
+			name:        "answer token",
+			structType:  reflect.TypeOf(Answer{}),
+			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
+			defer monkey.UnpatchAll()
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			assert.NoError(t, err)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			assert.NoError(t, err)
+
+			payloadRefl := reflect.New(test.payloadType)
+			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			payload := payloadRefl.Interface()
+			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
+			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface().(Signer)
+			token, err := tokenStruct.Sign(privateKey)
+			assert.NoError(t, err)
+
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(UnmarshalStringer)
+			assert.NoError(t, result.UnmarshalString(token))
+			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
+		})
+	}
+}
+
+func TestToken_MarshalString(t *testing.T) {
+	tests := []struct {
+		name        string
+		structType  reflect.Type
+		payloadMap  map[string]interface{}
+		payloadType reflect.Type
+	}{
+		{
+			name:        "task token",
+			structType:  reflect.TypeOf(Task{}),
+			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+			payloadType: reflect.TypeOf(payloads.TaskToken{}),
+		},
+		{
+			name:        "answer token",
+			structType:  reflect.TypeOf(Answer{}),
+			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
+			defer monkey.UnpatchAll()
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			assert.NoError(t, err)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			assert.NoError(t, err)
+
+			payloadRefl := reflect.New(test.payloadType)
+			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			payloadRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			payload := payloadRefl.Interface()
+			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
+			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface()
+			token, err := tokenStruct.(MarshalStringer).MarshalString()
+			assert.NoError(t, err)
+			tokenJSON, err := tokenStruct.(json.Marshaler).MarshalJSON()
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(tokenJSON), fmt.Sprintf("%q", token))
+
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(UnmarshalStringer)
+			assert.NoError(t, result.UnmarshalString(token))
 			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
 		})
 	}

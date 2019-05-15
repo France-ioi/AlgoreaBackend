@@ -59,7 +59,22 @@ type UnmarshalStringer interface {
 	UnmarshalString(string) error
 }
 
+// MarshalStringer is the interface implemented by types
+// that can marshal themselves into a string.
+// For example, a token's string description is `{ENCODED_TOKEN}`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`
+type MarshalStringer interface {
+	MarshalString() (string, error)
+}
+
+// Signer is the interface implemented by types
+// that can sign themselves returning a token in a string.
+type Signer interface {
+	Sign(*rsa.PrivateKey) (string, error)
+}
+
 var _ UnmarshalStringer = (*abstract)(nil)
+var _ MarshalStringer = (*abstract)(nil)
 
 func marshalJSON(payload interface{}) ([]byte, error) {
 	return (&abstract{Payload: payload}).MarshalJSON()

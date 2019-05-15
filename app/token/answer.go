@@ -36,4 +36,6 @@ var (
 	_ json.Unmarshaler  = (*Answer)(nil)
 	_ json.Marshaler    = (*Answer)(nil)
 	_ UnmarshalStringer = (*Answer)(nil)
+	_ MarshalStringer   = (*Task)(nil)
+	_ Signer            = (*Task)(nil)
 )
