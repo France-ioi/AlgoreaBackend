@@ -21,6 +21,7 @@ Feature: Submit a new answer
 
   Scenario: User is able to submit a new answer
     Given I am the user with ID "10"
+    And time is frozen
     When I send a POST request to "/answers" with the following body:
       """
       {
@@ -65,6 +66,7 @@ Feature: Submit a new answer
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
+    And time is frozen
     When I send a POST request to "/answers" with the following body:
       """
       {
