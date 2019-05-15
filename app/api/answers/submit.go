@@ -75,22 +75,23 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
-		"answer_token": &token.Answer{
-			Answer:          *requestData.Answer,
-			UserID:          requestData.TaskToken.UserID,
-			ItemID:          requestData.TaskToken.ItemID,
-			ItemURL:         requestData.TaskToken.ItemURL,
-			LocalItemID:     requestData.TaskToken.LocalItemID,
-			UserAnswerID:    strconv.FormatInt(userAnswerID, 10),
-			RandomSeed:      requestData.TaskToken.RandomSeed,
-			HintsRequested:  hintsInfo.HintsRequested,
-			HintsGivenCount: strconv.FormatInt(int64(hintsInfo.HintsCached), 10),
-			AttemptID:       requestData.TaskToken.AttemptID,
-			PlatformName:    srv.TokenConfig.PlatformName,
+	answerToken, err := (&token.Answer{
+		Answer:          *requestData.Answer,
+		UserID:          requestData.TaskToken.UserID,
+		ItemID:          requestData.TaskToken.ItemID,
+		ItemURL:         requestData.TaskToken.ItemURL,
+		LocalItemID:     requestData.TaskToken.LocalItemID,
+		UserAnswerID:    strconv.FormatInt(userAnswerID, 10),
+		RandomSeed:      requestData.TaskToken.RandomSeed,
+		HintsRequested:  hintsInfo.HintsRequested,
+		HintsGivenCount: strconv.FormatInt(int64(hintsInfo.HintsCached), 10),
+		AttemptID:       requestData.TaskToken.AttemptID,
+		PlatformName:    srv.TokenConfig.PlatformName,
+	}).Sign(srv.TokenConfig.PrivateKey)
+	service.MustNotBeError(err)
 
-			PrivateKey: srv.TokenConfig.PrivateKey,
-		},
+	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
+		"answer_token": answerToken,
 	})))
 	return service.NoError
 }

@@ -44,6 +44,11 @@ func (t *abstract) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), privateKey))), nil
 }
 
+func (t *abstract) MarshalString() (string, error) {
+	privateKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PrivateKey").Interface().(*rsa.PrivateKey)
+	return string(Generate(payloads.ConvertIntoMap(t.Payload), privateKey)), nil
+}
+
 var _ json.Marshaler = (*abstract)(nil)
 
 // UnmarshalStringer is the interface implemented by types
@@ -62,6 +67,10 @@ func marshalJSON(payload interface{}) ([]byte, error) {
 
 func unmarshalJSON(data []byte, payload interface{}) error {
 	return (&abstract{Payload: payload}).UnmarshalJSON(data)
+}
+
+func marshalString(payload interface{}) (string, error) {
+	return (&abstract{Payload: payload}).MarshalString()
 }
 
 func unmarshalString(data string, payload interface{}) error {
