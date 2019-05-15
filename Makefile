@@ -36,6 +36,9 @@ all: build
 build: $(BIN_PATH)
 $(BIN_PATH): .FORCE # let go decide what need to be rebuilt
 	$(GOBUILD) -o $(BIN_PATH) -v -race
+gen-keys:
+	openssl genpkey -algorithm RSA -out private_key.pem 2>/dev/null | openssl genrsa -out private_key.pem 1024
+	openssl rsa -pubout -in private_key.pem -out public_key.pem
 db-restore: $(BIN_PATH)
 	$(BIN_PATH) db-restore
 db-migrate: $(BIN_PATH)
@@ -73,4 +76,4 @@ $(GOLANGCILINT):
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.15.0
 
 .FORCE: # force the rule using it to always re-run
-.PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate
+.PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate gen-keys

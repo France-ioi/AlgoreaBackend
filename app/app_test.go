@@ -15,6 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 func TestNew_Success(t *testing.T) {
@@ -59,13 +60,25 @@ func TestNew_DBErr(t *testing.T) {
 
 func TestNew_APIErr(t *testing.T) {
 	assert := assertlib.New(t)
-	patch := monkey.Patch(api.NewCtx, func(*config.Root, *database.DB) (*api.Ctx, error) {
-		return nil, errors.New("api creation error")
-	})
+	patch := monkey.Patch(api.NewCtx,
+		func(conf *config.Root, db *database.DB, tokenConfig *token.Config) (*api.Ctx, error) {
+			return nil, errors.New("api creation error")
+		})
 	defer patch.Unpatch()
 	app, err := New()
 	assert.Nil(app)
 	assert.EqualError(err, "api creation error")
+}
+
+func TestNew_TokenErr(t *testing.T) {
+	assert := assertlib.New(t)
+	patch := monkey.Patch(token.Initialize, func(*config.Token) (*token.Config, error) {
+		return nil, errors.New("keys loading error")
+	})
+	defer patch.Unpatch()
+	app, err := New()
+	assert.Nil(app)
+	assert.EqualError(err, "keys loading error")
 }
 
 // The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves

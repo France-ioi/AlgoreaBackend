@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
+
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
 // ErrorResponse is an extension of the response for returning errors
@@ -38,7 +40,7 @@ func (e APIError) httpResponse() render.Renderer {
 		return &result
 	}
 
-	if fieldErrors, ok := e.Error.(FieldErrors); ok {
+	if fieldErrors, ok := e.Error.(formdata.FieldErrors); ok {
 		result.Errors = fieldErrors
 	}
 

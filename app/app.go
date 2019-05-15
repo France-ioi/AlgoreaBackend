@@ -11,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
 // Application is the core state of the app
@@ -18,6 +19,7 @@ type Application struct {
 	HTTPHandler *chi.Mux
 	Config      *config.Root
 	Database    *database.DB
+	TokenConfig *token.Config
 }
 
 // New configures application resources and routes.
@@ -41,8 +43,14 @@ func New() (*Application, error) {
 		log.WithField("module", "database").Error(err)
 	}
 
+	tokenConfig, err := token.Initialize(&conf.Token)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
 	var apiCtx *api.Ctx
-	if apiCtx, err = api.NewCtx(conf, db); err != nil {
+	if apiCtx, err = api.NewCtx(conf, db, tokenConfig); err != nil {
 		log.Error(err)
 		return nil, err
 	}
@@ -60,5 +68,10 @@ func New() (*Application, error) {
 
 	router.Mount(conf.Server.RootPath, apiCtx.Router())
 
-	return &Application{router, conf, db}, nil
+	return &Application{
+		HTTPHandler: router,
+		Config:      conf,
+		Database:    db,
+		TokenConfig: tokenConfig,
+	}, nil
 }

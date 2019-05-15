@@ -1,4 +1,4 @@
-package service
+package formdata
 
 import (
 	"net/http"
@@ -164,6 +164,180 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			f := NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
 			err := f.ParseJSONRequestData(req)
+			if tt.wantErr != "" {
+				assert.NotNil(t, err, "Should produce an error, but it did not")
+				if err != nil {
+					assert.Equal(t, tt.wantErr, err.Error())
+				}
+			} else {
+				assert.Nil(t, err)
+			}
+			if tt.wantFieldErrors != nil {
+				assert.IsType(t, FieldErrors{}, err)
+				assert.Equal(t, tt.wantFieldErrors, err)
+			}
+		})
+	}
+}
+
+func TestFormData_ParseMapData(t *testing.T) {
+	tests := []struct {
+		name                string
+		definitionStructure interface{}
+		sourceMap           map[string]interface{}
+		wantErr             string
+		wantFieldErrors     FieldErrors
+	}{
+		{
+			"simple",
+			&struct {
+				ID   int64  `json:"id"`
+				Name string `json:"name"`
+			}{},
+			map[string]interface{}{"id": 123, "name": "John"},
+			"",
+			nil,
+		},
+		{
+			"wrong value for a field",
+			&struct {
+				ID int64 `json:"id"`
+			}{},
+			map[string]interface{}{"id": "123"},
+			"invalid input data",
+			FieldErrors{"id": {"expected type 'int64', got unconvertible type 'string'"}},
+		},
+		{
+			"null value for a not-null field",
+			&struct {
+				ID   int64  `json:"id"`
+				Name string `json:"name"`
+			}{},
+			map[string]interface{}{"id": nil, "name": nil},
+			"invalid input data",
+			FieldErrors{
+				"id":   {"should not be null (expected type: int64)"},
+				"name": {"should not be null (expected type: string)"},
+			},
+		},
+		{
+			"unexpected field",
+			&struct {
+				ID int64 `json:"id"`
+			}{},
+			map[string]interface{}{"my_id": "123"},
+			"invalid input data",
+			FieldErrors{"my_id": {"unexpected field"}},
+		},
+		{
+			"field ignored by json",
+			&struct {
+				Name string `json:"-" gorm:"column:sName"`
+			}{},
+			map[string]interface{}{"Name": "test"},
+			"invalid input data",
+			FieldErrors{"Name": {"unexpected field"}},
+		},
+		{
+			"decoder error for a field",
+			&struct {
+				Time time.Time `json:"time"`
+			}{},
+			map[string]interface{}{"time": "123"},
+			"invalid input data",
+			FieldErrors{"time": {"decoding error: parsing time \"123\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"123\" as \"2006\""}},
+		},
+		{
+			"multiple errors",
+			&struct {
+				ID *int64 `json:"id" valid:"required"`
+			}{},
+			map[string]interface{}{"my_id": 1, "id": nil},
+			"invalid input data",
+			FieldErrors{
+				"id":    {"non zero value required"},
+				"my_id": {"unexpected field"},
+			},
+		},
+		{
+			"nested structure",
+			&struct {
+				Struct struct {
+					Name        string `json:"name" valid:"required"`
+					OtherStruct *struct {
+						Name *string `json:"name" valid:"required"`
+					} `json:"other_struct" valid:"required"`
+					OtherStruct2 *struct {
+						Name *string `json:"name" valid:"required"`
+					} `valid:"required"`
+				} `json:"struct" valid:"required"`
+			}{},
+			map[string]interface{}{"id": nil, "struct": map[string]interface{}{"other_struct": nil, "OtherStruct2": nil}},
+			"invalid input data",
+			FieldErrors{
+				"id":                  {"unexpected field"},
+				"struct.other_struct": {"non zero value required"},
+				"struct.OtherStruct2": {"non zero value required"},
+			},
+		},
+		{
+			"nested structure2",
+			&struct {
+				Struct struct {
+					Name        *string `json:"name" valid:"required"`
+					OtherStruct struct {
+						Name *string `json:"name" valid:"required"`
+					} `json:"other_struct" valid:"required"`
+					OtherStruct2 struct {
+						Name *string `json:"name" valid:"required"`
+					} `valid:"required"`
+				} `json:"struct" valid:"required"`
+			}{},
+			map[string]interface{}{
+				"id": nil,
+				"struct": map[string]interface{}{
+					"name": nil,
+					"other_struct": map[string]interface{}{
+						"name": nil,
+					},
+					"OtherStruct2": map[string]interface{}{
+						"name": nil,
+					},
+				},
+			},
+			"invalid input data",
+			FieldErrors{
+				"id":                       {"unexpected field"},
+				"struct.name":              {"non zero value required"},
+				"struct.other_struct.name": {"non zero value required"},
+				"struct.OtherStruct2.name": {"non zero value required"},
+			},
+		},
+		{
+			"ignores errors in fields that are not given",
+			&struct {
+				ID   *int64  `json:"id" valid:"required"`
+				Name *string `json:"name" valid:"required"`
+			}{},
+			map[string]interface{}{},
+			"",
+			nil,
+		},
+		{
+			"rare errors (unsupported type)",
+			&struct {
+				Field chan bool `json:"field"`
+			}{},
+			map[string]interface{}{"field": "value"},
+			"invalid input data",
+			FieldErrors{"": {"field: unsupported type: chan"}},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			f := NewFormData(tt.definitionStructure)
+			err := f.ParseMapData(tt.sourceMap)
 			if tt.wantErr != "" {
 				assert.NotNil(t, err, "Should produce an error, but it did not")
 				if err != nil {

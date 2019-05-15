@@ -22,3 +22,6 @@
 
 # Local config
 conf/config.yaml
+
+# Keys
+*.pem
