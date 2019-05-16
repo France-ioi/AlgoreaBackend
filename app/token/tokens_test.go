@@ -144,33 +144,34 @@ func Test_UnmarshalString(t *testing.T) {
 	}
 }
 
+var marshalAndSignTests = []struct {
+	name        string
+	structType  reflect.Type
+	payloadMap  map[string]interface{}
+	payloadType reflect.Type
+}{
+	{
+		name:        "task token",
+		structType:  reflect.TypeOf(Task{}),
+		payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+		payloadType: reflect.TypeOf(payloads.TaskToken{}),
+	},
+	{
+		name:        "answer token",
+		structType:  reflect.TypeOf(Answer{}),
+		payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+		payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+	},
+	{
+		name:        "hint token",
+		structType:  reflect.TypeOf(Hint{}),
+		payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
+		payloadType: reflect.TypeOf(payloads.HintToken{}),
+	},
+}
+
 func TestToken_MarshalJSON(t *testing.T) {
-	tests := []struct {
-		name        string
-		structType  reflect.Type
-		payloadMap  map[string]interface{}
-		payloadType reflect.Type
-	}{
-		{
-			name:        "task token",
-			structType:  reflect.TypeOf(Task{}),
-			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.TaskToken{}),
-		},
-		{
-			name:        "answer token",
-			structType:  reflect.TypeOf(Answer{}),
-			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
-		},
-		{
-			name:        "hint token",
-			structType:  reflect.TypeOf(Hint{}),
-			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
-			payloadType: reflect.TypeOf(payloads.HintToken{}),
-		},
-	}
-	for _, test := range tests {
+	for _, test := range marshalAndSignTests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
@@ -200,32 +201,7 @@ func TestToken_MarshalJSON(t *testing.T) {
 }
 
 func TestToken_Sign(t *testing.T) {
-	tests := []struct {
-		name        string
-		structType  reflect.Type
-		payloadMap  map[string]interface{}
-		payloadType reflect.Type
-	}{
-		{
-			name:        "task token",
-			structType:  reflect.TypeOf(Task{}),
-			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.TaskToken{}),
-		},
-		{
-			name:        "answer token",
-			structType:  reflect.TypeOf(Answer{}),
-			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
-		},
-		{
-			name:        "hint token",
-			structType:  reflect.TypeOf(Hint{}),
-			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
-			payloadType: reflect.TypeOf(payloads.HintToken{}),
-		},
-	}
-	for _, test := range tests {
+	for _, test := range marshalAndSignTests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
@@ -254,32 +230,7 @@ func TestToken_Sign(t *testing.T) {
 }
 
 func TestToken_MarshalString(t *testing.T) {
-	tests := []struct {
-		name        string
-		structType  reflect.Type
-		payloadMap  map[string]interface{}
-		payloadType reflect.Type
-	}{
-		{
-			name:        "task token",
-			structType:  reflect.TypeOf(Task{}),
-			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.TaskToken{}),
-		},
-		{
-			name:        "answer token",
-			structType:  reflect.TypeOf(Answer{}),
-			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
-			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
-		},
-		{
-			name:        "hint token",
-			structType:  reflect.TypeOf(Hint{}),
-			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
-			payloadType: reflect.TypeOf(payloads.HintToken{}),
-		},
-	}
-	for _, test := range tests {
+	for _, test := range marshalAndSignTests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
