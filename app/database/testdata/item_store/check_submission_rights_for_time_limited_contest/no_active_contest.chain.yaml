@@ -1,0 +1,8 @@
+users: [{ID: 1, idGroupSelf: 11, sLogin: 1}]
+groups: [{ID: 11}, {ID: 20}]
+groups_groups: [{idGroupParent: 20, idGroupChild: 12}]
+groups_ancestors:
+  - {idGroupAncestor: 11, idGroupChild: 11}
+  - {idGroupAncestor: 20, idGroupChild: 11}
+groups_items: [{idGroup: 20, idItem: 114, sFullAccessDate: 2019-03-22T08:44:55Z, sCachedFullAccessDate: 2019-03-22T08:44:55Z}]
+

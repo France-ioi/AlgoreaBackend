@@ -1,0 +1,10 @@
+users: [{ID: 5, idGroupSelf: 15, sLogin: 5}]
+users_items: [{idUser: 5, idItem: 115, sAdditionalTime: 0000-00-00 01:00:00}]
+groups: [{ID: 15}, {ID: 24}]
+groups_items: [{idGroup: 24, idItem: 115, sPartialAccessDate: 2019-03-22T08:44:55Z, sCachedPartialAccessDate: 2019-03-22T08:44:55Z}]
+groups_groups: [{idGroupParent: 24, idGroupChild: 15}]
+groups_ancestors:
+  - {idGroupAncestor: 15, idGroupChild: 15}
+  - {idGroupAncestor: 24, idGroupChild: 15}
+
+

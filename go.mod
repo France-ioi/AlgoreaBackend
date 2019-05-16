@@ -3,7 +3,7 @@ module github.com/France-ioi/AlgoreaBackend
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
-	github.com/CloudyKit/jet v2.1.2+incompatible
+	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/France-ioi/govalidator v0.0.0-20190304102511-a2eeeae8d4ba

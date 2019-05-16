@@ -1,6 +1,7 @@
 package token
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
@@ -22,8 +23,19 @@ func (tt *Answer) UnmarshalString(raw string) error {
 // MarshalJSON marshals the answer token into JSON
 func (tt *Answer) MarshalJSON() ([]byte, error) { return marshalJSON(tt) }
 
+// MarshalString marshals the answer token into a string
+func (tt *Answer) MarshalString() (string, error) { return marshalString(tt) }
+
+// Sign returns a signed token as a string
+func (tt *Answer) Sign(privateKey *rsa.PrivateKey) (string, error) {
+	tt.PrivateKey = privateKey
+	return tt.MarshalString()
+}
+
 var (
 	_ json.Unmarshaler  = (*Answer)(nil)
 	_ json.Marshaler    = (*Answer)(nil)
 	_ UnmarshalStringer = (*Answer)(nil)
+	_ MarshalStringer   = (*Task)(nil)
+	_ Signer            = (*Task)(nil)
 )

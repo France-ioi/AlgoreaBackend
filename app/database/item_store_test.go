@@ -3,6 +3,8 @@ package database
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckAccess(t *testing.T) {
@@ -82,4 +84,15 @@ func TestCheckAccess(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_, _, _ = NewDataStore(db).Items().CheckSubmissionRights(12, NewMockUser(1, &UserData{SelfGroupID: 14}))
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

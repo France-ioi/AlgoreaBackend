@@ -1,7 +1,11 @@
 package database
 
 import (
+	"errors"
 	"fmt"
+	"time"
+
+	"github.com/jinzhu/gorm"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/types"
@@ -239,4 +243,199 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// CheckSubmissionRights checks if the user can submit an answer for the given item (task):
+// 1. If the task is inside a time-limited chapter, the method checks that the task is a part of
+//    the user's active contest (or the user has full access to one of the task's chapters)
+// 2. The method also checks that the item (task) exists and is not read-only.
+//
+// Note: This method doesn't check if the user has access to the item.
+// Note 2: This method may also close the user's active contest (or the user's active team contest).
+func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess bool, reason, err error) {
+	s.mustBeInTransaction() // because it may close a contest
+	recoverPanics(&err)
+
+	hasRights, reason := s.checkSubmissionRightsForTimeLimitedContest(itemID, user)
+	if !hasRights {
+		return hasRights, reason, nil
+	}
+
+	var result []bool
+	mustNotBeError(s.ByID(itemID).Pluck("bReadOnly", &result).Error())
+	if len(result) == 0 {
+		return false, errors.New("no such item"), nil
+	}
+	if result[0] {
+		return false, errors.New("item is read-only"), nil
+	}
+	return true, nil, nil
+}
+
+func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, user *User) (bool, error) {
+	// TODO: handle case where the item is both in a contest and in a non-contest chapter the user has access to
+
+	// ItemID & FullAccess for time-limited ancestors of the item
+	// to which the user has at least grayed access.
+	// Note that while an answer is always related to a task,
+	// tasks cannot be time-limited, only chapters can.
+	// So, actually here we select time-limited chapters that are ancestors of the task.
+	var contestItems []struct {
+		ItemID     int64 `gorm:"column:idItem"`
+		FullAccess bool  `gorm:"column:fullAccess"`
+	}
+
+	mustNotBeError(s.Visible(user).
+		Select("items.ID AS idItem, fullAccess").
+		Joins("JOIN items_ancestors ON items_ancestors.idItemAncestor = items.ID").
+		Where("items_ancestors.idItemChild = ?", itemID).
+		Where("items.sDuration IS NOT NULL").
+		Group("items.ID").Scan(&contestItems).Error())
+
+	// The item is not time-limited itself and it doesn't have time-limited ancestors the user has access to.
+	// Or maybe the user doesn't have access to the item at all... We ignore this possibility here
+	if len(contestItems) == 0 {
+		return true, nil // The user can submit an answer
+	}
+
+	activeContestErr := errors.New("the contest has not started yet or has already finished")
+
+	activeContest := s.getActiveContestInfoForUser(user)
+	if activeContest == nil {
+		return false, activeContestErr
+	}
+
+	if activeContest.IsOver() {
+		if activeContest.TeamMode != nil {
+			s.closeTeamContest(activeContest.ItemID, user)
+		} else {
+			s.closeContest(activeContest.ItemID, user)
+		}
+		return false, activeContestErr
+	}
+
+	for i := range contestItems {
+		if contestItems[i].FullAccess || activeContest.ItemID == contestItems[i].ItemID {
+			return true, nil
+		}
+	}
+
+	return false, errors.New(
+		"the exercise for which you wish to submit an answer is a part " +
+			"of a different competition than the one in progress")
+}
+
+type activeContestInfo struct {
+	ItemID   int64
+	UserID   int64
+	TeamMode *string
+
+	Now               time.Time
+	DurationInSeconds int32
+	EndTime           time.Time
+	StartTime         time.Time
+}
+
+func (contest *activeContestInfo) IsOver() bool {
+	return contest.EndTime.Before(contest.Now) || contest.EndTime.Equal(contest.Now)
+}
+
+// Closes the time-limited contest if needed or returns time stats
+func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
+	// Get info for the item if the user has already started it, but hasn't finished yet
+	// Note: the current API doesn't allow users to have more than one active contest
+	var results []struct {
+		Now                     time.Time `gorm:"column:now"`
+		DurationInSeconds       int32     `gorm:"column:duration"`
+		ItemID                  int64     `gorm:"column:idItem"`
+		AdditionalTimeInSeconds int32     `gorm:"column:additionalTime"`
+		ContestStartDate        time.Time `gorm:"column:sContestStartDate"`
+		TeamMode                *string   `gorm:"column:sTeamMode"`
+	}
+	mustNotBeError(s.
+		Select(`
+			NOW() AS now,
+			TIME_TO_SEC(items.sDuration) AS duration,
+			items.ID AS idItem,
+			items.sTeamMode,
+			IF(users_items.sAdditionalTime IS NULL, 0, TIME_TO_SEC(users_items.sAdditionalTime)) AS additionalTime,
+			users_items.sContestStartDate AS sContestStartDate`).
+		Joins(`
+			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
+				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.UserID).
+		Order("users_items.sContestStartDate DESC").Scan(&results).Error())
+
+	if len(results) == 0 {
+		return nil
+	}
+
+	if len(results) > 1 {
+		log.Warnf("User with ID = %d has %d (>1) active contests", user.UserID, len(results))
+	}
+
+	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
+	endTime := results[0].ContestStartDate.Add(time.Duration(totalDuration) * time.Second)
+
+	return &activeContestInfo{
+		Now:               results[0].Now,
+		DurationInSeconds: totalDuration,
+		StartTime:         results[0].ContestStartDate,
+		EndTime:           endTime,
+		ItemID:            results[0].ItemID,
+		UserID:            user.UserID,
+		TeamMode:          results[0].TeamMode,
+	}
+}
+
+func (s *ItemStore) closeContest(itemID int64, user *User) {
+	mustNotBeError(s.UserItems().
+		Where("idItem = ? AND idUser = ?", itemID, user.UserID).
+		UpdateColumn("sFinishDate", gorm.Expr("NOW()")).Error())
+
+	selfGroupID, err := user.SelfGroupID()
+	mustNotBeError(err)
+	groupItemStore := s.GroupItems()
+
+	// TODO: "remove partial access if other access were present" (what did he mean???)
+	groupItemStore.removePartialAccess(selfGroupID, itemID)
+	mustNotBeError(groupItemStore.db.Exec(`
+		DELETE groups_items
+		FROM groups_items
+		JOIN items_ancestors ON
+			items_ancestors.idItemChild = groups_items.idItem AND
+			items_ancestors.idItemAncestor = ?
+		WHERE groups_items.idGroup = ? AND
+			(sCachedFullAccessDate IS NULL OR sCachedFullAccessDate > NOW()) AND
+			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, selfGroupID).Error)
+	// we do not need to call GroupItem.after() because we do not grant new access here
+	groupItemStore.computeAllAccess()
+}
+
+func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
+	var teamGroupID int64
+	mustNotBeError(s.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+	// Set contest as finished
+	/*
+		// We would use this block if UPDATEs with JOINs were fixed in jinzhu/gorm
+		mustNotBeError(s.UserItems().
+			Joins("JOIN users ON users.ID = users_items.idUser").
+			Joins(`JOIN groups_groups
+				ON groups_groups.idGroupChild = users.idGroupSelf AND groups_groups.idGroupParent = ?`, teamGroupID).
+			Where("users_items.idItem = ?", itemID).
+			UpdateColumn("sFinishDate", gorm.Expr("NOW()")).Error())
+	*/ // nolint:gocritic
+	mustNotBeError(s.db.Exec(`
+		UPDATE users_items
+		JOIN users ON users.ID = users_items.idUser
+		JOIN groups_groups
+			ON groups_groups.idGroupChild = users.idGroupSelf AND groups_groups.idGroupParent = ?
+		SET sFinishDate = NOW()
+		WHERE users_items.idItem = ?`, teamGroupID, itemID).Error)
+
+	groupItemStore := s.GroupItems()
+	// Remove access
+	groupItemStore.removePartialAccess(teamGroupID, itemID)
+
+	// we do not need to call GroupItem.after() because we do not grant new access here
+	groupItemStore.computeAllAccess()
 }
