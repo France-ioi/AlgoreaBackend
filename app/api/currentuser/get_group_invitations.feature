@@ -20,17 +20,17 @@ Feature: Get group invitations for the current user
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          | idUserInviting |
-      | 2  | 1             | 21           | invitationSent     | relativeTime(-169h)  | null           |
-      | 3  | 2             | 21           | invitationRefused  | relativeTime(-168h)  | 1              |
-      | 4  | 3             | 21           | requestSent        | relativeTime(-167h)  | 1              |
-      | 5  | 4             | 21           | requestRefused     | relativeTime(-166h)  | 2              |
-      | 6  | 5             | 21           | invitationAccepted | relativeTime(-165h)  | 2              |
-      | 7  | 6             | 21           | requestAccepted    | relativeTime(-164h)  | 2              |
-      | 8  | 7             | 21           | removed            | relativeTime(-163h)  | 1              |
-      | 9  | 8             | 21           | left               | relativeTime(-162h)  | 1              |
-      | 10 | 9             | 21           | direct             | relativeTime(-161h)  | 2              |
-      | 11 | 1             | 22           | invitationSent     | relativeTime(-170h)  | 2              |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate               | idUserInviting |
+      | 2  | 1             | 21           | invitationSent     | {{relativeTime("-169h")}} | null           |
+      | 3  | 2             | 21           | invitationRefused  | {{relativeTime("-168h")}} | 1              |
+      | 4  | 3             | 21           | requestSent        | {{relativeTime("-167h")}} | 1              |
+      | 5  | 4             | 21           | requestRefused     | {{relativeTime("-166h")}} | 2              |
+      | 6  | 5             | 21           | invitationAccepted | {{relativeTime("-165h")}} | 2              |
+      | 7  | 6             | 21           | requestAccepted    | {{relativeTime("-164h")}} | 2              |
+      | 8  | 7             | 21           | removed            | {{relativeTime("-163h")}} | 1              |
+      | 9  | 8             | 21           | left               | {{relativeTime("-162h")}} | 1              |
+      | 10 | 9             | 21           | direct             | {{relativeTime("-161h")}} | 2              |
+      | 11 | 1             | 22           | invitationSent     | {{relativeTime("-170h")}} | 2              |
 
   Scenario: Show all invitations
     Given I am the user with ID "1"

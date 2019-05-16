@@ -34,5 +34,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
 	s.Step(`^the table "([^"]*)" should stay unchanged but the row with IDs? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 
+	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
+
 	s.AfterScenario(ctx.ScenarioTeardown)
 }

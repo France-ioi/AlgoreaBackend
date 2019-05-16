@@ -2,14 +2,17 @@ package testhelpers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"bou.ke/monkey"
+	"github.com/DATA-DOG/godog/gherkin"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 )
@@ -65,5 +68,14 @@ func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string)
 		generatedPasswords = generatedPasswords[len(password[1]):]
 		return password[2], nil
 	})
+	return nil
+}
+
+func (ctx *TestContext) LogsShouldContain(docString *gherkin.DocString) error { // nolint
+	stringToSearch := strings.TrimSpace(docString.Content)
+	logs := ctx.logsHook.GetAllLogs()
+	if !strings.Contains(logs, stringToSearch) {
+		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
+	}
 	return nil
 }

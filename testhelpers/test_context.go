@@ -15,9 +15,11 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
 type dbquery struct {
@@ -38,6 +40,8 @@ type TestContext struct {
 	featureQueries   []dbquery
 	lastResponse     *http.Response
 	lastResponseBody string
+	logsHook         *loggingtest.Hook
+	logsRestoreFunc  func()
 	inScenario       bool
 	dbTableData      map[string]*gherkin.DataTable
 	addedDBIndices   []*addedDBIndex
@@ -48,6 +52,11 @@ var db *sql.DB
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	scenario := data.(*gherkin.Scenario)
 	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+
+	var logHook *test.Hook
+	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
+	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
+
 	ctx.setupApp()
 	ctx.userID = 999 // the default for the moment
 	ctx.lastResponse = nil
@@ -84,6 +93,7 @@ func (ctx *TestContext) tearDownApp() {
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	monkey.UnpatchAll()
+	ctx.logsRestoreFunc()
 
 	db, err := gorm.Open("mysql", ctx.db())
 	if err != nil {

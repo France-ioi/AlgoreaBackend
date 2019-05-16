@@ -44,7 +44,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		return
 	}
 
-	expectedBody, err := ctx.preprocessJSONBody(body.Content)
+	expectedBody, err := ctx.preprocessString(body.Content)
 	if err != nil {
 		return err
 	}
