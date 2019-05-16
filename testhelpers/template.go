@@ -11,29 +11,70 @@ import (
 	"time"
 
 	"github.com/CloudyKit/jet"
+	"gopkg.in/jose.v1/crypto"
 
 	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
 
-func (ctx *TestContext) preprocessJSONBody(jsonBody string) (string, error) {
+func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
+	set := ctx.constructTemplateSet()
+
+	tmpl, err := set.LoadTemplate("template", jsonBody)
+
+	if err != nil {
+		return "", err
+	}
+	buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+	err = tmpl.Execute(buffer, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	jsonBody = buffer.String()
+
+	return jsonBody, nil
+}
+
+func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	set := jet.NewSet(jet.SafeWriter(func(w io.Writer, b []byte) {
 		w.Write(b) // nolint:gosec,errcheck
 	}))
+
 	set.AddGlobalFunc("currentTimeInFormat", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("currentTimeInFormat", 1, 1)
 		return reflect.ValueOf(time.Now().UTC().Format(a.Get(0).Interface().(string)))
 	})
+
 	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("generateToken", 2, 2)
+		var privateKey *rsa.PrivateKey
+		privateKeyRefl := a.Get(1)
+		if privateKeyRefl.CanAddr() {
+			privateKey = privateKeyRefl.Addr().Interface().(*rsa.PrivateKey)
+		} else {
+			var err error
+			var privateKeyBytes []byte
+			if privateKeyRefl.Kind() == reflect.String {
+				privateKeyBytes = []byte(privateKeyRefl.Interface().(string))
+			} else {
+				privateKeyBytes = privateKeyRefl.Interface().([]byte)
+			}
+			privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
+			if err != nil {
+				a.Panicf("Cannot parse private key: ", err)
+			}
+		}
 		return reflect.ValueOf(
 			fmt.Sprintf("%q", token.Generate(a.Get(0).Interface().(map[string]interface{}),
-				a.Get(1).Addr().Interface().(*rsa.PrivateKey))))
+				privateKey)))
 	})
+
 	set.AddGlobalFunc("app", func(a jet.Arguments) reflect.Value {
 		return reflect.ValueOf(ctx.application)
 	})
+
 	set.AddGlobalFunc("db", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("db", 1, 1)
 		path := a.Get(0).Interface().(string)
@@ -58,17 +99,19 @@ func (ctx *TestContext) preprocessJSONBody(jsonBody string) (string, error) {
 		a.Panicf("wrong data path: %q", path)
 		return reflect.Value{}
 	})
-	tmpl, err := set.LoadTemplate("template", jsonBody)
 
-	if err != nil {
-		return "", err
-	}
-	buffer := bytes.NewBuffer(make([]byte, 0, 1024))
-	err = tmpl.Execute(buffer, nil, nil)
-	if err != nil {
-		return "", err
-	}
-	jsonBody = buffer.String()
+	set.AddGlobalFunc("relativeTime", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("relativeTime", 1, 1)
+		durationString := a.Get(0).Interface().(string)
+		duration, err := time.ParseDuration(durationString)
+		if err != nil {
+			a.Panicf("can't parse duration: %s", err.Error())
+		}
+		return reflect.ValueOf(time.Now().UTC().Add(duration).Format(time.RFC3339))
+	})
 
-	return jsonBody, nil
+	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
+	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
+
+	return set
 }

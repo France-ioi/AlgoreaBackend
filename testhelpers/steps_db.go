@@ -2,10 +2,8 @@ package testhelpers
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jinzhu/gorm"
@@ -25,7 +23,10 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	for i := 1; i < len(data.Rows); i++ {
 		var vals []interface{}
 		for _, cell := range data.Rows[i].Cells {
-			cell.Value = prepareVal(cell.Value)
+			var err error
+			if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
+				return err
+			}
 			vals = append(vals, dbDataTableValue(cell.Value))
 		}
 		if ctx.inScenario {
@@ -93,19 +94,6 @@ func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) 
 	}
 	ctx.addedDBIndices = append(ctx.addedDBIndices, &addedDBIndex{Table: tableName, Index: indexName})
 	return nil
-}
-
-var prepareValRegexp = regexp.MustCompile(`^\s*([\w]+)\s*\(\s*(.*)\)\s*$`)
-
-func prepareVal(input string) string {
-	if match := prepareValRegexp.FindStringSubmatch(input); len(match) == 3 && match[1] == "relativeTime" {
-		duration, err := time.ParseDuration(match[2])
-		if err != nil {
-			panic(err)
-		}
-		return time.Now().UTC().Add(duration).Format(time.RFC3339)
-	}
-	return input
 }
 
 func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
@@ -249,7 +237,10 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 				continue
 			}
 			colName := dataCols[iCol].Value
-			dataValue := prepareVal(dataCell.Value)
+			dataValue, err := ctx.preprocessString(dataCell.Value)
+			if err != nil {
+				return err
+			}
 			sqlValue := rowValPtr[iCol].(**string)
 
 			if *sqlValue == nil {

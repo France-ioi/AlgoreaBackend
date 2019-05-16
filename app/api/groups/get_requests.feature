@@ -12,20 +12,20 @@ Feature: Get requests for group_id
       | 77 | 22              | 11           | 0       | 0        |
       | 78 | 21              | 21           | 1       | 0        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          | idUserInviting |
-      | 1  | 13            | 21           | invitationSent     | relativeTime(-170h)  | 2              |
-      | 2  | 13            | 11           | invitationRefused  | relativeTime(-169h)  | 3              |
-      | 3  | 13            | 31           | requestSent        | relativeTime(-168h)  | 1              |
-      | 4  | 13            | 22           | requestRefused     | relativeTime(-167h)  | 2              |
-      | 5  | 14            | 11           | invitationSent     | null                 | 2              |
-      | 6  | 14            | 31           | invitationRefused  | null                 | 3              |
-      | 7  | 14            | 21           | requestSent        | null                 | 1              |
-      | 8  | 14            | 22           | requestRefused     | null                 | 2              |
-      | 9  | 13            | 121          | invitationAccepted | 2017-05-29T06:38:38Z | 2              |
-      | 10 | 13            | 111          | requestAccepted    | null                 | 3              |
-      | 11 | 13            | 131          | removed            | null                 | 1              |
-      | 12 | 13            | 122          | left               | null                 | 2              |
-      | 13 | 13            | 123          | direct             | null                 | 2              |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate               | idUserInviting |
+      | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} | 2              |
+      | 2  | 13            | 11           | invitationRefused  | {{relativeTime("-169h")}} | 3              |
+      | 3  | 13            | 31           | requestSent        | {{relativeTime("-168h")}} | 1              |
+      | 4  | 13            | 22           | requestRefused     | {{relativeTime("-167h")}} | 2              |
+      | 5  | 14            | 11           | invitationSent     | null                      | 2              |
+      | 6  | 14            | 31           | invitationRefused  | null                      | 3              |
+      | 7  | 14            | 21           | requestSent        | null                      | 1              |
+      | 8  | 14            | 22           | requestRefused     | null                      | 2              |
+      | 9  | 13            | 121          | invitationAccepted | 2017-05-29T06:38:38Z      | 2              |
+      | 10 | 13            | 111          | requestAccepted    | null                      | 3              |
+      | 11 | 13            | 131          | removed            | null                      | 1              |
+      | 12 | 13            | 122          | left               | null                      | 2              |
+      | 13 | 13            | 123          | direct             | null                      | 2              |
 
   Scenario: User is an admin of the group (default sort)
     Given I am the user with ID "1"

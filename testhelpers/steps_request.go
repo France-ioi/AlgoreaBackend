@@ -24,7 +24,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	authProxyServer := ctx.setupAuthProxyServer()
 	defer authProxyServer.Close()
 
-	reqBody, err := ctx.preprocessJSONBody(reqBody)
+	reqBody, err := ctx.preprocessString(reqBody)
 	if err != nil {
 		return err
 	}
