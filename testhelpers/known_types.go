@@ -42,9 +42,42 @@ func (resp *answersSubmitResponse) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
+type askHintResponse struct {
+	Data struct {
+		TaskToken token.Task `json:"task_token"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+
+	PublicKey *rsa.PublicKey
+}
+
+type askHintResponseWrapper struct {
+	Data struct {
+		TaskToken *string `json:"task_token"`
+	} `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}
+
+func (resp *askHintResponse) UnmarshalJSON(raw []byte) error {
+	wrapper := askHintResponseWrapper{}
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return err
+	}
+	resp.Message = wrapper.Message
+	resp.Success = wrapper.Success
+	if wrapper.Data.TaskToken != nil {
+		resp.Data.TaskToken.PublicKey = resp.PublicKey
+		return (&resp.Data.TaskToken).UnmarshalString(*wrapper.Data.TaskToken)
+	}
+	return nil
+}
+
 var knownTypes = map[string]reflect.Type{
 	"AnswersSubmitRequest":  reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
 	"AnswersSubmitResponse": reflect.TypeOf(&answersSubmitResponse{}).Elem(),
+	"AskHintResponse":       reflect.TypeOf(&askHintResponse{}).Elem(),
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {
