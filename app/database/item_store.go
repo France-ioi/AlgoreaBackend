@@ -337,7 +337,7 @@ type activeContestInfo struct {
 }
 
 func (contest *activeContestInfo) IsOver() bool {
-	return contest.Now.After(contest.EndTime) || contest.Now.Equal(contest.EndTime)
+	return contest.EndTime.Before(contest.Now) || contest.EndTime.Equal(contest.Now)
 }
 
 // Closes the time-limited contest if needed or returns time stats
