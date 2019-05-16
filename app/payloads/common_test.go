@@ -27,15 +27,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    "0",
-				HintsAllowed:       "0",
-				HintPossible:       true,
-				AccessSolutions:    "1",
-				ReadAnswers:        true,
-				Login:              "test",
-				SubmissionPossible: true,
-				SupportedLangProg:  "*",
-				IsAdmin:            "0",
+				HintsGivenCount:    ptrString("0"),
+				HintsAllowed:       ptrString("0"),
+				HintPossible:       ptrBool(true),
+				AccessSolutions:    ptrString("1"),
+				ReadAnswers:        ptrBool(true),
+				Login:              ptrString("test"),
+				SubmissionPossible: ptrBool(true),
+				SupportedLangProg:  ptrString("*"),
+				IsAdmin:            ptrString("0"),
 				Converted: TaskTokenConverted{
 					UserID:      556371821693219925,
 					LocalItemID: 901756573345831409,
@@ -119,6 +119,7 @@ func TestConvertIntoMap(t *testing.T) {
 		Skipped       string        `json:"-"`
 		AnotherNormal string        `json:"another_normal"`
 		Struct        *nestedStruct `json:"struct"`
+		OmitEmpty     *string       `json:"omit_empty,omitempty"`
 	}
 	got := ConvertIntoMap(&testStruct{
 		notExported:   "notExported value",
@@ -138,3 +139,6 @@ func TestConvertIntoMap(t *testing.T) {
 		},
 	}, got)
 }
+
+func ptrString(s string) *string { return &s }
+func ptrBool(b bool) *bool       { return &b }

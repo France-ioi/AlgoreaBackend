@@ -40,17 +40,17 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	out := make(map[string]interface{}, fieldsNumber)
 	for i := 0; i < fieldsNumber; i++ {
 		field := sourceType.Field(i)
-		jsonName := getJSONFieldName(&field)
+		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)
 		if jsonName != "-" {
 			fieldValue := sourceValue.Field(i)
 			if fieldValue.CanInterface() { // skip unexported fields
-				for fieldValue.IsValid() && fieldValue.Type().Kind() == reflect.Ptr && !fieldValue.IsNil() {
-					fieldValue = fieldValue.Elem()
-				}
-				if fieldValue.Kind() == reflect.Struct {
-					out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
-				} else {
-					out[jsonName] = fieldValue.Interface()
+				fieldValue = resolvePointer(fieldValue)
+				if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
+					if fieldValue.Kind() == reflect.Struct {
+						out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
+					} else {
+						out[jsonName] = fieldValue.Interface()
+					}
 				}
 			}
 		}
@@ -58,10 +58,25 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	return out
 }
 
-func getJSONFieldName(structField *reflect.StructField) string {
-	jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
-	if jsonTagParts[0] == "" {
-		return "-"
+func resolvePointer(fieldValue reflect.Value) reflect.Value {
+	for fieldValue.IsValid() && fieldValue.Type().Kind() == reflect.Ptr && !fieldValue.IsNil() {
+		fieldValue = fieldValue.Elem()
 	}
-	return jsonTagParts[0]
+	return fieldValue
+}
+
+func getJSONFieldNameAndOmitEmpty(structField *reflect.StructField) (string, bool) {
+	jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
+	name := jsonTagParts[0]
+	if name == "" {
+		name = "-"
+	}
+	var omitEmpty bool
+	for i := 1; i < len(jsonTagParts); i++ {
+		if jsonTagParts[i] == "omitempty" {
+			omitEmpty = true
+			break
+		}
+	}
+	return name, omitEmpty
 }
