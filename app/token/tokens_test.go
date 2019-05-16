@@ -163,6 +163,12 @@ func TestToken_MarshalJSON(t *testing.T) {
 			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
 		},
+		{
+			name:        "hint token",
+			structType:  reflect.TypeOf(Hint{}),
+			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
+			payloadType: reflect.TypeOf(payloads.HintToken{}),
+		},
 	}
 	for _, test := range tests {
 		test := test
@@ -212,6 +218,12 @@ func TestToken_Sign(t *testing.T) {
 			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
 		},
+		{
+			name:        "hint token",
+			structType:  reflect.TypeOf(Hint{}),
+			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
+			payloadType: reflect.TypeOf(payloads.HintToken{}),
+		},
 	}
 	for _, test := range tests {
 		test := test
@@ -259,6 +271,12 @@ func TestToken_MarshalString(t *testing.T) {
 			structType:  reflect.TypeOf(Answer{}),
 			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+		},
+		{
+			name:        "hint token",
+			structType:  reflect.TypeOf(Hint{}),
+			payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
+			payloadType: reflect.TypeOf(payloads.HintToken{}),
 		},
 	}
 	for _, test := range tests {

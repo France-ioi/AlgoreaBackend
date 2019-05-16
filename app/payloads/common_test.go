@@ -59,6 +59,37 @@ func TestPayloads_ParseMap(t *testing.T) {
 			},
 		},
 		{
+			name: "hint token",
+			raw:  payloadstest.HintPayloadFromTaskPlatform,
+			want: &HintToken{
+				Date:      "02-05-2019",
+				UserID:    "556371821693219925",
+				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				AskedHint: Anything("1"),
+				Converted: HintTokenConverted{
+					UserID: 556371821693219925,
+				},
+			},
+		},
+		{
+			name: "hint token with a complex askedHint",
+			raw: map[string]interface{}{
+				"itemUrl":   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				"idUser":    "556371821693219925",
+				"askedHint": `{"rotorIndex":0,"cellRank":1}`,
+				"date":      "02-05-2019",
+			},
+			want: &HintToken{
+				Date:      "02-05-2019",
+				UserID:    "556371821693219925",
+				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				AskedHint: Anything(`{"rotorIndex":0,"cellRank":1}`),
+				Converted: HintTokenConverted{
+					UserID: 556371821693219925,
+				},
+			},
+		},
+		{
 			name: "invalid task token",
 			raw:  map[string]interface{}{"date": "abcdef"},
 			want: &TaskToken{Date: "abcdef"},
