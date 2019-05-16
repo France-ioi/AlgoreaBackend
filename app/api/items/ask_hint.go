@@ -100,10 +100,11 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(err)
 
 	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
-	requestData.TaskToken.PrivateKey = srv.TokenConfig.PrivateKey
+	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
+	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"task_token": requestData.TaskToken,
+		"task_token": newTaskToken,
 	})))
 	return service.NoError
 }
