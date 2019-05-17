@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"database/sql/driver"
 	"regexp"
 	"strconv"
 
@@ -17,11 +18,11 @@ func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
 			return
 		}
 
-		if ctx == nil && msg == "sql-stmt-exec" { // duplicated message
+		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
+		if valuesMap["err"] != nil && valuesMap["err"] == driver.ErrSkip { // duplicated message
 			return
 		}
 
-		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
 		args := make([]interface{}, 0, 4)
 
 		args = append(args, "rawsql", ctx, msg, valuesMap)
