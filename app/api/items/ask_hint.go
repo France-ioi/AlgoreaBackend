@@ -203,8 +203,11 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 	return nil
 }
 
-// Bind of AskHintRequest does nothing.
+// Bind of AskHintRequest checks that the asked hint is present
 func (requestData *AskHintRequest) Bind(r *http.Request) error {
+	if len(requestData.HintToken.AskedHint) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint) {
+		return fmt.Errorf("asked hint should not be empty")
+	}
 	return nil
 }
 

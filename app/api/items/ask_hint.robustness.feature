@@ -179,3 +179,25 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "Can't find previously requested hints info"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
+
+  Scenario: missing askedHint
+    Given I am the user with ID "10"
+    When I send a POST request to "/items/ask_hint" with the following body:
+      """
+      {
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
+        "hint_requested": {{generateToken(map(
+          "idUser", "10",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        ), taskPlatformPrivateKey)}}
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Asked hint should not be empty"
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
