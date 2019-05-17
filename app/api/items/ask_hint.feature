@@ -45,8 +45,7 @@ Feature: Ask for a hint
           "idUser", "10",
 	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}},
-        "answer": "print 1"
+        ), taskPlatformPrivateKey)}}
       }
       """
     Then the response code should be 201
@@ -93,8 +92,7 @@ Feature: Ask for a hint
           "idUser", "10",
 	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}},
-        "answer": "print 1"
+        ), taskPlatformPrivateKey)}}
       }
       """
     Then the response code should be 201
@@ -140,8 +138,7 @@ Feature: Ask for a hint
           "idUser", "10",
 	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 	        "askedHint", `{"rotorIndex":0,"cellRank":0}`,
-        ), taskPlatformPrivateKey)}},
-        "answer": "print 1"
+        ), taskPlatformPrivateKey)}}
       }
       """
     Then the response code should be 201
