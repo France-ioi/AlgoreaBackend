@@ -13,6 +13,9 @@ func (a *Anything) UnmarshalJSON(raw []byte) error {
 
 // MarshalJSON of Anything copies the stored JSON data back
 func (a Anything) MarshalJSON() ([]byte, error) {
+	if len(a) == 0 {
+		return []byte("null"), nil
+	}
 	return []byte(a), nil
 }
 

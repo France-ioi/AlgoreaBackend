@@ -13,6 +13,13 @@ func TestAnything_MarshalJSON(t *testing.T) {
 	assert.Equal(t, []byte(`"value"`), result)
 }
 
+func TestAnything_MarshalJSON_EmptyValue(t *testing.T) {
+	anything := Anything(nil)
+	result, err := anything.MarshalJSON()
+	assert.NoError(t, err)
+	assert.Equal(t, []byte(`null`), result)
+}
+
 func TestAnything_UnmarshalJSON(t *testing.T) {
 	raw := []byte(`"value"`)
 	anything := Anything("")

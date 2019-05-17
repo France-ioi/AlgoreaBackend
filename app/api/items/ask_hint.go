@@ -128,8 +128,10 @@ func queryAndParsePreviouslyRequestedHints(
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal(*(*[]byte)(unsafe.Pointer(hintsRequested)), &hintsRequestedParsed) //nolint:gosec
 		if hintsErr != nil {
+			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(fieldsForLogging)
-			logging.GetLogEntry(r).Warnf("Unable to parse sHintsRequested (%s): %s", fieldsForLoggingMarshaled, hintsErr.Error())
+			logging.GetLogEntry(r).Warnf("Unable to parse sHintsRequested (%s) having value %q: %s", fieldsForLoggingMarshaled,
+				*hintsRequested, hintsErr.Error())
 		}
 	}
 	return hintsRequestedParsed, err

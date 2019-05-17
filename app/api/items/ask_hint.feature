@@ -222,7 +222,7 @@ Feature: Ask for a hint
       | 100 | 101     | 50     | 1               | 1             | [{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
     And logs should contain:
       """
-      Unable to parse sHintsRequested ({"idAttempt":100,"idItem":50,"idUser":10}): invalid character 'o' in literal null (expecting 'u')
+      Unable to parse sHintsRequested ({"idAttempt":100,"idItem":50,"idUser":10}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
       """
 
   Scenario: User is able to ask for a hint with missing askedHint
