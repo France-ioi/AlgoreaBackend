@@ -30,7 +30,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 	user := srv.GetUser(r)
 	apiError := service.NoError
-	if apiError = checkAskHintUsers(user, &requestData); apiError != service.NoError {
+	if apiError = checkAskHintUsersAndItemURL(user, &requestData); apiError != service.NoError {
 		return apiError
 	}
 
@@ -206,7 +206,7 @@ func (requestData *AskHintRequest) Bind(r *http.Request) error {
 	return nil
 }
 
-func checkAskHintUsers(user *database.User, requestData *AskHintRequest) service.APIError {
+func checkAskHintUsersAndItemURL(user *database.User, requestData *AskHintRequest) service.APIError {
 	var err error
 	if err = user.Load(); err == database.ErrUserNotFound {
 		return service.InsufficientAccessRightsError
@@ -218,10 +218,13 @@ func checkAskHintUsers(user *database.User, requestData *AskHintRequest) service
 			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
 			requestData.TaskToken.Converted.UserID, user.UserID))
 	}
-	if user.UserID != requestData.HintToken.Converted.UserID {
+	if requestData.HintToken.Converted.UserID != nil && user.UserID != *requestData.HintToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in hint_requested doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.HintToken.Converted.UserID, user.UserID))
+			*requestData.HintToken.Converted.UserID, user.UserID))
+	}
+	if requestData.HintToken.ItemURL != nil && requestData.TaskToken.ItemURL != *requestData.HintToken.ItemURL {
+		return service.ErrInvalidRequest(errors.New("wrong itemUrl in hint_requested token"))
 	}
 	return service.NoError
 }

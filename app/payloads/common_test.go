@@ -63,11 +63,11 @@ func TestPayloads_ParseMap(t *testing.T) {
 			raw:  payloadstest.HintPayloadFromTaskPlatform,
 			want: &HintToken{
 				Date:      "02-05-2019",
-				UserID:    "556371821693219925",
-				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				UserID:    ptrString("556371821693219925"),
+				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
 				AskedHint: Anything("1"),
 				Converted: HintTokenConverted{
-					UserID: 556371821693219925,
+					UserID: ptrInt64(556371821693219925),
 				},
 			},
 		},
@@ -81,11 +81,11 @@ func TestPayloads_ParseMap(t *testing.T) {
 			},
 			want: &HintToken{
 				Date:      "02-05-2019",
-				UserID:    "556371821693219925",
-				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				UserID:    ptrString("556371821693219925"),
+				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
 				AskedHint: Anything(`{"rotorIndex":0,"cellRank":1}`),
 				Converted: HintTokenConverted{
-					UserID: 556371821693219925,
+					UserID: ptrInt64(556371821693219925),
 				},
 			},
 		},
@@ -142,3 +142,4 @@ func TestConvertIntoMap(t *testing.T) {
 
 func ptrString(s string) *string { return &s }
 func ptrBool(b bool) *bool       { return &b }
+func ptrInt64(i int64) *int64    { return &i }

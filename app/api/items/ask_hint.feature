@@ -39,11 +39,12 @@ Feature: Ask for a hint
         "task_token": {{generateToken(map(
           "idUser", "10",
           "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
           "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+	        "itemUrl", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
 	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
         ), taskPlatformPrivateKey)}}
       }
@@ -57,7 +58,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "10",
             "idItemLocal": "50",
-            "itemUrl": "",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
             "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0},{\"rotorIndex\":1,\"cellRank\":1}]",
@@ -86,6 +87,7 @@ Feature: Ask for a hint
           "idUser", "10",
           "idItemLocal", "50",
           "idAttempt", "100",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -105,7 +107,7 @@ Feature: Ask for a hint
             "idUser": "10",
             "idItemLocal": "50",
             "idAttempt": "100",
-            "itemUrl": "",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
             "sHintsRequested": "[0,1,\"hint\",null,{\"rotorIndex\":1,\"cellRank\":1}]",
@@ -132,6 +134,7 @@ Feature: Ask for a hint
         "task_token": {{generateToken(map(
           "idUser", "10",
           "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -150,7 +153,7 @@ Feature: Ask for a hint
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "10",
             "idItemLocal": "50",
-            "itemUrl": "",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
             "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0}]",
@@ -179,6 +182,7 @@ Feature: Ask for a hint
           "idUser", "10",
           "idItemLocal", "50",
           "idAttempt", "100",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -198,7 +202,7 @@ Feature: Ask for a hint
             "idUser": "10",
             "idItemLocal": "50",
             "idAttempt": "100",
-            "itemUrl": "",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
             "sHintsRequested": "[{\"rotorIndex\":1,\"cellRank\":1}]",
@@ -220,4 +224,47 @@ Feature: Ask for a hint
       """
       Unable to parse sHintsRequested ({"idAttempt":100,"idItem":50,"idUser":10}): invalid character 'o' in literal null (expecting 'u')
       """
+
+  Scenario: User is able to ask for a hint with missing askedHint
+    Given I am the user with ID "10"
+    When I send a POST request to "/items/ask_hint" with the following body:
+      """
+      {
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+          "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
+        "hint_requested": {{generateToken(map(
+          "idUser", "10",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        ), taskPlatformPrivateKey)}}
+      }
+      """
+    Then the response code should be 201
+    And the response body decoded as "AskHintResponse" should be, in JSON:
+      """
+      {
+        "data": {
+          "task_token": {
+            "date": "{{currentTimeInFormat("02-01-2006")}}",
+            "idUser": "10",
+            "idItemLocal": "50",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+            "randomSeed": "",
+            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0},null]",
+            "nbHintsGiven": "2"
+          }
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "users_items" should be:
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                      | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null                                 | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 2             | [{"rotorIndex":0,"cellRank":0},null] | done                       | 1                                  | 1                              |
+    And the table "groups_attempts" should stay unchanged
 

@@ -17,7 +17,7 @@ func TestHintToken_UnmarshalJSON_InvalidJSON(t *testing.T) {
 
 func TestHintToken_UnmarshalJSON_WrongUserID(t *testing.T) {
 	tt := &HintToken{}
-	err := tt.UnmarshalJSON([]byte("{}"))
+	err := tt.UnmarshalJSON([]byte(`{"idUser":"abc"}`))
 	assert.NotNil(t, err)
 	if err != nil {
 		assert.Equal(t, "wrong idUser", err.Error())
@@ -29,10 +29,10 @@ func TestHintToken_UnmarshalJSON(t *testing.T) {
 	err := tt.UnmarshalJSON([]byte(`{"idUser":"10", "askedHint":   false}`))
 	assert.NoError(t, err)
 	assert.Equal(t, &HintToken{
-		UserID:    "10",
+		UserID:    ptrString("10"),
 		AskedHint: Anything("false"),
 		Converted: HintTokenConverted{
-			UserID: 10,
+			UserID: ptrInt64(10),
 		},
 	}, tt)
 }

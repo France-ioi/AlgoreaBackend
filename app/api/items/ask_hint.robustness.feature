@@ -50,6 +50,7 @@ Feature: Ask for a hint - robustness
         "task_token": {{generateToken(map(
           "idUser", "404",
           "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -72,6 +73,7 @@ Feature: Ask for a hint - robustness
         "task_token": {{generateToken(map(
           "idUser", "20",
           "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -83,6 +85,29 @@ Feature: Ask for a hint - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: itemUrls of task_token and hint_requested doesn't match
+    Given I am the user with ID "10"
+    When I send a POST request to "/items/ask_hint" with the following body:
+      """
+      {
+        "task_token": {{generateToken(map(
+          "idUser", "10",
+          "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "platformName", app().TokenConfig.PlatformName,
+        ), app().TokenConfig.PrivateKey)}},
+        "hint_requested": {{generateToken(map(
+          "idUser", "10",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
+	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
+        ), taskPlatformPrivateKey)}}
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong itemUrl in hint_requested token"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -116,6 +141,7 @@ Feature: Ask for a hint - robustness
         "task_token": {{generateToken(map(
           "idUser", "10",
           "idItemLocal", "50",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
@@ -139,6 +165,7 @@ Feature: Ask for a hint - robustness
           "idUser", "10",
           "idItemLocal", "10",
           "idAttempt", "100",
+	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "platformName", app().TokenConfig.PlatformName,
         ), app().TokenConfig.PrivateKey)}},
         "hint_requested": {{generateToken(map(
