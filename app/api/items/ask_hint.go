@@ -12,7 +12,6 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/jose.v1/crypto"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -177,38 +176,22 @@ func (requestData *AskHintRequest) UnmarshalJSON(raw []byte) error {
 	if err := requestData.TaskToken.UnmarshalString(*wrapper.TaskToken); err != nil {
 		return fmt.Errorf("invalid task_token: %s", err.Error())
 	}
-	if wrapper.HintRequestedToken == nil {
-		return errors.New("missing hint_requested")
-	}
 	return requestData.unmarshalHintToken(&wrapper)
 }
 
 func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWrapper) error {
-	var platformInfo struct {
-		UsesTokens bool   `gorm:"column:bUsesTokens"`
-		PublicKey  string `gorm:"column:sPublicKey"`
+	if wrapper.HintRequestedToken == nil {
+		return errors.New("missing hint_requested")
 	}
-	var err error
-	if err = requestData.store.Platforms().Select("bUsesTokens, sPublicKey").
-		Joins("JOIN items ON items.idPlatform = platforms.ID").
-		Where("items.ID = ?", requestData.TaskToken.Converted.LocalItemID).
-		Scan(&platformInfo).Error(); gorm.IsRecordNotFoundError(err) {
-		return fmt.Errorf("cannot find the platform for item %s", requestData.TaskToken.LocalItemID)
+
+	err := token.UnmarshalDependingOnItemPlatform(requestData.store, requestData.TaskToken.Converted.LocalItemID,
+		&requestData.HintToken, []byte(wrapper.HintRequestedToken), "hint_requested")
+	if err != nil && !token.IsUnexpectedError(err) {
+		return err
 	}
 	service.MustNotBeError(err)
 
-	if platformInfo.UsesTokens {
-		parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(platformInfo.PublicKey))
-		if err != nil {
-			logging.Warnf("cannot parse platform's public key for item with ID = %d: %s",
-				requestData.TaskToken.Converted.LocalItemID, err.Error())
-			return errors.New("invalid hint_requested: wrong platform's key")
-		}
-		requestData.HintToken = &token.Hint{PublicKey: parsedPublicKey}
-		if err = requestData.HintToken.UnmarshalJSON([]byte(wrapper.HintRequestedToken)); err != nil {
-			return fmt.Errorf("invalid hint_requested: %s", err.Error())
-		}
-	} else {
+	if requestData.HintToken == nil {
 		hintToken := payloads.HintToken{}
 		if err := hintToken.UnmarshalJSON(wrapper.HintRequestedToken); err != nil {
 			return fmt.Errorf("invalid hint_requested: %s", err.Error())
