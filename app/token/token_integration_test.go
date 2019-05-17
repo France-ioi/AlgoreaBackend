@@ -28,7 +28,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		itemID         int64
 		token          []byte
 		tokenFieldName string
-		fixture        string
+		fixtures       []string
 		target         interface{}
 		expected       interface{}
 		expectedErr    error
@@ -42,12 +42,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		{
 			name:   "missing token",
 			itemID: 50,
-			fixture: `
-				platforms:
-					- {ID: 11, bUsesTokens: 1, sRegexp: "http://taskplatform1.mblockelet.info/task.html.*",
-						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}
-				items:
-					- {ID: 50, idPlatform: 11, sUrl: "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183936"}`,
+			fixtures: []string{
+				`platforms: [{ID: 11, bUsesTokens: 1, sRegexp: "http://taskplatform1.mblockelet.info/task.html.*",
+						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
+				`items: [{ID: 50, idPlatform: 11, sUrl: "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+			},
 			token:          nil,
 			tokenFieldName: "hint_requested",
 			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
@@ -57,12 +56,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		{
 			name:   "invalid token",
 			itemID: 50,
-			fixture: `
-				platforms:
-					- {ID: 10, bUsesTokens: 1, sRegexp: "http://taskplatform2.mblockelet.info/task.html\\.*",
-						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}
-				items:
-					- {ID: 50, idPlatform: 10, sUrl: "http://taskplatform2.mblockelet.info/task.html?taskId=403449543672183936"}`,
+			fixtures: []string{
+				`platforms: [{ID: 10, bUsesTokens: 1, sRegexp: "http://taskplatform2.mblockelet.info/task.html\\.*",
+						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
+				`items: [{ID: 50, idPlatform: 10, sUrl: "http://taskplatform2.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+			},
 			token:          []byte(""),
 			tokenFieldName: "hint_requested",
 			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
@@ -72,12 +70,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		{
 			name:   "invalid public key",
 			itemID: 50,
-			fixture: `
-				platforms:
-					- {ID: 10, bUsesTokens: 1, sRegexp: "^http://taskplatform3\\.mblockelet\\.info/task\\.html\\.*",
-						sPublicKey: dasdfa}
-				items:
-					- {ID: 50, idPlatform: 10, sUrl: "http://taskplatform3.mblockelet.info/task.html?taskId=403449543672183936"}`,
+			fixtures: []string{
+				`platforms: [{ID: 10, bUsesTokens: 1, sRegexp: "^http://taskplatform3\\.mblockelet\\.info/task\\.html\\.*",
+						sPublicKey: dasdfa}]`,
+				`items: [{ID: 50, idPlatform: 10, sUrl: "http://taskplatform3.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+			},
 			token:          []byte("dsafafd"),
 			tokenFieldName: "score_token",
 			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
@@ -87,12 +84,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		{
 			name:   "everything is okay",
 			itemID: 50,
-			fixture: `
-				platforms:
-					- {ID: 10, bUsesTokens: 1, sRegexp: "^http://taskplatform4\\.mblockelet.info/task.html.*$",
-						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}
-				items:
-					- {ID: 50, idPlatform: 10, sUrl: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936"}`,
+			fixtures: []string{
+				`platforms: [{ID: 10, bUsesTokens: 1, sRegexp: "^http://taskplatform4\\.mblockelet.info/task.html.*$",
+						sPublicKey: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
+				`items: [{ID: 50, idPlatform: 10, sUrl: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+			},
 			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform,
 				tokentest.TaskPlatformPrivateKeyParsed))),
 			tokenFieldName: "hint_requested",
@@ -103,11 +99,10 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 		{
 			name:   "platform doesn't use tokens",
 			itemID: 50,
-			fixture: `
-				platforms:
-					- {ID: 10, bUsesTokens: 0, sRegexp: "^http://taskplatform5\\.mblockelet\\.info/task.html.*$"}
-				items:
-					- {ID: 50, idPlatform: 10, sUrl: "http://taskplatform5.mblockelet.info/task.html?taskId=403449543672183936"}`,
+			fixtures: []string{
+				`platforms: [{ID: 10, bUsesTokens: 0, sRegexp: "^http://taskplatform5\\.mblockelet\\.info/task.html.*$"}]`,
+				`items: [{ID: 50, idPlatform: 10, sUrl: "http://taskplatform5.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+			},
 			token:          []byte(`{}`),
 			tokenFieldName: "hint_requested",
 			target:         reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
@@ -118,7 +113,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(tt.fixture)
+			db := testhelpers.SetupDBWithFixtureString(tt.fixtures...)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			err := token.UnmarshalDependingOnItemPlatform(store, tt.itemID, tt.target, tt.token, tt.tokenFieldName)
