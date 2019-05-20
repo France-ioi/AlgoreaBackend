@@ -20,9 +20,7 @@ import (
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
-	set := ctx.constructTemplateSet()
-
-	tmpl, err := set.LoadTemplate("template", jsonBody)
+	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
 
 	if err != nil {
 		return "", err

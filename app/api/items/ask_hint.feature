@@ -26,27 +26,35 @@ Feature: Ask for a hint
       | idItemAncestor | idItemChild |
       | 10             | 50          |
     And the database has the following table 'users_items':
-      | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
-      | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     | 100             |
-      | 10     | 10     | null                            | 0             | 0                     | null            |
+      | idUser | idItem | sHintsRequested    | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
+      | 10     | 50     | [{"rotorIndex":0}] | 12            | 2                     | 100             |
+      | 10     | 10     | null               | 0             | 0                     | null            |
     And time is frozen
 
   Scenario: User is able to ask for a hint
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemUrl", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 201
@@ -61,7 +69,7 @@ Feature: Ask for a hint
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
-            "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0},{\"rotorIndex\":1,\"cellRank\":1}]",
+            "sHintsRequested": "[{\"rotorIndex\":0},{\"rotorIndex\":1}]",
             "nbHintsGiven": "2"
           }
         },
@@ -70,9 +78,9 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                                               | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                                                          | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 2             | [{"rotorIndex":0,"cellRank":0},{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                     | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null                                | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 2             | [{"rotorIndex":0},{"rotorIndex":1}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User is able to ask for a hint with idAttempt set
@@ -80,21 +88,29 @@ Feature: Ask for a hint
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem | sHintsRequested        |
       | 100 | 101     | 50     | [0,  1, "hint" , null] |
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "idAttempt", "100",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 201
@@ -110,7 +126,7 @@ Feature: Ask for a hint
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
-            "sHintsRequested": "[0,1,\"hint\",null,{\"rotorIndex\":1,\"cellRank\":1}]",
+            "sHintsRequested": "[0,1,\"hint\",null,{\"rotorIndex\":1}]",
             "nbHintsGiven": "5"
           }
         },
@@ -119,29 +135,37 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                                 | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                                            | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null                               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                                 | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 100 | 101     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
+      | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 100 | 101     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":0}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":0,"cellRank":0}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 201
@@ -156,7 +180,7 @@ Feature: Ask for a hint
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
-            "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0}]",
+            "sHintsRequested": "[{\"rotorIndex\":0}]",
             "nbHintsGiven": "1"
           }
         },
@@ -165,9 +189,9 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                 | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                            | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 1             | [{"rotorIndex":0,"cellRank":0}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":0}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Can't parse sHintsRequested
@@ -175,21 +199,29 @@ Feature: Ask for a hint
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem | sHintsRequested        |
       | 100 | 101     | 50     | not an array           |
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "idAttempt", "100",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 201
@@ -205,7 +237,7 @@ Feature: Ask for a hint
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}",
-            "sHintsRequested": "[{\"rotorIndex\":1,\"cellRank\":1}]",
+            "sHintsRequested": "[{\"rotorIndex\":1}]",
             "nbHintsGiven": "1"
           }
         },
@@ -214,12 +246,12 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                 | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                            | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 1             | [{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":1}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                 | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 100 | 101     | 50     | 1               | 1             | [{"rotorIndex":1,"cellRank":1}] | done                       | 1                                  | 1                              |
+      | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 100 | 101     | 50     | 1               | 1             | [{"rotorIndex":1}] | done                       | 1                                  | 1                              |
     And logs should contain:
       """
       Unable to parse sHintsRequested ({"idAttempt":100,"idItem":50,"idUser":10}) having value "not an array": invalid character 'o' in literal null (expecting 'u')

@@ -59,14 +59,18 @@ Feature: Submit a new answer - robustness
 
   Scenario: Missing answer
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}}
+        "task_token": "{{userTaskToken}}"
       }
       """
     Then the response code should be 400
@@ -76,14 +80,18 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idUser
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """
@@ -94,13 +102,17 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idItemLocal
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """
@@ -111,15 +123,19 @@ Feature: Submit a new answer - robustness
 
   Scenario: Wrong idAttempt
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "abc",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "idAttempt", "abc",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """
@@ -130,14 +146,18 @@ Feature: Submit a new answer - robustness
 
   Scenario: idUser doesn't match the user's ID
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "20",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "20",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """
@@ -148,14 +168,18 @@ Feature: Submit a new answer - robustness
 
   Scenario: User not found
     Given I am the user with ID "404"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "404",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "404",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """
@@ -166,14 +190,18 @@ Feature: Submit a new answer - robustness
 
   Scenario: No submission rights
     Given I am the user with ID "10"
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(1)"
       }
       """

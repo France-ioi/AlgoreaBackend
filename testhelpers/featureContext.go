@@ -34,6 +34,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
 	s.Step(`^the table "([^"]*)" should stay unchanged but the row with IDs? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 
+	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
 
 	s.AfterScenario(ctx.ScenarioTeardown)

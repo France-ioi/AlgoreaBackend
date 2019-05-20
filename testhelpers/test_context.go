@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"bou.ke/monkey"
+	"github.com/CloudyKit/jet"
 	"github.com/DATA-DOG/godog/gherkin"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/jinzhu/gorm"
@@ -45,6 +46,7 @@ type TestContext struct {
 	inScenario       bool
 	dbTableData      map[string]*gherkin.DataTable
 	addedDBIndices   []*addedDBIndex
+	templateSet      *jet.Set
 }
 
 var db *sql.DB
@@ -63,6 +65,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
 	ctx.dbTableData = make(map[string]*gherkin.DataTable)
+	ctx.templateSet = ctx.constructTemplateSet()
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)

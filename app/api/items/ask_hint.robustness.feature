@@ -44,20 +44,28 @@ Feature: Ask for a hint - robustness
 
   Scenario: User not found
     Given I am the user with ID "404"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "404",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "404",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "404",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "404",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 403
@@ -67,20 +75,28 @@ Feature: Ask for a hint - robustness
 
   Scenario: idUser in task_token doesn't match the user's ID
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "20",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "20",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 400
@@ -90,20 +106,28 @@ Feature: Ask for a hint - robustness
 
   Scenario: itemUrls of task_token and hint_requested doesn't match
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 400
@@ -113,19 +137,28 @@ Feature: Ask for a hint - robustness
 
   Scenario: idUser in hint_requested doesn't match the user's ID
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "20",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "20",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 400
@@ -135,20 +168,28 @@ Feature: Ask for a hint - robustness
 
   Scenario: No submission rights
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 403
@@ -158,21 +199,29 @@ Feature: Ask for a hint - robustness
 
   Scenario: idAttempt not found
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "10",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "10",
-          "idAttempt", "100",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-	        "askedHint", `{"rotorIndex":1,"cellRank":1}`,
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 404
@@ -182,19 +231,27 @@ Feature: Ask for a hint - robustness
 
   Scenario: missing askedHint
     Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"
+      }
+      """
     When I send a POST request to "/items/ask_hint" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
-        "hint_requested": {{generateToken(map(
-          "idUser", "10",
-	        "itemURL", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        ), taskPlatformPrivateKey)}}
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
       }
       """
     Then the response code should be 400
