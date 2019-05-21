@@ -83,6 +83,57 @@ Feature: Ask for a hint
       | 10     | 50     | 1               | 2             | [{"rotorIndex":0},{"rotorIndex":1}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should stay unchanged
 
+  Scenario: User is able to ask for a hint with a minimal hint token
+    Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
+    When I send a POST request to "/items/ask_hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body decoded as "AskHintResponse" should be, in JSON:
+      """
+      {
+        "data": {
+          "task_token": {
+            "date": "{{currentTimeInFormat("02-01-2006")}}",
+            "idUser": "10",
+            "idItemLocal": "50",
+            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+            "randomSeed": "",
+            "platformName": "{{app().TokenConfig.PlatformName}}",
+            "sHintsRequested": "[{\"rotorIndex\":0},{\"rotorIndex\":1}]",
+            "nbHintsGiven": "2"
+          }
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "users_items" should be:
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                     | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null                                | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 2             | [{"rotorIndex":0},{"rotorIndex":1}] | done                       | 1                                  | 1                              |
+    And the table "groups_attempts" should stay unchanged
+
   Scenario: User is able to ask for a hint with idAttempt set
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
