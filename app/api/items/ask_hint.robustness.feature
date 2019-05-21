@@ -25,6 +25,10 @@ Feature: Ask for a hint - robustness
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 10             | 50          |
+    And the database has the following table 'groups_items':
+      | idGroup | idItem | sCachedPartialAccessDate |
+      | 101     | 10     | 2017-05-29T06:38:38Z     |
+      | 101     | 50     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
       | 10     | 10     | null                            | 0             | 0                     | null            |

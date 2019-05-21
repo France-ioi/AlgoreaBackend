@@ -256,19 +256,23 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 	s.mustBeInTransaction() // because it may close a contest
 	recoverPanics(&err)
 
+	var readOnly bool
+	err = s.Visible(user).Where("fullAccess > 0 OR partialAccess > 0").Where("ID = ?", itemID).
+		PluckFirst("bReadOnly", &readOnly).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return false, errors.New("no access to the task item"), nil
+	}
+	mustNotBeError(err)
+
+	if readOnly {
+		return false, errors.New("item is read-only"), nil
+	}
+
 	hasRights, reason := s.checkSubmissionRightsForTimeLimitedContest(itemID, user)
 	if !hasRights {
 		return hasRights, reason, nil
 	}
 
-	var result []bool
-	mustNotBeError(s.ByID(itemID).Pluck("bReadOnly", &result).Error())
-	if len(result) == 0 {
-		return false, errors.New("no such item"), nil
-	}
-	if result[0] {
-		return false, errors.New("item is read-only"), nil
-	}
 	return true, nil, nil
 }
 

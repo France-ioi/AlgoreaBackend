@@ -15,6 +15,9 @@ Feature: Submit a new answer - robustness
     And the database has the following table 'items':
       | ID | bReadOnly |
       | 50 | 1         |
+    And the database has the following table 'groups_items':
+      | idGroup | idItem | sCachedPartialAccessDate |
+      | 101     | 50     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested                 | nbHintsCached |
       | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            |
