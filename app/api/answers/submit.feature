@@ -15,6 +15,9 @@ Feature: Submit a new answer
     And the database has the following table 'items':
       | ID |
       | 50 |
+    And the database has the following table 'groups_items':
+      | idGroup | idItem | sCachedPartialAccessDate |
+      | 101     | 50     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
       | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
@@ -22,14 +25,18 @@ Feature: Submit a new answer
   Scenario: User is able to submit a new answer
     Given I am the user with ID "10"
     And time is frozen
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idUser", "10",
-          "idItemLocal", "50",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print 1"
       }
       """
@@ -67,19 +74,23 @@ Feature: Submit a new answer
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
     And time is frozen
+    And the following token "userTaskToken" signed by the app is distributed:
+      """
+      {
+        "idItem": "50",
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "idItemLocal": "50",
+        "randomSeed": "100",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
     When I send a POST request to "/answers" with the following body:
       """
       {
-        "task_token": {{generateToken(map(
-          "idItem", "50",
-          "idUser", "10",
-          "idItemLocal", "50",
-          "idAttempt", "100",
-          "itemUrl", "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "idItemLocal", "50",
-          "randomSeed", "100",
-          "platformName", app().TokenConfig.PlatformName,
-        ), app().TokenConfig.PrivateKey)}},
+        "task_token": "{{userTaskToken}}",
         "answer": "print(2)"
       }
       """

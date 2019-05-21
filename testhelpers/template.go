@@ -20,9 +20,7 @@ import (
 var dbPathRegexp = regexp.MustCompile(`^\s*(\w+)\[(\d+)]\[(\w+)]\s*$`)
 
 func (ctx *TestContext) preprocessString(jsonBody string) (string, error) {
-	set := ctx.constructTemplateSet()
-
-	tmpl, err := set.LoadTemplate("template", jsonBody)
+	tmpl, err := ctx.templateSet.Parse("template", jsonBody)
 
 	if err != nil {
 		return "", err
@@ -63,7 +61,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 			}
 			privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 			if err != nil {
-				a.Panicf("Cannot parse private key: ", err)
+				a.Panicf("Cannot parse private key: %s", err)
 			}
 		}
 		return reflect.ValueOf(

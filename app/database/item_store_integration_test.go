@@ -96,7 +96,7 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	}{
 		{name: "normal", itemID: 13, wantHasAccess: true, wantReason: nil, wantError: nil},
 		{name: "read-only", itemID: 12, wantHasAccess: false, wantReason: errors.New("item is read-only"), wantError: nil},
-		{name: "not found", itemID: 10, wantHasAccess: false, wantReason: errors.New("no such item"), wantError: nil},
+		{name: "no access", itemID: 10, wantHasAccess: false, wantReason: errors.New("no access to the task item"), wantError: nil},
 		{name: "finished time-limited", itemID: 14, wantHasAccess: false,
 			wantReason: errors.New("the contest has not started yet or has already finished"), wantError: nil},
 	}

@@ -29,7 +29,7 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	}
 }
 
-// ParseJSONRequestData parses and validates JSON according to the structure definition
+// ParseJSONRequestData parses and validates JSON from the request according to the structure definition
 func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	if err := f.decodeRequestJSONDataIntoStruct(r); err != nil {
 		return err
@@ -84,6 +84,7 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 		Result: f.definitionStructure,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeHookFunc(time.RFC3339),
+			toAnythingHookFunc(),
 		),
 		ErrorUnused:      false, // we will check this on our own
 		Metadata:         &f.metadata,
@@ -237,4 +238,22 @@ func getJSONFieldName(structField *reflect.StructField) string {
 		return "-"
 	}
 	return jsonTagParts[0]
+}
+
+// toAnythingHookFunc returns a DecodeHookFunc that converts
+// any value to payloads.Anything.
+func toAnythingHookFunc() mapstructure.DecodeHookFunc {
+	return func(
+		f reflect.Type,
+		t reflect.Type,
+		data interface{}) (interface{}, error) {
+		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/payloads" {
+			return data, nil
+		}
+
+		if f.Kind() == reflect.String {
+			return []byte(data.(string)), nil
+		}
+		return json.Marshal(data)
+	}
 }

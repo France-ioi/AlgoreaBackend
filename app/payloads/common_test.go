@@ -27,15 +27,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    "0",
-				HintsAllowed:       "0",
-				HintPossible:       true,
-				AccessSolutions:    "1",
-				ReadAnswers:        true,
-				Login:              "test",
-				SubmissionPossible: true,
-				SupportedLangProg:  "*",
-				IsAdmin:            "0",
+				HintsGivenCount:    ptrString("0"),
+				HintsAllowed:       ptrString("0"),
+				HintPossible:       ptrBool(true),
+				AccessSolutions:    ptrString("1"),
+				ReadAnswers:        ptrBool(true),
+				Login:              ptrString("test"),
+				SubmissionPossible: ptrBool(true),
+				SupportedLangProg:  ptrString("*"),
+				IsAdmin:            ptrString("0"),
 				Converted: TaskTokenConverted{
 					UserID:      556371821693219925,
 					LocalItemID: 901756573345831409,
@@ -56,6 +56,37 @@ func TestPayloads_ParseMap(t *testing.T) {
 				Answer: "{\"idSubmission\":\"899146309203855074\",\"langProg\":\"python\"," +
 					"\"sourceCode\":\"print(min(int(input()), int(input()), int(input())))\"}",
 				UserAnswerID: "251510027138726857",
+			},
+		},
+		{
+			name: "hint token",
+			raw:  payloadstest.HintPayloadFromTaskPlatform,
+			want: &HintToken{
+				Date:      "02-05-2019",
+				UserID:    ptrString("556371821693219925"),
+				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
+				AskedHint: Anything("1"),
+				Converted: HintTokenConverted{
+					UserID: ptrInt64(556371821693219925),
+				},
+			},
+		},
+		{
+			name: "hint token with a complex askedHint",
+			raw: map[string]interface{}{
+				"itemUrl":   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
+				"idUser":    "556371821693219925",
+				"askedHint": `{"rotorIndex":0,"cellRank":1}`,
+				"date":      "02-05-2019",
+			},
+			want: &HintToken{
+				Date:      "02-05-2019",
+				UserID:    ptrString("556371821693219925"),
+				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
+				AskedHint: Anything(`{"rotorIndex":0,"cellRank":1}`),
+				Converted: HintTokenConverted{
+					UserID: ptrInt64(556371821693219925),
+				},
 			},
 		},
 		{
@@ -88,6 +119,7 @@ func TestConvertIntoMap(t *testing.T) {
 		Skipped       string        `json:"-"`
 		AnotherNormal string        `json:"another_normal"`
 		Struct        *nestedStruct `json:"struct"`
+		OmitEmpty     *string       `json:"omit_empty,omitempty"`
 	}
 	got := ConvertIntoMap(&testStruct{
 		notExported:   "notExported value",
@@ -107,3 +139,7 @@ func TestConvertIntoMap(t *testing.T) {
 		},
 	}, got)
 }
+
+func ptrString(s string) *string { return &s }
+func ptrBool(b bool) *bool       { return &b }
+func ptrInt64(i int64) *int64    { return &i }

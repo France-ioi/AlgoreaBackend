@@ -49,8 +49,8 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 }
 
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
-// and loads fixtures from the string (yaml with a tableName->[]dataRow map)
-func SetupDBWithFixtureString(fixture string) *database.DB {
+// and loads fixtures from the strings (yaml with a tableName->[]dataRow map)
+func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
@@ -58,7 +58,10 @@ func SetupDBWithFixtureString(fixture string) *database.DB {
 
 	// Seed the DB
 	EmptyDB(rawDb)
-	loadFixtureChainFromString(rawDb, fixture)
+
+	for _, fixture := range fixtures {
+		loadFixtureChainFromString(rawDb, fixture)
+	}
 
 	// Return a new db connection
 	var db *database.DB

@@ -73,6 +73,11 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
 }
 
+// Platforms returns a PlatformStore
+func (s *DataStore) Platforms() *PlatformStore {
+	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
+}
+
 // UserAnswers returns a UserAnswerStore
 func (s *DataStore) UserAnswers() *UserAnswerStore {
 	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}

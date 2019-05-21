@@ -1,6 +1,8 @@
 package testhelpers
 
 import (
+	"crypto/rsa"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,6 +17,8 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
+	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
 
 func (ctx *TestContext) RunFallbackServer() error { // nolint
@@ -77,5 +81,29 @@ func (ctx *TestContext) LogsShouldContain(docString *gherkin.DocString) error { 
 	if !strings.Contains(logs, stringToSearch) {
 		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
 	}
+	return nil
+}
+
+func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, docString *gherkin.DocString) error { // nolint
+	var privateKey *rsa.PrivateKey
+	signerName = strings.TrimSpace(signerName)
+	switch signerName {
+	case "the app":
+		privateKey = ctx.application.TokenConfig.PrivateKey
+	case "the task platform":
+		privateKey = tokentest.TaskPlatformPrivateKeyParsed
+	default:
+		return fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName)
+	}
+
+	data, err := ctx.preprocessString(docString.Content)
+	if err != nil {
+		return err
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal([]byte(data), &payload); err != nil {
+		return err
+	}
+	ctx.templateSet.AddGlobal(varName, token.Generate(payload, privateKey))
 	return nil
 }
