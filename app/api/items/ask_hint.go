@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"unsafe"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -126,7 +125,7 @@ func queryAndParsePreviouslyRequestedHints(
 	err := query.PluckFirst("sHintsRequested", &hintsRequested).Error()
 	var hintsRequestedParsed []payloads.Anything
 	if err == nil && hintsRequested != nil {
-		hintsErr := json.Unmarshal(*(*[]byte)(unsafe.Pointer(hintsRequested)), &hintsRequestedParsed) //nolint:gosec
+		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(fieldsForLogging)
