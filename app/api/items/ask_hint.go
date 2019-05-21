@@ -50,7 +50,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []payloads.Anything
-		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(&requestData, store, user, r)
+		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, user, r)
 		if err == gorm.ErrRecordNotFound {
 			apiError = service.ErrNotFound(errors.New("can't find previously requested hints info"))
 			return nil // commit
@@ -107,19 +107,19 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
-func queryAndParsePreviouslyRequestedHints(
-	requestData *AskHintRequest, store *database.DataStore, user *database.User, r *http.Request) ([]payloads.Anything, error) {
+func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
+	user *database.User, r *http.Request) ([]payloads.Anything, error) {
 	fieldsForLogging := map[string]interface{}{
 		"idUser": user.UserID,
-		"idItem": requestData.TaskToken.Converted.LocalItemID,
+		"idItem": taskToken.Converted.LocalItemID,
 	}
 	var query *database.DB
-	if requestData.TaskToken.Converted.AttemptID != nil {
-		query = store.GroupAttempts().ByID(*requestData.TaskToken.Converted.AttemptID)
-		fieldsForLogging["idAttempt"] = *requestData.TaskToken.Converted.AttemptID
+	if taskToken.Converted.AttemptID != nil {
+		query = store.GroupAttempts().ByID(*taskToken.Converted.AttemptID)
+		fieldsForLogging["idAttempt"] = *taskToken.Converted.AttemptID
 	} else {
 		query = store.UserItems().Where("idUser = ?", user.UserID).
-			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
+			Where("idItem = ?", taskToken.Converted.LocalItemID)
 	}
 	var hintsRequested *string
 	err := query.PluckFirst("sHintsRequested", &hintsRequested).Error()
