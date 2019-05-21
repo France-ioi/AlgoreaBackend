@@ -61,7 +61,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 			}
 			privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 			if err != nil {
-				a.Panicf("Cannot parse private key: ", err)
+				a.Panicf("Cannot parse private key: %s", err)
 			}
 		}
 		return reflect.ValueOf(
