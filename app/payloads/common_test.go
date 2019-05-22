@@ -31,15 +31,16 @@ func TestPayloads_ParseMap(t *testing.T) {
 				HintsGivenCount:    ptrString("0"),
 				HintsAllowed:       ptrString("0"),
 				HintPossible:       ptrBool(true),
-				AccessSolutions:    ptrString("1"),
+				AccessSolutions:    formdata.AnythingFromString(`"1"`),
 				ReadAnswers:        ptrBool(true),
 				Login:              ptrString("test"),
 				SubmissionPossible: ptrBool(true),
 				SupportedLangProg:  ptrString("*"),
 				IsAdmin:            ptrString("0"),
 				Converted: TaskTokenConverted{
-					UserID:      556371821693219925,
-					LocalItemID: 901756573345831409,
+					UserID:          556371821693219925,
+					LocalItemID:     901756573345831409,
+					AccessSolutions: ptrBool(true),
 				},
 			},
 		},
@@ -142,5 +143,4 @@ func TestConvertIntoMap(t *testing.T) {
 }
 
 func ptrString(s string) *string { return &s }
-func ptrBool(b bool) *bool       { return &b }
 func ptrInt64(i int64) *int64    { return &i }

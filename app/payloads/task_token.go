@@ -25,7 +25,7 @@ type TaskToken struct {
 	HintPossible       *bool              `json:"bHintPossible,omitempty"`
 	HintsRequested     *string            `json:"sHintsRequested,omitempty"`
 	HintsGivenCount    *string            `json:"nbHintsGiven,omitempty"`
-	AccessSolutions    *string            `json:"bAccessSolutions,omitempty"` // "0" or "1"
+	AccessSolutions    *formdata.Anything `json:"bAccessSolutions,omitempty"` // "0" or "1" / 0 or 1
 	ReadAnswers        *bool              `json:"bReadAnswers,omitempty"`
 	Login              *string            `json:"sLogin,omitempty"`
 	SubmissionPossible *bool              `json:"bSubmissionPossible,omitempty"`
@@ -40,9 +40,10 @@ type TaskToken struct {
 
 // TaskTokenConverted contains converted field values of TaskToken payload
 type TaskTokenConverted struct {
-	UserID      int64
-	LocalItemID int64
-	AttemptID   *int64
+	UserID          int64
+	LocalItemID     int64
+	AttemptID       *int64
+	AccessSolutions *bool
 }
 
 // Bind validates a task token and converts some needed field values.
@@ -65,7 +66,19 @@ func (tt *TaskToken) Bind() error {
 		}
 		tt.Converted.AttemptID = &attemptID
 	}
+	if tt.AccessSolutions != nil {
+		switch {
+		case bytes.Equal([]byte("0"), tt.AccessSolutions.Bytes()), bytes.Equal([]byte(`"0"`), tt.AccessSolutions.Bytes()):
+			tt.Converted.AccessSolutions = ptrBool(false)
+		case bytes.Equal([]byte("1"), tt.AccessSolutions.Bytes()), bytes.Equal([]byte(`"1"`), tt.AccessSolutions.Bytes()):
+			tt.Converted.AccessSolutions = ptrBool(true)
+		default:
+			return errors.New("wrong bAccessSolutions")
+		}
+	}
 	return nil
 }
+
+func ptrBool(b bool) *bool { return &b }
 
 var _ Binder = (*TaskToken)(nil)
