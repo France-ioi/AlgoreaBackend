@@ -380,6 +380,11 @@ func (conn *DB) Error() error {
 	return conn.db.Error
 }
 
+// Exec executes raw sql
+func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
+	return newDB(conn.db.Exec(sqlQuery, values...))
+}
+
 // insert reads fields from the data struct and insert the values which have been set
 // into the given table
 func (conn *DB) insert(tableName string, data interface{}) error {

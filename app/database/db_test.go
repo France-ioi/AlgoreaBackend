@@ -693,6 +693,23 @@ func TestDB_Delete(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_Exec(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	query := "UPDATE users set ID = ? WHERE ID = ?"
+	mock.ExpectExec("^"+regexp.QuoteMeta(query)+"$").
+		WithArgs(1, 2).
+		WillReturnResult(sqlmock.NewResult(-1, 1))
+
+	execDB := db.Exec(query, 1, 2)
+
+	assert.NotEqual(t, execDB, db)
+	assert.NoError(t, execDB.Error())
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_insert(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
