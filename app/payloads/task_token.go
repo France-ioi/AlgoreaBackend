@@ -1,33 +1,36 @@
 package payloads
 
 import (
+	"bytes"
 	"crypto/rsa"
 	"errors"
 	"strconv"
+
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
 // TaskToken represents data inside a task token
 type TaskToken struct {
 	// Nullable fields are of pointer types
-	Date               string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
-	UserID             string  `json:"idUser"`
-	ItemID             *string `json:"idItem,omitempty"` // always is nil?
-	AttemptID          *string `json:"idAttempt,omitempty"`
-	ItemURL            string  `json:"itemUrl"`
-	LocalItemID        string  `json:"idItemLocal"`
-	PlatformName       string  `json:"platformName" valid:"stringlength(1|200)"`
-	RandomSeed         string  `json:"randomSeed"`
-	TaskID             *string `json:"idTask,omitempty"`        // always is nil?
-	HintsAllowed       *string `json:"bHintsAllowed,omitempty"` // "0" or "1"
-	HintPossible       *bool   `json:"bHintPossible,omitempty"`
-	HintsRequested     *string `json:"sHintsRequested,omitempty"`
-	HintsGivenCount    *string `json:"nbHintsGiven,omitempty"`
-	AccessSolutions    *string `json:"bAccessSolutions,omitempty"` // "0" or "1"
-	ReadAnswers        *bool   `json:"bReadAnswers,omitempty"`
-	Login              *string `json:"sLogin,omitempty"`
-	SubmissionPossible *bool   `json:"bSubmissionPossible,omitempty"`
-	SupportedLangProg  *string `json:"sSupportedLangProg,omitempty"`
-	IsAdmin            *string `json:"bIsAdmin,omitempty"` // "0" or "1"
+	Date               string             `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
+	UserID             string             `json:"idUser"`
+	ItemID             *string            `json:"idItem,omitempty"` // always is nil?
+	AttemptID          *string            `json:"idAttempt,omitempty"`
+	ItemURL            string             `json:"itemUrl"`
+	LocalItemID        string             `json:"idItemLocal"`
+	PlatformName       string             `json:"platformName" valid:"stringlength(1|200)"`
+	RandomSeed         string             `json:"randomSeed"`
+	TaskID             *string            `json:"idTask,omitempty"`        // always is nil?
+	HintsAllowed       *string            `json:"bHintsAllowed,omitempty"` // "0" or "1"
+	HintPossible       *bool              `json:"bHintPossible,omitempty"`
+	HintsRequested     *string            `json:"sHintsRequested,omitempty"`
+	HintsGivenCount    *string            `json:"nbHintsGiven,omitempty"`
+	AccessSolutions    *string            `json:"bAccessSolutions,omitempty"` // "0" or "1"
+	ReadAnswers        *bool              `json:"bReadAnswers,omitempty"`
+	Login              *string            `json:"sLogin,omitempty"`
+	SubmissionPossible *bool              `json:"bSubmissionPossible,omitempty"`
+	SupportedLangProg  *string            `json:"sSupportedLangProg,omitempty"`
+	IsAdmin            *string            `json:"bIsAdmin,omitempty"` // "0" or "1"
 
 	Converted TaskTokenConverted
 

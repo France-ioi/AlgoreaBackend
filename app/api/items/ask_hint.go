@@ -13,6 +13,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -49,7 +50,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		service.MustNotBeError(err)
 
 		// Get the previous hints requested JSON data
-		var hintsRequestedParsed []payloads.Anything
+		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, user, r)
 		if err == gorm.ErrRecordNotFound {
 			apiError = service.ErrNotFound(errors.New("can't find previously requested hints info"))
@@ -108,7 +109,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
-	user *database.User, r *http.Request) ([]payloads.Anything, error) {
+	user *database.User, r *http.Request) ([]formdata.Anything, error) {
 	fieldsForLogging := map[string]interface{}{
 		"idUser": user.UserID,
 		"idItem": taskToken.Converted.LocalItemID,
@@ -123,7 +124,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 	}
 	var hintsRequested *string
 	err := query.PluckFirst("sHintsRequested", &hintsRequested).Error()
-	var hintsRequestedParsed []payloads.Anything
+	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
@@ -136,10 +137,10 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 	return hintsRequestedParsed, err
 }
 
-func addHintToListIfNeeded(hintsList []payloads.Anything, hintToAdd payloads.Anything) []payloads.Anything {
+func addHintToListIfNeeded(hintsList []formdata.Anything, hintToAdd formdata.Anything) []formdata.Anything {
 	var hintFound bool
 	for _, hint := range hintsList {
-		if bytes.Equal(hint, hintToAdd) {
+		if bytes.Equal(hint.Bytes(), hintToAdd.Bytes()) {
 			hintFound = true
 			break
 		}
@@ -160,8 +161,8 @@ type AskHintRequest struct {
 }
 
 type askHintRequestWrapper struct {
-	TaskToken          *string           `json:"task_token"`
-	HintRequestedToken payloads.Anything `json:"hint_requested"`
+	TaskToken          *string            `json:"task_token"`
+	HintRequestedToken *formdata.Anything `json:"hint_requested"`
 }
 
 // UnmarshalJSON unmarshals the items/askHint request data from JSON
@@ -186,7 +187,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 	}
 
 	err := token.UnmarshalDependingOnItemPlatform(requestData.store, requestData.TaskToken.Converted.LocalItemID,
-		&requestData.HintToken, []byte(wrapper.HintRequestedToken), "hint_requested")
+		&requestData.HintToken, wrapper.HintRequestedToken.Bytes(), "hint_requested")
 	if err != nil && !token.IsUnexpectedError(err) {
 		return err
 	}
@@ -194,7 +195,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 
 	if requestData.HintToken == nil {
 		hintToken := payloads.HintToken{}
-		if err := hintToken.UnmarshalJSON(wrapper.HintRequestedToken); err != nil {
+		if err := json.Unmarshal(wrapper.HintRequestedToken.Bytes(), &hintToken); err != nil {
 			return fmt.Errorf("invalid hint_requested: %s", err.Error())
 		}
 		requestData.HintToken = (*token.Hint)(&hintToken)
@@ -204,7 +205,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 
 // Bind of AskHintRequest checks that the asked hint is present
 func (requestData *AskHintRequest) Bind(r *http.Request) error {
-	if len(requestData.HintToken.AskedHint) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint) {
+	if len(requestData.HintToken.AskedHint.Bytes()) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint.Bytes()) {
 		return fmt.Errorf("asked hint should not be empty")
 	}
 	return nil

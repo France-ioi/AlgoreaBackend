@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
@@ -121,7 +122,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			itemID:   901756573345831409,
 			platform: &platform{usesTokens: false},
 			wantErr: errors.New("invalid hint_requested: " +
-				"json: cannot unmarshal array into Go value of type map[string]payloads.Anything"),
+				"json: cannot unmarshal array into Go value of type map[string]formdata.Anything"),
 		},
 		{
 			name: "invalid plain hint_requested",
@@ -145,7 +146,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 				TaskToken: &expectedTaskToken,
 				HintToken: &token.Hint{
 					UserID:    ptrString("556371821693219925"),
-					AskedHint: payloads.Anything(`"123"`),
+					AskedHint: *formdata.AnythingFromString(`"123"`),
 					Converted: payloads.HintTokenConverted{
 						UserID: ptrInt64(556371821693219925),
 					},

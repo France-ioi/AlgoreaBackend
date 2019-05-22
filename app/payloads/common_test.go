@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
 )
 
@@ -65,7 +66,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 				Date:      "02-05-2019",
 				UserID:    ptrString("556371821693219925"),
 				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
-				AskedHint: Anything("1"),
+				AskedHint: *formdata.AnythingFromString("1"),
 				Converted: HintTokenConverted{
 					UserID: ptrInt64(556371821693219925),
 				},
@@ -76,14 +77,14 @@ func TestPayloads_ParseMap(t *testing.T) {
 			raw: map[string]interface{}{
 				"itemUrl":   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
 				"idUser":    "556371821693219925",
-				"askedHint": `{"rotorIndex":0,"cellRank":1}`,
+				"askedHint": *formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
 				"date":      "02-05-2019",
 			},
 			want: &HintToken{
 				Date:      "02-05-2019",
 				UserID:    ptrString("556371821693219925"),
 				ItemURL:   ptrString("http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696"),
-				AskedHint: Anything(`{"rotorIndex":0,"cellRank":1}`),
+				AskedHint: *formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
 				Converted: HintTokenConverted{
 					UserID: ptrInt64(556371821693219925),
 				},

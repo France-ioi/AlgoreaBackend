@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
 // HintToken represents data inside a hint token
 type HintToken struct {
-	Date      string   `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
-	UserID    *string  `json:"idUser,omitempty"`
-	ItemID    *string  `json:"idItem,omitempty"`
-	ItemURL   *string  `json:"itemUrl,omitempty"`
-	AskedHint Anything `json:"askedHint"`
+	Date      string            `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
+	UserID    *string           `json:"idUser,omitempty"`
+	ItemID    *string           `json:"idItem,omitempty"`
+	ItemURL   *string           `json:"itemUrl,omitempty"`
+	AskedHint formdata.Anything `json:"askedHint"`
 
 	Converted HintTokenConverted
 
@@ -28,7 +30,7 @@ type HintTokenConverted struct {
 
 // UnmarshalJSON unmarshals the hint token payload from JSON
 func (tt *HintToken) UnmarshalJSON(raw []byte) error {
-	preparsedHintToken := map[string]Anything{}
+	preparsedHintToken := map[string]formdata.Anything{}
 	if err := json.Unmarshal(raw, &preparsedHintToken); err != nil {
 		return err
 	}
@@ -38,7 +40,7 @@ func (tt *HintToken) UnmarshalJSON(raw []byte) error {
 			parsedHintToken[key] = preparsedHintToken[key]
 		} else {
 			var value interface{}
-			_ = json.Unmarshal([]byte(preparsedHintToken[key]), &value)
+			_ = json.Unmarshal(preparsedHintToken[key].Bytes(), &value)
 			parsedHintToken[key] = value
 		}
 	}

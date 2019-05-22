@@ -12,7 +12,6 @@ import (
 	"github.com/France-ioi/mapstructure"
 
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 )
 
 func TestFormData_ParseJSONRequestData(t *testing.T) {
@@ -503,18 +502,25 @@ func Test_toAnythingHookFunc(t *testing.T) {
 		wantErr  error
 	}{
 		{
-			name:     "string to anything (just convert to bytes)",
+			name:     "string to anything (serialize)",
 			typeFrom: reflect.TypeOf("string"),
-			typeTo:   reflect.TypeOf(payloads.Anything{}),
+			typeTo:   reflect.TypeOf(formdata.Anything{}),
 			data:     "string",
-			want:     []byte("string"),
+			want:     *formdata.AnythingFromBytes([]byte(`"string"`)),
+		},
+		{
+			name:     "[]byte to anything (just copy)",
+			typeFrom: reflect.TypeOf([]byte("null")),
+			typeTo:   reflect.TypeOf(formdata.Anything{}),
+			data:     []byte("null"),
+			want:     *formdata.AnythingFromBytes([]byte(`null`)),
 		},
 		{
 			name:     "int to anything (serialize)",
 			typeFrom: reflect.TypeOf(int(1)),
-			typeTo:   reflect.TypeOf(payloads.Anything{}),
+			typeTo:   reflect.TypeOf(formdata.Anything{}),
 			data:     int(1),
-			want:     []byte("1"),
+			want:     *formdata.AnythingFromBytes([]byte("1")),
 		},
 		{
 			name:     "int to string (does nothing)",
