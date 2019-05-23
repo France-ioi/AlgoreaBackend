@@ -77,8 +77,8 @@ func (resp *askHintResponse) UnmarshalJSON(raw []byte) error {
 type saveGradeResponse struct {
 	Data struct {
 		TaskToken   token.Task `json:"task_token"`
-		Validated   bool       `json:"bValidated"`
-		KeyObtained bool       `json:"bKeyObtained"`
+		Validated   bool       `json:"validated"`
+		KeyObtained bool       `json:"key_obtained"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -89,8 +89,8 @@ type saveGradeResponse struct {
 type saveGradeResponseWrapper struct {
 	Data struct {
 		TaskToken   *string `json:"task_token"`
-		Validated   bool    `json:"bValidated"`
-		KeyObtained bool    `json:"bKeyObtained"`
+		Validated   bool    `json:"validated"`
+		KeyObtained bool    `json:"key_obtained"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`

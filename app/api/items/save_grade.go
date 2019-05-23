@@ -67,8 +67,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
 		"task_token":   newTaskToken,
-		"bValidated":   validated,
-		"bKeyObtained": keyObtained,
+		"validated":    validated,
+		"key_obtained": keyObtained,
 	})))
 	return service.NoError
 }

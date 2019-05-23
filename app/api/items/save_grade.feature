@@ -87,8 +87,8 @@ Feature: Save grading result
             "randomSeed": "123",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": true
+          "key_obtained": true,
+          "validated": true
         },
         "message": "created",
         "success": true
@@ -151,8 +151,8 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": true
+          "key_obtained": true,
+          "validated": true
         },
         "message": "created",
         "success": true
@@ -211,8 +211,8 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": false,
-          "bValidated": false
+          "key_obtained": false,
+          "validated": false
         },
         "message": "created",
         "success": true
@@ -274,8 +274,8 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": false,
-          "bValidated": false
+          "key_obtained": false,
+          "validated": false
         },
         "message": "created",
         "success": true
@@ -334,8 +334,8 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": false
+          "key_obtained": true,
+          "validated": false
         },
         "message": "created",
         "success": true
@@ -397,8 +397,8 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": false
+          "key_obtained": true,
+          "validated": false
         },
         "message": "created",
         "success": true
@@ -461,8 +461,8 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": false,
-          "bValidated": false
+          "key_obtained": false,
+          "validated": false
         },
         "message": "created",
         "success": true
@@ -522,8 +522,8 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": true
+          "key_obtained": true,
+          "validated": true
         },
         "message": "created",
         "success": true
@@ -582,8 +582,8 @@ Feature: Save grading result
             "bAccessSolutions": "1",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": true
+          "key_obtained": true,
+          "validated": true
         },
         "message": "created",
         "success": true
@@ -632,8 +632,8 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "bKeyObtained": true,
-          "bValidated": true
+          "key_obtained": true,
+          "validated": true
         },
         "message": "created",
         "success": true
