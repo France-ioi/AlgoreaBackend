@@ -140,10 +140,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
-	userItemsValues := make([]interface{}, len(values)+2)
-	copy(userItemsValues, values)
-	userItemsValues[len(userItemsValues)-2] = user.UserID
-	userItemsValues[len(userItemsValues)-1] = requestData.TaskToken.Converted.LocalItemID
+	userItemsValues := make([]interface{}, 0, len(values)+2)
+	userItemsValues = append(userItemsValues, values...)
+	userItemsValues = append(userItemsValues, user.UserID, requestData.TaskToken.Converted.LocalItemID)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE users_items "+updateExpr+" WHERE idUser = ? AND idItem = ?", userItemsValues...).Error()) // nolint:gosec
 	if requestData.TaskToken.Converted.AttemptID != nil {
