@@ -54,6 +54,7 @@ Feature: Save grading result
         "idUser": "10",
         "idItemLocal": "50",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "randomSeed": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -83,7 +84,7 @@ Feature: Save grading result
             "idUser": "10",
             "idItemLocal": "50",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "randomSeed": "",
+            "randomSeed": "123",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
           "bKeyObtained": true,
@@ -115,6 +116,7 @@ Feature: Save grading result
         "idUser": "10",
         "idItemLocal": "50",
         "idAttempt": "100",
+        "randomSeed": "456",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -145,7 +147,7 @@ Feature: Save grading result
             "idUser": "10",
             "idItemLocal": "50",
             "idAttempt": "100",
-            "randomSeed": "",
+            "randomSeed": "456",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
