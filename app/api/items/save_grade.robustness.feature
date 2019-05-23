@@ -47,7 +47,7 @@ Feature: Save grading result - robustness
       []
       """
     Then the response code should be 400
-    And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequestWrapper"
+    And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged

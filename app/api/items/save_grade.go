@@ -20,7 +20,7 @@ import (
 )
 
 func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.APIError {
-	requestData := SaveGradeRequest{store: srv.Store, publicKey: srv.TokenConfig.PublicKey}
+	requestData := saveGradeRequestParsed{store: srv.Store, publicKey: srv.TokenConfig.PublicKey}
 
 	var err error
 	if err = render.Bind(r, &requestData); err != nil {
@@ -74,7 +74,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
-	requestData *SaveGradeRequest) (validated, keyObtained bool) {
+	requestData *saveGradeRequestParsed) (validated, keyObtained bool) {
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
@@ -155,8 +155,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	return validated, keyObtained
 }
 
-// SaveGradeRequest represents a JSON request body format needed by items.saveGrade()
-type SaveGradeRequest struct {
+type saveGradeRequestParsed struct {
 	TaskToken   *token.Task
 	ScoreToken  *token.Score
 	AnswerToken *token.Answer
@@ -165,7 +164,7 @@ type SaveGradeRequest struct {
 	publicKey *rsa.PublicKey
 }
 
-type saveGradeRequestWrapper struct {
+type saveGradeRequest struct {
 	TaskToken    *string            `json:"task_token"`
 	ScoreToken   formdata.Anything  `json:"score_token"`
 	Score        *float64           `json:"score"`
@@ -174,8 +173,8 @@ type saveGradeRequestWrapper struct {
 }
 
 // UnmarshalJSON unmarshals the items/saveGrade request data from JSON
-func (requestData *SaveGradeRequest) UnmarshalJSON(raw []byte) error {
-	var wrapper saveGradeRequestWrapper
+func (requestData *saveGradeRequestParsed) UnmarshalJSON(raw []byte) error {
+	var wrapper saveGradeRequest
 	if err := json.Unmarshal(raw, &wrapper); err != nil {
 		return err
 	}
@@ -189,7 +188,7 @@ func (requestData *SaveGradeRequest) UnmarshalJSON(raw []byte) error {
 	return requestData.unmarshalScoreToken(&wrapper)
 }
 
-func (requestData *SaveGradeRequest) unmarshalScoreToken(wrapper *saveGradeRequestWrapper) error {
+func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGradeRequest) error {
 	err := token.UnmarshalDependingOnItemPlatform(requestData.store, requestData.TaskToken.Converted.LocalItemID,
 		&requestData.ScoreToken, wrapper.ScoreToken.Bytes(), "score_token")
 	if err != nil && !token.IsUnexpectedError(err) {
@@ -205,7 +204,7 @@ func (requestData *SaveGradeRequest) unmarshalScoreToken(wrapper *saveGradeReque
 	return nil
 }
 
-func (requestData *SaveGradeRequest) unmarshalAnswerToken(wrapper *saveGradeRequestWrapper) error {
+func (requestData *saveGradeRequestParsed) unmarshalAnswerToken(wrapper *saveGradeRequest) error {
 	if wrapper.AnswerToken == nil {
 		return errors.New("missing answer_token")
 	}
@@ -230,7 +229,7 @@ func (requestData *SaveGradeRequest) unmarshalAnswerToken(wrapper *saveGradeRequ
 	return nil
 }
 
-func (requestData *SaveGradeRequest) reconstructScoreTokenData(wrapper *saveGradeRequestWrapper) error {
+func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *saveGradeRequest) error {
 	if err := requestData.unmarshalAnswerToken(wrapper); err != nil {
 		return err
 	}
@@ -252,12 +251,12 @@ func (requestData *SaveGradeRequest) reconstructScoreTokenData(wrapper *saveGrad
 	return nil
 }
 
-// Bind of SaveGradeRequest does nothing.
-func (requestData *SaveGradeRequest) Bind(r *http.Request) error {
+// Bind of saveGradeRequestParsed does nothing.
+func (requestData *saveGradeRequestParsed) Bind(r *http.Request) error {
 	return nil
 }
 
-func checkSaveGradeTokenParams(user *database.User, requestData *SaveGradeRequest) service.APIError {
+func checkSaveGradeTokenParams(user *database.User, requestData *saveGradeRequestParsed) service.APIError {
 	if user.UserID != requestData.TaskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
