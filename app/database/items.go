@@ -6,7 +6,8 @@ func (conn *DB) WhereItemsAreVisible(user *User) *DB {
 		MatchingUserAncestors(user).
 		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
 			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, " +
-			"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
+			"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, " +
+			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions").
 		Group("idItem")
 
 	if groupItemsPerms.Error() != nil {
