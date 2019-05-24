@@ -132,22 +132,26 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		)
 		values = append(values,
 			todo, 1, 1, gorm.Expr("IFNULL(sValidationDate, NOW())"))
+		// if the item is validated, we don't need to check whether we are above iScoreMinUnlock
+		// as we are sure we get a higher score than iScoreMinUnlock
 		keyObtained = true
 	} else {
-		// Item wasn't validated, check if we unlocked something
+		// Item wasn't validated, so we need to check if we unlocked something (score >= iScoreMinUnlock)
 		var unlockedInfo struct {
 			UnlockedItemID string  `gorm:"column:idItemUnlocked"`
 			ScoreMinUnlock float64 `gorm:"column:iScoreMinUnlock"`
 		}
 		service.MustNotBeError(store.Items().ByID(requestData.TaskToken.Converted.LocalItemID).Select("idItemUnlocked, iScoreMinUnlock").
 			Take(&unlockedInfo).Error())
-		if unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock < score {
+		if unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock <= score {
 			keyObtained = true
 			// Update sAncestorsComputationState only if we hadn't obtained the key before
 			columnsToUpdate = append(columnsToUpdate,
 				"sAncestorsComputationState", "bKeyObtained",
 			)
-			values = append(values, gorm.Expr("IF(bKeyObtained = 0, 'todo', sAncestorsComputationState)"), 1)
+			values = append(values,
+				gorm.Expr("IF(bKeyObtained = 0, 'todo', sAncestorsComputationState)"),
+				gorm.Expr("IF(bKeyObtained = 0, 1, bKeyObtained)"))
 		}
 	}
 	if score > 0 && requestData.TaskToken.Converted.AttemptID != nil {
