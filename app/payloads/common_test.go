@@ -32,11 +32,11 @@ func TestPayloads_ParseMap(t *testing.T) {
 				HintsAllowed:       ptrString("0"),
 				HintPossible:       ptrBool(true),
 				AccessSolutions:    formdata.AnythingFromString(`"1"`),
-				ReadAnswers:        ptrBool(true),
+				ReadAnswers:        formdata.AnythingFromString("true"),
 				Login:              ptrString("test"),
 				SubmissionPossible: ptrBool(true),
 				SupportedLangProg:  ptrString("*"),
-				IsAdmin:            ptrString("0"),
+				IsAdmin:            formdata.AnythingFromString(`"0"`),
 				Converted: TaskTokenConverted{
 					UserID:          556371821693219925,
 					LocalItemID:     901756573345831409,

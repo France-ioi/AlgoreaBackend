@@ -209,5 +209,4 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	}
 }
 
-func ptrString(s string) *string { return &s }
-func ptrInt64(i int64) *int64    { return &i }
+func ptrInt64(i int64) *int64 { return &i }
