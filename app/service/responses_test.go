@@ -35,6 +35,18 @@ func TestCreationSuccess(t *testing.T) {
 	assert.Equal(http.StatusCreated, recorder.Code)
 }
 
+func TestUpdateSuccess(t *testing.T) {
+	assert := assertlib.New(t)
+
+	data := struct {
+		Info string `json:"info"`
+	}{"some info"}
+
+	recorder := httpResponseForResponse(UpdateSuccess(data))
+	assert.Equal(`{"success":true,"message":"updated","data":{"info":"some info"}}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusOK, recorder.Code)
+}
+
 func TestDeletionSuccess(t *testing.T) {
 	assert := assertlib.New(t)
 
