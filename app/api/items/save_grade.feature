@@ -72,7 +72,7 @@ Feature: Save grading result
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -138,7 +138,7 @@ Feature: Save grading result
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -204,7 +204,7 @@ Feature: Save grading result
         "idUserAnswer": "124"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -271,7 +271,7 @@ Feature: Save grading result
         "idUserAnswer": "124"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -335,7 +335,7 @@ Feature: Save grading result
         "idUserAnswer": "124"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -397,7 +397,7 @@ Feature: Save grading result
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -450,7 +450,7 @@ Feature: Save grading result
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",

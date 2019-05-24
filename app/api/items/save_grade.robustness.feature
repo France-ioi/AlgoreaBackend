@@ -44,7 +44,7 @@ Feature: Save grading result - robustness
 
   Scenario: Wrong JSON in request
     Given I am the user with ID "10"
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       []
       """
@@ -75,7 +75,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -109,7 +109,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -143,7 +143,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -177,7 +177,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -201,7 +201,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "score_token": "{{scoreToken}}"
@@ -224,7 +224,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "abcdef",
@@ -249,7 +249,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -283,7 +283,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "123"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -308,7 +308,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -333,7 +333,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -369,7 +369,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -405,7 +405,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -441,7 +441,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -477,7 +477,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -514,7 +514,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -551,7 +551,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -587,7 +587,7 @@ Feature: Save grading result - robustness
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -626,7 +626,7 @@ Feature: Save grading result - robustness
         "idUserAnswer": "124"
       }
       """
-    When I send a POST request to "/items/save_grade" with the following body:
+    When I send a POST request to "/items/save-grade" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
