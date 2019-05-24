@@ -634,11 +634,46 @@ Feature: Save grading result - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "The answer has been already graded"
+    And the response error message should contain "The answer has been already graded or is not found"
     And logs should contain:
     """
-    The answer has been already graded or is not found ({"idAttempt":100,"idItem":80,"idUser":10,"idUserAnswer":124})
+    A user tries to replay a score token with a different score value ({"idAttempt":100,"idItem":80,"idUser":10,"idUserAnswer":124,"newScore":100,"oldScore":0})
     """
+    And the table "users_answers" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: The answer is not found
+    Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "80",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "bAccessSolutions": "0",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "scoreToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "score": "100",
+        "idUserAnswer": "124"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "The answer has been already graded or is not found"
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged

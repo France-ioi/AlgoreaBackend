@@ -60,13 +60,6 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	service.MustNotBeError(err)
 
 	if !ok {
-		fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-			"idAttempt":    requestData.TaskToken.Converted.AttemptID,
-			"idItem":       requestData.TaskToken.Converted.LocalItemID,
-			"idUser":       user.UserID,
-			"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
-		})
-		logging.GetLogEntry(r).Warnf("The answer has been already graded or is not found (%s)", fieldsForLoggingMarshaled)
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
 
@@ -89,25 +82,15 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed) (validated, keyObtained, ok bool) {
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
-	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
 
 	// TODO: handle validation in a proper way (what did he mean??)
 	if score > 99 {
 		validated = true
 	}
-	updateResult := store.UserAnswers().ByID(userAnswerID).
-		Where("idUser = ?", user.UserID).
-		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
-		Where("iScore IS NULL").
-		UpdateColumn(map[string]interface{}{
-			"sGradingDate": gorm.Expr("NOW()"),
-			"bValidated":   validated,
-			"iScore":       score,
-		})
-	service.MustNotBeError(updateResult.Error())
-	if updateResult.RowsAffected() == 0 {
+	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
 		return validated, keyObtained, false
 	}
+
 	// Build query to update users_items
 	// The iScore is set towards the end, so that the IF condition on
 	// sBestAnswerDate is computed before iScore is updated
@@ -173,6 +156,43 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 	service.MustNotBeError(store.GroupAttempts().After())
 	return validated, keyObtained, true
+}
+
+func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
+	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
+	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
+	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
+		Where("idUser = ?", user.UserID).
+		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
+
+	var oldScore *float64
+	err := userAnswerScope.WithWriteLock().PluckFirst("iScore", &oldScore).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return false
+	}
+	service.MustNotBeError(err)
+	if oldScore != nil {
+		if *oldScore != score {
+			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+				"idAttempt":    requestData.TaskToken.Converted.AttemptID,
+				"idItem":       requestData.TaskToken.Converted.LocalItemID,
+				"idUser":       user.UserID,
+				"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
+				"newScore":     score,
+				"oldScore":     *oldScore,
+			})
+			logging.Warnf("A user tries to replay a score token with a different score value (%s)", fieldsForLoggingMarshaled)
+		}
+		return false
+	}
+	updateResult := userAnswerScope.
+		UpdateColumn(map[string]interface{}{
+			"sGradingDate": gorm.Expr("NOW()"),
+			"bValidated":   validated,
+			"iScore":       score,
+		})
+	service.MustNotBeError(updateResult.Error())
+	return true
 }
 
 type saveGradeRequestParsed struct {
