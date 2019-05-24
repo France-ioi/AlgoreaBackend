@@ -20,6 +20,7 @@ Feature: Save grading result - robustness
       | ID | idPlatform | sUrl                                                                    | bReadOnly | idItemUnlocked | iScoreMinUnlock | sValidationType |
       | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |                |                 |                 |
       | 70 | 20         | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         |                |                 |                 |
+      | 80 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         |                |                 |                 |
       | 10 | null       | null                                                                    | 0         |                |                 | AllButOne       |
     And the database has the following table 'items_items':
       | idItemParent | idItemChild |
@@ -31,6 +32,7 @@ Feature: Save grading result - robustness
       | idGroup | idItem | sCachedPartialAccessDate |
       | 101     | 50     | 2017-05-29T06:38:38Z     |
       | 101     | 70     | 2017-05-29T06:38:38Z     |
+      | 101     | 80     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate      | sValidationDate      |
       | 10     | 10     | null            | 0      | null                 | null                 |
@@ -599,3 +601,44 @@ Feature: Save grading result - robustness
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
+  Scenario: The answer has been already graded
+    Given I am the user with ID "10"
+    And the database has the following table 'users_answers':
+      | ID  | idUser | idItem | iScore |
+      | 124 | 10     | 80     | 0      |
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "80",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "bAccessSolutions": "0",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "scoreToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "score": "100",
+        "idUserAnswer": "124"
+      }
+      """
+    When I send a POST request to "/items/save_grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "The answer has been already graded"
+    And logs should contain:
+    """
+    The answer has been already graded or is not found ({"idAttempt":100,"idItem":80,"idUser":10,"idUserAnswer":124})
+    """
+    And the table "users_answers" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged

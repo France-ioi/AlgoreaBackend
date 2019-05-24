@@ -675,6 +675,20 @@ func TestDB_Scan_NonPointer(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_RowsAffected(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectExec("^" + regexp.QuoteMeta("UPDATE `myTable` SET `myColumn` = ?") + "$").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(-1, 123))
+
+	rowsAffected := db.Table("myTable").UpdateColumn("myColumn", 1).RowsAffected()
+
+	assert.Equal(t, int64(123), rowsAffected)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

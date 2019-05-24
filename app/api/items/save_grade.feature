@@ -44,6 +44,7 @@ Feature: Save grading result
       | ID  | idUser | idItem |
       | 123 | 10     | 50     |
       | 124 | 10     | 60     |
+      | 125 | 10     | 70     |
     And time is frozen
 
   Scenario: User is able to save the grading result with a high score and idAttempt
@@ -103,6 +104,7 @@ Feature: Save grading result
       | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
       | 123 | 10     | 50     | 100    | 1          | 1                             |
       | 124 | 10     | 60     | null   | null       | null                          |
+      | 125 | 10     | 70     | null   | null       | null                          |
     And the table "users_items" should be:
       | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
       | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                  | null                             | 0                                | 1                                |
@@ -168,6 +170,7 @@ Feature: Save grading result
       | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
       | 123 | 10     | 50     | 99     | 0          | 1                             |
       | 124 | 10     | 60     | null   | null       | null                          |
+      | 125 | 10     | 70     | null   | null       | null                          |
     And the table "users_items" should be:
       | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
       | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
@@ -233,6 +236,7 @@ Feature: Save grading result
       | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
       | 123 | 10     | 50     | null   | null       | null                          |
       | 124 | 10     | 60     | 99     | 0          | 1                             |
+      | 125 | 10     | 70     | null   | null       | null                          |
     And the table "users_items" should be:
       | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
       | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
@@ -299,6 +303,7 @@ Feature: Save grading result
       | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
       | 123 | 10     | 50     | null   | null       | null                          |
       | 124 | 10     | 60     | 5      | 0          | 1                             |
+      | 125 | 10     | 70     | null   | null       | null                          |
     And the table "users_items" should be:
       | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
       | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
@@ -362,6 +367,7 @@ Feature: Save grading result
       | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
       | 123 | 10     | 50     | null   | null       | null                          |
       | 124 | 10     | 60     | 100    | 1          | 1                             |
+      | 125 | 10     | 70     | null   | null       | null                          |
     And the table "users_items" should be:
       | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
       | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
@@ -440,7 +446,7 @@ Feature: Save grading result
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idUserAnswer": "123",
+        "idUserAnswer": "125",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """

@@ -14,6 +14,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
@@ -38,7 +39,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return apiError
 	}
 
-	var validated, keyObtained bool
+	var validated, keyObtained, ok bool
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
@@ -50,13 +51,24 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
 		}
 
-		validated, keyObtained = saveGradingResultsIntoDB(store, user, &requestData)
+		validated, keyObtained, ok = saveGradingResultsIntoDB(store, user, &requestData)
 		return nil
 	})
 	if apiError != service.NoError {
 		return apiError
 	}
 	service.MustNotBeError(err)
+
+	if !ok {
+		fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+			"idAttempt":    requestData.TaskToken.Converted.AttemptID,
+			"idItem":       requestData.TaskToken.Converted.LocalItemID,
+			"idUser":       user.UserID,
+			"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
+		})
+		logging.GetLogEntry(r).Warnf("The answer has been already graded or is not found (%s)", fieldsForLoggingMarshaled)
+		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
+	}
 
 	if validated && requestData.TaskToken.Converted.AccessSolutions != nil && !(*requestData.TaskToken.Converted.AccessSolutions) {
 		requestData.TaskToken.AccessSolutions = formdata.AnythingFromString(`"1"`)
@@ -74,7 +86,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed) (validated, keyObtained bool) {
+	requestData *saveGradeRequestParsed) (validated, keyObtained, ok bool) {
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
@@ -83,14 +95,19 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	if score > 99 {
 		validated = true
 	}
-	service.MustNotBeError(store.UserAnswers().ByID(userAnswerID).
+	updateResult := store.UserAnswers().ByID(userAnswerID).
 		Where("idUser = ?", user.UserID).
 		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
+		Where("iScore IS NULL").
 		UpdateColumn(map[string]interface{}{
 			"sGradingDate": gorm.Expr("NOW()"),
 			"bValidated":   validated,
 			"iScore":       score,
-		}).Error())
+		})
+	service.MustNotBeError(updateResult.Error())
+	if updateResult.RowsAffected() == 0 {
+		return validated, keyObtained, false
+	}
 	// Build query to update users_items
 	// The iScore is set towards the end, so that the IF condition on
 	// sBestAnswerDate is computed before iScore is updated
@@ -151,7 +168,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 			store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE ID = ?", values...).Error()) // nolint:gosec
 	}
 	service.MustNotBeError(store.GroupAttempts().After())
-	return validated, keyObtained
+	return validated, keyObtained, true
 }
 
 type saveGradeRequestParsed struct {
