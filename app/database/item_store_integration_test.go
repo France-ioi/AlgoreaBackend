@@ -330,7 +330,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {ID: 1, sLogin: 1, idGroupSelf: 10}
 			- {ID: 2, sLogin: 2, idGroupSelf: 20}
 			- {ID: 3, sLogin: 3, idGroupSelf: 30}
-		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11}]
+		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}]
 		groups_groups:
 			- {idGroupParent: 40, idGroupChild: 10}
 			- {idGroupParent: 40, idGroupChild: 30}

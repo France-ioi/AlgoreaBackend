@@ -17,7 +17,23 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 		Where("groups_ancestors.idGroupAncestor=?", userOwnedGroupID)
 }
 
-// TeamGroupByItemAndUser returns a composable query for getting a team on some item for the current user
+// TeamGroupByTeamItemAndUser returns a composable query for getting a team for the current user by the team's main item
+func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
+	selfGroupID, err := user.SelfGroupID()
+	if err != nil {
+		_ = s.DB.db.AddError(err)
+		return s.DB
+	}
+
+	return s.
+		Joins(`JOIN groups_groups
+			ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, selfGroupID).
+		Where("groups.idTeamItem = ?", itemID).
+		Where("groups.sType = 'Team'").
+		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
+}
+
+// TeamGroupByItemAndUser returns a composable query for getting a team for the current user by one of team's items
 func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
 	selfGroupID, err := user.SelfGroupID()
 	if err != nil {
@@ -27,7 +43,11 @@ func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
 
 	return s.
 		Joins(`JOIN groups_groups
-				ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, selfGroupID).
-		Where("groups.idTeamItem = ?", itemID).
+			ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, selfGroupID).
+		Joins(`LEFT JOIN items_ancestors
+			ON items_ancestors.idItemAncestor = groups.idTeamItem`).
+		Where("groups.sType = 'Team'").
+		Where("items_ancestors.idItemChild = ? OR groups.idTeamItem = ?", itemID, itemID).
+		Group("groups.ID").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }

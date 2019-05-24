@@ -417,7 +417,8 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	var teamGroupID int64
-	mustNotBeError(s.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+	mustNotBeError(s.Groups().TeamGroupByTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+
 	// Set contest as finished
 	/*
 		// We would use this block if UPDATEs with JOINs were fixed in jinzhu/gorm
