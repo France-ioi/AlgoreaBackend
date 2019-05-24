@@ -108,31 +108,21 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate,
-			"sAncestorsComputationState", "bValidated", "bKeyObtained", "sValidationDate",
+			"sAncestorsComputationState", "bValidated", "sValidationDate",
 		)
 		values = append(values,
-			todo, 1, 1, gorm.Expr("IFNULL(sValidationDate, NOW())"))
-		// if the item is validated, we don't need to check whether we are above iScoreMinUnlock
-		// as we are sure we get a higher score than iScoreMinUnlock
+			todo, 1, gorm.Expr("IFNULL(sValidationDate, NOW())"))
+	}
+	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, validated) {
 		keyObtained = true
-	} else {
-		// Item wasn't validated, so we need to check if we unlocked something (score >= iScoreMinUnlock)
-		var unlockedInfo struct {
-			UnlockedItemID string  `gorm:"column:idItemUnlocked"`
-			ScoreMinUnlock float64 `gorm:"column:iScoreMinUnlock"`
-		}
-		service.MustNotBeError(store.Items().ByID(requestData.TaskToken.Converted.LocalItemID).Select("idItemUnlocked, iScoreMinUnlock").
-			Take(&unlockedInfo).Error())
-		if unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock <= score {
-			keyObtained = true
+		if !validated {
+			// If validated, as the ancestor's recomputation will happen anyway
 			// Update sAncestorsComputationState only if we hadn't obtained the key before
-			columnsToUpdate = append(columnsToUpdate,
-				"sAncestorsComputationState", "bKeyObtained",
-			)
-			values = append(values,
-				gorm.Expr("IF(bKeyObtained = 0, 'todo', sAncestorsComputationState)"),
-				gorm.Expr("IF(bKeyObtained = 0, 1, bKeyObtained)"))
+			columnsToUpdate = append(columnsToUpdate, "sAncestorsComputationState")
+			values = append(values, gorm.Expr("IF(bKeyObtained = 0, 'todo', sAncestorsComputationState)"))
 		}
+		columnsToUpdate = append(columnsToUpdate, "bKeyObtained")
+		values = append(values, 1)
 	}
 	if score > 0 && requestData.TaskToken.Converted.AttemptID != nil {
 		// Always propagate attempts if the score was non-zero
@@ -190,6 +180,19 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 		})
 	service.MustNotBeError(updateResult.Error())
 	return true
+}
+
+func shouldUnlockItems(store *database.DataStore, itemID int64, score float64, gotFullScore bool) bool {
+	if gotFullScore {
+		return true
+	}
+	var unlockedInfo struct {
+		UnlockedItemID string  `gorm:"column:idItemUnlocked"`
+		ScoreMinUnlock float64 `gorm:"column:iScoreMinUnlock"`
+	}
+	service.MustNotBeError(store.Items().ByID(itemID).Select("idItemUnlocked, iScoreMinUnlock").
+		Take(&unlockedInfo).Error())
+	return unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock <= score
 }
 
 type saveGradeRequestParsed struct {
