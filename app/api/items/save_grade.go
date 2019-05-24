@@ -83,10 +83,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 
-	// TODO: handle validation in a proper way (what did he mean??)
-	if score > 99 {
-		validated = true
-	}
+	validated = score > 99 // currently a validated task is only a task with a full score (score > 99)
 	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
 		return validated, keyObtained, false
 	}
