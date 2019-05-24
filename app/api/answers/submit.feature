@@ -65,8 +65,8 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts |
-      | 10     | 50     | 3                     |
+      | idUser | idItem | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
+      | 10     | 50     | 3                     | 1                                  |
     And the table "users_answers" should be:
       | idUser | idItem | idAttempt | sType      | sAnswer | ABS(sSubmissionDate - NOW()) < 3 |
       | 10     | 50     | null      | Submission | print 1 | 1                                |
@@ -74,6 +74,9 @@ Feature: Submit a new answer
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
     And time is frozen
+    And the database has the following table 'groups_attempts':
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -119,8 +122,11 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts |
-      | 10     | 50     | 3                     |
+      | idUser | idItem | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
+      | 10     | 50     | 3                     | 1                                  |
     And the table "users_answers" should be:
       | idUser | idItem | idAttempt | sType      | sAnswer  | ABS(sSubmissionDate - NOW()) < 3 |
       | 10     | 50     | 100       | Submission | print(2) | 1                                |
+    And the table "groups_attempts" should be:
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                  |
