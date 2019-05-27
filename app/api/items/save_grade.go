@@ -83,7 +83,8 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 
-	validated = score > 99 // currently a validated task is only a task with a full score (score > 99)
+	gotFullScore := score == 100
+	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
 	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
 		return validated, keyObtained, false
 	}
@@ -113,7 +114,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		values = append(values,
 			todo, 1, gorm.Expr("IFNULL(sValidationDate, NOW())"))
 	}
-	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, validated) {
+	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
 		keyObtained = true
 		if !validated {
 			// If validated, as the ancestor's recomputation will happen anyway
