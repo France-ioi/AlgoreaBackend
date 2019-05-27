@@ -152,33 +152,37 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 		Where("idUser = ?", user.UserID).
 		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
 
-	var oldScore *float64
-	err := userAnswerScope.WithWriteLock().PluckFirst("iScore", &oldScore).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return false
-	}
-	service.MustNotBeError(err)
-	if oldScore != nil {
-		if *oldScore != score {
-			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-				"idAttempt":    requestData.TaskToken.Converted.AttemptID,
-				"idItem":       requestData.TaskToken.Converted.LocalItemID,
-				"idUser":       user.UserID,
-				"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
-				"newScore":     score,
-				"oldScore":     *oldScore,
-			})
-			logging.Warnf("A user tries to replay a score token with a different score value (%s)", fieldsForLoggingMarshaled)
-		}
-		return false
-	}
-	updateResult := userAnswerScope.
+	updateResult := userAnswerScope.Where("iScore = ? OR iScore IS NULL", score).
 		UpdateColumn(map[string]interface{}{
 			"sGradingDate": gorm.Expr("NOW()"),
 			"bValidated":   validated,
 			"iScore":       score,
 		})
 	service.MustNotBeError(updateResult.Error())
+
+	if updateResult.RowsAffected() == 0 {
+		var oldScore *float64
+		err := userAnswerScope.PluckFirst("iScore", &oldScore).Error()
+		if gorm.IsRecordNotFoundError(err) {
+			return false
+		}
+		service.MustNotBeError(err)
+		if oldScore != nil {
+			if *oldScore != score {
+				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+					"idAttempt":    requestData.TaskToken.Converted.AttemptID,
+					"idItem":       requestData.TaskToken.Converted.LocalItemID,
+					"idUser":       user.UserID,
+					"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
+					"newScore":     score,
+					"oldScore":     *oldScore,
+				})
+				logging.Warnf("A user tries to replay a score token with a different score value (%s)", fieldsForLoggingMarshaled)
+			}
+			return false
+		}
+	}
+
 	return true
 }
 
