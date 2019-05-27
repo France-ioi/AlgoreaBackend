@@ -33,7 +33,7 @@ Feature: Fetch active attempt for an item
       | 111     | 50     | null                     | 2017-05-29T06:38:38Z  | null                       |
     And time is frozen
 
-  Scenario: User is able fetch an active attempt (no active attempt set)
+  Scenario: User is able to fetch an active attempt (no active attempt set)
     Given I am the user with ID "11"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate | sHintsRequested | nbHintsCached |
@@ -73,7 +73,7 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
       | 8674665223082153551 | 111     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
 
-  Scenario: User is able fetch an active attempt (no active attempt set, only full access)
+  Scenario: User is able to fetch an active attempt (no active attempt set, only full access)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -112,7 +112,7 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
       | 8674665223082153551 | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
 
-  Scenario: User is able fetch an active attempt (no active attempt and item.bHasAttempts=1)
+  Scenario: User is able to fetch an active attempt (no active attempt and item.bHasAttempts=1)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -151,7 +151,7 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
       | 8674665223082153551 | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
 
-  Scenario: User is able fetch an active attempt (with active attempt set)
+  Scenario: User is able to fetch an active attempt (with active attempt set)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -188,7 +188,7 @@ Feature: Fetch active attempt for an item
       | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
     And the table "groups_attempts" should stay unchanged
 
-  Scenario: User is able fetch an active attempt (no active attempt set, but there are some in the DB)
+  Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -234,7 +234,7 @@ Feature: Fetch active attempt for an item
       | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
       | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
 
-  Scenario: User is able fetch an active attempt (no active attempt set, but there are some in the DB and items.bHasAttempts=1)
+  Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB and items.bHasAttempts=1)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
