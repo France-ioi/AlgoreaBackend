@@ -1,4 +1,4 @@
-package payloads
+package formdata
 
 import (
 	"testing"
@@ -7,14 +7,14 @@ import (
 )
 
 func TestAnything_MarshalJSON(t *testing.T) {
-	anything := Anything(`"value"`)
+	anything := AnythingFromString(`"value"`)
 	result, err := anything.MarshalJSON()
 	assert.NoError(t, err)
 	assert.Equal(t, []byte(`"value"`), result)
 }
 
 func TestAnything_MarshalJSON_EmptyValue(t *testing.T) {
-	anything := Anything(nil)
+	anything := Anything{raw: nil}
 	result, err := anything.MarshalJSON()
 	assert.NoError(t, err)
 	assert.Equal(t, []byte(`null`), result)
@@ -22,8 +22,13 @@ func TestAnything_MarshalJSON_EmptyValue(t *testing.T) {
 
 func TestAnything_UnmarshalJSON(t *testing.T) {
 	raw := []byte(`"value"`)
-	anything := Anything("")
+	anything := AnythingFromString("")
 	err := anything.UnmarshalJSON(raw)
 	assert.NoError(t, err)
-	assert.Equal(t, Anything(`"value"`), anything)
+	assert.Equal(t, AnythingFromString(`"value"`), anything)
+}
+
+func TestAnything_Bytes(t *testing.T) {
+	anything := AnythingFromString(`"value"`)
+	assert.Equal(t, []byte(`"value"`), anything.Bytes())
 }

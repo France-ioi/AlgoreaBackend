@@ -247,13 +247,14 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 		f reflect.Type,
 		t reflect.Type,
 		data interface{}) (interface{}, error) {
-		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/payloads" {
+		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata" {
 			return data, nil
 		}
 
-		if f.Kind() == reflect.String {
-			return []byte(data.(string)), nil
+		if f.Kind() == reflect.Slice && f.Elem().Kind() == reflect.Uint8 {
+			return *AnythingFromBytes(data.([]byte)), nil
 		}
-		return json.Marshal(data)
+		bytes, _ := json.Marshal(data)
+		return *AnythingFromBytes(bytes), nil
 	}
 }

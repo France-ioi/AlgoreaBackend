@@ -1,10 +1,13 @@
 package payloads
 
 import (
+	"encoding/json"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
 func TestTaskToken_Bind(t *testing.T) {
@@ -38,6 +41,31 @@ func TestTaskToken_Bind(t *testing.T) {
 			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AttemptID: &wrongAttemptID},
 			wantErr:   errors.New("wrong idAttempt"),
 		},
+		{
+			name:      "wrong bAccessSolutions",
+			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("abc")},
+			wantErr:   errors.New("wrong bAccessSolutions"),
+		},
+		{
+			name:          "bAccessSolutions = false (0)",
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("0")},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(false)},
+		},
+		{
+			name:          `bAccessSolutions = false ("0")`,
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString(`"0"`)},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(false)},
+		},
+		{
+			name:          "bAccessSolutions = true (1)",
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("1")},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(true)},
+		},
+		{
+			name:          `bAccessSolutions = true ("1")`,
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString(`"1"`)},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(true)},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -51,4 +79,16 @@ func TestTaskToken_Bind(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestTaskToken_MarshalJSON(t *testing.T) {
+	tt := &TaskToken{
+		UserID:          "10",
+		AccessSolutions: formdata.AnythingFromString(`"1"`),
+	}
+	result, err := json.Marshal(ConvertIntoMap(tt))
+	assert.NoError(t, err)
+	assert.Equal(t, []byte(
+		`{"bAccessSolutions":"1","date":"","idItemLocal":"","idUser":"10","itemUrl":"","platformName":"","randomSeed":""}`,
+	), result)
 }

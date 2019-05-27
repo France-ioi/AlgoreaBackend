@@ -375,9 +375,19 @@ func (conn *DB) Delete(where ...interface{}) *DB {
 	return newDB(conn.db.Delete(nil, where...))
 }
 
+// RowsAffected returns the number of rows affected by the last UPDATE/DELETE statement
+func (conn *DB) RowsAffected() int64 {
+	return conn.db.RowsAffected
+}
+
 // Error returns current errors
 func (conn *DB) Error() error {
 	return conn.db.Error
+}
+
+// Exec executes raw sql
+func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
+	return newDB(conn.db.Exec(sqlQuery, values...))
 }
 
 // insert reads fields from the data struct and insert the values which have been set

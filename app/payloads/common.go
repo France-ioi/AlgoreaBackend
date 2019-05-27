@@ -46,7 +46,7 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 			if fieldValue.CanInterface() { // skip unexported fields
 				fieldValue = resolvePointer(fieldValue)
 				if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
-					if fieldValue.Kind() == reflect.Struct {
+					if shouldConvert(fieldValue) {
 						out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
 					} else {
 						out[jsonName] = fieldValue.Interface()
@@ -56,6 +56,12 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 		}
 	}
 	return out
+}
+
+func shouldConvert(fieldValue reflect.Value) bool {
+	return fieldValue.Kind() == reflect.Struct &&
+		(fieldValue.Type().Name() != "Anything" ||
+			fieldValue.Type().PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata")
 }
 
 func resolvePointer(fieldValue reflect.Value) reflect.Value {

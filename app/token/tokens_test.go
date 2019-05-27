@@ -168,6 +168,12 @@ var marshalAndSignTests = []struct {
 		payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
 		payloadType: reflect.TypeOf(payloads.HintToken{}),
 	},
+	{
+		name:        "score token",
+		structType:  reflect.TypeOf(Score{}),
+		payloadMap:  payloadstest.ScorePayloadFromGrader,
+		payloadType: reflect.TypeOf(payloads.ScoreToken{}),
+	},
 }
 
 func TestToken_MarshalJSON(t *testing.T) {
