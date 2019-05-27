@@ -330,7 +330,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {ID: 1, sLogin: 1, idGroupSelf: 10}
 			- {ID: 2, sLogin: 2, idGroupSelf: 20}
 			- {ID: 3, sLogin: 3, idGroupSelf: 30}
-		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11}]
+		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}]
 		groups_groups:
 			- {idGroupParent: 40, idGroupChild: 10}
 			- {idGroupParent: 40, idGroupChild: 30}
@@ -401,4 +401,36 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		{GroupID: 40, ItemID: 11, PartialAccessDate: nil, CachedPartialAccessDate: nil, CachedPartialAccess: false},
 		{GroupID: 40, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
 	}, groupItems)
+}
+
+func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{ID: 11}, {ID: 12}, {ID: 13}]
+		users: [{ID: 1, idGroupSelf: 10}]
+		groups: [{ID: 10}, {ID: 40}]
+		groups_groups:
+			- {idGroupParent: 40, idGroupChild: 10}
+		groups_ancestors:
+			- {idGroupAncestor: 10, idGroupChild: 10}
+			- {idGroupAncestor: 40, idGroupChild: 10}
+			- {idGroupAncestor: 40, idGroupChild: 40}
+		groups_items:
+			- {idGroup: 40, idItem: 11, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2018-03-22T08:44:55Z}
+			- {idGroup: 10, idItem: 11, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2019-03-22T08:44:55Z}
+			- {idGroup: 10, idItem: 12, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2019-04-22T08:44:55Z}
+			- {idGroup: 10, idItem: 13, sCachedFullAccessDate: 2018-03-22T08:44:55Z}`)
+	type resultType struct {
+		ID              int64 `gorm:"column:ID"`
+		AccessSolutions bool  `gorm:"column:accessSolutions"`
+	}
+	var result []resultType
+
+	assert.NoError(t, database.NewDataStore(db).Items().
+		Visible(database.NewMockUser(10, &database.UserData{SelfGroupID: 10})).
+		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
+	assert.Equal(t, []resultType{
+		{ID: 11, AccessSolutions: true},
+		{ID: 12, AccessSolutions: true},
+		{ID: 13, AccessSolutions: false},
+	}, result)
 }

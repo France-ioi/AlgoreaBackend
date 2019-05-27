@@ -37,7 +37,8 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` JOIN (SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
-			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess "+
+			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, "+
+			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions "+
 			"FROM `groups_items` JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
 			"ON groups_items.idGroup = ancestors.idGroupAncestor GROUP BY idItem) as visible ON visible.idItem = items.ID "+
 			"WHERE (fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0)") + "$").

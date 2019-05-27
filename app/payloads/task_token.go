@@ -26,11 +26,11 @@ type TaskToken struct {
 	HintsRequested     *string            `json:"sHintsRequested,omitempty"`
 	HintsGivenCount    *string            `json:"nbHintsGiven,omitempty"`
 	AccessSolutions    *formdata.Anything `json:"bAccessSolutions,omitempty"` // "0" or "1" / 0 or 1
-	ReadAnswers        *bool              `json:"bReadAnswers,omitempty"`
+	ReadAnswers        *formdata.Anything `json:"bReadAnswers,omitempty"`
 	Login              *string            `json:"sLogin,omitempty"`
 	SubmissionPossible *bool              `json:"bSubmissionPossible,omitempty"`
 	SupportedLangProg  *string            `json:"sSupportedLangProg,omitempty"`
-	IsAdmin            *string            `json:"bIsAdmin,omitempty"` // "0" or "1"
+	IsAdmin            *formdata.Anything `json:"bIsAdmin,omitempty"` // "0" or "1" / false or true
 
 	Converted TaskTokenConverted
 

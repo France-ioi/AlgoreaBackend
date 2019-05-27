@@ -113,10 +113,11 @@ func (resp *saveGradeResponse) UnmarshalJSON(raw []byte) error {
 }
 
 var knownTypes = map[string]reflect.Type{
-	"AnswersSubmitRequest":  reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
-	"AnswersSubmitResponse": reflect.TypeOf(&answersSubmitResponse{}).Elem(),
-	"AskHintResponse":       reflect.TypeOf(&askHintResponse{}).Elem(),
-	"SaveGradeResponse":     reflect.TypeOf(&saveGradeResponse{}).Elem(),
+	"AnswersSubmitRequest":       reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
+	"AnswersSubmitResponse":      reflect.TypeOf(&answersSubmitResponse{}).Elem(),
+	"AskHintResponse":            reflect.TypeOf(&askHintResponse{}).Elem(),
+	"SaveGradeResponse":          reflect.TypeOf(&saveGradeResponse{}).Elem(),
+	"FetchActiveAttemptResponse": reflect.TypeOf(&askHintResponse{}).Elem(),
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {

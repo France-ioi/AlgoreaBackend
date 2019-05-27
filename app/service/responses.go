@@ -33,6 +33,16 @@ func CreationSuccess(data interface{}) render.Renderer {
 	}
 }
 
+// UpdateSuccess generated a success response for a PUT updating
+func UpdateSuccess(data interface{}) render.Renderer {
+	return &Response{
+		HTTPStatusCode: http.StatusOK,
+		Success:        true,
+		Message:        "updated",
+		Data:           data,
+	}
+}
+
 // DeletionSuccess generated a success response for a DELETE deletion
 func DeletionSuccess(data interface{}) render.Renderer {
 	return &Response{
