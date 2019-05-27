@@ -64,9 +64,15 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 		scope := userItemStore.Where("idUser = ? AND idItem = ?", user.UserID, requestData.TaskToken.LocalItemID)
 		service.MustNotBeError(scope.WithWriteLock().Select("sHintsRequested, nbHintsCached").Scan(&hintsInfo).Error())
-		service.MustNotBeError(scope.UpdateColumn(map[string]interface{}{
+		columnsToUpdate := map[string]interface{}{
 			"nbSubmissionsAttempts": gorm.Expr("nbSubmissionsAttempts + 1"),
-		}).Error())
+			"sLastActivityDate":     gorm.Expr("NOW()"),
+		}
+		service.MustNotBeError(scope.UpdateColumn(columnsToUpdate).Error())
+		if requestData.TaskToken.Converted.AttemptID != nil {
+			service.MustNotBeError(store.GroupAttempts().ByID(*requestData.TaskToken.Converted.AttemptID).
+				UpdateColumn(columnsToUpdate).Error())
+		}
 		return nil // commit
 	})
 
