@@ -9,7 +9,6 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
@@ -98,23 +97,14 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 	}
 	service.MustNotBeError(err)
 
-	var tokenAccessSolutions *formdata.Anything
-	if itemInfo.AccessSolutions {
-		tokenAccessSolutions = formdata.AnythingFromString(`"1"`)
-	} else {
-		tokenAccessSolutions = formdata.AnythingFromString(`"0"`)
-	}
-
-	boolValues := map[bool]string{false: "0", true: "1"}
-
 	taskToken := token.Task{
-		AccessSolutions:    tokenAccessSolutions,
-		SubmissionPossible: func(b bool) *bool { return &b }(true),
-		HintsAllowed:       ptrString(boolValues[itemInfo.HintsAllowed]),
+		AccessSolutions:    &itemInfo.AccessSolutions,
+		SubmissionPossible: ptrBool(true),
+		HintsAllowed:       &itemInfo.HintsAllowed,
 		HintsRequested:     userItemInfo.HintsRequested,
 		HintsGivenCount:    ptrString(strconv.Itoa(int(userItemInfo.HintsCachedCount))),
-		IsAdmin:            formdata.AnythingFromString("false"),
-		ReadAnswers:        formdata.AnythingFromString("true"),
+		IsAdmin:            ptrBool(false),
+		ReadAnswers:        ptrBool(true),
 		UserID:             strconv.FormatInt(user.UserID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
@@ -134,3 +124,4 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 }
 
 func ptrString(s string) *string { return &s }
+func ptrBool(b bool) *bool       { return &b }

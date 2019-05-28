@@ -613,7 +613,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": "0",
+        "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -652,7 +652,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": "0",
+        "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """

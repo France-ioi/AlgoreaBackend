@@ -63,8 +63,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
 
-	if validated && requestData.TaskToken.Converted.AccessSolutions != nil && !(*requestData.TaskToken.Converted.AccessSolutions) {
-		requestData.TaskToken.AccessSolutions = formdata.AnythingFromString(`"1"`)
+	if validated && requestData.TaskToken.AccessSolutions != nil && !(*requestData.TaskToken.AccessSolutions) {
+		requestData.TaskToken.AccessSolutions = ptrBool(true)
 	}
 	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)

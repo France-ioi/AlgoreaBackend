@@ -384,7 +384,7 @@ Feature: Save grading result
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "bAccessSolutions": "0",
+        "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -416,7 +416,7 @@ Feature: Save grading result
             "idAttempt": "100",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "randomSeed": "",
-            "bAccessSolutions": "1",
+            "bAccessSolutions": true,
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
           "key_obtained": true,

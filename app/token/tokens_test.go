@@ -27,13 +27,6 @@ func Test_UnmarshalJSON(t *testing.T) {
 		expectedErrorMessage string
 	}{
 		{
-			name:                "task token",
-			structType:          reflect.TypeOf(Task{}),
-			token:               []byte(fmt.Sprintf("%q", taskTokenFromAlgoreaPlatform)),
-			expectedPayloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			expectedPayloadType: reflect.TypeOf(payloads.TaskToken{}),
-		},
-		{
 			name:                "answer token",
 			structType:          reflect.TypeOf(Answer{}),
 			token:               []byte(fmt.Sprintf("%q", answerTokenFromAlgoreaPlatform)),
@@ -93,14 +86,6 @@ func Test_UnmarshalString(t *testing.T) {
 		expectedPayloadType  reflect.Type
 		expectedErrorMessage string
 	}{
-		{
-			name:                "task token",
-			structType:          reflect.TypeOf(Task{}),
-			token:               taskTokenFromAlgoreaPlatform,
-			publicKey:           tokentest.AlgoreaPlatformPublicKey,
-			expectedPayloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
-			expectedPayloadType: reflect.TypeOf(payloads.TaskToken{}),
-		},
 		{
 			name:                "answer token",
 			structType:          reflect.TypeOf(Answer{}),

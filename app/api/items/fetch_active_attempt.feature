@@ -46,8 +46,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "0",
-            "bHintsAllowed": "1",
+            "bAccessSolutions": false,
+            "bHintsAllowed": true,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -86,8 +86,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "0",
-            "bHintsAllowed": "1",
+            "bAccessSolutions": false,
+            "bHintsAllowed": true,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -125,8 +125,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "1",
-            "bHintsAllowed": "0",
+            "bAccessSolutions": true,
+            "bHintsAllowed": false,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -164,8 +164,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "0",
-            "bHintsAllowed": "1",
+            "bAccessSolutions": false,
+            "bHintsAllowed": true,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -207,8 +207,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "0",
-            "bHintsAllowed": "1",
+            "bAccessSolutions": false,
+            "bHintsAllowed": true,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -253,8 +253,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "1",
-            "bHintsAllowed": "0",
+            "bAccessSolutions": true,
+            "bHintsAllowed": false,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
@@ -296,8 +296,8 @@ Feature: Fetch active attempt for an item
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": "0",
-            "bHintsAllowed": "1",
+            "bAccessSolutions": false,
+            "bHintsAllowed": true,
             "bIsAdmin": false,
             "bReadAnswers": true,
             "bSubmissionPossible": true,
