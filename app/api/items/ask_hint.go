@@ -70,21 +70,23 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
 		columnsToUpdate := map[string]interface{}{
-			"sHintsRequested":            hintsRequestedNew,
-			"nbHintsCached":              len(hintsRequestedParsed),
 			"nbTasksWithHelp":            1,
 			"sAncestorsComputationState": "todo",
 			"sLastActivityDate":          gorm.Expr("NOW()"),
 			"sLastHintDate":              gorm.Expr("NOW()"),
 		}
-		// Update groups_attempts with the hint request
-		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
-			UpdateColumn(columnsToUpdate).Error())
 		// Update users_items with the hint request
 		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.UserID).
 			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
 			Where("idAttemptActive = ?", requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
+
+		// Update groups_attempts with the hint request
+		columnsToUpdate["sHintsRequested"] = hintsRequestedNew
+		columnsToUpdate["nbHintsCached"] = len(hintsRequestedParsed)
+		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
+			UpdateColumn(columnsToUpdate).Error())
+
 		service.MustNotBeError(store.GroupAttempts().After())
 
 		return nil

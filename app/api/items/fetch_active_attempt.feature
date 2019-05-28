@@ -56,8 +56,7 @@ Feature: Fetch active attempt for an item
             "idItemLocal": "50",
             "idItem": "task1",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "3",
-            "sHintsRequested": "1,2,3",
+            "nbHintsGiven": "0",
             "randomSeed": "8674665223082153551",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           }
@@ -194,11 +193,11 @@ Feature: Fetch active attempt for an item
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 50     | null            | 0      | null            | null            | null       |
     And the database has the following table 'groups_attempts':
-      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate |
-      | 1  | 101     | 50     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 2  | 101     | 50     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 3  | 102     | 50     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 4  | 101     | 51     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            |
+      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
+      | 1  | 101     | 50     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | 2  | 101     | 50     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
+      | 3  | 102     | 50     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | 4  | 101     | 51     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
     When I send a PUT request to "/items/50/active-attempt"
     Then the response code should be 200
     And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
@@ -217,7 +216,8 @@ Feature: Fetch active attempt for an item
             "idItemLocal": "50",
             "idItem": "task1",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
+            "nbHintsGiven": "4",
+            "sHintsRequested": "[1,2,3,4]",
             "randomSeed": "2",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           }
@@ -240,11 +240,11 @@ Feature: Fetch active attempt for an item
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 60     | null            | 0      | null            | null            | null       |
     And the database has the following table 'groups_attempts':
-      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate |
-      | 1  | 102     | 60     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 2  | 102     | 60     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 3  | 101     | 60     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            |
-      | 4  | 102     | 61     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            |
+      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
+      | 1  | 102     | 60     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | 2  | 102     | 60     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
+      | 3  | 101     | 60     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | 4  | 102     | 61     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
     When I send a PUT request to "/items/60/active-attempt"
     Then the response code should be 200
     And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
@@ -262,7 +262,8 @@ Feature: Fetch active attempt for an item
             "idUser": "10",
             "idItemLocal": "60",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
+            "nbHintsGiven": "4",
+            "sHintsRequested": "[1,2,3,4]",
             "sSupportedLangProg": "c,python",
             "randomSeed": "2",
             "platformName": "{{app().TokenConfig.PlatformName}}"

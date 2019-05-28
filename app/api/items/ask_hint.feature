@@ -30,15 +30,15 @@ Feature: Ask for a hint
       | 101     | 50     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested    | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
-      | 10     | 50     | [{"rotorIndex":0}] | 12            | 2                     | 100             |
+      | 10     | 50     | [{"rotorIndex":0}] | 1             | 2                     | 100             |
       | 10     | 10     | null               | 0             | 0                     | null            |
     And time is frozen
 
   Scenario: User is able to ask for a hint
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | nbHintsCached |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 4             |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -87,9 +87,9 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                               | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":0}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
       | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
       | 100 | 101     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
@@ -146,9 +146,9 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null                               | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":0}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
       | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested                    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
       | 100 | 101     | 50     | 1               | 5             | [0,1,"hint",null,{"rotorIndex":1}] | done                       | 1                                  | 1                              |
@@ -206,9 +206,9 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested   | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
-      | 10     | 10     | 1               | 0             | null              | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 4             | [0,1,"hint",null] | done                       | 1                                  | 1                              |
+      | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
+      | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":0}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
       | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested   | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
       | 100 | 101     | 50     | 1               | 4             | [0,1,"hint",null] | done                       | 1                                  | 1                              |
@@ -268,7 +268,7 @@ Feature: Ask for a hint
     And the table "users_items" should be:
       | idUser | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
       | 10     | 10     | 1               | 0             | null               | done                       | 1                                  | null                           |
-      | 10     | 50     | 1               | 1             | [{"rotorIndex":1}] | done                       | 1                                  | 1                              |
+      | 10     | 50     | 1               | 1             | [{"rotorIndex":0}] | done                       | 1                                  | 1                              |
     And the table "groups_attempts" should be:
       | ID  | idGroup | idItem | nbTasksWithHelp | nbHintsCached | sHintsRequested    | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastHintDate - NOW()) < 3 |
       | 100 | 101     | 50     | 1               | 1             | [{"rotorIndex":1}] | done                       | 1                                  | 1                              |

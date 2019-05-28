@@ -62,15 +62,17 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			user.UserID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		scope := userItemStore.Where("idUser = ? AND idItem = ?", user.UserID, requestData.TaskToken.LocalItemID)
-		service.MustNotBeError(scope.WithWriteLock().Select("sHintsRequested, nbHintsCached").Scan(&hintsInfo).Error())
+		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)
+		service.MustNotBeError(
+			groupAttemptsScope.WithWriteLock().Select("sHintsRequested, nbHintsCached").Scan(&hintsInfo).Error())
 		columnsToUpdate := map[string]interface{}{
 			"nbSubmissionsAttempts": gorm.Expr("nbSubmissionsAttempts + 1"),
 			"sLastActivityDate":     gorm.Expr("NOW()"),
 		}
-		service.MustNotBeError(scope.UpdateColumn(columnsToUpdate).Error())
-		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
+		service.MustNotBeError(userItemStore.
+			Where("idUser = ? AND idItem = ?", user.UserID, requestData.TaskToken.LocalItemID).
 			UpdateColumn(columnsToUpdate).Error())
+		service.MustNotBeError(groupAttemptsScope.UpdateColumn(columnsToUpdate).Error())
 		return nil // commit
 	})
 
