@@ -30,6 +30,11 @@ func TestScoreToken_Bind(t *testing.T) {
 			wantErr:   errors.New("wrong idUserAnswer"),
 		},
 		{
+			name:      "wrong idAttempt",
+			taskToken: ScoreToken{UserID: "10", UserAnswerID: "abc", Score: "10.12"},
+			wantErr:   errors.New("wrong idUserAnswer"),
+		},
+		{
 			name:      "wrong score",
 			taskToken: ScoreToken{UserID: "10", UserAnswerID: "20", Score: "abc"},
 			wantErr:   errors.New("wrong score"),

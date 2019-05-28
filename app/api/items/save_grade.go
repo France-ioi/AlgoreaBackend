@@ -63,8 +63,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
 
-	if validated && requestData.TaskToken.Converted.AccessSolutions != nil && !(*requestData.TaskToken.Converted.AccessSolutions) {
-		requestData.TaskToken.AccessSolutions = formdata.AnythingFromString(`"1"`)
+	if validated && requestData.TaskToken.AccessSolutions != nil && !(*requestData.TaskToken.AccessSolutions) {
+		requestData.TaskToken.AccessSolutions = ptrBool(true)
 	}
 	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
@@ -125,7 +125,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		columnsToUpdate = append(columnsToUpdate, "bKeyObtained")
 		values = append(values, 1)
 	}
-	if score > 0 && requestData.TaskToken.Converted.AttemptID != nil {
+	if score > 0 {
 		// Always propagate attempts if the score was non-zero
 		columnsToUpdate = append(columnsToUpdate, "sAncestorsComputationState")
 		values = append(values, todo)
@@ -137,11 +137,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	userItemsValues = append(userItemsValues, user.UserID, requestData.TaskToken.Converted.LocalItemID)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE users_items "+updateExpr+" WHERE idUser = ? AND idItem = ?", userItemsValues...).Error()) // nolint:gosec
-	if requestData.TaskToken.Converted.AttemptID != nil {
-		values = append(values, *requestData.TaskToken.Converted.AttemptID)
-		service.MustNotBeError(
-			store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE ID = ?", values...).Error()) // nolint:gosec
-	}
+	values = append(values, requestData.TaskToken.Converted.AttemptID)
+	service.MustNotBeError(
+		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE ID = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().After())
 	return validated, keyObtained, true
 }
@@ -266,9 +264,7 @@ func (requestData *saveGradeRequestParsed) unmarshalAnswerToken(wrapper *saveGra
 	if requestData.AnswerToken.ItemURL != requestData.TaskToken.ItemURL {
 		return errors.New("wrong itemUrl in answer_token")
 	}
-	if (requestData.AnswerToken.AttemptID == nil) != (requestData.TaskToken.AttemptID == nil) ||
-		(requestData.AnswerToken.AttemptID != nil &&
-			*requestData.AnswerToken.AttemptID != *requestData.TaskToken.AttemptID) {
+	if requestData.AnswerToken.AttemptID != requestData.TaskToken.AttemptID {
 		return errors.New("wrong idAttempt in answer_token")
 	}
 	return nil
@@ -291,7 +287,8 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 			UserID:       requestData.TaskToken.Converted.UserID,
 			UserAnswerID: userAnswerID,
 		},
-		ItemURL: requestData.TaskToken.ItemURL,
+		ItemURL:   requestData.TaskToken.ItemURL,
+		AttemptID: requestData.AnswerToken.AttemptID,
 	}
 	return nil
 }
@@ -314,6 +311,9 @@ func checkSaveGradeTokenParams(user *database.User, requestData *saveGradeReques
 	}
 	if requestData.TaskToken.ItemURL != requestData.ScoreToken.ItemURL {
 		return service.ErrInvalidRequest(errors.New("wrong itemUrl in score_token"))
+	}
+	if requestData.TaskToken.AttemptID != requestData.ScoreToken.AttemptID {
+		return service.ErrInvalidRequest(errors.New("wrong idAttempt in score_token"))
 	}
 	return service.NoError
 }

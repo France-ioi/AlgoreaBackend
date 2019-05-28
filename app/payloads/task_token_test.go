@@ -6,15 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 )
 
 func TestTaskToken_Bind(t *testing.T) {
-	attemptID := "100"
-	attemptIDInt64 := int64(100)
-	attemptIDInt64Ptr := &attemptIDInt64
-	wrongAttemptID := "abc"
 	tests := []struct {
 		name          string
 		taskToken     TaskToken
@@ -23,48 +17,23 @@ func TestTaskToken_Bind(t *testing.T) {
 	}{
 		{
 			name:          "okay",
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AttemptID: &attemptID},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AttemptID: attemptIDInt64Ptr},
+			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "100"},
+			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AttemptID: int64(100)},
 		},
 		{
 			name:      "wrong idUser",
-			taskToken: TaskToken{UserID: "abc", LocalItemID: "20", AttemptID: &attemptID},
+			taskToken: TaskToken{UserID: "abc", LocalItemID: "20", AttemptID: "100"},
 			wantErr:   errors.New("wrong idUser"),
 		},
 		{
 			name:      "wrong idItemLocal",
-			taskToken: TaskToken{UserID: "10", LocalItemID: "abc", AttemptID: &attemptID},
+			taskToken: TaskToken{UserID: "10", LocalItemID: "abc", AttemptID: "100"},
 			wantErr:   errors.New("wrong idItemLocal"),
 		},
 		{
 			name:      "wrong idAttempt",
-			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AttemptID: &wrongAttemptID},
+			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AttemptID: "abc"},
 			wantErr:   errors.New("wrong idAttempt"),
-		},
-		{
-			name:      "wrong bAccessSolutions",
-			taskToken: TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("abc")},
-			wantErr:   errors.New("wrong bAccessSolutions"),
-		},
-		{
-			name:          "bAccessSolutions = false (0)",
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("0")},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(false)},
-		},
-		{
-			name:          `bAccessSolutions = false ("0")`,
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString(`"0"`)},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(false)},
-		},
-		{
-			name:          "bAccessSolutions = true (1)",
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString("1")},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(true)},
-		},
-		{
-			name:          `bAccessSolutions = true ("1")`,
-			taskToken:     TaskToken{UserID: "10", LocalItemID: "20", AccessSolutions: formdata.AnythingFromString(`"1"`)},
-			wantConverted: TaskTokenConverted{UserID: 10, LocalItemID: 20, AccessSolutions: ptrBool(true)},
 		},
 	}
 	for _, tt := range tests {
@@ -84,11 +53,12 @@ func TestTaskToken_Bind(t *testing.T) {
 func TestTaskToken_MarshalJSON(t *testing.T) {
 	tt := &TaskToken{
 		UserID:          "10",
-		AccessSolutions: formdata.AnythingFromString(`"1"`),
+		AttemptID:       "200",
+		AccessSolutions: ptrBool(true),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte(
-		`{"bAccessSolutions":"1","date":"","idItemLocal":"","idUser":"10","itemUrl":"","platformName":"","randomSeed":""}`,
+		`{"bAccessSolutions":true,"date":"","idAttempt":"200","idItemLocal":"","idUser":"10","itemUrl":"","platformName":"","randomSeed":""}`,
 	), result)
 }

@@ -70,6 +70,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "404",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -104,6 +105,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -138,6 +140,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "20",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -152,6 +155,41 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Token in score_token doesn't correspond to user session: got idUser=20, expected 10"
+    And the table "users_answers" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: idAttempt in score_token and task_token don't match
+    Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "scoreToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "idAttempt": "101",
+        "score": "100",
+        "idUserAnswer": "123"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong idAttempt in score_token"
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
@@ -172,6 +210,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -196,6 +235,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -219,6 +259,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "123"
@@ -278,6 +319,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "99",
         "idUserAnswer": "123"
@@ -364,6 +406,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "20",
         "idItemLocal": "70",
+        "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -400,6 +443,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "10",
         "idItemLocal": "60",
+        "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -436,6 +480,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "10",
         "idItemLocal": "70",
+        "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183",
         "idUserAnswer": "123",
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -613,7 +658,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": "0",
+        "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -621,6 +666,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"
@@ -652,7 +698,7 @@ Feature: Save grading result - robustness
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
-        "bAccessSolutions": "0",
+        "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -660,6 +706,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"

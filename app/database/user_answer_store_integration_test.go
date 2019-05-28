@@ -19,11 +19,10 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 		name      string
 		userID    int64
 		itemID    int64
-		attemptID *int64
+		attemptID int64
 		answer    string
 	}{
-		{name: "with attemptID", userID: 12, itemID: 34, attemptID: ptrInt64(56), answer: "my answer"},
-		{name: "without attemptID", userID: 34, itemID: 56, attemptID: nil, answer: "another answer"},
+		{name: "with attemptID", userID: 12, itemID: 34, attemptID: 56, answer: "my answer"},
 	}
 
 	for _, test := range tests {
@@ -50,7 +49,7 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 			assert.Equal(t, userAnswer{
 				UserID:            test.userID,
 				ItemID:            test.itemID,
-				AttemptID:         test.attemptID,
+				AttemptID:         &test.attemptID,
 				Type:              "Submission",
 				Answer:            test.answer,
 				SubmissionDateSet: true,
@@ -59,5 +58,3 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 		})
 	}
 }
-
-func ptrInt64(i int64) *int64 { return &i }

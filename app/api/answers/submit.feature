@@ -21,6 +21,9 @@ Feature: Submit a new answer
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
       | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
+    And the database has the following table 'groups_attempts':
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with ID "10"
@@ -30,6 +33,7 @@ Feature: Submit a new answer
       {
         "idUser": "10",
         "idItemLocal": "50",
+        "idAttempt": "100",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -49,7 +53,7 @@ Feature: Submit a new answer
             "date": "{{currentTimeInFormat("02-01-2006")}}",
             "idUser": "10",
             "idItem": null,
-            "idAttempt": null,
+            "idAttempt": "100",
             "itemUrl": "",
             "idItemLocal": "50",
             "platformName": "algrorea_backend",
@@ -69,14 +73,14 @@ Feature: Submit a new answer
       | 10     | 50     | 3                     | 1                                  |
     And the table "users_answers" should be:
       | idUser | idItem | idAttempt | sType      | sAnswer | ABS(sSubmissionDate - NOW()) < 3 |
-      | 10     | 50     | null      | Submission | print 1 | 1                                |
+      | 10     | 50     | 100       | Submission | print 1 | 1                                |
+    And the table "groups_attempts" should be:
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                  |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
     And time is frozen
-    And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {

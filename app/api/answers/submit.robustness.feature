@@ -66,6 +66,7 @@ Feature: Submit a new answer - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "idItemLocal": "50",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -87,6 +88,7 @@ Feature: Submit a new answer - robustness
       """
       {
         "idUser": "",
+        "idAttempt": "100",
         "idItemLocal": "50",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
@@ -109,6 +111,7 @@ Feature: Submit a new answer - robustness
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -154,6 +157,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "20",
         "idItemLocal": "50",
+        "idAttempt": "100",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -176,6 +180,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "404",
         "idItemLocal": "50",
+        "idAttempt": "100",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """
@@ -198,6 +203,7 @@ Feature: Submit a new answer - robustness
       {
         "idUser": "10",
         "idItemLocal": "50",
+        "idAttempt": "100",
         "platformName": "{{app().TokenConfig.PlatformName}}"
       }
       """

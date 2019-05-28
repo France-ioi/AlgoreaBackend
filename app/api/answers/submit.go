@@ -69,10 +69,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			"sLastActivityDate":     gorm.Expr("NOW()"),
 		}
 		service.MustNotBeError(scope.UpdateColumn(columnsToUpdate).Error())
-		if requestData.TaskToken.Converted.AttemptID != nil {
-			service.MustNotBeError(store.GroupAttempts().ByID(*requestData.TaskToken.Converted.AttemptID).
-				UpdateColumn(columnsToUpdate).Error())
-		}
+		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
+			UpdateColumn(columnsToUpdate).Error())
 		return nil // commit
 	})
 

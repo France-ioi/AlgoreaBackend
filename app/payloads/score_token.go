@@ -12,7 +12,7 @@ type ScoreToken struct {
 	Date         string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
 	UserID       string  `json:"idUser"`
 	ItemID       *string `json:"idItem,omitempty"`
-	AttemptID    *string `json:"idAttempt,omitempty"`
+	AttemptID    string  `json:"idAttempt"`
 	ItemURL      string  `json:"itemUrl"`
 	Score        string  `json:"score"`
 	UserAnswerID string  `json:"idUserAnswer"`

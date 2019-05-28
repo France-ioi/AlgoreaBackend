@@ -43,9 +43,10 @@ func TestHintToken_UnmarshalJSON(t *testing.T) {
 func TestHintToken_MarshalJSON(t *testing.T) {
 	tt := &HintToken{
 		UserID:    ptrString("10"),
+		AttemptID: "100",
 		AskedHint: *formdata.AnythingFromString("false"),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	assert.NoError(t, err)
-	assert.Equal(t, []byte(`{"askedHint":false,"date":"","idUser":"10"}`), result)
+	assert.Equal(t, []byte(`{"askedHint":false,"date":"","idAttempt":"100","idUser":"10"}`), result)
 }
