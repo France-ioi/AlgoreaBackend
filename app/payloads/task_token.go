@@ -12,7 +12,7 @@ type TaskToken struct {
 	Date               string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
 	UserID             string  `json:"idUser"`
 	ItemID             *string `json:"idItem,omitempty"` // always is nil?
-	AttemptID          *string `json:"idAttempt,omitempty"`
+	AttemptID          string  `json:"idAttempt"`
 	ItemURL            string  `json:"itemUrl"`
 	LocalItemID        string  `json:"idItemLocal"`
 	PlatformName       string  `json:"platformName" valid:"stringlength(1|200)"`
@@ -39,7 +39,7 @@ type TaskToken struct {
 type TaskTokenConverted struct {
 	UserID      int64
 	LocalItemID int64
-	AttemptID   *int64
+	AttemptID   int64
 }
 
 // Bind validates a task token and converts some needed field values.
@@ -54,13 +54,9 @@ func (tt *TaskToken) Bind() error {
 		return errors.New("wrong idItemLocal")
 	}
 
-	if tt.AttemptID != nil {
-		var attemptID int64
-		attemptID, err = strconv.ParseInt(*tt.AttemptID, 10, 64)
-		if err != nil {
-			return errors.New("wrong idAttempt")
-		}
-		tt.Converted.AttemptID = &attemptID
+	tt.Converted.AttemptID, err = strconv.ParseInt(tt.AttemptID, 10, 64)
+	if err != nil {
+		return errors.New("wrong idAttempt")
 	}
 	return nil
 }

@@ -67,6 +67,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"
@@ -133,6 +134,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "99",
         "idUserAnswer": "123"
@@ -199,6 +201,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "99",
         "idUserAnswer": "124"
@@ -266,6 +269,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "5",
         "idUserAnswer": "124"
@@ -330,6 +334,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"
@@ -392,6 +397,7 @@ Feature: Save grading result
       """
       {
         "idUser": "10",
+        "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
         "idUserAnswer": "123"

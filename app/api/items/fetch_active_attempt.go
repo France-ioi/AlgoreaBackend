@@ -108,7 +108,7 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		UserID:             strconv.FormatInt(user.UserID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
-		AttemptID:          ptrString(strconv.FormatInt(*userItemInfo.ActiveAttemptID, 10)),
+		AttemptID:          strconv.FormatInt(*userItemInfo.ActiveAttemptID, 10),
 		ItemURL:            itemInfo.URL,
 		SupportedLangProg:  itemInfo.SupportedLangProg,
 		RandomSeed:         strconv.FormatInt(*userItemInfo.ActiveAttemptID, 10),

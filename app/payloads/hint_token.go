@@ -15,6 +15,7 @@ type HintToken struct {
 	UserID    *string           `json:"idUser,omitempty"`
 	ItemID    *string           `json:"idItem,omitempty"`
 	ItemURL   *string           `json:"itemUrl,omitempty"`
+	AttemptID string            `json:"idAttempt"`
 	AskedHint formdata.Anything `json:"askedHint"`
 
 	Converted HintTokenConverted

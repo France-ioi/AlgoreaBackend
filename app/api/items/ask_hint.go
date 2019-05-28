@@ -78,17 +78,13 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 			"sLastHintDate":              gorm.Expr("NOW()"),
 		}
 		// Update groups_attempts with the hint request
-		if requestData.TaskToken.Converted.AttemptID != nil {
-			service.MustNotBeError(store.GroupAttempts().ByID(*requestData.TaskToken.Converted.AttemptID).
-				UpdateColumn(columnsToUpdate).Error())
-		}
+		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
+			UpdateColumn(columnsToUpdate).Error())
 		// Update users_items with the hint request
-		query := store.UserItems().Where("idUser = ?", user.UserID).
-			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
-		if requestData.TaskToken.Converted.AttemptID != nil {
-			query = query.Where("idAttemptActive = ?", *requestData.TaskToken.Converted.AttemptID)
-		}
-		service.MustNotBeError(query.UpdateColumn(columnsToUpdate).Error())
+		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.UserID).
+			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
+			Where("idAttemptActive = ?", requestData.TaskToken.Converted.AttemptID).
+			UpdateColumn(columnsToUpdate).Error())
 		service.MustNotBeError(store.GroupAttempts().After())
 
 		return nil
@@ -110,26 +106,18 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	user *database.User, r *http.Request) ([]formdata.Anything, error) {
-	fieldsForLogging := map[string]interface{}{
-		"idUser": user.UserID,
-		"idItem": taskToken.Converted.LocalItemID,
-	}
-	var query *database.DB
-	if taskToken.Converted.AttemptID != nil {
-		query = store.GroupAttempts().ByID(*taskToken.Converted.AttemptID)
-		fieldsForLogging["idAttempt"] = *taskToken.Converted.AttemptID
-	} else {
-		query = store.UserItems().Where("idUser = ?", user.UserID).
-			Where("idItem = ?", taskToken.Converted.LocalItemID)
-	}
 	var hintsRequested *string
-	err := query.PluckFirst("sHintsRequested", &hintsRequested).Error()
+	err := store.GroupAttempts().ByID(taskToken.Converted.AttemptID).PluckFirst("sHintsRequested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
-			fieldsForLoggingMarshaled, _ := json.Marshal(fieldsForLogging)
+			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+				"idUser":    user.UserID,
+				"idItem":    taskToken.Converted.LocalItemID,
+				"idAttempt": taskToken.Converted.AttemptID,
+			})
 			logging.GetLogEntry(r).Warnf("Unable to parse sHintsRequested (%s) having value %q: %s", fieldsForLoggingMarshaled,
 				*hintsRequested, hintsErr.Error())
 		}
@@ -230,6 +218,9 @@ func checkAskHintUsersAndItemURL(user *database.User, requestData *AskHintReques
 	}
 	if requestData.HintToken.ItemURL != nil && requestData.TaskToken.ItemURL != *requestData.HintToken.ItemURL {
 		return service.ErrInvalidRequest(errors.New("wrong itemUrl in hint_requested token"))
+	}
+	if requestData.HintToken.AttemptID != requestData.TaskToken.AttemptID {
+		return service.ErrInvalidRequest(errors.New("wrong idAttempt in hint_requested token"))
 	}
 	return service.NoError
 }

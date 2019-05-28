@@ -23,6 +23,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	_ = payloads.ParseMap(payloadstest.TaskPayloadFromAlgoreaPlatform, &expectedTaskToken)
 	expectedTaskToken.Converted.UserID = 556371821693219925
 	expectedTaskToken.Converted.LocalItemID = 901756573345831409
+	expectedTaskToken.Converted.AttemptID = 100
 	expectedHintToken := token.Hint{}
 	expectedHintToken.Converted.UserID = ptrInt64(556371821693219925)
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedHintToken)
