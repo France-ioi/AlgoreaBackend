@@ -10,8 +10,8 @@ Background:
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
     | 13 | Group B    |         | -2     | Class     | 0        |
   And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
+    | ID | idGroupParent | idGroupChild | iVersion | sType           |
+    | 61 | 13            | 11           | 0        | requestAccepted |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
     | 71 | 11              | 11           | 1       | 0        |

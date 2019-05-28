@@ -17,7 +17,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	mockUser := NewMockUser(1, &UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
-		"WHERE (groups_groups.idGroupChild = ? AND groups_groups.sType='direct')")).
+		"WHERE (groups_groups.idGroupChild = ?) AND (groups_groups.sType IN ('invitationAccepted','requestAccepted'))")).
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
