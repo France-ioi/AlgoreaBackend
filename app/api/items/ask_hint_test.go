@@ -25,7 +25,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	expectedTaskToken.Converted.LocalItemID = 901756573345831409
 	expectedTaskToken.Converted.AttemptID = 100
 	expectedHintToken := token.Hint{}
-	expectedHintToken.Converted.UserID = ptrInt64(556371821693219925)
+	expectedHintToken.Converted.UserID = 556371821693219925
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedHintToken)
 	monkey.Patch(time.Now,
 		func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
@@ -146,10 +146,10 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			expected: AskHintRequest{
 				TaskToken: &expectedTaskToken,
 				HintToken: &token.Hint{
-					UserID:    ptrString("556371821693219925"),
+					UserID:    "556371821693219925",
 					AskedHint: *formdata.AnythingFromString(`"123"`),
 					Converted: payloads.HintTokenConverted{
-						UserID: ptrInt64(556371821693219925),
+						UserID: 556371821693219925,
 					},
 				},
 			},
@@ -207,5 +207,3 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
-
-func ptrInt64(i int64) *int64 { return &i }

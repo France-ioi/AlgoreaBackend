@@ -287,8 +287,9 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 			UserID:       requestData.TaskToken.Converted.UserID,
 			UserAnswerID: userAnswerID,
 		},
-		ItemURL:   requestData.TaskToken.ItemURL,
-		AttemptID: requestData.AnswerToken.AttemptID,
+		ItemURL:     requestData.TaskToken.ItemURL,
+		AttemptID:   requestData.AnswerToken.AttemptID,
+		LocalItemID: requestData.AnswerToken.LocalItemID,
 	}
 	return nil
 }
@@ -308,6 +309,9 @@ func checkSaveGradeTokenParams(user *database.User, requestData *saveGradeReques
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in score_token doesn't correspond to user session: got idUser=%d, expected %d",
 			requestData.ScoreToken.Converted.UserID, user.UserID))
+	}
+	if requestData.TaskToken.LocalItemID != requestData.ScoreToken.LocalItemID {
+		return service.ErrInvalidRequest(errors.New("wrong idItemLocal in score_token"))
 	}
 	if requestData.TaskToken.ItemURL != requestData.ScoreToken.ItemURL {
 		return service.ErrInvalidRequest(errors.New("wrong itemUrl in score_token"))

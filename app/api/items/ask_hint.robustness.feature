@@ -65,6 +65,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "404",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -98,6 +99,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -131,6 +133,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
         "askedHint": {"rotorIndex":1}
@@ -164,6 +167,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "20",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -197,6 +201,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "101",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -211,6 +216,40 @@ Feature: Ask for a hint - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in hint_requested token"
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: idItemLocal in hint_requested & task_token don't match
+    Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "hintRequestToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "idAttempt": "100",
+        "idItemLocal": "51",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "askedHint": {"rotorIndex":1}
+      }
+      """
+    When I send a POST request to "/items/ask_hint" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "hint_requested": "{{hintRequestToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong idItemLocal in hint_requested token"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -230,6 +269,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -263,6 +303,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "10",
         "idAttempt": "101",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -296,6 +337,7 @@ Feature: Ask for a hint - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"
       }

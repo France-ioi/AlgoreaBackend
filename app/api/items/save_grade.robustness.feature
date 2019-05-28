@@ -70,6 +70,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "404",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
@@ -105,6 +106,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
@@ -140,6 +142,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "20",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "100",
@@ -175,6 +178,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "idAttempt": "101",
         "score": "100",
@@ -190,6 +194,42 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in score_token"
+    And the table "users_answers" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: idItemLocal in score_token and task_token don't match
+    Given I am the user with ID "10"
+    And the following token "priorUserTaskToken" signed by the app is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "50",
+        "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "platformName": "{{app().TokenConfig.PlatformName}}"
+      }
+      """
+    And the following token "scoreToken" signed by the task platform is distributed:
+      """
+      {
+        "idUser": "10",
+        "idItemLocal": "51",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "idAttempt": "100",
+        "score": "100",
+        "idUserAnswer": "123"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "task_token": "{{priorUserTaskToken}}",
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Wrong idItemLocal in score_token"
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
@@ -210,6 +250,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
@@ -235,6 +276,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
@@ -259,6 +301,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
@@ -319,6 +362,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "score": "99",
@@ -666,6 +710,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "80",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
@@ -706,6 +751,7 @@ Feature: Save grading result - robustness
       """
       {
         "idUser": "10",
+        "idItemLocal": "80",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
