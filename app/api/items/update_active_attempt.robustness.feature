@@ -49,15 +49,15 @@ Feature: Update active attempt for an item - robustness
 
   Scenario: Invalid groups_attempt_id
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/update-active-attempt"
+    When I send a PUT request to "/attempts/abc/active"
     Then the response code should be 400
-    And the response error message should contain "Missing groups_attempt_id"
+    And the response error message should contain "Wrong value for groups_attempt_id (should be int64)"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
     Given I am the user with ID "404"
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -71,7 +71,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 121     | 50     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -82,7 +82,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive |
       | 10     | 50     | null            |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -96,7 +96,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 101     | 51     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -111,7 +111,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 101     | 50     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -125,7 +125,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 103     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -139,7 +139,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 104     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -153,7 +153,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 105     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -167,7 +167,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 106     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -181,7 +181,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 107     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -195,7 +195,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 108     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -209,7 +209,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 109     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
@@ -223,7 +223,7 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 102     | 50     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged

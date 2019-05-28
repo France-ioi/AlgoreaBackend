@@ -41,7 +41,7 @@ Feature: Update active attempt for an item
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 111     | 50     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -65,7 +65,7 @@ Feature: Update active attempt for an item
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 100 | 101     | 50     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=100"
+    When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -89,7 +89,7 @@ Feature: Update active attempt for an item
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 200 | 102     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=200"
+    When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -113,7 +113,7 @@ Feature: Update active attempt for an item
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 200 | 103     | 60     |
-    When I send a PUT request to "/items/update-active-attempt?groups_attempt_id=200"
+    When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
