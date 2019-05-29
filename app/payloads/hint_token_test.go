@@ -32,21 +32,22 @@ func TestHintToken_UnmarshalJSON(t *testing.T) {
 	err := tt.UnmarshalJSON([]byte(`{"idUser":"10", "askedHint":   false}`))
 	assert.NoError(t, err)
 	assert.Equal(t, &HintToken{
-		UserID:    ptrString("10"),
+		UserID:    "10",
 		AskedHint: *formdata.AnythingFromString("false"),
 		Converted: HintTokenConverted{
-			UserID: ptrInt64(10),
+			UserID: 10,
 		},
 	}, tt)
 }
 
 func TestHintToken_MarshalJSON(t *testing.T) {
 	tt := &HintToken{
-		UserID:    ptrString("10"),
-		AttemptID: "100",
-		AskedHint: *formdata.AnythingFromString("false"),
+		UserID:      "10",
+		AttemptID:   "100",
+		LocalItemID: "200",
+		AskedHint:   *formdata.AnythingFromString("false"),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	assert.NoError(t, err)
-	assert.Equal(t, []byte(`{"askedHint":false,"date":"","idAttempt":"100","idUser":"10"}`), result)
+	assert.Equal(t, []byte(`{"askedHint":false,"date":"","idAttempt":"100","idItemLocal":"200","idUser":"10","itemUrl":""}`), result)
 }

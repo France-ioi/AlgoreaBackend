@@ -35,9 +35,6 @@ func TestHint_UnmarshalString(t *testing.T) {
 	assert.NoError(t, err)
 
 	hint.Date = result.Date
-	if hint.UserID != nil {
-		convertedUserID, _ := strconv.ParseInt(*hint.UserID, 10, 64)
-		hint.Converted.UserID = &convertedUserID
-	}
+	hint.Converted.UserID, _ = strconv.ParseInt(hint.UserID, 10, 64)
 	assert.Equal(t, hint, result)
 }

@@ -11,12 +11,13 @@ import (
 
 // HintToken represents data inside a hint token
 type HintToken struct {
-	Date      string            `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
-	UserID    *string           `json:"idUser,omitempty"`
-	ItemID    *string           `json:"idItem,omitempty"`
-	ItemURL   *string           `json:"itemUrl,omitempty"`
-	AttemptID string            `json:"idAttempt"`
-	AskedHint formdata.Anything `json:"askedHint"`
+	Date        string            `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
+	UserID      string            `json:"idUser,omitempty"`
+	ItemID      *string           `json:"idItem,omitempty"`
+	LocalItemID string            `json:"idItemLocal"`
+	ItemURL     string            `json:"itemUrl"`
+	AttemptID   string            `json:"idAttempt"`
+	AskedHint   formdata.Anything `json:"askedHint"`
 
 	Converted HintTokenConverted
 
@@ -26,7 +27,7 @@ type HintToken struct {
 
 // HintTokenConverted contains converted field values of HintToken payload
 type HintTokenConverted struct {
-	UserID *int64
+	UserID int64
 }
 
 // UnmarshalJSON unmarshals the hint token payload from JSON
@@ -50,12 +51,10 @@ func (tt *HintToken) UnmarshalJSON(raw []byte) error {
 
 // Bind validates a hint token and converts some needed field values (called by ParseMap)
 func (tt *HintToken) Bind() error {
-	if tt.UserID != nil {
-		convertedUserID, err := strconv.ParseInt(*tt.UserID, 10, 64)
-		if err != nil {
-			return errors.New("wrong idUser")
-		}
-		tt.Converted.UserID = &convertedUserID
+	var err error
+	tt.Converted.UserID, err = strconv.ParseInt(tt.UserID, 10, 64)
+	if err != nil {
+		return errors.New("wrong idUser")
 	}
 	return nil
 }

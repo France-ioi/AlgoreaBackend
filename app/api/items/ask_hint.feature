@@ -53,6 +53,7 @@ Feature: Ask for a hint
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
@@ -113,7 +114,9 @@ Feature: Ask for a hint
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
+        "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
       }
       """
@@ -172,6 +175,7 @@ Feature: Ask for a hint
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": "hint"
@@ -232,6 +236,7 @@ Feature: Ask for a hint
       """
       {
         "idUser": "10",
+        "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "askedHint": {"rotorIndex":1}
