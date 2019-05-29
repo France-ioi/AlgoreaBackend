@@ -45,19 +45,19 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 	}
 	service.MustNotBeError(err)
 
-	var userItemInfo struct {
-		ActiveAttemptID  *int64  `gorm:"column:idAttemptActive"`
+	var groupsAttemptInfo struct {
+		ID               int64   `gorm:"column:ID"`
 		HintsRequested   *string `gorm:"column:sHintsRequested"`
 		HintsCachedCount int32   `gorm:"column:nbHintsCached"`
 	}
+	var activeAttemptID *int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
 		service.MustNotBeError(userItemStore.CreateIfMissing(user.UserID, itemID))
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.UserID).Where("idItem = ?", itemID).
-			WithWriteLock().Select("idAttemptActive, sHintsRequested, nbHintsCached").
-			Take(&userItemInfo).Error())
-		if userItemInfo.ActiveAttemptID == nil {
+			WithWriteLock().PluckFirst("idAttemptActive", &activeAttemptID).Error())
+		if activeAttemptID == nil {
 			groupID, _ := user.SelfGroupID()
 			if itemInfo.HasAttempts {
 				err = store.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
@@ -70,22 +70,24 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 			var attemptID int64
 			groupAttemptScope := store.GroupAttempts().
 				Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
-			err = groupAttemptScope.Order("sLastActivityDate DESC").Limit(1).
-				PluckFirst("ID", &attemptID).Error()
+			err = groupAttemptScope.Order("sLastActivityDate DESC").
+				Select("ID, sHintsRequested, nbHintsCached").Limit(1).
+				Take(&groupsAttemptInfo).Error()
 			if gorm.IsRecordNotFoundError(err) {
 				attemptID, err = store.GroupAttempts().CreateNew(groupID, itemID)
 				service.MustNotBeError(err)
 			} else {
+				attemptID = groupsAttemptInfo.ID
 				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
 					"sStartDate":        gorm.Expr("IFNULL(sStartDate, NOW())"),
 					"sLastActivityDate": gorm.Expr("NOW()"),
 				}).Error())
 			}
-			userItemInfo.ActiveAttemptID = &attemptID
+			activeAttemptID = &attemptID
 		}
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.UserID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"idAttemptActive":   *userItemInfo.ActiveAttemptID,
+				"idAttemptActive":   *activeAttemptID,
 				"sStartDate":        gorm.Expr("IFNULL(sStartDate, NOW())"),
 				"sLastActivityDate": gorm.Expr("NOW()"),
 			}).Error())
@@ -101,17 +103,17 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		AccessSolutions:    &itemInfo.AccessSolutions,
 		SubmissionPossible: ptrBool(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
-		HintsRequested:     userItemInfo.HintsRequested,
-		HintsGivenCount:    ptrString(strconv.Itoa(int(userItemInfo.HintsCachedCount))),
+		HintsRequested:     groupsAttemptInfo.HintsRequested,
+		HintsGivenCount:    ptrString(strconv.Itoa(int(groupsAttemptInfo.HintsCachedCount))),
 		IsAdmin:            ptrBool(false),
 		ReadAnswers:        ptrBool(true),
 		UserID:             strconv.FormatInt(user.UserID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
-		AttemptID:          strconv.FormatInt(*userItemInfo.ActiveAttemptID, 10),
+		AttemptID:          strconv.FormatInt(*activeAttemptID, 10),
 		ItemURL:            itemInfo.URL,
 		SupportedLangProg:  itemInfo.SupportedLangProg,
-		RandomSeed:         strconv.FormatInt(*userItemInfo.ActiveAttemptID, 10),
+		RandomSeed:         strconv.FormatInt(*activeAttemptID, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
 	}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)

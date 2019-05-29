@@ -23,8 +23,7 @@ const computeAllUserItemsLockTimeout = 10 * time.Second
 //  (we consider a row in users_items as an ancestor if it has the same value in idUser and
 //  its idItem is an ancestor of the original row's idItem).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
-//  Then we copy sHintsRequested from related groups_attempts for them.
-//  If an object has children, we update
+//  Then, if an object has children, we update
 //    sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, bValidated, sValidationDate.
 //  This step is repeated until no records are updated.
 // 3. We insert new groups_items for each processed row with bKeyObtained=1 according to corresponding items.idItemUnlocked.
@@ -120,8 +119,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						ON users_items.idItem = items.ID
 					LEFT JOIN items_items
 						ON items_items.idItemParent = users_items.idItem
-					LEFT JOIN groups_attempts
-						ON groups_attempts.ID = users_items.idAttemptActive
 					SET
 						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.sLastActivityDate, users_items.sLastActivityDate),
@@ -148,8 +145,6 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								IF(items.sValidationType = 'Categories',
 									task_children_data.maxValidationDateCategories, task_children_data.maxValidationDate)
 							), users_items.sValidationDate),
-						users_items.sHintsRequested = IF(groups_attempts.ID IS NOT NULL,
-							groups_attempts.sHintsRequested, users_items.sHintsRequested),
 						users_items.sAncestorsComputationState = 'done'
 					WHERE users_items.sAncestorsComputationState = 'processing'`
 				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
