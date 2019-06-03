@@ -35,7 +35,7 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Missing attempt_id"
+    And the response error message should contain "Wrong value for 'attempt_id': must be given and not null"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
@@ -49,7 +49,7 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Missing answer"
+    And the response error message should contain "Wrong value for 'answer': must be given and not null"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
@@ -63,7 +63,7 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Missing state"
+    And the response error message should contain "Wrong value for 'state': must be given and not nul"
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 

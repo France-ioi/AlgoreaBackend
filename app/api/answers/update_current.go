@@ -1,13 +1,13 @@
 package answers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
@@ -24,27 +24,28 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	}
 	service.MustNotBeError(err)
 
-	foundItemID, itemID, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(*requestData.AttemptID, user)
+	attemptID := requestData.AttemptID.Value.(int64)
+	found, itemID, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
 	service.MustNotBeError(err)
-	if !foundItemID {
+	if !found {
 		return service.InsufficientAccessRightsError
 	}
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userAnswerStore := store.UserAnswers()
 		var currentAnswerID int64
-		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.UserID, itemID, requestData.AttemptID)
+		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.UserID, itemID, &attemptID)
 		service.MustNotBeError(err)
 
 		columnsToUpdate := map[string]interface{}{
-			"sState":  *requestData.State,
-			"sAnswer": *requestData.Answer,
+			"sState":  requestData.State.String.Value,
+			"sAnswer": requestData.Answer.String.Value,
 		}
 		service.MustNotBeError(userAnswerStore.ByID(currentAnswerID).UpdateColumn(columnsToUpdate).Error())
 
 		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.UserID).
 			Where("idItem = ?", itemID).
-			Where("idAttemptActive = ?", requestData.AttemptID).
+			Where("idAttemptActive = ?", requestData.AttemptID.Value).
 			UpdateColumn(columnsToUpdate).Error())
 
 		return nil
@@ -56,24 +57,13 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 }
 
 type updateCurrentRequest struct {
-	AttemptID *int64  `json:"attempt_id,string"`
-	Answer    *string `json:"answer"`
-	State     *string `json:"state"`
+	AttemptID types.RequiredInt64  `json:"attempt_id,string"`
+	Answer    types.RequiredString `json:"answer"`
+	State     types.RequiredString `json:"state"`
 }
 
 // Bind checks that all the needed request parameters are present
 func (requestData *updateCurrentRequest) Bind(r *http.Request) error {
-	if requestData.AttemptID == nil {
-		return errors.New("missing attempt_id")
-	}
-
-	if requestData.Answer == nil {
-		return errors.New("missing answer")
-	}
-
-	if requestData.State == nil {
-		return errors.New("missing state")
-	}
-
-	return nil
+	return types.Validate([]string{"attempt_id", "answer", "state"},
+		&requestData.AttemptID, &requestData.Answer, &requestData.State)
 }
