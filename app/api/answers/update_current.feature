@@ -19,8 +19,8 @@ Feature: Update the 'current' answer
       | idGroup | idItem | sCachedPartialAccessDate |
       | 101     | 50     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem | idAttempt |
-      | 100 | 10     | 50     | 200       |
+      | ID  | idUser | idItem | idAttempt | sType      |
+      | 100 | 10     | 50     | 200       | Submission |
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem |
       | 200 | 101     | 50     |
@@ -57,8 +57,8 @@ Feature: Update the 'current' answer
   Scenario: User is able to create the 'current' answer and users_items.idAttemptActive != request.attempt_id
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive |
-      | 10     | 50     | 100             |
+      | idUser | idItem | idAttemptActive | sAnswer | sState |
+      | 10     | 50     | 100             | null    | null   |
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -75,9 +75,7 @@ Feature: Update the 'current' answer
         "success": true
       }
       """
-    And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAnswer | sState |
-      | 10     | 50     | 100             | null    | null   |
+    And the table "users_items" should stay unchanged
     And the table "users_answers" should be:
       | idUser | idItem | idAttempt | sType      | sAnswer | sState     |
       | 10     | 50     | 200       | Submission | null    | null       |
