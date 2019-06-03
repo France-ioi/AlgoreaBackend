@@ -103,7 +103,7 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 			if test.expectedCurrentAnswerID > 0 {
 				assert.Equal(t, test.expectedCurrentAnswerID, currentAnswerID)
 			} else {
-				assert.Greater(t, currentAnswerID, int64(6))
+				assert.True(t, currentAnswerID > int64(6))
 				type userAnswer struct {
 					UserID            int64  `gorm:"column:idUser"`
 					ItemID            int64  `gorm:"column:idItem"`
