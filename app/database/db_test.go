@@ -808,6 +808,21 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_ScanIntoSliceOfMaps_DoesNothingIfErrorIsSet(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	_ = db.db.AddError(expectedError)
+	var result []map[string]interface{}
+	dbScan := db.ScanIntoSliceOfMaps(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []map[string]interface{}(nil), result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
