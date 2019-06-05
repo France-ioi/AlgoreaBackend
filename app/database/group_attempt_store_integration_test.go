@@ -300,11 +300,10 @@ func TestGroupAttemptStore_ByUserAndItemID(t *testing.T) {
 			itemID:      60,
 		},
 		{
-			name:      "okay (bHasAttempts=1, groups_groups.sType=invitationAccepted)",
-			userID:    10,
-			attemptID: 200,
-			fixture: `
-				groups_attempts: [{ID: 200, idGroup: 110, idItem: 60}]`,
+			name:        "okay (bHasAttempts=1, groups_groups.sType=invitationAccepted)",
+			userID:      10,
+			attemptID:   200,
+			fixture:     `groups_attempts: [{ID: 200, idGroup: 110, idItem: 60}]`,
 			expectedIDs: []int64{200},
 			itemID:      60,
 		},
