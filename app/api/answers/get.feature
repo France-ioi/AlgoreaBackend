@@ -5,24 +5,27 @@ Background:
     | 1  | jdoe   | 0        | 11          | 12           | John       | Doe       |
     | 2  | other  | 0        | 21          | 22           | George     | Bush      |
   And the database has the following table 'groups':
-    | ID | sName      | sType     |
-    | 11 | jdoe       | UserAdmin |
-    | 12 | jdoe-admin | UserAdmin |
-    | 13 | Group B    | Class     |
-    | 23 | Group C    | Class     |
+    | ID | sName       | sType     |
+    | 11 | jdoe        | UserSelf  |
+    | 12 | jdoe-admin  | UserAdmin |
+    | 13 | Group B     | Class     |
+    | 21 | other       | UserSelf  |
+    | 22 | other-admin | UserAdmin |
+    | 23 | Group C     | Class     |
   And the database has the following table 'groups_groups':
     | ID | idGroupParent | idGroupChild | sType              |
     | 61 | 13            | 11           | invitationAccepted |
     | 62 | 13            | 21           | requestAccepted    |
+    | 63 | 23            | 21           | direct             |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf |
     | 71 | 11              | 11           | 1       |
     | 72 | 12              | 12           | 1       |
     | 73 | 13              | 13           | 1       |
     | 74 | 13              | 11           | 0       |
-    | 75 | 22              | 11           | 0       |
+    | 75 | 13              | 21           | 0       |
     | 76 | 23              | 21           | 0       |
-    | 77 | 13              | 21           | 0       |
+    | 77 | 23              | 23           | 1       |
   And the database has the following table 'items':
     | ID  | bHasAttempts |
     | 200 | 0            |
@@ -32,9 +35,9 @@ Background:
     | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     |
     | 46 | 23      | 210    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     |
   And the database has the following table 'users_answers':
-    | ID | idUser | idItem | idAttempt | sType      | sState  | sAnswer  | sLangProg | sSubmissionDate     | iScore | bValidated | sGradingDate        | idUserGrader |
-    | 1  | 1      | 200    | 150       | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100    | true       | 2018-05-29 06:38:38 | 123          |
-    | 2  | 1      | 210    | 250       | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100    | true       | 2019-05-29 06:38:38 | 456          |
+    | ID  | idUser | idItem | idAttempt | sType      | sState  | sAnswer  | sLangProg | sSubmissionDate     | iScore | bValidated | sGradingDate        | idUserGrader |
+    | 101 | 1      | 200    | 150       | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100    | true       | 2018-05-29 06:38:38 | 123          |
+    | 102 | 1      | 210    | 250       | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100    | true       | 2019-05-29 06:38:38 | 456          |
   And the database has the following table 'groups_attempts':
     | ID  | idGroup | idItem |
     | 150 | 11      | 200    |
@@ -42,12 +45,12 @@ Background:
 
   Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID
     Given I am the user with ID "1"
-    When I send a GET request to "/answers/1"
+    When I send a GET request to "/answers/101"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "id": "1",
+      "id": "101",
       "attempt_id": "150",
       "score": 100.0,
       "answer": "print(1)",
@@ -64,12 +67,12 @@ Background:
 
   Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1)
     Given I am the user with ID "2"
-    When I send a GET request to "/answers/2"
+    When I send a GET request to "/answers/102"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
-      "id": "2",
+      "id": "102",
       "attempt_id": "250",
       "score": 100,
       "answer": "print(2)",
