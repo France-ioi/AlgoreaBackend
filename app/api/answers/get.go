@@ -28,6 +28,9 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
+	if len(result) == 0 {
+		return service.InsufficientAccessRightsError
+	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 
 	render.Respond(rw, httpReq, convertedResult)

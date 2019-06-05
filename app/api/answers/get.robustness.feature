@@ -1,7 +1,9 @@
 Feature: Feature: Get user's answer by user_answer_id
-  Given the database has the following table 'users':
-    | ID | sLogin | idGroupSelf | idGroupOwned |
-    | 1  | jdoe   | 11          | 12           |
+  Background:
+    Given the database has the following table 'users':
+      | ID | sLogin | idGroupSelf | idGroupOwned |
+      | 1  | jdoe   | 11          | 12           |
+
   Scenario: Wrong answer_id
     Given I am the user with ID "1"
     When I send a GET request to "/answers/abc"
@@ -11,5 +13,11 @@ Feature: Feature: Get user's answer by user_answer_id
   Scenario: User doesnt have sufficient access rights to the answer
     Given I am the user with ID "404"
     When I send a GET request to "/answers/1"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: No answers
+    Given I am the user with ID "1"
+    When I send a GET request to "/answers/100"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
