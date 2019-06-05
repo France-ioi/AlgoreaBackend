@@ -500,6 +500,19 @@ func TestDB_Pluck(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_Pluck_DoesNothingIfErrorIsSet(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	db = db.Table("myTable")
+	expectedError := errors.New("some error")
+	db.db.Error = expectedError
+	var result []int64
+	pluckDB := db.Pluck("ID", &result)
+	assert.Equal(t, expectedError, pluckDB.Error())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Pluck_WipesOldData(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

@@ -335,6 +335,9 @@ func (conn *DB) Count(dest interface{}) *DB {
 //     db.Table("users").Pluck("ID", &ids)
 // The 'values' parameter should be a pointer to a slice
 func (conn *DB) Pluck(column string, values interface{}) *DB {
+	if conn.db.Error != nil {
+		return conn
+	}
 	// If 'values' is not empty, wipe its content by replacing it with an empty slice.
 	// Otherwise we would get new values mixed with old values.
 	reflectPtr := reflect.ValueOf(values)
