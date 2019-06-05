@@ -273,7 +273,16 @@ func (conn *DB) Scan(dest interface{}) *DB {
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	*dest = *new([]map[string]interface{})
 
+	if conn.db.Error != nil {
+		return conn
+	}
+
 	rows, err := conn.db.Rows()
+	if rows != nil {
+		defer func() {
+			_ = conn.db.AddError(rows.Close())
+		}()
+	}
 	if conn.db.AddError(err) != nil {
 		return conn
 	}
@@ -282,36 +291,35 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 		return conn
 	}
 
-	if rows != nil {
-		defer func() {
-			if conn.db.AddError(rows.Close()) != nil {
-				return
-			}
-		}()
-	}
-
 	for rows.Next() {
-		columns := make([]interface{}, len(cols))
-		columnPointers := make([]interface{}, len(cols))
-		for i := range columns {
-			columnPointers[i] = &columns[i]
-		}
-
-		if err := rows.Scan(columnPointers...); err != nil {
+		conn.readRowIntoMap(cols, rows, dest)
+		if conn.db.Error != nil {
 			return conn
 		}
+	}
+	_ = conn.db.AddError(rows.Err())
+	return conn
+}
 
-		rowMap := make(map[string]interface{})
-		for i, columnName := range cols {
-			if value, ok := columns[i].([]byte); ok {
-				columns[i] = *(*string)(unsafe.Pointer(&value)) // nolint:gosec
-			}
-			rowMap[columnName] = columns[i]
-		}
-		*dest = append(*dest, rowMap)
+func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows, dest *[]map[string]interface{}) {
+	columns := make([]interface{}, len(cols))
+	columnPointers := make([]interface{}, len(cols))
+	for i := range columns {
+		columnPointers[i] = &columns[i]
 	}
 
-	return conn
+	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil {
+		return
+	}
+
+	rowMap := make(map[string]interface{})
+	for i, columnName := range cols {
+		if value, ok := columns[i].([]byte); ok {
+			columns[i] = *(*string)(unsafe.Pointer(&value)) // nolint:gosec
+		}
+		rowMap[columnName] = columns[i]
+	}
+	*dest = append(*dest, rowMap)
 }
 
 // Count gets how many records for a model

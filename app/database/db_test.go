@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"reflect"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -808,6 +809,21 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_ScanIntoSliceOfMaps_DoesNothingIfErrorIsSet(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	_ = db.db.AddError(expectedError)
+	var result []map[string]interface{}
+	dbScan := db.ScanIntoSliceOfMaps(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []map[string]interface{}(nil), result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -846,6 +862,46 @@ func TestDB_ScanIntoSliceOfMaps_RowsError(t *testing.T) {
 	assert.Equal(t, expectedError, dbScan.Error())
 
 	assert.Nil(t, result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSliceOfMaps_ErrorOnGettingColumns(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Columns", func(*sql.Rows) ([]string, error) { return nil, expectedError })
+	defer monkey.UnpatchAll()
+	db = db.Table("myTable")
+
+	var result []map[string]interface{}
+	dbScan := db.ScanIntoSliceOfMaps(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []map[string]interface{}(nil), result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSliceOfMaps_ErrorOnScan(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Scan", func(*sql.Rows, ...interface{}) error { return expectedError })
+	defer monkey.UnpatchAll()
+	db = db.Table("myTable")
+
+	var result []map[string]interface{}
+	dbScan := db.ScanIntoSliceOfMaps(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []map[string]interface{}(nil), result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

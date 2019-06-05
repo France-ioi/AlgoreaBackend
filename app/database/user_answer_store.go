@@ -1,6 +1,8 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+)
 
 // UserAnswerStore implements database operations on `users_answers`
 type UserAnswerStore struct {
@@ -77,4 +79,34 @@ func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, itemID int64, attempt
 	}
 	mustNotBeError(err)
 	return userAnswerID, err
+}
+
+// Visible returns a composable query for getting users_answers with the following access rights
+// restrictions:
+// 1) the user should have at least partial access rights to the users_answers.idItem item,
+// 2) the user is able to see answers related to his group's attempts, so:
+//   (a) if items.bHasAttempts = 1, then the user should be a member of the groups_attempts.idGroup team
+//   (b) if items.bHasAttempts = 0, then groups_attempts.idGroup should be equal to the user's self group
+func (s *UserAnswerStore) Visible(user *User) *DB {
+	selfGroupID, err := user.SelfGroupID()
+	if err != nil {
+		if err == ErrUserNotFound {
+			err = gorm.ErrRecordNotFound
+		}
+		_ = s.DB.db.AddError(err)
+		return s.DB
+	}
+
+	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
+	// the user should have at least partial access to the item
+	itemsQuery := s.Items().Visible(user).Where("partialAccess > 0 OR fullAccess > 0")
+
+	return s.
+		// the user should have at least partial access to the users_answers.idItem
+		Joins("JOIN ? AS items ON items.ID = users_answers.idItem", itemsQuery.SubQuery()).
+		Joins("JOIN groups_attempts ON groups_attempts.idItem = users_answers.idItem AND groups_attempts.ID = users_answers.idAttempt").
+		// if items.bHasAttempts = 1, then groups_attempts.idGroup should be one of the authorized user's groups,
+		// otherwise groups_attempts.idGroup should be equal to the user's self group
+		Where("IF(items.bHasAttempts, groups_attempts.idGroup IN ?, groups_attempts.idGroup = ?)",
+			usersGroupsQuery.SubQuery(), selfGroupID)
 }
