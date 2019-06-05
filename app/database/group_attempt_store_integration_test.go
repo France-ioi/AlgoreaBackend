@@ -265,7 +265,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 	}
 }
 
-func TestGroupAttemptStore_ByUserAndItemID(t *testing.T) {
+func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 	tests := []struct {
 		name        string
 		fixture     string
@@ -433,7 +433,7 @@ func TestGroupAttemptStore_ByUserAndItemID(t *testing.T) {
 			store := database.NewDataStore(db)
 			user := database.NewUser(test.userID, store.Users(), nil)
 			var ids []int64
-			err := store.GroupAttempts().ByUserAndItemID(user, test.itemID).Pluck("groups_attempts.ID", &ids).Error()
+			err := store.GroupAttempts().VisibleAndByItemID(user, test.itemID).Pluck("groups_attempts.ID", &ids).Error()
 			assert.Equal(t, test.expectedErr, err)
 			assert.Equal(t, test.expectedIDs, ids)
 		})

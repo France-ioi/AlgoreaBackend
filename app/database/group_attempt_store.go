@@ -67,13 +67,13 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 	return true, itemID, nil
 }
 
-// ByUserAndItemID returns a composable query for getting groups_attempts with the following access rights
+// VisibleAndByItemID returns a composable query for getting groups_attempts with the following access rights
 // restrictions:
 // 1) the user should have at least partial access rights to the groups_attempts.idItem item,
 // 2) the user is able to see answers related to his group's attempts, so:
 //   (a) if items.bHasAttempts = 1, then the user should be a member of the groups_attempts.idGroup team
 //   (b) if items.bHasAttempts = 0, then groups_attempts.idGroup should be equal to the user's self group
-func (s *GroupAttemptStore) ByUserAndItemID(user *User, itemID int64) *DB {
+func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 	selfGroupID, err := user.SelfGroupID()
 	if err != nil {
 		if err == ErrUserNotFound {

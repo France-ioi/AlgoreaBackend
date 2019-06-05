@@ -14,7 +14,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 	user := srv.GetUser(r)
-	query := srv.Store.GroupAttempts().ByUserAndItemID(user, itemID).
+	query := srv.Store.GroupAttempts().VisibleAndByItemID(user, itemID).
 		Joins("LEFT JOIN users AS creators ON creators.ID = groups_attempts.idUserCreator").
 		Select(`
 			groups_attempts.ID, groups_attempts.iOrder, groups_attempts.iScore, groups_attempts.bValidated,
