@@ -345,7 +345,7 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 }
 
 // stringToInt64HookFunc returns a DecodeHookFunc that converts
-// any value to payloads.Anything.
+// strings to int64
 func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
