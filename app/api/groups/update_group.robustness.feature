@@ -73,8 +73,8 @@ Feature: Update a group (groupEdit) - robustness
         "opened": ["expected type 'bool', got unconvertible type 'string'"],
         "password_end": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "password_timer": ["expected type 'string', got unconvertible type 'float64'"],
-        "redirect_path": ["some path does not validate as matches(^(\\d+(/\\d+)*)*$)"],
-        "type": ["Root does not validate as in(Class|Team|Club|Friends|Other)"]
+        "redirect_path": ["invalid redirect path"],
+        "type": ["type must be one of [Class Team Club Friends Other]"]
       },
       "message": "Bad Request",
       "success": false
