@@ -15,7 +15,7 @@ type TaskToken struct {
 	AttemptID          string  `json:"idAttempt"`
 	ItemURL            string  `json:"itemUrl"`
 	LocalItemID        string  `json:"idItemLocal"`
-	PlatformName       string  `json:"platformName" validate:"min=1,max=200"`
+	PlatformName       string  `json:"platformName" validate:"min=1,max=200"` // 1 <= length <= 200
 	RandomSeed         string  `json:"randomSeed"`
 	TaskID             *string `json:"idTask,omitempty"` // always is nil?
 	HintsAllowed       *bool   `json:"bHintsAllowed,omitempty"`

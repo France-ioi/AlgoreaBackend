@@ -32,11 +32,16 @@ type FormData struct {
 
 // NewFormData creates a new FormData object for given definitions
 func NewFormData(definitionStructure interface{}) *FormData {
+	// Initialize go-playground/validator
 	validate := validator.New()
+
+	// Initialize go-playground/validator's default error messages in English
 	var eng = english.New()
 	var uni = ut.New(eng, eng)
 	trans, _ := uni.GetTranslator("en")
 	_ = en.RegisterDefaultTranslations(validate, trans)
+
+	// go-playground/validator should read field names from 'json' tag
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
 		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
 		if name == "-" {
@@ -50,6 +55,8 @@ func NewFormData(definitionStructure interface{}) *FormData {
 		validate:            validate,
 		trans:               trans,
 	}
+
+	// Register global custom validations
 	formData.RegisterValidation("duration", validator.Func(validateDuration))
 	formData.RegisterTranslation("duration", "invalid duration")
 

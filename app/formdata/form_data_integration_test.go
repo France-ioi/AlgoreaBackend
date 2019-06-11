@@ -16,7 +16,7 @@ import (
 
 type NamedStruct struct {
 	ID   *int64  `json:"id" validate:"min=1"`
-	Name *string `json:"name" validate:"min=1"`
+	Name *string `json:"name" validate:"min=1"` // length >= 1
 }
 
 func TestFormData_ParseJSONRequestData(t *testing.T) {
@@ -168,7 +168,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"ignores errors in fields that are not given",
 			&struct {
 				ID   *int64  `json:"id" validate:"min=1"`
-				Name *string `json:"name" validate:"min=1"`
+				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
 			`{}`,
 			"",
@@ -360,7 +360,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			"ignores errors in fields that are not given",
 			&struct {
 				ID   *int64  `json:"id" validate:"min=1"`
-				Name *string `json:"name" validate:"min=1"`
+				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
 			map[string]interface{}{},
 			"",
