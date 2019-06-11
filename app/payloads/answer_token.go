@@ -6,13 +6,13 @@ import "crypto/rsa"
 // idAttempt is required.
 type AnswerToken struct {
 	// Nullable fields are of pointer types
-	Date            string  `json:"date" valid:"matches(^[0-3][0-9]-[0-1][0-9]-\\d{4}$)"` // dd-mm-yyyy
+	Date            string  `json:"date" validate:"dmy-date"` // dd-mm-yyyy
 	UserID          string  `json:"idUser"`
 	ItemID          *string `json:"idItem"` // always is nil?
 	AttemptID       string  `json:"idAttempt"`
 	ItemURL         string  `json:"itemUrl"`
 	LocalItemID     string  `json:"idItemLocal"`
-	PlatformName    string  `json:"platformName" valid:"stringlength(1|200)"`
+	PlatformName    string  `json:"platformName" validate:"min=1,max=200"`
 	RandomSeed      string  `json:"randomSeed"`
 	HintsRequested  *string `json:"sHintsRequested"`
 	HintsGivenCount string  `json:"nbHintsGiven"`

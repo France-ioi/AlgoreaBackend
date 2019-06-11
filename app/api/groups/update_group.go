@@ -2,9 +2,11 @@ package groups
 
 import (
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/go-chi/render"
+	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -13,15 +15,15 @@ import (
 
 type groupUpdateInput struct {
 	// Nullable fields are of pointer types
-	Type          string     `json:"type" sql:"column:sType" valid:"in(Class|Team|Club|Friends|Other)"`
+	Type          string     `json:"type" sql:"column:sType" validate:"oneof=Class Team Club Friends Other"`
 	Name          string     `json:"name" sql:"column:sName"`
 	Grade         int32      `json:"grade" sql:"column:iGrade"`
 	Description   *string    `json:"description" sql:"column:sDescription"`
 	Opened        bool       `json:"opened" sql:"column:bOpened"`
 	FreeAccess    bool       `json:"free_access" sql:"column:bFreeAccess"`
-	PasswordTimer *string    `json:"password_timer" sql:"column:sPasswordTimer" valid:"matches(^\\d{2}:[0-5]\\d:[0-5]\\d$)"`
+	PasswordTimer *string    `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
 	PasswordEnd   *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
-	RedirectPath  *string    `json:"redirect_path" sql:"column:sRedirectPath" valid:"matches(^(\\d+(/\\d+)*)*$)"`
+	RedirectPath  *string    `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`
 	OpenContest   bool       `json:"open_contest" sql:"column:bOpenContest"`
 }
 
@@ -105,7 +107,13 @@ func refuseSentGroupRequestsIfNeeded(
 	return nil
 }
 
+var redirectPathRegexp = regexp.MustCompile(`^(\d+(/\d+)*)*$`)
+
 func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
 	formData := formdata.NewFormData(&groupUpdateInput{})
+	formData.RegisterValidation("redirect_path", validator.Func(func(fl validator.FieldLevel) bool {
+		return redirectPathRegexp.MatchString(fl.Field().Interface().(string))
+	}))
+	formData.RegisterTranslation("redirect_path", "invalid redirect path")
 	return formData, formData.ParseJSONRequestData(r)
 }
