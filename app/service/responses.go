@@ -8,10 +8,11 @@ import (
 
 // Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request
 type Response struct {
-	HTTPStatusCode int         `json:"-"`
-	Success        bool        `json:"success"`
-	Message        string      `json:"message"`
-	Data           interface{} `json:"data,omitempty"`
+	HTTPStatusCode int  `json:"-"`
+	Success        bool `json:"success"`
+	// example: success
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // Render generates the HTTP response from Response
@@ -31,6 +32,13 @@ func CreationSuccess(data interface{}) render.Renderer {
 		Message:        "created",
 		Data:           data,
 	}
+}
+
+// This response format is both used for responses on actions (POST/PUT/PATCH/DELETE) and for errors
+// swagger:response defaultResponse
+type defaultResponse struct { //nolint: deadcode
+	// in: body
+	Body Response
 }
 
 // UpdateSuccess generated a success response for a PUT updating

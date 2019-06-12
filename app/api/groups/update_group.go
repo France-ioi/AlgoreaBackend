@@ -11,20 +11,47 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type groupUpdateInput struct {
-	// Nullable fields are of pointer types
-	Type          string     `json:"type" sql:"column:sType" valid:"in(Class|Team|Club|Friends|Other)"`
-	Name          string     `json:"name" sql:"column:sName"`
-	Grade         int32      `json:"grade" sql:"column:iGrade"`
-	Description   *string    `json:"description" sql:"column:sDescription"`
-	Opened        bool       `json:"opened" sql:"column:bOpened"`
-	FreeAccess    bool       `json:"free_access" sql:"column:bFreeAccess"`
+// Information of the group to be modified
+type GroupUpdateInput struct {
+	// Type of the group, among Class, Team, Club, Friends, Other
+	// example: Other
+	Type        string  `json:"type" sql:"column:sType" valid:"in(Class|Team|Club|Friends|Other)"`
+	Name        string  `json:"name" sql:"column:sName"`
+	Grade       int32   `json:"grade" sql:"column:iGrade"`
+	Description *string `json:"description" sql:"column:sDescription"`
+	Opened      bool    `json:"opened" sql:"column:bOpened"`
+	// If changed from true to false, automatically switch all requests to join
+	// this group from requestSent to requestRefused
+	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
+	// Duration after the first use of the password it will expire
+	// example: 79:56:22
 	PasswordTimer *string    `json:"password_timer" sql:"column:sPasswordTimer" valid:"matches(^\\d{2}:[0-5]\\d:[0-5]\\d$)"`
 	PasswordEnd   *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
-	RedirectPath  *string    `json:"redirect_path" sql:"column:sRedirectPath" valid:"matches(^(\\d+(/\\d+)*)*$)"`
-	OpenContest   bool       `json:"open_contest" sql:"column:bOpenContest"`
+	// Path to which the user should be sent when joining this group.
+	// example: /group-join/welcome-joe
+	RedirectPath *string `json:"redirect_path" sql:"column:sRedirectPath" valid:"matches(^(\\d+(/\\d+)*)*$)"`
+	OpenContest  bool    `json:"open_contest" sql:"column:bOpenContest"`
 }
 
+// swagger:operation PUT /groups/{group_id} groupEdit
+// ---
+// summary: Edit group information
+// description: Edit group information.
+//   Requires the user to be the owner of the group.
+// parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: string
+//   pattern: \d+
+// - name: group information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/GroupUpdateInput"
+// responses:
+//   default:
+//     "$ref": "#/responses/defaultResponse"
 func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -106,6 +133,6 @@ func refuseSentGroupRequestsIfNeeded(
 }
 
 func validateUpdateGroupInput(r *http.Request) (*formdata.FormData, error) {
-	formData := formdata.NewFormData(&groupUpdateInput{})
+	formData := formdata.NewFormData(&GroupUpdateInput{})
 	return formData, formData.ParseJSONRequestData(r)
 }
