@@ -3,8 +3,6 @@ package database
 import (
 	"math/rand"
 	"time"
-
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DataStore gather all stores for database operations on business data
@@ -98,13 +96,6 @@ func (s *DataStore) UserItems() *UserItemStore {
 func (s *DataStore) NewID() int64 {
 	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
 	return rand.Int63()
-}
-
-// EnsureSetID does check the given ID is set. If not, generate a (random) ID for it
-func (s *DataStore) EnsureSetID(id *types.Int64) {
-	if !id.Set {
-		*id = *types.NewInt64(s.NewID())
-	}
 }
 
 // InTransaction executes the given function in a transaction and commits

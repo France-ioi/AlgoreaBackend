@@ -25,15 +25,6 @@ type GroupItem struct {
 	Version int64 `sql:"column:iVersion"` // use Go default in DB (to be fixed)
 }
 
-func (s *GroupItemStore) tableName() string {
-	return "groups_items"
-}
-
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *GroupItemStore) Insert(data *GroupItem) error {
-	return s.insert(s.tableName(), data)
-}
-
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
 func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
 	db := s.GroupAncestors().UserAncestors(user)

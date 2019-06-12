@@ -8,26 +8,11 @@ import (
 	"github.com/jinzhu/gorm"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // ItemStore implements database operations on items
 type ItemStore struct {
 	*DataStore
-}
-
-// Item matches the content the `items` table
-type Item struct {
-	ID                types.Int64  `sql:"column:ID"`
-	Type              types.String `sql:"column:sType"`
-	DefaultLanguageID types.Int64  `sql:"column:idDefaultLanguage"`
-	TeamsEditable     types.Bool   `sql:"column:bTeamsEditable"`
-	NoScore           types.Bool   `sql:"column:bNoScore"`
-	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
-}
-
-func (s *ItemStore) tableName() string {
-	return "items"
 }
 
 // Visible returns a view of the visible items for the given user
@@ -70,11 +55,6 @@ func (s *ItemStore) AccessRights(user *User) *DB {
 				"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, " +
 				"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions").
 		Group("idItem")
-}
-
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *ItemStore) Insert(data *Item) error {
-	return s.insert(s.tableName(), data)
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
