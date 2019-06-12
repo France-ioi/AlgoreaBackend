@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -93,6 +94,35 @@ func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
 		_, _, _ = NewDataStore(db).Items().CheckSubmissionRights(12, NewMockUser(1, &UserData{SelfGroupID: 14}))
 	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_HasManagerAccess_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_, _ = NewDataStore(db).Items().HasManagerAccess(NewMockUser(1, &UserData{SelfGroupID: 14}), 20)
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_HasManagerAccess_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectBegin()
+	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	dbMock.ExpectRollback()
+
+	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		result, err := store.Items().HasManagerAccess(NewMockUser(1, &UserData{SelfGroupID: 14}), 20)
+		assert.False(t, result)
+		return err
+	}))
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

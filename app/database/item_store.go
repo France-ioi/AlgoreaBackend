@@ -79,26 +79,21 @@ func (s *ItemStore) Insert(data *Item) error {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemID int64) (found, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (found bool, err error) {
+	var count int64
 
-	var dbRes []struct {
-		ItemID        int64 `sql:"column:idItem"`
-		ManagerAccess bool  `sql:"column:bManagerAccess"`
-		OwnerAccess   bool  `sql:"column:bOwnerAccess"`
+	idsMap := make(map[int64]bool, len(itemIDs))
+	for _, itemID := range itemIDs {
+		idsMap[itemID] = true
 	}
-
-	db := s.GroupItems().MatchingUserAncestors(user).
-		Select("idItem, bManagerAccess, bOwnerAccess").
-		Where("idItem = ?", itemID).
-		Scan(&dbRes)
-	if db.Error() != nil {
-		return false, false, db.Error()
+	err = s.GroupItems().MatchingUserAncestors(user).
+		WithWriteLock().
+		Where("idItem IN (?) AND (bManagerAccess OR bOwnerAccess)", itemIDs).
+		PluckFirst("COUNT(DISTINCT idItem)", &count).Error()
+	if err != nil {
+		return false, err
 	}
-	if len(dbRes) != 1 {
-		return false, false, nil
-	}
-	item := dbRes[0]
-	return true, item.ManagerAccess || item.OwnerAccess, nil
+	return count == int64(len(idsMap)), nil
 }
 
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
