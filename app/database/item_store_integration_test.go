@@ -426,7 +426,7 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 	var result []resultType
 
 	assert.NoError(t, database.NewDataStore(db).Items().
-		Visible(database.NewMockUser(10, &database.UserData{SelfGroupID: 10})).
+		Visible(database.NewMockUser(1, &database.UserData{SelfGroupID: 10})).
 		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
 	assert.Equal(t, []resultType{
 		{ID: 11, AccessSolutions: true},
