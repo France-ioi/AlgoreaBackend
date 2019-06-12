@@ -18,7 +18,6 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DB contains information for current db connection (wraps *gorm.DB)
@@ -400,60 +399,6 @@ func (conn *DB) Error() error {
 // Exec executes raw sql
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...))
-}
-
-// insert reads fields from the data struct and insert the values which have been set
-// into the given table
-func (conn *DB) insert(tableName string, data interface{}) error {
-	// introspect data
-	dataV := reflect.ValueOf(data)
-
-	// extract data from pointer it is a pointer
-	if dataV.Kind() == reflect.Ptr {
-		dataV = dataV.Elem()
-	}
-
-	// we only accept structs
-	if dataV.Kind() != reflect.Struct {
-		return fmt.Errorf("insert only accepts structs; got %T", dataV)
-	}
-
-	// data for the building the SQL request
-	// "INSERT INTO tablename (attributes... ) VALUES (?, ?, NULL, ?, ...)", values...
-	var attributes = make([]string, 0, dataV.NumField())
-	var valueMarks = make([]string, 0, dataV.NumField())
-	var values = make([]interface{}, 0, dataV.NumField())
-
-	typ := dataV.Type()
-	for i := 0; i < dataV.NumField(); i++ {
-		// gets us a StructField
-		field := typ.Field(i)
-		sqlParam := strings.Split(field.Tag.Get("sql"), ":")
-		if len(sqlParam) == 2 && sqlParam[0] == "column" {
-			attrName := sqlParam[1]
-			value, null, set := dataV.Field(i).Interface(), false, true
-			if val, ok := value.(types.AllAttributeser); ok {
-				value, null, set = val.AllAttributes()
-			}
-
-			// only add non optional value (we suppose they will be understandable by the
-			// SQL lib, or optional which are set) and optional value which are set
-			if set {
-				attributes = append(attributes, attrName)
-				if null {
-					valueMarks = append(valueMarks, "NULL")
-				} else {
-					valueMarks = append(valueMarks, "?")
-					values = append(values, value)
-				}
-			}
-		}
-	}
-	// nolint:gosec
-	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
-		strings.Join(attributes, ", "),
-		strings.Join(valueMarks, ", "))
-	return conn.db.Exec(query, values...).Error
 }
 
 // insertMap reads fields from the given map and inserts the values which have been set

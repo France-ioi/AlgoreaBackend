@@ -17,8 +17,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 const someName = "some name"
@@ -736,66 +734,6 @@ func TestDB_Exec(t *testing.T) {
 	assert.NoError(t, execDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_insert(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	type dataType struct {
-		ID          int64        `sql:"column:ID"`
-		Field       types.String `sql:"column:sField"`
-		NullField   types.String `sql:"column:sNullField"`
-		AbsentField types.String `sql:"column:sAbsentField"`
-	}
-
-	normalString := types.NewString("some value")
-	normalString.Null = false
-	normalString.Set = true
-
-	nullString := types.NewString("")
-	nullString.Null = true
-	nullString.Set = true
-
-	absentString := types.NewString("")
-	absentString.Null = false
-	absentString.Set = false
-
-	dataRow := dataType{1, *normalString, *nullString, *absentString}
-
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
-		WithArgs(1, "some value").
-		WillReturnResult(sqlmock.NewResult(1234, 1))
-
-	assert.NoError(t, db.insert("myTable", &dataRow))
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_insert_ignoresFieldsWithoutSQLColumnTag(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	type dataType struct {
-		ID    int64
-		Field string `sql:"anything:value"`
-	}
-
-	dataRow := dataType{1, "my string"}
-
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` () VALUES ()")).
-		WillReturnResult(sqlmock.NewResult(1234, 1))
-
-	assert.NoError(t, db.insert("myTable", &dataRow))
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_insert_WithNonStructValue(t *testing.T) {
-	db, _ := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	dataRow := "some value"
-
-	assert.EqualError(t, db.insert("myTable", dataRow), "insert only accepts structs; got reflect.Value")
 }
 
 func TestDB_insertMap(t *testing.T) {
