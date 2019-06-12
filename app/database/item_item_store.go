@@ -34,3 +34,13 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 func (s *ItemItemStore) createNewAncestors() {
 	s.DataStore.createNewAncestors("items", "Item")
 }
+
+// After is a "listener" that calls UserItemStore::createNewAncestors() & GroupItemStore::ComputeAllAccess()
+func (s *ItemItemStore) After() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	s.createNewAncestors()
+	s.GroupItems().computeAllAccess()
+	return nil
+}

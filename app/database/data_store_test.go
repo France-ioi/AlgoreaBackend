@@ -3,10 +3,12 @@ package database
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,6 +27,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"ItemAncestors", func(store *DataStore) *DB { return store.ItemAncestors().Where("") }, "items_ancestors"},
 		{"ItemItems", func(store *DataStore) *DB { return store.ItemItems().Where("") }, "items_items"},
 		{"ItemStrings", func(store *DataStore) *DB { return store.ItemStrings().Where("") }, "items_strings"},
+		{"Languages", func(store *DataStore) *DB { return store.Languages().Where("") }, "languages"},
 		{"Platforms", func(store *DataStore) *DB { return store.Platforms().Where("") }, "platforms"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "users"},
 		{"UserAnswers", func(store *DataStore) *DB { return store.UserAnswers().Where("") }, "users_answers"},
@@ -60,6 +63,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"ItemAncestors", func(store *DataStore) interface{} { return store.ItemAncestors() }, &ItemAncestorStore{}},
 		{"ItemItems", func(store *DataStore) interface{} { return store.ItemItems() }, &ItemItemStore{}},
 		{"ItemStrings", func(store *DataStore) interface{} { return store.ItemStrings() }, &ItemStringStore{}},
+		{"Languages", func(store *DataStore) interface{} { return store.Languages() }, &LanguageStore{}},
 		{"Platforms", func(store *DataStore) interface{} { return store.Platforms() }, &PlatformStore{}},
 		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
 		{"UserAnswers", func(store *DataStore) interface{} { return store.UserAnswers() }, &UserAnswerStore{}},
@@ -179,4 +183,40 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	for i := 1; i < idTriesCount; i++ {
+		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
+	}
+	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(idTriesCount).
+		WillReturnResult(sqlmock.NewResult(idTriesCount, 1))
+
+	retryCount := 0
+	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError(func(store *DataStore) error {
+		retryCount++
+		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDataStore_InsertMap(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRow := map[string]interface{}{"ID": int64(1), "sField": "some value", "sNullField": nil}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
+		WithArgs(int64(1), "some value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").InsertMap(dataRow))
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

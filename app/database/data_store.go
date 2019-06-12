@@ -73,6 +73,11 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
 }
 
+// Languages returns a LanguageStore
+func (s *DataStore) Languages() *LanguageStore {
+	return &LanguageStore{NewDataStoreWithTable(s.DB, "languages")}
+}
+
 // Platforms returns a PlatformStore
 func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
@@ -122,4 +127,18 @@ func (s *DataStore) ByID(id int64) *DB {
 		panic("method ByID() called for abstract DataStore")
 	}
 	return s.Where(s.tableName+".ID = ?", id)
+}
+
+// RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors
+// for primary keys
+func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		return f(NewDataStore(db))
+	})
+}
+
+// InsertMap reads fields from the given map and inserts the values which have been set
+// into the store's table
+func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
+	return s.DB.insertMap(s.tableName, dataMap)
 }

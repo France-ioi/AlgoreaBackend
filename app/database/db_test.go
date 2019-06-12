@@ -798,6 +798,21 @@ func TestDB_insert_WithNonStructValue(t *testing.T) {
 	assert.EqualError(t, db.insert("myTable", dataRow), "insert only accepts structs; got reflect.Value")
 }
 
+func TestDB_insertMap(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRow := map[string]interface{}{"ID": int64(1), "sField": "some value", "sNullField": nil}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
+		WithArgs(int64(1), "some value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.insertMap("myTable", dataRow))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 	"unsafe"
@@ -446,6 +447,37 @@ func (conn *DB) insert(tableName string, data interface{}) error {
 					values = append(values, value)
 				}
 			}
+		}
+	}
+	// nolint:gosec
+	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
+		strings.Join(attributes, ", "),
+		strings.Join(valueMarks, ", "))
+	return conn.db.Exec(query, values...).Error
+}
+
+// insertMap reads fields from the given map and inserts the values which have been set
+// into the given table
+func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
+	// data for the building the SQL request
+	// "INSERT INTO tablename (attributes... ) VALUES (?, ?, NULL, ?, ...)", values...
+	var attributes = make([]string, 0, len(dataMap))
+	var valueMarks = make([]string, 0, len(dataMap))
+	var values = make([]interface{}, 0, len(dataMap))
+
+	keys := make([]string, 0, len(dataMap))
+	for key := range dataMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		attributes = append(attributes, key)
+		if dataMap[key] == nil {
+			valueMarks = append(valueMarks, "NULL")
+		} else {
+			valueMarks = append(valueMarks, "?")
+			values = append(values, dataMap[key])
 		}
 	}
 	// nolint:gosec
