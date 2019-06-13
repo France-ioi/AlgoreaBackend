@@ -69,7 +69,7 @@ func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (found bool, 
 	err = s.GroupItems().MatchingUserAncestors(user).
 		WithWriteLock().
 		Where("idItem IN (?) AND (bManagerAccess OR bOwnerAccess)", itemIDs).
-		PluckFirst("COUNT(DISTINCT idItem)", &count).Error()
+		Select("COUNT(DISTINCT idItem)").Count(&count).Error()
 	if err != nil {
 		return false, err
 	}
