@@ -21,50 +21,52 @@ type itemChild struct {
 	Order  int32 `json:"order" sql:"column:iChildOrder"`
 }
 
+type item struct {
+	Type                   string  `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
+	URL                    *string `json:"url" sql:"column:sUrl"`
+	TeamsEditable          bool    `json:"teams_editable" sql:"column:bTeamsEditable"`
+	NoScore                bool    `json:"no_score" sql:"column:bNoScore"`
+	TextID                 *string `json:"text_id" sql:"column:sTextId"`
+	CustomChapter          *bool   `json:"custom_chapter" sql:"column:bCustomChapter"`
+	DisplayDetailsInParent bool    `json:"display_details_in_parent" sql:"column:bDisplayDetailsInParent"`
+	ReadOnly               bool    `json:"read_only" sql:"column:bReadOnly"`
+	FullScreen             string  `json:"full_screen" sql:"column:sFullScreen" validate:"omitempty,oneof=forceYes forceNo default"`
+	ShowDifficulty         bool    `json:"show_difficulty" sql:"column:bShowDifficulty"`
+	ShowSource             bool    `json:"show_source" sql:"column:bShowSource"`
+	HintsAllowed           bool    `json:"hints_allowed" sql:"column:bHintsAllowed"`
+	FixedRanks             bool    `json:"fixed_ranks" sql:"column:bFixedRanks"`
+
+	ValidationType string `json:"validation_type" sql:"column:sValidationType" validate:"oneof=None All AllButOne Categories One Manual"`
+
+	ValidationMin   *int32     `json:"validation_min" sql:"column:iValidationMin"`
+	UnlockedItemIDs *string    `json:"unlocked_item_ids" sql:"column:idItemUnlocked" validate:"unlocked_item_ids"`
+	ScoreMinUnlock  *int32     `json:"score_min_unlock" sql:"column:iScoreMinUnlock"`
+	TeamMode        *string    `json:"team_mode" sql:"column:sTeamMode" validate:"oneof=All Half One None"`
+	TeamInGroupID   *int64     `json:"team_in_group_id" sql:"column:idTeamInGroup" validate:"team_in_group_id"`
+	TeamMaxMembers  int32      `json:"team_max_members" sql:"column:iTeamMaxMembers"`
+	TitleBarVisible bool       `json:"title_bar_visible" sql:"column:bTitleBarVisible"`
+	HasAttempts     bool       `json:"has_attempts" sql:"column:bHasAttempts"`
+	AccessOpenDate  *time.Time `json:"access_open_date" sql:"column:sAccessOpenDate"`
+	Duration        *string    `json:"duration" sql:"column:sDuration" validate:"duration"`
+	EndContestDate  *time.Time `json:"end_contest_date" sql:"column:sEndContestDate"`
+	ContestPhase    *string    `json:"contest_phase" sql:"column:sContestPhase" validate:"oneof=Running Analysis Closed"`
+	ShowUserInfos   bool       `json:"show_user_infos" sql:"column:bShowUserInfos"`
+	Level           *int32     `json:"level" sql:"column:iLevel"`
+	UsesAPI         bool       `json:"uses_api" sql:"column:bUsesAPI"`
+	GroupCodeEnter  *bool      `json:"group_code_enter" sql:"column:groupCodeEnter"`
+}
+
 // NewItemRequest is the expected input for new created item
 type NewItemRequest struct {
 	// Nullable fields are of pointer types
-	Item struct {
-		Type                   string  `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
-		URL                    *string `json:"url" sql:"column:sUrl"`
-		TeamsEditable          bool    `json:"teams_editable" sql:"column:bTeamsEditable"`
-		NoScore                bool    `json:"no_score" sql:"column:bNoScore"`
-		TextID                 *string `json:"text_id" sql:"column:sTextId"`
-		CustomChapter          *bool   `json:"custom_chapter" sql:"column:bCustomChapter"`
-		DisplayDetailsInParent bool    `json:"display_details_in_parent" sql:"column:bDisplayDetailsInParent"`
-		ReadOnly               bool    `json:"read_only" sql:"column:bReadOnly"`
-		FullScreen             string  `json:"full_screen" sql:"column:sFullScreen" validate:"omitempty,oneof=forceYes forceNo default"`
-		ShowDifficulty         bool    `json:"show_difficulty" sql:"column:bShowDifficulty"`
-		ShowSource             bool    `json:"show_source" sql:"column:bShowSource"`
-		HintsAllowed           bool    `json:"hints_allowed" sql:"column:bHintsAllowed"`
-		FixedRanks             bool    `json:"fixed_ranks" sql:"column:bFixedRanks"`
-
-		ValidationType string `json:"validation_type" sql:"column:sValidationType" validate:"oneof=None All AllButOne Categories One Manual"`
-
-		ValidationMin   *int32     `json:"validation_min" sql:"column:iValidationMin"`
-		UnlockedItemIDs *string    `json:"unlocked_item_ids" sql:"column:idItemUnlocked" validate:"unlocked_item_ids"`
-		ScoreMinUnlock  *int32     `json:"score_min_unlock" sql:"column:iScoreMinUnlock"`
-		TeamMode        *string    `json:"team_mode" sql:"column:sTeamMode" validate:"oneof=All Half One None"`
-		TeamInGroupID   *int64     `json:"team_in_group_id" sql:"column:idTeamInGroup" validate:"team_in_group_id"`
-		TeamMaxMembers  int32      `json:"team_max_members" sql:"column:iTeamMaxMembers"`
-		TitleBarVisible bool       `json:"title_bar_visible" sql:"column:bTitleBarVisible"`
-		HasAttempts     bool       `json:"has_attempts" sql:"column:bHasAttempts"`
-		AccessOpenDate  *time.Time `json:"access_open_date" sql:"column:sAccessOpenDate"`
-		Duration        *string    `json:"duration" sql:"column:sDuration" validate:"duration"`
-		EndContestDate  *time.Time `json:"end_contest_date" sql:"column:sEndContestDate"`
-		ContestPhase    *string    `json:"contest_phase" sql:"column:sContestPhase" validate:"oneof=Running Analysis Closed"`
-		ShowUserInfos   bool       `json:"show_user_infos" sql:"column:bShowUserInfos"`
-		Level           *int32     `json:"level" sql:"column:iLevel"`
-		UsesAPI         bool       `json:"uses_api" sql:"column:bUsesAPI"`
-		GroupCodeEnter  *bool      `json:"group_code_enter" sql:"column:groupCodeEnter"`
-	} `json:"item" sql:"column:items"`
+	Item       item  `json:"item,squash"`
 	LanguageID int64 `json:"language_id" validate:"required,language_id"`
 	String     struct {
 		Title       string  `json:"title" validate:"required" sql:"column:sTitle"`
 		ImageURL    *string `json:"image_url" sql:"column:sImageUrl"`
 		Subtitle    *string `json:"subtitle" sql:"column:sSubtitle"`
 		Description *string `json:"description" sql:"column:sDescription"`
-	} `json:"string"`
+	} `json:"string,squash"`
 
 	ParentItemID int64 `json:"parent_item_id,string" validate:"required,parent_item_id"`
 	Order        int32 `json:"order"`

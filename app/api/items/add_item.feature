@@ -28,16 +28,12 @@ Scenario: Valid
   When I send a POST request to "/items/" with the following body:
     """
     {
-      "item": {
-        "type": "Course"
-      },
+      "type": "Course",
       "language_id": "3",
-      "string": {
-        "title": "my title",
-        "image_url":"http://bit.ly/1234",
-        "subtitle": "hard task",
-        "description": "the goal of this task is ..."
-      },
+      "title": "my title",
+      "image_url":"http://bit.ly/1234",
+      "subtitle": "hard task",
+      "description": "the goal of this task is ...",
       "parent_item_id": "21",
       "order": 100
     }
@@ -88,45 +84,41 @@ Scenario: Valid
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course",
-          "url": "http://myurl.com/",
-          "text_id": "Task number 1",
-          "title_bar_visible": true,
-          "custom_chapter": true,
-          "display_details_in_parent": true,
-          "uses_api": true,
-          "read_only": true,
-          "full_screen": "forceYes",
-          "show_difficulty": true,
-          "show_source": true,
-          "hints_allowed": true,
-          "fixed_ranks": true,
-          "validation_type": "AllButOne",
-          "validation_min": 1234,
-          "unlocked_item_ids": "12,34",
-          "score_min_unlock": 34,
-          "team_mode": "All",
-          "teams_editable": true,
-          "team_in_group_id": "12345",
-          "team_max_members": 2345,
-          "has_attempts": true,
-          "access_open_date": "2018-01-02T03:04:05Z",
-          "duration": "01:02:03",
-          "end_contest_date": "2019-02-03T04:05:06Z",
-          "show_user_infos": true,
-          "contest_phase": "Analysis",
-          "level": 345,
-          "no_score": true,
-          "group_code_enter": true
-        },
+        "type": "Course",
+        "url": "http://myurl.com/",
+        "text_id": "Task number 1",
+        "title_bar_visible": true,
+        "custom_chapter": true,
+        "display_details_in_parent": true,
+        "uses_api": true,
+        "read_only": true,
+        "full_screen": "forceYes",
+        "show_difficulty": true,
+        "show_source": true,
+        "hints_allowed": true,
+        "fixed_ranks": true,
+        "validation_type": "AllButOne",
+        "validation_min": 1234,
+        "unlocked_item_ids": "12,34",
+        "score_min_unlock": 34,
+        "team_mode": "All",
+        "teams_editable": true,
+        "team_in_group_id": "12345",
+        "team_max_members": 2345,
+        "has_attempts": true,
+        "access_open_date": "2018-01-02T03:04:05Z",
+        "duration": "01:02:03",
+        "end_contest_date": "2019-02-03T04:05:06Z",
+        "show_user_infos": true,
+        "contest_phase": "Analysis",
+        "level": 345,
+        "no_score": true,
+        "group_code_enter": true,
         "language_id": "3",
-        "string": {
-          "title": "my title",
-          "image_url":"http://bit.ly/1234",
-          "subtitle": "hard task",
-          "description": "the goal of this task is ..."
-        },
+        "title": "my title",
+        "image_url":"http://bit.ly/1234",
+        "subtitle": "hard task",
+        "description": "the goal of this task is ...",
         "parent_item_id": "21",
         "order": 100,
         "children": [
@@ -172,14 +164,10 @@ Scenario: Valid
     When I send a POST request to "/items/" with the following body:
     """
     {
-      "item": {
-        "type": "Course",
-        "full_screen": ""
-      },
+      "type": "Course",
+      "full_screen": "",
       "language_id": "3",
-      "string": {
-        "title": "my title"
-      },
+      "title": "my title",
       "parent_item_id": "21",
       "order": 100
     }

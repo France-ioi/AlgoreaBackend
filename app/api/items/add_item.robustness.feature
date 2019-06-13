@@ -32,9 +32,7 @@ Feature: Add item - robustness
       """
       {
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -47,7 +45,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.type": ["missing field"]
+          "type": ["missing field"]
         }
       }
       """
@@ -57,12 +55,8 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
-        "string": {
-          "title": "my title"
-        },
+        "type": "Chapter",
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -85,9 +79,7 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
         "parent_item_id": "21",
         "order": 100
@@ -101,7 +93,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "string.title": ["missing field"]
+          "title": ["missing field"]
         }
       }
       """
@@ -111,13 +103,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "order": 100
       }
       """
@@ -139,13 +127,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "sewrwer3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -168,13 +152,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "404",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -198,13 +178,9 @@ Feature: Add item - robustness
       """
       {
         "id": "2",
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "sfaewr20",
         "order": 100
       }
@@ -228,13 +204,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "404",
         "order": 100
       }
@@ -260,13 +232,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "22",
         "order": 100
       }
@@ -289,13 +257,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course"
-        },
+        "type": "Course",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -308,14 +272,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Course",
-          "full_screen": "wrong value"
-        },
+        "type": "Course",
+        "full_screen": "wrong value",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -328,7 +288,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.full_screen": ["full_screen must be one of [forceYes forceNo default]"]
+          "full_screen": ["full_screen must be one of [forceYes forceNo default]"]
         }
       }
       """
@@ -338,13 +298,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Wrong"
-        },
+        "type": "Wrong",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -357,7 +313,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.type": ["type must be one of [Root Category Chapter Task Course]"]
+          "type": ["type must be one of [Root Category Chapter Task Course]"]
         }
       }
       """
@@ -367,14 +323,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "validation_type": "Wrong"
-        },
+        "type": "Chapter",
+        "validation_type": "Wrong",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -387,7 +339,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.validation_type": ["validation_type must be one of [None All AllButOne Categories One Manual]"]
+          "validation_type": ["validation_type must be one of [None All AllButOne Categories One Manual]"]
         }
       }
       """
@@ -397,14 +349,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "validation_min": "Wrong"
-        },
+        "type": "Chapter",
+        "validation_min": "Wrong",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -417,7 +365,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.validation_min": ["expected type 'int32', got unconvertible type 'string'"]
+          "validation_min": ["expected type 'int32', got unconvertible type 'string'"]
         }
       }
       """
@@ -427,14 +375,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "unlocked_item_ids": "1,abc"
-        },
+        "type": "Chapter",
+        "unlocked_item_ids": "1,abc",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -447,7 +391,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
         }
       }
       """
@@ -457,14 +401,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "unlocked_item_ids": "404"
-        },
+        "type": "Chapter",
+        "unlocked_item_ids": "404",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -477,7 +417,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
         }
       }
       """
@@ -487,14 +427,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "unlocked_item_ids": "22"
-        },
+        "type": "Chapter",
+        "unlocked_item_ids": "22",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -507,7 +443,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
         }
       }
       """
@@ -517,14 +453,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "team_mode": "Wrong"
-        },
+        "type": "Chapter",
+        "team_mode": "Wrong",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -537,7 +469,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.team_mode": ["team_mode must be one of [All Half One None]"]
+          "team_mode": ["team_mode must be one of [All Half One None]"]
         }
       }
       """
@@ -547,14 +479,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "team_in_group_id": "404"
-        },
+        "type": "Chapter",
+        "team_in_group_id": "404",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -567,7 +495,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.team_in_group_id": ["should exist and be owned by the user"]
+          "team_in_group_id": ["should exist and be owned by the user"]
         }
       }
       """
@@ -577,14 +505,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "team_in_group_id": "11"
-        },
+        "type": "Chapter",
+        "team_in_group_id": "11",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -597,7 +521,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.team_in_group_id": ["should exist and be owned by the user"]
+          "team_in_group_id": ["should exist and be owned by the user"]
         }
       }
       """
@@ -607,14 +531,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "12:34"
-        },
+        "type": "Chapter",
+        "duration": "12:34",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -627,7 +547,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -637,14 +557,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "-1:34:56"
-        },
+        "type": "Chapter",
+        "duration": "-1:34:56",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -657,7 +573,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -667,14 +583,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "100:34:56"
-        },
+        "type": "Chapter",
+        "duration": "100:34:56",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -687,7 +599,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -697,14 +609,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "99:-1:56"
-        },
+        "type": "Chapter",
+        "duration": "99:-1:56",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -717,7 +625,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -727,14 +635,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "99:60:56"
-        },
+        "type": "Chapter",
+        "duration": "99:60:56",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -747,7 +651,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -757,14 +661,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "99:59:-1"
-        },
+        "type": "Chapter",
+        "duration": "99:59:-1",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -777,7 +677,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -787,14 +687,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "duration": "99:59:60"
-        },
+        "type": "Chapter",
+        "duration": "99:59:60",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -807,7 +703,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.duration": ["invalid duration"]
+          "duration": ["invalid duration"]
         }
       }
       """
@@ -817,14 +713,10 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter",
-          "contest_phase": "Wrong"
-        },
+        "type": "Chapter",
+        "contest_phase": "Wrong",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100
       }
@@ -837,7 +729,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "item.contest_phase": ["contest_phase must be one of [Running Analysis Closed]"]
+          "contest_phase": ["contest_phase must be one of [Running Analysis Closed]"]
         }
       }
       """
@@ -847,13 +739,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "4",
         "order": 100,
         "children": [
@@ -880,13 +768,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100,
         "children": [
@@ -913,13 +797,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100,
         "children": [
@@ -935,13 +815,9 @@ Feature: Add item - robustness
     When I send a POST request to "/items/" with the following body:
       """
       {
-        "item": {
-          "type": "Chapter"
-        },
+        "type": "Chapter",
         "language_id": "3",
-        "string": {
-          "title": "my title"
-        },
+        "title": "my title",
         "parent_item_id": "21",
         "order": 100,
         "children": [
