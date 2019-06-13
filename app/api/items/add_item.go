@@ -124,7 +124,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	apiError := service.NoError
 	var itemID int64
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		registerValidators(formData, store, user)
+		registerAddItemValidators(formData, store, user)
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -220,7 +220,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User) 
 	})
 }
 
-func registerValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
+func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user))
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should have manager/owner access to it")
@@ -228,13 +228,20 @@ func registerValidators(formData *formdata.FormData, store *database.DataStore, 
 	formData.RegisterValidation("language_id", constructLanguageIDValidator(store))
 	formData.RegisterTranslation("language_id", "no such language")
 
+	registerChildrenValidator(formData, store, user)
+	registerItemValidators(formData, store, user)
+}
+
+func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("team_in_group_id", constructTeamInGroupIDValidator(store, user))
 	formData.RegisterTranslation("team_in_group_id", "should exist and be owned by the user")
 
 	formData.RegisterValidation("unlocked_item_ids", constructUnlockedItemIDsValidator(store, user))
 	formData.RegisterTranslation("unlocked_item_ids",
 		"all the IDs should exist and the user should have manager/owner access to them")
+}
 
+func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user))
 	formData.RegisterTranslation("children",
 		"children IDs should be unique and the user should have manager/owner access to them")
