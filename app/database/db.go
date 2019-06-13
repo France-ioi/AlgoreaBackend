@@ -415,8 +415,7 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 // into the given table
 func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
 	// data for the building the SQL request
-	// "INSERT INTO tablename (attributes... ) VALUES (?, ?, NULL, ?, ...)", values...
-	var attributes = make([]string, 0, len(dataMap))
+	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...)", values...
 	var valueMarks = make([]string, 0, len(dataMap))
 	var values = make([]interface{}, 0, len(dataMap))
 
@@ -427,7 +426,6 @@ func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) erro
 	sort.Strings(keys)
 
 	for _, key := range keys {
-		attributes = append(attributes, key)
 		if dataMap[key] == nil {
 			valueMarks = append(valueMarks, "NULL")
 		} else {
@@ -437,7 +435,7 @@ func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) erro
 	}
 	// nolint:gosec
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
-		strings.Join(attributes, ", "),
+		strings.Join(keys, ", "),
 		strings.Join(valueMarks, ", "))
 	return conn.db.Exec(query, values...).Error
 }
