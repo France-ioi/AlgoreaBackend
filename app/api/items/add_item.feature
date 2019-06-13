@@ -24,7 +24,6 @@ Background:
 
 Scenario: Valid
   Given I am the user with ID "1"
-  And the time now is "2018-01-01T00:00:00Z"
   When I send a POST request to "/items/" with the following body:
     """
     {
@@ -80,7 +79,6 @@ Scenario: Valid
       | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
       | 42 | 11      | 12     | true           | false        |
       | 43 | 11      | 34     | false          | true         |
-    And the time now is "2018-01-01T00:00:00Z"
     When I send a POST request to "/items/" with the following body:
       """
       {
@@ -160,7 +158,6 @@ Scenario: Valid
 
   Scenario: Valid with empty full_screen
     Given I am the user with ID "1"
-    And the time now is "2018-01-01T00:00:00Z"
     When I send a POST request to "/items/" with the following body:
     """
     {
