@@ -2,6 +2,7 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,15 +75,6 @@ type NewItemRequest struct {
 	Children []itemChild `json:"children" validate:"children"`
 }
 
-func (in *NewItemRequest) itemData(itemID int64, itemMap map[string]interface{}) map[string]interface{} {
-	itemMap["ID"] = itemID
-	itemMap["idDefaultLanguage"] = in.LanguageID
-	if _, ok := itemMap["sContestPhase"]; !ok {
-		itemMap["sContestPhase"] = "Running"
-	}
-	return itemMap
-}
-
 func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int64) map[string]interface{} {
 	return map[string]interface{}{
 		"ID":              groupItemID,
@@ -95,22 +87,6 @@ func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int
 		// as the owner gets full access, there is no need to request parents' access to get the actual access level
 		"sCachedFullAccessDate": gorm.Expr("NOW()"),
 		"bCachedFullAccess":     true,
-	}
-}
-
-func (in *NewItemRequest) itemStringData(itemStringID, itemID int64, stringMap map[string]interface{}) map[string]interface{} {
-	stringMap["ID"] = itemStringID
-	stringMap["idItem"] = itemID
-	stringMap["idLanguage"] = in.LanguageID
-	return stringMap
-}
-
-func (in *NewItemRequest) itemItemData(itemItemID, parentItemID, childItemID int64, order int32) map[string]interface{} {
-	return map[string]interface{}{
-		"ID":           itemItemID,
-		"idItemChild":  childItemID,
-		"iChildOrder":  order,
-		"idItemParent": parentItemID,
 	}
 }
 
@@ -278,19 +254,52 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 
 	err = store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
 		itemID = s.NewID()
-		service.MustNotBeError(s.Items().InsertMap(newItemRequest.itemData(itemID, itemMap)))
+
+		itemMap["ID"] = itemID
+		itemMap["idDefaultLanguage"] = newItemRequest.LanguageID
+		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
 		userSelfGroupID, _ := user.SelfGroupID() // the user has been already loaded in addItem()
-		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(store.NewID(), user.UserID, userSelfGroupID, itemID)))
-		service.MustNotBeError(s.ItemStrings().InsertMap(newItemRequest.itemStringData(store.NewID(), itemID, stringMap)))
+		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.UserID, userSelfGroupID, itemID)))
 
-		service.MustNotBeError(
-			s.ItemItems().InsertMap(newItemRequest.itemItemData(store.NewID(), newItemRequest.ParentItemID, itemID, newItemRequest.Order)))
+		stringMap["ID"] = s.NewID()
+		stringMap["idItem"] = itemID
+		stringMap["idLanguage"] = newItemRequest.LanguageID
+		service.MustNotBeError(s.ItemStrings().InsertMap(stringMap))
 
+		parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
+		parentChildSpec = append(parentChildSpec,
+			&insertItemItemsSpec{ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order})
 		for _, child := range newItemRequest.Children {
-			service.MustNotBeError(s.ItemItems().InsertMap(newItemRequest.itemItemData(store.NewID(), itemID, child.ItemID, child.Order)))
+			parentChildSpec = append(parentChildSpec,
+				&insertItemItemsSpec{ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order})
 		}
-		return s.ItemItems().After()
+		insertItemItems(s, parentChildSpec)
+		return store.ItemItems().After()
 	})
 	return itemID, err
+}
+
+type insertItemItemsSpec struct {
+	ParentItemID int64
+	ChildItemID  int64
+	Order        int32
+}
+
+func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
+	if len(spec) == 0 {
+		return
+	}
+
+	var values = make([]interface{}, 0, len(spec)*4)
+
+	for index := range spec {
+		values = append(values, store.NewID(), spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order)
+	}
+
+	valuesMarks := strings.Repeat("(?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?)"
+	// nolint:gosec
+	query := fmt.Sprintf("INSERT INTO `items_items` (`ID`, `idItemParent`, `idItemChild`, `iChildOrder`) VALUES %s",
+		valuesMarks)
+	service.MustNotBeError(store.Exec(query, values...).Error())
 }
