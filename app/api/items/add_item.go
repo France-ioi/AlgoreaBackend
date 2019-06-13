@@ -167,27 +167,19 @@ func constructParentItemIDValidator(store *database.DataStore, user *database.Us
 
 func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		var result int64
-		err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().PluckFirst("1", &result).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return false
-		}
+		found, err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().HasRows()
 		service.MustNotBeError(err)
-		return true
+		return found
 	})
 }
 
 func constructTeamInGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		var result int64
-		err := store.Groups().
+		found, err := store.Groups().
 			OwnedBy(user).Where("groups.ID = ?", fl.Field().Interface().(int64)).
-			WithWriteLock().PluckFirst("1", &result).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return false
-		}
+			WithWriteLock().HasRows()
 		service.MustNotBeError(err)
-		return true
+		return found
 	})
 }
 
