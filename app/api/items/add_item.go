@@ -240,11 +240,15 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should have manager/owner access to it")
 
-	formData.RegisterValidation("language_id", constructLanguageIDValidator(store))
-	formData.RegisterTranslation("language_id", "no such language")
+	registerLanguageIDValidator(formData, store)
 
 	registerChildrenValidator(formData, store, user)
 	registerItemValidators(formData, store, user)
+}
+
+func registerLanguageIDValidator(formData *formdata.FormData, store *database.DataStore) {
+	formData.RegisterValidation("language_id", constructLanguageIDValidator(store))
+	formData.RegisterTranslation("language_id", "no such language")
 }
 
 func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
