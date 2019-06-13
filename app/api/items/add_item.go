@@ -90,7 +90,7 @@ func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int
 	}
 }
 
-func (in *NewItemRequest) checkItemsRelationsCycles(store *database.DataStore) bool {
+func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
 	if len(in.Children) == 0 {
 		return true
 	}
@@ -132,7 +132,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 		}
 
 		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-			if !input.checkItemsRelationsCycles(lockedStore) {
+			if !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
 				return apiError.Error // rollback
 			}
