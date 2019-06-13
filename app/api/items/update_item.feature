@@ -37,7 +37,6 @@ Background:
 
 Scenario: Valid
   Given I am the user with ID "1"
-  And the time now is "2018-01-01T00:00:00Z"
   When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -161,7 +160,6 @@ Scenario: Valid
 
   Scenario: Valid without any fields
     Given I am the user with ID "1"
-    And the time now is "2018-01-01T00:00:00Z"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
