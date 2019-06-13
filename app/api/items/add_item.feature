@@ -53,19 +53,19 @@ Scenario: Valid
     """
   And the table "items" at ID "5577006791947779410" should be:
     | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-    | 5577006791947779410 | Course | null |                 3 |              0 |        0 | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+    | 5577006791947779410 | Course | null | 3                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
   And the table "items_strings" should be:
-    |                  ID | idItem              | idLanguage |   sTitle |          sImageUrl | sSubtitle |                 sDescription |
-    | 6129484611666145821 | 5577006791947779410 |          3 | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+    | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
+    | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
   And the table "items_items" should be:
-    |                  ID | idItemParent | idItemChild         | iChildOrder |
-    | 4037200794235010051 |           21 | 5577006791947779410 |         100 |
+    | ID                  | idItemParent | idItemChild         | iChildOrder |
+    | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
   And the table "items_ancestors" should be:
     | idItemAncestor | idItemChild         |
     | 21             | 5577006791947779410 |
   And the table "groups_items" at ID "8674665223082153551" should be:
-    |                  ID | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 |  bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-    | 8674665223082153551 |      11 | 5577006791947779410 |             1 | 1                                |             1 |              1 | 1                                      |                 1 |
+    | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+    | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      |                 1 |
 
 
   Scenario: Valid (all the fields are set)
@@ -146,15 +146,15 @@ Scenario: Valid
       """
     And the table "items" at ID "5577006791947779410" should be:
       | ID                  | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 5577006791947779410 | Course | http://myurl.com/ |                 3 |              1 |        1 | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 1              | Analysis      | 345    | 1        | 1              |
+      | 5577006791947779410 | Course | http://myurl.com/ | 3                 | 1              | 1        | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 1              | Analysis      | 345    | 1        | 1              |
     And the table "items_strings" should be:
-      |                  ID | idItem              | idLanguage |   sTitle |          sImageUrl | sSubtitle |                 sDescription |
-      | 6129484611666145821 | 5577006791947779410 |          3 | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
+      | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      |                  ID | idItemParent        | idItemChild         | iChildOrder |
-      | 3916589616287113937 | 5577006791947779410 | 12                  |           0 |
-      | 4037200794235010051 | 21                  | 5577006791947779410 |         100 |
-      | 6334824724549167320 | 5577006791947779410 | 34                  |           1 |
+      | ID                  | idItemParent        | idItemChild         | iChildOrder |
+      | 3916589616287113937 | 5577006791947779410 | 12                  | 0           |
+      | 4037200794235010051 | 21                  | 5577006791947779410 | 100         |
+      | 6334824724549167320 | 5577006791947779410 | 34                  | 1           |
     And the table "items_ancestors" should be:
       | idItemAncestor      | idItemChild         |
       | 21                  | 12                  |
@@ -163,8 +163,8 @@ Scenario: Valid
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      |                  ID | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 |      11 | 5577006791947779410 |             1 | 1                                |            1 |              1 | 1                                      |                 1 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      | 1                 |
 
   Scenario: Valid with empty full_screen
     Given I am the user with ID "1"
@@ -197,14 +197,14 @@ Scenario: Valid
       | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
       | 5577006791947779410 | Course | null |                 3 |              0 |        0 | null    | 1                | 0              | 0                       | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
     And the table "items_strings" should be:
-      |                  ID | idItem              | idLanguage |   sTitle | sImageUrl | sSubtitle | sDescription |
-      | 6129484611666145821 | 5577006791947779410 |          3 | my title | null      | null      | null         |
+      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl | sSubtitle | sDescription |
+      | 6129484611666145821 | 5577006791947779410 | 3          | my title | null      | null      | null         |
     And the table "items_items" should be:
-      |                  ID | idItemParent | idItemChild         | iChildOrder |
-      | 4037200794235010051 |           21 | 5577006791947779410 |         100 |
+      | ID                  | idItemParent | idItemChild         | iChildOrder |
+      | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
     And the table "items_ancestors" should be:
       | idItemAncestor | idItemChild         |
       | 21             | 5577006791947779410 |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      |                  ID | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 |  bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 |      11 | 5577006791947779410 |             1 | 1                                |             1 |              1 | 1                                      |                 1 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      |                 1 |
