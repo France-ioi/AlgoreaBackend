@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 	"unsafe"
@@ -17,7 +18,6 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DB contains information for current db connection (wraps *gorm.DB)
@@ -381,6 +381,16 @@ func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))
 }
 
+// HasRows returns true if at least one row is found
+func (conn *DB) HasRows() (bool, error) {
+	var result int64
+	err := conn.PluckFirst("1", &result).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition
 func (conn *DB) Delete(where ...interface{}) *DB {
 	return newDB(conn.db.Delete(nil, where...))
@@ -401,56 +411,31 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...))
 }
 
-// insert reads fields from the data struct and insert the values which have been set
+// insertMap reads fields from the given map and inserts the values which have been set
 // into the given table
-func (conn *DB) insert(tableName string, data interface{}) error {
-	// introspect data
-	dataV := reflect.ValueOf(data)
-
-	// extract data from pointer it is a pointer
-	if dataV.Kind() == reflect.Ptr {
-		dataV = dataV.Elem()
-	}
-
-	// we only accept structs
-	if dataV.Kind() != reflect.Struct {
-		return fmt.Errorf("insert only accepts structs; got %T", dataV)
-	}
-
+func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
 	// data for the building the SQL request
-	// "INSERT INTO tablename (attributes... ) VALUES (?, ?, NULL, ?, ...)", values...
-	var attributes = make([]string, 0, dataV.NumField())
-	var valueMarks = make([]string, 0, dataV.NumField())
-	var values = make([]interface{}, 0, dataV.NumField())
+	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...)", values...
+	var valueMarks = make([]string, 0, len(dataMap))
+	var values = make([]interface{}, 0, len(dataMap))
 
-	typ := dataV.Type()
-	for i := 0; i < dataV.NumField(); i++ {
-		// gets us a StructField
-		field := typ.Field(i)
-		sqlParam := strings.Split(field.Tag.Get("sql"), ":")
-		if len(sqlParam) == 2 && sqlParam[0] == "column" {
-			attrName := sqlParam[1]
-			value, null, set := dataV.Field(i).Interface(), false, true
-			if val, ok := value.(types.AllAttributeser); ok {
-				value, null, set = val.AllAttributes()
-			}
+	keys := make([]string, 0, len(dataMap))
+	for key := range dataMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
 
-			// only add non optional value (we suppose they will be understandable by the
-			// SQL lib, or optional which are set) and optional value which are set
-			if set {
-				attributes = append(attributes, attrName)
-				if null {
-					valueMarks = append(valueMarks, "NULL")
-				} else {
-					valueMarks = append(valueMarks, "?")
-					values = append(values, value)
-				}
-			}
+	for _, key := range keys {
+		if dataMap[key] == nil {
+			valueMarks = append(valueMarks, "NULL")
+		} else {
+			valueMarks = append(valueMarks, "?")
+			values = append(values, dataMap[key])
 		}
 	}
 	// nolint:gosec
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
-		strings.Join(attributes, ", "),
+		strings.Join(keys, ", "),
 		strings.Join(valueMarks, ", "))
 	return conn.db.Exec(query, values...).Error
 }

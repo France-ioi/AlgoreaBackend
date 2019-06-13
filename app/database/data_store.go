@@ -3,8 +3,6 @@ package database
 import (
 	"math/rand"
 	"time"
-
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // DataStore gather all stores for database operations on business data
@@ -73,6 +71,11 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
 }
 
+// Languages returns a LanguageStore
+func (s *DataStore) Languages() *LanguageStore {
+	return &LanguageStore{NewDataStoreWithTable(s.DB, "languages")}
+}
+
 // Platforms returns a PlatformStore
 func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
@@ -95,13 +98,6 @@ func (s *DataStore) NewID() int64 {
 	return rand.Int63()
 }
 
-// EnsureSetID does check the given ID is set. If not, generate a (random) ID for it
-func (s *DataStore) EnsureSetID(id *types.Int64) {
-	if !id.Set {
-		*id = *types.NewInt64(s.NewID())
-	}
-}
-
 // InTransaction executes the given function in a transaction and commits
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
 	return s.inTransaction(func(db *DB) error {
@@ -122,4 +118,18 @@ func (s *DataStore) ByID(id int64) *DB {
 		panic("method ByID() called for abstract DataStore")
 	}
 	return s.Where(s.tableName+".ID = ?", id)
+}
+
+// RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors
+// for primary keys
+func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		return f(NewDataStore(db))
+	})
+}
+
+// InsertMap reads fields from the given map and inserts the values which have been set
+// into the store's table
+func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
+	return s.DB.insertMap(s.tableName, dataMap)
 }

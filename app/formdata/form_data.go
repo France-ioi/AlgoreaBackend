@@ -14,7 +14,7 @@ import (
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"gopkg.in/go-playground/validator.v9"
-	en "gopkg.in/go-playground/validator.v9/translations/en"
+	"gopkg.in/go-playground/validator.v9/translations/en"
 
 	"github.com/France-ioi/mapstructure"
 )
@@ -43,9 +43,15 @@ func NewFormData(definitionStructure interface{}) *FormData {
 
 	// go-playground/validator should read field names from 'json' tag
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		parts := strings.Split(fld.Tag.Get("json"), ",")
+		name := parts[0]
 		if name == "-" {
 			return ""
+		}
+		for i := 0; i < len(parts); i++ {
+			if parts[i] == squash {
+				return "<squash>"
+			}
 		}
 		return name
 	})
@@ -121,6 +127,9 @@ func (f *FormData) ConstructPartialMapForDB(part string) map[string]interface{} 
 	partField := reflect.ValueOf(f.definitionStructure).Elem().FieldByName(part)
 	partFieldType, _ := reflect.TypeOf(f.definitionStructure).Elem().FieldByName(part)
 	prefix := getJSONFieldName(&partFieldType)
+	if getJSONSquash(&partFieldType) {
+		prefix = ""
+	}
 	if partField.Kind() == reflect.Ptr {
 		partField = partField.Elem()
 	}
@@ -203,6 +212,7 @@ func (f *FormData) validateFieldValues() {
 }
 
 const required = "required"
+const squash = "squash"
 
 func (f *FormData) processValidatorErrors(err error) {
 	validatorErrors := err.(validator.ValidationErrors)
@@ -218,6 +228,7 @@ func (f *FormData) processValidatorErrors(err error) {
 			prefix = structName + "."
 		}
 		path = strings.TrimPrefix(path, prefix)
+		path = strings.Replace(path, "<squash>.", "", -1)
 		if f.usedKeys[path] && validatorError.Tag() != required {
 			errorMsg := validatorError.Translate(f.trans)
 			f.fieldErrors[path] = append(f.fieldErrors[path], errorMsg)
@@ -305,11 +316,17 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 		if jsonName == "-" { // skip fields ignored in json
 			continue
 		}
-		if len(prefix) > 0 {
-			jsonName = prefix + "." + jsonName
-		}
+		squash := getJSONSquash(&structField)
+		result := true
+		if !squash {
+			if len(prefix) > 0 {
+				jsonName = prefix + "." + jsonName
+			}
 
-		result := fn(field, structField, jsonName)
+			result = fn(field, structField, jsonName)
+		} else {
+			jsonName = prefix
+		}
 
 		if result && field.Kind() == reflect.Struct {
 			traverseStructure(fn, field, jsonName)
@@ -323,6 +340,16 @@ func getJSONFieldName(structField *reflect.StructField) string {
 		return "-"
 	}
 	return jsonTagParts[0]
+}
+
+func getJSONSquash(structField *reflect.StructField) bool {
+	jsonTagParts := strings.Split(structField.Tag.Get("json"), ",")
+	for i := 1; i < len(jsonTagParts); i++ {
+		if jsonTagParts[i] == squash {
+			return true
+		}
+	}
+	return false
 }
 
 // toAnythingHookFunc returns a DecodeHookFunc that converts

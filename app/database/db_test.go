@@ -17,8 +17,6 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 const someName = "some name"
@@ -481,6 +479,58 @@ func TestDB_Take(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_HasRows(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.NoError(t, err)
+	assert.True(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_HasRows_NoRows(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"1"}))
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.NoError(t, err)
+	assert.False(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_HasRows_Error(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnError(expectedError)
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.Equal(t, expectedError, err)
+	assert.False(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Pluck(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -738,64 +788,19 @@ func TestDB_Exec(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insert(t *testing.T) {
+func TestDB_insertMap(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	type dataType struct {
-		ID          int64        `sql:"column:ID"`
-		Field       types.String `sql:"column:sField"`
-		NullField   types.String `sql:"column:sNullField"`
-		AbsentField types.String `sql:"column:sAbsentField"`
-	}
+	dataRow := map[string]interface{}{"ID": int64(1), "sField": "some value", "sNullField": nil}
 
-	normalString := types.NewString("some value")
-	normalString.Null = false
-	normalString.Set = true
-
-	nullString := types.NewString("")
-	nullString.Null = true
-	nullString.Set = true
-
-	absentString := types.NewString("")
-	absentString.Null = false
-	absentString.Set = false
-
-	dataRow := dataType{1, *normalString, *nullString, *absentString}
-
+	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
-		WithArgs(1, "some value").
-		WillReturnResult(sqlmock.NewResult(1234, 1))
+		WithArgs(int64(1), "some value").
+		WillReturnError(expectedError)
 
-	assert.NoError(t, db.insert("myTable", &dataRow))
+	assert.Equal(t, expectedError, db.insertMap("myTable", dataRow))
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_insert_ignoresFieldsWithoutSQLColumnTag(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	type dataType struct {
-		ID    int64
-		Field string `sql:"anything:value"`
-	}
-
-	dataRow := dataType{1, "my string"}
-
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` () VALUES ()")).
-		WillReturnResult(sqlmock.NewResult(1234, 1))
-
-	assert.NoError(t, db.insert("myTable", &dataRow))
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_insert_WithNonStructValue(t *testing.T) {
-	db, _ := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	dataRow := "some value"
-
-	assert.EqualError(t, db.insert("myTable", dataRow), "insert only accepts structs; got reflect.Value")
 }
 
 func TestDB_ScanIntoSliceOfMaps(t *testing.T) {

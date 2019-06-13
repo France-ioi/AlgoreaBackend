@@ -35,7 +35,17 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong value for 'attempt_id': must be given and not null"
+    And the response body should be, in JSON:
+      """
+      {
+        "error_text": "Invalid input data",
+        "errors": {
+          "attempt_id": ["missing field"]
+        },
+        "message": "Bad Request",
+        "success": false
+      }
+      """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
@@ -49,7 +59,17 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong value for 'answer': must be given and not null"
+    And the response body should be, in JSON:
+      """
+      {
+        "error_text": "Invalid input data",
+        "errors": {
+          "answer": ["missing field"]
+        },
+        "message": "Bad Request",
+        "success": false
+      }
+      """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
@@ -63,7 +83,17 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Wrong value for 'state': must be given and not nul"
+    And the response body should be, in JSON:
+      """
+      {
+        "error_text": "Invalid input data",
+        "errors": {
+          "state": ["missing field"]
+        },
+        "message": "Bad Request",
+        "success": false
+      }
+      """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 

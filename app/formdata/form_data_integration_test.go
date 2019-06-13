@@ -127,6 +127,40 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			},
 		},
 		{
+			"nested structure with squash",
+			&struct {
+				Struct struct {
+					Name        string `json:"name" validate:"required"`
+					OtherStruct struct {
+						Name *string `json:"name1" validate:"required"`
+					} `json:"other_struct,squash" validate:"required"`
+					OtherStruct2 struct {
+						Name *string `json:"name2" validate:"required"`
+					} `json:"other_struct2,squash" validate:"required"`
+				} `json:"struct" validate:"required"`
+			}{},
+			`{"id":null, "struct":{"name1": "my name"}}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":           {"unexpected field"},
+				"struct.name":  {"missing field"},
+				"struct.name2": {"missing field"},
+			},
+		},
+		{
+			"nested structure with squash and invalid fields",
+			&struct {
+				Struct struct {
+					Name string `json:"name" validate:"min=1"`
+				} `json:"struct,squash" validate:"required"`
+			}{},
+			`{"name": ""}}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"name": {"name must be at least 1 character in length"},
+			},
+		},
+		{
 			"nested structure2",
 			&struct {
 				Struct struct {
@@ -557,6 +591,19 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 				} `json:"struct" validate:"required"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
+			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+		},
+		{
+			"structure with squash",
+			&struct {
+				Struct struct {
+					Name        string `json:"name" validate:"required" sql:"column:structs.sName"`
+					OtherStruct struct {
+						Name string `json:"name" validate:"required" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"required"`
+				} `json:"struct,squash" validate:"required"`
+			}{},
+			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 	}

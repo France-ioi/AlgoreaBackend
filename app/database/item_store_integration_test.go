@@ -426,11 +426,60 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 	var result []resultType
 
 	assert.NoError(t, database.NewDataStore(db).Items().
-		Visible(database.NewMockUser(10, &database.UserData{SelfGroupID: 10})).
+		Visible(database.NewMockUser(1, &database.UserData{SelfGroupID: 10})).
 		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
 	assert.Equal(t, []resultType{
 		{ID: 11, AccessSolutions: true},
 		{ID: 12, AccessSolutions: true},
 		{ID: 13, AccessSolutions: false},
 	}, result)
+}
+
+func TestItemStore_HasManagerAccess(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{ID: 11}, {ID: 12}, {ID: 13}]
+		users: [{ID: 1, sLogin: 1, idGroupSelf: 100}, {ID: 2, sLogin: 2, idGroupSelf: 110}]
+		groups: [{ID: 10}, {ID: 11}, {ID: 40}]
+		groups_groups:
+			- {idGroupParent: 400, idGroupChild: 100}
+		groups_ancestors:
+			- {idGroupAncestor: 100, idGroupChild: 100}
+			- {idGroupAncestor: 110, idGroupChild: 110}
+			- {idGroupAncestor: 400, idGroupChild: 100}
+			- {idGroupAncestor: 400, idGroupChild: 400}
+		groups_items:
+			- {idGroup: 400, idItem: 11, bManagerAccess: 1}
+			- {idGroup: 100, idItem: 11, bOwnerAccess: 1}
+			- {idGroup: 100, idItem: 12}
+			- {idGroup: 100, idItem: 13}
+			- {idGroup: 110, idItem: 12, bOwnerAccess: 1}
+			- {idGroup: 110, idItem: 13, bManagerAccess: 1}`)
+
+	tests := []struct {
+		name       string
+		ids        []int64
+		userID     int64
+		wantResult bool
+	}{
+		{name: "two groups_items rows for one item", ids: []int64{11}, userID: 1, wantResult: true},
+		{name: "no manager/owner access", ids: []int64{12}, userID: 1, wantResult: false},
+		{name: "access to a part of items", ids: []int64{11, 12}, userID: 1, wantResult: false},
+		{name: "no manager/owner access for another user", ids: []int64{11}, userID: 2, wantResult: false},
+		{name: "owner access", ids: []int64{12}, userID: 2, wantResult: true},
+		{name: "manager access", ids: []int64{13}, userID: 2, wantResult: true},
+		{name: "two items", ids: []int64{12, 13}, userID: 2, wantResult: true},
+		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 2, wantResult: true},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				hasAccess, err := store.Items().
+					HasManagerAccess(database.NewUser(test.userID, store.Users(), nil), test.ids...)
+				assert.NoError(t, err)
+				assert.Equal(t, test.wantResult, hasAccess)
+				return nil
+			}))
+		})
+	}
 }

@@ -20,7 +20,7 @@ func TestGroupAttemptStore_After_MustBeInTransaction(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestGroupAttemptStore_HandlesErrorOfPropagateAttempts(t *testing.T) {
+func TestGroupAttemptStore_After_HandlesErrorOfPropagateAttempts(t *testing.T) {
 	expectedError := errors.New("some error")
 	monkey.PatchInstanceMethod(reflect.TypeOf(&UserItemStore{}), "PropagateAttempts",
 		func(*UserItemStore) error { return expectedError })
@@ -40,7 +40,7 @@ func TestGroupAttemptStore_HandlesErrorOfPropagateAttempts(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestGroupAttemptStore_HandlesErrorOfComputeAllUserItems(t *testing.T) {
+func TestGroupAttemptStore_After_HandlesErrorOfComputeAllUserItems(t *testing.T) {
 	expectedError := errors.New("some error")
 	monkey.PatchInstanceMethod(reflect.TypeOf(&UserItemStore{}), "PropagateAttempts",
 		func(*UserItemStore) error { return nil })
@@ -62,7 +62,7 @@ func TestGroupAttemptStore_HandlesErrorOfComputeAllUserItems(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestGroupAttemptStore_CallBothMethods(t *testing.T) {
+func TestGroupAttemptStore_After_CallsBothMethods(t *testing.T) {
 	var propagateAttemptsCalled, computeAllUserItemsCalled int
 	monkey.PatchInstanceMethod(reflect.TypeOf(&UserItemStore{}), "PropagateAttempts",
 		func(*UserItemStore) error { propagateAttemptsCalled++; return nil })

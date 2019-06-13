@@ -8,26 +8,11 @@ import (
 	"github.com/jinzhu/gorm"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/types"
 )
 
 // ItemStore implements database operations on items
 type ItemStore struct {
 	*DataStore
-}
-
-// Item matches the content the `items` table
-type Item struct {
-	ID                types.Int64  `sql:"column:ID"`
-	Type              types.String `sql:"column:sType"`
-	DefaultLanguageID types.Int64  `sql:"column:idDefaultLanguage"`
-	TeamsEditable     types.Bool   `sql:"column:bTeamsEditable"`
-	NoScore           types.Bool   `sql:"column:bNoScore"`
-	Version           int64        `sql:"column:iVersion"` // use Go default in DB (to be fixed)
-}
-
-func (s *ItemStore) tableName() string {
-	return "items"
 }
 
 // Visible returns a view of the visible items for the given user
@@ -72,33 +57,23 @@ func (s *ItemStore) AccessRights(user *User) *DB {
 		Group("idItem")
 }
 
-// Insert does a INSERT query in the given table with data that may contain types.* types
-func (s *ItemStore) Insert(data *Item) error {
-	return s.insert(s.tableName(), data)
-}
-
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemID int64) (found, allowed bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (found bool, err error) {
+	var count int64
 
-	var dbRes []struct {
-		ItemID        int64 `sql:"column:idItem"`
-		ManagerAccess bool  `sql:"column:bManagerAccess"`
-		OwnerAccess   bool  `sql:"column:bOwnerAccess"`
+	idsMap := make(map[int64]bool, len(itemIDs))
+	for _, itemID := range itemIDs {
+		idsMap[itemID] = true
 	}
-
-	db := s.GroupItems().MatchingUserAncestors(user).
-		Select("idItem, bManagerAccess, bOwnerAccess").
-		Where("idItem = ?", itemID).
-		Scan(&dbRes)
-	if db.Error() != nil {
-		return false, false, db.Error()
+	err = s.GroupItems().MatchingUserAncestors(user).
+		WithWriteLock().
+		Where("idItem IN (?) AND (bManagerAccess OR bOwnerAccess)", itemIDs).
+		Select("COUNT(DISTINCT idItem)").Count(&count).Error()
+	if err != nil {
+		return false, err
 	}
-	if len(dbRes) != 1 {
-		return false, false, nil
-	}
-	item := dbRes[0]
-	return true, item.ManagerAccess || item.OwnerAccess, nil
+	return count == int64(len(idsMap)), nil
 }
 
 // IsValidHierarchy gets an ordered set of item ids and returns whether they forms a valid item hierarchy path from a root
