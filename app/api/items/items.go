@@ -21,6 +21,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/items/", service.AppHandler(srv.addItem).ServeHTTP)
 	router.Get("/items/", service.AppHandler(srv.getList).ServeHTTP)
 	router.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
+	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
 	router.Get("/items/{item_id}/as-nav-tree", service.AppHandler(srv.getNavigationData).ServeHTTP)
 	router.Put("/items/{item_id}/active-attempt", service.AppHandler(srv.fetchActiveAttempt).ServeHTTP)
 	router.Put("/attempts/{groups_attempt_id}/active", service.AppHandler(srv.updateActiveAttempt).ServeHTTP)
