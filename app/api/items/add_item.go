@@ -158,6 +158,8 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	return service.NoError
 }
 
+// constructParentItemIDValidator constructs a validator for the ParentItemID field.
+// The validator checks that the user has access rights to manage the parent item (bOwnerAccess or bManagerAccess).
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		hasAccess, err := store.Items().HasManagerAccess(user, fl.Field().Interface().(int64))
@@ -166,6 +168,8 @@ func constructParentItemIDValidator(store *database.DataStore, user *database.Us
 	})
 }
 
+// constructLanguageIDValidator constructs a validator for the LanguageID field.
+// The validator checks that the language exists.
 func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		found, err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().HasRows()
@@ -174,6 +178,8 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	})
 }
 
+// constructTeamInGroupIDValidator constructs a validator for the TeamInGroupID field.
+// The validator checks that the group in the TeamInGroupID field is owned by the user.
 func constructTeamInGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		found, err := store.Groups().
@@ -184,6 +190,8 @@ func constructTeamInGroupIDValidator(store *database.DataStore, user *database.U
 	})
 }
 
+// constructUnlockedItemIDsValidator constructs a validator for the UnlockedItemIDs field.
+// The validator checks that the user has access rights to manage all the listed items (bOwnerAccess or bManagerAccess).
 func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		ids := strings.Split(fl.Field().Interface().(string), ",")
@@ -201,6 +209,9 @@ func constructUnlockedItemIDsValidator(store *database.DataStore, user *database
 	})
 }
 
+// constructChildrenValidator constructs a validator for the Children field.
+// The validator checks that there are no duplicates in the list and
+// the user has access rights to manage all the listed items (bOwnerAccess or bManagerAccess).
 func constructChildrenValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
