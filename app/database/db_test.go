@@ -479,6 +479,58 @@ func TestDB_Take(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_HasRows(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.NoError(t, err)
+	assert.True(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_HasRows_NoRows(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnRows(mock.NewRows([]string{"1"}))
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.NoError(t, err)
+	assert.False(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_HasRows_Error(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+		WillReturnError(expectedError)
+
+	db = db.Table("myTable")
+
+	found, err := db.Where("ID = 1").HasRows()
+
+	assert.Equal(t, expectedError, err)
+	assert.False(t, found)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Pluck(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

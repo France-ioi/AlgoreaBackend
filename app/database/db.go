@@ -381,6 +381,16 @@ func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
 	return newDB(conn.db.Take(out, where...))
 }
 
+// HasRows returns true if at least one row is found
+func (conn *DB) HasRows() (bool, error) {
+	var result int64
+	err := conn.PluckFirst("1", &result).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition
 func (conn *DB) Delete(where ...interface{}) *DB {
 	return newDB(conn.db.Delete(nil, where...))
