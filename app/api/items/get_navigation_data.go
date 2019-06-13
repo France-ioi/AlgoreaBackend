@@ -2,11 +2,8 @@ package items
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -65,12 +62,11 @@ type navigationItemChild struct {
 	AccessRestricted bool  `json:"access_restricted"`
 }
 
-// Bind binds req.ID to URLParam("itemID")
+// Bind binds req.ID to URLParam("item_id")
 func (req *GetItemRequest) Bind(r *http.Request) error {
-	strItemID := chi.URLParam(r, "itemID")
-	itemID, err := strconv.ParseInt(strItemID, 10, 64)
+	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
-		return fmt.Errorf("missing itemID")
+		return err
 	}
 	req.ID = itemID
 	return nil
@@ -84,12 +80,10 @@ func (srv *Service) getNavigationData(rw http.ResponseWriter, httpReq *http.Requ
 
 	user := srv.GetUser(httpReq)
 	rawData, err := getRawNavigationData(srv.Store, req.ID, user)
-	if err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
+	if err == database.ErrUserNotFound {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
 	if len(rawData) == 0 || rawData[0].ID != req.ID {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item id"))
