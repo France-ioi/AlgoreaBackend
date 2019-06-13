@@ -75,6 +75,7 @@ type NewItemRequest struct {
 	Children []itemChild `json:"children" validate:"children"`
 }
 
+// groupItemData creates a map containing the db data to be inserted into the groups_items table
 func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int64) map[string]interface{} {
 	return map[string]interface{}{
 		"ID":              groupItemID,
