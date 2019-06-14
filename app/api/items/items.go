@@ -26,7 +26,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Put("/items/{item_id}/active-attempt", service.AppHandler(srv.fetchActiveAttempt).ServeHTTP)
 	router.Put("/attempts/{groups_attempt_id}/active", service.AppHandler(srv.updateActiveAttempt).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.getAttempts).ServeHTTP)
-	router.Put("/items/{item_id}/string/{language_id}", service.AppHandler(srv.updateItemString).ServeHTTP)
+	router.Put("/items/{item_id}/strings/{language_id}", service.AppHandler(srv.updateItemString).ServeHTTP)
 	router.Post("/items/ask_hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 }

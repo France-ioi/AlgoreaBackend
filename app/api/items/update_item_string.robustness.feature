@@ -31,7 +31,7 @@ Feature: Update item strings - robustness
 
   Scenario: User not found
     Given I am the user with ID "404"
-    When I send a PUT request to "/items/50/string/default" with the following body:
+    When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
         "title": "The title"
@@ -43,7 +43,7 @@ Feature: Update item strings - robustness
 
   Scenario: Invalid item_id
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/abc/string/default" with the following body:
+    When I send a PUT request to "/items/abc/strings/default" with the following body:
       """
       {
         "title": "The title"
@@ -55,7 +55,7 @@ Feature: Update item strings - robustness
 
   Scenario: The title is too long
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string/default" with the following body:
+    When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
         "title": "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
@@ -77,7 +77,7 @@ Feature: Update item strings - robustness
 
   Scenario: Image URL is too long
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string/default" with the following body:
+    When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
         "image_url": "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
@@ -99,7 +99,7 @@ Feature: Update item strings - robustness
 
   Scenario: The subtitle is too long
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string/default" with the following body:
+    When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
         "subtitle": "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
@@ -121,7 +121,7 @@ Feature: Update item strings - robustness
 
   Scenario: Wrong language
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string/404" with the following body:
+    When I send a PUT request to "/items/50/strings/404" with the following body:
       """
       {
       }
@@ -132,7 +132,7 @@ Feature: Update item strings - robustness
 
   Scenario: Invalid language_id
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string/abc" with the following body:
+    When I send a PUT request to "/items/50/strings/abc" with the following body:
       """
       {
       }
@@ -143,7 +143,7 @@ Feature: Update item strings - robustness
 
   Scenario: The user doesn't have rights to manage the item
     And I am the user with ID "1"
-    When I send a PUT request to "/items/60/string/default" with the following body:
+    When I send a PUT request to "/items/60/strings/default" with the following body:
       """
       {
         "title": "The title"
