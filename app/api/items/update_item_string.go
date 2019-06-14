@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -14,7 +15,6 @@ import (
 // UpdateItemStringRequest is the expected input for item's strings updating
 type UpdateItemStringRequest struct {
 	// Nullable fields are of pointer types
-	LanguageID  int64   `json:"language_id" sql:"-" validate:"language_id"`
 	Title       string  `json:"title" sql:"column:sTitle" validate:"max=200"`        // max length = 200
 	ImageURL    *string `json:"image_url" sql:"column:sImageUrl" validate:"max=100"` // max length = 100
 	Subtitle    *string `json:"subtitle" sql:"column:sSubtitle" validate:"max=200"`  // max length = 200
@@ -35,12 +35,20 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
+	var languageID int64
+	useDefaultLanguage := true
+	if chi.URLParam(r, "language_id") != "default" {
+		languageID, err = service.ResolveURLQueryPathInt64Field(r, "language_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+		useDefaultLanguage = false
+	}
+
 	input := UpdateItemStringRequest{}
 	formData := formdata.NewFormData(&input)
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		registerLanguageIDValidator(formData, store)
-
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
@@ -55,9 +63,15 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 			return apiError.Error // rollback
 		}
 
-		languageID := input.LanguageID
-		if !formData.IsSet("language_id") {
+		if useDefaultLanguage {
 			service.MustNotBeError(store.Items().ByID(itemID).PluckFirst("idDefaultLanguage", &languageID).Error())
+		} else {
+			found, err := store.Languages().ByID(languageID).WithWriteLock().HasRows()
+			service.MustNotBeError(err)
+			if !found {
+				apiError = service.ErrInvalidRequest(errors.New("no such language"))
+				return apiError.Error // rollback
+			}
 		}
 		dbMap := formData.ConstructMapForDB()
 		scope := store.ItemStrings().

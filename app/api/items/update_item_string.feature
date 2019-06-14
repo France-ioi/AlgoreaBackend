@@ -32,7 +32,7 @@ Feature: Update item strings
 
   Scenario: Update the default language string
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string" with the following body:
+    When I send a PUT request to "/items/50/string/default" with the following body:
       """
       {
         "title": "The title",
@@ -49,10 +49,9 @@ Feature: Update item strings
 
   Scenario: Update the specified language string
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string" with the following body:
+    When I send a PUT request to "/items/50/string/3" with the following body:
       """
       {
-        "language_id": "3",
         "title": "The title",
         "image_url": "http://mysite.com/image.jpg",
         "subtitle": "The subtitle",
@@ -67,7 +66,7 @@ Feature: Update item strings
 
   Scenario: Insert the default language string
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/60/string" with the following body:
+    When I send a PUT request to "/items/60/string/default" with the following body:
       """
       {
         "title": "The title",
@@ -85,10 +84,9 @@ Feature: Update item strings
 
   Scenario: Insert the specified language string
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/60/string" with the following body:
+    When I send a PUT request to "/items/60/string/2" with the following body:
       """
       {
-        "language_id": "2",
         "title": "The title",
         "image_url": "http://mysite.com/image.jpg",
         "subtitle": "The subtitle",
@@ -104,7 +102,7 @@ Feature: Update item strings
 
   Scenario: Valid without any fields
     Given I am the user with ID "1"
-    When I send a PUT request to "/items/50/string" with the following body:
+    When I send a PUT request to "/items/50/string/default" with the following body:
       """
       {
       }
