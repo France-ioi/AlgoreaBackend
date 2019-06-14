@@ -25,3 +25,8 @@ conf/config.yaml
 
 # Keys
 *.pem
+
+# Swagger specs
+swagger.yaml
+swagger.yml
+swagger.json
