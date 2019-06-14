@@ -164,3 +164,21 @@ Scenario: Valid
     And the table "items_ancestors" should stay unchanged
     And the table "groups_items" should stay unchanged
 
+  Scenario: Valid with empty children array
+    Given I am the user with ID "1"
+    When I send a PUT request to "/items/50" with the following body:
+    """
+    {
+      "children": []
+    }
+    """
+    Then the response should be "updated"
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should be:
+      | idItemParent | idItemChild |
+      | 21           | 60          |
+    And the table "items_ancestors" should be:
+      | idItemAncestor | idItemChild |
+      | 21             | 60          |
+    And the table "groups_items" should stay unchanged
