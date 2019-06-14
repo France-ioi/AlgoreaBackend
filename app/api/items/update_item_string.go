@@ -64,34 +64,17 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		if useDefaultLanguage {
-			service.MustNotBeError(store.Items().ByID(itemID).PluckFirst("idDefaultLanguage", &languageID).Error())
+			service.MustNotBeError(store.Items().ByID(itemID).WithWriteLock().PluckFirst("idDefaultLanguage", &languageID).Error())
 		} else {
-			found, err := store.Languages().ByID(languageID).WithWriteLock().HasRows()
+			found, err = store.Languages().ByID(languageID).WithWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiError = service.ErrInvalidRequest(errors.New("no such language"))
 				return apiError.Error // rollback
 			}
 		}
-		dbMap := data.ConstructMapForDB()
-		scope := store.ItemStrings().
-			Where("idLanguage = ?", languageID).
-			Where("idItem = ?", itemID)
-		found, err = scope.HasRows()
-		service.MustNotBeError(err)
-
-		if !found {
-			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-				dbMap["ID"] = retryStore.NewID()
-				dbMap["idItem"] = itemID
-				dbMap["idLanguage"] = languageID
-				return retryStore.ItemStrings().InsertMap(dbMap)
-			}))
-		} else {
-			service.MustNotBeError(scope.UpdateColumn(dbMap).Error())
-		}
-
-		return err
+		updateItemStringData(store, itemID, languageID, data.ConstructMapForDB())
+		return nil // commit
 	})
 
 	if apiError != service.NoError {
@@ -102,4 +85,22 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 	// response
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
 	return service.NoError
+}
+
+func updateItemStringData(store *database.DataStore, itemID, languageID int64, dbMap map[string]interface{}) {
+	scope := store.ItemStrings().
+		Where("idLanguage = ?", languageID).
+		Where("idItem = ?", itemID)
+	found, err := scope.HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
+			dbMap["ID"] = retryStore.NewID()
+			dbMap["idItem"] = itemID
+			dbMap["idLanguage"] = languageID
+			return retryStore.ItemStrings().InsertMap(dbMap)
+		}))
+	} else {
+		service.MustNotBeError(scope.UpdateColumn(dbMap).Error())
+	}
 }
