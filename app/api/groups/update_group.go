@@ -9,7 +9,7 @@ package groups
 // - name: group_id
 //   in: path
 //   required: true
-//   type: string
+//   type: integer
 // - name: group information
 //   in: body
 //   required: true
@@ -48,12 +48,13 @@ type groupUpdateInput struct {
 	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
 	// Duration after the first use of the password it will expire
 	// Nullable
-	// pattern: \d{2}:\d{2}:\d{2}
+	// pattern: ^\d{2}:\d{2}:\d{2}$
 	// example: 79:56:22
 	PasswordTimer *string `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
 	// Nullable
 	PasswordEnd *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
 	// Nullable
+	// pattern:  ^(\d+(/\d+))$
 	RedirectPath *string `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`
 	OpenContest  bool    `json:"open_contest" sql:"column:bOpenContest"`
 }
