@@ -4,6 +4,7 @@ Feature: Get group memberships history for the current user
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade | sNotificationReadDate |
       | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  | 3      | 2017-06-29T06:38:38Z  |
       | 2  | user   | 11          | 12           | John        | Doe       | 1      | null                  |
+      | 3  | jane   | 13          | 14           | Jane        | Doe       | 2      | 2019-06-29T06:38:38Z  |
     And the database has the following table 'groups':
       | ID | sType     | sName              |
       | 1  | Class     | Our Class          |
@@ -39,6 +40,9 @@ Feature: Get group memberships history for the current user
       | 18 | 7             | 11           | removed            | 2016-08-29T06:38:38Z |
       | 19 | 8             | 11           | left               | 2016-09-29T06:38:38Z |
       | 20 | 9             | 11           | direct             | 2016-10-29T06:38:38Z |
+      | 22 | 1             | 13           | invitationSent     | 2016-02-29T06:38:38Z |
+      | 23 | 2             | 13           | invitationRefused  | 2016-03-29T06:38:38Z |
+      | 24 | 3             | 13           | requestSent        | 2016-04-29T06:38:38Z |
 
   Scenario: Show all the history (with sNotificationReadDate set)
     Given I am the user with ID "1"
@@ -82,6 +86,52 @@ Feature: Get group memberships history for the current user
         },
         "status_date": "2017-06-29T06:38:38Z",
         "type": "invitationAccepted"
+      }
+    ]
+    """
+
+  Scenario: Show all the history in reverse order (with sNotificationReadDate set)
+    Given I am the user with ID "1"
+    When I send a GET request to "/current-user/group-memberships-history?sort=status_date"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "6",
+        "group": {
+          "name": "Other people",
+          "type": "Other"
+        },
+        "status_date": "2017-06-29T06:38:38Z",
+        "type": "invitationAccepted"
+      },
+      {
+        "id": "7",
+        "group": {
+          "name": "Another Class",
+          "type": "Class"
+        },
+        "status_date": "2017-07-29T06:38:38Z",
+        "type": "requestAccepted"
+      },
+      {
+        "id": "8",
+        "group": {
+          "name": "Another Team",
+          "type": "Team"
+        },
+        "status_date": "2017-08-29T06:38:38Z",
+        "type": "removed"
+      },
+      {
+        "id": "9",
+        "group": {
+          "name": "Another Club",
+          "type": "Club"
+        },
+        "status_date": "2017-09-29T06:38:38Z",
+        "type": "left"
       }
     ]
     """
@@ -206,3 +256,12 @@ Feature: Get group memberships history for the current user
     ]
     """
 
+  Scenario: No new notifications
+    Given I am the user with ID "3"
+    When I send a GET request to "/current-user/group-memberships-history"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
