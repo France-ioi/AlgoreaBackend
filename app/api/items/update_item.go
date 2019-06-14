@@ -81,26 +81,28 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-			service.MustNotBeError(lockedStore.ItemItems().Delete("idItemParent = ?", itemID).Error())
+		service.MustNotBeError(store.Items().Where("ID = ?", itemID).UpdateColumn(formData.ConstructPartialMapForDB("Item")).Error())
+		if formData.IsSet("children") {
+			err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+				service.MustNotBeError(lockedStore.ItemItems().Delete("idItemParent = ?", itemID).Error())
 
-			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
-				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.Error // rollback
-			}
-
-			service.MustNotBeError(lockedStore.Items().Where("ID = ?", itemID).UpdateColumn(formData.ConstructPartialMapForDB("Item")).Error())
-			service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-				parentChildSpec := make([]*insertItemItemsSpec, 0, len(input.Children))
-				for _, child := range input.Children {
-					parentChildSpec = append(parentChildSpec,
-						&insertItemItemsSpec{ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order})
+				if !input.checkItemsRelationsCycles(lockedStore, itemID) {
+					apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
+					return apiError.Error // rollback
 				}
-				insertItemItems(retryStore, parentChildSpec)
-				return nil
-			}))
-			return lockedStore.ItemItems().After()
-		})
+
+				service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
+					parentChildSpec := make([]*insertItemItemsSpec, 0, len(input.Children))
+					for _, child := range input.Children {
+						parentChildSpec = append(parentChildSpec,
+							&insertItemItemsSpec{ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order})
+					}
+					insertItemItems(retryStore, parentChildSpec)
+					return nil
+				}))
+				return lockedStore.ItemItems().After()
+			})
+		}
 		return err
 	})
 

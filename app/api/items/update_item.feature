@@ -48,12 +48,8 @@ Scenario: Valid
     | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
     | 50 | Course | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null            | null      | null                 | 0              | Running       | null   | 0              |
   And the table "items_strings" should stay unchanged
-  And the table "items_items" should be:
-    | idItemParent | idItemChild |
-    | 21           | 60          |
-  And the table "items_ancestors" should be:
-    | idItemAncestor | idItemChild |
-    | 21             | 60          |
+  And the table "items_items" should stay unchanged
+  And the table "items_ancestors" should stay unchanged
   And the table "groups_items" should be:
     | idGroup | idItem | bManagerAccess | bOwnerAccess |
     | 11      | 21     | true           | false        |
@@ -150,12 +146,8 @@ Scenario: Valid
       | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
       | 50 | Course | null |                 1 |        0 | null    | 1                | 0              | 0                       | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0              |
     And the table "items_strings" should stay unchanged
-    And the table "items_items" should be:
-      | idItemParent | idItemChild |
-      | 21           | 60          |
-    And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild |
-      | 21             | 60          |
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid without any fields
@@ -170,15 +162,7 @@ Scenario: Valid
       | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
       | 50 | Root   | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0              |
     And the table "items_strings" should stay unchanged
-    And the table "items_items" should be:
-      | idItemParent | idItemChild |
-      | 21           | 60          |
-    And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild |
-      | 21             | 60          |
-    And the table "groups_items" should be:
-      | idGroup | idItem | bManagerAccess | bOwnerAccess |
-      | 11      | 21     | true           | false        |
-      | 11      | 50     | false          | true         |
-      | 11      | 60     | false          | true         |
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
