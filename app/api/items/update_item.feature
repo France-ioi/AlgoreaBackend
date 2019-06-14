@@ -9,10 +9,10 @@ Background:
     | 11 | jdoe       | UserSelf  |
     | 12 | jdoe-admin | UserAdmin |
   And the database has the following table 'items':
-    | ID |
-    | 21 |
-    | 50 |
-    | 60 |
+    | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+    | 21 | Root   | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null            | null      | null                 | 0              | Running       | null   | 0              |
+    | 50 | Root   | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null            | null      | null                 | 0              | Running       | null   | 0              |
+    | 60 | Root   | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null            | null      | null                 | 0              | Running       | null   | 0              |
   And the database has the following table 'items_items':
     | idItemParent | idItemChild |
     | 21           | 60          |
@@ -45,8 +45,8 @@ Scenario: Valid
     """
   Then the response should be "updated"
   And the table "items" at ID "50" should be:
-    | ID | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-    | 50 | Course | null | 1                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+    | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+    | 50 | Course | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null            | null      | null                 | 0              | Running       | null   | 0              |
   And the table "items_strings" should stay unchanged
   And the table "items_items" should be:
     | idItemParent | idItemChild |
@@ -85,7 +85,7 @@ Scenario: Valid
         "type": "Course",
         "url": "http://myurl.com/",
         "text_id": "Task number 1",
-        "title_bar_visible": true,
+        "title_bar_visible": false,
         "custom_chapter": true,
         "display_details_in_parent": true,
         "uses_api": true,
@@ -121,8 +121,8 @@ Scenario: Valid
       """
     Then the response should be "updated"
     And the table "items" at ID "50" should be:
-      | ID | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 50 | Course | http://myurl.com/ |                 3 |              1 |        1 | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 1              | Analysis      | 345    | 1        | 1              |
+      | ID | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+      | 50 | Course | http://myurl.com/ |                 3 |              1 |        1 | Task number 1 | 0                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 1              | Analysis      | 345    | 1              |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | idItemParent | idItemChild |
@@ -147,8 +147,8 @@ Scenario: Valid
       """
     Then the response should be "updated"
     And the table "items" at ID "50" should be:
-      | ID | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 50 | Course | null |                 1 |              0 |        0 | null    | 1                | 0              | 0                       | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+      | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+      | 50 | Course | null |                 1 |        0 | null    | 1                | 0              | 0                       | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0              |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | idItemParent | idItemChild |
@@ -167,8 +167,8 @@ Scenario: Valid
     """
     Then the response should be "updated"
     And the table "items" at ID "50" should be:
-      | ID | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 50 | Root   | null | 1                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+      | ID | sType  | sUrl | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+      | 50 | Root   | null | 1                 | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0              |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | idItemParent | idItemChild |
