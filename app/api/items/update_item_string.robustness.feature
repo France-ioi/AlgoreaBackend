@@ -13,9 +13,9 @@ Feature: Update item strings - robustness
       | 50 | 2                 |
       | 60 | 3                 |
     And the database has the following table 'items_strings':
-      | idItem | idLanguage | sTitle | sImageUrl | sSubtitle | sDescription |
-      | 50     | 2          |        | null      | null      | null         |
-      | 50     | 3          |        | null      | null      | null         |
+      | idItem | idLanguage | sTitle | sImageUrl                  | sSubtitle       | sDescription       |
+      | 50     | 2          | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
+      | 50     | 3          | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
       | 40 | 11      | 50     | false          | true         |
