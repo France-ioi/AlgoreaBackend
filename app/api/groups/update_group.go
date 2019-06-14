@@ -50,7 +50,7 @@ type groupUpdateInput struct {
 	// Nullable
 	// pattern: \d{2}:\d{2}:\d{2}
 	// example: 79:56:22
-	PasswordTimer *string `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration" x-nullable:"true" nullable:"true"`
+	PasswordTimer *string `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
 	// Nullable
 	PasswordEnd *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
 	// Nullable
