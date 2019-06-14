@@ -46,10 +46,10 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 	}
 
 	input := UpdateItemStringRequest{}
-	formData := formdata.NewFormData(&input)
+	data := formdata.NewFormData(&input)
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		err = formData.ParseJSONRequestData(r)
+		err = data.ParseJSONRequestData(r)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
 			return err // rollback
@@ -73,7 +73,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 				return apiError.Error // rollback
 			}
 		}
-		dbMap := formData.ConstructMapForDB()
+		dbMap := data.ConstructMapForDB()
 		scope := store.ItemStrings().
 			Where("idLanguage = ?", languageID).
 			Where("idItem = ?", itemID)
