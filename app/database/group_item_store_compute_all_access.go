@@ -26,6 +26,25 @@ func (s *GroupItemStore) computeAllAccess() {
 		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
 	var err error
 
+	// inserting missing children of groups_items into groups_items
+	// for groups_items_propagate having sPropagateAccess = 'children'
+	const queryInsertMissingChildren = `
+		INSERT IGNORE INTO groups_items (idGroup, idItem, idUserCreated, sCachedAccessReason, sAccessReason)
+		SELECT
+			parents.idGroup AS idGroup,
+			items_items.idItemChild AS idItem,
+			parents.idUserCreated AS idUserCreated,
+			NULL AS sCachedAccessReason,
+			NULL AS sAccessReason
+		FROM items_items
+		JOIN groups_items AS parents
+			ON parents.idItem = items_items.idItemParent
+		JOIN groups_items_propagate AS parents_propagate
+			ON parents.ID = parents_propagate.ID AND parents_propagate.sPropagateAccess = 'children'`
+	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
+
 	// inserting missing (or set sPropagateAccess='self' to existing) groups_items_propagate
 	// for groups_items having sPropagateAccess='self'
 	const queryInsertMissingPropagate = `
@@ -49,25 +68,6 @@ func (s *GroupItemStore) computeAllAccess() {
 	stmtUpdatePropagateAccess, err = s.db.CommonDB().Prepare(queryUpdatePropagateAccess)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdatePropagateAccess.Close()) }()
-
-	// inserting missing children of groups_items into groups_items
-	// for groups_items_propagate having sPropagateAccess = 'children'
-	const queryInsertMissingChildren = `
-		INSERT IGNORE INTO groups_items (idGroup, idItem, idUserCreated, sCachedAccessReason, sAccessReason)
-		SELECT
-			parents.idGroup AS idGroup,
-			items_items.idItemChild AS idItem,
-			parents.idUserCreated AS idUserCreated,
-			NULL AS sCachedAccessReason,
-			NULL AS sAccessReason
-		FROM items_items
-		JOIN groups_items AS parents
-			ON parents.idItem = items_items.idItemParent
-		JOIN groups_items_propagate AS parents_propagate
-			ON parents.ID = parents_propagate.ID AND parents_propagate.sPropagateAccess = 'children'`
-	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
 
 	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.bCustomChapter=1)
 	const queryMarkDoNotPropagate = `

@@ -15,9 +15,14 @@ func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
 	return s.Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }
 
-func (s *GroupItemStore) after() {
+// After is a "listener" that calls GroupItemStore::computeAllAccess() & GroupItemStore::grantCachedAccessWhereNeeded()
+func (s *GroupItemStore) After() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
 	s.computeAllAccess()
 	s.grantCachedAccessWhereNeeded()
+	return nil
 }
 
 func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {

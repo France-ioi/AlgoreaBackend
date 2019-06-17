@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -69,7 +69,7 @@ func TestItemItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
 	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
 	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("INSERT INTO groups_items_propagate").WillReturnError(expectedError)
+	dbMock.ExpectPrepare("INSERT IGNORE INTO groups_items").WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {

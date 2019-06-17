@@ -167,7 +167,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		s.GroupItems().after()
+		return s.GroupItems().After()
 	}
 	return nil
 }
