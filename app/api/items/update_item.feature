@@ -23,10 +23,10 @@ Background:
     | 50             | 21          |
     | 50             | 60          |
   And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
-    | 40 | 11      | 50     | false          | true         |
-    | 41 | 11      | 21     | true           | false        |
-    | 42 | 11      | 60     | false          | true         |
+    | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
+    | 40 | 11      | 50     | false          | false                | true         |
+    | 41 | 11      | 21     | true           | true                 | false        |
+    | 42 | 11      | 60     | false          | true                 | true         |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf |
     | 71 | 11              | 11           | 1       |
@@ -52,10 +52,10 @@ Scenario: Valid
   And the table "items_items" should stay unchanged
   And the table "items_ancestors" should stay unchanged
   And the table "groups_items" should be:
-    | idGroup | idItem | bManagerAccess | bOwnerAccess |
-    | 11      | 21     | true           | false        |
-    | 11      | 50     | false          | true         |
-    | 11      | 60     | false          | true         |
+    | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
+    | 11      | 21     | true           | true                 | false        |
+    | 11      | 50     | false          | false                | true         |
+    | 11      | 60     | false          | true                 | true         |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with ID "1"
@@ -73,9 +73,9 @@ Scenario: Valid
       | idLanguage | idItem |
       | 3          | 50     |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
-      | 43 | 11      | 12     | true           | false        |
-      | 44 | 11      | 34     | false          | true         |
+      | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
+      | 43 | 11      | 12     | true           | true                 | false        |
+      | 44 | 11      | 34     | false          | false                | true         |
     When I send a PUT request to "/items/50" with the following body:
       """
       {

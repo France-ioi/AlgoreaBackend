@@ -448,12 +448,12 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 			- {idGroupAncestor: 400, idGroupChild: 100}
 			- {idGroupAncestor: 400, idGroupChild: 400}
 		groups_items:
-			- {idGroup: 400, idItem: 11, bManagerAccess: 1}
+			- {idGroup: 400, idItem: 11, bCachedManagerAccess: 1}
 			- {idGroup: 100, idItem: 11, bOwnerAccess: 1}
 			- {idGroup: 100, idItem: 12}
 			- {idGroup: 100, idItem: 13}
 			- {idGroup: 110, idItem: 12, bOwnerAccess: 1}
-			- {idGroup: 110, idItem: 13, bManagerAccess: 1}`)
+			- {idGroup: 110, idItem: 13, bCachedManagerAccess: 1}`)
 
 	tests := []struct {
 		name       string

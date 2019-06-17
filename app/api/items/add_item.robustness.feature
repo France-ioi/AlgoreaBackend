@@ -15,10 +15,10 @@ Feature: Add item - robustness
       | ID | idItemAncestor | idItemChild |
       | 1  | 4              | 21          |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
-      | 41 | 11      | 21     | true           | false        |
-      | 42 | 11      | 22     | false          | false        |
-      | 43 | 11      | 4      | true           | false        |
+      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess |
+      | 41 | 11      | 21     | true                 | false        |
+      | 42 | 11      | 22     | false                | false        |
+      | 43 | 11      | 4      | true                 | false        |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf |
       | 71 | 11              | 11           | 1       |
