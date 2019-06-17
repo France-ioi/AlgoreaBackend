@@ -1,66 +1,66 @@
 Feature: Add item
 
-Background:
-  Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
-    | 1  | jdoe   | 0        | 11          | 12           |
-  And the database has the following table 'groups':
-    | ID | sName      | sType     |
-    | 11 | jdoe       | UserSelf  |
-    | 12 | jdoe-admin | UserAdmin |
-  And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore |
-    | 21 | false          | false    |
-  And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | bCachedManagerAccess | idUserCreated |
-    | 41 | 11      | 21     | true                 | 0             |
-  And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf |
-    | 71 | 11              | 11           | 1       |
-    | 72 | 12              | 12           | 1       |
-  And the database has the following table 'languages':
-    | ID |
-    | 3  |
+  Background:
+    Given the database has the following table 'users':
+      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
+      | 1  | jdoe   | 0        | 11          | 12           |
+    And the database has the following table 'groups':
+      | ID | sName      | sType     |
+      | 11 | jdoe       | UserSelf  |
+      | 12 | jdoe-admin | UserAdmin |
+    And the database has the following table 'items':
+      | ID | bTeamsEditable | bNoScore |
+      | 21 | false          | false    |
+    And the database has the following table 'groups_items':
+      | ID | idGroup | idItem | bCachedManagerAccess | idUserCreated |
+      | 41 | 11      | 21     | true                 | 0             |
+    And the database has the following table 'groups_ancestors':
+      | ID | idGroupAncestor | idGroupChild | bIsSelf |
+      | 71 | 11              | 11           | 1       |
+      | 72 | 12              | 12           | 1       |
+    And the database has the following table 'languages':
+      | ID |
+      | 3  |
 
-Scenario: Valid
-  Given I am the user with ID "1"
-  When I send a POST request to "/items/" with the following body:
-    """
-    {
-      "type": "Course",
-      "language_id": "3",
-      "title": "my title",
-      "image_url":"http://bit.ly/1234",
-      "subtitle": "hard task",
-      "description": "the goal of this task is ...",
-      "parent_item_id": "21",
-      "order": 100
-    }
-    """
-  Then the response code should be 201
-  And the response body should be, in JSON:
-    """
-    {
-      "success": true,
-      "message": "created",
-      "data": { "ID": "5577006791947779410" }
-    }
-    """
-  And the table "items" at ID "5577006791947779410" should be:
-    | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-    | 5577006791947779410 | Course | null | 3                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
-  And the table "items_strings" should be:
-    | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
-    | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
-  And the table "items_items" should be:
-    | ID                  | idItemParent | idItemChild         | iChildOrder |
-    | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
-  And the table "items_ancestors" should be:
-    | idItemAncestor | idItemChild         |
-    | 21             | 5577006791947779410 |
-  And the table "groups_items" at ID "8674665223082153551" should be:
-    | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-    | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
+  Scenario: Valid
+    Given I am the user with ID "1"
+    When I send a POST request to "/items/" with the following body:
+      """
+      {
+        "type": "Course",
+        "language_id": "3",
+        "title": "my title",
+        "image_url":"http://bit.ly/1234",
+        "subtitle": "hard task",
+        "description": "the goal of this task is ...",
+        "parent_item_id": "21",
+        "order": 100
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": { "ID": "5577006791947779410" }
+      }
+      """
+    And the table "items" at ID "5577006791947779410" should be:
+      | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
+      | 5577006791947779410 | Course | null | 3                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+    And the table "items_strings" should be:
+      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
+      | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+    And the table "items_items" should be:
+      | ID                  | idItemParent | idItemChild         | iChildOrder |
+      | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
+    And the table "items_ancestors" should be:
+      | idItemAncestor | idItemChild         |
+      | 21             | 5577006791947779410 |
+    And the table "groups_items" at ID "8674665223082153551" should be:
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with ID "1"
