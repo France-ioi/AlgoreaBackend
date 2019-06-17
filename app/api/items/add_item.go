@@ -23,7 +23,6 @@ type itemChild struct {
 }
 
 type item struct {
-	Type                   string  `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
 	URL                    *string `json:"url" sql:"column:sUrl"`
 	TeamsEditable          bool    `json:"teams_editable" sql:"column:bTeamsEditable"`
 	NoScore                bool    `json:"no_score" sql:"column:bNoScore"`
@@ -57,11 +56,16 @@ type item struct {
 	GroupCodeEnter  *bool      `json:"group_code_enter" sql:"column:groupCodeEnter"`
 }
 
+type itemWithRequiredType struct {
+	Item item   `json:"item,squash"`
+	Type string `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
+}
+
 // NewItemRequest is the expected input for new created item
 type NewItemRequest struct {
 	// Nullable fields are of pointer types
-	Item       item  `json:"item,squash"`
-	LanguageID int64 `json:"language_id" validate:"required,language_id"`
+	Item       itemWithRequiredType `json:"item,squash"`
+	LanguageID int64                `json:"language_id" validate:"required,language_id"`
 	String     struct {
 		Title       string  `json:"title" validate:"required" sql:"column:sTitle"`
 		ImageURL    *string `json:"image_url" sql:"column:sImageUrl"`

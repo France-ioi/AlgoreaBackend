@@ -56,3 +56,9 @@ Background:
     When I send a GET request to "/items/404/as-nav-tree"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item id"
+
+  Scenario: Invalid item_id
+    Given I am the user with ID "1"
+    When I send a GET request to "/items/abc/as-nav-tree"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for item_id (should be int64)"
