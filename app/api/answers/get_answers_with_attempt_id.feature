@@ -29,15 +29,18 @@ Background:
     | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
     | 42 | 13      | 190    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
     | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
-    | 44 | 13      | 210    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+    | 44 | 13      | 210    | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
     | 45 | 41      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
   And the database has the following table 'users_answers':
     | ID | idUser | idItem | idAttempt | sName            | sType      | sState  | sLangProg | sSubmissionDate     | iScore | bValidated |
     | 1  | 1      | 200    | 100       | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
-    | 2  | 1      | 200    | 101       | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
+    | 2  | 1      | 200    | 101       | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
+    | 3  | 1      | 210    | 102       | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100    | true       |
   And the database has the following table 'groups_attempts':
     | ID  | idGroup | idItem |
     | 100 | 13      | 200    |
+    | 101 | 11      | 200    |
+    | 102 | 11      | 210    |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with ID "1"
@@ -74,6 +77,54 @@ Background:
         "id": "1",
         "lang_prog": "python",
         "name": "My answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      }
+    ]
+    """
+
+  Scenario: Full access on the item and the user's self group is the groups_attempts.idGroup
+    Given I am the user with ID "1"
+    When I send a GET request to "/answers?attempt_id=101"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "2",
+        "lang_prog": "python",
+        "name": "My second answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:38:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      }
+    ]
+    """
+
+  Scenario: Partial access on the item and the user's self group is the groups_attempts.idGroup
+    Given I am the user with ID "1"
+    When I send a GET request to "/answers?attempt_id=102"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "3",
+        "lang_prog": "python",
+        "name": "My third answer",
         "score": 100,
         "submission_date": "2017-05-29T06:38:38Z",
         "type": "Submission",
