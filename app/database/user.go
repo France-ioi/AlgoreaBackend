@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"time"
 
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -16,15 +17,16 @@ type User struct {
 
 // UserData represents data associated with the user (from the `users` table)
 type UserData struct {
-	ID                int64  `sql:"column:ID"`
-	Login             string `sql:"column:sLogin"`
-	DefaultLanguage   string `sql:"column:sDefaultLanguage"`
-	DefaultLanguageID int64  `sql:"column:idDefaultLanguage"`
-	IsAdmin           bool   `sql:"column:bIsAdmin"`
-	SelfGroupID       int64  `sql:"column:idGroupSelf"`
-	OwnedGroupID      int64  `sql:"column:idGroupOwned"`
-	AccessGroupID     int64  `sql:"column:idGroupAccess"`
-	AllowSubgroups    bool   `sql:"column:allowSubgroups"`
+	ID                   int64      `sql:"column:ID"`
+	Login                string     `sql:"column:sLogin"`
+	DefaultLanguage      string     `sql:"column:sDefaultLanguage"`
+	DefaultLanguageID    int64      `sql:"column:idDefaultLanguage"`
+	IsAdmin              bool       `sql:"column:bIsAdmin"`
+	SelfGroupID          int64      `sql:"column:idGroupSelf"`
+	OwnedGroupID         int64      `sql:"column:idGroupOwned"`
+	AccessGroupID        int64      `sql:"column:idGroupAccess"`
+	AllowSubgroups       bool       `sql:"column:allowSubgroups"`
+	NotificationReadDate *time.Time `sql:"column:sNotificationReadDate"`
 }
 
 // ErrUserNotFound is returned when database.User cannot find the user in the DB
@@ -89,4 +91,12 @@ func (u *User) AllowSubgroups() (bool, error) {
 		return false, err
 	}
 	return u.data.AllowSubgroups, nil
+}
+
+// NotificationReadDate returns the user's sNotificationReadDate
+func (u *User) NotificationReadDate() (*time.Time, error) {
+	if err := u.lazyLoadData(); err != nil {
+		return nil, err
+	}
+	return u.data.NotificationReadDate, nil
 }

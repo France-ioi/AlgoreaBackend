@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -64,6 +65,8 @@ func TestUser_Load_Fail(t *testing.T) {
 }
 
 func TestUser_Method(t *testing.T) {
+	currentTime := time.Now().UTC()
+
 	tests := []struct {
 		name          string
 		methodToCall  string
@@ -76,6 +79,10 @@ func TestUser_Method(t *testing.T) {
 		{methodToCall: "OwnedGroupID", dbColumn: "idGroupOwned", dbValue: int64(44), expectedValue: int64(44)},
 		{name: "true", methodToCall: "AllowSubgroups", dbColumn: "allowSubgroups", dbValue: int64(1), expectedValue: true},
 		{name: "false", methodToCall: "AllowSubgroups", dbColumn: "allowSubgroups", dbValue: int64(0), expectedValue: false},
+		{name: "time", methodToCall: "NotificationReadDate", dbColumn: "sNotificationReadDate",
+			dbValue: &currentTime, expectedValue: &currentTime},
+		{name: "nil", methodToCall: "NotificationReadDate", dbColumn: "sNotificationReadDate",
+			dbValue: nil, expectedValue: (*time.Time)(nil)},
 	}
 	for _, testCase := range tests {
 		testCase := testCase
@@ -170,6 +177,28 @@ func TestUser_AllowSubgroups_UserNotFound(t *testing.T) {
 		got, err := user.AllowSubgroups()
 		return []interface{}{got, err}
 	}, []interface{}{false, ErrUserNotFound})
+}
+
+func TestUser_NotificationReadDate_Fail(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	userStore := NewDataStore(db).Users()
+	expectedError := errors.New("db error")
+	dbMock.ExpectQuery(expectedLazyLoadDataQueryRegexp).WithArgs(42).WillReturnError(expectedError)
+	user := User{42, userStore, nil}
+
+	got, err := user.NotificationReadDate()
+	assert.Nil(t, got)
+	assert.Equal(t, expectedError, err)
+	assert.Nil(t, user.data)
+}
+
+func TestUser_NotificationReadDate_UserNotFound(t *testing.T) {
+	testMethodHandlesUserNotFoundError(t, func(db *DB, user *User) []interface{} {
+		got, err := user.NotificationReadDate()
+		return []interface{}{got, err}
+	}, []interface{}{(*time.Time)(nil), ErrUserNotFound})
 }
 
 func testMethodHandlesUserNotFoundError(t *testing.T,
