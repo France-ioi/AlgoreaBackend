@@ -60,6 +60,7 @@ run:
     - app/database/testdata
     - test-results
     - pkg/golinters/goanalysis/(checker|passes)
+    - app/doc
 
 issues:
   exclude-use-default: false

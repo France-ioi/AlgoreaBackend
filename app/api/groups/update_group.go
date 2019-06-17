@@ -1,5 +1,32 @@
 package groups
 
+// swagger:operation PUT /groups/{group_id} groupEdit
+// ---
+// summary: Edit group information
+// description: Edit group information.
+//   Requires the user to be the owner of the group.
+// parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: group information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/groupUpdateInput"
+// responses:
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
+
 import (
 	"net/http"
 	"regexp"
@@ -13,18 +40,29 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// Information of the group to be modified
+// swagger:model
 type groupUpdateInput struct {
-	// Nullable fields are of pointer types
-	Type          string     `json:"type" sql:"column:sType" validate:"oneof=Class Team Club Friends Other"`
-	Name          string     `json:"name" sql:"column:sName"`
-	Grade         int32      `json:"grade" sql:"column:iGrade"`
-	Description   *string    `json:"description" sql:"column:sDescription"`
-	Opened        bool       `json:"opened" sql:"column:bOpened"`
-	FreeAccess    bool       `json:"free_access" sql:"column:bFreeAccess"`
-	PasswordTimer *string    `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
-	PasswordEnd   *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
-	RedirectPath  *string    `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`
-	OpenContest   bool       `json:"open_contest" sql:"column:bOpenContest"`
+	// enum: Class,Team,Club,Friends,Other
+	Type  string `json:"type" sql:"column:sType" validate:"oneof=Class Team Club Friends Other"`
+	Name  string `json:"name" sql:"column:sName"`
+	Grade int32  `json:"grade" sql:"column:iGrade"`
+	// Nullable
+	Description *string `json:"description" sql:"column:sDescription"`
+	Opened      bool    `json:"opened" sql:"column:bOpened"`
+	// If changed from true to false, automatically switch all requests to join this group from requestSent to requestRefused
+	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
+	// Duration after the first use of the password it will expire
+	// Nullable
+	// pattern: ^\d{1,2}:\d{1,2}:\d{1,2}$
+	// example: 79:56:22
+	PasswordTimer *string `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
+	// Nullable
+	PasswordEnd *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
+	// Nullable
+	// pattern:  ^(\d+(/\d+))$
+	RedirectPath *string `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`
+	OpenContest  bool    `json:"open_contest" sql:"column:bOpenContest"`
 }
 
 func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {

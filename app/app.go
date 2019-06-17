@@ -10,6 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )

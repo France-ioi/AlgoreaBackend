@@ -1,4 +1,6 @@
-version: 2
+version: 2.1
+orbs:
+  aws-s3: circleci/aws-s3@1.0.0
 jobs:
   deps:
     docker:
@@ -81,6 +83,34 @@ jobs:
           at: ./
       - restore_cache: *CACHEKEYMOD
       - run: make lint
+  swagger-gen:
+    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
+    docker:
+      - image: quay.io/goswagger/swagger
+    steps:
+      - checkout
+      - run:
+          name: Install deps (not using go modules)
+          command: go get -t ./...
+      - run: swagger generate spec --scan-models -o ./swagger.yaml
+      - run: swagger validate ./swagger.yaml
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - swagger.yaml
+  swagger-deploy:
+    docker:
+      - image: 'circleci/python:2.7'
+    environment:
+      AWS_REGION: eu-west-3
+    steps:
+      - attach_workspace:
+          at: ./
+      - aws-s3/copy:
+          from: swagger.yaml
+          to: 's3://franceioi-algorea/spec/swagger.yaml'
+          arguments: '--acl public-read'
+
 workflows:
   version: 2
   build_test:
@@ -92,3 +122,10 @@ workflows:
       - lint:
           requires:
           - deps
+      - swagger-gen
+      - swagger-deploy:
+          requires:
+            - swagger-gen
+          filters:
+            branches:
+              only: master
