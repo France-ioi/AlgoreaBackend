@@ -17,9 +17,15 @@ package groups
 //     "$ref": "#/definitions/groupUpdateInput"
 // responses:
 //   "200":
-//     "$ref": "#/responses/updated"
-//   default:
-//     "$ref": "#/responses/error"
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 
 import (
 	"net/http"
