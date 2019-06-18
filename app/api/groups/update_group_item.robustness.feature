@@ -48,8 +48,11 @@ Feature: Change item access rights for a group - robustness
     And the database has the following table 'groups_items':
       | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bOwnerAccess | sAccessReason                                  |
       | 21      | 100    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 1            | owner owns the item                            |
+      | 21      | 101    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
+      | 21      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
+      | 21      | 103    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
       | 25      | 100    | null            | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0            | the parent item is visible to the user's class |
+      | 25      | 101    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0            | null                                           |
 
   Scenario: Invalid group_id
     Given I am the user with ID "1"
