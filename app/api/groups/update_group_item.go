@@ -11,14 +11,56 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// Access rights to be set
+// swagger:model
 type updateGroupItemInput struct {
-	// Nullable fields are of pointer types
-	PartialAccessDate   *time.Time `json:"partial_access_date" sql:"column:sPartialAccessDate"`
-	FullAccessDate      *time.Time `json:"full_access_date" sql:"column:sFullAccessDate"`
+	// Nullable
+	PartialAccessDate *time.Time `json:"partial_access_date" sql:"column:sPartialAccessDate"`
+	// Nullable
+	FullAccessDate *time.Time `json:"full_access_date" sql:"column:sFullAccessDate"`
+	// Nullable
 	AccessSolutionsDate *time.Time `json:"access_solutions_date" sql:"column:sAccessSolutionsDate"`
-	AccessReason        *string    `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"` // max length = 200
+	// Nullable
+	// maxLength: 200
+	AccessReason *string `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"` // max length = 200
 }
 
+// swagger:operation PUT /groups/{group_id}/items/{item_id} groupItemEdit
+// ---
+// summary: Edit the group access rights on the item
+// description: Let an admin of a group give/withdraw access rights on an item to a user (represented by group_id).
+//
+//  * The user giving the access must be an owner of one of the ancestors of the group.
+//
+//  * The user giving the access must be an owner of any of the item’s ancestors or the item itself (bOwnerAccess)
+//  or be a manager of the item (groups_items.bCachedManagerAccess=1).
+//
+//  * The group must already have access to one of the parents of the item or the item itself.
+// parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: item_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: access rights information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/updateGroupItemInput"
+// responses:
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
