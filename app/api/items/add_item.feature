@@ -12,8 +12,8 @@ Background:
     | ID | bTeamsEditable | bNoScore |
     | 21 | false          | false    |
   And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | bManagerAccess | idUserCreated |
-    | 41 | 11      | 21     | true           | 0             |
+    | ID | idGroup | idItem | bCachedManagerAccess | idUserCreated |
+    | 41 | 11      | 21     | true                 | 0             |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf |
     | 71 | 11              | 11           | 1       |
@@ -59,9 +59,8 @@ Scenario: Valid
     | idItemAncestor | idItemChild         |
     | 21             | 5577006791947779410 |
   And the table "groups_items" at ID "8674665223082153551" should be:
-    | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-    | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      |                 1 |
-
+    | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+    | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with ID "1"
@@ -76,9 +75,9 @@ Scenario: Valid
       | 12 |
       | 34 |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
-      | 42 | 11      | 12     | true           | false        |
-      | 43 | 11      | 34     | false          | true         |
+      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess |
+      | 42 | 11      | 12     | true                 | false        |
+      | 43 | 11      | 34     | false                | true         |
     When I send a POST request to "/items/" with the following body:
       """
       {
@@ -153,8 +152,8 @@ Scenario: Valid
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      | 1                 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      | 1                 |
 
   Scenario: Valid with empty full_screen
     Given I am the user with ID "1"
@@ -191,5 +190,5 @@ Scenario: Valid
       | idItemAncestor | idItemChild         |
       | 21             | 5577006791947779410 |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1              | 1                                      |                 1 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
