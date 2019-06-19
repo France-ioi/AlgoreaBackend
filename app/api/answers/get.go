@@ -65,7 +65,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	return service.NoError
 }
 
-// OK. Normal response of the itemAnswersGet service
+// OK. Success response of the itemAnswersGet service
 // swagger:response itemAnswerGetResponse
 type itemAnswerGetResponse struct { //nolint:unused,deadcode
 	// description: The returned answer

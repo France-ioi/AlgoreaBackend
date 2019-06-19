@@ -37,7 +37,7 @@ import (
 //     "$ref": "#/definitions/submitRequestWrapper"
 // responses:
 //   "201":
-//     description: "Created. Normal response with answer_token"
+//     description: "Created. Success response with answer_token"
 //     in: body
 //     schema:
 //       "$ref": "#/definitions/answerSubmitResponse"
@@ -186,7 +186,7 @@ var (
 	_ render.Binder = (*SubmitRequest)(nil)
 )
 
-// Created. Normal response of the itemGetAnswerToken service
+// Created. Success response of the itemGetAnswerToken service
 // swagger:model answerSubmitResponse
 type answerSubmitResponse struct { // nolint:unused,deadcode
 	// description
