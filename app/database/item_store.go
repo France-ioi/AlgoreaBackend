@@ -386,7 +386,7 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 		WHERE groups_items.idGroup = ? AND
 			(sCachedFullAccessDate IS NULL OR sCachedFullAccessDate > NOW()) AND
 			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, selfGroupID).Error)
-	// we do not need to call GroupItem.after() because we do not grant new access here
+	// we do not need to call GroupItemStore.After() because we do not grant new access here
 	groupItemStore.computeAllAccess()
 }
 
@@ -416,6 +416,6 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	// Remove access
 	groupItemStore.removePartialAccess(teamGroupID, itemID)
 
-	// we do not need to call GroupItem.after() because we do not grant new access here
+	// we do not need to call GroupItemStore.After() because we do not grant new access here
 	groupItemStore.computeAllAccess()
 }

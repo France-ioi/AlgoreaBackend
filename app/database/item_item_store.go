@@ -16,7 +16,7 @@ func (s *ItemItemStore) createNewAncestors() {
 	s.DataStore.createNewAncestors("items", "Item")
 }
 
-// After is a "listener" that calls UserItemStore::createNewAncestors() & GroupItemStore::ComputeAllAccess()
+// After is a "listener" that calls UserItemStore::createNewAncestors() & GroupItemStore::computeAllAccess()
 func (s *ItemItemStore) After() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
