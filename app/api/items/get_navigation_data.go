@@ -48,7 +48,7 @@ type navigationItemCommonFields struct {
 	User         navigationItemUser         `json:"user"`
 	AccessRights navigationItemAccessRights `json:"access_rights"`
 
-	Children []navigationItemChild `json:"children,omitempty"`
+	Children []navigationItemChild `json:"children"`
 }
 
 type navigationDataResponse struct {
@@ -130,7 +130,7 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 }
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
-	return &navigationItemCommonFields{
+	result := &navigationItemCommonFields{
 		ID:                rawData.ID,
 		Type:              rawData.Type,
 		TransparentFolder: rawData.TransparentFolder,
@@ -152,4 +152,8 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 			GrayAccess:    rawData.GrayedAccess,
 		},
 	}
+	if rawData.IDItemGrandParent == nil {
+		result.Children = make([]navigationItemChild, 0)
+	}
+	return result
 }

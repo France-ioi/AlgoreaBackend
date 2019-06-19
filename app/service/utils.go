@@ -107,7 +107,6 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 // 1) all maps keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
 // 2) all maps keys are converted to snake case
 // 3) prefixes are stripped, values are converted to needed types accordingly
-// 4) fields with nil values are skipped
 func ConvertSliceOfMapsFromDBToJSON(dbMaps []map[string]interface{}) []map[string]interface{} {
 	convertedResult := make([]map[string]interface{}, len(dbMaps))
 	for index := range dbMaps {
@@ -121,7 +120,6 @@ func ConvertSliceOfMapsFromDBToJSON(dbMaps []map[string]interface{}) []map[strin
 // 1) all map keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})
 // 2) all map keys are converted to snake case
 // 3) prefixes are stripped, values are converted to needed types accordingly
-// 4) fields with nil values are skipped
 func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{} {
 	result := map[string]interface{}{}
 	for key, value := range dbMap {
@@ -147,14 +145,28 @@ func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{}
 			}
 		}
 	}
+
+	replaceEmptySubMapsWithNils(result)
 	return result
 }
 
-func setConvertedValueToJSONMap(valueName string, value interface{}, result map[string]interface{}) {
-	if value == nil {
-		return
+func replaceEmptySubMapsWithNils(mapToProcess map[string]interface{}) bool {
+	for key := range mapToProcess {
+		if subMap, ok := mapToProcess[key].(map[string]interface{}); ok {
+			if replaceEmptySubMapsWithNils(subMap) {
+				mapToProcess[key] = nil
+			}
+		}
 	}
+	for key := range mapToProcess {
+		if mapToProcess[key] != nil {
+			return false
+		}
+	}
+	return true
+}
 
+func setConvertedValueToJSONMap(valueName string, value interface{}, result map[string]interface{}) {
 	snakeCaseName := toSnakeCase(valueName)
 	underscoreIndex := strings.IndexByte(snakeCaseName, '_')
 	prefix := ""

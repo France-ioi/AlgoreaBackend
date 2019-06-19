@@ -79,24 +79,31 @@ type itemAnswerGetResponse struct { //nolint:unused,deadcode
 		ItemID int64 `json:"item_id,string"`
 		// Nullable
 		// format:integer
+		// required:true
 		AttemptID *string `json:"attempt_id,string"`
 		// required:true
 		// enum:Submission,Saved,Current
 		Type string `json:"type"`
 		// Nullable
-		State *string `json:"state,omitempty"`
+		// required:true
+		State *string `json:"state"`
 		// Nullable
-		Answer *string `json:"answer,omitempty"`
+		// required:true
+		Answer *string `json:"answer"`
 		// required:true
 		SubmissionDate time.Time `json:"submission_date"`
 		// Nullable
-		Score *float32 `json:"score,omitempty"`
+		// required:true
+		Score *float32 `json:"score"`
 		// Nullable
-		Validated *bool `json:"validated,omitempty"`
+		// required:true
+		Validated *bool `json:"validated"`
 		// Nullable
-		GradingDate *time.Time `json:"grading_date,omitempty"`
+		// required:true
+		GradingDate *time.Time `json:"grading_date"`
 		// Nullable
 		// format:integer
-		UserGraderID *string `json:"user_grader_id,omitempty"`
+		// required:true
+		UserGraderID *string `json:"user_grader_id"`
 	}
 }

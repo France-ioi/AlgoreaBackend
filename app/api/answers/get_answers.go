@@ -107,27 +107,33 @@ type answersResponseAnswerUser struct {
 	// required: true
 	Login string `json:"login"`
 	// Nullable
-	FirstName *string `json:"first_name,omitempty"`
+	// required: true
+	FirstName *string `json:"first_name"`
 	// Nullable
-	LastName *string `json:"last_name,omitempty"`
+	// required: true
+	LastName *string `json:"last_name"`
 }
 
 type answersResponseAnswer struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable
-	Name *string `json:"name,omitempty"`
+	// required: true
+	Name *string `json:"name"`
 	// required: true
 	// enum: Submission,Saved,Current
 	Type string `json:"type"`
 	// Nullable
-	LangProg *string `json:"lang_prog,omitempty"`
+	// required: true
+	LangProg *string `json:"lang_prog"`
 	// required: true
 	SubmissionDate string `json:"submission_date"`
 	// Nullable
-	Score *float32 `json:"score,omitempty"`
+	// required: true
+	Score *float32 `json:"score"`
 	// Nullable
-	Validated *bool `json:"validated,omitempty"`
+	// required: true
+	Validated *bool `json:"validated"`
 
 	// required: true
 	User answersResponseAnswerUser `json:"user"`

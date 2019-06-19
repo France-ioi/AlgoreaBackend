@@ -184,7 +184,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": true,
                   "gray_access": true
-                }
+                },
+                "children": null
               },
               {
                 "id": "231",
@@ -210,7 +211,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": true,
                   "gray_access": true
-                }
+                },
+                "children": null
               }
             ]
           },
@@ -238,7 +240,8 @@ Feature: Get item for tree navigation
               "partial_access": true,
               "full_access": true,
               "gray_access": true
-            }
+            },
+            "children": []
           },
           {
             "id": "210",
@@ -290,7 +293,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": true,
                   "gray_access": true
-                }
+                },
+                "children": null
               }
             ]
           }
@@ -326,7 +330,8 @@ Feature: Get item for tree navigation
           "partial_access": true,
           "full_access": true,
           "gray_access": true
-        }
+        },
+        "children": []
       }
       """
 
@@ -384,7 +389,8 @@ Feature: Get item for tree navigation
               "partial_access": true,
               "full_access": true,
               "gray_access": true
-            }
+            },
+            "children": []
           },
           {
             "id": "231",
@@ -410,7 +416,8 @@ Feature: Get item for tree navigation
               "partial_access": true,
               "full_access": true,
               "gray_access": true
-            }
+            },
+            "children": []
           }
         ]
       }
@@ -444,7 +451,8 @@ Feature: Get item for tree navigation
           "partial_access": false,
           "full_access": false,
           "gray_access": true
-        }
+        },
+        "children": []
       }
       """
 
@@ -502,7 +510,8 @@ Feature: Get item for tree navigation
               "partial_access": false,
               "full_access": false,
               "gray_access": true
-            }
+            },
+            "children": []
           },
           {
             "id": "220",
@@ -528,7 +537,8 @@ Feature: Get item for tree navigation
               "partial_access": true,
               "full_access": true,
               "gray_access": true
-            }
+            },
+            "children": []
           },
           {
             "id": "210",
@@ -554,7 +564,8 @@ Feature: Get item for tree navigation
               "partial_access": false,
               "full_access": false,
               "gray_access": true
-            }
+            },
+            "children": []
           }
         ]
       }
@@ -640,7 +651,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": false,
                   "gray_access": true
-                }
+                },
+                "children": null
               },
               {
                 "id": "231",
@@ -666,7 +678,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": false,
                   "gray_access": true
-                }
+                },
+                "children": null
               }
             ]
           },
@@ -694,7 +707,8 @@ Feature: Get item for tree navigation
               "partial_access": true,
               "full_access": false,
               "gray_access": true
-            }
+            },
+            "children": []
           },
           {
             "id": "210",
@@ -746,7 +760,8 @@ Feature: Get item for tree navigation
                   "partial_access": true,
                   "full_access": false,
                   "gray_access": true
-                }
+                },
+                "children": null
               }
             ]
           }
