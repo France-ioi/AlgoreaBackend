@@ -18,7 +18,6 @@ type updatedResponse struct {
 }
 
 // CreatedResponse returned when the request has successfully created the object
-// swagger:response updatedResponse
 type CreatedResponse struct {
 	// description: The request has successfully created the object
 	// "created"
