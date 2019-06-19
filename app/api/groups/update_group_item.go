@@ -22,7 +22,7 @@ type updateGroupItemInput struct {
 	AccessSolutionsDate *time.Time `json:"access_solutions_date" sql:"column:sAccessSolutionsDate"`
 	// Nullable
 	// maxLength: 200
-	AccessReason *string `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"` // max length = 200
+	AccessReason *string `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"`
 }
 
 // swagger:operation PUT /groups/{group_id}/items/{item_id} groups items groupItemEdit
