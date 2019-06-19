@@ -67,18 +67,22 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
 	}
 
+	allTheIDs := []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30}
 	tests := []struct {
 		name                string
 		action              database.GroupGroupTransitionAction
+		relationsToChange   []int64
 		createCycleWithType database.GroupGroupType
 		wantResult          database.GroupGroupTransitionResults
 		wantGroupGroups     []groupGroup
 		wantGroupAncestors  []groupAncestor
+		shouldRunListeners  bool
 	}{
 		{
 			name:                "AdminCreatesInvitation",
 			action:              database.AdminCreatesInvitation,
 			createCycleWithType: database.RequestSent,
+			relationsToChange:   allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 3: "success", 6: "success", 7: "success", 8: "success", 9: "success",
 				2: "unchanged",
@@ -101,16 +105,17 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				[]groupGroup{
 					{ParentGroupID: 20, ChildGroupID: 1, Type: "invitationSent", InvitingUserID: userIDPtr, ChildOrder: 1, StatusDate: currentTimePtr},
 				}),
-			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
-				nil,
+			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged, nil,
 				[]groupAncestor{
 					{AncestorGroupID: 20, ChildGroupID: 3},
 					{AncestorGroupID: 30, ChildGroupID: 3},
 				}),
+			shouldRunListeners: true,
 		},
 		{
-			name:   "UserCreatesRequest",
-			action: database.UserCreatesRequest,
+			name:              "UserCreatesRequest",
+			action:            database.UserCreatesRequest,
+			relationsToChange: allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 6: "success", 7: "success", 8: "success", 9: "success",
 				3: "unchanged",
@@ -128,10 +133,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					{ParentGroupID: 20, ChildGroupID: 1, Type: "requestSent", ChildOrder: 1, StatusDate: currentTimePtr},
 				}),
 			wantGroupAncestors: groupAncestorsUnchanged,
+			shouldRunListeners: true,
 		},
 		{
 			name:                "UserAcceptsInvitation",
 			action:              database.UserAcceptsInvitation,
+			relationsToChange:   allTheIDs,
 			createCycleWithType: database.InvitationSent,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				2: "success", 4: "unchanged", 30: "cycle",
@@ -146,10 +153,22 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					{AncestorGroupID: 20, ChildGroupID: 2},
 					{AncestorGroupID: 30, ChildGroupID: 2},
 				}),
+			shouldRunListeners: true,
+		},
+		{
+			name:                "UserAcceptsInvitation (should not do anything when all transitions cause cycles)",
+			action:              database.UserAcceptsInvitation,
+			relationsToChange:   []int64{30},
+			createCycleWithType: database.InvitationSent,
+			wantResult:          database.GroupGroupTransitionResults{30: "cycle"},
+			wantGroupGroups:     patchGroupGroups(groupsGroupsUnchanged, database.InvitationSent, nil, nil),
+			wantGroupAncestors:  patchGroupAncestors(groupAncestorsUnchanged, nil, nil),
+			shouldRunListeners:  false,
 		},
 		{
 			name:                "AdminAcceptsRequest",
 			action:              database.AdminAcceptsRequest,
+			relationsToChange:   allTheIDs,
 			createCycleWithType: database.RequestSent,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				3: "success", 5: "unchanged", 30: "cycle",
@@ -164,10 +183,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					{AncestorGroupID: 20, ChildGroupID: 3},
 					{AncestorGroupID: 30, ChildGroupID: 3},
 				}),
+			shouldRunListeners: true,
 		},
 		{
-			name:   "UserRefusesInvitation",
-			action: database.UserRefusesInvitation,
+			name:              "UserRefusesInvitation",
+			action:            database.UserRefusesInvitation,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				2: "success", 6: "unchanged",
 			}),
@@ -176,10 +197,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "invitationRefused", StatusDate: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
+			shouldRunListeners: true,
 		},
 		{
-			name:   "AdminRefusesRequest",
-			action: database.AdminRefusesRequest,
+			name:              "AdminRefusesRequest",
+			action:            database.AdminRefusesRequest,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				3: "success", 7: "unchanged",
 			}),
@@ -188,10 +211,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestRefused", StatusDate: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
+			shouldRunListeners: true,
 		},
 		{
-			name:   "AdminRemovesUser",
-			action: database.AdminRemovesUser,
+			name:              "AdminRemovesUser",
+			action:            database.AdminRemovesUser,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				4: "success", 5: "success", 8: "unchanged",
 			}),
@@ -202,20 +227,24 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{"20_4": nil, "20_5": nil, "30_4": nil, "30_5": nil}, nil),
+			shouldRunListeners: true,
 		},
 		{
-			name:   "AdminCancelsInvitation",
-			action: database.AdminCancelsInvitation,
+			name:              "AdminCancelsInvitation",
+			action:            database.AdminCancelsInvitation,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				2: "success",
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{"20_2": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
+			shouldRunListeners: true,
 		},
 		{
-			name:   "UserLeavesGroup",
-			action: database.UserLeavesGroup,
+			name:              "UserLeavesGroup",
+			action:            database.UserLeavesGroup,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				4: "success", 5: "success", 10: "success",
 				9: "unchanged",
@@ -231,20 +260,24 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					"20_4": nil, "20_5": nil, "20_10": nil,
 					"30_4": nil, "30_5": nil, "30_10": nil,
 				}, nil),
+			shouldRunListeners: true,
 		},
 		{
-			name:   "UserCancelsRequest",
-			action: database.UserCancelsRequest,
+			name:              "UserCancelsRequest",
+			action:            database.UserCancelsRequest,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				3: "success",
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{"20_3": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
+			shouldRunListeners: true,
 		},
 		{
-			name:   "AdminAddsDirectRelation",
-			action: database.AdminAddsDirectRelation,
+			name:              "AdminAddsDirectRelation",
+			action:            database.AdminAddsDirectRelation,
+			relationsToChange: allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 2: "success", 3: "success", 4: "success", 5: "success", 6: "success", 7: "success", 8: "success",
 				9: "success",
@@ -301,10 +334,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{AncestorGroupID: 30, ChildGroupID: 20},
 				{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
 			},
+			shouldRunListeners: true,
 		},
 		{
-			name:   "AdminRemovesDirectRelation",
-			action: database.AdminRemovesDirectRelation,
+			name:              "AdminRemovesDirectRelation",
+			action:            database.AdminRemovesDirectRelation,
+			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				10: "success", 1: "unchanged", 30: "unchanged",
 			}),
@@ -312,6 +347,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupGroup{"20_10": nil}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{"20_10": nil, "30_10": nil}, nil),
+			shouldRunListeners: true,
 		},
 	}
 	for _, tt := range tests {
@@ -331,7 +367,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			err := dataStore.InTransaction(func(store *database.DataStore) error {
 				var err error
 				result, err = store.GroupGroups().Transition(
-					tt.action, 20, []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30}, 12,
+					tt.action, 20, tt.relationsToChange, 12,
 				)
 				return err
 			})
@@ -356,7 +392,11 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			var count int64
 			assert.NoError(t, dataStore.Table("groups_propagate").
 				Where("sAncestorsComputationState != 'done'").Count(&count).Error())
-			assert.Zero(t, count)
+			if tt.shouldRunListeners {
+				assert.Zero(t, count, "Listeners should be executed")
+			} else {
+				assert.NotZero(t, count, "Listeners should not be executed")
+			}
 		})
 	}
 }
@@ -440,7 +480,7 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 		if row.StatusDate == nil {
 			assert.Nil(t, groupsGroups[index].StatusDate)
 		} else {
-			assert.NotNil(t, groupsGroups[index].StatusDate, "StatusDate should be nil in row %#v", groupsGroups[index])
+			assert.NotNil(t, groupsGroups[index].StatusDate, "StatusDate should not be nil in row %#v", groupsGroups[index])
 			if groupsGroups[index].StatusDate != nil {
 				assert.True(t, groupsGroups[index].StatusDate.Sub(time.Now().UTC())/time.Second < 5)
 				assert.True(t, time.Now().UTC().Sub(*groupsGroups[index].StatusDate)/time.Second > -5)
