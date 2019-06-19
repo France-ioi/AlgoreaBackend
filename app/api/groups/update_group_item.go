@@ -25,7 +25,7 @@ type updateGroupItemInput struct {
 	AccessReason *string `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"` // max length = 200
 }
 
-// swagger:operation PUT /groups/{group_id}/items/{item_id} groupItemEdit
+// swagger:operation PUT /groups/{group_id}/items/{item_id} groups items groupItemEdit
 // ---
 // summary: Edit the group access rights on the item
 // description: Let an admin of a group give/withdraw access rights on an item to a user (represented by group_id).
