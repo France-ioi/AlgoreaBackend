@@ -31,6 +31,14 @@ type forbiddenResponse struct {
 	Body struct{ forbidden }
 }
 
+// Unprocessable Entity. Returned by services performing groups relations transitions to indicate
+// that the transition is impossible.
+// swagger:response unprocessableEntityResponse
+type unprocessableEntityResponse struct {
+	// in: body
+	Body struct{ unprocessableEntity }
+}
+
 // Internal Error. An unexpected error has happened on the server (e.g., uncaught database error).
 // If the problem persists, it should be reported.
 // swagger:response internalErrorResponse

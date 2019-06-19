@@ -1,6 +1,6 @@
 package groups
 
-// swagger:operation PUT /groups/{group_id} groupEdit
+// swagger:operation PUT /groups/{group_id} groups groupEdit
 // ---
 // summary: Edit group information
 // description: Edit group information.

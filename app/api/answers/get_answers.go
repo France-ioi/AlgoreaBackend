@@ -11,6 +11,42 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /answers answers users attempts items itemAnswersView
+// ---
+// summary: View answers history
+// description: Display the history of answers (submissions, saved and current)
+//   for a given item and user, or from a given attempt.
+//
+//   * One of (user_id, item_id) pair or attempt_id is required.
+//
+//   * The user should have at least partial access to the item.
+//
+//   * If item_id and user_id are given, the authenticated user should be either the input user
+//   or an owner of a group containing the selfGroup of the input user.
+//
+//   * If attempt_id is given, the authenticated user should be a member of the group
+//   or an owner of the group attached to the attempt.
+// parameters:
+// - name: user_id
+//   in: query
+//   type: integer
+// - name: item_id
+//   in: query
+//   type: integer
+// - name: attempt_id
+//   in: query
+//   type: integer
+// responses:
+//   "200":
+//     "$ref": "#/responses/itemAnswersViewResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
@@ -68,21 +104,41 @@ type rawAnswersData struct {
 }
 
 type answersResponseAnswerUser struct {
-	Login     string  `json:"login"`
+	// required: true
+	Login string `json:"login"`
+	// Nullable
 	FirstName *string `json:"first_name,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
+	// Nullable
+	LastName *string `json:"last_name,omitempty"`
 }
 
 type answersResponseAnswer struct {
-	ID             int64    `json:"id,string"`
-	Name           *string  `json:"name,omitempty"`
-	Type           string   `json:"type"`
-	LangProg       *string  `json:"lang_prog,omitempty"`
-	SubmissionDate string   `json:"submission_date"`
-	Score          *float32 `json:"score,omitempty"`
-	Validated      *bool    `json:"validated,omitempty"`
+	// required: true
+	ID int64 `json:"id,string"`
+	// Nullable
+	Name *string `json:"name,omitempty"`
+	// required: true
+	// enum: Submission,Saved,Current
+	Type string `json:"type"`
+	// Nullable
+	LangProg *string `json:"lang_prog,omitempty"`
+	// required: true
+	SubmissionDate string `json:"submission_date"`
+	// Nullable
+	Score *float32 `json:"score,omitempty"`
+	// Nullable
+	Validated *bool `json:"validated,omitempty"`
 
+	// required: true
 	User answersResponseAnswerUser `json:"user"`
+}
+
+// OK. Normal response of the itemAnswersView service
+// swagger:response itemAnswersViewResponse
+type itemAnswersViewResponse struct { // nolint:unused,deadcode
+	// description: The returned answers
+	// in:body
+	Answers []answersResponseAnswer
 }
 
 func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *[]answersResponseAnswer) {
