@@ -235,7 +235,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		idsToInsert, idsToUpdate, idsToCheckCycle, idsToDelete := buildTransitionsPlan(
 			parentGroupID, childGroupIDs, results, oldTypesMap, action)
 
-		performCyclesChecking(s.DataStore, idsToCheckCycle, parentGroupID, results, idsToInsert, idsToUpdate)
+		performCyclesChecking(s.DataStore, idsToCheckCycle, parentGroupID, results, idsToInsert, idsToUpdate, idsToDelete)
 
 		setIDUserInviting := groupGroupTransitionRules[action].SetIDUserInviting
 		shouldCreateNewAncestors := false
@@ -292,7 +292,8 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 }
 
 func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentGroupID int64,
-	results GroupGroupTransitionResults, idsToInsert, idsToUpdate map[int64]GroupGroupType) {
+	results GroupGroupTransitionResults, idsToInsert, idsToUpdate map[int64]GroupGroupType,
+	idsToDelete map[int64]bool) {
 	if len(idsToCheckCycle) > 0 {
 		idsToCheckCycleSlice := make([]int64, 0, len(idsToCheckCycle))
 		for id := range idsToCheckCycle {
@@ -310,6 +311,7 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 			results[idGroup] = Cycle
 			delete(idsToUpdate, idGroup)
 			delete(idsToInsert, idGroup)
+			delete(idsToDelete, idGroup)
 		}
 	}
 }
