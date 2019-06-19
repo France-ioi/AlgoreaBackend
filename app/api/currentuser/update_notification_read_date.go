@@ -1,5 +1,15 @@
 package currentuser
 
+import (
+	"net/http"
+
+	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/service"
+)
+
 // swagger:operation PUT /current-user/notification-read-date userNotificationReadDateUpdate
 // ---
 // summary: Update user's notification read date
@@ -13,17 +23,6 @@ package currentuser
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-
-import (
-	"net/http"
-
-	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-)
-
 func (srv *Service) updateNotificationReadDate(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	err := user.Load()
