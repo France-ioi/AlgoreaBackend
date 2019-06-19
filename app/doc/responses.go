@@ -19,7 +19,6 @@ type updatedResponse struct {
 
 // CreatedResponse returned when the request has successfully created the object
 type CreatedResponse struct {
-	// description: The request has successfully created the object
 	// "created"
 	// enum: created
 	// required: true
