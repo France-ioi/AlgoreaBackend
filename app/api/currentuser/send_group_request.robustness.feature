@@ -4,17 +4,19 @@ Feature: User sends a request to join a group - robustness
       | ID | idGroupSelf | idGroupOwned |
       | 1  | 21          | 22           |
     And the database has the following table 'groups':
-      | ID |
-      | 11 |
-      | 13 |
-      | 14 |
-      | 21 |
-      | 22 |
+      | ID | bFreeAccess |
+      | 11 | 1           |
+      | 13 | 1           |
+      | 14 | 1           |
+      | 15 | 0           |
+      | 21 | 0           |
+      | 22 | 0           |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
       | 13              | 13           | 1       |
       | 14              | 14           | 1       |
+      | 15              | 15           | 1       |
       | 21              | 13           | 0       |
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
@@ -68,3 +70,8 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Can't send request to a group having bFreeAccess=0
+    Given I am the user with ID "1"
+    When I send a POST request to "/current-user/group-requests/15"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"

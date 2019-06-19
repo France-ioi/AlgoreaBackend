@@ -4,11 +4,11 @@ Feature: User sends a request to join a group
       | ID | idGroupSelf | idGroupOwned |
       | 1  | 21          | 22           |
     And the database has the following table 'groups':
-      | ID |
-      | 11 |
-      | 14 |
-      | 21 |
-      | 22 |
+      | ID | bFreeAccess |
+      | 11 | 1           |
+      | 14 | 1           |
+      | 21 | 0           |
+      | 22 | 0           |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
