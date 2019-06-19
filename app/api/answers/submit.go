@@ -24,8 +24,6 @@ import (
 //   A task_token has to be given to this service.
 //
 //
-//   This service corresponds to task.php/askValidation <https://github.com/France-ioi/AlgoreaPlatform/blob/master/task/task.php#L202>
-//
 //   * task_token.idUser should be the current user
 //
 //   * The user should have submission rights on task_token.idItemLocal
