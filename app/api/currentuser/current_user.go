@@ -58,6 +58,15 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	}
 	service.MustNotBeError(err)
 
+	if action == createGroupRequestAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).Where("bFreeAccess").HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.InsufficientAccessRightsError
+		}
+	}
+
 	var results database.GroupGroupTransitionResults
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		results, err = store.GroupGroups().Transition(
