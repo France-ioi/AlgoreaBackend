@@ -39,7 +39,7 @@ type updateCurrentRequest struct {
 //   "201":
 //     "$ref": "#/responses/updatedResponse"
 //   "400":
-//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//     "$ref": "#/responses/badRequestResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":

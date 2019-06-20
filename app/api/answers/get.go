@@ -30,7 +30,7 @@ import (
 //   "200":
 //     "$ref": "#/responses/itemAnswerGetResponse"
 //   "400":
-//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
+//     "$ref": "#/responses/badRequestResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":

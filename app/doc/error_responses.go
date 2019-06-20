@@ -10,8 +10,8 @@ package doc
 //     "$ref": "#/responses/unauthorizedResponse"
 
 // BadRequest. There is an error in the input data which was provided (path or body) to this service.
-// swagger:response badRequestPOSTPUTPATCHResponse
-type badRequestPOSTPUTPATCHResponse struct {
+// swagger:response badRequestResponse
+type badRequestResponse struct {
 	// in: body
 	Body struct{ badRequest }
 }
