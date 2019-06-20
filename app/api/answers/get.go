@@ -2,7 +2,6 @@ package answers
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -63,47 +62,4 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 
 	render.Respond(rw, httpReq, convertedResult)
 	return service.NoError
-}
-
-// OK. Success response of the itemAnswersGet service
-// swagger:response itemAnswerGetResponse
-type itemAnswerGetResponse struct { //nolint:unused,deadcode
-	// description: The returned answer
-	// in:body
-	Body struct {
-		// required:true
-		ID int64 `json:"id,string"`
-		// required:true
-		UserID int64 `json:"user_id,string"`
-		// required:true
-		ItemID int64 `json:"item_id,string"`
-		// Nullable
-		// format:integer
-		// required:true
-		AttemptID *string `json:"attempt_id,string"`
-		// required:true
-		// enum:Submission,Saved,Current
-		Type string `json:"type"`
-		// Nullable
-		// required:true
-		State *string `json:"state"`
-		// Nullable
-		// required:true
-		Answer *string `json:"answer"`
-		// required:true
-		SubmissionDate time.Time `json:"submission_date"`
-		// Nullable
-		// required:true
-		Score *float32 `json:"score"`
-		// Nullable
-		// required:true
-		Validated *bool `json:"validated"`
-		// Nullable
-		// required:true
-		GradingDate *time.Time `json:"grading_date"`
-		// Nullable
-		// format:integer
-		// required:true
-		UserGraderID *string `json:"user_grader_id"`
-	}
 }
