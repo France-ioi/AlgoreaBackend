@@ -139,7 +139,7 @@ type answersResponseAnswer struct {
 	User answersResponseAnswerUser `json:"user"`
 }
 
-// OK. Success response of the itemAnswersView service
+// OK. Success response with an array of answers
 // swagger:response itemAnswersViewResponse
 type itemAnswersViewResponse struct { // nolint:unused,deadcode
 	// description: The returned answers

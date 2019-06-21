@@ -184,7 +184,7 @@ var (
 	_ render.Binder = (*SubmitRequest)(nil)
 )
 
-// Created. Success response of the itemGetAnswerToken service
+// Created. Success response with answer_token
 // swagger:model answerSubmitResponse
 type answerSubmitResponse struct { // nolint:unused,deadcode
 	// description
