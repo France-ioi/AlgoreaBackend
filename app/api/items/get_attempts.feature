@@ -57,7 +57,7 @@ Feature: Get groups attempts for current user and item_id
         "order": 0,
         "score": 99,
         "start_date": "2018-05-29T06:38:38Z",
-        "user_creator": {},
+        "user_creator": null,
         "validated": false
       },
       {
@@ -87,7 +87,7 @@ Feature: Get groups attempts for current user and item_id
         "order": 0,
         "score": 99,
         "start_date": "2018-05-29T06:38:38Z",
-        "user_creator": {},
+        "user_creator": null,
         "validated": false
       }
     ]
@@ -117,7 +117,7 @@ Feature: Get groups attempts for current user and item_id
         "order": 0,
         "score": 99,
         "start_date": "2018-05-29T06:38:38Z",
-        "user_creator": {},
+        "user_creator": null,
         "validated": false
       }
     ]

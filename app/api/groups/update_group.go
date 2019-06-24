@@ -1,32 +1,5 @@
 package groups
 
-// swagger:operation PUT /groups/{group_id} groupEdit
-// ---
-// summary: Edit group information
-// description: Edit group information.
-//   Requires the user to be the owner of the group.
-// parameters:
-// - name: group_id
-//   in: path
-//   required: true
-//   type: integer
-// - name: group information
-//   in: body
-//   required: true
-//   schema:
-//     "$ref": "#/definitions/groupUpdateInput"
-// responses:
-//   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "400":
-//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
-//   "401":
-//     "$ref": "#/responses/unauthorizedResponse"
-//   "403":
-//     "$ref": "#/responses/forbiddenResponse"
-//   "500":
-//     "$ref": "#/responses/internalErrorResponse"
-
 import (
 	"net/http"
 	"regexp"
@@ -65,6 +38,32 @@ type groupUpdateInput struct {
 	OpenContest  bool    `json:"open_contest" sql:"column:bOpenContest"`
 }
 
+// swagger:operation PUT /groups/{group_id} groups groupEdit
+// ---
+// summary: Edit group information
+// description: Edit group information.
+//   Requires the user to be the owner of the group.
+// parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: group information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/groupUpdateInput"
+// responses:
+//   "200":
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

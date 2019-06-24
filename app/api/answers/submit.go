@@ -12,10 +12,41 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/doc"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
+// swagger:operation POST /answers answers items itemGetAnswerToken
+// ---
+// summary: Generate answer token
+// description: Generate a token that can be used by the TaskGrader to ensure task parameters have not been altered.
+//   A task_token has to be given to this service.
+//
+//
+//   * task_token.idUser should be the current user
+//
+//   * The user should have submission rights on task_token.idItemLocal
+// parameters:
+// - name: answer information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/submitRequestWrapper"
+// responses:
+//   "201":
+//     description: "Created. Success response with answer_token"
+//     in: body
+//     schema:
+//       "$ref": "#/definitions/answerSubmitResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
@@ -103,6 +134,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 }
 
 // SubmitRequest represents a JSON request body format needed by answers.submit()
+// swagger:ignore
 type SubmitRequest struct {
 	TaskToken *token.Task `json:"task_token"`
 	Answer    *string     `json:"answer"`
@@ -110,9 +142,12 @@ type SubmitRequest struct {
 	PublicKey *rsa.PublicKey
 }
 
+// swagger:model
 type submitRequestWrapper struct {
+	// required:true
 	TaskToken *string `json:"task_token"`
-	Answer    *string `json:"answer"`
+	// required:true
+	Answer *string `json:"answer"`
 }
 
 // UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken
@@ -148,3 +183,15 @@ func (requestData *SubmitRequest) Bind(r *http.Request) error {
 var (
 	_ render.Binder = (*SubmitRequest)(nil)
 )
+
+// Created. Success response with answer_token
+// swagger:model answerSubmitResponse
+type answerSubmitResponse struct { // nolint:unused,deadcode
+	// description
+	// swagger:allOf
+	doc.CreatedResponse
+	// required:true
+	Data struct {
+		AnswerToken string `json:"answer_token"`
+	} `json:"data"`
+}

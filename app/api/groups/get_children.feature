@@ -45,15 +45,15 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true},
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true},
+      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null},
+      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde"},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd"},
       {"id": "24", "name": "Root", "type": "Root", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc"},
-      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true},
-      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true},
-      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true}
+      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true, "password": null}
     ]
     """
 
@@ -64,15 +64,15 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true},
-      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true},
+      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null},
+      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true, "password": null},
       {"id": "24", "name": "Root", "type": "Root", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc"},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd"},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true},
+      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde"},
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true},
-      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true},
-      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true}
+      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true, "password": null}
     ]
     """
 
@@ -84,14 +84,14 @@ Feature: Get group children (groupChildrenView)
     """
     [
       {"id": "24", "name": "Root", "type": "Root", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc"},
-      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true},
+      {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd"},
-      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true},
+      {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde"},
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true},
-      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true},
-      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true},
-      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true}
+      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true, "password": null},
+      {"id": "30", "name": "RootSelf", "type": "RootSelf", "free_access": false, "grade": 0, "opened": true, "password": null},
+      {"id": "31", "name": "RootAdmin", "type": "RootAdmin", "free_access": false, "grade": 0, "opened": true, "password": null}
     ]
     """
 
@@ -102,7 +102,7 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true}
+      {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null}
     ]
     """
 
@@ -113,6 +113,6 @@ Feature: Get group children (groupChildrenView)
     And the response body should be, in JSON:
     """
     [
-      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true}
+      {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true, "password": null}
     ]
     """

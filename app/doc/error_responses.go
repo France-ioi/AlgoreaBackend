@@ -10,8 +10,8 @@ package doc
 //     "$ref": "#/responses/unauthorizedResponse"
 
 // BadRequest. There is an error in the input data which was provided (path or body) to this service.
-// swagger:response badRequestPOSTPUTPATCHResponse
-type badRequestPOSTPUTPATCHResponse struct {
+// swagger:response badRequestResponse
+type badRequestResponse struct {
 	// in: body
 	Body struct{ badRequest }
 }
@@ -29,6 +29,14 @@ type unauthorizedResponse struct {
 type forbiddenResponse struct {
 	// in: body
 	Body struct{ forbidden }
+}
+
+// Unprocessable Entity. Returned by services performing groups relations transitions to indicate
+// that the transition is impossible.
+// swagger:response unprocessableEntityResponse
+type unprocessableEntityResponse struct {
+	// in: body
+	Body struct{ unprocessableEntity }
 }
 
 // Internal Error. An unexpected error has happened on the server (e.g., uncaught database error).
