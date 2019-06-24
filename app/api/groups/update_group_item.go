@@ -27,15 +27,16 @@ type updateGroupItemInput struct {
 
 // swagger:operation PUT /groups/{group_id}/items/{item_id} groups items groupItemEdit
 // ---
-// summary: Edit the group access rights on the item
-// description: Let an admin of a group give/withdraw access rights on an item to a user (represented by group_id).
+// summary: Update access rights of a group on an item
+// description: Let an admin of a group give/withdraw access rights on an item (identified by `item_id`)
+//   to a user (identified by `group_id` of his self group).
 //
-//  * The user giving the access must be an owner of one of the ancestors of the group.
+//   * The user giving the access must be an owner of one of the ancestors of the group.
 //
-//  * The user giving the access must be an owner of any of the item’s ancestors or the item itself (bOwnerAccess)
-//  or be a manager of the item (groups_items.bCachedManagerAccess=1).
+//   * The user giving the access must be an owner of any of the item’s ancestors or the item itself (`bOwnerAccess`)
+//   or be a manager of the item (`groups_items.bCachedManagerAccess`).
 //
-//  * The group must already have access to one of the parents of the item or the item itself.
+//   * The group must already have access to one of the parents of the item or the item itself.
 // parameters:
 // - name: group_id
 //   in: path

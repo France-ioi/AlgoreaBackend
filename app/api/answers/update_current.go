@@ -22,12 +22,12 @@ type updateCurrentRequest struct {
 
 // swagger:operation PUT /answers/current answers itemAnswerUpdateCurrent
 // ---
-// summary: Update user’s current answer
-// description: The service is used for auto-saving while working on a task.
+// summary: Update current answer
+// description: Update user's current answer. Used for auto-saving while working on a task.
 //
-//   * The authenticated user should have at least partial access to the groups_attempts[attempt_id].idItem
+//   * The authenticated user should have at least partial access to the `groups_attempts[attempt_id].idItem`
 //
-//   * groups_attempts.idGroup should be the user's selfGroup (if items.bHasAttempts=0) or the user's team (otherwise)
+//   * `groups_attempts.idGroup` should be the user's selfGroup (if `items.bHasAttempts=0`) or the user's team (otherwise)
 //   [this extra check just ensures the consistency of data]
 // parameters:
 // - name: current answer information

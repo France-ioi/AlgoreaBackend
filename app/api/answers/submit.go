@@ -19,14 +19,13 @@ import (
 
 // swagger:operation POST /answers answers items itemGetAnswerToken
 // ---
-// summary: Generate answer token
-// description: Generate a token that can be used by the TaskGrader to ensure task parameters have not been altered.
-//   A task_token has to be given to this service.
-//
+// summary: Generate an answer token
+// description: Generate and return an answer token from user s answer and task token.
+//   It is used to bind an answer with task parameters so that the TaskGrader can checkt they have not been altered.
 //
 //   * task_token.idUser should be the current user
 //
-//   * The user should have submission rights on task_token.idItemLocal
+//   * The user should have submission rights on `task_token.idItemLocal`
 // parameters:
 // - name: answer information
 //   in: body

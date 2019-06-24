@@ -8,13 +8,14 @@ import (
 
 // swagger:operation POST /current-user/group-invitations/{group_id}/accept groups users acceptGroupInvitation
 // ---
-// summary: User accepts an invitation to a group
+// summary: Accept a group invitation
 // description:
-//   On success the service sets groups_groups.sType to "invitationAccepted" and sStatusDate to current UTC time.
+//   Let a user approve an invitation to join a group
+//   On success the service sets `groups_groups.sType` to `invitationAccepted` and `sStatusDate` to current UTC time.
 //   It also refreshes the access rights.
 //
-//   * There should be a row in groups_groups with the group_id as a parent
-//   and the authenticated user’s selfGroup’s ID as a child with sType=invitationSent/invitationAccepted.
+//   * There should be a row in `groups_groups` with the group_id as a parent
+//   and the authenticated user’s selfGroup’s ID as a child with `sType=invitationSent`/`invitationAccepted`.
 //   Otherwise the unprocessable entity error is returned.
 // parameters:
 // - name: group_id

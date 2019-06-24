@@ -40,7 +40,7 @@ type groupUpdateInput struct {
 
 // swagger:operation PUT /groups/{group_id} groups groupEdit
 // ---
-// summary: Edit group information
+// summary: Update group information
 // description: Edit group information.
 //   Requires the user to be the owner of the group.
 // parameters:

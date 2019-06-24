@@ -13,18 +13,18 @@ import (
 
 // swagger:operation GET /answers answers users attempts items itemAnswersView
 // ---
-// summary: View answers history
-// description: Display the history of answers (submissions, saved and current)
+// summary: List answers
+// description: Return answers (i.e., history of submissions and current answer)
 //   for a given item and user, or from a given attempt.
 //
-//   * One of (user_id, item_id) pair or attempt_id is required.
+//   * One of (`user_id`, `item_id`) pair or `attempt_id` is required.
 //
 //   * The user should have at least partial access to the item.
 //
-//   * If item_id and user_id are given, the authenticated user should be either the input user
+//   * If `item_id` and `user_id` are given, the authenticated user should be either the input user
 //   or an owner of a group containing the selfGroup of the input user.
 //
-//   * If attempt_id is given, the authenticated user should be a member of the group
+//   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
 // parameters:
 // - name: user_id
