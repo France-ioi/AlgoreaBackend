@@ -75,7 +75,7 @@ Feature: Get group invitations for the current user
       },
       {
         "id": "2",
-        "inviting_user": null,
+        "inviting_user": {},
         "group": {
           "id": "1",
           "name": "Our Class",

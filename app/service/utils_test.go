@@ -346,14 +346,9 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			}},
 		},
 		{
-			"keeps nil fields",
-			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
-			[]map[string]interface{}{{"the_greatest_user": nil, "other_field": 1}},
-		},
-		{
-			"replaces empty sub-maps with nils",
-			[]map[string]interface{}{{"TheGreatestUser": nil, "EmptySubMap__Field1": nil, "EmptySubMap__Field2": nil}},
-			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map": nil}},
+			"skips nil fields",
+			[]map[string]interface{}{{"TheGreatestUser": nil}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{}},
 		},
 		{
 			"converts int64 into string",

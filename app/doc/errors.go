@@ -47,13 +47,6 @@ type forbidden struct {
 	Message string `json:"message"`
 }
 
-type unprocessableEntity struct {
-	genericError
-	// required: true
-	// enum: Unprocessable Entity
-	Message string `json:"message"`
-}
-
 type internalError struct {
 	genericError
 	// required: true

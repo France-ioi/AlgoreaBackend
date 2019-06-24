@@ -33,8 +33,6 @@ type rawNavigationItem struct {
 	Order        int32 `sql:"column:iChildOrder"`
 
 	*database.ItemAccessDetails
-
-	IDItemGrandParent *int64 `sql:"column:idItemGrandParent"`
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
@@ -73,7 +71,6 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			items.iChildOrder AS iChildOrder,
 			items.bAccessRestricted,
 			items.idItemParent AS idItemParent,
-			items.idItemGrandParent AS idItemGrandParent,
 			items.fullAccess, items.partialAccess, items.grayedAccess
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).

@@ -54,7 +54,7 @@ type updateGroupItemInput struct {
 //   "200":
 //     "$ref": "#/responses/updatedResponse"
 //   "400":
-//     "$ref": "#/responses/badRequestResponse"
+//     "$ref": "#/responses/badRequestPOSTPUTPATCHResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
