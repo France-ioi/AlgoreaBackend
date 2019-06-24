@@ -42,7 +42,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "user"
         },
-        "joining_user": {},
+        "joining_user": null,
         "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
@@ -73,8 +73,10 @@ Feature: Get requests for group_id
           "login": "jane"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 1,
           "id": "2",
+          "last_name": null,
           "login": "user"
         },
         "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
@@ -89,8 +91,10 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 3,
           "id": "1",
+          "last_name": null,
           "login": "owner"
         },
         "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
@@ -115,8 +119,10 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 3,
           "id": "1",
+          "last_name": null,
           "login": "owner"
         },
         "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
@@ -149,8 +155,10 @@ Feature: Get requests for group_id
           "login": "jane"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 1,
           "id": "2",
+          "last_name": null,
           "login": "user"
         },
         "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
@@ -164,7 +172,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "user"
         },
-        "joining_user": {},
+        "joining_user": null,
         "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       }
@@ -186,7 +194,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "user"
         },
-        "joining_user": {},
+        "joining_user": null,
         "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
@@ -217,8 +225,10 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 3,
           "id": "1",
+          "last_name": null,
           "login": "owner"
         },
         "status_date": "{{db("groups_groups[1][sStatusDate]")}}",
@@ -233,8 +243,10 @@ Feature: Get requests for group_id
           "login": "jane"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 1,
           "id": "2",
+          "last_name": null,
           "login": "user"
         },
         "status_date": "{{db("groups_groups[2][sStatusDate]")}}",
@@ -258,7 +270,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "user"
         },
-        "joining_user": {},
+        "joining_user": null,
         "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       }
@@ -280,7 +292,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "user"
         },
-        "joining_user": {},
+        "joining_user": null,
         "status_date": "{{db("groups_groups[4][sStatusDate]")}}",
         "type": "requestRefused"
       },
@@ -311,8 +323,10 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": {
+          "first_name": null,
           "grade": 3,
           "id": "1",
+          "last_name": null,
           "login": "owner"
         },
         "status_date": "{{db("groups_groups[1][sStatusDate]")}}",

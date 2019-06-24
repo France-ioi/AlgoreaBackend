@@ -98,7 +98,7 @@ Feature: Get item view information
       "show_user_infos": true,
       "contest_phase": "Running",
       "url": "http://someurl",
-      "uses_API": true,
+      "uses_api": true,
       "hints_allowed": true,
 
       "string": {
@@ -273,7 +273,9 @@ Feature: Get item view information
         "validation_date": "2019-01-31T09:26:42Z",
         "finish_date": "2019-02-01T09:26:42Z",
         "contest_start_date": "2019-02-01T06:26:42Z"
-      }
+      },
+
+      "children": []
     }
     """
 
@@ -328,7 +330,9 @@ Feature: Get item view information
         "validation_date": "2019-01-31T09:26:42Z",
         "finish_date": "2019-02-01T09:26:42Z",
         "contest_start_date": "2019-02-01T06:26:42Z"
-      }
+      },
+
+      "children": []
     }
     """
 
@@ -363,7 +367,7 @@ Feature: Get item view information
       "show_user_infos": true,
       "contest_phase": "Running",
       "url": "http://someurl",
-      "uses_API": true,
+      "uses_api": true,
       "hints_allowed": true,
 
       "string": {
@@ -517,7 +521,7 @@ Feature: Get item view information
       "show_user_infos": true,
       "contest_phase": "Running",
       "url": "http://someurl",
-      "uses_API": true,
+      "uses_api": true,
       "hints_allowed": true,
 
       "string": {

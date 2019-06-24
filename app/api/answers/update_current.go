@@ -10,12 +10,42 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model
 type updateCurrentRequest struct {
-	AttemptID int64  `json:"attempt_id,string" validate:"required"`
-	Answer    string `json:"answer" validate:"required"`
-	State     string `json:"state" validate:"required"`
+	// required:true
+	AttemptID int64 `json:"attempt_id,string" validate:"required"`
+	// required:true
+	Answer string `json:"answer" validate:"required"`
+	// required:true
+	State string `json:"state" validate:"required"`
 }
 
+// swagger:operation PUT /answers/current answers itemAnswerUpdateCurrent
+// ---
+// summary: Update current answer
+// description: Update user's current answer. Used for auto-saving while working on a task.
+//
+//   * The authenticated user should have at least partial access to the `groups_attempts[attempt_id].idItem`
+//
+//   * `groups_attempts.idGroup` should be the user's selfGroup (if `items.bHasAttempts=0`) or the user's team (otherwise)
+//   [this extra check just ensures the consistency of data]
+// parameters:
+// - name: current answer information
+//   in: body
+//   required: true
+//   schema:
+//     "$ref": "#/definitions/updateCurrentRequest"
+// responses:
+//   "201":
+//     "$ref": "#/responses/updatedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	var requestData updateCurrentRequest
 
