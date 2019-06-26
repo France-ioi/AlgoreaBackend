@@ -12,22 +12,30 @@ import (
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
 	db := ctx.db()
 
-	head := data.Rows[0].Cells
-	fields := make([]string, 0, len(head))
-	marks := make([]string, 0, len(head))
-	for _, cell := range head {
-		fields = append(fields, cell.Value)
-		marks = append(marks, "?")
-	}
-	query := "INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES(" + strings.Join(marks, ", ") + ")" // nolint: gosec
-	for i := 1; i < len(data.Rows); i++ {
-		var vals []interface{}
-		for _, cell := range data.Rows[i].Cells {
-			var err error
-			if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-				return err
+	if len(data.Rows) > 1 {
+		head := data.Rows[0].Cells
+		fields := make([]string, 0, len(head))
+		marks := make([]string, 0, len(head))
+		for _, cell := range head {
+			fields = append(fields, cell.Value)
+			marks = append(marks, "?")
+		}
+
+		marksString := "(" + strings.Join(marks, ", ") + ")"
+		finalMarksString := marksString
+		if len(data.Rows) > 2 {
+			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
+		}
+		query := "INSERT INTO " + tableName + " (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString // nolint: gosec
+		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
+		for i := 1; i < len(data.Rows); i++ {
+			for _, cell := range data.Rows[i].Cells {
+				var err error
+				if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
+					return err
+				}
+				vals = append(vals, dbDataTableValue(cell.Value))
 			}
-			vals = append(vals, dbDataTableValue(cell.Value))
 		}
 		if ctx.inScenario {
 			_, err := db.Exec(query, vals...)
