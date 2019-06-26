@@ -305,7 +305,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 								score := int(rand.Float32() * 101)
 								groupsAttemptsQueryValues = append(groupsAttemptsQueryValues, fmt.Sprintf(
 									"(%d, %d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
-										"%d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
+										"%d, %d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
 										"%d, %d, %d, "+
 										"FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))))",
 									attemptGroupID, itemID, score, -score, int(rand.Float32()*11), int(rand.Float32()*11),
