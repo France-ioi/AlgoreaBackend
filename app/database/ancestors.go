@@ -111,8 +111,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 			`+relationsTable+`.id`+upObjectName+`Child = `+objectName+`_propagate.ID
 		)
 		WHERE
-			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition)
-	insertQueries = append(insertQueries, `
+			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition, `
 		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
 			id`+upObjectName+`Ancestor,
@@ -129,8 +128,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 			`+relationsTable+`.id`+upObjectName+`Parent = `+objectName+`_propagate.ID
 		)
 		WHERE
-			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition)
-	insertQueries = append(insertQueries, `
+			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition, `
 		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
 			id`+upObjectName+`Ancestor,
@@ -167,7 +165,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 				groups_propagate.ID AS idGroupChild,
 				'1' AS bIsSelf
 			FROM groups_propagate
-			WHERE groups_propagate.sAncestorsComputationState = 'processing'`)
+			WHERE groups_propagate.sAncestorsComputationState = 'processing'`) // #nosec
 	}
 
 	insertAncestors := make([]*sql.Stmt, len(insertQueries))
