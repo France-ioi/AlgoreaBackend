@@ -265,7 +265,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 					groupsQueryValues := make([]string, 0, batchSize+teamsNumber)
 					groupsGroupsQuery := "INSERT INTO groups_groups (idGroupParent, idGroupChild, sType) VALUES "
 					groupsGroupsQueryValues := make([]string, 0, batchSize+teamsNumber)
-					groupsAttemptsQuery := "INSERT INTO groups_attempts (idGroup, idItem, sStartDate, iScore, sBestAnswerDate, " +
+					groupsAttemptsQuery := "INSERT INTO groups_attempts (idGroup, idItem, sStartDate, iScore, iMinusScore, sBestAnswerDate, " +
 						"nbHintsCached, nbSubmissionsAttempts, bValidated, sValidationDate) VALUES "
 					groupsAttemptsQueryValues := make([]string, 0, 36*batchSize)
 					teams := make([]int64, teamsNumber)
@@ -302,12 +302,13 @@ func init() { // nolint:gochecknoinits,gocyclo
 						} {
 							attemptsNumber := int(rand.Float32() * 2)
 							for attempt := 0; attempt < attemptsNumber; attempt++ {
+								score := int(rand.Float32() * 101)
 								groupsAttemptsQueryValues = append(groupsAttemptsQueryValues, fmt.Sprintf(
 									"(%d, %d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
 										"%d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
 										"%d, %d, %d, "+
 										"FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))))",
-									attemptGroupID, itemID, int(rand.Float32()*101), int(rand.Float32()*11), int(rand.Float32()*11),
+									attemptGroupID, itemID, score, -score, int(rand.Float32()*11), int(rand.Float32()*11),
 									int(rand.Float32()*2)))
 							}
 						}
