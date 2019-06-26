@@ -33,6 +33,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
 
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
+	router.Get("/groups/{group_id}/progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/requests/accept", service.AppHandler(srv.acceptRequests).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/requests/reject", service.AppHandler(srv.rejectRequests).ServeHTTP)
 
