@@ -27,9 +27,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	groupsAcceptedCondition := ""
 	if objectName == groups {
 		groupsAcceptedCondition = ` AND (
-			groups_groups.sType = 'invitationAccepted' OR
-			groups_groups.sType = 'requestAccepted' OR
-			groups_groups.sType = 'direct'
+			groups_groups.sType IN('invitationAccepted', 'requestAccepted','direct')
 		)`
 	}
 
@@ -95,58 +93,89 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	}
 
 	// For every object marked as 'processing', we compute all its ancestors
-	query = `
-		INSERT IGNORE INTO ` + objectName + `_ancestors
+	insertQueries := make([]string, 0, 4)
+	insertQueries = append(insertQueries, `
+		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
-			id` + upObjectName + `Ancestor,
-			id` + upObjectName + `Child` + `
-			` + bIsSelfColumn + `
+			id`+upObjectName+`Ancestor,
+			id`+upObjectName+`Child`+`
+			`+bIsSelfColumn+`
 		)
 		SELECT
-			` + relationsTable + `.id` + upObjectName + `Parent,
-			` + relationsTable + `.id` + upObjectName + `Child
-			` + bIsSelfValue + `
-		FROM ` + relationsTable + `
-		JOIN ` + objectName + `_propagate
+			`+relationsTable+`.id`+upObjectName+`Parent,
+			`+relationsTable+`.id`+upObjectName+`Child
+			`+bIsSelfValue+`
+		FROM `+relationsTable+`
+		JOIN `+objectName+`_propagate
 		ON (
-			` + relationsTable + `.id` + upObjectName + `Child = ` + objectName + `_propagate.ID OR
-			` + relationsTable + `.id` + upObjectName + `Parent = ` + objectName + `_propagate.ID
+			`+relationsTable+`.id`+upObjectName+`Child = `+objectName+`_propagate.ID
 		)
 		WHERE
-			` + objectName + `_propagate.sAncestorsComputationState = 'processing'` + groupsAcceptedCondition + `
-		UNION ALL
-		SELECT
-			` + objectName + `_ancestors.id` + upObjectName + `Ancestor,
-			` + relationsTable + `_join.id` + upObjectName + `Child
-			` + bIsSelfValue + `
-		FROM ` + objectName + `_ancestors
-		JOIN ` + relationsTable + ` AS ` + relationsTable + `_join ON (
-			` + relationsTable + `_join.id` + upObjectName + `Parent = ` + objectName + `_ancestors.id` + upObjectName + `Child
+			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition)
+	insertQueries = append(insertQueries, `
+		INSERT IGNORE INTO `+objectName+`_ancestors
+		(
+			id`+upObjectName+`Ancestor,
+			id`+upObjectName+`Child`+`
+			`+bIsSelfColumn+`
 		)
-		JOIN ` + objectName + `_propagate ON (
-			` + relationsTable + `_join.id` + upObjectName + `Child = ` + objectName + `_propagate.ID
+		SELECT
+			`+relationsTable+`.id`+upObjectName+`Parent,
+			`+relationsTable+`.id`+upObjectName+`Child
+			`+bIsSelfValue+`
+		FROM `+relationsTable+`
+		JOIN `+objectName+`_propagate
+		ON (
+			`+relationsTable+`.id`+upObjectName+`Parent = `+objectName+`_propagate.ID
+		)
+		WHERE
+			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`+groupsAcceptedCondition)
+	insertQueries = append(insertQueries, `
+		INSERT IGNORE INTO `+objectName+`_ancestors
+		(
+			id`+upObjectName+`Ancestor,
+			id`+upObjectName+`Child`+`
+			`+bIsSelfColumn+`
+		)
+		SELECT
+			`+objectName+`_ancestors.id`+upObjectName+`Ancestor,
+			`+relationsTable+`_join.id`+upObjectName+`Child
+			`+bIsSelfValue+`
+		FROM `+objectName+`_ancestors
+		JOIN `+relationsTable+` AS `+relationsTable+`_join ON (
+			`+relationsTable+`_join.id`+upObjectName+`Parent = `+objectName+`_ancestors.id`+upObjectName+`Child
+		)
+		JOIN `+objectName+`_propagate ON (
+			`+relationsTable+`_join.id`+upObjectName+`Child = `+objectName+`_propagate.ID
 		)
 		WHERE 
-			` + objectName + `_propagate.sAncestorsComputationState = 'processing'` // #nosec
+			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`) // #nosec
 	if objectName == groups {
-		query += `
+		insertQueries[2] += `
 			AND (
-				groups_groups_join.sType = 'invitationAccepted' OR
-				groups_groups_join.sType = 'requestAccepted' OR
-				groups_groups_join.sType = 'direct'
+				groups_groups_join.sType IN('invitationAccepted', 'requestAccepted', 'direct')
+			)`
+		insertQueries = append(insertQueries, `
+			INSERT IGNORE INTO `+objectName+`_ancestors
+			(
+				id`+upObjectName+`Ancestor,
+				id`+upObjectName+`Child`+`
+				`+bIsSelfColumn+`
 			)
-		UNION ALL
-		SELECT
-			` + `groups_propagate.ID AS idGroupAncestor,
-			` + `groups_propagate.ID AS idGroupChild,
-			'1' AS bIsSelf
-		FROM groups_propagate
-		WHERE groups_propagate.sAncestorsComputationState = 'processing'`
+			SELECT
+				groups_propagate.ID AS idGroupAncestor,
+				groups_propagate.ID AS idGroupChild,
+				'1' AS bIsSelf
+			FROM groups_propagate
+			WHERE groups_propagate.sAncestorsComputationState = 'processing'`)
 	}
 
-	insertAncestors, err := s.db.CommonDB().Prepare(query)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(insertAncestors.Close()) }()
+	insertAncestors := make([]*sql.Stmt, len(insertQueries))
+	for i := 0; i < len(insertQueries); i++ {
+		insertAncestors[i], err = s.db.CommonDB().Prepare(insertQueries[i])
+		mustNotBeError(err)
+		defer func(i int) { mustNotBeError(insertAncestors[i].Close()) }(i)
+	}
 
 	// Objects marked as 'processing' are now marked as 'done'
 	query = `
@@ -160,8 +189,10 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	for hasChanges {
 		_, err = markAsProcessing.Exec()
 		mustNotBeError(err)
-		_, err = insertAncestors.Exec()
-		mustNotBeError(err)
+		for i := 0; i < len(insertAncestors); i++ {
+			_, err = insertAncestors[i].Exec()
+			mustNotBeError(err)
+		}
 
 		var result sql.Result
 		result, err = markAsDone.Exec()
