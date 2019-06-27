@@ -56,6 +56,14 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	service.MustNotBeError(srv.Store.ItemItems().Where("idItemParent IN (?)", itemParentIDs).
 		Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemChild", itemsVisibleToUserSubquery).
 		Pluck("items_items.idItemChild", &itemIDs).Error())
+	if len(itemIDs) == 0 {
+		render.Respond(w, r, []map[string]interface{}{})
+		return service.NoError
+	}
+	itemsUnion := srv.Store.Raw("SELECT ? AS ID", itemIDs[0])
+	for i := 1; i < len(itemIDs); i++ {
+		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS ID", itemIDs[i]).QueryExpr())
+	}
 
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
@@ -77,7 +85,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Pluck("group_child.ID", &ancestorGroupIDs).Error())
 
 	var dbResult []map[string]interface{}
-	// It still takes about 4 minutes to complete on large data sets
+	// It still takes about 3 minutes to complete on large data sets
 	service.MustNotBeError(srv.Store.GroupAncestors().
 		Select(`
 			groups_ancestors.idGroupAncestor AS idGroup,
@@ -114,7 +122,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
             idGroupParent IN (SELECT idGroupChild FROM groups_ancestors AS ga WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor)
           LIMIT 1
         ) = 1`).
-		Joins("JOIN items ON items.ID IN (?)", itemIDs).
+		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
 			ON attempt_with_best_score.ID = (
