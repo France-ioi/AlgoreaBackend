@@ -270,9 +270,9 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 20      | 419    | null                  | null                     | 2037-05-29T06:38:38Z    |
     And the database has the following table 'groups_attempts':
       | idGroup | idItem | sStartDate           | iScore | sBestAnswerDate      | nbHintsCached | nbSubmissionsAttempts | bValidated | sValidationDate      |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 0      | 2017-05-29T06:38:38Z | 100           | 100                   | 1          | 2017-05-30T06:38:38Z |
+      | 14      | 211    | 2017-05-29T06:38:38Z | 0      | 2017-05-29T06:38:38Z | 100           | 100                   | 0          | 2017-05-30T06:38:38Z |
       | 14      | 211    | 2017-05-29T06:38:38Z | 40     | 2017-05-29T06:38:38Z | 2             | 3                     | 0          | null                 |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-29T06:38:38Z | 3             | 4                     | 0          | null                 | # nbHintsCached & nbSubmissionsAttempts for 14,211 come from this line
+      | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-29T06:38:38Z | 3             | 4                     | 1          | null                 | # nbHintsCached & nbSubmissionsAttempts for 14,211 come from this line
       | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-30T06:38:38Z | 10            | 20                    | 0          | null                 |
       | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
       | 15      | 212    | 2017-03-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |

@@ -76,98 +76,56 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.ID", &ancestorGroupIDs).Error())
 
-	endMembersStats := srv.Store.
-		Table("groups_attempts AS main_attempts FORCE INDEX(GroupItemMinusScoreBestAnswerDateID)").
+	var dbResult []map[string]interface{}
+	// It still takes about 4 minutes to complete on large data sets
+	service.MustNotBeError(srv.Store.GroupAncestors().
 		Select(`
-			main_attempts.idItem AS idItem,
-			main_attempts.idGroup AS idGroup,
-			IFNULL(MAX(main_attempts.iScore), 0) AS iMaxEndMemberScore,
-			IFNULL(MAX(main_attempts.bValidated), 0) AS bMaxEndMemberValidated,
-			IFNULL(attempt_with_best_score.nbHintsCached, 0) AS nbEndMemberBestScoreHintsCached,
-			IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0) AS nbEndMemberBestScoreSubmissionAttempts,
-			IF(attempt_with_best_score.idGroup IS NULL,
+			groups_ancestors.idGroupAncestor AS idGroup,
+			items.ID AS idItem,
+			AVG(IFNULL(attempt_with_best_score.iScore, 0)) AS iAverageScore,
+			AVG(IFNULL(attempt_with_best_score.bValidated, 0)) AS iValidationRate,
+			AVG(IFNULL(attempt_with_best_score.nbHintsCached, 0)) AS iAvgHintsRequested,
+			AVG(IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0)) AS iAvgSubmissionsAttempts,
+			AVG(IF(attempt_with_best_score.idGroup IS NULL,
 				0,
-				IF(MAX(main_attempts.bValidated),
-					TIMESTAMPDIFF(SECOND, MIN(main_attempts.sStartDate), MIN(main_attempts.sValidationDate)),
-					TIMESTAMPDIFF(SECOND, MIN(main_attempts.sStartDate), NOW())
-				)
-			) AS sEndMemberTimeSpent`).
-		Joins(`
-			JOIN groups_ancestors
-			ON groups_ancestors.idGroupChild = main_attempts.idGroup AND
-				groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor AND
-				groups_ancestors.idGroupAncestor IN (?)`, ancestorGroupIDs). // preliminary filter (makes the query faster)
-		Joins(`JOIN groups ON groups.ID = groups_ancestors.idGroupChild AND groups.sType IN ('UserSelf', 'Team')`).
-		Joins(`
-			JOIN groups_attempts AS attempt_with_best_score
-			ON attempt_with_best_score.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = main_attempts.idGroup AND idItem = main_attempts.idItem
-				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
-			)`).
-		Where("main_attempts.idItem IN (?)", itemIDs). // preliminary filter (makes the query faster)
-		Group("main_attempts.idGroup, main_attempts.idItem")
-
-	endMembers := srv.Store.GroupAncestors().
-		Select("groups_ancestors.idGroupAncestor AS idGroup, end_member.ID AS idEndMember").
+        (
+          SELECT IF(MAX(bValidated),
+            TIMESTAMPDIFF(SECOND, MIN(sStartDate), MIN(sValidationDate)),
+            TIMESTAMPDIFF(SECOND, MIN(sStartDate), NOW())
+          )
+          FROM groups_attempts
+          WHERE idGroup = end_member.ID AND idItem = items.ID
+        )
+      )) AS sAvgTimeSpent`).
 		Joins(`
 			JOIN groups AS end_member
-			ON end_member.ID = groups_ancestors.idGroupChild AND end_member.sType IN ('UserSelf', 'Team')`).
-		// The team users filtering starts here (is not well specified yet)
-		Joins(`
-			LEFT JOIN groups_groups AS team_link
 			ON
-				end_member.ID IS NOT NULL AND
-				end_member.sType != 'Team' AND
-				team_link.idGroupChild = end_member.ID AND
-				team_link.sType IN('invitationAccepted','requestAccepted','direct')`).
+				end_member.ID = groups_ancestors.idGroupChild AND
+				end_member.sType IN ('UserSelf', 'Team')`).
 		Joins(`
-			LEFT JOIN groups_ancestors AS team_ancestor_check
-			ON team_ancestor_check.idGroupChild = team_link.idGroupParent AND
-				team_ancestor_check.idGroupAncestor = groups_ancestors.idGroupAncestor`).
-		Joins("LEFT JOIN groups AS team ON team.ID = team_ancestor_check.idGroupChild AND team.sType = 'Team'").
+			JOIN (SELECT 1 as bKeepUser) AS keep_user
+        ON end_member.sType = 'Team' OR (
+          SELECT 1
+          FROM groups_groups
+          JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType != 'Team'
+          WHERE
+            idGroupChild = end_member.ID AND
+            groups_groups.sType IN('invitationAccepted','requestAccepted','direct') AND
+            idGroupParent IN (SELECT idGroupChild FROM groups_ancestors AS ga WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor)
+          LIMIT 1
+        ) = 1`).
+		Joins("JOIN items ON items.ID IN (?)", itemIDs).
 		Joins(`
-			LEFT JOIN (SELECT 1 as bHasOtherParents) AS other_parents
-			ON team.ID IS NOT NULL AND (
-				SELECT 1
-				FROM groups_groups
-				WHERE idGroupChild = end_member.ID AND
-					idGroupParent != team.ID AND
-					idGroupParent IN (SELECT idGroupChild FROM groups_ancestors AS ga WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor)
-				LIMIT 1
-			) = 1`).
-		// The team users filtering ends here
-		Where("groups_ancestors.idGroupAncestor IN (?)", ancestorGroupIDs). // preliminary filter (makes the query faster)
-		Where("groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild").
-		Group("groups_ancestors.idGroupAncestor, end_member.ID").
-		// The team users filtering (is not well specified yet)
-		Having("MIN(end_member.sType = 'Team' OR (team.ID IS NULL OR (team.ID IS NOT NULL AND other_parents.bHasOtherParents)))")
-
-	// We want to keep groups that don't have end members
-	groupsEndMembers := srv.Store.Groups().
-		Select("groups.ID AS idGroup, end_member.idEndMember AS idEndMember").
-		Joins(`
-			LEFT JOIN ? AS end_member
-			ON end_member.idGroup = groups.ID`, endMembers.SubQuery()).
-		Where("groups.ID IN (?)", ancestorGroupIDs)
-
-	var dbResult []map[string]interface{}
-	service.MustNotBeError(srv.Store.Raw(`
-		SELECT
-			groups_end_members.idGroup AS idGroup,
-			items.ID AS idItem,
-			AVG(IFNULL(end_members_stats.iMaxEndMemberScore, 0)) AS iAverageScore,
-			AVG(IFNULL(end_members_stats.bMaxEndMemberValidated, 0)) AS iValidationRate,
-			AVG(IFNULL(end_members_stats.nbEndMemberBestScoreHintsCached, 0)) AS iAvgHintsRequested,
-			AVG(IFNULL(end_members_stats.nbEndMemberBestScoreSubmissionAttempts, 0)) AS iAvgSubmissionsAttempts,
-			AVG(IFNULL(end_members_stats.sEndMemberTimeSpent, 0)) AS sAvgTimeSpent
-		FROM ? AS groups_end_members
-		JOIN items FORCE INDEX(PRIMARY) ON items.ID IN (?)
-		LEFT JOIN ? AS end_members_stats
-			ON end_members_stats.idGroup = groups_end_members.idEndMember AND end_members_stats.idItem = items.ID
-		`, groupsEndMembers.SubQuery(), itemIDs, endMembersStats.SubQuery()).
-		Group("groups_end_members.idGroup, items.ID").
-		Order("groups_end_members.idGroup, items.ID").
+			LEFT JOIN groups_attempts AS attempt_with_best_score
+			ON attempt_with_best_score.ID = (
+				SELECT ID FROM groups_attempts
+				WHERE idGroup = end_member.ID AND idItem = items.ID
+				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
+			)`).
+		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor").
+		Where("groups_ancestors.idGroupAncestor IN (?)", ancestorGroupIDs).
+		Group("groups_ancestors.idGroupAncestor, items.ID").
+		Order("groups_ancestors.idGroupAncestor, items.ID").
 		ScanIntoSliceOfMaps(&dbResult).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
 	render.Respond(w, r, convertedResult)
