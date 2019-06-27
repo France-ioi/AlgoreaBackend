@@ -297,7 +297,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
 
   Scenario: The user is an owner of the group
     Given I am the user with ID "1"
-    When I send a GET request to "/groups/1/progress?parent_item_ids=210,220,310"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
