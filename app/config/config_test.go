@@ -31,8 +31,7 @@ func TestLoadConfig(t *testing.T) {
 	configDir = tmpDir
 
 	_ = os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
-	conf, err := Load()
-	assert.NoError(err)
+	conf := Load()
 
 	// test config override
 	assert.EqualValues(1234, conf.Server.Port)
@@ -47,9 +46,9 @@ func TestLoadConfig(t *testing.T) {
 func TestLoadConfig_Concurrent(t *testing.T) {
 	assert := assertlib.New(t)
 	assert.NotPanics(func() {
-		_, _ = Load()
+		Load()
 		for i := 0; i < 1000; i++ {
-			go func() { _, _ = Load() }()
+			go func() { Load() }()
 		}
 	})
 }

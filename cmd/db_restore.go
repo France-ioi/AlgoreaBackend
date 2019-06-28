@@ -22,12 +22,7 @@ func init() { // nolint:gochecknoinits
 			var err error
 
 			// load config
-			var conf *config.Root
-			conf, err = config.Load()
-			if err != nil {
-				fmt.Println("Unable to load config: ", err)
-				os.Exit(1)
-			}
+			conf := config.Load()
 
 			// open DB
 			var db *sql.DB
