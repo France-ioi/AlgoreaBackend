@@ -27,7 +27,7 @@ func init() { // nolint:gochecknoinits
 			if err != nil {
 				log.Fatal(err)
 			}
-			server.Start()
+			<-server.Start()
 		},
 	}
 
