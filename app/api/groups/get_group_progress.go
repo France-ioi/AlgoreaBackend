@@ -119,7 +119,12 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
           WHERE
             idGroupChild = end_member.ID AND
             groups_groups.sType IN('invitationAccepted','requestAccepted','direct') AND
-            idGroupParent IN (SELECT idGroupChild FROM groups_ancestors AS ga WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor)
+            idGroupParent IN (
+							SELECT idGroupChild
+							FROM groups_ancestors AS ga
+							-- bIsSelf is good here since a user can be a direct member of the input group
+							WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor
+						)
           LIMIT 1
         ) = 1`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
