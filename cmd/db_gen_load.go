@@ -248,6 +248,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 			db.Exec("ALTER TABLE groups_attempts DROP INDEX GroupItemMinusScoreBestAnswerDateID")
 
 			limiter := make(chan bool, 5)
+			barrier := make(chan bool, 100)
 			done := make(chan bool)
 			store := database.NewDataStore(db)
 
@@ -256,7 +257,8 @@ func init() { // nolint:gochecknoinits,gocyclo
 			// generate 500k students and their attempts
 			for i := 0; i < usersNumber/batchSize; i++ {
 				go func(i int) {
-					<-limiter
+					limiter <- true
+					barrier <- true
 					//			usersQuery := "INSERT INTO users (ID, sLogin, idGroupSelf, idGroupOwned) VALUES "
 					//			usersQueryValues := make([]string, 0, 100)
 
@@ -325,24 +327,20 @@ func init() { // nolint:gochecknoinits,gocyclo
 					done <- true
 				}(i)
 			}
-			for i := 0; i < 5; i++ {
-				limiter <- true
-			}
-			for i := 0; i < usersNumber/batchSize/5; i++ {
-				for k := 0; k < 5; k++ {
-					<-done
-				}
-				if i != 0 && i%100 == 0 {
+			for i := 0; i < usersNumber/batchSize; i++ {
+				<-done
+				if i%100 == 99 {
 					// run store.GroupsGroups().createNewAncestors()
 					if err := store.InTransaction(func(txStore *database.DataStore) error {
 						return txStore.GroupGroups().DeleteRelation(1, 2, true)
 					}); err != nil {
 						panic(err)
 					}
+					for k := 0; k < 100; k++ {
+						<-barrier
+					}
 				}
-				for k := 0; k < 5; k++ {
-					limiter <- true
-				}
+				<-limiter
 			}
 			// run store.GroupsGroups().createNewAncestors()
 			if err := store.InTransaction(func(txStore *database.DataStore) error {
