@@ -19,10 +19,11 @@ func init() { // nolint:gochecknoinits
 		Short: "start http server",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			const devEnvironment = "dev"
 			var err error
 
 			var application *app.Application
-			environment := "dev"
+			environment := devEnvironment
 			if len(args) == 1 {
 				environment = args[0]
 			}
@@ -32,7 +33,7 @@ func init() { // nolint:gochecknoinits
 				log.Fatal(err)
 			}
 
-			if environment == "dev" {
+			if environment == devEnvironment {
 				backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)
