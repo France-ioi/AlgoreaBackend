@@ -244,7 +244,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 					panic(err)
 				}
 			}
-			fmt.Print("\nRemoving the groups_attempts.GroupItemMinusScoreBestAnswerDateID index. You will have to restore it manually!")
+			fmt.Print("\nRemoving the groups_attempts.GroupItemMinusScoreBestAnswerDateID index")
 			db.Exec("ALTER TABLE groups_attempts DROP INDEX GroupItemMinusScoreBestAnswerDateID")
 
 			limiter := make(chan bool, 5)
@@ -350,6 +350,9 @@ func init() { // nolint:gochecknoinits,gocyclo
 			}); err != nil {
 				panic(err)
 			}
+
+			fmt.Println("\nRestoring the groups_attempts.GroupItemMinusScoreBestAnswerDateID index")
+			db.Exec("ALTER TABLE groups_attempts ADD INDEX GroupItemMinusScoreBestAnswerDateID (idGroup, idItem, iMinusScore, sBestAnswerDate)")
 
 			// Success
 			fmt.Println("\nDONE")
