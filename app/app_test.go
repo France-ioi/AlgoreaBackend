@@ -20,7 +20,7 @@ import (
 
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	app, err := New()
+	app, err := New("test")
 	assert.NotNil(app)
 	assert.NoError(err)
 	assert.NotNil(app.Config)
@@ -32,11 +32,11 @@ func TestNew_Success(t *testing.T) {
 
 func TestNew_ConfigErr(t *testing.T) {
 	assert := assertlib.New(t)
-	patch := monkey.Patch(config.Load, func() (*config.Root, error) {
+	patch := monkey.Patch(config.Load, func(string) (*config.Root, error) {
 		return nil, errors.New("config loading error")
 	})
 	defer patch.Unpatch()
-	app, err := New()
+	app, err := New("test")
 	assert.Nil(app)
 	assert.EqualError(err, "config loading error")
 }
@@ -49,7 +49,7 @@ func TestNew_DBErr(t *testing.T) {
 		return nil, errors.New("db opening error")
 	})
 	defer patch.Unpatch()
-	app, err := New()
+	app, err := New("test")
 	assert.NotNil(app)
 	assert.NoError(err)
 	logMsg := hook.LastEntry()
@@ -65,7 +65,7 @@ func TestNew_APIErr(t *testing.T) {
 			return nil, errors.New("api creation error")
 		})
 	defer patch.Unpatch()
-	app, err := New()
+	app, err := New("test")
 	assert.Nil(app)
 	assert.EqualError(err, "api creation error")
 }
@@ -76,7 +76,7 @@ func TestNew_TokenErr(t *testing.T) {
 		return nil, errors.New("keys loading error")
 	})
 	defer patch.Unpatch()
-	app, err := New()
+	app, err := New("test")
 	assert.Nil(app)
 	assert.EqualError(err, "keys loading error")
 }
@@ -88,7 +88,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
-	app, _ := New()
+	app, _ := New("test")
 	router := app.HTTPHandler
 	router.Get("/dummy", func(http.ResponseWriter, *http.Request) {
 		panic("error in service")
@@ -122,7 +122,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
-	app, _ := New()
+	app, _ := New("test")
 	router := app.HTTPHandler
 	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

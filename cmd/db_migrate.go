@@ -15,15 +15,16 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var migrateCmd = &cobra.Command{
-		Use:   "db-migrate",
+		Use:   "db-migrate <environment>",
 		Short: "apply schema-change migrations to the database",
+		Args:  cobra.ExactArgs(1),
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 
 			// load config
 			var conf *config.Root
-			conf, err = config.Load()
+			conf, err = config.Load(args[0])
 			if err != nil {
 				fmt.Println("Unable to load config: ", err)
 				os.Exit(1)

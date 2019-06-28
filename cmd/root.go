@@ -16,11 +16,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		var err error
-
-		var application *app.Application
-		application, err = app.New()
+		application, err := app.New("prod")
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -11,13 +11,19 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var serveCmd = &cobra.Command{
-		Use:   "serve",
+		Use:   "serve [environment]",
 		Short: "start http server",
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 
 			var application *app.Application
-			application, err = app.New()
+			environment := "dev"
+			if len(args) == 1 {
+				environment = args[0]
+			}
+
+			application, err = app.New(environment)
 			if err != nil {
 				log.Fatal(err)
 			}

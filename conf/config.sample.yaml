@@ -11,7 +11,6 @@ database:
     passwd: a_db_password
     addr: localhost
     dbname: algorea_db
-    allownativepasswords: true
     parseTime: true # required for the migration system
 logging:
   format: text # text, json

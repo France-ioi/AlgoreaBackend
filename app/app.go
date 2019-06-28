@@ -24,11 +24,11 @@ type Application struct {
 }
 
 // New configures application resources and routes.
-func New() (*Application, error) {
+func New(environment string) (*Application, error) {
 	var err error
 
 	var conf *config.Root
-	if conf, err = config.Load(); err != nil {
+	if conf, err = config.Load(environment); err != nil {
 		return nil, err
 	}
 
