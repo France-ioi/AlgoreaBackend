@@ -2,19 +2,12 @@ package database
 
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
 func (conn *DB) WhereItemsAreVisible(user *User) *DB {
-	groupItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().
-		MatchingUserAncestors(user).
-		Select("idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
-			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, " +
-			"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, " +
-			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions").
-		Group("idItem")
+	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().AccessRightsForItemsVisibleToUser(user)
 
-	if groupItemsPerms.Error() != nil {
-		return groupItemsPerms
+	if visibleItemsPerms.Error() != nil {
+		return visibleItemsPerms
 	}
-	return conn.Joins("JOIN ? as visible ON visible.idItem = items.ID", groupItemsPerms.SubQuery()).
-		Where("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+	return conn.Joins("JOIN ? as visible ON visible.idItem = items.ID", visibleItemsPerms.SubQuery())
 }
 
 // JoinsUserAndDefaultItemStrings joins items_strings with the given view twice

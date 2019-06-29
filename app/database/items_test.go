@@ -39,9 +39,10 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 		"SELECT `items`.* FROM `items` JOIN (SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
 			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, "+
 			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions "+
-			"FROM `groups_items` JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
-			"ON groups_items.idGroup = ancestors.idGroupAncestor GROUP BY idItem) as visible ON visible.idItem = items.ID "+
-			"WHERE (fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0)") + "$").
+			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
+			"ON ancestors.idGroupAncestor = groups_items.idGroup GROUP BY groups_items.idItem "+
+			"HAVING (fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0)) "+
+			"as visible ON visible.idItem = items.ID") + "$").
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 

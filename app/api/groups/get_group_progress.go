@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -26,12 +25,6 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	userSelfGroupID, err := user.SelfGroupID()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
-
 	var found bool
 	found, err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
 	service.MustNotBeError(err)
@@ -39,22 +32,13 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.InsufficientAccessRightsError
 	}
 
-	itemsVisibleToUserSubquery := srv.Store.GroupItems().
-		Select(
-			"idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
-				"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, "+
-				"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
-		Joins(`
-			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors
-			ON ancestors.idGroupAncestor = groups_items.idGroup`, userSelfGroupID).
-		Group("groups_items.idItem").
-		Having("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0").SubQuery()
+	itemsVisibleToUserSubQuery := srv.Store.GroupItems().AccessRightsForItemsVisibleToUser(user).SubQuery()
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
 	var itemIDs []int64
 	service.MustNotBeError(srv.Store.ItemItems().Where("idItemParent IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemChild", itemsVisibleToUserSubquery).
+		Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemChild", itemsVisibleToUserSubQuery).
 		Pluck("items_items.idItemChild", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
