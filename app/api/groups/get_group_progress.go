@@ -64,7 +64,9 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	if apiError != service.NoError {
 		return apiError
 	}
-	ancestorGroupIDQuery = service.SetQueryLimit(r, ancestorGroupIDQuery, 10, 20)
+	ancestorGroupIDQuery = service.NewQueryLimiter().
+		SetDefaultLimit(10).SetMaxAllowedLimit(20).
+		Apply(r, ancestorGroupIDQuery)
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.ID", &ancestorGroupIDs).Error())
 

@@ -40,7 +40,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query = srv.filterByValidated(r, query)
 
 	query, apiError := service.ApplySortingAndPaging(r, query,

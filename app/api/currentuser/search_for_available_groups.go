@@ -52,7 +52,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 		Where("groups.ID NOT IN ?", skipGroups).
 		Where("groups.sName LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"id": {ColumnName: "groups.ID", FieldType: "int64"}},

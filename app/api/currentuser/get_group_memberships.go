@@ -31,7 +31,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
 		Where("groups_groups.idGroupChild = ?", selfGroupID)
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"status_date": {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},

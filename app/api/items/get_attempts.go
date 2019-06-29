@@ -20,7 +20,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 			groups_attempts.ID, groups_attempts.iOrder, groups_attempts.iScore, groups_attempts.bValidated,
 			groups_attempts.sStartDate, creators.sLogin AS userCreator__sLogin,
 			creators.sFirstName AS userCreator__sFirstName, creators.sLastName AS userCreator__sLastName`)
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"order": {ColumnName: "groups_attempts.iOrder", FieldType: "int64"},
 	}, "order")
