@@ -1,6 +1,6 @@
 package tokentest
 
-import "gopkg.in/jose.v1/crypto"
+import "github.com/SermoDigital/jose/crypto"
 
 // AlgoreaPlatformPublicKey represents a sample public key used to decode
 // AlgoreaPlatform tokens in tests

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"bou.ke/monkey"
+	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jose.v1/crypto"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
