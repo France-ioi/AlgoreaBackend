@@ -278,6 +278,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-30T06:38:38Z | 10            | 20                    | 0          | null                 |
       | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
       | 15      | 212    | 2017-03-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
+      | 59      | 212    | 2019-01-01T00:00:00Z | 10     | null                 | 0             | 0                     | 0          | null                 |
       | 14      | 211    | 2017-05-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
       | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
       | 15      | 212    | 2017-03-29T06:38:38Z | 100    | null                 | 0             | 0                     | 1          | null                 |
@@ -299,6 +300,8 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
 
   Scenario: The user is an owner of the group
     Given I am the user with ID "1"
+    # here we fixate avg_time_spent even if it depends on NOW()
+    And the DB time now is "2019-05-30T20:19:05Z"
     When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -314,10 +317,10 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "validation_rate": "0.5000"
       },
       {
-        "average_score": 0,
+        "average_score": 5,
         "avg_hints_requested": "0.0000",
         "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_time_spent": "6473372.5000",
         "group_id": "11",
         "item_id": "212",
         "validation_rate": "0.0000"
