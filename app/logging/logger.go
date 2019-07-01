@@ -80,6 +80,5 @@ func ResetShared() {
 }
 
 func new() *Logger {
-	logger := logrus.New()
-	return &Logger{logger, nil}
+	return &Logger{logrus.New(), nil}
 }
