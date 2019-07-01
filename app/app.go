@@ -27,10 +27,7 @@ type Application struct {
 func New() (*Application, error) {
 	var err error
 
-	var conf *config.Root
-	if conf, err = config.Load(); err != nil {
-		return nil, err
-	}
+	conf := config.Load() // exits on errors
 
 	// Apply the config to the global logger
 	log.SharedLogger.Configure(conf.Logging)
