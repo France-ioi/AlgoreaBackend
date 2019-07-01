@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/jose.v1/crypto"
 
 	"github.com/France-ioi/AlgoreaBackend/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/CloudyKit/jet"
-	"gopkg.in/jose.v1/crypto"
+	"github.com/SermoDigital/jose/crypto"
 
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
