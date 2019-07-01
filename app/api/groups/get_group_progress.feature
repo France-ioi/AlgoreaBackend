@@ -309,138 +309,138 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     [
       {
         "average_score": 25,
-        "avg_hints_requested": "1.5000",
-        "avg_submissions_attempts": "2.0000",
-        "avg_time_spent": "43200.0000",
+        "avg_hints_requested": 1.5,
+        "avg_submissions_attempts": 2,
+        "avg_time_spent": 43200,
         "group_id": "11",
         "item_id": "211",
-        "validation_rate": "0.5000"
+        "validation_rate": 0.5
       },
       {
         "average_score": 5,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "6473372.5000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 6473372.5,
         "group_id": "11",
         "item_id": "212",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "213",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "214",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "215",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "221",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "222",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "223",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "224",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "225",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "311",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "312",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "313",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "314",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       },
       {
         "average_score": 0,
-        "avg_hints_requested": "0.0000",
-        "avg_submissions_attempts": "0.0000",
-        "avg_time_spent": "0.0000",
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "315",
-        "validation_rate": "0.0000"
+        "validation_rate": 0
       }
     ]
     """

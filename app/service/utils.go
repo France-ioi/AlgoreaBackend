@@ -182,9 +182,7 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 	case "b":
 		value = value == int64(1)
 	case "i":
-		if _, ok := value.(int64); ok {
-			value = int32(value.(int64))
-		}
+		value = parseINumber(value)
 	}
 	if map[string]bool{"nb": true, "b": true, "i": true, "s": true}[prefix] {
 		snakeCaseName = snakeCaseName[underscoreIndex+1:]
@@ -195,6 +193,20 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 	}
 
 	result[snakeCaseName] = value
+}
+
+func parseINumber(value interface{}) interface{} {
+	switch typedValue := value.(type) {
+	case int64:
+		value = int32(typedValue)
+	case string:
+		if parsed, err := strconv.ParseInt(typedValue, 10, 32); err == nil {
+			value = int32(parsed)
+		} else if parsed, err := strconv.ParseFloat(typedValue, 64); err == nil {
+			value = float32(parsed)
+		}
+	}
+	return value
 }
 
 // toSnakeCase convert the given string to snake case following the Golang format:

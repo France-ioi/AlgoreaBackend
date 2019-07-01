@@ -83,7 +83,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 					FROM groups_attempts
 					WHERE idGroup = end_member.ID AND idItem = items.ID
 				)
-			)) AS sAvgTimeSpent`).
+			)) AS iAvgTimeSpent`).
 		Joins(`
 			JOIN groups AS end_member
 			ON

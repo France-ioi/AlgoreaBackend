@@ -370,6 +370,34 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"grade":            int32(-1),
 			}},
 		},
+		{
+			"converts int64 into string",
+			[]map[string]interface{}{{
+				"int64":             int64(123),
+				"int32":             int32(1234),
+				"nbCorrectionsRead": int64(12345),
+				"iGrade":            int64(-1),
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"int_64":           "123",
+				"int_32":           int32(1234),
+				"corrections_read": int32(12345),
+				"grade":            int32(-1),
+			}},
+		},
+		{
+			"converts strings into float32 or int32 for i-prefixed fields",
+			[]map[string]interface{}{{
+				"iNumber":   "123",
+				"iAvgScore": "1.500",
+				"iPi":       "3.1415926535897932384626433",
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"number":    int32(123),
+				"avg_score": float32(1.5),
+				"pi":        float32(3.1415927),
+			}},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
