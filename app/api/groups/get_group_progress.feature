@@ -51,6 +51,8 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType              |
       | 1             | 11           | direct             |
+      | 1             | 14           | direct             | # direct child of group_id with sType = 'Team' (ignored)
+      | 1             | 51           | direct             | # direct child of group_id with sType = 'UserSelf' (ignored)
       | 3             | 13           | direct             |
       | 11            | 14           | direct             |
       | 11            | 17           | direct             |
@@ -437,5 +439,15 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
         "item_id": "315",
         "validation_rate": "0.0000"
       }
+    ]
+    """
+
+  Scenario: No visible items
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids=1010"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
     ]
     """
