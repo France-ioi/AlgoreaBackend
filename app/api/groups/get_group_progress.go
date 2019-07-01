@@ -2,8 +2,10 @@ package groups
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -29,9 +31,10 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them
-	var itemIDs []int64
+	var itemIDs []interface{}
 	service.MustNotBeError(srv.Store.ItemItems().Where("idItemParent IN (?)", itemParentIDs).
 		Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemChild", itemsVisibleToUserSubQuery).
+		Order("items_items.idItemChild").
 		Pluck("items_items.idItemChild", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
@@ -45,15 +48,17 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
 	// There should not be too many of groups because we paginate on them.
-	var ancestorGroupIDs []int64
+	var ancestorGroupIDs []interface{}
 	ancestorGroupIDQuery := srv.Store.GroupGroups().
 		Where("groups_groups.idGroupParent = ?", groupID).
 		Joins(`
 			JOIN groups AS group_child
 			ON group_child.ID = groups_groups.idGroupChild AND group_child.sType NOT IN('Team', 'UserSelf')`)
 	ancestorGroupIDQuery, apiError := service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
-		"id": {ColumnName: "group_child.ID", FieldType: "int64"},
-	}, "id")
+		// Note that we require the 'from.name' request parameter although the service does not return group names
+		"name": {ColumnName: "group_child.sName", FieldType: "string"},
+		"id":   {ColumnName: "group_child.ID", FieldType: "int64"},
+	}, "name,id")
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -62,6 +67,10 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Apply(r, ancestorGroupIDQuery)
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.ID", &ancestorGroupIDs).Error())
+	if len(ancestorGroupIDs) == 0 {
+		render.Respond(w, r, []map[string]interface{}{})
+		return service.NoError
+	}
 
 	var dbResult []map[string]interface{}
 	// It still takes about 3 minutes to complete on large data sets
@@ -117,7 +126,12 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor").
 		Where("groups_ancestors.idGroupAncestor IN (?)", ancestorGroupIDs).
 		Group("groups_ancestors.idGroupAncestor, items.ID").
-		Order("groups_ancestors.idGroupAncestor, items.ID").
+		Order(gorm.Expr(
+			"FIELD(groups_ancestors.idGroupAncestor"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
+			ancestorGroupIDs...)).
+		Order(gorm.Expr(
+			"FIELD(items.ID"+strings.Repeat(", ?", len(itemIDs))+")",
+			itemIDs...)).
 		ScanIntoSliceOfMaps(&dbResult).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
 	render.Respond(w, r, convertedResult)

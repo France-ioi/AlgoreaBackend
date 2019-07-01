@@ -14,44 +14,45 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 19 | janed  | 67          | 68           |
       | 20 | janee  | 69          | 70           |
     And the database has the following table 'groups':
-      | ID | sType     |
-      | 1  | Root      |
-      | 3  | Root      |
-      | 11 | Class     |
-      | 12 | Class     |
-      | 13 | Class     |
-      | 14 | Team      |
-      | 15 | Team      |
-      | 16 | Team      |
-      | 17 | Other     |
-      | 18 | Club      |
-      | 20 | Friends   |
-      | 21 | UserSelf  |
-      | 51 | UserSelf  |
-      | 53 | UserSelf  |
-      | 55 | UserSelf  |
-      | 57 | UserSelf  |
-      | 59 | UserSelf  |
-      | 61 | UserSelf  |
-      | 63 | UserSelf  |
-      | 65 | UserSelf  |
-      | 67 | UserSelf  |
-      | 69 | UserSelf  |
-      | 22 | UserAdmin |
-      | 52 | UserAdmin |
-      | 54 | UserAdmin |
-      | 56 | UserAdmin |
-      | 58 | UserAdmin |
-      | 60 | UserAdmin |
-      | 62 | UserAdmin |
-      | 64 | UserAdmin |
-      | 66 | UserAdmin |
-      | 68 | UserAdmin |
-      | 70 | UserAdmin |
+      | ID | sType     | sName          |
+      | 1  | Root      | Root 1         |
+      | 3  | Root      | Root 2         |
+      | 11 | Class     | Our Class      |
+      | 12 | Class     | Other Class    |
+      | 13 | Class     | Special Class  |
+      | 14 | Team      | Super Team     |
+      | 15 | Team      | Our Team       |
+      | 16 | Team      | First Team     |
+      | 17 | Other     | A custom group |
+      | 18 | Club      | Our Club       |
+      | 20 | Friends   | My Friends     |
+      | 21 | UserSelf  | owner          |
+      | 51 | UserSelf  | johna          |
+      | 53 | UserSelf  | johnb          |
+      | 55 | UserSelf  | johnc          |
+      | 57 | UserSelf  | johnd          |
+      | 59 | UserSelf  | johne          |
+      | 61 | UserSelf  | janea          |
+      | 63 | UserSelf  | janeb          |
+      | 65 | UserSelf  | janec          |
+      | 67 | UserSelf  | janed          |
+      | 69 | UserSelf  | janee          |
+      | 22 | UserAdmin | owner-admin    |
+      | 52 | UserAdmin | johna-admin    |
+      | 54 | UserAdmin | johnb-admin    |
+      | 56 | UserAdmin | johnc-admin    |
+      | 58 | UserAdmin | johnd-admin    |
+      | 60 | UserAdmin | johne-admin    |
+      | 62 | UserAdmin | janea-admin    |
+      | 64 | UserAdmin | janeb-admin    |
+      | 66 | UserAdmin | janec-admin    |
+      | 68 | UserAdmin | janed-admin    |
+      | 70 | UserAdmin | janee-admin    |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType              |
       | 1             | 11           | direct             |
       | 1             | 14           | direct             | # direct child of group_id with sType = 'Team' (ignored)
+      | 1             | 17           | direct             |
       | 1             | 51           | direct             | # direct child of group_id with sType = 'UserSelf' (ignored)
       | 3             | 13           | direct             |
       | 11            | 14           | direct             |
@@ -76,6 +77,9 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 16            | 63           | direct             |
       | 16            | 65           | requestAccepted    |
       | 16            | 67           | invitationAccepted |
+      | 17            | 14           | direct             |
+      | 17            | 18           | direct             |
+      | 17            | 59           | requestAccepted    |
       | 20            | 21           | direct             |
       | 22            | 1            | direct             |
       | 22            | 3            | direct             |
@@ -125,10 +129,18 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 16              | 63           | 0       |
       | 16              | 65           | 0       |
       | 16              | 67           | 0       |
+      | 17              | 14           | 0       |
+      | 17              | 17           | 1       |
+      | 17              | 18           | 0       |
+      | 17              | 51           | 0       |
+      | 17              | 53           | 0       |
+      | 17              | 55           | 0       |
+      | 17              | 59           | 0       |
       | 20              | 20           | 1       |
       | 20              | 21           | 0       |
       | 21              | 21           | 1       |
       | 22              | 1            | 0       |
+      | 22              | 3            | 0       |
       | 22              | 11           | 0       |
       | 22              | 12           | 0       |
       | 22              | 13           | 0       |
@@ -298,11 +310,442 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
       | 15      | 212    | 2017-03-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 |
 
-  Scenario: The user is an owner of the group
+  Scenario: Get progress of groups
     Given I am the user with ID "1"
     # here we fixate avg_time_spent even if it depends on NOW()
     And the DB time now is "2019-05-30T20:19:05Z"
     When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "average_score": 25,
+        "avg_hints_requested": 1.5,
+        "avg_submissions_attempts": 2,
+        "avg_time_spent": 43200,
+        "group_id": "17",
+        "item_id": "211",
+        "validation_rate": 0.5
+      },
+      {
+        "average_score": 5,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 6473372.5,
+        "group_id": "17",
+        "item_id": "212",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "213",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "214",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "215",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "221",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "222",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "223",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "224",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "311",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "312",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "313",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "314",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "315",
+        "validation_rate": 0
+      },
+
+
+      {
+        "average_score": 25,
+        "avg_hints_requested": 1.5,
+        "avg_submissions_attempts": 2,
+        "avg_time_spent": 43200,
+        "group_id": "11",
+        "item_id": "211",
+        "validation_rate": 0.5
+      },
+      {
+        "average_score": 5,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 6473372.5,
+        "group_id": "11",
+        "item_id": "212",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "213",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "214",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "215",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "221",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "222",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "223",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "224",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "311",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "312",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "313",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "314",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "11",
+        "item_id": "315",
+        "validation_rate": 0
+      }
+    ]
+    """
+
+  Scenario: Get progress of the first group
+    Given I am the user with ID "1"
+    # here we fixate avg_time_spent even if it depends on NOW()
+    And the DB time now is "2019-05-30T20:19:05Z"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "average_score": 25,
+        "avg_hints_requested": 1.5,
+        "avg_submissions_attempts": 2,
+        "avg_time_spent": 43200,
+        "group_id": "17",
+        "item_id": "211",
+        "validation_rate": 0.5
+      },
+      {
+        "average_score": 5,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 6473372.5,
+        "group_id": "17",
+        "item_id": "212",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "213",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "214",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "215",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "221",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "222",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "223",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "224",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "225",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "311",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "312",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "313",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "314",
+        "validation_rate": 0
+      },
+      {
+        "average_score": 0,
+        "avg_hints_requested": 0,
+        "avg_submissions_attempts": 0,
+        "avg_time_spent": 0,
+        "group_id": "17",
+        "item_id": "315",
+        "validation_rate": 0
+      }
+    ]
+    """
+
+  Scenario: Get progress of groups skipping the first row
+    Given I am the user with ID "1"
+    # here we fixate avg_time_spent even if it depends on NOW()
+    And the DB time now is "2019-05-30T20:19:05Z"
+    When I send a GET request to "/groups/1/group-progress?parent_item_ids=210,220,310&from.name=A%20custom%20group&from.id=17"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -448,6 +891,18 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
   Scenario: No visible items
     Given I am the user with ID "1"
     When I send a GET request to "/groups/1/group-progress?parent_item_ids=1010"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
+
+  Scenario: No groups
+    Given I am the user with ID "1"
+    # here we fixate avg_time_spent even if it depends on NOW()
+    And the DB time now is "2019-05-30T20:19:05Z"
+    When I send a GET request to "/groups/13/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
