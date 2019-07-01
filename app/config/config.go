@@ -70,7 +70,7 @@ var (
 // 4) config file
 // 5) key/value store
 // 6) default
-func Load(environment string) (*Root, error) {
+func Load(environment string) *Root {
 	var err error
 
 	var config *Root
@@ -98,10 +98,9 @@ func Load(environment string) (*Root, error) {
 	// map the given config to a static struct
 	if err = viperConfig.UnmarshalExact(&config); err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
-		return nil, err
 	}
 
-	return config, nil
+	return config
 }
 
 func setDefaults(c *viper.Viper) {

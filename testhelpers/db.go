@@ -19,10 +19,9 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 func init() { // nolint:gochecknoinits
-	if conf, err := config.Load("test"); err == nil {
-		// Apply the config to the global logger
-		logging.SharedLogger.Configure(conf.Logging)
-	}
+	conf := config.Load("test")
+	// Apply the config to the global logger
+	logging.SharedLogger.Configure(conf.Logging)
 }
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
@@ -76,12 +75,8 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 // OpenRawDBConnection creates a new connection to the DB specified in the config
 func OpenRawDBConnection() (*sql.DB, error) {
 	// needs actual config for connection to DB
-	conf, err := config.Load("test")
-	if err != nil {
-		panic(err)
-	}
-	var rawDb *sql.DB
-	rawDb, err = database.OpenRawDBConnection(conf.Database.Connection.FormatDSN())
+	conf := config.Load("test")
+	rawDb, err := database.OpenRawDBConnection(conf.Database.Connection.FormatDSN())
 	if err != nil {
 		panic(err)
 	}
@@ -201,10 +196,6 @@ func emptyDB(db *sql.DB, dbName string) {
 
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
-	conf, err := config.Load("test")
-	if err != nil {
-		panic(err)
-	}
-
+	conf := config.Load("test")
 	emptyDB(db, conf.Database.Connection.DBName)
 }

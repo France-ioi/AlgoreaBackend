@@ -30,17 +30,6 @@ func TestNew_Success(t *testing.T) {
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 }
 
-func TestNew_ConfigErr(t *testing.T) {
-	assert := assertlib.New(t)
-	patch := monkey.Patch(config.Load, func(string) (*config.Root, error) {
-		return nil, errors.New("config loading error")
-	})
-	defer patch.Unpatch()
-	app, err := New("test")
-	assert.Nil(app)
-	assert.EqualError(err, "config loading error")
-}
-
 func TestNew_DBErr(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
