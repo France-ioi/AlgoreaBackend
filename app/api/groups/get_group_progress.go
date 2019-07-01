@@ -82,15 +82,15 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			AVG(IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0)) AS iAvgSubmissionsAttempts,
 			AVG(IF(attempt_with_best_score.idGroup IS NULL,
 				0,
-        (
-          SELECT IF(MAX(bValidated),
-            TIMESTAMPDIFF(SECOND, MIN(sStartDate), MIN(sValidationDate)),
-            TIMESTAMPDIFF(SECOND, MIN(sStartDate), NOW())
-          )
-          FROM groups_attempts
-          WHERE idGroup = end_member.ID AND idItem = items.ID
-        )
-      )) AS sAvgTimeSpent`).
+				(
+					SELECT IF(MAX(bValidated),
+						TIMESTAMPDIFF(SECOND, MIN(sStartDate), MIN(sValidationDate)),
+						TIMESTAMPDIFF(SECOND, MIN(sStartDate), NOW())
+					)
+					FROM groups_attempts
+					WHERE idGroup = end_member.ID AND idItem = items.ID
+				)
+			)) AS sAvgTimeSpent`).
 		Joins(`
 			JOIN groups AS end_member
 			ON
@@ -98,21 +98,21 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				end_member.sType IN ('UserSelf', 'Team')`).
 		Joins(`
 			JOIN (SELECT 1 as bKeepUser) AS keep_user
-        ON end_member.sType = 'Team' OR (
-          SELECT 1
-          FROM groups_groups
-          JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType != 'Team'
-          WHERE
-            idGroupChild = end_member.ID AND
-            groups_groups.sType IN('invitationAccepted','requestAccepted','direct') AND
-            idGroupParent IN (
+			ON end_member.sType = 'Team' OR (
+				SELECT 1
+				FROM groups_groups
+				JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType != 'Team'
+				WHERE
+					idGroupChild = end_member.ID AND
+					groups_groups.sType IN('invitationAccepted','requestAccepted','direct') AND
+					idGroupParent IN (
 							SELECT idGroupChild
 							FROM groups_ancestors AS ga
 							-- bIsSelf is good here since a user can be a direct member of the input group
 							WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor
 						)
-          LIMIT 1
-        ) = 1`).
+					LIMIT 1
+				) = 1`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
