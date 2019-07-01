@@ -1,7 +1,7 @@
 -- +migrate Up
-ALTER TABLE `groups` ADD INDEX IDType (ID, sType);
+ALTER TABLE `groups` ADD INDEX `sType` (`sType`);
 
 
 -- +migrate Down
-ALTER TABLE `groups` DROP INDEX IDType;
+ALTER TABLE `groups` DROP INDEX `sType`;
 
