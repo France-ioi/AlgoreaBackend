@@ -25,13 +25,6 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	var found bool
-	found, err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		return service.InsufficientAccessRightsError
-	}
-
 	itemsVisibleToUserSubQuery := srv.Store.GroupItems().AccessRightsForItemsVisibleToUser(user).SubQuery()
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
