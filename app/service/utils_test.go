@@ -52,19 +52,19 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 			desc:           "not a int64 (string)",
 			queryString:    "ids=6,7,etc",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: 'etc', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: 'etc', param: 'ids')",
 		},
 		{
 			desc:           "not a int64 (empty val)",
 			queryString:    "ids=8,,9",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: '', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '', param: 'ids')",
 		},
 		{
 			desc:           "too big for int64",
 			queryString:    "ids=123456789012345678901234567890",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: '123456789012345678901234567890', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '123456789012345678901234567890', param: 'ids')",
 		},
 	}
 	for _, testCase := range testCases {

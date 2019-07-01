@@ -27,7 +27,7 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse one of the integer given as query arg (value: '%s', param: '%s')", idStr, paramName)
+			return nil, fmt.Errorf("unable to parse one of the integers given as query args (value: '%s', param: '%s')", idStr, paramName)
 		}
 		ids = append(ids, id)
 	}
