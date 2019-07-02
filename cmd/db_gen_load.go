@@ -23,11 +23,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 		Short: "generate data for load tests",
 		Run: func(cmd *cobra.Command, args []string) {
 			// load config
-			conf, err := config.Load("dev")
-			if err != nil {
-				fmt.Println("Unable to load config: ", err)
-				os.Exit(1)
-			}
+			conf := config.Load("dev")
 
 			// open DB
 			rawdb, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
