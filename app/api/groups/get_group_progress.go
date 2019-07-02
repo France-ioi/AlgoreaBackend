@@ -11,7 +11,7 @@ import (
 )
 
 func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r) // hack it with: user := database.NewUser(1, srv.Store.Users(), nil)
+	user := srv.GetUser(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
