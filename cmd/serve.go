@@ -23,10 +23,7 @@ func init() { // nolint:gochecknoinits
 			var err error
 
 			var application *app.Application
-			environment := devEnvironment
-			if len(args) == 1 {
-				environment = args[0]
-			}
+			environment := resolveEnvironment(args, devEnvironment)
 
 			application, err = app.New(environment)
 			if err != nil {

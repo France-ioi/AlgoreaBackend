@@ -15,15 +15,15 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var migrateCmd = &cobra.Command{
-		Use:   "db-migrate <environment>",
+		Use:   "db-migrate [environment]",
 		Short: "apply schema-change migrations to the database",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 
 			// load config
-			conf := config.Load(args[0])
+			conf := config.Load(resolveEnvironment(args, "test"))
 
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}

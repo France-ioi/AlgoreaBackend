@@ -29,6 +29,7 @@ jobs:
           MYSQL_DATABASE: ci_db
           MYSQL_ROOT_PASSWORD: root
     environment:
+      ALGOREA_ENV: test
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
       ALGOREA_DATABASE.CONNECTION.USER: algorea
       ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password

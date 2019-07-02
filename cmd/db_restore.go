@@ -16,14 +16,14 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var restoreCmd = &cobra.Command{
-		Use:   "db-restore <environment>",
+		Use:   "db-restore [environment]",
 		Short: "load the last db schema",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 
 			// load config
-			conf := config.Load(args[0])
+			conf := config.Load(resolveEnvironment(args, "test"))
 
 			// open DB
 			var db *sql.DB
