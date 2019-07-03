@@ -9,7 +9,7 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 )
 
-var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[)|$)`)
+var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<nil>|[\w.]+) )|$)`)
 
 // NewRawDBLogger returns a logger for raw database actions using an existing dblogger and logMode setting
 func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
