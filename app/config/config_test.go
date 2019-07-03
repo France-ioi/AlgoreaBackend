@@ -6,12 +6,15 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/France-ioi/AlgoreaBackend/app/common"
+
 	"bou.ke/monkey"
 	assertlib "github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfig(t *testing.T) {
 	assert := assertlib.New(t)
+	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
 	tmpDir := os.TempDir()
@@ -39,7 +42,7 @@ func TestLoadConfig(t *testing.T) {
 	}()
 
 	_ = os.Setenv("ALGOREA_SERVER.WRITETIMEOUT", "999")
-	conf := Load("test")
+	conf := Load()
 
 	// test config override
 	assert.EqualValues(1234, conf.Server.Port)
@@ -78,16 +81,16 @@ func TestLoadConfig_CannotUnmarshal(t *testing.T) {
 	called := false
 	monkey.Patch(os.Exit, func(int) { called = true })
 	defer monkey.UnpatchAll()
-	Load("test")
+	Load()
 	assert.True(called)
 }
 
 func TestLoadConfig_Concurrent(t *testing.T) {
 	assert := assertlib.New(t)
 	assert.NotPanics(func() {
-		Load("test")
+		Load()
 		for i := 0; i < 1000; i++ {
-			go func() { Load("test") }()
+			go func() { Load() }()
 		}
 	})
 }

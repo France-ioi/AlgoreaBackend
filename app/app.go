@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"math/rand"
 	"time"
 
@@ -25,12 +24,10 @@ type Application struct {
 }
 
 // New configures application resources and routes.
-func New(environment string) (*Application, error) {
+func New() (*Application, error) {
 	var err error
 
-	log.Println("Starting application: environment =", environment)
-
-	conf := config.Load(environment) // exits on errors
+	conf := config.Load() // exits on errors
 
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(conf.Logging)

@@ -40,18 +40,18 @@ gen-keys:
 	openssl genpkey -algorithm RSA -out private_key.pem 2>/dev/null | openssl genrsa -out private_key.pem 1024
 	openssl rsa -pubout -in private_key.pem -out public_key.pem
 db-restore: $(BIN_PATH)
-	$(BIN_PATH) db-restore $(ARGS)
+	$(BIN_PATH) db-restore
 db-migrate: $(BIN_PATH)
-	$(BIN_PATH) db-migrate $(ARGS)
+	$(BIN_PATH) db-migrate
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
-	$(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
+	ALGOREA_ENV=test $(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
 test-unit:
-	$(GOTEST) -race -cover -v ./app/... -tags=unit
+	ALGOREA_ENV=test $(GOTEST) -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
-	$(GODOG) --format=progress $(ARGS) .
+	ALGOREA_ENV=test $(GODOG) --format=progress $(ARGS) .
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run --deadline 5m0s
 
