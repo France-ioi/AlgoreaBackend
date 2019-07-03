@@ -1,5 +1,7 @@
 module github.com/France-ioi/AlgoreaBackend
 
+exclude github.com/SermoDigital/jose v0.9.1
+
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
@@ -7,6 +9,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.3.2
 	github.com/DATA-DOG/godog v0.7.13
 	github.com/France-ioi/mapstructure v1.1.3-0.20190228185851-70b68b9b4003
+	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
 	github.com/akrylysov/algnhsa v0.0.0-20190203201208-70f315bb89bd
 	github.com/aws/aws-lambda-go v1.8.2
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -29,6 +32,5 @@ require (
 	github.com/stretchr/testify v1.2.2
 	gopkg.in/go-playground/validator.v9 v9.29.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
-	gopkg.in/jose.v1 v1.0.0-20161127122323-a941c3995164
 	gopkg.in/yaml.v2 v2.2.2
 )
