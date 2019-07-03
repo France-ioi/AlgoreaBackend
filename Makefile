@@ -46,7 +46,7 @@ db-migrate: $(BIN_PATH)
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
-	ALGOREA_ENV=test $(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
+	$(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
 test-unit:
 	ALGOREA_ENV=test $(GOTEST) -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
