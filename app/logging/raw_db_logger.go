@@ -9,7 +9,7 @@ import (
 	"github.com/luna-duclos/instrumentedsql"
 )
 
-var rawArgsRegexp = regexp.MustCompile(`^{\[(<nil>|[\w.]+) (.+?)\]((?:, \[(?:<nil>|[\w.]+) .+?\])*)}$`)
+var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[)|$)`)
 
 // NewRawDBLogger returns a logger for raw database actions using an existing dblogger and logMode setting
 func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
@@ -37,22 +37,20 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	}
 	if valuesMap["query"] != nil && valuesMap["args"] != nil {
 		argsString := valuesMap["args"].(string)
+		argsString = argsString[1 : len(argsString)-1]
 		var argsValues []interface{}
-		const emptyMapString = "{}"
-		for argsString != emptyMapString {
-			subMatches := rawArgsRegexp.FindStringSubmatch(argsString)
-			typeStr := subMatches[1]
-			valueCopy := make([]byte, len(subMatches[2]))
-			copy(valueCopy, subMatches[2])
+		for argsString != "" {
+			indices := rawArgsRegexp.FindStringSubmatchIndex(argsString)
+			typeStr := argsString[indices[2]:indices[3]]
+			valueCopy := make([]byte, indices[5]-indices[4])
+			copy(valueCopy, argsString[indices[4]:indices[5]])
 			value := string(valueCopy)
 			convertedValue := convertRawSQLArgValue(value, typeStr)
-			nextStr := subMatches[3]
-			if nextStr != "" {
-				argsString = "{" + subMatches[3][2:] + "}"
-			} else {
-				argsString = emptyMapString
-			}
 			argsValues = append(argsValues, convertedValue)
+			if indices[5]+3 >= len(argsString) {
+				break
+			}
+			argsString = argsString[indices[5]+3:]
 		}
 		valuesMap["query"] = fillSQLPlaceholders(valuesMap["query"].(string), argsValues)
 		delete(valuesMap, "args")
