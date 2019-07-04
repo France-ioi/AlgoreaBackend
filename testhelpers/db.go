@@ -20,6 +20,7 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 func init() { // nolint:gochecknoinits
+	common.SetDefaultEnvToTest()
 	conf := config.Load()
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(conf.Logging)
@@ -214,9 +215,8 @@ func EmptyDB(db *sql.DB) {
 }
 
 func mustBeInTestEnv() {
-	common.SetDefaultEnvToTest()
 	if !common.IsEnvTest() {
-		fmt.Println("Tests on db can only be run in 'test' env")
+		fmt.Println("Tests altering the db can only be run in 'test' env")
 		os.Exit(1)
 	}
 }

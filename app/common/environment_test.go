@@ -15,6 +15,7 @@ func TestEnv_Prod(t *testing.T) {
 	assert.Equal(t, "prod", Env())
 	assert.False(t, IsEnvDev())
 	assert.False(t, IsEnvTest())
+	assert.True(t, IsEnvProd())
 }
 
 func TestEnv_Dev(t *testing.T) {
@@ -22,6 +23,7 @@ func TestEnv_Dev(t *testing.T) {
 	assert.Equal(t, "dev", Env())
 	assert.True(t, IsEnvDev())
 	assert.False(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
 }
 
 func TestEnv_Test(t *testing.T) {
@@ -29,6 +31,7 @@ func TestEnv_Test(t *testing.T) {
 	assert.Equal(t, "test", Env())
 	assert.False(t, IsEnvDev())
 	assert.True(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
 }
 
 func TestEnv_NotSet(t *testing.T) {
@@ -36,13 +39,23 @@ func TestEnv_NotSet(t *testing.T) {
 	assert.Equal(t, "dev", Env())
 	assert.True(t, IsEnvDev())
 	assert.False(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
 }
 
-func TestEnv_Invalid(t *testing.T) {
-	_ = os.Setenv(envVarName, "notexistingenv")
+func TestEnv_Empty(t *testing.T) {
+	_ = os.Setenv(envVarName, "")
 	assert.Equal(t, "dev", Env())
 	assert.True(t, IsEnvDev())
 	assert.False(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
+}
+
+func TestEnv_Other(t *testing.T) {
+	_ = os.Setenv(envVarName, "myownenv")
+	assert.Equal(t, "myownenv", Env())
+	assert.False(t, IsEnvDev())
+	assert.False(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
 }
 
 func TestSetDefaultEnvToTest_NotSet(t *testing.T) {
@@ -51,6 +64,7 @@ func TestSetDefaultEnvToTest_NotSet(t *testing.T) {
 	assert.Equal(t, "test", Env())
 	assert.False(t, IsEnvDev())
 	assert.True(t, IsEnvTest())
+	assert.False(t, IsEnvProd())
 }
 
 func TestSetDefaultEnvToTest_Set(t *testing.T) {
@@ -59,6 +73,7 @@ func TestSetDefaultEnvToTest_Set(t *testing.T) {
 	assert.Equal(t, "prod", Env())
 	assert.False(t, IsEnvDev())
 	assert.False(t, IsEnvTest())
+	assert.True(t, IsEnvProd())
 }
 
 func TestSetDefaultEnvToTest_Panic(t *testing.T) {
