@@ -73,12 +73,13 @@ type itemAnswerGetResponse struct {
 }
 
 // OK. Success response with groups progress on items
+// For all children of items in the parent_item_id list, display the result for each direct child
+// of the given group_id whose type is not in (Team,UserSelf). Values are averages of all the group's
+// "end-members" where “end-member” defined as descendants of the group which are either
+// 1) teams or
+// 2) users who descend from the input group not only through teams (one or more).
 // swagger:response groupsGetGroupProgressResponse
 type groupsGetGroupProgressResponse struct {
-	// description: For all children of items in the parent_item_id list, display the result for each direct child
-	//              of the given group_id whose type is not in (Team,UserSelf). Values are averages of all the group's
-	//              "end-members" where “end-member” defined as descendants of the group which are either
-	//                1) teams or 2) users who do not descend from the input group only through teams (one or more).
 	// in: body
 	Body []struct {
 		// The child’s group_id
