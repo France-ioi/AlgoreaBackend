@@ -121,3 +121,44 @@ type groupsGetGroupProgressResponse struct {
 		AvgTimeSpent float32 `json:"avg_time_spent"`
 	}
 }
+
+// OK. Success response with teams progress on items
+// swagger:response groupsGetTeamProgressResponse
+type groupsGetTeamProgressResponse struct {
+	// in: body
+	Body []struct {
+		// The team’s `group_id`
+		// required:true
+		GroupID int64 `json:"group_id,string"`
+		// required:true
+		ItemID int64 `json:"item_id,string"`
+		// The best score across all attempts, or 0
+		// required:true
+		Score float32 `json:"score"`
+		// Max of `bValidated` across all attempts, or `false`
+		// required:true
+		Validated bool `json:"validated"`
+		// Max across all attempts of the team (`null` if no attempts)
+		// required:true
+		LastActivityDate time.Time `json:"last_activity_date"`
+		// `groups_attempts.nbHintsCached` of the attempt with the best score (0 if no attempts;
+		// if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`)
+		// required:true
+		HintsRequested int32 `json:"hints_requested"`
+		// `groups_attempts.nbSubmissionsAttempts` of the attempt with the best score (0 if no attempts;
+		// if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`)
+		// required:true
+		SubmissionsAttempts int32 `json:"submissions_attempts"`
+		// Time spent by the team (in seconds):
+		//
+		//   1) if no attempts yet: 0
+		//
+		//   2) if one attempt validated: min(`sValidationDate`) - min(`sStartDate`)
+		//     (i.e., time between the first time it started one (any) attempt
+		//      and the time he first validated the task)
+		//
+		//   3) if no attempts validated: `now` - min(`sStartDate`)
+		// required:true
+		TimeSpent int32 `json:"time_spent"`
+	}
+}

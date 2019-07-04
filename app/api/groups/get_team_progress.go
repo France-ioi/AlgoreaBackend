@@ -10,6 +10,48 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /groups/{group_id}/team-progress groups attempts items groupTeamProgress
+// ---
+// summary: Display the current progress of teams on a subset of items
+// description: For all children of items from the parent_item_id list,
+//              display the result of each team among the descendants of the group.
+// parameters:
+// - name: group_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: parent_item_ids
+//   in: query
+//   type: array
+//   items:
+//     type: integer
+// - name: from.name
+//   description: Start the page from the team next to the team with `sName` = `from.name` and `ID` = `from.id`
+//                (`from.id` is required when `from.name` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the team next to the team with `sName`=`from.name` and `ID`=`from.id`
+//                (`from.name` is required when from.id is present)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display results for the first N teams (sorted by `sName`)
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     "$ref": "#/responses/groupsGetTeamProgressResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
