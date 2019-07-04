@@ -71,7 +71,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			IF(attempt_with_best_score.idGroup IS NULL,
 				0,
 				(
-					SELECT IF(MAX(bValidated),
+					SELECT IF(attempt_with_best_score.bValidated,
 						TIMESTAMPDIFF(SECOND, MIN(sStartDate), MIN(sValidationDate)),
 						TIMESTAMPDIFF(SECOND, MIN(sStartDate), NOW())
 					)
