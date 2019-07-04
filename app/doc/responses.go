@@ -82,7 +82,7 @@ type itemAnswerGetResponse struct {
 type groupsGetGroupProgressResponse struct {
 	// in: body
 	Body []struct {
-		// The child’s group_id
+		// The child’s `group_id`
 		// required:true
 		GroupID int64 `json:"group_id,string"`
 		// required:true
