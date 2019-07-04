@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/group-progress groups users attempts items getGroupProgress
+// swagger:operation GET /groups/{group_id}/group-progress groups users attempts items groupGroupProgress
 // ---
 // summary: Display the current progress of a group on a subset of items
 // description: For all children of items from the parent_item_id list, display the result
