@@ -72,67 +72,80 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.NoError
 	}
 
-	var dbResult []map[string]interface{}
-	// It still takes about 3 minutes to complete on large data sets
-	service.MustNotBeError(srv.Store.GroupAncestors().
-		Select(`
-			groups_ancestors.idGroupAncestor AS idGroup,
+	users := srv.Store.GroupGroups().
+		Select("child.ID").
+		Joins("JOIN groups AS parent ON parent.ID = groups_groups.idGroupParent AND parent.sType != 'Team'").
+		Joins("JOIN groups AS child ON child.ID = groups_groups.idGroupChild and child.sType = 'UserSelf'").
+		Joins(`
+			JOIN groups_ancestors
+			ON groups_ancestors.idGroupAncestor IN (?) AND
+				groups_ancestors.idGroupChild = parent.ID`, ancestorGroupIDs).
+		Where("groups_groups.sType IN ('direct', 'invitationAccepted', 'requestAccepted')").
+		Group("child.ID")
+
+	teams := srv.Store.Table("groups FORCE INDEX(sType)").
+		Select("groups.ID").
+		Joins(`
+			JOIN groups_ancestors
+			ON groups_ancestors.idGroupAncestor IN (?) AND
+				groups_ancestors.idGroupChild = groups.ID`, ancestorGroupIDs).
+		Where("groups.sType='Team'").
+		Group("groups.ID")
+
+	endMembers := users.Union(teams.SubQuery())
+
+	endMembersStats := srv.Store.Raw(`
+		SELECT
+			end_members.ID,
 			items.ID AS idItem,
-			AVG(IFNULL(attempt_with_best_score.iScore, 0)) AS iAverageScore,
-			AVG(IFNULL(attempt_with_best_score.bValidated, 0)) AS iValidationRate,
-			AVG(IFNULL(attempt_with_best_score.nbHintsCached, 0)) AS iAvgHintsRequested,
-			AVG(IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0)) AS iAvgSubmissionsAttempts,
-			AVG(IF(attempt_with_best_score.idGroup IS NULL,
+			IFNULL(attempt_with_best_score.iScore, 0) AS iScore,
+			IFNULL(attempt_with_best_score.bValidated, 0) AS bValidated,
+			IFNULL(attempt_with_best_score.nbHintsCached, 0) AS nbHintsCached,
+			IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0) AS nbSubmissionsAttempts,
+			IF(attempt_with_best_score.idGroup IS NULL,
 				0,
 				(
-					SELECT IF(MAX(bValidated),
+					SELECT IF(attempt_with_best_score.bValidated,
 						TIMESTAMPDIFF(SECOND, MIN(sStartDate), MIN(sValidationDate)),
 						TIMESTAMPDIFF(SECOND, MIN(sStartDate), NOW())
 					)
-					FROM groups_attempts
-					WHERE idGroup = end_member.ID AND idItem = items.ID
+					FROM groups_attempts FORCE INDEX (GroupItemMinusScoreBestAnswerDateID)
+					WHERE idGroup = end_members.ID AND idItem = items.ID
 				)
-			)) AS iAvgTimeSpent`).
-		Joins(`
-			JOIN groups AS end_member
-			ON
-				end_member.ID = groups_ancestors.idGroupChild AND
-				end_member.sType IN ('UserSelf', 'Team')`).
-		Joins(`
-			JOIN (SELECT 1 as bKeepUser) AS keep_user
-			ON end_member.sType = 'Team' OR (
-				SELECT 1
-				FROM groups_groups
-				JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType != 'Team'
-				WHERE
-					idGroupChild = end_member.ID AND
-					groups_groups.sType IN('invitationAccepted','requestAccepted','direct') AND
-					idGroupParent IN (
-							SELECT idGroupChild
-							FROM groups_ancestors AS ga
-							-- bIsSelf is good here since a user can be a direct member of the input group
-							WHERE ga.idGroupAncestor = groups_ancestors.idGroupAncestor
-						)
-					LIMIT 1
-				) = 1`).
+			) AS iTimeSpent
+		FROM ? AS end_members`, endMembers.SubQuery()).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
 			ON attempt_with_best_score.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = end_member.ID AND idItem = items.ID
+				SELECT ID FROM groups_attempts FORCE INDEX (GroupItemMinusScoreBestAnswerDateID)
+				WHERE idGroup = end_members.ID AND idItem = items.ID
 				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
-			)`).
-		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor").
-		Where("groups_ancestors.idGroupAncestor IN (?)", ancestorGroupIDs).
-		Group("groups_ancestors.idGroupAncestor, items.ID").
-		Order(gorm.Expr(
-			"FIELD(groups_ancestors.idGroupAncestor"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
-			ancestorGroupIDs...)).
-		Order(gorm.Expr(
-			"FIELD(items.ID"+strings.Repeat(", ?", len(itemIDs))+")",
-			itemIDs...)).
-		ScanIntoSliceOfMaps(&dbResult).Error())
+			)`)
+
+	var dbResult []map[string]interface{}
+	// It still takes more than 2 minutes to complete on large data sets
+	service.MustNotBeError(
+		srv.Store.GroupAncestors().
+			Select(`
+				groups_ancestors.idGroupAncestor AS idGroup,
+				member_stats.idItem,
+				AVG(member_stats.iScore) AS iAverageScore,
+				AVG(member_stats.bValidated) AS iValidationRate,
+				AVG(member_stats.nbHintsCached) AS iAvgHintsRequested,
+				AVG(member_stats.nbSubmissionsAttempts) AS iAvgSubmissionsAttempts,
+				AVG(member_stats.iTimeSpent) AS iAvgTimeSpent`).
+			Joins("JOIN ? AS member_stats ON member_stats.ID = groups_ancestors.idGroupChild", endMembersStats.SubQuery()).
+			Where("groups_ancestors.idGroupAncestor IN (?)", ancestorGroupIDs).
+			Group("groups_ancestors.idGroupAncestor, member_stats.idItem").
+			Order(gorm.Expr(
+				"FIELD(groups_ancestors.idGroupAncestor"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
+				ancestorGroupIDs...)).
+			Order(gorm.Expr(
+				"FIELD(member_stats.idItem"+strings.Repeat(", ?", len(itemIDs))+")",
+				itemIDs...)).
+			ScanIntoSliceOfMaps(&dbResult).Error())
+
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
 	render.Respond(w, r, convertedResult)
 	return service.NoError
