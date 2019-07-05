@@ -59,8 +59,10 @@ type Root struct {
 	Token        Token
 }
 
+const defaultConfigName = "config"
+
 var (
-	configName = "config"
+	configName = defaultConfigName
 	configDir  = configDirectory()
 )
 
