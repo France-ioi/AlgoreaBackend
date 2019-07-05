@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
@@ -19,11 +20,22 @@ import (
 func init() { // nolint:gochecknoinits,gocyclo
 
 	var dbGenLoadCmd = &cobra.Command{
-		Use:   "db-gen-load",
+		Use:   "db-gen-load  [environment]",
 		Short: "generate data for load tests",
 		Run: func(cmd *cobra.Command, args []string) {
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
+
+			common.SetDefaultEnv("dev")
+
 			// load config
-			conf := config.Load("dev")
+			conf := config.Load()
+			if common.IsEnvProd() {
+				fmt.Println("'db-gen-load' must not be run in 'prod' env!")
+				os.Exit(1)
+			}
 
 			// open DB
 			rawdb, err := sql.Open("mysql", conf.Database.Connection.FormatDSN())
