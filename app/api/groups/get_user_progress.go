@@ -17,7 +17,7 @@ import (
 //              display the result of all user self-groups among the descendants of the given group
 //              (including those in teams).
 //
-//              For all users, only the attempt corresponding to the best score counts
+//              For each user, only the attempt corresponding to his best score counts
 //              (across all his teams and his own attempts), disregarding whether or not
 //              the score was done in a team which is descendant of the input group.
 // parameters:
