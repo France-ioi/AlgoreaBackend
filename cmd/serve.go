@@ -16,10 +16,16 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var serveCmd = &cobra.Command{
-		Use:   "serve",
+		Use:   "serve [environment]",
 		Short: "start http server",
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
+
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
 
 			log.Println("Starting application: environment =", common.Env())
 
