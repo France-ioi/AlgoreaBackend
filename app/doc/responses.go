@@ -132,21 +132,21 @@ type groupsGetTeamProgressResponse struct {
 		GroupID int64 `json:"group_id,string"`
 		// required:true
 		ItemID int64 `json:"item_id,string"`
-		// The best score across all attempts, or 0
+		// Current score. If there are no attempts, the score is 0
 		// required:true
 		Score float32 `json:"score"`
-		// Max of `bValidated` across all attempts, or `false`
+		// Whether the team has the item validated
 		// required:true
 		Validated bool `json:"validated"`
-		// Max across all attempts of the team (`null` if no attempts)
+		// Nullable
 		// required:true
 		LastActivityDate time.Time `json:"last_activity_date"`
-		// `groups_attempts.nbHintsCached` of the attempt with the best score (0 if no attempts;
-		// if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`)
+		// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
+		// If there are no attempts, the number of hints is 0.
 		// required:true
 		HintsRequested int32 `json:"hints_requested"`
-		// `groups_attempts.nbSubmissionsAttempts` of the attempt with the best score (0 if no attempts;
-		// if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`)
+		// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
+		// If there are no attempts, the number of submissions is 0.
 		// required:true
 		SubmissionsAttempts int32 `json:"submissions_attempts"`
 		// Time spent by the team (in seconds):

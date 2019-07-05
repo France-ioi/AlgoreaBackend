@@ -22,6 +22,7 @@ import (
 //   required: true
 // - name: parent_item_ids
 //   in: query
+//   required: true
 //   type: array
 //   items:
 //     type: integer
