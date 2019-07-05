@@ -20,7 +20,7 @@ import (
 
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	app, err := New("test")
+	app, err := New()
 	assert.NotNil(app)
 	assert.NoError(err)
 	assert.NotNil(app.Config)
@@ -38,7 +38,7 @@ func TestNew_DBErr(t *testing.T) {
 		return nil, errors.New("db opening error")
 	})
 	defer patch.Unpatch()
-	app, err := New("test")
+	app, err := New()
 	assert.NotNil(app)
 	assert.NoError(err)
 	logMsg := hook.LastEntry()
@@ -54,7 +54,7 @@ func TestNew_APIErr(t *testing.T) {
 			return nil, errors.New("api creation error")
 		})
 	defer patch.Unpatch()
-	app, err := New("test")
+	app, err := New()
 	assert.Nil(app)
 	assert.EqualError(err, "api creation error")
 }
@@ -65,7 +65,7 @@ func TestNew_TokenErr(t *testing.T) {
 		return nil, errors.New("keys loading error")
 	})
 	defer patch.Unpatch()
-	app, err := New("test")
+	app, err := New()
 	assert.Nil(app)
 	assert.EqualError(err, "keys loading error")
 }
@@ -77,7 +77,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
-	app, _ := New("test")
+	app, _ := New()
 	router := app.HTTPHandler
 	router.Get("/dummy", func(http.ResponseWriter, *http.Request) {
 		panic("error in service")
@@ -111,7 +111,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
-	app, _ := New("test")
+	app, _ := New()
 	router := app.HTTPHandler
 	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

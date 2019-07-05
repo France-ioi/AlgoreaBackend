@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 )
 
 func init() { // nolint:gochecknoinits
@@ -19,18 +20,22 @@ func init() { // nolint:gochecknoinits
 		Short: "start http server",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			const devEnvironment = "dev"
 			var err error
 
-			var application *app.Application
-			environment := resolveEnvironment(args, devEnvironment)
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
 
-			application, err = app.New(environment)
+			log.Println("Starting application: environment =", common.Env())
+
+			var application *app.Application
+			application, err = app.New()
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			if environment == devEnvironment {
+			if common.IsEnvDev() {
 				backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)

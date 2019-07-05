@@ -80,7 +80,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 func (ctx *TestContext) setupApp() {
 	var err error
 	ctx.tearDownApp()
-	ctx.application, err = app.New("test")
+	ctx.application, err = app.New()
 	if err != nil {
 		fmt.Println("Unable to load app")
 		panic(err)

@@ -40,9 +40,9 @@ gen-keys:
 	openssl genpkey -algorithm RSA -out private_key.pem 2>/dev/null | openssl genrsa -out private_key.pem 1024
 	openssl rsa -pubout -in private_key.pem -out public_key.pem
 db-restore: $(BIN_PATH)
-	$(BIN_PATH) db-restore $(ARGS)
+	$(BIN_PATH) db-restore
 db-migrate: $(BIN_PATH)
-	$(BIN_PATH) db-migrate $(ARGS)
+	$(BIN_PATH) db-migrate
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism

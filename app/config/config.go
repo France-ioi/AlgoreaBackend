@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
+
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 )
 
 // Database is the part of the config related to the database
@@ -70,7 +72,7 @@ var (
 // 4) config file
 // 5) key/value store
 // 6) default
-func Load(environment string) *Root {
+func Load() *Root {
 	var err error
 
 	var config *Root
@@ -90,6 +92,7 @@ func Load(environment string) *Root {
 		log.Print("Cannot read the config file, ignoring it: ", err)
 	}
 
+	environment := common.Env()
 	viperConfig.SetConfigName(configName + "." + environment)
 	if err = viperConfig.MergeInConfig(); err != nil {
 		log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)

@@ -16,7 +16,7 @@ import (
 )
 
 func TestServer_Start(t *testing.T) {
-	app, err := New("test")
+	app, err := New()
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
@@ -48,7 +48,7 @@ func TestServer_Start(t *testing.T) {
 }
 
 func TestServer_StartHandlesListenerError(t *testing.T) {
-	app, err := New("test")
+	app, err := New()
 	assert.NoError(t, err)
 	app.Config.Server.Port = -1
 	srv, err := NewServer(app)
@@ -79,7 +79,7 @@ func TestServer_StartHandlesListenerError(t *testing.T) {
 }
 
 func TestServer_StartHandlesShutdownError(t *testing.T) {
-	app, err := New("test")
+	app, err := New()
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
