@@ -28,7 +28,7 @@ func init() { // nolint:gochecknoinits
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
@@ -54,7 +54,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
 // and loads fixtures from the strings (yaml with a tableName->[]dataRow map)
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
@@ -96,7 +96,7 @@ func OpenRawDBConnection() (*sql.DB, error) {
 // Otherwise, data will be loaded into table with the same name as the filename (without extension).
 // Note that you should probably empty the DB before using this function.
 func LoadFixture(db *sql.DB, fileName string) {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	var files []os.FileInfo
 	var err error
@@ -140,7 +140,7 @@ func LoadFixture(db *sql.DB, fileName string) {
 }
 
 func loadFixtureChainFromString(db *sql.DB, fixture string) {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	var content map[string][]map[string]interface{}
 	fixture = dedent.Dedent(fixture)
@@ -158,7 +158,7 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 
 // InsertBatch insert the data into the table with the name given
 func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	for _, row := range data {
 		var attributes []string
@@ -182,7 +182,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 
 // nolint: gosec
 func emptyDB(db *sql.DB, dbName string) {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -209,14 +209,14 @@ func emptyDB(db *sql.DB, dbName string) {
 
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
-	mustBeInTestEnv()
+	mustNotBeInProdEnv()
 	conf := config.Load()
 	emptyDB(db, conf.Database.Connection.DBName)
 }
 
-func mustBeInTestEnv() {
-	if !common.IsEnvTest() {
-		fmt.Println("Tests altering the db can only be run in 'test' env")
+func mustNotBeInProdEnv() {
+	if common.IsEnvProd() {
+		fmt.Println("Can't be run in 'prod' env")
 		os.Exit(1)
 	}
 }
