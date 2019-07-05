@@ -10,7 +10,7 @@ database:
     user: algorea
     passwd: a_db_password
     addr: localhost
-    dbname: algorea_db
+    #dbname: algorea_db
     allownativepasswords: true
     parseTime: true # required for the migration system
 logging:
