@@ -48,10 +48,10 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
 	$(Q)$(GOTEST) -race -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v ./app/... -p 1 -parallel 1
 test-unit:
-	ALGOREA_ENV=test $(GOTEST) -race -cover -v ./app/... -tags=unit
+	$(GOTEST) -race -cover -v ./app/... -tags=unit
 test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
-	ALGOREA_ENV=test $(GODOG) --format=progress $(ARGS) .
+	$(GODOG) --format=progress $(ARGS) .
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run --deadline 5m0s
 
