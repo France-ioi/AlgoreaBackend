@@ -23,6 +23,7 @@ import (
 // - name: parent_item_ids
 //   in: query
 //   type: array
+//   required: true
 //   items:
 //     type: integer
 // - name: from.name
