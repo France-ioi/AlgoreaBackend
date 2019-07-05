@@ -605,3 +605,173 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     [
     ]
     """
+
+  Scenario: The input group_id is a user
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/51/user-progress?parent_item_ids=210,220,310"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
+
+  Scenario: The input group_id is a team
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/14/user-progress?parent_item_ids=210"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group_id": "51",
+        "hints_requested": 3,
+        "item_id": "211",
+        "last_activity_date": "2018-05-30T06:38:38Z",
+        "score": 50,
+        "submission_attempts": 4,
+        "time_spent": 20,
+        "validated": true
+      },
+      {
+        "group_id": "51",
+        "hints_requested": 0,
+        "item_id": "212",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "51",
+        "hints_requested": 0,
+        "item_id": "213",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "51",
+        "hints_requested": 0,
+        "item_id": "214",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "51",
+        "hints_requested": 0,
+        "item_id": "215",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 3,
+        "item_id": "211",
+        "last_activity_date": "2018-05-30T06:38:38Z",
+        "score": 50,
+        "submission_attempts": 4,
+        "time_spent": 20,
+        "validated": true
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 0,
+        "item_id": "212",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 0,
+        "item_id": "213",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 0,
+        "item_id": "214",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "53",
+        "hints_requested": 0,
+        "item_id": "215",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 3,
+        "item_id": "211",
+        "last_activity_date": "2018-05-30T06:38:38Z",
+        "score": 50,
+        "submission_attempts": 4,
+        "time_spent": 20,
+        "validated": true
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "212",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "213",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "214",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      },
+      {
+        "group_id": "55",
+        "hints_requested": 0,
+        "item_id": "215",
+        "last_activity_date": null,
+        "score": 0,
+        "submission_attempts": 0,
+        "time_spent": 0,
+        "validated": false
+      }
+    ]
+    """
