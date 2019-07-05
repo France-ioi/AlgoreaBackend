@@ -100,18 +100,6 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.NoError
 	}
 
-	var teamIDs []int64
-	service.MustNotBeError(srv.Store.GroupGroups().
-		Joins(`
-			JOIN groups_ancestors
-			ON groups_ancestors.idGroupChild = groups_groups.idGroupParent AND
-				groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild AND
-				groups_ancestors.idGroupAncestor = ?`, groupID).
-		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType = 'Team'").
-		Where("groups_groups.idGroupChild IN (?)", userGroupIDs).
-		Where("groups_groups.sType IN ('direct', 'requestAccepted', 'invitationAccepted')").
-		Pluck("groups_groups.idGroupParent", &teamIDs).Error())
-
 	// Preselect item IDs (there should not be many of them)
 	var itemIDs []interface{}
 	service.MustNotBeError(srv.Store.ItemItems().Where("idItemParent IN (?)", itemParentIDs).
@@ -148,9 +136,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
 			ON team_links.sType IN ('direct', 'requestAccepted', 'invitationAccepted') AND
-				team_links.idGroupParent IN (?) AND
-				team_links.idGroupChild = groups.ID
-		`, teamIDs).
+				team_links.idGroupChild = groups.ID`).
+		Joins(`
+			JOIN groups AS teams
+			ON teams.sType = 'Team' AND
+				teams.ID = team_links.idGroupParent`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score_for_user
 			ON attempt_with_best_score_for_user.ID = (
@@ -162,7 +152,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_attempts AS attempt_with_best_score_for_team
 			ON attempt_with_best_score_for_team.ID = (
 				SELECT ID FROM groups_attempts
-				WHERE idGroup = team_links.idGroupParent AND idItem = items.ID
+				WHERE idGroup = teams.ID AND idItem = items.ID
 				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
 			)`).
 		Joins(`
@@ -189,7 +179,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_attempts AS last_attempt_of_team
 			ON last_attempt_of_team.ID = (
 				SELECT ID FROM groups_attempts
-				WHERE idGroup = team_links.idGroupParent AND idItem = items.ID AND sLastActivityDate IS NOT NULL
+				WHERE idGroup = teams.ID AND idItem = items.ID AND sLastActivityDate IS NOT NULL
 				ORDER BY sLastActivityDate DESC LIMIT 1
 			)`).
 		Joins(`
@@ -214,7 +204,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_attempts AS first_attempt_of_team
 			ON first_attempt_of_team.ID = (
 				SELECT ID FROM groups_attempts
-				WHERE idGroup = team_links.idGroupParent AND idItem = items.ID AND sStartDate IS NOT NULL
+				WHERE idGroup = teams.ID AND idItem = items.ID AND sStartDate IS NOT NULL
 				ORDER BY sStartDate LIMIT 1
 			)`).
 		Joins(`
@@ -239,7 +229,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_attempts AS first_validated_attempt_of_team
 			ON first_validated_attempt_of_team.ID = (
 				SELECT ID FROM groups_attempts
-				WHERE idGroup = team_links.idGroupParent AND idItem = items.ID AND sValidationDate IS NOT NULL
+				WHERE idGroup = teams.ID AND idItem = items.ID AND sValidationDate IS NOT NULL
 				ORDER BY sValidationDate LIMIT 1
 			)`).
 		Joins(`
