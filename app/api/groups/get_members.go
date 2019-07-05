@@ -34,7 +34,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
 		Where("groups_groups.idGroupParent = ?", groupID)
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"user.login":  {ColumnName: "users.sLogin"},

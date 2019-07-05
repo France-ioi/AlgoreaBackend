@@ -49,7 +49,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			NOW() - INTERVAL ? WEEK < groups_groups.sStatusDate`, oldRejectionsWeeks)
 	}
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"type":               {ColumnName: "groups_groups.sType"},

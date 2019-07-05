@@ -44,7 +44,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		query = query.Where("NOW() - INTERVAL ? WEEK < groups_groups.sStatusDate", withinWeeks)
 	}
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"status_date": {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},

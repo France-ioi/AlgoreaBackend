@@ -33,3 +33,34 @@ func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {
 			"bCachedPartialAccess":     0,
 		}).Error())
 }
+
+// AccessRightsForItemsVisibleToGroup returns a composable query for getting access rights
+// (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
+// for all the items that are visible to the given group.
+func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID int64) *DB {
+	return s.
+		Select(`
+			idItem,
+			MIN(sCachedFullAccessDate) <= NOW() AS fullAccess,
+			MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess,
+			MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess,
+			MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions`).
+		Joins(`
+			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors
+			ON ancestors.idGroupAncestor = groups_items.idGroup`, groupID).
+		Group("groups_items.idItem").
+		Having("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+}
+
+// AccessRightsForItemsVisibleToUser returns a composable query for getting access rights
+// (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
+// for all the items that are visible to the given user.
+func (s *GroupItemStore) AccessRightsForItemsVisibleToUser(user *User) *DB {
+	userSelfGroupID, err := user.SelfGroupID()
+	if err != nil {
+		_ = s.DB.db.AddError(err)
+		return s.DB
+	}
+
+	return s.AccessRightsForItemsVisibleToGroup(userSelfGroupID)
+}

@@ -112,25 +112,16 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		}
 
 		// at least one of the item's parents should be visible to the group
-		itemsVisibleToGroupSubquery := s.GroupItems().
-			Select(
-				"idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
-					"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, "+
-					"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess").
-			Joins(`
-				JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors
-				ON ancestors.idGroupAncestor = groups_items.idGroup`, groupID).
-			Group("groups_items.idItem").
-			Having("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0").SubQuery()
+		itemsVisibleToGroupSubQuery := s.GroupItems().AccessRightsForItemsVisibleToGroup(groupID).SubQuery()
 
 		found, err = s.ItemItems().
-			Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemParent", itemsVisibleToGroupSubquery).
+			Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemParent", itemsVisibleToGroupSubQuery).
 			Where("items_items.idItemChild = ?", itemID).
 			HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			found, err = s.Items().ByID(itemID).
-				Joins("JOIN ? AS visible ON visible.idItem = items.ID", itemsVisibleToGroupSubquery).HasRows()
+				Joins("JOIN ? AS visible ON visible.idItem = items.ID", itemsVisibleToGroupSubQuery).HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiErr = service.InsufficientAccessRightsError

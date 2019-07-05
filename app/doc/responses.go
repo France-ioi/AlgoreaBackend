@@ -71,3 +71,53 @@ type itemAnswerGetResponse struct {
 		UserGraderID *string `json:"user_grader_id"`
 	}
 }
+
+// OK. Success response with groups progress on items
+// For all children of items in the parent_item_id list, display the result for each direct child
+// of the given group_id whose type is not in (Team,UserSelf). Values are averages of all the group's
+// "end-members" where “end-member” defined as descendants of the group which are either
+// 1) teams or
+// 2) users who descend from the input group not only through teams (one or more).
+// swagger:response groupsGetGroupProgressResponse
+type groupsGetGroupProgressResponse struct {
+	// in: body
+	Body []struct {
+		// The child’s `group_id`
+		// required:true
+		GroupID int64 `json:"group_id,string"`
+		// required:true
+		ItemID int64 `json:"item_id,string"`
+		// Average score of all "end-members".
+		// The score of an "end-member" is the max of his `groups_attempt.iScore` or 0 if no attempts.
+		// required:true
+		AverageScore float32 `json:"average_score"`
+		// % (float [0,1]) of "end-members" who have validated the task.
+		// An "end-member" has validated a task if one of his attempts has `groups_attempts.bValidated` = 1.
+		// No attempts for an "end-member" is considered as not validated.
+		// required:true
+		ValidationRate float32 `json:"validation_rate"`
+		// Average number of hints requested by each "end-member".
+		// The number of hints requested of an "end-member" is the `groups_attempts.nbHintsCached`
+		// of the attempt with the best score
+		// (if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`).
+		// required:true
+		AvgHintsRequested float32 `json:"avg_hints_requested"`
+		// Average number of submissions made by each "end-member".
+		// The number of submissions made by an "end-member" is the `groups_attempts.nbSubmissionsAttempts`.
+		// of the attempt with the best score
+		// (if several with the same score, we use the first attempt chronologically on `sBestAnswerDate`).
+		// required:true
+		AvgSubmissionsAttempts float32 `json:"avg_submissions_attempts"`
+		// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
+		//
+		//   1) if no attempts yet: 0
+		//
+		//   2) if one attempt validated: min(`sValidationDate`) - min(`sStartDate`)
+		//     (i.e., time between the first time it started one (any) attempt
+		//      and the time he first validated the task)
+		//
+		//   3) if no attempts validated: `now` - min(`sStartDate`)
+		// required:true
+		AvgTimeSpent float32 `json:"avg_time_spent"`
+	}
+}

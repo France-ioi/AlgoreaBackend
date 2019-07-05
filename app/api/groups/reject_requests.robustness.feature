@@ -71,6 +71,6 @@ Feature: Reject group requests - robustness
     Given I am the user with ID "1"
     When I send a POST request to "/groups/13/requests/reject?group_ids=31,abc,11,13,22"
     Then the response code should be 400
-    And the response error message should contain "Unable to parse one of the integer given as query arg (value: 'abc', param: 'group_ids')"
+    And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

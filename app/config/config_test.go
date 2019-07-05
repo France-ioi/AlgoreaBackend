@@ -12,7 +12,7 @@ import (
 	assertlib "github.com/stretchr/testify/assert"
 )
 
-func TestLoadConfig(t *testing.T) {
+func TestLoad(t *testing.T) {
 	assert := assertlib.New(t)
 	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
@@ -33,6 +33,10 @@ func TestLoadConfig(t *testing.T) {
 	fileName := filepath.Base(tmpFile.Name())
 	configName = fileName[:len(fileName)-5] // strip the ".yaml"
 	configDir = tmpDir
+	defer func() {
+		configName = defaultConfigName
+		configDir = configDirectory()
+	}()
 
 	tmpTestFileName := tmpDir + "/" + configName + ".test.yaml"
 	err = ioutil.WriteFile(tmpTestFileName, []byte("server:\n  rootpath: '/test/'"), 0644)
@@ -57,26 +61,66 @@ func TestLoadConfig(t *testing.T) {
 	assert.EqualValues("/test/", conf.Server.RootPath)
 }
 
-func TestLoadConfig_CannotUnmarshal(t *testing.T) {
+func TestLoad_IgnoresMainConfigFileIfMissing(t *testing.T) {
 	assert := assertlib.New(t)
+	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+
+	// create a temp config file
+	tmpFile, deferFunc := createTmpFile("config-*.test.yaml", assert)
+	defer deferFunc()
+
+	fileName := filepath.Base(tmpFile.Name())
+	configName = fileName[:len(fileName)-10] // strip the ".test.yaml"
+	configDir = os.TempDir()
+	defer func() {
+		configName = defaultConfigName
+		configDir = configDirectory()
+	}()
+
+	conf := Load()
+	assert.NotNil(conf)
+}
+
+func TestLoad_IgnoresEnvConfigFileIfMissing(t *testing.T) {
+	assert := assertlib.New(t)
+	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
 	tmpDir := os.TempDir()
-	tmpFile, err := ioutil.TempFile(tmpDir, "config-*.yaml")
-	assert.NoError(err)
+	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
+	defer deferFunc()
+
+	fileName := filepath.Base(tmpFile.Name())
+	configName = fileName[:len(fileName)-5] // strip the ".yaml"
+	configDir = tmpDir
 	defer func() {
-		_ = os.Remove(tmpFile.Name())
-		_ = tmpFile.Close()
+		configName = defaultConfigName
+		configDir = configDirectory()
 	}()
 
+	conf := Load()
+	assert.NotNil(conf)
+}
+
+func TestLoad_CannotUnmarshal(t *testing.T) {
+	assert := assertlib.New(t)
+
+	// create a temp config file
+	tmpFile, deferFunc := createTmpFile("config-*.yaml", assert)
+	defer deferFunc()
+
 	text := []byte("unknown: 1234\n")
-	_, err = tmpFile.Write(text)
+	_, err := tmpFile.Write(text)
 	assert.NoError(err)
 
 	// change default config values
 	fileName := filepath.Base(tmpFile.Name())
 	configName = fileName[:len(fileName)-5] // strip the ".yaml"
-	configDir = tmpDir
+	configDir = os.TempDir()
+	defer func() {
+		configName = defaultConfigName
+		configDir = configDirectory()
+	}()
 
 	called := false
 	monkey.Patch(os.Exit, func(int) { called = true })
@@ -85,7 +129,9 @@ func TestLoadConfig_CannotUnmarshal(t *testing.T) {
 	assert.True(called)
 }
 
-func TestLoadConfig_Concurrent(t *testing.T) {
+func TestLoad_Concurrent(t *testing.T) {
+	_ = os.Unsetenv("ALGOREA_ENV")
+	common.SetDefaultEnvToTest()
 	assert := assertlib.New(t)
 	assert.NotPanics(func() {
 		Load()
@@ -93,4 +139,14 @@ func TestLoadConfig_Concurrent(t *testing.T) {
 			go func() { Load() }()
 		}
 	})
+}
+
+func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {
+	// create a temp config file
+	tmpFile, err := ioutil.TempFile(os.TempDir(), pattern)
+	assert.NoError(err)
+	return tmpFile, func() {
+		_ = os.Remove(tmpFile.Name())
+		_ = tmpFile.Close()
+	}
 }

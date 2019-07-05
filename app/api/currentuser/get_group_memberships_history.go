@@ -33,7 +33,7 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 		query = query.Where("groups_groups.sStatusDate >= ?", notificationReadDate)
 	}
 
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"status_date": {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},

@@ -52,19 +52,19 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 			desc:           "not a int64 (string)",
 			queryString:    "ids=6,7,etc",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: 'etc', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: 'etc', param: 'ids')",
 		},
 		{
 			desc:           "not a int64 (empty val)",
 			queryString:    "ids=8,,9",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: '', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '', param: 'ids')",
 		},
 		{
 			desc:           "too big for int64",
 			queryString:    "ids=123456789012345678901234567890",
 			expectedList:   nil,
-			expectedErrMsg: "unable to parse one of the integer given as query arg (value: '123456789012345678901234567890', param: 'ids')",
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '123456789012345678901234567890', param: 'ids')",
 		},
 	}
 	for _, testCase := range testCases {
@@ -368,6 +368,34 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"int_32":           int32(1234),
 				"corrections_read": int32(12345),
 				"grade":            int32(-1),
+			}},
+		},
+		{
+			"converts int64 into string",
+			[]map[string]interface{}{{
+				"int64":             int64(123),
+				"int32":             int32(1234),
+				"nbCorrectionsRead": int64(12345),
+				"iGrade":            int64(-1),
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"int_64":           "123",
+				"int_32":           int32(1234),
+				"corrections_read": int32(12345),
+				"grade":            int32(-1),
+			}},
+		},
+		{
+			"converts strings into float32 or int32 for i-prefixed fields",
+			[]map[string]interface{}{{
+				"iNumber":   "123",
+				"iAvgScore": "1.500",
+				"iPi":       "3.1415926535897932384626433",
+			}}, // gorm returns numbers as int64
+			[]map[string]interface{}{{
+				"number":    int32(123),
+				"avg_score": float32(1.5),
+				"pi":        float32(3.1415927),
 			}},
 		},
 	}

@@ -86,3 +86,25 @@ func TestItemItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testi
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestGroupItemStore_AccessRightsForItemsVisibleToUser(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mockUser := NewMockUser(1, &UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+
+	mock.ExpectQuery("^" + regexp.QuoteMeta(
+		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
+			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, "+
+			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions "+
+			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
+			"ON ancestors.idGroupAncestor = groups_items.idGroup GROUP BY groups_items.idItem "+
+			"HAVING (fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0)") + "$").
+		WithArgs(2).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	var result []interface{}
+	err := NewDataStore(db).GroupItems().AccessRightsForItemsVisibleToUser(mockUser).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

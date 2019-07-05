@@ -24,7 +24,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		Select("groups.ID, groups.sName, groups.sType, groups.iGrade, groups.bOpened, groups.bFreeAccess, groups.sPassword").
 		Where("groups.sType NOT LIKE 'UserSelf'").
 		Joins("JOIN groups_groups ON groups.ID=groups_groups.idGroupChild AND groups_groups.idGroupParent = ?", groupID)
-	query = service.SetQueryLimit(r, query)
+	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"name":  {ColumnName: "groups.sName", FieldType: "string"},

@@ -59,8 +59,10 @@ type Root struct {
 	Token        Token
 }
 
+const defaultConfigName = "config"
+
 var (
-	configName = "config"
+	configName = defaultConfigName
 	configDir  = configDirectory()
 )
 
@@ -89,10 +91,12 @@ func Load() *Root {
 	viperConfig.AddConfigPath(configDir)
 
 	if err = viperConfig.ReadInConfig(); err != nil {
-		log.Print("Cannot read the config file, ignoring it: ", err)
+		log.Print("Cannot read the main config file, ignoring it: ", err)
 	}
 
 	environment := common.Env()
+	log.Printf("Loading environment: %s\n", environment)
+
 	viperConfig.SetConfigName(configName + "." + environment)
 	if err = viperConfig.MergeInConfig(); err != nil {
 		log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
