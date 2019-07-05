@@ -9,17 +9,26 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
 func init() { // nolint:gochecknoinits
 
 	var migrateCmd = &cobra.Command{
-		Use:   "db-migrate",
+		Use:   "db-migrate [environment]",
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
+
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
+
+			common.SetDefaultEnvToTest()
 
 			// load config
 			conf := config.Load()

@@ -11,6 +11,7 @@ import (
 	"github.com/lithammer/dedent"
 	"gopkg.in/yaml.v2"
 
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -19,6 +20,7 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 func init() { // nolint:gochecknoinits
+	common.SetDefaultEnvToTest()
 	conf := config.Load()
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(conf.Logging)
@@ -26,6 +28,8 @@ func init() { // nolint:gochecknoinits
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
+	mustBeInTestEnv()
+
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
@@ -50,6 +54,8 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
 // and loads fixtures from the strings (yaml with a tableName->[]dataRow map)
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
+	mustBeInTestEnv()
+
 	rawDb, err := OpenRawDBConnection()
 	if err != nil {
 		panic(err)
@@ -90,6 +96,8 @@ func OpenRawDBConnection() (*sql.DB, error) {
 // Otherwise, data will be loaded into table with the same name as the filename (without extension).
 // Note that you should probably empty the DB before using this function.
 func LoadFixture(db *sql.DB, fileName string) {
+	mustBeInTestEnv()
+
 	var files []os.FileInfo
 	var err error
 	filePath := filepath.Join(fixtureDir, fileName)
@@ -132,6 +140,8 @@ func LoadFixture(db *sql.DB, fileName string) {
 }
 
 func loadFixtureChainFromString(db *sql.DB, fixture string) {
+	mustBeInTestEnv()
+
 	var content map[string][]map[string]interface{}
 	fixture = dedent.Dedent(fixture)
 	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
@@ -148,6 +158,8 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 
 // InsertBatch insert the data into the table with the name given
 func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
+	mustBeInTestEnv()
+
 	for _, row := range data {
 		var attributes []string
 		var valueMarks []string
@@ -170,6 +182,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 
 // nolint: gosec
 func emptyDB(db *sql.DB, dbName string) {
+	mustBeInTestEnv()
 
 	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
@@ -196,6 +209,14 @@ func emptyDB(db *sql.DB, dbName string) {
 
 // EmptyDB empties all tables of the database specified in the config
 func EmptyDB(db *sql.DB) {
+	mustBeInTestEnv()
 	conf := config.Load()
 	emptyDB(db, conf.Database.Connection.DBName)
+}
+
+func mustBeInTestEnv() {
+	if !common.IsEnvTest() {
+		fmt.Println("Tests altering the db can only be run in 'test' env")
+		os.Exit(1)
+	}
 }

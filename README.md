@@ -27,6 +27,8 @@ To make testing and development easier, a `docker-compose` file declares a datab
 
 The app configuration stands in the `conf/config.yml` file. The file `conf/config.sample.yml` is a sample configuration to start from, it is configured to work with the `docker-compose` configuration for local development. All configuration parameter can be also defined using environment variables (with an higher priority), see `.circleci/config.yml` for examples.
 
+Environment-specific configurations can be defined using `conf/config.ENV.yml` files when ENV can be "prod", "dev" or "test.
+
 ## Seeding the database
 
 An empty dump (schema without data) can be loaded using the `./bin/AlgoreaBackend db-restore` followed by `./bin/AlgoreaBackend db-migrate`.

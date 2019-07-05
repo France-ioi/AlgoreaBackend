@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
-	log "github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
@@ -30,7 +30,7 @@ func New() (*Application, error) {
 	conf := config.Load() // exits on errors
 
 	// Apply the config to the global logger
-	log.SharedLogger.Configure(conf.Logging)
+	logging.SharedLogger.Configure(conf.Logging)
 
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -38,29 +38,29 @@ func New() (*Application, error) {
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {
-		log.WithField("module", "database").Error(err)
+		logging.WithField("module", "database").Error(err)
 	}
 
 	tokenConfig, err := token.Initialize(&conf.Token)
 	if err != nil {
-		log.Error(err)
+		logging.Error(err)
 		return nil, err
 	}
 
 	var apiCtx *api.Ctx
 	if apiCtx, err = api.NewCtx(conf, db, tokenConfig); err != nil {
-		log.Error(err)
+		logging.Error(err)
 		return nil, err
 	}
 
 	// Set up middlewares
 	router := chi.NewRouter()
 
-	router.Use(middleware.RealIP)          // must be before logger or any middleware using remote IP
-	router.Use(middleware.DefaultCompress) // apply last on response
-	router.Use(middleware.RequestID)       // must be before any middleware using the request id (the logger and the recoverer do)
-	router.Use(log.NewStructuredLogger())  //
-	router.Use(middleware.Recoverer)       // must be before logger so that it an log panics
+	router.Use(middleware.RealIP)             // must be before logger or any middleware using remote IP
+	router.Use(middleware.DefaultCompress)    // apply last on response
+	router.Use(middleware.RequestID)          // must be before any middleware using the request id (the logger and the recoverer do)
+	router.Use(logging.NewStructuredLogger()) //
+	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
 

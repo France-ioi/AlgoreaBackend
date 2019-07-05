@@ -7,6 +7,8 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
+
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 )
 
 // Database is the part of the config related to the database
@@ -87,18 +89,24 @@ func Load() *Root {
 	viperConfig.AddConfigPath(configDir)
 
 	if err = viperConfig.ReadInConfig(); err != nil {
-		log.Print("Cannot read the config file, ignoring it.")
+		log.Print("Cannot read the config file, ignoring it: ", err)
+	}
+
+	environment := common.Env()
+	viperConfig.SetConfigName(configName + "." + environment)
+	if err = viperConfig.MergeInConfig(); err != nil {
+		log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
 	}
 
 	// map the given config to a static struct
-	if err = viperConfig.Unmarshal(&config); err != nil {
+	if err = viperConfig.UnmarshalExact(&config); err != nil {
 		log.Fatal("Cannot map the given config to the expected configuration struct:", err)
 	}
+
 	return config
 }
 
 func setDefaults(c *viper.Viper) {
-
 	// server
 	c.SetDefault("server.port", 8080)
 	c.SetDefault("server.readTimeout", 60)  // in seconds

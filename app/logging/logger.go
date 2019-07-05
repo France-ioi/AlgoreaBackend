@@ -70,6 +70,8 @@ func (l *Logger) Configure(conf config.Logging) {
 	} else {
 		l.SetLevel(level)
 	}
+
+	log.SetOutput(l.Logger.Writer())
 }
 
 // ResetShared reset the global logger to its default settings before its configuration
@@ -78,7 +80,5 @@ func ResetShared() {
 }
 
 func new() *Logger {
-	logger := logrus.New()
-	log.SetOutput(logger.Writer())
-	return &Logger{logger, nil}
+	return &Logger{logrus.New(), nil}
 }

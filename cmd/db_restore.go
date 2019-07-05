@@ -9,6 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
+	"github.com/France-ioi/AlgoreaBackend/app/common"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
@@ -16,10 +17,22 @@ import (
 func init() { // nolint:gochecknoinits
 
 	var restoreCmd = &cobra.Command{
-		Use:   "db-restore",
+		Use:   "db-restore [environment]",
 		Short: "load the last db schema",
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
+
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
+
+			common.SetDefaultEnvToTest()
+			if common.IsEnvProd() {
+				fmt.Println("'db-restore' must not be run in 'prod' env!")
+				os.Exit(1)
+			}
 
 			// load config
 			conf := config.Load()
