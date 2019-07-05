@@ -1,4 +1,4 @@
-package common
+package appenv
 
 import "os"
 

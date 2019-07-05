@@ -8,7 +8,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/common"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
 // Database is the part of the config related to the database
@@ -94,7 +94,7 @@ func Load() *Root {
 		log.Print("Cannot read the main config file, ignoring it: ", err)
 	}
 
-	environment := common.Env()
+	environment := appenv.Env()
 	log.Printf("Loading environment: %s\n", environment)
 
 	viperConfig.SetConfigName(configName + "." + environment)

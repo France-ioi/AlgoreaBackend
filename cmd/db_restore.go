@@ -9,7 +9,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app/common"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
@@ -25,11 +25,11 @@ func init() { // nolint:gochecknoinits
 
 			// if arg given, replace the env
 			if len(args) > 0 {
-				common.SetEnv(args[0])
+				appenv.SetEnv(args[0])
 			}
 
-			common.SetDefaultEnvToTest()
-			if common.IsEnvProd() {
+			appenv.SetDefaultEnvToTest()
+			if appenv.IsEnvProd() {
 				fmt.Println("'db-restore' must not be run in 'prod' env!")
 				os.Exit(1)
 			}
