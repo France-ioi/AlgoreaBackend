@@ -53,11 +53,13 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 1             | 11           | direct             |
       | 3             | 13           | direct             |
       | 11            | 14           | direct             |
-      | 11            | 16           | direct             |
       | 11            | 17           | direct             |
       | 11            | 18           | direct             |
       | 11            | 59           | requestAccepted    |
+      | 11            | 63           | direct             |
+      | 11            | 65           | requestAccepted    |
       | 13            | 15           | direct             |
+      | 13            | 16           | direct             |
       | 13            | 69           | invitationAccepted |
       | 14            | 51           | requestAccepted    |
       | 14            | 53           | requestAccepted    |
@@ -84,7 +86,6 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 1               | 11           | 0       |
       | 1               | 12           | 0       |
       | 1               | 14           | 0       |
-      | 1               | 16           | 0       |
       | 1               | 17           | 0       |
       | 1               | 18           | 0       |
       | 1               | 51           | 0       |
@@ -97,13 +98,13 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 3               | 3            | 1       |
       | 3               | 13           | 0       |
       | 3               | 15           | 0       |
+      | 3               | 16           | 0       |
       | 3               | 61           | 0       |
       | 3               | 63           | 0       |
       | 3               | 65           | 0       |
       | 3               | 69           | 0       |
       | 11              | 11           | 1       |
       | 11              | 14           | 0       |
-      | 11              | 16           | 0       |
       | 11              | 17           | 0       |
       | 11              | 18           | 0       |
       | 11              | 51           | 0       |
@@ -116,18 +117,30 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 12              | 12           | 1       |
       | 13              | 13           | 1       |
       | 13              | 15           | 0       |
+      | 13              | 16           | 0       |
+      | 13              | 51           | 0       |
+      | 13              | 53           | 0       |
+      | 13              | 55           | 0       |
+      | 13              | 59           | 0       |
       | 13              | 61           | 0       |
       | 13              | 63           | 0       |
       | 13              | 65           | 0       |
+      | 13              | 67           | 0       |
       | 13              | 69           | 0       |
       | 14              | 14           | 1       |
       | 14              | 51           | 0       |
       | 14              | 53           | 0       |
       | 14              | 55           | 0       |
       | 15              | 15           | 1       |
+      | 15              | 51           | 0       |
+      | 15              | 53           | 0       |
+      | 15              | 55           | 0       |
+      | 15              | 59           | 0       |
       | 15              | 61           | 0       |
       | 15              | 63           | 0       |
       | 15              | 65           | 0       |
+      | 15              | 69           | 0       |
+      | 15              | 67           | 0       |
       | 16              | 16           | 1       |
       | 16              | 63           | 0       |
       | 16              | 65           | 0       |
