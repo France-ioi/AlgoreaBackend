@@ -23,6 +23,11 @@ func init() { // nolint:gochecknoinits
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 
+			// if arg given, replace the env
+			if len(args) > 0 {
+				common.SetEnv(args[0])
+			}
+
 			common.SetDefaultEnvToTest()
 
 			// load config

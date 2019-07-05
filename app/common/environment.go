@@ -17,11 +17,16 @@ func Env() string {
 	return developementEnv
 }
 
-// SetDefaultEnv set the deployment environment to the given value if not set.
+// SetDefaultEnv sets the deployment environment to the given value if not set.
 func SetDefaultEnv(newVal string) {
 	if _, ok := os.LookupEnv(envVarName); ok {
 		return // already set
 	}
+	SetEnv(newVal)
+}
+
+// SetEnv sets the deployment environment to the given value
+func SetEnv(newVal string) {
 	if os.Setenv(envVarName, newVal) != nil {
 		panic("unable to set env variable")
 	}

@@ -86,3 +86,20 @@ func TestSetDefaultEnvToTest_Panic(t *testing.T) {
 		SetDefaultEnv("prod")
 	})
 }
+
+func TestSetEnv_Ok(t *testing.T) {
+	_ = os.Setenv(envVarName, "prod")
+	SetEnv("myEnv")
+	assert.Equal(t, "myEnv", Env())
+}
+
+func TestSetEnv_Panic(t *testing.T) {
+	_ = os.Setenv(envVarName, "prod")
+	monkey.Patch(os.Setenv, func(string, string) error {
+		return errors.New("unexpected error")
+	})
+	defer monkey.UnpatchAll()
+	assert.Panics(t, func() {
+		SetEnv("myEnv")
+	})
+}
