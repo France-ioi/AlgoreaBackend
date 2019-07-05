@@ -194,7 +194,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	selectsJoined := strings.Join(selects, ", ")
 
 	// exec sql
-	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
+	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s FOR UPDATE", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
 	sqlRows, err := db.Query(query)
 	if err != nil {
 		return err
