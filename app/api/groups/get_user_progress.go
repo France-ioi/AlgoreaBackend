@@ -26,6 +26,7 @@ import (
 //   type: integer
 //   required: true
 // - name: parent_item_ids
+//   required: true
 //   in: query
 //   type: array
 //   items:
