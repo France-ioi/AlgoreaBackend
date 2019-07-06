@@ -298,7 +298,7 @@ func TestItemStore_CloseContest(t *testing.T) {
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(NOW() - sFinishDate) < 3) AS finishDateSet").
+		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sFinishDate, NOW())) < 3) AS finishDateSet").
 		Order("idUser, idItem").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{
@@ -372,7 +372,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(NOW() - sFinishDate) < 3) as finishDateSet").
+		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sFinishDate, NOW())) < 3) as finishDateSet").
 		Order("idUser, idItem").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{

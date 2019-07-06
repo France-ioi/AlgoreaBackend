@@ -66,11 +66,11 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 11     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 11     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should be:
-      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 8674665223082153551 | 111     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 8674665223082153551 | 111     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
   Scenario: User is able to fetch an active attempt (no active attempt set, only full access)
     Given I am the user with ID "10"
@@ -105,11 +105,11 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should be:
-      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 8674665223082153551 | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 8674665223082153551 | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
   Scenario: User is able to fetch an active attempt (no active attempt and item.bHasAttempts=1)
     Given I am the user with ID "10"
@@ -144,11 +144,11 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 10     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 10     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should be:
-      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 8674665223082153551 | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 8674665223082153551 | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
   Scenario: User is able to fetch an active attempt (with active attempt set)
     Given I am the user with ID "10"
@@ -183,8 +183,8 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB)
@@ -227,12 +227,12 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should stay unchanged but the row with ID "2"
     And the table "groups_attempts" at ID "2" should be:
-      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
   Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB and items.bHasAttempts=1)
     Given I am the user with ID "10"
@@ -274,12 +274,12 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 10     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 10     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should stay unchanged but the row with ID "2"
     And the table "groups_attempts" at ID "2" should be:
-      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | ABS(sStartDate - NOW()) < 3 |
-      | 2  | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 1                           |
+      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
+      | 2  | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
   Scenario: Keeps previous sStartDate values
     Given I am the user with ID "10"
@@ -317,10 +317,10 @@ Feature: Fetch active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | sStartDate           |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 2017-05-29T06:38:38Z |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate           |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29T06:38:38Z |
     And the table "groups_attempts" should stay unchanged but the row with ID "2"
     And the table "groups_attempts" at ID "2" should be:
-      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 | sStartDate           |
-      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                  | null                             | null                             | null                             | 2017-05-29T06:38:38Z |
+      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate           |
+      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29T06:38:38Z |
 

@@ -37,8 +37,8 @@ Feature: Save grading result
       | 101     | 70     | 2017-05-29T06:38:38Z     |
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate      | sValidationDate      |
-      | 10     | 10     | null            | 0      |                      | null                 |
-      | 10     | 50     | 100             | 0      |                      | null                 |
+      | 10     | 10     | null            | 0      | null                 | null                 |
+      | 10     | 50     | 100             | 0      | null                 | null                 |
       | 10     | 60     | 101             | 10     | 2017-05-29T06:38:38Z | 2019-03-29T06:38:38Z |
     And the database has the following table 'users_answers':
       | ID  | idUser | idItem |
@@ -103,18 +103,18 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
-      | 123 | 10     | 50     | 100    | 1          | 1                             |
-      | 124 | 10     | 60     | null   | null       | null                          |
-      | 125 | 10     | 70     | null   | null       | null                          |
+      | ID  | idUser | idItem | iScore | bValidated | ABS(TIMESTAMPDIFF(SECOND, sGradingDate, NOW())) < 3 |
+      | 123 | 10     | 50     | 100    | 1          | 1                                                   |
+      | 124 | 10     | 60     | null   | null       | null                                                |
+      | 125 | 10     | 70     | null   | null       | null                                                |
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                  | null                             | 0                                | 1                                |
-      | 10     | 50     | 100    | 1            | 1          | 1            | done                       | 1                                  | 1                                | 1                                | 1                                |
-      | 10     | 60     | 10     | 0            | 0          | 0            | done                       | null                               | null                             | 0                                | 0                                |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                                        | null                                                   | null                                                   | 1                                                      |
+      | 10     | 50     | 100    | 1            | 1          | 1            | done                       | 1                                                        | 1                                                      | 1                                                      | 1                                                      |
+      | 10     | 60     | 10     | 0            | 0          | 0            | done                       | null                                                     | null                                                   | 0                                                      | 0                                                      |
     And the table "groups_attempts" should be:
-      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 100 | 100    | 1            | 1          | 1            | done                       | 1                                  | 1                                | 1                                | 1                                |
+      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 100 | 100    | 1            | 1          | 1            | done                       | 1                                                        | 1                                                      | 1                                                      | 1                                                      |
 
   Scenario: User is able to save the grading result with a low score and idAttempt
     Given I am the user with ID "10"
@@ -171,18 +171,18 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
-      | 123 | 10     | 50     | 99     | 0          | 1                             |
-      | 124 | 10     | 60     | null   | null       | null                          |
-      | 125 | 10     | 70     | null   | null       | null                          |
+      | ID  | idUser | idItem | iScore | bValidated | ABS(TIMESTAMPDIFF(SECOND, sGradingDate, NOW())) < 3 |
+      | 123 | 10     | 50     | 99     | 0          | 1                                                   |
+      | 124 | 10     | 60     | null   | null       | null                                                |
+      | 125 | 10     | 70     | null   | null       | null                                                |
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
-      | 10     | 50     | 99     | 1            | 0          | 0            | done                       | 1                                  | 1                                | 1                                | null                             |
-      | 10     | 60     | 10     | 0            | 0          | 0            | done                       | null                               | null                             | 0                                | 0                                |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | 0                                                      |
+      | 10     | 50     | 99     | 1            | 0          | 0            | done                       | 1                                                        | 1                                                      | 1                                                      | null                                                   |
+      | 10     | 60     | 10     | 0            | 0          | 0            | done                       | null                                                     | null                                                   | 0                                                      | 0                                                      |
     And the table "groups_attempts" should be:
-      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 100 | 99     | 1            | 0          | 0            | done                       | 1                                  | 1                                | 1                                | null                             |
+      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 100 | 99     | 1            | 0          | 0            | done                       | 1                                                        | 1                                                      | 1                                                      | null                                                   |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with ID "10"
@@ -239,18 +239,18 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
-      | 123 | 10     | 50     | null   | null       | null                          |
-      | 124 | 10     | 60     | 99     | 0          | 1                             |
-      | 125 | 10     | 70     | null   | null       | null                          |
+      | ID  | idUser | idItem | iScore | bValidated | ABS(TIMESTAMPDIFF(SECOND, sGradingDate, NOW())) < 3 |
+      | 123 | 10     | 50     | null   | null       | null                                                |
+      | 124 | 10     | 60     | 99     | 0          | 1                                                   |
+      | 125 | 10     | 70     | null   | null       | null                                                |
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                               | null                             | 0                                | null                             |
-      | 10     | 60     | 99     | 1            | 0          | 1            | done                       | 1                                  | 1                                | 1                                | 0                                |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | 0                                                      |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                                                     | null                                                   | null                                                   | null                                                   |
+      | 10     | 60     | 99     | 1            | 0          | 1            | done                       | 1                                                        | 1                                                      | 1                                                      | 0                                                      |
     And the table "groups_attempts" should be:
-      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 100 | 99     | 1            | 0          | 1            | done                       | 1                                  | 1                                | 1                                | null                             |
+      | ID  | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 100 | 99     | 1            | 0          | 1            | done                       | 1                                                        | 1                                                      | 1                                                      | null                                                   |
 
 
   Scenario: Should keep previous score if it is greater
@@ -308,15 +308,15 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
-      | 123 | 10     | 50     | null   | null       | null                          |
-      | 124 | 10     | 60     | 5      | 0          | 1                             |
-      | 125 | 10     | 70     | null   | null       | null                          |
+      | ID  | idUser | idItem | iScore | bValidated | ABS(TIMESTAMPDIFF(SECOND, sGradingDate, NOW())) < 3 |
+      | 123 | 10     | 50     | null   | null       | null                                                |
+      | 124 | 10     | 60     | 5      | 0          | 1                                                   |
+      | 125 | 10     | 70     | null   | null       | null                                                |
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                               | null                             | 0                                | null                             |
-      | 10     | 60     | 10     | 1            | 0          | 0            | done                       | 1                                  | 1                                | 0                                | 0                                |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 10     | 10     | 0      | 1            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | 0                                                      |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                                                     | null                                                   | null                                                   | null                                                   |
+      | 10     | 60     | 10     | 1            | 0          | 0            | done                       | 1                                                        | 1                                                      | 0                                                      | 0                                                      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should keep previous sValidationDate if it is earlier
@@ -374,15 +374,15 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | iScore | bValidated | ABS(sGradingDate - NOW()) < 3 |
-      | 123 | 10     | 50     | null   | null       | null                          |
-      | 124 | 10     | 60     | 100    | 1          | 1                             |
-      | 125 | 10     | 70     | null   | null       | null                          |
+      | ID  | idUser | idItem | iScore | bValidated | ABS(TIMESTAMPDIFF(SECOND, sGradingDate, NOW())) < 3 |
+      | 123 | 10     | 50     | null   | null       | null                                                |
+      | 124 | 10     | 60     | 100    | 1          | 1                                                   |
+      | 125 | 10     | 70     | null   | null       | null                                                |
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 | ABS(sLastAnswerDate - NOW()) < 3 | ABS(sBestAnswerDate - NOW()) < 3 | ABS(sValidationDate - NOW()) < 3 |
-      | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                  | null                             | 0                                | 0                                |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                               | null                             | 0                                | null                             |
-      | 10     | 60     | 100    | 1            | 1          | 1            | done                       | 1                                  | 1                                | 1                                | 0                                |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 |
+      | 10     | 10     | 0      | 1            | 1          | 0            | done                       | 1                                                        | null                                                   | null                                                   | 0                                                      |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | null                                                     | null                                                   | null                                                   | null                                                   |
+      | 10     | 60     | 100    | 1            | 1          | 1            | done                       | 1                                                        | 1                                                      | 1                                                      | 0                                                      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated

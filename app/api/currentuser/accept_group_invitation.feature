@@ -34,8 +34,8 @@ Feature: User accepts an invitation to join a group
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
     And the table "groups_groups" at ID "1" should be:
-      | ID | idGroupParent | idGroupChild | sType              | (sStatusDate IS NOT NULL) AND (ABS(NOW() - sStatusDate) < 3) |
-      | 1  | 11            | 21           | invitationAccepted | 1                                                            |
+      | ID | idGroupParent | idGroupChild | sType              | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
+      | 1  | 11            | 21           | invitationAccepted | 1                                                                                  |
     And the table "groups_ancestors" should be:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
