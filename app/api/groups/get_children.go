@@ -8,6 +8,78 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /groups/{group_id}/children groups groupChildrenView
+// ---
+// summary: List group's children
+// description: Returns children of the group having types
+//   specified by `types_include` and `types_exclude` parameters.
+//
+//   * The authenticated user should own the parent group.
+// parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: types_include
+//   in: query
+//   default: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+//   type: array
+//   items:
+//     type: string
+//     enum: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+// - name: types_exclude
+//   in: query
+//   type: array
+//   items:
+//     type: string
+//     enum: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+// - name: from.name
+//   description: Start the page from the sub-group next to the sub-group with `sName` = `from.name` and `ID` = `from.id`
+//                (`from.id` is required when `from.name` is present,
+//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//   in: query
+//   type: string
+// - name: from.type
+//   description: Start the page from the sub-group next to the sub-group with `sType` = `from.type` and `ID` = `from.id`
+//                (`from.id` is required when `from.type` is present,
+//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//   in: query
+//   type: string
+// - name: from.grade
+//   description: Start the page from the sub-group next to the sub-group with `iGrade` = `from.grade` and `ID` = `from.id`
+//                (`from.id` is required when `from.grade` is present,
+//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the sub-group next to the sub-group with `ID`=`from.id`
+//                (if at least one of other 'sort.*' parameters is present, `sort.id` is required)
+//   in: query
+//   type: integer
+// - name: sort
+//   in: query
+//   default: [name,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [name,-name,type,-type,grade,-grade,id,-id]
+// - name: limit
+//   description: Display the first N sub-groups
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     "$ref": "#/responses/groupChildrenViewResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
