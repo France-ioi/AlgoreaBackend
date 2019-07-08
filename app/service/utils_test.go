@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
@@ -291,6 +292,149 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 				assert.NoError(err)
 			}
 			assert.True(testCase.expectedValue.Equal(dateTime))
+		})
+	}
+}
+
+func TestResolveURLQueryGetStringSliceField(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedList   []string
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no param",
+			queryString:    "",
+			expectedList:   nil,
+			expectedErrMsg: "missing values",
+		},
+		{
+			desc:           "empty param",
+			queryString:    "values=",
+			expectedList:   []string{""},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "wrong param name",
+			queryString:    "value=1,2",
+			expectedList:   nil,
+			expectedErrMsg: "missing values",
+		},
+		{
+			desc:           "single value",
+			queryString:    "values=3",
+			expectedList:   []string{"3"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "multiple values",
+			queryString:    "values=4,abc",
+			expectedList:   []string{"4", "abc"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "empty val",
+			queryString:    "values=abc,,def",
+			expectedList:   []string{"abc", "", "def"},
+			expectedErrMsg: "",
+		},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			list, err := ResolveURLQueryGetStringSliceField(req, "values")
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(err)
+			}
+			assert.Equal(testCase.expectedList, list)
+		})
+	}
+}
+
+func TestResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedList   []string
+		expectedErrMsg string
+	}{
+		{
+			desc:           "no params",
+			queryString:    "",
+			expectedList:   []string{"apple", "orange", "pear"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "empty include param",
+			queryString:    "fruits_include=",
+			expectedList:   nil,
+			expectedErrMsg: `wrong value in 'fruits_include': ""`,
+		},
+		{
+			desc:           "empty exclude param",
+			queryString:    "fruits_exclude=",
+			expectedList:   nil,
+			expectedErrMsg: `wrong value in 'fruits_exclude': ""`,
+		},
+		{
+			desc:           "wrong value in include param",
+			queryString:    "fruits_include=cat",
+			expectedList:   nil,
+			expectedErrMsg: `wrong value in 'fruits_include': "cat"`,
+		},
+		{
+			desc:           "wrong value in exclude param",
+			queryString:    "fruits_exclude=dog",
+			expectedList:   nil,
+			expectedErrMsg: `wrong value in 'fruits_exclude': "dog"`,
+		},
+		{
+			desc:           "include param is given",
+			queryString:    "fruits_include=apple,orange",
+			expectedList:   []string{"apple", "orange"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "exclude param is given",
+			queryString:    "fruits_exclude=orange,pear",
+			expectedList:   []string{"apple"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "both params are given",
+			queryString:    "fruits_include=apple,orange&fruits_exclude=apple",
+			expectedList:   []string{"orange"},
+			expectedErrMsg: "",
+		},
+		{
+			desc:           "exclude an absent value",
+			queryString:    "fruits_include=apple,orange&fruits_exclude=pear",
+			expectedList:   []string{"apple", "orange"},
+			expectedErrMsg: "",
+		},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			req, _ := http.NewRequest("GET", "/health-check?"+testCase.queryString, nil)
+			list, err := ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(req, "fruits",
+				map[string]bool{"apple": true, "orange": true, "pear": true})
+			if testCase.expectedErrMsg != "" {
+				assert.EqualError(err, testCase.expectedErrMsg)
+			} else {
+				assert.NoError(err)
+			}
+			sort.Strings(list)
+			sort.Strings(testCase.expectedList)
+			assert.Equal(testCase.expectedList, list)
 		})
 	}
 }
