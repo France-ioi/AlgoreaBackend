@@ -36,24 +36,24 @@ import (
 // - name: from.name
 //   description: Start the page from the sub-group next to the sub-group with `sName` = `from.name` and `ID` = `from.id`
 //                (`from.id` is required when `from.name` is present,
-//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.type
 //   description: Start the page from the sub-group next to the sub-group with `sType` = `from.type` and `ID` = `from.id`
 //                (`from.id` is required when `from.type` is present,
-//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.grade
 //   description: Start the page from the sub-group next to the sub-group with `iGrade` = `from.grade` and `ID` = `from.id`
 //                (`from.id` is required when `from.grade` is present,
-//                some other 'sort.*' parameters may be required too depending on the `sort`)
+//                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.id
 //   description: Start the page from the sub-group next to the sub-group with `ID`=`from.id`
-//                (if at least one of other 'sort.*' parameters is present, `sort.id` is required)
+//                (if at least one of other 'from.*' parameters is present, `sort.id` is required)
 //   in: query
 //   type: integer
 // - name: sort
