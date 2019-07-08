@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/France-ioi/AlgoreaBackend/app/common"
-
 	"bou.ke/monkey"
 	assertlib "github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
 func TestLoad(t *testing.T) {
 	assert := assertlib.New(t)
-	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
 	tmpDir := os.TempDir()
@@ -63,7 +63,7 @@ func TestLoad(t *testing.T) {
 
 func TestLoad_IgnoresMainConfigFileIfMissing(t *testing.T) {
 	assert := assertlib.New(t)
-	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
 	tmpFile, deferFunc := createTmpFile("config-*.test.yaml", assert)
@@ -83,7 +83,7 @@ func TestLoad_IgnoresMainConfigFileIfMissing(t *testing.T) {
 
 func TestLoad_IgnoresEnvConfigFileIfMissing(t *testing.T) {
 	assert := assertlib.New(t)
-	common.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
+	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
 	tmpDir := os.TempDir()
@@ -131,7 +131,7 @@ func TestLoad_CannotUnmarshal(t *testing.T) {
 
 func TestLoad_Concurrent(t *testing.T) {
 	_ = os.Unsetenv("ALGOREA_ENV")
-	common.SetDefaultEnvToTest()
+	appenv.SetDefaultEnvToTest()
 	assert := assertlib.New(t)
 	assert.NotPanics(func() {
 		Load()

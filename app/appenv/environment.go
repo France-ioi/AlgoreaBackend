@@ -1,10 +1,10 @@
-package common
+package appenv
 
 import "os"
 
 const envVarName = "ALGOREA_ENV"
 const productionEnv = "prod"
-const developementEnv = "dev"
+const developmentEnv = "dev"
 const testEnv = "test"
 
 // Env returns the deployment environment set for this app ("prod", "dev", or "test"). Default to "dev".
@@ -14,7 +14,7 @@ func Env() string {
 		return env
 	}
 	// else, not set or set to empty string
-	return developementEnv
+	return developmentEnv
 }
 
 // SetDefaultEnv sets the deployment environment to the given value if not set.
@@ -44,7 +44,7 @@ func IsEnvTest() bool {
 
 // IsEnvDev return whether the app is in "dev" environment
 func IsEnvDev() bool {
-	return Env() == developementEnv
+	return Env() == developmentEnv
 }
 
 // IsEnvProd return whether the app is in "prod" environment

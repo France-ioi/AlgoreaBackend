@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/common"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 )
 
 func init() { // nolint:gochecknoinits
@@ -24,10 +24,10 @@ func init() { // nolint:gochecknoinits
 
 			// if arg given, replace the env
 			if len(args) > 0 {
-				common.SetEnv(args[0])
+				appenv.SetEnv(args[0])
 			}
 
-			log.Println("Starting application: environment =", common.Env())
+			log.Println("Starting application: environment =", appenv.Env())
 
 			var application *app.Application
 			application, err = app.New()
@@ -35,7 +35,7 @@ func init() { // nolint:gochecknoinits
 				log.Fatal(err)
 			}
 
-			if common.IsEnvDev() {
+			if appenv.IsEnvDev() {
 				backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusOK)

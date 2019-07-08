@@ -11,7 +11,7 @@ import (
 	"github.com/lithammer/dedent"
 	"gopkg.in/yaml.v2"
 
-	"github.com/France-ioi/AlgoreaBackend/app/common"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -20,7 +20,7 @@ import (
 const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
 
 func init() { // nolint:gochecknoinits
-	common.SetDefaultEnvToTest()
+	appenv.SetDefaultEnvToTest()
 	conf := config.Load()
 	// Apply the config to the global logger
 	logging.SharedLogger.Configure(conf.Logging)
@@ -215,7 +215,7 @@ func EmptyDB(db *sql.DB) {
 }
 
 func mustNotBeInProdEnv() {
-	if common.IsEnvProd() {
+	if appenv.IsEnvProd() {
 		fmt.Println("Can't be run in 'prod' env")
 		os.Exit(1)
 	}

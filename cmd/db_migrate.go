@@ -9,7 +9,7 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app/common"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 )
 
@@ -25,10 +25,10 @@ func init() { // nolint:gochecknoinits
 
 			// if arg given, replace the env
 			if len(args) > 0 {
-				common.SetEnv(args[0])
+				appenv.SetEnv(args[0])
 			}
 
-			common.SetDefaultEnvToTest()
+			appenv.SetDefaultEnvToTest()
 
 			// load config
 			conf := config.Load()
