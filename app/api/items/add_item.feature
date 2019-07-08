@@ -59,8 +59,8 @@ Feature: Add item
       | idItemAncestor | idItemChild         |
       | 21             | 5577006791947779410 |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with ID "1"
@@ -152,8 +152,8 @@ Feature: Add item
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      | 1                 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |
 
   Scenario: Valid with empty full_screen
     Given I am the user with ID "1"
@@ -190,5 +190,5 @@ Feature: Add item
       | idItemAncestor | idItemChild         |
       | 21             | 5577006791947779410 |
     And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(sFullAccessDate - NOW()) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(sCachedFullAccessDate - NOW()) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                | 1            | 1                    | 1                                      |                 1 |
+      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
+      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |

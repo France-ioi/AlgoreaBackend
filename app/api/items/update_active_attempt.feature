@@ -54,11 +54,11 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 11     | 50     | 100             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 11     | 50     | 100             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 111     | 50     | done                       | 1                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 111     | 50     | done                       | 1                                                        |
 
   Scenario: User is able to fetch an active attempt (partial access)
     Given I am the user with ID "10"
@@ -78,11 +78,11 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 10     | 50     | 100             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 10     | 50     | 100             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 101     | 50     | done                       | 1                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 101     | 50     | done                       | 1                                                        |
 
   Scenario: User is able to update an active attempt (bHasAttempts=1, groups_groups.sType=invitationAccepted)
     Given I am the user with ID "10"
@@ -103,12 +103,12 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 10     | 10     | null            | done                       | 1                                  |
-      | 10     | 60     | 200             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 10     | 10     | null            | done                       | 1                                                        |
+      | 10     | 60     | 200             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 200 | 102     | 60     | done                       | 1                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 200 | 102     | 60     | done                       | 1                                                        |
 
   Scenario: User is able to update an active attempt (bHasAttempts=1, groups_groups.sType=requestAccepted)
     Given I am the user with ID "10"
@@ -129,12 +129,12 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 10     | 10     | null            | done                       | 1                                  |
-      | 10     | 60     | 200             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 10     | 10     | null            | done                       | 1                                                        |
+      | 10     | 60     | 200             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 200 | 103     | 60     | done                       | 1                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 200 | 103     | 60     | done                       | 1                                                        |
 
   Scenario: User is able to update an active attempt when this attempt is already active
     Given I am the user with ID "11"
@@ -154,11 +154,11 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 11     | 50     | 100             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 11     | 50     | 100             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 111     | 50     | done                       | 1                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 111     | 50     | done                       | 1                                                        |
 
 
   Scenario: User is able to update an active attempt when another attempt is active
@@ -180,9 +180,9 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 11     | 50     | 100             | done                       | 1                                  |
+      | idUser | idItem | idAttemptActive | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 11     | 50     | 100             | done                       | 1                                                        |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 111     | 50     | done                       | 1                                  |
-      | 101 | 111     | 50     | done                       | 0                                  |
+      | ID  | idGroup | idItem | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 111     | 50     | done                       | 1                                                        |
+      | 101 | 111     | 50     | done                       | 0                                                        |

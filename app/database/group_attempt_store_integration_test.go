@@ -37,8 +37,8 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	var result resultType
 	assert.NoError(t, database.NewDataStore(db).GroupAttempts().ByID(newID).
 		Select(`
-			idGroup, idItem, ABS(sStartDate - NOW()) < 3 AS startDateSet,
-			ABS(sLastActivityDate - NOW()) < 3 AS lastActivityDateSet, iOrder`).
+			idGroup, idItem, ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 AS startDateSet,
+			ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 AS lastActivityDateSet, iOrder`).
 		Take(&result).Error())
 	assert.Equal(t, resultType{
 		GroupID:             10,

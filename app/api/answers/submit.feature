@@ -69,14 +69,14 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
-      | 10     | 50     | 3                     | 1                                  |
+      | idUser | idItem | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 10     | 50     | 3                     | 1                                                        |
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer | ABS(sSubmissionDate - NOW()) < 3 |
-      | 10     | 50     | 100       | Submission | print 1 | 1                                |
+      | idUser | idItem | idAttempt | sType      | sAnswer | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
+      | 10     | 50     | 100       | Submission | print 1 | 1                                                      |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                  |
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                                        |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with ID "10"
@@ -126,11 +126,11 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
-      | 10     | 50     | 3                     | 1                                  |
+      | idUser | idItem | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 10     | 50     | 3                     | 1                                                        |
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer  | ABS(sSubmissionDate - NOW()) < 3 |
-      | 10     | 50     | 100       | Submission | print(2) | 1                                |
+      | idUser | idItem | idAttempt | sType      | sAnswer  | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
+      | 10     | 50     | 100       | Submission | print(2) | 1                                                      |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(sLastActivityDate - NOW()) < 3 |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                  |
+      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
+      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                                        |

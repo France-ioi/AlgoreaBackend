@@ -48,7 +48,7 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 			assert.NoError(t,
 				userAnswerStore.ByID(newID).
 					Select("idUser, idItem, idAttempt, sType, sAnswer, "+
-						"bValidated, ABS(NOW() - sSubmissionDate) < 3 AS submissionDateSet").
+						"bValidated, ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 AS submissionDateSet").
 					Scan(&insertedAnswer).Error())
 			assert.Equal(t, userAnswer{
 				UserID:            test.userID,
@@ -116,7 +116,7 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 				var insertedAnswer userAnswer
 				assert.NoError(t,
 					dataStore.UserAnswers().ByID(currentAnswerID).
-						Select("idUser, idItem, idAttempt, sType, bValidated, ABS(NOW() - sSubmissionDate) < 3 AS submissionDateSet").
+						Select("idUser, idItem, idAttempt, sType, bValidated, ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 AS submissionDateSet").
 						Scan(&insertedAnswer).Error())
 				assert.Equal(t, userAnswer{
 					UserID:            test.userID,

@@ -11,5 +11,5 @@ Feature: Set users.sNotificationReadDate to NOW() for the current user
     Then the response should be "updated"
     And the table "users" should stay unchanged but the row with ID "1"
     And the table "users" at ID "1" should be:
-      | ID | sLogin | ABS(NOW() - sNotificationReadDate) < 3 |
-      | 1  | user   | 1                                      |
+      | ID | sLogin | ABS(TIMESTAMPDIFF(SECOND, sNotificationReadDate, NOW())) < 3 |
+      | 1  | user   | 1                                                            |
