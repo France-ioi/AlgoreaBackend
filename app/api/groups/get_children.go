@@ -16,14 +16,35 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
+	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
+		map[string]bool{
+			"Root": true, "Class": true, "Team": true, "Club": true, "Friends": true,
+			"Other": true, "UserSelf": true, "UserAdmin": true, "RootSelf": true, "RootAdmin": true,
+		})
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
 	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 
 	query := srv.Store.Groups().
-		Select("groups.ID, groups.sName, groups.sType, groups.iGrade, groups.bOpened, groups.bFreeAccess, groups.sPassword").
-		Where("groups.sType NOT LIKE 'UserSelf'").
-		Joins("JOIN groups_groups ON groups.ID=groups_groups.idGroupChild AND groups_groups.idGroupParent = ?", groupID)
+		Select(`
+			groups.ID as ID, groups.sName, groups.sType, groups.iGrade,
+			groups.bOpened, groups.bFreeAccess, groups.sPassword,
+			(
+				SELECT COUNT(*) FROM groups AS user_groups
+				JOIN groups_ancestors
+				ON groups_ancestors.idGroupChild = user_groups.ID AND
+					groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild
+				WHERE user_groups.sType = 'UserSelf' AND groups_ancestors.idGroupAncestor = groups.ID
+			) AS iUserCount`).
+		Joins(`
+			JOIN groups_groups ON groups.ID = groups_groups.idGroupChild AND
+				groups_groups.sType IN ('direct', 'requestAccepted', 'invitationAccepted') AND
+				groups_groups.idGroupParent = ?`, groupID).
+		Where("groups.sType IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{

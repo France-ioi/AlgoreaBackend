@@ -34,3 +34,15 @@ Feature: Get group children (groupChildrenView) - robustness
     When I send a GET request to "/groups/13/children?sort=password"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "password""
+
+  Scenario: Invalid type in types_include
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/13/children?types_include=Teacher"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value in 'types_include': "Teacher""
+
+  Scenario: Invalid type in types_exclude
+    Given I am the user with ID "1"
+    When I send a GET request to "/groups/13/children?types_exclude=Manager"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value in 'types_exclude': "Manager""
