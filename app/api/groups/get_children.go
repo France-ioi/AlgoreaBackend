@@ -29,6 +29,7 @@ import (
 //     enum: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
 // - name: types_exclude
 //   in: query
+//   default: []
 //   type: array
 //   items:
 //     type: string
