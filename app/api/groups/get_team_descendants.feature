@@ -165,8 +165,6 @@ Feature: List team descendants of the group (groupTeamDescendantView)
 
   Scenario: Get descendant teams
     Given I am the user with ID "1"
-    # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
     When I send a GET request to "/groups/1/team-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -251,8 +249,6 @@ Feature: List team descendants of the group (groupTeamDescendantView)
 
   Scenario: Get the first team from the list
     Given I am the user with ID "1"
-    # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
     When I send a GET request to "/groups/1/team-descendants?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -300,8 +296,6 @@ Feature: List team descendants of the group (groupTeamDescendantView)
 
   Scenario: Get teams skipping the first one
     Given I am the user with ID "1"
-    # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
     When I send a GET request to "/groups/1/team-descendants?from.name=First%20Team&from.id=16"
     Then the response code should be 200
     And the response body should be, in JSON:
