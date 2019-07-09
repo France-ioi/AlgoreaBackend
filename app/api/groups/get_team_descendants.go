@@ -119,11 +119,11 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 			member_links.idGroupParent AS idLinkedGroup,
 			users.idGroupSelf, users.ID, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
 		Joins(`
-				JOIN groups_groups AS member_links ON
-					member_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
-					member_links.idGroupChild = users.idGroupSelf AND
-					member_links.idGroupParent IN (?)`, groupIDs).
-		Order("users.ID").
+			JOIN groups_groups AS member_links ON
+				member_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
+				member_links.idGroupChild = users.idGroupSelf AND
+				member_links.idGroupParent IN (?)`, groupIDs).
+		Order("member_links.idGroupParent, member_links.idGroupChild").
 		Scan(&membersResult).Error())
 
 	for _, membersRow := range membersResult {
