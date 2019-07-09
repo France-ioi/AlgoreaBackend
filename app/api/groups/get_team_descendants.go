@@ -101,11 +101,11 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	service.MustNotBeError(srv.Store.Groups().
 		Select("parent_links.idGroupChild AS idLinkedGroup, groups.ID, groups.sName").
 		Joins(`
-				JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
-					parent_links.sType = 'direct' AND parent_links.idGroupChild IN (?)`, groupIDs).
+			JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
+				parent_links.sType = 'direct' AND parent_links.idGroupChild IN (?)`, groupIDs).
 		Joins(`
-				JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = parent_links.idGroupParent AND
-					parent_ancestors.idGroupAncestor = ?`, groupID).
+			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = parent_links.idGroupParent AND
+				parent_ancestors.idGroupAncestor = ?`, groupID).
 		Order("groups.ID").
 		Scan(&parentsResult).Error())
 
