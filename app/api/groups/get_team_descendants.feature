@@ -1,4 +1,4 @@
-Feature: List team descendants of the group (groupTeamDescendants)
+Feature: List team descendants of the group (groupTeamDescendantView)
   Background:
     Given the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |

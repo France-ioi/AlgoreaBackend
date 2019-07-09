@@ -1,4 +1,4 @@
-Feature: List team descendants of the group (groupTeamDescendants) - robustness
+Feature: List team descendants of the group (groupTeamDescendantView) - robustness
   Background:
     Given the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned |
