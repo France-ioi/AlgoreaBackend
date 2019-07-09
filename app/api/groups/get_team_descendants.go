@@ -171,7 +171,7 @@ type teamDescendant struct {
 	// required:true
 	Grade int32 `sql:"column:iGrade" json:"grade"`
 
-	// Team's parent groups
+	// Team's parent groups among the input group's descendants
 	// required:true
 	Parents []teamDescendantParent `sql:"-" json:"parents"`
 	// Team's member users
