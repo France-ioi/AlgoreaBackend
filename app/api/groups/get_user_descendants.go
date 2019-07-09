@@ -8,10 +8,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/team-descendants groups groupTeamDescendantView
+// swagger:operation GET /groups/{group_id}/user-descendants groups users groupUserDescendantView
 // ---
-// summary: List team descendants of the group
-// description: Returns all teams (`sType` = "Team") among the descendants of the given group
+// summary: List user descendants of the group
+// description: Return all users (`sType` = "UserSelf") among the descendants of the given group
 //
 //   * The authenticated user should own the parent group.
 // parameters:
@@ -20,12 +20,12 @@ import (
 //   required: true
 //   type: integer
 // - name: from.name
-//   description: Start the page from the team next to the team with `sName` = `from.name` and `ID` = `from.id`
+//   description: Start the page from the user next to the user with self group's `sName` = `from.name` and `ID` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the team next to the team with `sName`=`from.name` and `ID`=`from.id`
+//   description: Start the page from the user next to the user with self group's `sName`=`from.name` and `ID`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -44,11 +44,11 @@ import (
 //   default: 500
 // responses:
 //   "200":
-//     description: OK. Success response with an array of teams
+//     description: OK. Success response with an array of users
 //     schema:
 //       type: array
 //       items:
-//         "$ref": "#/definitions/teamDescendant"
+//         "$ref": "#/definitions/userDescendant"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -57,7 +57,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
@@ -70,12 +70,15 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	}
 
 	query := srv.Store.Groups().
-		Select("groups.ID, groups.sName, groups.iGrade").
+		Select(`
+			groups.ID, groups.sName,
+			users.ID AS idUser, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID AND
 				groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild AND
 				groups_ancestors.idGroupAncestor = ?`, groupID).
-		Where("groups.sType = 'Team'")
+		Joins("JOIN users ON users.idGroupSelf = groups.ID").
+		Where("groups.sType = 'UserSelf'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
@@ -86,15 +89,14 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		return apiError
 	}
 
-	var result []teamDescendant
+	var result []userDescendant
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	groupIDs := make([]int64, 0, len(result))
-	resultMap := make(map[int64]*teamDescendant, len(result))
+	resultMap := make(map[int64]*userDescendant, len(result))
 	for index, groupRow := range result {
 		groupIDs = append(groupIDs, groupRow.ID)
 		resultMap[groupRow.ID] = &result[index]
-		result[index].Members = []teamDescendantMember{}
 	}
 
 	var parentsResult []descendantParent
@@ -102,7 +104,8 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		Select("parent_links.idGroupChild AS idLinkedGroup, groups.ID, groups.sName").
 		Joins(`
 			JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
-				parent_links.sType = 'direct' AND parent_links.idGroupChild IN (?)`, groupIDs).
+				parent_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
+				parent_links.idGroupChild IN (?)`, groupIDs).
 		Joins(`
 			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = groups.ID AND
 				parent_ancestors.idGroupAncestor = ?`, groupID).
@@ -113,42 +116,14 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		resultMap[parentsRow.LinkedGroupID].Parents = append(resultMap[parentsRow.LinkedGroupID].Parents, parentsRow)
 	}
 
-	var membersResult []teamDescendantMember
-	service.MustNotBeError(srv.Store.Users().
-		Select(`
-			member_links.idGroupParent AS idLinkedGroup,
-			users.idGroupSelf, users.ID, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
-		Joins(`
-			JOIN groups_groups AS member_links ON
-				member_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
-				member_links.idGroupChild = users.idGroupSelf AND
-				member_links.idGroupParent IN (?)`, groupIDs).
-		Order("member_links.idGroupParent, member_links.idGroupChild").
-		Scan(&membersResult).Error())
-
-	for _, membersRow := range membersResult {
-		resultMap[membersRow.LinkedGroupID].Members = append(resultMap[membersRow.LinkedGroupID].Members, membersRow)
-	}
-
 	render.Respond(w, r, result)
 	return service.NoError
 }
 
-type descendantParent struct {
+type userDescendantUser struct {
+	// The user's `users.ID`
 	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
-	// required:true
-	Name string `sql:"column:sName" json:"name"`
-
-	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
-}
-
-type teamDescendantMember struct {
-	// User's `ID`
-	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
-	// required:true
-	SelfGroupID int64 `sql:"column:idGroupSelf" json:"self_group_id"`
+	ID int64 `sql:"column:idUser" json:"id,string"`
 	// Nullable
 	// required:true
 	FirstName *string `sql:"column:sFirstName" json:"first_name"`
@@ -160,24 +135,20 @@ type teamDescendantMember struct {
 	// Nullable
 	// required:true
 	Grade *int32 `sql:"column:iGrade" json:"grade"`
-
-	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
 }
 
 // swagger:model
-type teamDescendant struct {
-	// The team's `groups.ID`
+type userDescendant struct {
+	// The user's self `groups.ID`
 	// required:true
 	ID int64 `sql:"column:ID" json:"id,string"`
+	// The user's self `groups.sName`
 	// required:true
 	Name string `sql:"column:sName" json:"name"`
 	// required:true
-	Grade int32 `sql:"column:iGrade" json:"grade"`
+	User userDescendantUser `json:"user" gorm:"embedded"`
 
-	// Team's parent groups among the input group's descendants
+	// User's parent groups among the input group's descendants
 	// required:true
 	Parents []descendantParent `sql:"-" json:"parents"`
-	// Team's member users
-	// required:true
-	Members []teamDescendantMember `sql:"-" json:"members"`
 }
