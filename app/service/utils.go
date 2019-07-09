@@ -55,6 +55,59 @@ func ResolveURLQueryGetStringField(httpReq *http.Request, name string) (string, 
 	return httpReq.URL.Query().Get(name), nil
 }
 
+// ResolveURLQueryGetStringSliceField extracts from the query parameter of the request a list of strings separated by commas (',')
+// returns `nil` the parameter is missing
+func ResolveURLQueryGetStringSliceField(req *http.Request, paramName string) ([]string, error) {
+	if err := checkQueryGetFieldIsNotMissing(req, paramName); err != nil {
+		return nil, err
+	}
+
+	paramValue := req.URL.Query().Get(paramName)
+	return strings.Split(paramValue, ","), nil
+}
+
+// ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters extracts a list of values
+// out from '<fieldName>_include'/'<fieldName>_exclude' request parameters:
+//   1. If none of '<fieldName>_include'/'<fieldName>_exclude' is present, all the known values are returned.
+//   2. If '<fieldName>_include' is present, then it becomes the result list.
+//   3. If '<fieldName>_exclude' is present, then we exclude all its values from the result list.
+//
+// All values from both the request parameters are checked against the list of known values.
+func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
+	r *http.Request, fieldName string, knownValuesMap map[string]bool) ([]string, error) {
+	var valuesMap map[string]bool
+	valuesToInclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_include")
+	if err == nil {
+		valuesMap = make(map[string]bool, len(valuesToInclude))
+		for _, value := range valuesToInclude {
+			if !knownValuesMap[value] {
+				return nil, fmt.Errorf("wrong value in '%s_include': %q", fieldName, value)
+			}
+			valuesMap[value] = true
+		}
+	} else {
+		valuesMap = make(map[string]bool, len(knownValuesMap))
+		for value := range knownValuesMap {
+			valuesMap[value] = true
+		}
+	}
+
+	valuesToExclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_exclude")
+	if err == nil && len(valuesToExclude) != 0 {
+		for _, valueToExclude := range valuesToExclude {
+			if !knownValuesMap[valueToExclude] {
+				return nil, fmt.Errorf("wrong value in '%s_exclude': %q", fieldName, valueToExclude)
+			}
+			delete(valuesMap, valueToExclude)
+		}
+	}
+	valuesList := make([]string, 0, len(valuesMap))
+	for value := range valuesMap {
+		valuesList = append(valuesList, value)
+	}
+	return valuesList, nil
+}
+
 // ResolveURLQueryGetTimeField extracts a get-parameter of type time.Time (rfc3339) from the query
 func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time, error) {
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {

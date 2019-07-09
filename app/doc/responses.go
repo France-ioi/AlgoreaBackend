@@ -203,3 +203,30 @@ type groupsGetUserProgressResponse struct {
 		TimeSpent int32 `json:"time_spent"`
 	}
 }
+
+// OK. Success response with group's sub-groups
+// swagger:response groupChildrenViewResponse
+type groupChildrenViewResponse struct {
+	// in: body
+	Body []struct {
+		// The sub-group's `groups.ID`
+		// required:true
+		ID int64 `json:"id,string"`
+		// required:true
+		Name string `json:"name"`
+		// required:true
+		Type string `json:"type"`
+		// required:true
+		Grade int32 `json:"grade"`
+		// required:true
+		Opened bool `json:"opened"`
+		// required:true
+		FreeAccess bool `json:"free_access"`
+		// Nullable
+		// required:true
+		Password *string `json:"password"`
+		// The number of descendant users
+		// required:true
+		UserCount int32 `json:"user_count"`
+	}
+}
