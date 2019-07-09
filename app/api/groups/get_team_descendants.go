@@ -150,12 +150,15 @@ type teamDescendantMember struct {
 	// required:true
 	SelfGroupID int64 `sql:"column:idGroupSelf" json:"self_group_id"`
 	// Nullable
+	// required:true
 	FirstName *string `sql:"column:sFirstName" json:"first_name"`
 	// Nullable
+	// required:true
 	LastName *string `sql:"column:sLastName" json:"last_name"`
 	// required:true
 	Login string `sql:"column:sLogin" json:"login"`
 	// Nullable
+	// required:true
 	Grade *int32 `sql:"column:iGrade" json:"grade"`
 
 	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
