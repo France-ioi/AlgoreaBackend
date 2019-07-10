@@ -12,6 +12,7 @@ import (
 	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -138,4 +139,45 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	// check that the compression has been applied but the length in the logs is not altered by compression i
 	assert.Equal(23, hook.LastEntry().Data["resp_bytes_length"])
 	assert.Equal("gzip", response.Header.Get("Content-Encoding"))
+}
+
+func TestNew_MountsPprofInDev(t *testing.T) {
+	assert := assertlib.New(t)
+
+	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
+	defer monkey.UnpatchAll()
+
+	app, err := New()
+	assert.NotNil(app)
+	assert.NoError(err)
+
+	srv := httptest.NewServer(app.HTTPHandler)
+	defer srv.Close()
+
+	request, _ := http.NewRequest("GET", srv.URL+"/debug", nil)
+	response, _ := http.DefaultClient.Do(request)
+	body, err := ioutil.ReadAll(response.Body)
+	assert.NoError(err)
+	assert.Contains(string(body), "Types of profiles available:")
+}
+
+func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
+	assert := assertlib.New(t)
+
+	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
+	defer monkey.UnpatchAll()
+
+	app, err := New()
+	assert.NotNil(app)
+	assert.NoError(err)
+
+	srv := httptest.NewServer(app.HTTPHandler)
+	defer srv.Close()
+
+	request, _ := http.NewRequest("GET", srv.URL+"/debug", nil)
+	response, _ := http.DefaultClient.Do(request)
+	assert.Equal(502, response.StatusCode)
+	body, err := ioutil.ReadAll(response.Body)
+	assert.NoError(err)
+	assert.Equal("", string(body))
 }
