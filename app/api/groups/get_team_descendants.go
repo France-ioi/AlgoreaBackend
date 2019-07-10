@@ -134,15 +134,6 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	return service.NoError
 }
 
-type descendantParent struct {
-	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
-	// required:true
-	Name string `sql:"column:sName" json:"name"`
-
-	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
-}
-
 type teamDescendantMember struct {
 	// User's `ID`
 	// required:true

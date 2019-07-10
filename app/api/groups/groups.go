@@ -136,3 +136,12 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 	renderGroupGroupTransitionResults(w, r, results)
 	return service.NoError
 }
+
+type descendantParent struct {
+	// required:true
+	ID int64 `sql:"column:ID" json:"id,string"`
+	// required:true
+	Name string `sql:"column:sName" json:"name"`
+
+	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
+}
