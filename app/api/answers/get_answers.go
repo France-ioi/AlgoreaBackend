@@ -38,7 +38,11 @@ import (
 //   type: integer
 // responses:
 //   "200":
-//     "$ref": "#/responses/itemAnswersViewResponse"
+//     description: OK. Success response with an array of answers
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/answersResponseAnswer"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -90,6 +94,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	return service.NoError
 }
 
+// swagger:ignore
 type rawAnswersData struct {
 	ID             int64    `sql:"column:ID"`
 	Name           *string  `sql:"column:sName"`
@@ -114,6 +119,7 @@ type answersResponseAnswerUser struct {
 	LastName *string `json:"last_name"`
 }
 
+// swagger:model
 type answersResponseAnswer struct {
 	// required: true
 	ID int64 `json:"id,string"`
@@ -137,14 +143,6 @@ type answersResponseAnswer struct {
 
 	// required: true
 	User answersResponseAnswerUser `json:"user"`
-}
-
-// OK. Success response with an array of answers
-// swagger:response itemAnswersViewResponse
-type itemAnswersViewResponse struct { // nolint:unused,deadcode
-	// description: The returned answers
-	// in:body
-	Answers []answersResponseAnswer
 }
 
 func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response *[]answersResponseAnswer) {
