@@ -90,3 +90,29 @@ swagger serve ./swagger.yaml
 * The API routing (`app/api/api.go`) does the same for mounting all group of services.
 * A service group (e.g., `app/api/groups/groups.go`.) mounts all its services and pass the context again.
 * Each service has its dedicated file (e.g., `app/api/groups/get-all.go`). We try to separate the actual HTTP request parsing and response generation from the actual business logic and the call to the database.
+
+## How to profile a service
+1. Start the server in 'dev' environment
+```
+./bin/AlgoreaBackend serve dev
+```
+```
+2019/07/10 00:15:39 Loading environment: test
+INFO 2019/07/10 00:15:39 Starting application: environment = dev
+INFO 2019/07/10 00:15:39 Loading environment: dev
+INFO 2019/07/10 00:15:39 Configuring server...
+INFO 2019/07/10 00:15:39 Starting server...
+INFO 2019/07/10 00:15:39 Listening on :8080
+```
+
+2. Start making many requests to the service you want to profile and wait for 10 seconds:
+```
+ab -k -c 1 -n 10000 -C "PHPSESSID=dummy" "http://127.0.0.1:8080/groups/1/team-descendants"
+```
+('-c 1' means 'concurrency = 1', you can try other values as well)
+
+3. Get the profile:
+```
+go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
+```
+Type 'web' as a pprof command to see the call graph with durations.
