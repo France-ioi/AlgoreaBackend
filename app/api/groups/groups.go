@@ -30,6 +30,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/groups/{group_id}/password", service.AppHandler(srv.discardPassword).ServeHTTP)
 
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
+	router.Get("/groups/{group_id}/team-descendants", service.AppHandler(srv.getTeamDescendants).ServeHTTP)
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
 
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
