@@ -3,16 +3,6 @@ Feature: List user descendants of the group (groupUserDescendantView)
     Given the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
       | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  | 10     |
-      | 11 | johna  | 51          | 52           | John        | Adams     | 1      |
-      | 12 | johnb  | 53          | 54           | John        | Baker     | 2      |
-      | 13 | johnc  | 55          | 56           | John        | null      | 3      |
-      | 14 | johnd  | 57          | 58           | null        | Davis     | -1     |
-      | 15 | johne  | 59          | 60           | John        | Edwards   | null   |
-      | 16 | janea  | 61          | 62           | Jane        | Adams     | 3      |
-      | 17 | janeb  | 63          | 64           | Jane        | Baker     | null   |
-      | 18 | janec  | 65          | 66           | Jane        | null      | 4      |
-      | 19 | janed  | 67          | 68           | Jane        | Doe       | -2     |
-      | 20 | janee  | 69          | 70           | Jane        | Edwards   | null   |
     And the database has the following table 'groups':
       | ID | sType     | sName          | iGrade |
       | 1  | Root      | Root 1         | -2     |
@@ -27,60 +17,18 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 18 | Club      | Our Club       | -2     |
       | 20 | Friends   | My Friends     | -2     |
       | 21 | UserSelf  | owner          | -2     |
-      | 51 | UserSelf  | johna          | -2     |
-      | 53 | UserSelf  | johnb          | -2     |
-      | 55 | UserSelf  | johnc          | -2     |
-      | 57 | UserSelf  | johnd          | -2     |
-      | 59 | UserSelf  | johne          | -2     |
-      | 61 | UserSelf  | janea          | -2     |
-      | 63 | UserSelf  | janeb          | -2     |
-      | 65 | UserSelf  | janec          | -2     |
-      | 67 | UserSelf  | janed          | -2     |
-      | 69 | UserSelf  | janee          | -2     |
       | 22 | UserAdmin | owner-admin    | -2     |
-      | 52 | UserAdmin | johna-admin    | -2     |
-      | 54 | UserAdmin | johnb-admin    | -2     |
-      | 56 | UserAdmin | johnc-admin    | -2     |
-      | 58 | UserAdmin | johnd-admin    | -2     |
-      | 60 | UserAdmin | johne-admin    | -2     |
-      | 62 | UserAdmin | janea-admin    | -2     |
-      | 64 | UserAdmin | janeb-admin    | -2     |
-      | 66 | UserAdmin | janec-admin    | -2     |
-      | 68 | UserAdmin | janed-admin    | -2     |
-      | 70 | UserAdmin | janee-admin    | -2     |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType              |
       | 1             | 11           | direct             |
       | 3             | 13           | direct             |
+      | 3             | 15           | direct             |
       | 11            | 14           | direct             |
       | 11            | 16           | direct             |
       | 11            | 17           | direct             |
       | 11            | 18           | direct             |
-      | 11            | 59           | requestAccepted    |
-      | 12            | 63           | requestAccepted    |
       | 13            | 14           | direct             |
       | 13            | 15           | direct             |
-      | 13            | 67           | requestAccepted    |
-      | 13            | 69           | invitationAccepted |
-      | 14            | 51           | requestAccepted    |
-      | 14            | 53           | requestAccepted    |
-      | 14            | 55           | invitationAccepted |
-      | 15            | 57           | direct             |
-      | 15            | 59           | requestAccepted    |
-      | 15            | 61           | invitationAccepted |
-      | 15            | 63           | invitationRejected |
-      | 15            | 65           | left               |
-      | 15            | 67           | invitationSent     |
-      | 15            | 69           | requestSent        |
-      | 16            | 51           | invitationRefused  |
-      | 16            | 53           | requestRefused     |
-      | 16            | 55           | removed            |
-      | 16            | 63           | direct             |
-      | 16            | 65           | requestAccepted    |
-      | 16            | 67           | invitationAccepted |
-      | 20            | 21           | direct             |
-      | 22            | 1            | direct             |
-      | 22            | 3            | direct             |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 1            | 1       |
@@ -90,61 +38,21 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 1               | 16           | 0       |
       | 1               | 17           | 0       |
       | 1               | 18           | 0       |
-      | 1               | 51           | 0       |
-      | 1               | 53           | 0       |
-      | 1               | 55           | 0       |
-      | 1               | 59           | 0       |
-      | 1               | 63           | 0       |
-      | 1               | 65           | 0       |
-      | 1               | 67           | 0       |
       | 3               | 3            | 1       |
       | 3               | 13           | 0       |
       | 3               | 15           | 0       |
-      | 3               | 51           | 0       |
-      | 3               | 53           | 0       |
-      | 3               | 55           | 0       |
-      | 3               | 61           | 0       |
-      | 3               | 63           | 0       |
-      | 3               | 65           | 0       |
-      | 3               | 67           | 0       |
-      | 3               | 69           | 0       |
       | 11              | 11           | 1       |
       | 11              | 14           | 0       |
       | 11              | 16           | 0       |
       | 11              | 17           | 0       |
       | 11              | 18           | 0       |
-      | 11              | 51           | 0       |
-      | 11              | 53           | 0       |
-      | 11              | 55           | 0       |
-      | 11              | 59           | 0       |
-      | 11              | 63           | 0       |
-      | 11              | 65           | 0       |
-      | 11              | 67           | 0       |
       | 12              | 12           | 1       |
-      | 12              | 63           | 0       |
       | 13              | 13           | 1       |
       | 13              | 14           | 0       |
       | 13              | 15           | 0       |
-      | 13              | 51           | 0       |
-      | 13              | 53           | 0       |
-      | 13              | 55           | 0       |
-      | 13              | 61           | 0       |
-      | 13              | 63           | 0       |
-      | 13              | 65           | 0       |
-      | 13              | 67           | 0       |
-      | 13              | 69           | 0       |
       | 14              | 14           | 1       |
-      | 14              | 51           | 0       |
-      | 14              | 53           | 0       |
-      | 14              | 55           | 0       |
       | 15              | 15           | 1       |
-      | 15              | 61           | 0       |
-      | 15              | 63           | 0       |
-      | 15              | 65           | 0       |
       | 16              | 16           | 1       |
-      | 16              | 63           | 0       |
-      | 16              | 65           | 0       |
-      | 16              | 67           | 0       |
       | 20              | 20           | 1       |
       | 20              | 21           | 0       |
       | 21              | 21           | 1       |
@@ -158,220 +66,233 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 22              | 17           | 0       |
       | 22              | 18           | 0       |
       | 22              | 22           | 1       |
+
+  Scenario: One group with 3 grand children (different parents; one connected as "direct", one as "invitationAccepted", one as "requestAccepted")
+    Given the database table 'users' has also the following rows:
+      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
+      | 11 | johna  | 51          | 52           | null        | Adams     | 1      |
+      | 12 | johnb  | 53          | 54           | John        | Baker     | null   |
+      | 13 | johnc  | 55          | 56           | John        | null      | 3      |
+    And the database table 'groups' has also the following rows:
+      | ID | sType     | sName          | iGrade |
+      | 51 | UserSelf  | johna          | -2     |
+      | 52 | UserAdmin | johna-admin    | -2     |
+      | 53 | UserSelf  | johnb          | -2     |
+      | 54 | UserAdmin | johnb-admin    | -2     |
+      | 55 | UserSelf  | johnc          | -2     |
+      | 56 | UserAdmin | johnc-admin    | -2     |
+    And the database table 'groups_groups' has also the following rows:
+      | idGroupParent | idGroupChild | sType              |
+      | 11            | 51           | invitationAccepted |
+      | 17            | 53           | requestAccepted    |
+      | 16            | 55           | direct             |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 1               | 51           | 0       |
+      | 1               | 53           | 0       |
+      | 1               | 55           | 0       |
+      | 3               | 53           | 0       |
+      | 11              | 51           | 0       |
+      | 11              | 53           | 0       |
+      | 11              | 55           | 0       |
+      | 16              | 55           | 0       |
+      | 17              | 53           | 0       |
       | 22              | 51           | 0       |
       | 22              | 53           | 0       |
       | 22              | 55           | 0       |
-      | 22              | 59           | 0       |
-      | 22              | 61           | 0       |
-      | 22              | 63           | 0       |
-      | 22              | 65           | 0       |
-      | 22              | 67           | 0       |
-      | 22              | 69           | 0       |
-
-  Scenario: Get descendant users
-    Given I am the user with ID "1"
+      | 51              | 51           | 1       |
+      | 52              | 52           | 1       |
+      | 53              | 53           | 1       |
+      | 54              | 54           | 1       |
+      | 55              | 55           | 1       |
+      | 56              | 56           | 1       |
+    And I am the user with ID "1"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "63",
-        "name": "janeb",
-        "user": {
-          "first_name": "Jane",
-          "grade": null,
-          "id": "17",
-          "last_name": "Baker",
-          "login": "janeb"
-        },
-        "parents": [
-          {
-            "id": "12",
-            "name": "Other Class"
-          },
-          {
-            "id": "16",
-            "name": "First Team"
-          }
-        ]
-      },
-      {
-        "id": "65",
-        "name": "janec",
-        "user": {
-          "first_name": "Jane",
-          "grade": 4,
-          "id": "18",
-          "last_name": null,
-          "login": "janec"
-        },
-        "parents": [
-          {
-            "id": "16",
-            "name": "First Team"
-          }
-        ]
-      },
-      {
-        "id": "67",
-        "name": "janed",
-        "parents": [
-          {
-            "id": "16",
-            "name": "First Team"
-          }
-        ],
-        "user": {
-          "first_name": "Jane",
-          "grade": -2,
-          "id": "19",
-          "last_name": "Doe",
-          "login": "janed"
-        }
-      },
-      {
         "id": "51",
         "name": "johna",
-        "parents": [
-          {
-            "id": "14",
-            "name": "Super Team"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": 1,
-          "id": "11",
-          "last_name": "Adams",
-          "login": "johna"
-        }
+        "parents": [{"id": "11", "name": "Our Class"}],
+        "user": {"first_name": null, "grade": 1, "id": "11", "last_name": "Adams", "login": "johna"}
       },
       {
         "id": "53",
         "name": "johnb",
-        "parents": [
-          {
-            "id": "14",
-            "name": "Super Team"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": 2,
-          "id": "12",
-          "last_name": "Baker",
-          "login": "johnb"
-        }
+        "parents": [{"id": "17", "name": "A custom group"}],
+        "user": {"first_name": "John", "grade": null, "id": "12", "last_name": "Baker", "login": "johnb"}
       },
       {
         "id": "55",
         "name": "johnc",
-        "parents": [
-          {
-            "id": "14",
-            "name": "Super Team"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": 3,
-          "id": "13",
-          "last_name": null,
-          "login": "johnc"
-        }
-      },
-      {
-        "id": "59",
-        "name": "johne",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": null,
-          "id": "15",
-          "last_name": "Edwards",
-          "login": "johne"
-        }
+        "parents": [{"id": "16", "name": "First Team"}],
+        "user": {"first_name": "John", "grade": 3, "id": "13", "last_name": null, "login": "johnc"}
       }
     ]
     """
-
-  Scenario: Get the first user from the list
-    Given I am the user with ID "1"
     When I send a GET request to "/groups/1/user-descendants?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "63",
-        "name": "janeb",
-        "user": {
-          "first_name": "Jane",
-          "grade": null,
-          "id": "17",
-          "last_name": "Baker",
-          "login": "janeb"
-        },
-        "parents": [
-          {
-            "id": "12",
-            "name": "Other Class"
-          },
-          {
-            "id": "16",
-            "name": "First Team"
-          }
-        ]
+        "id": "51",
+        "name": "johna",
+        "parents": [{"id": "11", "name": "Our Class"}],
+        "user": {"first_name": null, "grade": 1, "id": "11", "last_name": "Adams", "login": "johna"}
       }
     ]
     """
-
-  Scenario: Get users skipping the first five
-    Given I am the user with ID "1"
-    When I send a GET request to "/groups/1/user-descendants?from.name=johnb&from.id=53"
+    When I send a GET request to "/groups/1/user-descendants?from.name=johna&from.id=51"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "55",
-        "name": "johnc",
-        "parents": [
-          {
-            "id": "14",
-            "name": "Super Team"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": 3,
-          "id": "13",
-          "last_name": null,
-          "login": "johnc"
-        }
+        "id": "53",
+        "name": "johnb",
+        "parents": [{"id": "17", "name": "A custom group"}],
+        "user": {"first_name": "John", "grade": null, "id": "12", "last_name": "Baker", "login": "johnb"}
       },
       {
-        "id": "59",
-        "name": "johne",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ],
-        "user": {
-          "first_name": "John",
-          "grade": null,
-          "id": "15",
-          "last_name": "Edwards",
-          "login": "johne"
-        }
+        "id": "55",
+        "name": "johnc",
+        "parents": [{"id": "16", "name": "First Team"}],
+        "user": {"first_name": "John", "grade": 3, "id": "13", "last_name": null, "login": "johnc"}
+      }
+    ]
+    """
+
+  Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
+    Given the database table 'users' has also the following rows:
+      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
+      | 11 | johna  | 51          | 52           | null        | Adams     | 1      |
+    And the database table 'groups' has also the following rows:
+      | ID | sType     | sName          | iGrade |
+      | 51 | UserSelf  | johna          | -2     |
+      | 52 | UserAdmin | johna-admin    | -2     |
+    And the database table 'groups_groups' has also the following rows:
+      | idGroupParent | idGroupChild | sType              |
+      | 11            | 51           | invitationAccepted |
+      | 13            | 51           | invitationAccepted |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 1               | 51           | 0       |
+      | 3               | 51           | 0       |
+      | 11              | 51           | 0       |
+      | 13              | 51           | 0       |
+      | 22              | 51           | 0       |
+      | 51              | 51           | 1       |
+      | 52              | 52           | 1       |
+    And I am the user with ID "1"
+    When I send a GET request to "/groups/1/user-descendants"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "51",
+        "name": "johna",
+        "parents": [{"id": "11", "name": "Our Class"}],
+        "user": {"first_name": null, "grade": 1, "id": "11", "last_name": "Adams", "login": "johna"}
+      }
+    ]
+    """
+
+  Scenario: Only actual memberships count
+    Given the database table 'users' has also the following rows:
+      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
+      | 11 | johna  | 51          | 52           | John        | Adams     | 1      |
+      | 12 | johnb  | 53          | 54           | John        | Baker     | 2      |
+      | 13 | johnc  | 55          | 56           | John        | null      | 3      |
+      | 14 | johnd  | 57          | 58           | null        | Davis     | -1     |
+      | 15 | johne  | 59          | 60           | John        | Edwards   | null   |
+      | 16 | janea  | 61          | 62           | Jane        | Adams     | 3      |
+      | 17 | janeb  | 63          | 64           | Jane        | Baker     | null   |
+    And the database table 'groups' has also the following rows:
+      | ID | sType     | sName          | iGrade |
+      | 51 | UserSelf  | johna          | -2     |
+      | 52 | UserAdmin | johna-admin    | -2     |
+      | 53 | UserSelf  | johnb          | -2     |
+      | 54 | UserAdmin | johnb-admin    | -2     |
+      | 55 | UserSelf  | johnc          | -2     |
+      | 56 | UserAdmin | johnc-admin    | -2     |
+      | 57 | UserSelf  | johnd          | -2     |
+      | 58 | UserAdmin | johnd-admin    | -2     |
+      | 59 | UserSelf  | johne          | -2     |
+      | 60 | UserAdmin | johne-admin    | -2     |
+      | 61 | UserSelf  | janea          | -2     |
+      | 62 | UserAdmin | janea-admin    | -2     |
+    And the database table 'groups_groups' has also the following rows:
+      | idGroupParent | idGroupChild | sType              |
+      | 11            | 51           | invitationSent     |
+      | 11            | 53           | requestSent        |
+      | 11            | 55           | invitationRefused  |
+      | 11            | 57           | requestRefused     |
+      | 11            | 59           | removed            |
+      | 11            | 61           | left               |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 22              | 51           | 0       |
+      | 22              | 53           | 0       |
+      | 22              | 55           | 0       |
+      | 22              | 57           | 0       |
+      | 22              | 59           | 0       |
+      | 22              | 61           | 0       |
+      | 51              | 51           | 1       |
+      | 52              | 52           | 1       |
+      | 53              | 53           | 1       |
+      | 54              | 54           | 1       |
+      | 55              | 55           | 1       |
+      | 56              | 56           | 1       |
+      | 57              | 57           | 1       |
+      | 58              | 58           | 1       |
+      | 59              | 59           | 1       |
+      | 60              | 60           | 1       |
+      | 61              | 61           | 1       |
+      | 62              | 62           | 1       |
+    And I am the user with ID "1"
+    When I send a GET request to "/groups/1/user-descendants"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
+
+  Scenario: No duplication (one group with 1 grand children connected through 2 different parents)
+    Given the database table 'users' has also the following rows:
+      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
+      | 11 | johna  | 51          | 52           | null        | Adams     | 1      |
+    And the database table 'groups' has also the following rows:
+      | ID | sType     | sName          | iGrade |
+      | 51 | UserSelf  | johna          | -2     |
+      | 52 | UserAdmin | johna-admin    | -2     |
+    And the database table 'groups_groups' has also the following rows:
+      | idGroupParent | idGroupChild | sType              |
+      | 11            | 51           | invitationAccepted |
+      | 14            | 51           | requestAccepted    |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 1               | 51           | 0       |
+      | 11              | 51           | 0       |
+      | 14              | 51           | 0       |
+      | 22              | 51           | 0       |
+      | 51              | 51           | 1       |
+      | 52              | 52           | 1       |
+    And I am the user with ID "1"
+    When I send a GET request to "/groups/1/user-descendants"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "51",
+        "name": "johna",
+        "parents": [{"id": "11", "name": "Our Class"}, {"id": "14", "name": "Super Team"}],
+        "user": {"first_name": null, "grade": 1, "id": "11", "last_name": "Adams", "login": "johna"}
       }
     ]
     """
