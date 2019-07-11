@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
+	"github.com/France-ioi/AlgoreaBackend/app/api/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/api/currentuser"
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/api/items"
@@ -44,6 +45,7 @@ func (ctx *Ctx) Router() *chi.Mux {
 		Config:      ctx.config,
 		TokenConfig: ctx.tokenConfig,
 	}
+	r.Group((&auth.Service{Base: base}).SetRoutes)
 	r.Group((&items.Service{Base: base}).SetRoutes)
 	r.Group((&groups.Service{Base: base}).SetRoutes)
 	r.Group((&answers.Service{Base: base}).SetRoutes)
