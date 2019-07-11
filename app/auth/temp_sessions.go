@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// TemporaryUserSessionLifetimeInSeconds specifies the lifetime of a temporary user session
+// TemporaryUserSessionLifetimeInSeconds specifies the lifetime of the access token for a temporary user
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user
