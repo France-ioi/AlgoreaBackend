@@ -20,6 +20,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the generated group password is "([^"]*)"$`, ctx.TheGeneratedGroupPasswordIs)
 	s.Step(`^the generated group passwords are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupPasswordsAre)
 
+	s.Step(`^request headers are:$`, ctx.RequestHeadersAre)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.TheResponseCodeShouldBe)

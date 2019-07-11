@@ -7,6 +7,17 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 )
 
+func (ctx *TestContext) RequestHeadersAre(data *gherkin.DataTable) error { // nolint
+	for _, row := range data.Rows {
+		headerName := row.Cells[0].Value
+		if ctx.requestHeaders == nil {
+			ctx.requestHeaders = make(map[string][]string, len(data.Rows))
+		}
+		ctx.requestHeaders[headerName] = append(ctx.requestHeaders[headerName], row.Cells[1].Value)
+	}
+	return nil
+}
+
 func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *gherkin.DocString) error { // nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
@@ -30,7 +41,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// do request
-	response, body, err := testRequest(testServer, method, path, strings.NewReader(reqBody))
+	response, body, err := testRequest(testServer, method, path, ctx.requestHeaders, strings.NewReader(reqBody))
 	if err != nil {
 		return err
 	}
