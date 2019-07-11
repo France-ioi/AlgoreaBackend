@@ -128,6 +128,14 @@ func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) err
 	})
 }
 
+// RetryOnDuplicateKeyError will retry the given function on getting duplicate entry errors
+// for the given key
+func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicateKeyError(keyName, nameInError, func(db *DB) error {
+		return f(NewDataStore(db))
+	})
+}
+
 // InsertMap reads fields from the given map and inserts the values which have been set
 // into the store's table
 func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {

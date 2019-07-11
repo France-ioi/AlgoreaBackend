@@ -1247,12 +1247,12 @@ func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	for i := 1; i < idTriesCount; i++ {
+	for i := 1; i < keyTriesCount; i++ {
 		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
 	}
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(idTriesCount).
-		WillReturnResult(sqlmock.NewResult(idTriesCount, 1))
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
+		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
 	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
@@ -1267,7 +1267,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	for i := 1; i < idTriesCount+1; i++ {
+	for i := 1; i < keyTriesCount+1; i++ {
 		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
 	}
