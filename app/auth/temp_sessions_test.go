@@ -36,7 +36,7 @@ func TestGenerateTempAccessToken_HandlesError(t *testing.T) {
 	assert.Equal(t, expectedError, err)
 }
 
-func TestSessionStore_CreateNewTempSession(t *testing.T) {
+func TestCreateNewTempSession(t *testing.T) {
 	expectedAccessToken := "tmp-01abcdefghijklmnopqrstuvwxyz"
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
@@ -58,7 +58,7 @@ func TestSessionStore_CreateNewTempSession(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSessionStore_CreateNewTempSession_Retries(t *testing.T) {
+func TestCreateNewTempSession_Retries(t *testing.T) {
 	expectedAccessTokens := []string{"tmp-02abcdefghijklmnopqrstuvwxyz", "tmp-03abcdefghijklmnopqrstuvwxyz"}
 	accessTokensIndex := -1
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
@@ -89,7 +89,7 @@ func TestSessionStore_CreateNewTempSession_Retries(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSessionStore_CreateNewTempSession_HandlesGeneratorError(t *testing.T) {
+func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	expectedError := errors.New("some error")
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return "", expectedError })
 	defer monkey.UnpatchAll()
@@ -107,7 +107,7 @@ func TestSessionStore_CreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSessionStore_CreateNewTempSession_HandlesDBError(t *testing.T) {
+func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 	expectedAccessToken := "tmp-04abcdefghijklmnopqrstuvwxyz"
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
