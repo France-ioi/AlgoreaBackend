@@ -35,7 +35,8 @@ func (s *SessionStore) CreateNewTempSession(userID int64) (accessToken string, e
 	return
 }
 
-// GenerateTempAccessToken generate a random access token for a temporary user's session
+// GenerateTempAccessToken generate a random access token for a temporary user's session.
+// Entropy of the generated token (assuming "crypto/rand" is well implemented) is 36^28, so ~144 bits.
 func GenerateTempAccessToken() (string, error) {
 	const allowedCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
 	const allowedCharactersLength = len(allowedCharacters)
