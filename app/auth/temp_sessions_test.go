@@ -18,11 +18,19 @@ import (
 )
 
 func TestGenerateTempAccessToken(t *testing.T) {
-	got, err := GenerateTempAccessToken()
+	got1, err := GenerateTempAccessToken()
 
 	assert.NoError(t, err)
-	assert.Len(t, got, 32)
-	assert.Regexp(t, `^[0-9a-z]{32}$`, got)
+	assert.Len(t, got1, 32)
+	assert.Regexp(t, `^[0-9a-z]{32}$`, got1)
+
+	got2, err := GenerateTempAccessToken()
+
+	assert.NoError(t, err)
+	assert.Len(t, got2, 32)
+	assert.Regexp(t, `^[0-9a-z]{32}$`, got2)
+
+	assert.NotEqual(t, got2, got1)
 }
 
 func TestGenerateTempAccessToken_HandlesError(t *testing.T) {
