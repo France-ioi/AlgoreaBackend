@@ -37,7 +37,7 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "WithNamedLock",
 		func(*DataStore, string, time.Duration, func(*DataStore) error) error {
 			var a []int
-			a[0]++ // runtime error
+			a[0]++ // nolint:govet // runtime error
 			return nil
 		})
 	defer monkey.UnpatchAll()
