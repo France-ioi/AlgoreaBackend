@@ -14,7 +14,7 @@ Feature: Create a temporary user
       | 3  | 2             | 4            | 1           |
 
   Scenario: Create a new temporary user
-    Given the generated access token is "tmp-zqri9a2adn4v1ut6izd76xb3pccw"
+    Given the generated access token is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
     When I send a POST request to "/auth/temp-user"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -22,12 +22,12 @@ Feature: Create a temporary user
       {
         "success": true,
         "message": "created",
-        "data": {"access_token": "tmp-zqri9a2adn4v1ut6izd76xb3pccw", "expires_in": 7200}
+        "data": {"access_token": "ny93zqri9a2adn4v1ut6izd76xb3pccw", "expires_in": 7200}
       }
       """
     And logs should contain:
       """
-      Generated a session token "tmp-zqri9a2adn4v1ut6izd76xb3pccw" expiring at
+      Generated a session token "ny93zqri9a2adn4v1ut6izd76xb3pccw" expiring at
       """
     And logs should contain:
       """
@@ -60,4 +60,4 @@ Feature: Create a temporary user
       | 6129484611666145821 | 6129484611666145821 | true    |
     And the table "sessions" should be:
       | sAccessToken                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), sExpirationDate) - 7200) < 3 | idUser              | ABS(TIMESTAMPDIFF(SECOND, NOW(), sIssuedAtDate)) < 3 | sIssuer |
-      | tmp-zqri9a2adn4v1ut6izd76xb3pccw | true                                                          | 5577006791947779410 | true                                                 | backend |
+      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                          | 5577006791947779410 | true                                                 | backend |

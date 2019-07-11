@@ -20,7 +20,7 @@ func TestGenerateTempAccessToken(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Len(t, got, 32)
-	assert.Regexp(t, `^tmp-[0-9a-z]{28}$`, got)
+	assert.Regexp(t, `^[0-9a-z]{32}$`, got)
 }
 
 func TestGenerateTempAccessToken_HandlesError(t *testing.T) {
