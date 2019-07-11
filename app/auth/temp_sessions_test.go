@@ -1,4 +1,4 @@
-package database
+package auth
 
 import (
 	"crypto/rand"
@@ -13,6 +13,8 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func TestGenerateTempAccessToken(t *testing.T) {
@@ -39,7 +41,7 @@ func TestSessionStore_CreateNewTempSession(t *testing.T) {
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
-	db, mock := NewDBMock()
+	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
@@ -48,7 +50,7 @@ func TestSessionStore_CreateNewTempSession(t *testing.T) {
 	)+"$").WithArgs(expectedUserID, expectedAccessToken, 2*60*60, "backend").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	accessToken, expireIn, err := NewDataStore(db).Sessions().CreateNewTempSession(expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -62,7 +64,7 @@ func TestSessionStore_CreateNewTempSession_Retries(t *testing.T) {
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
 	defer monkey.UnpatchAll()
 
-	db, mock := NewDBMock()
+	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
@@ -79,7 +81,7 @@ func TestSessionStore_CreateNewTempSession_Retries(t *testing.T) {
 	)+"$").WithArgs(expectedUserID, expectedAccessTokens[1], 2*60*60, "backend").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	accessToken, expireIn, err := NewDataStore(db).Sessions().CreateNewTempSession(expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessTokens[1], accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -92,12 +94,12 @@ func TestSessionStore_CreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return "", expectedError })
 	defer monkey.UnpatchAll()
 
-	db, mock := NewDBMock()
+	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
 
-	accessToken, expireIn, err := NewDataStore(db).Sessions().CreateNewTempSession(expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -110,7 +112,7 @@ func TestSessionStore_CreateNewTempSession_HandlesDBError(t *testing.T) {
 	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
-	db, mock := NewDBMock()
+	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedUserID := int64(12345)
@@ -120,7 +122,7 @@ func TestSessionStore_CreateNewTempSession_HandlesDBError(t *testing.T) {
 	)+"$").WithArgs(expectedUserID, expectedAccessToken, 2*60*60, "backend").
 		WillReturnError(expectedError)
 
-	accessToken, expireIn, err := NewDataStore(db).Sessions().CreateNewTempSession(expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours

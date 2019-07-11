@@ -17,7 +17,7 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
@@ -77,7 +77,7 @@ func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string)
 }
 
 func (ctx *TestContext) TheGeneratedAccessTokenIs(generatedToken string) error { // nolint
-	monkey.Patch(database.GenerateTempAccessToken, func() (string, error) { return generatedToken, nil }) // nolint:unparam
+	monkey.Patch(auth.GenerateTempAccessToken, func() (string, error) { return generatedToken, nil }) // nolint:unparam
 	return nil
 }
 

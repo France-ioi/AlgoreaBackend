@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	authlib "github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -82,7 +83,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		service.MustNotBeError(store.GroupGroups().CreateRelation(rootTempGroupID, selfGroupID))
 
 		var err error
-		token, expiresIn, err = store.Sessions().CreateNewTempSession(userID)
+		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userID)
 		return err
 	}))
 
