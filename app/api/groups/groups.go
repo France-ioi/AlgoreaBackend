@@ -31,6 +31,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 	router.Get("/groups/{group_id}/team-descendants", service.AppHandler(srv.getTeamDescendants).ServeHTTP)
+	router.Get("/groups/{group_id}/user-descendants", service.AppHandler(srv.getUserDescendants).ServeHTTP)
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
 
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
@@ -134,4 +135,13 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 
 	renderGroupGroupTransitionResults(w, r, results)
 	return service.NoError
+}
+
+type descendantParent struct {
+	// required:true
+	ID int64 `sql:"column:ID" json:"id,string"`
+	// required:true
+	Name string `sql:"column:sName" json:"name"`
+
+	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
 }
