@@ -25,6 +25,14 @@ Feature: Create a temporary user
         "data": {"access_token": "tmp-zqri9a2adn4v1ut6izd76xb3pccw", "expires_in": 7200}
       }
       """
+    And logs should contain:
+      """
+      Generated a session token "tmp-zqri9a2adn4v1ut6izd76xb3pccw" expiring at
+      """
+    And logs should contain:
+      """
+      for a temporary user 5577006791947779410
+      """
     And the table "users" at ID "5577006791947779410" should be:
       | ID                  | loginID | sLogin       | tempUser | ABS(TIMESTAMPDIFF(SECOND, sRegistrationDate, NOW())) < 3 | idGroupSelf         | idGroupOwned | sLastIp   |
       | 5577006791947779410 | 0       | tmp-49727887 | true     | true                                                     | 6129484611666145821 | null         | 127.0.0.1 |

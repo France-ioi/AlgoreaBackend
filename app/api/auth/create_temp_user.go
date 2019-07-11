@@ -6,11 +6,13 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -37,10 +39,10 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	var token string
 	var expiresIn int32
+	var userID int64
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		var login string
-		var userID int64
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 			userID = retryIDStore.NewID()
 			return retryIDStore.RetryOnDuplicateKeyError("sLogin", "login", func(retryLoginStore *database.DataStore) error {
@@ -88,5 +90,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		"access_token": token,
 		"expires_in":   expiresIn,
 	})))
+	logging.Infof("Generated a session token %q expiring at %s for a temporary user %d",
+		token, time.Now().UTC().Truncate(time.Second).Add(time.Duration(expiresIn)*time.Second), userID)
 	return service.NoError
 }
