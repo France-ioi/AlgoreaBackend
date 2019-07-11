@@ -7,14 +7,11 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 )
 
-func (ctx *TestContext) RequestHeadersAre(data *gherkin.DataTable) error { // nolint
-	for _, row := range data.Rows {
-		headerName := row.Cells[0].Value
-		if ctx.requestHeaders == nil {
-			ctx.requestHeaders = make(map[string][]string, len(data.Rows))
-		}
-		ctx.requestHeaders[headerName] = append(ctx.requestHeaders[headerName], row.Cells[1].Value)
+func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
+	if ctx.requestHeaders == nil {
+		ctx.requestHeaders = make(map[string][]string)
 	}
+	ctx.requestHeaders[name] = append(ctx.requestHeaders[name], value)
 	return nil
 }
 
