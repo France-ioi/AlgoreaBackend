@@ -26,6 +26,7 @@ func (s *SessionStore) CreateNewTempSession(userID int64) (accessToken string, e
 			"sAccessToken":    accessToken,
 			"sExpirationDate": gorm.Expr("NOW() + INTERVAL ? SECOND", expiresIn),
 			"idUser":          userID,
+			"sIssuer":         "backend",
 		})
 	}); err != nil {
 		accessToken = ""

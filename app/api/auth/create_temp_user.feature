@@ -59,5 +59,5 @@ Feature: Create a temporary user
       | 4                   | 6129484611666145821 | false   |
       | 6129484611666145821 | 6129484611666145821 | true    |
     And the table "sessions" should be:
-      | sAccessToken                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), sExpirationDate) - 7200) < 3 | idUser              |
-      | tmp-zqri9a2adn4v1ut6izd76xb3pccw | true                                                          | 5577006791947779410 |
+      | sAccessToken                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), sExpirationDate) - 7200) < 3 | idUser              | ABS(TIMESTAMPDIFF(SECOND, NOW(), sIssuedAtDate)) < 3 | sIssuer |
+      | tmp-zqri9a2adn4v1ut6izd76xb3pccw | true                                                          | 5577006791947779410 | true                                                 | backend |
