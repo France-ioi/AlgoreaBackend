@@ -43,6 +43,8 @@ db-restore: $(BIN_PATH)
 	$(BIN_PATH) db-restore
 db-migrate: $(BIN_PATH)
 	$(BIN_PATH) db-migrate
+db-migrate-undo: $(BIN_PATH)
+	$(BIN_PATH) db-migrate-undo
 
 test: $(TEST_REPORT_DIR)
 	$(Q)# the tests using the db do not currently support parallism
