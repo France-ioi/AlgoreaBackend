@@ -17,7 +17,7 @@ const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second)
 func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken string, expiresIn int32, err error) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
-	if err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
+	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 		accessToken, err = GenerateTempAccessToken()
 		if err != nil {
 			return err
@@ -28,7 +28,8 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 			"idUser":          userID,
 			"sIssuer":         "backend",
 		})
-	}); err != nil {
+	})
+	if err != nil {
 		accessToken = ""
 		return
 	}
