@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -91,7 +90,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		"access_token": token,
 		"expires_in":   expiresIn,
 	})))
-	logging.Infof("Generated a session token %q expiring at %s for a temporary user %d",
-		token, time.Now().UTC().Truncate(time.Second).Add(time.Duration(expiresIn)*time.Second), userID)
+	logging.Infof("Generated a session token %q expiring in %d seconds for a temporary user %d",
+		token, expiresIn, userID)
 	return service.NoError
 }
