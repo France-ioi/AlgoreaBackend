@@ -13,9 +13,12 @@ type SessionStore struct {
 	*DataStore
 }
 
+// TemporaryUserSessionLifetimeInSeconds specifies the lifetime of a temporary user session
+const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
+
 // CreateNewTempSession creates a new session for a temporary user
 func (s *SessionStore) CreateNewTempSession(userID int64) (accessToken string, expiresIn int32, err error) {
-	expiresIn = int32(2 * time.Hour / time.Second)
+	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	if err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
 		accessToken, err = GenerateTempAccessToken()
