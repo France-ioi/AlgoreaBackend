@@ -81,6 +81,11 @@ func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
 }
 
+// Sessions returns a SessionStore
+func (s *DataStore) Sessions() *SessionStore {
+	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}
+}
+
 // UserAnswers returns a UserAnswerStore
 func (s *DataStore) UserAnswers() *UserAnswerStore {
 	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}
@@ -124,6 +129,14 @@ func (s *DataStore) ByID(id int64) *DB {
 // for primary keys
 func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) error) error {
 	return s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		return f(NewDataStore(db))
+	})
+}
+
+// RetryOnDuplicateKeyError will retry the given function on getting duplicate entry errors
+// for the given key
+func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicateKeyError(keyName, nameInError, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }

@@ -47,6 +47,7 @@ type TestContext struct {
 	dbTableData      map[string]*gherkin.DataTable
 	addedDBIndices   []*addedDBIndex
 	templateSet      *jet.Set
+	requestHeaders   map[string][]string
 }
 
 var db *sql.DB
@@ -115,10 +116,17 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	ctx.tearDownApp()
 }
 
-func testRequest(ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string, error) {
+func testRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (*http.Response, string, error) {
 	req, err := http.NewRequest(method, ts.URL+path, body)
 	if err != nil {
 		return nil, "", err
+	}
+
+	// add headers
+	for name, values := range headers {
+		for _, value := range values {
+			req.Header.Add(name, value)
+		}
 	}
 
 	// set a dummy auth cookie

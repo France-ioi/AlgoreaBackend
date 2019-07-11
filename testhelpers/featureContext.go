@@ -19,7 +19,9 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group password is "([^"]*)"$`, ctx.TheGeneratedGroupPasswordIs)
 	s.Step(`^the generated group passwords are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupPasswordsAre)
+	s.Step(`^the generated access token is "([^"]*)"$`, ctx.TheGeneratedAccessTokenIs)
 
+	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)" with the following body:$`, ctx.ISendrequestToWithBody)
 	s.Step(`^the response code should be (\d+)$`, ctx.TheResponseCodeShouldBe)
@@ -28,12 +30,14 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the response header "([^"]*)" should be "([^"]*)"$`, ctx.TheResponseHeaderShouldBe)
 	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
+
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
+
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" at IDs? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
 	s.Step(`^the table "([^"]*)" should not contain IDs? "([^"]*)"$`, ctx.TableShouldNotContainID)
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
-	s.Step(`^the table "([^"]*)" should stay unchanged but the row with IDs? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
+	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with IDs? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
 
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
