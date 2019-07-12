@@ -64,7 +64,7 @@ func TestUserIDMiddleware(t *testing.T) {
 			expectedAccessToken:      "abcdefgh",
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
-			expectedBody:             "The access token has expired",
+			expectedBody:             "Invalid access token",
 		},
 		{
 			name:                     "spaces before the access token",
@@ -92,7 +92,7 @@ func TestUserIDMiddleware(t *testing.T) {
 			authHeader:               "Bearer " + strings.Repeat("1", 256),
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
-			expectedBody:             "The access token has expired",
+			expectedBody:             "Invalid access token",
 		},
 	}
 	for _, tt := range tests {

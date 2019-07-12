@@ -54,7 +54,7 @@ func UserIDMiddleware(sessionStore *database.SessionStore) func(next http.Handle
 			}
 
 			if !authorized {
-				http.Error(w, "The access token has expired", http.StatusUnauthorized)
+				http.Error(w, "Invalid access token", http.StatusUnauthorized)
 				return
 			}
 
