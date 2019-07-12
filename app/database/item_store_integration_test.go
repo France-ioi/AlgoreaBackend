@@ -259,7 +259,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				got.Now = test.want.Now
 			}
 			assert.Equal(t, test.want, got)
-			assert.Equal(t, test.wantLog, (&loggingtest.Hook{hook}).GetAllLogs())
+			assert.Equal(t, test.wantLog, (&loggingtest.Hook{Hook: hook}).GetAllLogs())
 		})
 	}
 }

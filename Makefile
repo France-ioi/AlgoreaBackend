@@ -75,7 +75,7 @@ $(TEST_REPORT_DIR):
 $(GODOG):
 	$(GOGET) -u github.com/DATA-DOG/godog/cmd/godog
 $(GOLANGCILINT):
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.15.0
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.16.0
 
 .FORCE: # force the rule using it to always re-run
 .PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate gen-keys
