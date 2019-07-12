@@ -24,7 +24,7 @@ import (
 func TestUserIDMiddleware(t *testing.T) {
 	tests := []struct {
 		name                     string
-		authHeader               string
+		authHeaders              []string
 		expectedAccessToken      string
 		userIDReturnedByDB       int64
 		dbError                  error
@@ -35,7 +35,7 @@ func TestUserIDMiddleware(t *testing.T) {
 	}{
 		{
 			name:                     "valid access token",
-			authHeader:               "Bearer 1234567",
+			authHeaders:              []string{"Bearer 1234567"},
 			expectedAccessToken:      "1234567",
 			userIDReturnedByDB:       890123,
 			expectedStatusCode:       200,
@@ -50,7 +50,7 @@ func TestUserIDMiddleware(t *testing.T) {
 		},
 		{
 			name:                     "database error",
-			authHeader:               "Bearer 123",
+			authHeaders:              []string{"Bearer 123"},
 			expectedAccessToken:      "123",
 			dbError:                  errors.New("some error"),
 			expectedStatusCode:       502,
@@ -60,7 +60,7 @@ func TestUserIDMiddleware(t *testing.T) {
 		},
 		{
 			name:                     "expired token",
-			authHeader:               "Bearer abcdefgh",
+			authHeaders:              []string{"Bearer abcdefgh"},
 			expectedAccessToken:      "abcdefgh",
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
@@ -68,31 +68,40 @@ func TestUserIDMiddleware(t *testing.T) {
 		},
 		{
 			name:                     "spaces before the access token",
-			authHeader:               "Bearer   1234567",
+			authHeaders:              []string{"Bearer   1234567"},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
 			expectedBody:             "No access token provided",
 		},
 		{
 			name:                     "spaces in access token",
-			authHeader:               "Bearer 123 456 7",
+			authHeaders:              []string{"Bearer 123 456 7"},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
 			expectedBody:             "No access token provided",
 		},
 		{
 			name:                     "ignores other kinds of authorization headers",
-			authHeader:               "Basic aladdin:opensesame",
+			authHeaders:              []string{"Basic aladdin:opensesame"},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
 			expectedBody:             "No access token provided",
 		},
 		{
 			name:                     "token is too long (should not query the DB)",
-			authHeader:               "Bearer " + strings.Repeat("1", 256),
+			authHeaders:              []string{"Bearer " + strings.Repeat("1", 256)},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
 			expectedBody:             "Invalid access token",
+		},
+		{
+			name:                     "takes the first access token from headers",
+			authHeaders:              []string{"Basic admin:password", "Bearer 1234567", "Bearer abcdefg"},
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
 		},
 	}
 	for _, tt := range tests {
@@ -102,7 +111,7 @@ func TestUserIDMiddleware(t *testing.T) {
 			logHook, restoreFunc := logging.MockSharedLoggerHook()
 			defer restoreFunc()
 
-			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeader, tt.userIDReturnedByDB, tt.dbError)
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
@@ -115,7 +124,7 @@ func TestUserIDMiddleware(t *testing.T) {
 	}
 }
 
-func callAuthThroughMiddleware(expectedSessionID, authorizationHeader string,
+func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []string,
 	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
@@ -149,8 +158,8 @@ func callAuthThroughMiddleware(expectedSessionID, authorizationHeader string,
 
 	// calling web server
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
-	if authorizationHeader != "" {
-		mainRequest.Header.Add("Authorization", authorizationHeader)
+	for _, header := range authorizationHeaders {
+		mainRequest.Header.Add("Authorization", header)
 	}
 	client := &http.Client{}
 	resp, _ := client.Do(mainRequest)
