@@ -7,6 +7,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
@@ -59,6 +60,23 @@ func UserIDMiddleware(sessionStore *database.SessionStore) func(next http.Handle
 
 			ctx := context.WithValue(r.Context(), ctxUserID, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// SetAuthorizationHeaderFromQueryMiddleware is a middleware that copies an access token
+// given as a query parameter into the "Authorization" header.
+// This middleware is for development purposes only. Don not use it in prod!
+func SetAuthorizationHeaderFromQueryMiddleware() func(next http.Handler) http.Handler {
+	if appenv.IsEnvProd() {
+		panic("SetAuthorizationHeaderFromQueryMiddleware should not be used in production")
+	}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if accessToken := r.URL.Query().Get("access_token"); accessToken != "" {
+				r.Header.Set("Authorization", "Bearer "+accessToken)
+			}
+			next.ServeHTTP(w, r)
 		})
 	}
 }

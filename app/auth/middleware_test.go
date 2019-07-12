@@ -5,14 +5,17 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
+	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
@@ -153,4 +156,33 @@ func callAuthThroughMiddleware(expectedSessionID, authorizationHeader string,
 	resp, _ := client.Do(mainRequest)
 
 	return enteredService, resp, mock
+}
+
+func TestSetAuthorizationHeaderFromQueryMiddleware_PanicsInProduction(t *testing.T) {
+	monkey.Patch(appenv.IsEnvProd, func() bool { return true })
+	defer monkey.UnpatchAll()
+	assertlib.Panics(t, func() {
+		SetAuthorizationHeaderFromQueryMiddleware()
+	})
+}
+
+func TestSetAuthorizationHeaderFromQueryMiddleware_SetsAuthorizationHeaderWhenAccessTokenPresent(t *testing.T) {
+	middleware := SetAuthorizationHeaderFromQueryMiddleware()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(body))
+	})
+	assertlib.Equal(t, "Bearer 123",
+		assertlib.HTTPBody(middleware(handler).ServeHTTP, "GET", "/", url.Values{"access_token": []string{"123"}}))
+}
+
+func TestSetAuthorizationHeaderFromQueryMiddleware_DoesNothingWhenAccessTokenAbsent(t *testing.T) {
+	middleware := SetAuthorizationHeaderFromQueryMiddleware()
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body := r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(body))
+	})
+	assertlib.Equal(t, "", assertlib.HTTPBody(middleware(handler).ServeHTTP, "GET", "/", nil))
 }
