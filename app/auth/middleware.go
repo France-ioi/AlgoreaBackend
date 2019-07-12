@@ -2,10 +2,13 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
+	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 type ctxKey int
@@ -14,55 +17,47 @@ const (
 	ctxUserID ctxKey = iota
 )
 
-// UserIDMiddleware is a middleware retrieving user ID from the request content
-// Created by giving the reverse proxy used for getting the auth info
-func UserIDMiddleware(conf *config.Auth) func(next http.Handler) http.Handler {
+// UserIDMiddleware is a middleware retrieving user ID from the request content.
+// It takes the access token from the 'Authorization' header and loads the user ID from the 'sessions' table
+func UserIDMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			authCookieName := "PHPSESSID"
-			var authCookie *http.Cookie
-			var err error
-
-			if authCookie, err = r.Cookie(authCookieName); err != nil {
-				http.Error(w, "Unable to get the expected auth cookie from the request", http.StatusUnauthorized)
-				return
+			var accessToken string
+			var userID int64
+			var authorized bool
+			for _, authValue := range r.Header["Authorization"] {
+				parsedAuthValue := strings.SplitN(authValue, " ", 3)
+				// credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
+				if len(parsedAuthValue) == 2 && parsedAuthValue[0] == "Bearer" {
+					accessToken = parsedAuthValue[1]
+					break
+				}
 			}
 
-			// create a new url from the raw RequestURI sent by the client
-			cookieParam := "?sessionid=" + authCookie.Value
-			var authRequest *http.Request
-			if authRequest, err = http.NewRequest("GET", conf.ProxyURL+cookieParam, nil); err != nil {
-				http.Error(w, "Unable to parse create request to auth server: "+err.Error(), http.StatusBadGateway)
-				return
-			}
-
-			httpClient := http.Client{}
-			var resp *http.Response
-			resp, err = httpClient.Do(authRequest)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadGateway)
+			if accessToken == "" {
+				http.Error(w, "No access token provided", http.StatusUnauthorized)
 				return
 			}
 
-			auth := &struct {
-				UserID int64  `json:"userID"`
-				Error  string `json:"error"`
-			}{}
-			if err = json.NewDecoder(resp.Body).Decode(auth); err != nil {
-				http.Error(w, "Unable to parse response for auth server: "+err.Error(), http.StatusBadGateway)
-				return
+			if len(accessToken) < 255 {
+				err := sessionStore.Where("sAccessToken = ?", accessToken).
+					Where("sExpirationDate > NOW()").PluckFirst("idUser", &userID).
+					Error()
+				authorized = err == nil
+				if err != nil && !gorm.IsRecordNotFoundError(err) {
+					logging.Errorf("Can't validate an access token: %s", err)
+					http.Error(w, "Can't validate the access token", http.StatusBadGateway)
+					return
+				}
 			}
-			if auth.Error != "" {
-				http.Error(w, "Unable to validate the session ID: "+auth.Error, http.StatusUnauthorized)
-				return
-			}
-			if auth.UserID <= 0 {
-				http.Error(w, "Invalid response from auth server. No error by userID:"+string(auth.UserID), http.StatusBadGateway)
+
+			if !authorized {
+				http.Error(w, "The access token has expired", http.StatusUnauthorized)
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxUserID, auth.UserID)
+			ctx := context.WithValue(r.Context(), ctxUserID, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

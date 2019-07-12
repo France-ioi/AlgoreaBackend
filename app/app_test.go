@@ -35,13 +35,14 @@ func TestNew_DBErr(t *testing.T) {
 	assert := assertlib.New(t)
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
+	expectedError := errors.New("db opening error")
 	patch := monkey.Patch(database.Open, func(interface{}) (*database.DB, error) {
-		return nil, errors.New("db opening error")
+		return nil, expectedError
 	})
 	defer patch.Unpatch()
 	app, err := New()
-	assert.NotNil(app)
-	assert.NoError(err)
+	assert.Nil(app)
+	assert.Equal(expectedError, err)
 	logMsg := hook.LastEntry()
 	assert.Equal(logrus.ErrorLevel, logMsg.Level)
 	assert.Equal("db opening error", logMsg.Message)

@@ -39,7 +39,6 @@ type Logging struct {
 
 // Auth is the part of the config related to the user authentication
 type Auth struct {
-	ProxyURL string
 }
 
 // Token is the part of the config related to tokens

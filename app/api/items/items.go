@@ -17,7 +17,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
+	router.Use(auth.UserIDMiddleware(srv.Store.Sessions()))
 	router.Post("/items/", service.AppHandler(srv.addItem).ServeHTTP)
 	router.Get("/items/", service.AppHandler(srv.getList).ServeHTTP)
 	router.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)

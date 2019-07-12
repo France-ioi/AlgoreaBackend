@@ -200,7 +200,6 @@ Feature: Add item - robustness
 
   Scenario: Non-existing parent
     Given I am the user with ID "1"
-    And I am the user with ID "1"
     When I send a POST request to "/items/" with the following body:
       """
       {

@@ -1,43 +1,138 @@
 package auth
 
 import (
-	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
-type authResp struct {
-	UserID int64  `json:"userID"`
-	Error  string `json:"error"`
+func TestUserIDMiddleware(t *testing.T) {
+	tests := []struct {
+		name                     string
+		authHeader               string
+		expectedAccessToken      string
+		userIDReturnedByDB       int64
+		dbError                  error
+		expectedStatusCode       int
+		expectedServiceWasCalled bool
+		expectedBody             string
+		expectedLogs             string
+	}{
+		{
+			name:                     "valid access token",
+			authHeader:               "Bearer 1234567",
+			expectedAccessToken:      "1234567",
+			userIDReturnedByDB:       890123,
+			expectedStatusCode:       200,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:890123",
+		},
+		{
+			name:                     "missing access token",
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "No access token provided",
+		},
+		{
+			name:                     "database error",
+			authHeader:               "Bearer 123",
+			expectedAccessToken:      "123",
+			dbError:                  errors.New("some error"),
+			expectedStatusCode:       502,
+			expectedServiceWasCalled: false,
+			expectedBody:             "Can't validate the access token",
+			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
+		},
+		{
+			name:                     "expired token",
+			authHeader:               "Bearer abcdefgh",
+			expectedAccessToken:      "abcdefgh",
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "The access token has expired",
+		},
+		{
+			name:                     "spaces before the access token",
+			authHeader:               "Bearer   1234567",
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "No access token provided",
+		},
+		{
+			name:                     "spaces in access token",
+			authHeader:               "Bearer 123 456 7",
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "No access token provided",
+		},
+		{
+			name:                     "ignores other kinds of authorization headers",
+			authHeader:               "Basic aladdin:opensesame",
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "No access token provided",
+		},
+		{
+			name:                     "token is too long (should not query the DB)",
+			authHeader:               "Bearer " + strings.Repeat("1", 256),
+			expectedStatusCode:       401,
+			expectedServiceWasCalled: false,
+			expectedBody:             "The access token has expired",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			assert := assertlib.New(t)
+			logHook, restoreFunc := logging.MockSharedLoggerHook()
+			defer restoreFunc()
+
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeader, tt.userIDReturnedByDB, tt.dbError)
+			defer func() { _ = resp.Body.Close() }()
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
+			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
+			assert.Contains(string(bodyBytes), tt.expectedBody)
+			assert.Contains((&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs(), tt.expectedLogs)
+
+			assert.NoError(mock.ExpectationsWereMet())
+		})
+	}
 }
 
-func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.ResponseWriter, r *http.Request),
-	wrongURL bool) (bool, *http.Response) {
-	// setup auth backend
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		authBackendFn(w, r)
-	}))
-	defer backend.Close()
-
-	// get the URL (and alter it for some tests)
-	backendURL, _ := url.Parse(backend.URL)
-	backendURLStr := backendURL.String()
-	if wrongURL {
-		backendURLStr += "9"
+func callAuthThroughMiddleware(expectedSessionID, authorizationHeader string,
+	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
+	dbmock, mock := database.NewDBMock()
+	defer func() { _ = dbmock.Close() }()
+	if expectedSessionID != "" {
+		expectation := mock.ExpectQuery("^" +
+			regexp.QuoteMeta("SELECT idUser FROM `sessions`  WHERE (sAccessToken = ?) AND (sExpirationDate > NOW()) LIMIT 1") +
+			"$").WithArgs(expectedSessionID)
+		if dbError != nil {
+			expectation.WillReturnError(dbError)
+		} else {
+			neededRows := mock.NewRows([]string{"idUser"})
+			if userID != 0 {
+				neededRows = neededRows.AddRow(userID)
+			}
+			expectation.WillReturnRows(neededRows)
+		}
 	}
 
 	// dummy server using the middleware
-	middleware := UserIDMiddleware(&config.Auth{ProxyURL: backendURLStr + "/a_path"})
+	middleware := UserIDMiddleware(database.NewDataStore(dbmock).Sessions())
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
@@ -51,138 +146,11 @@ func callAuthThroughMiddleware(sessionID string, authBackendFn func(w http.Respo
 
 	// calling web server
 	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, nil)
-	if sessionID != "" {
-		mainRequest.AddCookie(&http.Cookie{Name: "PHPSESSID", Value: sessionID})
+	if authorizationHeader != "" {
+		mainRequest.Header.Add("Authorization", authorizationHeader)
 	}
 	client := &http.Client{}
 	resp, _ := client.Do(mainRequest)
 
-	return enteredService, resp
-}
-
-func TestValid(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("123", func(w http.ResponseWriter, r *http.Request) {
-		id, _ := strconv.ParseInt(r.URL.Query()["sessionid"][0], 10, 64)
-		dataJSON, _ := json.Marshal(&authResp{id, ""})
-		_, _ = w.Write(dataJSON)
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(200, resp.StatusCode)
-	assert.True(didService)
-	assert.Contains(string(bodyBytes), "user_id:123")
-}
-
-func TestMissingSession(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("", func(w http.ResponseWriter, r *http.Request) {}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(401, resp.StatusCode)
-	assert.False(didService)
-	assert.Contains(string(bodyBytes), "expected auth cookie")
-}
-
-func TestNotResponding(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("123", func(w http.ResponseWriter, r *http.Request) {}, true)
-	assert.Equal(502, resp.StatusCode)
-	assert.False(didService)
-}
-
-func TestInvalidResponseFormat1(t *testing.T) {
-	type invalidAuthResp struct {
-		Message string `json:"message"`
-	}
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		dataJSON, _ := json.Marshal([]invalidAuthResp{{"duh?"}}) // unexpected format
-		_, _ = w.Write(dataJSON)                                 // nolint
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(502, resp.StatusCode)
-	assert.False(didService)
-	// the lib does not unmarshal as it cannot fit an array into the struct
-	assert.Contains(string(bodyBytes), "Unable to parse")
-}
-func TestInvalidResponseFormat2(t *testing.T) {
-	type invalidAuthResp struct {
-		Message string `json:"message"`
-	}
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		dataJSON, _ := json.Marshal(invalidAuthResp{"duh?"}) // unexpected format
-		_, _ = w.Write(dataJSON)                             // nolint
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(502, resp.StatusCode)
-	assert.False(didService)
-	// the lib still unmarshals it but with empty field as none is matching
-	assert.Contains(string(bodyBytes), "Invalid response ")
-}
-
-func TestInvalidJSON(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("this is invalid json"))
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(502, resp.StatusCode)
-	assert.False(didService)
-	// the lib does not unmarshal as it cannot fit an array into the struct
-	assert.Contains(string(bodyBytes), "Unable to parse")
-}
-
-func TestAuthError(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		dataJSON, _ := json.Marshal(&authResp{-1, "invalid token error"})
-		_, _ = w.Write(dataJSON)
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(401, resp.StatusCode)
-	assert.False(didService)
-	assert.Contains(string(bodyBytes), "Unable to validate the session ID") // middleware
-	assert.Contains(string(bodyBytes), "invalid token error")               // returned by the server
-}
-
-func TestAuthErrorPositiveID(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		dataJSON, _ := json.Marshal(&authResp{99, "invalid token error"})
-		_, _ = w.Write(dataJSON)
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(401, resp.StatusCode)
-	assert.False(didService)
-	assert.Contains(string(bodyBytes), "Unable to validate the session ID") // middleware
-	assert.Contains(string(bodyBytes), "invalid token error")               // returned by the server
-}
-
-func TestInvalidID(t *testing.T) {
-	assert := assertlib.New(t)
-
-	didService, resp := callAuthThroughMiddleware("1", func(w http.ResponseWriter, r *http.Request) {
-		dataJSON, _ := json.Marshal(&authResp{-1, ""}) // unexpected resp from the auth server
-		_, _ = w.Write(dataJSON)
-	}, false)
-	defer func() { _ = resp.Body.Close() }()
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	assert.Equal(502, resp.StatusCode)
-	assert.False(didService)
-	assert.Contains(string(bodyBytes), "Invalid response")
+	return enteredService, resp, mock
 }
