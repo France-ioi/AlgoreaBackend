@@ -28,7 +28,6 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
 
-
 	var headers map[string][]string
 	if ctx.userID != 0 {
 		headers = make(map[string][]string, len(ctx.requestHeaders)+1)
