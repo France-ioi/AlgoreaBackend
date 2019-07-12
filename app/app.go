@@ -9,7 +9,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/api"
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
@@ -68,7 +67,6 @@ func New() (*Application, error) {
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
 
 	if appenv.IsEnvDev() {
-		router.Use(auth.SetAuthorizationHeaderFromQueryMiddleware())
 		router.Mount("/debug", middleware.Profiler())
 	}
 	router.Mount(conf.Server.RootPath, apiCtx.Router())

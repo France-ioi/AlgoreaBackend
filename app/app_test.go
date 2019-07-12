@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -21,30 +20,15 @@ import (
 )
 
 func TestNew_Success(t *testing.T) {
-	defer appenv.SetEnv("test")
-	tests := []struct {
-		name            string
-		middlewareCount int
-	}{
-		{name: "dev", middlewareCount: 7}, // 6 + SetAuthorizationHeaderFromQueryMiddleware
-		{name: "test", middlewareCount: 6},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			assert := assertlib.New(t)
-			appenv.SetEnv(tt.name)
-			app, err := New()
-			assert.NotNil(app)
-			assert.NoError(err)
-			assert.NotNil(app.Config)
-			assert.NotNil(app.Database)
-			assert.NotNil(app.HTTPHandler)
-			assert.Len(app.HTTPHandler.Middlewares(), tt.middlewareCount)
-			assert.True(len(app.HTTPHandler.Routes()) > 0)
-		})
-	}
+	assert := assertlib.New(t)
+	app, err := New()
+	assert.NotNil(app)
+	assert.NoError(err)
+	assert.NotNil(app.Config)
+	assert.NotNil(app.Database)
+	assert.NotNil(app.HTTPHandler)
+	assert.Len(app.HTTPHandler.Middlewares(), 6)
+	assert.True(len(app.HTTPHandler.Routes()) > 0)
 }
 
 func TestNew_DBErr(t *testing.T) {
@@ -197,49 +181,4 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Equal("", string(body))
-}
-
-func TestSetAuthorizationHeaderFromQueryMiddleware_EnabledInDev(t *testing.T) {
-	appenv.SetEnv("dev")
-	defer appenv.SetEnv("test")
-	assert := assertlib.New(t)
-	app, _ := New()
-	router := app.HTTPHandler
-	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		output, _ := json.Marshal(map[string]string{"auth_header": r.Header.Get("Authorization")})
-		_, _ = w.Write(output)
-	})
-	srv := httptest.NewServer(router)
-	defer srv.Close()
-
-	request, _ := http.NewRequest("GET", srv.URL+"/dummy?access_token=12345", nil)
-	response, _ := http.DefaultClient.Do(request)
-	defer func() { _ = response.Body.Close() }()
-	body, _ := ioutil.ReadAll(response.Body)
-	assert.Equal(`{"auth_header":"Bearer 12345"}`, string(body))
-}
-
-func TestSetAuthorizationHeaderFromQueryMiddleware_DisabledWhenNotInDev(t *testing.T) {
-	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
-	defer monkey.UnpatchAll()
-
-	assert := assertlib.New(t)
-	app, _ := New()
-	router := app.HTTPHandler
-	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		output, _ := json.Marshal(map[string]string{"auth_header": r.Header.Get("Authorization")})
-		_, _ = w.Write(output)
-	})
-	srv := httptest.NewServer(router)
-	defer srv.Close()
-
-	request, _ := http.NewRequest("GET", srv.URL+"/dummy?access_token=12345", nil)
-	response, _ := http.DefaultClient.Do(request)
-	defer func() { _ = response.Body.Close() }()
-	body, _ := ioutil.ReadAll(response.Body)
-	assert.Equal(`{"auth_header":""}`, string(body))
 }
