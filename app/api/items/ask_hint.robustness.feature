@@ -78,8 +78,8 @@ Feature: Ask for a hint - robustness
         "hint_requested": "{{hintRequestToken}}"
       }
       """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 

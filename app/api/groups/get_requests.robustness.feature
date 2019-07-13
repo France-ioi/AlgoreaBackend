@@ -18,6 +18,12 @@ Feature: Get requests for group_id - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: User doesn't exist
+    Given I am the user with ID "404"
+    When I send a GET request to "/groups/13/requests"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+
   Scenario: Group ID is incorrect
     Given I am the user with ID "1"
     When I send a GET request to "/groups/abc/requests"

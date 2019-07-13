@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -14,7 +13,7 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (idItem) " +
@@ -33,7 +32,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` JOIN (SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
@@ -50,32 +49,4 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	err := db.Table("items").WhereItemsAreVisible(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_ItemMethodsHandleUserError(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "WhereItemsAreVisible"},
-		{name: "JoinsUserAndDefaultItemStrings"},
-	}
-	for _, testCase := range tests {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			db, mock := database.NewDBMock()
-			defer func() { _ = db.Close() }()
-
-			mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT users.*, l.ID as idDefaultLanguage FROM `users`")).
-				WithArgs(1).
-				WillReturnRows(mock.NewRows([]string{"ID"}))
-
-			user := database.NewUser(1, database.NewDataStore(db).Users(), nil)
-			var result []interface{}
-			err := reflect.ValueOf(db.Table("items")).MethodByName(testCase.name).
-				Call([]reflect.Value{reflect.ValueOf(user)})[0].Interface().(*database.DB).
-				Scan(&result).Error()
-			assert.Equal(t, database.ErrUserNotFound, err)
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-	}
 }

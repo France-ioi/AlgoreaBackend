@@ -47,11 +47,6 @@ func (in *UpdateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
-	err = user.Load()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {

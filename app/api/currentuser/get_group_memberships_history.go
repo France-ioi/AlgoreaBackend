@@ -5,20 +5,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
-	err := user.Load()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
-	selfGroupID, _ := user.SelfGroupID()
-	notificationReadDate, _ := user.NotificationReadDate()
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.ID,
@@ -28,9 +20,9 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 			groups.sType AS group__sType`).
 		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType != 'direct'").
-		Where("groups_groups.idGroupChild = ?", selfGroupID)
-	if notificationReadDate != nil {
-		query = query.Where("groups_groups.sStatusDate >= ?", notificationReadDate)
+		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
+	if user.NotificationReadDate != nil {
+		query = query.Where("groups_groups.sStatusDate >= ?", user.NotificationReadDate)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)

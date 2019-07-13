@@ -68,7 +68,7 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToInvite) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.UserID)
+			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.ID)
 			return err
 		})
 	}

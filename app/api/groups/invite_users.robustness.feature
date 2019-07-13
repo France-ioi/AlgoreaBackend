@@ -36,6 +36,19 @@ Feature: Invite users - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Fails when the user doesn't exist
+    Given I am the user with ID "404"
+    When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": ["john", "jane", "owner", "barack"]
+      }
+      """
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
     When I send a POST request to "/groups/abc/invitations" with the following body:

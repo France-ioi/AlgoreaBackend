@@ -332,7 +332,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			user := database.NewUser(test.userID, store.Users(), nil)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			var resultID int64
 			err := store.UserAnswers().Visible(user).
 				Where("users_answers.ID = ?", test.userAnswerID).

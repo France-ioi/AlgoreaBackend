@@ -19,7 +19,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserIDMiddleware(srv.Store.Sessions()))
+	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 
 	router.Get("/current-user", service.AppHandler(srv.getInfo).ServeHTTP)
 
@@ -54,11 +54,6 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	}
 
 	user := srv.GetUser(r)
-	selfGroupID, err := user.SelfGroupID()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	if action == createGroupRequestAction {
 		var found bool
@@ -77,10 +72,10 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 				rejectInvitationAction:   database.UserRefusesInvitation,
 				createGroupRequestAction: database.UserCreatesRequest,
 				leaveGroupAction:         database.UserLeavesGroup,
-			}[action], groupID, []int64{selfGroupID}, user.UserID)
+			}[action], groupID, []int64{user.SelfGroupID}, user.ID)
 		return err
 	}))
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[selfGroupID],
+	return service.RenderGroupGroupTransitionResult(w, r, results[user.SelfGroupID],
 		action == createGroupRequestAction, action == leaveGroupAction)
 }

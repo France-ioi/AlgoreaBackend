@@ -9,21 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGroupItemStore_MatchingUserAncestors_HandlesError(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT users.*, l.ID as idDefaultLanguage FROM `users`")).
-		WithArgs(1).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
-
-	user := NewUser(1, NewDataStore(db).Users(), nil)
-	var result []interface{}
-	err := NewDataStore(db).GroupItems().MatchingUserAncestors(user).Scan(&result).Error()
-	assert.Equal(t, ErrUserNotFound, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGroupItemStore_After_MustBeInTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -91,7 +76,7 @@ func TestGroupItemStore_AccessRightsForItemsVisibleToUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := NewMockUser(1, &UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+	mockUser := &User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+

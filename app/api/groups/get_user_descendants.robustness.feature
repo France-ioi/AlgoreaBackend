@@ -28,8 +28,8 @@ Feature: List user descendants of the group (groupUserDescendantView) - robustne
   Scenario: User not found
     Given I am the user with ID "404"
     When I send a GET request to "/groups/13/user-descendants"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
 
   Scenario: sort is incorrect
     Given I am the user with ID "1"

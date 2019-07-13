@@ -18,7 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
-func TestUserIDMiddleware(t *testing.T) {
+func TestUserMiddleware(t *testing.T) {
 	tests := []struct {
 		name                     string
 		authHeaders              []string
@@ -50,9 +50,9 @@ func TestUserIDMiddleware(t *testing.T) {
 			authHeaders:              []string{"Bearer 123"},
 			expectedAccessToken:      "123",
 			dbError:                  errors.New("some error"),
-			expectedStatusCode:       502,
+			expectedStatusCode:       500,
 			expectedServiceWasCalled: false,
-			expectedBody:             "Can't validate the access token",
+			expectedBody:             `{"success":false,"message":"Internal server error","error_text":"Can't validate the access token"}` + "\n",
 			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
 		},
 		{
@@ -61,14 +61,14 @@ func TestUserIDMiddleware(t *testing.T) {
 			expectedAccessToken:      "abcdefgh",
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
-			expectedBody:             "Invalid access token",
+			expectedBody:             `{"success":false,"message":"Unauthorized","error_text":"Invalid access token"}` + "\n",
 		},
 		{
 			name:                     "spaces before the access token",
 			authHeaders:              []string{"Bearer   1234567"},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
-			expectedBody:             "No access token provided",
+			expectedBody:             `{"success":false,"message":"Unauthorized","error_text":"No access token provided"}` + "\n",
 		},
 		{
 			name:                     "spaces in access token",
@@ -112,6 +112,7 @@ func TestUserIDMiddleware(t *testing.T) {
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
+			assert.Equal("application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
 			assert.Contains(string(bodyBytes), tt.expectedBody)
 			assert.Contains((&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs(), tt.expectedLogs)
@@ -127,12 +128,18 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	defer func() { _ = dbmock.Close() }()
 	if expectedSessionID != "" {
 		expectation := mock.ExpectQuery("^" +
-			regexp.QuoteMeta("SELECT idUser FROM `sessions`  WHERE (sAccessToken = ?) AND (sExpirationDate > NOW()) LIMIT 1") +
+			regexp.QuoteMeta(
+				"SELECT users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess, "+
+					"users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
+					"FROM `sessions` "+
+					"JOIN users ON users.ID = sessions.idUser "+
+					"LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode "+
+					"WHERE (sAccessToken = ?) AND (sExpirationDate > NOW()) LIMIT 1") +
 			"$").WithArgs(expectedSessionID)
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"idUser"})
+			neededRows := mock.NewRows([]string{"ID"})
 			if userID != 0 {
 				neededRows = neededRows.AddRow(userID)
 			}
@@ -141,12 +148,13 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	}
 
 	// dummy server using the middleware
-	middleware := UserIDMiddleware(database.NewDataStore(dbmock).Sessions())
+	middleware := UserMiddleware(database.NewDataStore(dbmock).Sessions())
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
-		userID := r.Context().Value(ctxUserID).(int64)
-		body := "user_id:" + strconv.FormatInt(userID, 10)
+		user := r.Context().Value(ctxUser).(*database.User)
+		body := "user_id:" + strconv.FormatInt(user.ID, 10)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))
 	})

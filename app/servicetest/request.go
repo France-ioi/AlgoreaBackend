@@ -33,7 +33,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 
 	base := service.Base{Store: database.NewDataStore(db), Config: nil}
 	router := chi.NewRouter()
-	router.Use(auth.MockUserIDMiddleware(userID))
+	router.Use(auth.MockUserMiddleware(&database.User{ID: userID}))
 	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))
 	setRouterFunc(router, &base)
 

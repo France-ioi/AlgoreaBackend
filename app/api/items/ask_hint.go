@@ -30,7 +30,9 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 	user := srv.GetUser(r)
 	apiError := service.NoError
-	if apiError = checkAskHintRequiredFields(user, &requestData); apiError != service.NoError {
+	if apiError = checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "hint_requested",
+		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
+		requestData.HintToken.ItemURL, requestData.HintToken.AttemptID); apiError != service.NoError {
 		return apiError
 	}
 
@@ -46,7 +48,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		}
 
 		userItemStore := store.UserItems()
-		err = userItemStore.CreateIfMissing(user.UserID, requestData.TaskToken.Converted.LocalItemID)
+		err = userItemStore.CreateIfMissing(user.ID, requestData.TaskToken.Converted.LocalItemID)
 		service.MustNotBeError(err)
 
 		// Get the previous hints requested JSON data
@@ -76,7 +78,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 			"sLastHintDate":              gorm.Expr("NOW()"),
 		}
 		// Update users_items with the hint request
-		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.UserID).
+		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.ID).
 			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
 			Where("idAttemptActive = ?", requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
@@ -116,7 +118,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-				"idUser":    user.UserID,
+				"idUser":    user.ID,
 				"idItem":    taskToken.Converted.LocalItemID,
 				"idAttempt": taskToken.Converted.AttemptID,
 			})
@@ -199,33 +201,4 @@ func (requestData *AskHintRequest) Bind(r *http.Request) error {
 		return fmt.Errorf("asked hint should not be empty")
 	}
 	return nil
-}
-
-func checkAskHintRequiredFields(user *database.User, requestData *AskHintRequest) service.APIError {
-	var err error
-	if err = user.Load(); err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
-
-	if user.UserID != requestData.TaskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.UserID))
-	}
-	if user.UserID != requestData.HintToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in hint_requested doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.HintToken.Converted.UserID, user.UserID))
-	}
-	if requestData.TaskToken.LocalItemID != requestData.HintToken.LocalItemID {
-		return service.ErrInvalidRequest(errors.New("wrong idItemLocal in hint_requested token"))
-	}
-	if requestData.TaskToken.ItemURL != requestData.HintToken.ItemURL {
-		return service.ErrInvalidRequest(errors.New("wrong itemUrl in hint_requested token"))
-	}
-	if requestData.HintToken.AttemptID != requestData.TaskToken.AttemptID {
-		return service.ErrInvalidRequest(errors.New("wrong idAttempt in hint_requested token"))
-	}
-	return service.NoError
 }

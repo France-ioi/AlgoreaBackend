@@ -26,6 +26,14 @@ Feature: Change the password of the given group - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
 
+  Scenario: User does not exist
+    Given I am the user with ID "404"
+    And the generated group password is "newpassword"
+    When I send a POST request to "/groups/13/password"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "groups" should stay unchanged
+
   Scenario: User is an admin of the group, but the generated password is not unique
     Given I am the user with ID "1"
     And the table "groups" has a unique key "sPassword" on "sPassword"

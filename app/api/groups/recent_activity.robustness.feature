@@ -33,6 +33,12 @@ Feature: Get recent activity for group_id and item_id - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Should fail when user doesn't exist
+    Given I am the user with ID "404"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+
   Scenario: Should return empty array when user is an admin of the group, but has no access rights to the item
     Given I am the user with ID "3"
     When I send a GET request to "/groups/13/recent_activity?item_id=200"

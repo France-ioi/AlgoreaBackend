@@ -48,9 +48,6 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		"fullAccess, partialAccess, grayedAccess"
 	itemQ := items.VisibleByID(user, rootID).Select(
 		commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
-	if itemQ.Error() == database.ErrUserNotFound {
-		return nil, database.ErrUserNotFound
-	}
 	service.MustNotBeError(itemQ.Error())
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(
 		commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
@@ -77,7 +74,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			items.fullAccess, items.partialAccess, items.grayedAccess
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.ID).
 		Order("idItemGrandparent, idItemParent, iChildOrder")
 
 	if err := query.Scan(&result).Error(); err != nil {

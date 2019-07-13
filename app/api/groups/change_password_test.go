@@ -39,8 +39,6 @@ func TestGenerateGroupPassword_HandlesError(t *testing.T) {
 
 func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, _ := assertMockedChangePasswordRequest(t, func(mock sqlmock.Sqlmock) {
-		mock.ExpectQuery(`SELECT .+ WHERE \(users\.ID = \?\)`).WithArgs(2).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(2))
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
 			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))

@@ -25,9 +25,9 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
-		service.MustNotBeError(userItemStore.CreateIfMissing(user.UserID, itemID))
+		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
 		service.MustNotBeError(userItemStore.
-			Where("idUser = ?", user.UserID).Where("idItem = ?", itemID).
+			Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"idAttemptActive":            groupsAttemptID,
 				"sLastActivityDate":          gorm.Expr("NOW()"),

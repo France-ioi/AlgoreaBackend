@@ -109,7 +109,7 @@ Feature: Change item access rights for a group - robustness
       """
     And the table "groups_items" should stay unchanged
 
-  Scenario: The user is not found
+  Scenario: The user doesn't exist
     Given I am the user with ID "404"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
@@ -120,8 +120,8 @@ Feature: Change item access rights for a group - robustness
       "access_reason": "the user really needs this access"
     }
     """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
     And the table "groups_items" should stay unchanged
 
   Scenario: The user is not a manager/owner of the item

@@ -22,10 +22,6 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 	}
 
 	user := srv.GetUser(r)
-	if err = user.Load(); err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	var itemInfo struct {
 		HasAttempts       bool    `gorm:"column:bHasAttempts"`
@@ -54,11 +50,11 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
-		service.MustNotBeError(userItemStore.CreateIfMissing(user.UserID, itemID))
-		service.MustNotBeError(userItemStore.Where("idUser = ?", user.UserID).Where("idItem = ?", itemID).
+		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
+		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			WithWriteLock().PluckFirst("idAttemptActive", &activeAttemptID).Error())
 		if activeAttemptID == nil {
-			groupID, _ := user.SelfGroupID()
+			groupID := user.SelfGroupID
 			if itemInfo.HasAttempts {
 				err = store.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
 				if gorm.IsRecordNotFoundError(err) {
@@ -85,7 +81,7 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 			}
 			activeAttemptID = &attemptID
 		}
-		service.MustNotBeError(userItemStore.Where("idUser = ?", user.UserID).Where("idItem = ?", itemID).
+		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"idAttemptActive":   *activeAttemptID,
 				"sStartDate":        gorm.Expr("IFNULL(sStartDate, NOW())"),
@@ -107,7 +103,7 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		HintsGivenCount:    ptrString(strconv.Itoa(int(groupsAttemptInfo.HintsCachedCount))),
 		IsAdmin:            ptrBool(false),
 		ReadAnswers:        ptrBool(true),
-		UserID:             strconv.FormatInt(user.UserID, 10),
+		UserID:             strconv.FormatInt(user.ID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
 		AttemptID:          strconv.FormatInt(*activeAttemptID, 10),

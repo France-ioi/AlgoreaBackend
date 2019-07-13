@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -29,15 +28,10 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	}
 
 	user := srv.GetUser(r)
-	selfGroupID, err := user.SelfGroupID()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	skipGroups := srv.Store.GroupGroups().
 		Select("groups_groups.idGroupParent").
-		Where("groups_groups.idGroupChild = ?", selfGroupID).
+		Where("groups_groups.idGroupChild = ?", user.SelfGroupID).
 		Where("groups_groups.sType IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct')").
 		SubQuery()
 

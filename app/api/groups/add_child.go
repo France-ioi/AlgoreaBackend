@@ -25,8 +25,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 	}
 
 	user := srv.GetUser(r)
-	userAllowSubgroups, err := user.AllowSubgroups()
-	if err == database.ErrUserNotFound || !userAllowSubgroups {
+	if !user.AllowSubgroups {
 		return service.InsufficientAccessRightsError
 	}
 

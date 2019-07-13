@@ -107,5 +107,5 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when the user doesn't exist
     And I am the user with ID "10"
     When I send a GET request to "/items/?ids=21,22,23"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"

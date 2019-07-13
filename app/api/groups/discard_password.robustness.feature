@@ -25,6 +25,13 @@ Feature: Discard the password of the given group - robustness
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
 
+  Scenario: User doesn't exist
+    Given I am the user with ID "404"
+    When I send a DELETE request to "/groups/13/password"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "groups" should stay unchanged
+
   Scenario: The group ID is not a number
     Given I am the user with ID "1"
     When I send a DELETE request to "/groups/1_3/password"

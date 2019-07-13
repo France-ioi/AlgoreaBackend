@@ -22,7 +22,7 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateNotificationReadDate(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
-	service.MustNotBeError(srv.Store.Users().ByID(user.UserID).
+	service.MustNotBeError(srv.Store.Users().ByID(user.ID).
 		UpdateColumn("sNotificationReadDate", gorm.Expr("NOW()")).Error())
 
 	response := service.Response{Success: true, Message: "updated"}

@@ -23,6 +23,8 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is not found
     Given I am the user with ID "3"
@@ -30,8 +32,10 @@ Feature: Update a group (groupEdit) - robustness
     """
     {}
     """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
     Given I am the user with ID "2"
@@ -41,6 +45,8 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but required fields are not filled in correctly
     Given I am the user with ID "1"
@@ -81,6 +87,7 @@ Feature: Update a group (groupEdit) - robustness
     }
     """
     And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but no fields provided
     Given I am the user with ID "1"
@@ -91,6 +98,7 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response should be "updated"
     And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
 
   Scenario: The group ID is not a number
     Given I am the user with ID "1"
@@ -101,3 +109,5 @@ Feature: Update a group (groupEdit) - robustness
     """
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged

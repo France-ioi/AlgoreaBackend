@@ -18,5 +18,5 @@ type Base struct {
 
 // GetUser returns the authenticated user data from context
 func (srv *Base) GetUser(r *http.Request) *database.User {
-	return auth.UserFromContext(r.Context(), srv.Store.Users())
+	return auth.UserFromContext(r.Context())
 }

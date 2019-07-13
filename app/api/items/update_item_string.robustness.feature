@@ -37,8 +37,8 @@ Feature: Update item strings - robustness
         "title": "The title"
       }
       """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
     And the table "items_strings" should stay unchanged
 
   Scenario: Invalid item_id

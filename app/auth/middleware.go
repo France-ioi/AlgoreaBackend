@@ -14,17 +14,17 @@ import (
 type ctxKey int
 
 const (
-	ctxUserID ctxKey = iota
+	ctxUser ctxKey = iota
 )
 
-// UserIDMiddleware is a middleware retrieving user ID from the request content.
-// It takes the access token from the 'Authorization' header and loads the user ID from the 'sessions' table
-func UserIDMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
+// UserMiddleware is a middleware retrieving a user from the request content.
+// It takes the access token from the 'Authorization' header and loads the user info from the DB
+func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			var accessToken string
-			var userID int64
+			var user database.User
 			var authorized bool
 			for _, authValue := range r.Header["Authorization"] {
 				parsedAuthValue := strings.SplitN(authValue, " ", 3)
@@ -36,28 +36,41 @@ func UserIDMiddleware(sessionStore *database.SessionStore) func(next http.Handle
 			}
 
 			if accessToken == "" {
-				http.Error(w, "No access token provided", http.StatusUnauthorized)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"success":false,"message":"Unauthorized","error_text":"No access token provided"}` + "\n"))
 				return
 			}
 
 			if len(accessToken) < 255 {
-				err := sessionStore.Where("sAccessToken = ?", accessToken).
-					Where("sExpirationDate > NOW()").PluckFirst("idUser", &userID).
+				err := sessionStore.
+					Select(`
+						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,
+						users.allowSubgroups, users.sNotificationReadDate,
+						users.sDefaultLanguage, l.ID as idDefaultLanguage`).
+					Joins("JOIN users ON users.ID = sessions.idUser").
+					Joins("LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode").
+					Where("sAccessToken = ?", accessToken).
+					Where("sExpirationDate > NOW()").Take(&user).
 					Error()
 				authorized = err == nil
 				if err != nil && !gorm.IsRecordNotFoundError(err) {
 					logging.Errorf("Can't validate an access token: %s", err)
-					http.Error(w, "Can't validate the access token", http.StatusBadGateway)
+					w.Header().Set("Content-Type", "application/json; charset=utf-8")
+					w.WriteHeader(http.StatusInternalServerError)
+					_, _ = w.Write([]byte(`{"success":false,"message":"Internal server error","error_text":"Can't validate the access token"}` + "\n"))
 					return
 				}
 			}
 
 			if !authorized {
-				http.Error(w, "Invalid access token", http.StatusUnauthorized)
+				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"success":false,"message":"Unauthorized","error_text":"Invalid access token"}` + "\n"))
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxUserID, userID)
+			ctx := context.WithValue(r.Context(), ctxUser, &user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

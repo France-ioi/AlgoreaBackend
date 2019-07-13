@@ -39,8 +39,8 @@ Feature: Fetch active attempt for an item - robustness
   Scenario: User not found
     Given I am the user with ID "404"
     When I send a PUT request to "/items/50/active-attempt"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
