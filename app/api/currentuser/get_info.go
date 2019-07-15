@@ -60,6 +60,8 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 			bNotifyNews, sNotify, sFreeText, sWebSite, bPhotoAutoload, sLangProg, bBasicEditorMode, nbSpacesForTab,
 			iStepLevelInSite, bIsAdmin, bNoRanking, loginModulePrefix, allowSubgroups`).
 		Scan(&userInfo).Error()
+
+	// This is very unlikely since the user middleware has already checked that the user exists
 	if err == gorm.ErrRecordNotFound {
 		return service.InsufficientAccessRightsError
 	}
