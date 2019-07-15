@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -50,9 +49,6 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 			users_answers.sSubmissionDate, users_answers.iScore, users_answers.bValidated,
 			users_answers.sGradingDate, users_answers.idUserGrader`).
 		ScanIntoSliceOfMaps(&result).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
-	}
 	service.MustNotBeError(err)
 	if len(result) == 0 {
 		return service.InsufficientAccessRightsError
