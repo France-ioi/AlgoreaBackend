@@ -22,6 +22,7 @@ import (
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateNotificationReadDate(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
+	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).
 		UpdateColumn("sNotificationReadDate", gorm.Expr("NOW()")).Error())
 
