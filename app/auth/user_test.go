@@ -5,14 +5,17 @@ import (
 	"testing"
 
 	assertlib "github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func TestUserFromContext(t *testing.T) {
 	assert := assertlib.New(t)
 
-	var userID int64 = 8
-	ctx := context.WithValue(context.Background(), ctxUserID, userID)
-	user := UserFromContext(ctx, nil)
+	myUser := &database.User{ID: 8}
+	ctx := context.WithValue(context.Background(), ctxUser, myUser)
+	user := UserFromContext(ctx)
 
-	assert.EqualValues(userID, user.UserID)
+	assert.False(myUser == user)
+	assert.EqualValues(myUser, user)
 }

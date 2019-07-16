@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 
 	"bou.ke/monkey"
@@ -52,6 +51,8 @@ type TestContext struct {
 
 var db *sql.DB
 
+const testAccessToken = "testsessiontestsessiontestsessio"
+
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	scenario := data.(*gherkin.Scenario)
 	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
@@ -61,7 +62,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
 
 	ctx.setupApp()
-	ctx.userID = 999 // the default for the moment
+	ctx.userID = 0 // not set
 	ctx.lastResponse = nil
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
@@ -145,22 +146,6 @@ func testRequest(ts *httptest.Server, method, path string, headers map[string][]
 	defer func() { /* #nosec */ _ = resp.Body.Close() }()
 
 	return resp, string(respBody), nil
-}
-
-func (ctx *TestContext) setupAuthProxyServer() *httptest.Server {
-	// set the auth proxy server up
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		dataJSON := fmt.Sprintf(`{"userID": %d, "error":""}`, ctx.userID)
-		_, _ = w.Write([]byte(dataJSON)) // nolint
-	}))
-
-	// put the backend URL into the config
-	backendURL, _ := url.Parse(backend.URL) // nolint
-	ctx.application.Config.Auth.ProxyURL = backendURL.String()
-
-	return backend
 }
 
 func (ctx *TestContext) db() *sql.DB {

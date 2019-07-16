@@ -8,9 +8,6 @@ type GroupItemStore struct {
 // MatchingUserAncestors returns a composable query of group items matching groups of which the user is member
 func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
 	db := s.GroupAncestors().UserAncestors(user)
-	if db.Error() != nil {
-		return db
-	}
 	userAncestors := db.SubQuery()
 	return s.Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
 }
@@ -56,11 +53,5 @@ func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID int64) *DB {
 // (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
 // for all the items that are visible to the given user.
 func (s *GroupItemStore) AccessRightsForItemsVisibleToUser(user *User) *DB {
-	userSelfGroupID, err := user.SelfGroupID()
-	if err != nil {
-		_ = s.DB.db.AddError(err)
-		return s.DB
-	}
-
-	return s.AccessRightsForItemsVisibleToGroup(userSelfGroupID)
+	return s.AccessRightsForItemsVisibleToGroup(user.SelfGroupID)
 }

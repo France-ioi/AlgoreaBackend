@@ -1,6 +1,6 @@
 -- +migrate Up
 CREATE TABLE `sessions` (
-    `sAccessToken` VARCHAR(64) NOT NULL,
+    `sAccessToken` VARBINARY(64) NOT NULL,
     `idUser` BIGINT(20) NOT NULL,
     `sExpirationDate` DATETIME NOT NULL,
     `sIssuedAtDate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

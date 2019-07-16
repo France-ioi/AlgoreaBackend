@@ -52,7 +52,7 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 		AllowSubgroups    *bool   `gorm:"column:allowSubgroups" json:"allow_subgroups"`
 	}
 
-	err := srv.Store.Users().ByID(user.UserID).
+	err := srv.Store.Users().ByID(user.ID).
 		Select(`ID, tempUser, sLogin, sRegistrationDate, sEmail, bEmailVerified, sFirstName, sLastName,
 			sStudentId, sCountryCode, sTimeZone,
 			CONVERT(sBirthDate, char) AS sBirthDate, iGraduationYear, iGrade, sSex, sAddress, sZipcode,
@@ -60,6 +60,8 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 			bNotifyNews, sNotify, sFreeText, sWebSite, bPhotoAutoload, sLangProg, bBasicEditorMode, nbSpacesForTab,
 			iStepLevelInSite, bIsAdmin, bNoRanking, loginModulePrefix, allowSubgroups`).
 		Scan(&userInfo).Error()
+
+	// This is very unlikely since the user middleware has already checked that the user exists
 	if err == gorm.ErrRecordNotFound {
 		return service.InsufficientAccessRightsError
 	}

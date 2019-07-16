@@ -19,8 +19,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route group
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
-	router.Get("/groups/", service.AppHandler(srv.getAll).ServeHTTP)
+	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 	router.Get("/groups/{group_id}/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
@@ -51,9 +50,6 @@ func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, g
 	var count int64
 	if err := store.GroupAncestors().OwnedByUser(user).
 		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {
@@ -76,9 +72,6 @@ func checkThatUserHasRightsForDirectRelation(
 		Select("groups.ID, sType").
 		Where("groups.ID IN(?, ?)", parentGroupID, childGroupID).
 		Scan(&groupData).Error()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
 	service.MustNotBeError(err)
 
 	if len(groupData) < 2 {
@@ -126,7 +119,7 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
 					acceptRequestsAction: database.AdminAcceptsRequest,
 					rejectRequestsAction: database.AdminRefusesRequest,
-				}[action], parentGroupID, groupIDs, user.UserID)
+				}[action], parentGroupID, groupIDs, user.ID)
 			return err
 		})
 	}

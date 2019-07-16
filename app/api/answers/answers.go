@@ -17,7 +17,7 @@ type Service struct {
 // SetRoutes defines the routes for this package in a route answers
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(auth.UserIDMiddleware(&srv.Config.Auth))
+	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 	router.Get("/answers", service.AppHandler(srv.getAnswers).ServeHTTP)
 	router.Get("/answers/{answer_id}", service.AppHandler(srv.get).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)

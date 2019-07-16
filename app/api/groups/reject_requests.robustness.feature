@@ -59,6 +59,14 @@ Feature: Reject group requests - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Fails when the user doesn't exist
+    Given I am the user with ID "404"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
     When I send a POST request to "/groups/abc/requests/reject?group_ids=31,141,21,11,13,22"

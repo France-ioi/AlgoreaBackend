@@ -40,7 +40,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
-			user := database.NewMockUser(1, &database.UserData{SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2})
+			user := &database.User{ID: 1, SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2}
 			dataStore := database.NewDataStore(db)
 			itemStore := dataStore.Items()
 
@@ -63,7 +63,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := database.NewMockUser(1, &database.UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
@@ -85,7 +85,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
-	user := database.NewMockUser(1, &database.UserData{SelfGroupID: 10})
+	user := &database.User{ID: 1, SelfGroupID: 10}
 
 	tests := []struct {
 		name          string
@@ -177,7 +177,8 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				}
 			}
 			err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-				user := database.NewUser(test.userID, store.Users(), nil)
+				user := &database.User{}
+				assert.NoError(t, user.LoadByID(store, test.userID))
 
 				hasAccess, reason := store.Items().CheckSubmissionRightsForTimeLimitedContest(test.itemID, user)
 				assert.Equal(t, test.wantHasAccess, hasAccess)
@@ -247,7 +248,8 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			store := database.NewDataStore(db)
-			user := database.NewUser(test.userID, store.Users(), nil)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			hook, restoreLogFunc := logging.MockSharedLoggerHook()
 			defer restoreLogFunc()
 
@@ -285,7 +287,8 @@ func TestItemStore_CloseContest(t *testing.T) {
 			- {idGroup: 20, idItem: 16, bManagerAccess: 1}
 			- {idGroup: 21, idItem: 12}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		user := database.NewUser(1, store.Users(), nil)
+		user := &database.User{}
+		assert.NoError(t, user.LoadByID(store, 1))
 		store.Items().CloseContest(11, user)
 		return nil
 	}))
@@ -359,7 +362,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
 				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		user := database.NewUser(1, store.Users(), nil)
+		user := &database.User{ID: 1, SelfGroupID: 10}
 		store.Items().CloseTeamContest(11, user)
 		return nil
 	}))
@@ -426,7 +429,7 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 	var result []resultType
 
 	assert.NoError(t, database.NewDataStore(db).Items().
-		Visible(database.NewMockUser(1, &database.UserData{SelfGroupID: 10})).
+		Visible(&database.User{ID: 1, SelfGroupID: 10}).
 		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
 	assert.Equal(t, []resultType{
 		{ID: 11, AccessSolutions: true},
@@ -474,8 +477,10 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				user := &database.User{}
+				assert.NoError(t, user.LoadByID(store, test.userID))
 				hasAccess, err := store.Items().
-					HasManagerAccess(database.NewUser(test.userID, store.Users(), nil), test.ids...)
+					HasManagerAccess(user, test.ids...)
 				assert.NoError(t, err)
 				assert.Equal(t, test.wantResult, hasAccess)
 				return nil

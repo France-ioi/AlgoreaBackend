@@ -170,9 +170,6 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
 		Having("fullAccess>0 OR partialAccess>0")
-	if itemsUserCanAccess.Error() == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
 	service.MustNotBeError(itemsUserCanAccess.Error())
 
 	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild")
@@ -181,13 +178,12 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
 	service.MustNotBeError(groupsWhereUserIsMember.Error())
 
-	userSelfGroupID, _ := user.SelfGroupID()
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
 		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess.SubQuery()).
 		Where("(groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?) OR groups_attempts.idGroup = ?",
 			groupsOwnedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
-			userSelfGroupID).
+			user.SelfGroupID).
 		Count(&count).Error())
 	if count == 0 {
 		return service.InsufficientAccessRightsError
@@ -196,16 +192,13 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
-	if userID != user.UserID {
+	if userID != user.ID {
 		count := 0
 		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf")
 		service.MustNotBeError(givenUserSelfGroup.Error())
 		err := srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild=?", givenUserSelfGroup.SubQuery()).
 			Count(&count).Error()
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
 		service.MustNotBeError(err)
 		if count == 0 {
 			return service.InsufficientAccessRightsError
@@ -213,9 +206,6 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 	}
 
 	accessDetails, err := srv.Store.Items().GetAccessDetailsForIDs(user, []int64{itemID})
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
 	service.MustNotBeError(err)
 
 	if len(accessDetails) == 0 || accessDetails[0].IsForbidden() {

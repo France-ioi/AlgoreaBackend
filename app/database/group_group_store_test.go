@@ -14,7 +14,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := NewMockUser(1, &UserData{SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4})
+	mockUser := &User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
 		"WHERE (groups_groups.idGroupChild = ?) AND (groups_groups.sType IN ('invitationAccepted','requestAccepted'))")).
@@ -25,15 +25,6 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	err := NewDataStore(db).GroupGroups().WhereUserIsMember(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGroupGroupStore_WhereUserIsMember_HandlesError(t *testing.T) {
-	testMethodHandlesUserNotFoundError(t, func(db *DB, user *User) []interface{} {
-		var result []interface{}
-		return []interface{}{
-			NewDataStore(db).GroupGroups().WhereUserIsMember(user).Scan(&result).Error(),
-		}
-	}, []interface{}{ErrUserNotFound})
 }
 
 func TestGroupGroupStore_CreateRelation(t *testing.T) {

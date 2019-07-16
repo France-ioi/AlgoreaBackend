@@ -4,6 +4,12 @@ Feature: Get groups attempts for current user and item_id - robustness
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName | sLastName |
       | 1  | jdoe   | 11          | 12           | John       | Doe       |
 
+  Scenario: User doesn't exist
+    Given I am the user with ID "404"
+    When I send a GET request to "/items/1/attempts"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+
   Scenario: Wrong item_id
     Given I am the user with ID "1"
     When I send a GET request to "/items/abc/attempts"

@@ -121,24 +121,6 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 	return accessDetails, nil
 }
 
-// GetAccessDetailsMapForIDs returns access details for given item IDs and the given user as a map (item_id->details)
-func (s *ItemStore) GetAccessDetailsMapForIDs(user *User, itemIDs []int64) (map[int64]ItemAccessDetails, error) {
-	accessDetails, err := s.GetAccessDetailsForIDs(user, itemIDs)
-	if err != nil {
-		return nil, err
-	}
-	accessDetailsMap := make(map[int64]ItemAccessDetails, len(accessDetails))
-	for _, row := range accessDetails {
-		accessDetailsMap[row.ItemID] = ItemAccessDetails{
-			FullAccess:      row.FullAccess,
-			PartialAccess:   row.PartialAccess,
-			GrayedAccess:    row.GrayedAccess,
-			AccessSolutions: row.AccessSolutions,
-		}
-	}
-	return accessDetailsMap, nil
-}
-
 // checkAccess checks if the user has access to all items:
 // - user has to have full access to all items
 // OR
@@ -341,7 +323,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			users_items.sContestStartDate AS sContestStartDate`).
 		Joins(`
 			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
-				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.UserID).
+				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.ID).
 		Order("users_items.sContestStartDate DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
@@ -349,7 +331,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	}
 
 	if len(results) > 1 {
-		log.Warnf("User with ID = %d has %d (>1) active contests", user.UserID, len(results))
+		log.Warnf("User with ID = %d has %d (>1) active contests", user.ID, len(results))
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
@@ -361,22 +343,20 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		StartTime:         results[0].ContestStartDate,
 		EndTime:           endTime,
 		ItemID:            results[0].ItemID,
-		UserID:            user.UserID,
+		UserID:            user.ID,
 		TeamMode:          results[0].TeamMode,
 	}
 }
 
 func (s *ItemStore) closeContest(itemID int64, user *User) {
 	mustNotBeError(s.UserItems().
-		Where("idItem = ? AND idUser = ?", itemID, user.UserID).
+		Where("idItem = ? AND idUser = ?", itemID, user.ID).
 		UpdateColumn("sFinishDate", gorm.Expr("NOW()")).Error())
 
-	selfGroupID, err := user.SelfGroupID()
-	mustNotBeError(err)
 	groupItemStore := s.GroupItems()
 
 	// TODO: "remove partial access if other access were present" (what did he mean???)
-	groupItemStore.removePartialAccess(selfGroupID, itemID)
+	groupItemStore.removePartialAccess(user.SelfGroupID, itemID)
 	mustNotBeError(groupItemStore.db.Exec(`
 		DELETE groups_items
 		FROM groups_items
@@ -385,7 +365,7 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 			items_ancestors.idItemAncestor = ?
 		WHERE groups_items.idGroup = ? AND
 			(sCachedFullAccessDate IS NULL OR sCachedFullAccessDate > NOW()) AND
-			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, selfGroupID).Error)
+			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, user.SelfGroupID).Error)
 	// we do not need to call GroupItemStore.After() because we do not grant new access here
 	groupItemStore.computeAllAccess()
 }

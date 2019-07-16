@@ -79,20 +79,15 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
-		var errInTransaction error
 		groupStore := s.Groups()
 
 		var currentGroupData []struct {
 			FreeAccess bool `sql:"column:bFreeAccess"`
 		}
 
-		if errInTransaction = groupStore.OwnedBy(user).
+		if errInTransaction := groupStore.OwnedBy(user).
 			Select("groups.bFreeAccess").WithWriteLock().
 			Where("groups.ID = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
-			if errInTransaction == database.ErrUserNotFound {
-				apiErr = service.InsufficientAccessRightsError
-				return apiErr.Error // rollback
-			}
 			return errInTransaction // rollback
 		}
 		if len(currentGroupData) < 1 {

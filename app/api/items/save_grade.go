@@ -29,13 +29,11 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	user := srv.GetUser(r)
-	if err = user.Load(); err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	apiError := service.NoError
-	if apiError = checkSaveGradeTokenParams(user, &requestData); apiError != service.NoError {
+	if apiError = checkHintOrScoreTokenRequiredFields(user, requestData.TaskToken, "score_token",
+		requestData.ScoreToken.Converted.UserID, requestData.ScoreToken.LocalItemID,
+		requestData.ScoreToken.ItemURL, requestData.ScoreToken.AttemptID); apiError != service.NoError {
 		return apiError
 	}
 
@@ -134,7 +132,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	userItemsValues := make([]interface{}, 0, len(values)+2)
 	userItemsValues = append(userItemsValues, values...)
-	userItemsValues = append(userItemsValues, user.UserID, requestData.TaskToken.Converted.LocalItemID)
+	userItemsValues = append(userItemsValues, user.ID, requestData.TaskToken.Converted.LocalItemID)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE users_items "+updateExpr+" WHERE idUser = ? AND idItem = ?", userItemsValues...).Error()) // nolint:gosec
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
@@ -148,7 +146,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
 	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
 	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
-		Where("idUser = ?", user.UserID).
+		Where("idUser = ?", user.ID).
 		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
 
 	updateResult := userAnswerScope.Where("iScore = ? OR iScore IS NULL", score).
@@ -171,7 +169,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
 					"idAttempt":    requestData.TaskToken.Converted.AttemptID,
 					"idItem":       requestData.TaskToken.Converted.LocalItemID,
-					"idUser":       user.UserID,
+					"idUser":       user.ID,
 					"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,
@@ -297,27 +295,4 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 // Bind of saveGradeRequestParsed does nothing.
 func (requestData *saveGradeRequestParsed) Bind(r *http.Request) error {
 	return nil
-}
-
-func checkSaveGradeTokenParams(user *database.User, requestData *saveGradeRequestParsed) service.APIError {
-	if user.UserID != requestData.TaskToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.UserID))
-	}
-	if user.UserID != requestData.ScoreToken.Converted.UserID {
-		return service.ErrInvalidRequest(fmt.Errorf(
-			"token in score_token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.ScoreToken.Converted.UserID, user.UserID))
-	}
-	if requestData.TaskToken.LocalItemID != requestData.ScoreToken.LocalItemID {
-		return service.ErrInvalidRequest(errors.New("wrong idItemLocal in score_token"))
-	}
-	if requestData.TaskToken.ItemURL != requestData.ScoreToken.ItemURL {
-		return service.ErrInvalidRequest(errors.New("wrong itemUrl in score_token"))
-	}
-	if requestData.TaskToken.AttemptID != requestData.ScoreToken.AttemptID {
-		return service.ErrInvalidRequest(errors.New("wrong idAttempt in score_token"))
-	}
-	return service.NoError
 }

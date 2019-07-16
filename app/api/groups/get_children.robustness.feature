@@ -20,8 +20,8 @@ Feature: Get group children (groupChildrenView) - robustness
   Scenario: User doesn't exist
     Given I am the user with ID "10"
     When I send a GET request to "/groups/11/children"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
 
   Scenario: Invalid group_id given
     Given I am the user with ID "1"

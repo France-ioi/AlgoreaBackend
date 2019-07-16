@@ -5,19 +5,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
-	err := user.Load()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
-	selfGroupID, _ := user.SelfGroupID()
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.ID,
@@ -29,7 +22,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			groups.sType AS group__sType`).
 		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
-		Where("groups_groups.idGroupChild = ?", selfGroupID)
+		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

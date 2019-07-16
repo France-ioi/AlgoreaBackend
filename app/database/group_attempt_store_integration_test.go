@@ -5,7 +5,6 @@ package database_test
 import (
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -256,7 +255,8 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			user := database.NewUser(test.userID, store.Users(), nil)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			found, itemID, err := store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(test.attemptID, user)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedFound, found)
@@ -313,7 +313,6 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			userID:      404,
 			attemptID:   100,
 			expectedIDs: []int64(nil),
-			expectedErr: gorm.ErrRecordNotFound,
 		},
 		{
 			name:        "user doesn't have access to the item",
@@ -431,7 +430,8 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			user := database.NewUser(test.userID, store.Users(), nil)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			var ids []int64
 			err := store.GroupAttempts().VisibleAndByItemID(user, test.itemID).Pluck("groups_attempts.ID", &ids).Error()
 			assert.Equal(t, test.expectedErr, err)

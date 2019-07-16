@@ -47,18 +47,14 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err e
 //  3) the user's idGroupSelf = groups_attempts.idGroup (if items.bHasAttempts = 0)
 func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
 	recoverPanics(&err)
-	selfGroupID, err := user.SelfGroupID()
-	if err == ErrUserNotFound {
-		return false, 0, nil
-	}
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
 	err = s.Items().Visible(user).
 		Joins("JOIN groups_attempts ON groups_attempts.idItem = items.ID AND groups_attempts.ID = ?", attemptID).
-		Joins("JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ?", user.UserID).
+		Joins("JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ?", user.ID).
 		Where("partialAccess > 0 OR fullAccess > 0").
 		Where("IF(items.bHasAttempts, groups_attempts.idGroup IN ?, groups_attempts.idGroup = ?)",
-			usersGroupsQuery.SubQuery(), selfGroupID).
+			usersGroupsQuery.SubQuery(), user.SelfGroupID).
 		PluckFirst("items.ID", &itemID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, 0, nil
@@ -74,15 +70,6 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 //   (a) if items.bHasAttempts = 1, then the user should be a member of the groups_attempts.idGroup team
 //   (b) if items.bHasAttempts = 0, then groups_attempts.idGroup should be equal to the user's self group
 func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
-	selfGroupID, err := user.SelfGroupID()
-	if err != nil {
-		if err == ErrUserNotFound {
-			err = gorm.ErrRecordNotFound
-		}
-		_ = s.DB.db.AddError(err)
-		return s.DB
-	}
-
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
 	// the user should have at least partial access to the item
 	itemsQuery := s.Items().Visible(user).Where("partialAccess > 0 OR fullAccess > 0")
@@ -93,5 +80,5 @@ func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 		// if items.bHasAttempts = 1, then groups_attempts.idGroup should be one of the authorized user's groups,
 		// otherwise groups_attempts.idGroup should be equal to the user's self group
 		Where("IF(items.bHasAttempts, groups_attempts.idGroup IN ?, groups_attempts.idGroup = ?)",
-			usersGroupsQuery.SubQuery(), selfGroupID)
+			usersGroupsQuery.SubQuery(), user.SelfGroupID)
 }

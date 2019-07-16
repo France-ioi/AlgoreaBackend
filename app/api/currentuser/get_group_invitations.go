@@ -5,19 +5,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
-	err := user.Load()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
-	selfGroupID, _ := user.SelfGroupID()
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.ID,
@@ -34,7 +27,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Joins("LEFT JOIN users ON users.ID = groups_groups.idUserInviting").
 		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType IN ('invitationSent', 'requestSent', 'requestRefused')").
-		Where("groups_groups.idGroupChild = ?", selfGroupID)
+		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
 
 	if len(r.URL.Query()["within_weeks"]) > 0 {
 		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")

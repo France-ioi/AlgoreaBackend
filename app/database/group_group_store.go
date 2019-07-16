@@ -15,13 +15,7 @@ type GroupGroupStore struct {
 // WhereUserIsMember returns a composable query of direct ancestors (parents) of user's self group,
 // i.e. groups of which he is a direct member
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
-	userSelfGroupID, err := user.SelfGroupID()
-	if err != nil {
-		_ = s.DB.db.AddError(err)
-		return s.DB
-	}
-
-	return s.Where("groups_groups.idGroupChild = ?", userSelfGroupID).
+	return s.Where("groups_groups.idGroupChild = ?", user.SelfGroupID).
 		Where("groups_groups.sType IN ('invitationAccepted','requestAccepted')")
 }
 

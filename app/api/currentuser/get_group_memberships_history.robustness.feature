@@ -7,8 +7,8 @@ Feature: Get group memberships history for the current user - robustness
   Scenario: User doesn't exist
     Given I am the user with ID "4"
     When I send a GET request to "/current-user/group-memberships-history"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
 
   Scenario: sort is incorrect
     Given I am the user with ID "1"

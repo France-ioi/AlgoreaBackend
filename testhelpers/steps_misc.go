@@ -15,9 +15,11 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
 )
@@ -38,7 +40,15 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 
 func (ctx *TestContext) IAmUserWithID(id int64) error { // nolint
 	ctx.userID = id
-	return nil
+	db, err := database.Open(ctx.db())
+	if err != nil {
+		return err
+	}
+	return database.NewDataStore(db).Sessions().InsertMap(map[string]interface{}{
+		"sAccessToken":    testAccessToken,
+		"idUser":          ctx.userID,
+		"sExpirationDate": gorm.Expr("NOW() + INTERVAL 7200 SECOND"),
+	})
 }
 
 func (ctx *TestContext) TimeNow(timeStr string) error { // nolint

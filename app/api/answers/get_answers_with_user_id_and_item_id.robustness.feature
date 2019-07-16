@@ -38,11 +38,11 @@ Background:
   Scenario: Should fail when the user doesn't exist
     Given I am the user with ID "10"
     When I send a GET request to "/answers?item_id=210&user_id=1"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
 
-  Scenario: Should fail when the user doesn't exist and user_id is the same user
-    Given I am the user with ID "10"
+  Scenario: Should fail when the user_id doesn't exist
+    Given I am the user with ID "1"
     When I send a GET request to "/answers?item_id=210&user_id=10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

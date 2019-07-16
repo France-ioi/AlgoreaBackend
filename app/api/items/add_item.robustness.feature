@@ -49,6 +49,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Missing language_id
     Given I am the user with ID "1"
@@ -73,6 +78,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Missing title
     Given I am the user with ID "1"
@@ -97,6 +107,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Missing parent_item_id
     Given I am the user with ID "1"
@@ -121,6 +136,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: language_id is not a number
     Given I am the user with ID "1"
@@ -146,6 +166,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: language_id doesn't exist
     Given I am the user with ID "1"
@@ -171,6 +196,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: parent_item_id is not a number
     Given I am the user with ID "1"
@@ -197,10 +227,14 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Non-existing parent
     Given I am the user with ID "1"
-    And I am the user with ID "1"
     When I send a POST request to "/items/" with the following body:
       """
       {
@@ -223,6 +257,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Not enough perm on parent
     Given the database has the following table 'groups':
@@ -251,6 +290,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: The user doesn't exist
     And I am the user with ID "121"
@@ -264,8 +308,13 @@ Feature: Add item - robustness
         "order": 100
       }
       """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong full_screen
     Given I am the user with ID "1"
@@ -292,6 +341,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong type
     Given I am the user with ID "1"
@@ -317,6 +371,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong validation_type
     Given I am the user with ID "1"
@@ -343,6 +402,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong validation_min
     Given I am the user with ID "1"
@@ -369,6 +433,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong unlocked_item_ids
     Given I am the user with ID "1"
@@ -395,6 +464,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Non-existent ID in unlocked_item_ids
     Given I am the user with ID "1"
@@ -421,6 +495,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: unlocked_item_ids not owned/managed by the user
     Given I am the user with ID "1"
@@ -447,6 +526,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong team_mode
     Given I am the user with ID "1"
@@ -473,6 +557,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Non-existent group ID in team_in_group_id
     Given I am the user with ID "1"
@@ -499,6 +588,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: team_in_group_id is not owned by the user
     Given I am the user with ID "1"
@@ -525,6 +619,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (wrong format)
     Given I am the user with ID "1"
@@ -551,6 +650,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative hours)
     Given I am the user with ID "1"
@@ -577,6 +681,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many hours)
     Given I am the user with ID "1"
@@ -603,6 +712,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative minutes)
     Given I am the user with ID "1"
@@ -629,6 +743,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many minutes)
     Given I am the user with ID "1"
@@ -655,6 +774,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative seconds)
     Given I am the user with ID "1"
@@ -681,6 +805,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many seconds)
     Given I am the user with ID "1"
@@ -707,6 +836,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Wrong contest_phase
     Given I am the user with ID "1"
@@ -733,6 +867,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: Non-unique children item IDs
     Given I am the user with ID "1"
@@ -762,6 +901,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: User doesn't have manager/owner access to children items
     Given I am the user with ID "1"
@@ -791,6 +935,11 @@ Feature: Add item - robustness
         }
       }
       """
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: The parent is a child item
     Given I am the user with ID "1"
@@ -809,6 +958,11 @@ Feature: Add item - robustness
       """
     Then the response code should be 403
     And the response error message should contain "An item cannot become an ancestor of itself"
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged
 
   Scenario: The parent is a descendant of a child item
     Given I am the user with ID "1"
@@ -827,3 +981,8 @@ Feature: Add item - robustness
       """
     Then the response code should be 403
     And the response error message should contain "An item cannot become an ancestor of itself"
+    And the table "items" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "groups_items" should stay unchanged

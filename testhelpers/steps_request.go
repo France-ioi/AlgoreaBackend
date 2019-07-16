@@ -28,9 +28,17 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	testServer := httptest.NewServer(ctx.application.HTTPHandler)
 	defer testServer.Close()
 
-	// auth proxy server
-	authProxyServer := ctx.setupAuthProxyServer()
-	defer authProxyServer.Close()
+	var headers map[string][]string
+	if ctx.userID != 0 {
+		headers = make(map[string][]string, len(ctx.requestHeaders)+1)
+		for key := range ctx.requestHeaders {
+			headers[key] = make([]string, len(ctx.requestHeaders[key]))
+			copy(headers[key], ctx.requestHeaders[key])
+		}
+		headers["Authorization"] = []string{"Bearer " + testAccessToken}
+	} else {
+		headers = ctx.requestHeaders
+	}
 
 	reqBody, err := ctx.preprocessString(reqBody)
 	if err != nil {
@@ -38,7 +46,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// do request
-	response, body, err := testRequest(testServer, method, path, ctx.requestHeaders, strings.NewReader(reqBody))
+	response, body, err := testRequest(testServer, method, path, headers, strings.NewReader(reqBody))
 	if err != nil {
 		return err
 	}

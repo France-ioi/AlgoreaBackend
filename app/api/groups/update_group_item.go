@@ -74,10 +74,6 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	user := srv.GetUser(r)
-	if user.Load() == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	data := formdata.NewFormData(&updateGroupItemInput{})
 	err = data.ParseJSONRequestData(r)

@@ -5,7 +5,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -13,19 +12,14 @@ import (
 )
 
 func TestBase_GetUser(t *testing.T) {
-	db, mock := database.NewDBMock()
-	mock.ExpectQuery("").WithArgs(42).
-		WillReturnRows(sqlmock.NewRows([]string{"idGroupOwned"}).AddRow(int64(2)))
-	middleware := auth.MockUserIDMiddleware(42)
+	middleware := auth.MockUserMiddleware(&database.User{ID: 42, OwnedGroupID: 2})
 	called := false
 	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
-		srv := &Base{Store: database.NewDataStore(db)}
+		srv := &Base{}
 		user := srv.GetUser(r)
-		assert.Equal(t, int64(42), user.UserID)
-		userOwnedGroupID, err := user.OwnedGroupID()
-		assert.Equal(t, int64(2), userOwnedGroupID)
-		assert.NoError(t, err)
+		assert.Equal(t, int64(42), user.ID)
+		assert.Equal(t, int64(2), user.OwnedGroupID)
 	})))
 	defer ts.Close()
 

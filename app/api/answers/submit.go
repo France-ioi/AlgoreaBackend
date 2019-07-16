@@ -55,15 +55,11 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	}
 
 	user := srv.GetUser(httpReq)
-	if err = user.Load(); err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
-	if user.UserID != requestData.TaskToken.Converted.UserID {
+	if user.ID != requestData.TaskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.UserID))
+			requestData.TaskToken.Converted.UserID, user.ID))
 	}
 
 	var userAnswerID int64
@@ -85,11 +81,11 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		}
 
 		userItemStore := store.UserItems()
-		err = userItemStore.CreateIfMissing(user.UserID, requestData.TaskToken.Converted.LocalItemID)
+		err = userItemStore.CreateIfMissing(user.ID, requestData.TaskToken.Converted.LocalItemID)
 		service.MustNotBeError(err)
 
 		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
-			user.UserID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
+			user.ID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
 		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)
@@ -100,7 +96,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			"sLastActivityDate":     gorm.Expr("NOW()"),
 		}
 		service.MustNotBeError(userItemStore.
-			Where("idUser = ? AND idItem = ?", user.UserID, requestData.TaskToken.LocalItemID).
+			Where("idUser = ? AND idItem = ?", user.ID, requestData.TaskToken.LocalItemID).
 			UpdateColumn(columnsToUpdate).Error())
 		service.MustNotBeError(groupAttemptsScope.UpdateColumn(columnsToUpdate).Error())
 		return nil // commit

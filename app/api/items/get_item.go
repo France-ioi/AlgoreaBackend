@@ -118,12 +118,6 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	user := srv.GetUser(httpReq)
-	err := user.Load() // check that the user exists
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
-
 	rawData := getRawItemData(srv.Store.Items(), req.ID, user)
 
 	if len(rawData) == 0 || rawData[0].ID != req.ID {
@@ -211,7 +205,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 	var result []rawItem
 
 	accessRights := s.AccessRights(user)
-	service.MustNotBeError(accessRights.Error()) // we have already checked that the user exists in getItem()
+	service.MustNotBeError(accessRights.Error())
 
 	commonColumns := `items.ID AS ID,
 		items.sType,
@@ -318,7 +312,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.UserID).
+		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.ID).
 		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
 			accessRights.SubQuery()).
 		Order("iChildOrder")

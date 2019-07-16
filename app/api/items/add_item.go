@@ -116,11 +116,6 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
-	err = user.Load()
-	if err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	input := NewItemRequest{}
 	formData := formdata.NewFormData(&input)
@@ -278,8 +273,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemMap["idDefaultLanguage"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
-		userSelfGroupID, _ := user.SelfGroupID() // the user has been already loaded in addItem()
-		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.UserID, userSelfGroupID, itemID)))
+		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.ID, user.SelfGroupID, itemID)))
 
 		stringMap["ID"] = s.NewID()
 		stringMap["idItem"] = itemID

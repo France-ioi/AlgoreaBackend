@@ -67,8 +67,8 @@ Feature: User sends a request to join a group - robustness
   Scenario: Fails if the user doesn't exist
     Given I am the user with ID "4"
     When I send a POST request to "/current-user/group-requests/14"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    Then the response code should be 401
+    And the response error message should contain "Invalid access token"
 
   Scenario: Can't send request to a group having bFreeAccess=0
     Given I am the user with ID "1"

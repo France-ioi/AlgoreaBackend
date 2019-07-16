@@ -3,13 +3,15 @@ package auth
 import (
 	"context"
 	"net/http"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-// MockUserIDMiddleware is a middleware to be used to mock a fixed user id in the context
-func MockUserIDMiddleware(userID int64) func(next http.Handler) http.Handler {
+// MockUserMiddleware is a middleware to be used to mock a fixed user in the context
+func MockUserMiddleware(user *database.User) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), ctxUserID, userID)
+			ctx := context.WithValue(r.Context(), ctxUser, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

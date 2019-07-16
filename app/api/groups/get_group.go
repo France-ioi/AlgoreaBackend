@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -24,12 +23,8 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
      groups.sPassword, groups.sPasswordTimer, groups.sPasswordEnd, groups.bOpenContest`).Limit(1)
 
 	var result []map[string]interface{}
-	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
-		if err == database.ErrUserNotFound {
-			return service.InsufficientAccessRightsError
-		}
-		return service.ErrUnexpected(err)
-	}
+	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
+
 	if len(result) == 0 {
 		return service.InsufficientAccessRightsError
 	}

@@ -56,10 +56,6 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	}
 
 	user := srv.GetUser(httpReq)
-	if err = user.Load(); err == database.ErrUserNotFound {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	attemptID := requestData.AttemptID
 	found, itemID, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
@@ -71,7 +67,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userAnswerStore := store.UserAnswers()
 		var currentAnswerID int64
-		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.UserID, itemID, &attemptID)
+		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.ID, itemID, &attemptID)
 		service.MustNotBeError(err)
 
 		columnsToUpdate := map[string]interface{}{
@@ -80,7 +76,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 		}
 		service.MustNotBeError(userAnswerStore.ByID(currentAnswerID).UpdateColumn(columnsToUpdate).Error())
 
-		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.UserID).
+		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.ID).
 			Where("idItem = ?", itemID).
 			Where("idAttemptActive = ?", requestData.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
