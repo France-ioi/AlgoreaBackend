@@ -22,6 +22,7 @@ type Server struct {
 	ReadTimeout  int32
 	WriteTimeout int32
 	RootPath     string
+	Domain       string
 }
 
 // ReverseProxy is the part of the config for the Reverse Proxy
@@ -39,6 +40,10 @@ type Logging struct {
 
 // Auth is the part of the config related to the user authentication
 type Auth struct {
+	ClientID       string
+	ClientSecret   string
+	LoginModuleURL string
+	CallbackURL    string
 }
 
 // Token is the part of the config related to tokens

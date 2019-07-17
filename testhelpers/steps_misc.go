@@ -91,6 +91,20 @@ func (ctx *TestContext) TheGeneratedAuthRandomStringIs(generatedString string) e
 	return nil
 }
 
+func (ctx *TestContext) TheGeneratedAuthRandomStringsAre(generatedStrings string) error { // nolint
+	currentIndex := 0
+	monkey.Patch(auth.GenerateRandomString, func() (string, error) {
+		currentIndex++
+		randomString := multipleStringsRegexp.FindStringSubmatch(generatedStrings)
+		if randomString == nil {
+			return "", errors.New("not enough generated random strings")
+		}
+		generatedStrings = generatedStrings[len(randomString[1]):]
+		return randomString[2], nil
+	})
+	return nil
+}
+
 func (ctx *TestContext) LogsShouldContain(docString *gherkin.DocString) error { // nolint
 	stringToSearch := strings.TrimSpace(docString.Content)
 	logs := ctx.logsHook.GetAllLogs()
