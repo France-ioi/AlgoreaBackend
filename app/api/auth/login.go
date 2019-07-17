@@ -12,7 +12,7 @@ import (
 
 // swagger:operation POST /auth/login auth authLogin
 // ---
-// summary: Create a state & cookie for the login process
+// summary: Redirect with appropriate security parameters to the login module so that the user can log in
 // description: Generates a state value (a random 32-char [0-9a-z] string) and a random cookie (a random 32-char [0-9a-z] string).
 //              Stores the pair with an expiration time (2 hours) into the DB and sets the cookie value into the login_csrf cookie
 //              while the state value goes to the login module as a 'state' URL parameter.
