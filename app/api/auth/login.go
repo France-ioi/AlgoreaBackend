@@ -30,8 +30,9 @@ func (srv *Service) login(w http.ResponseWriter, r *http.Request) service.APIErr
 		return service.ErrInvalidRequest(errors.New("'Authorization' header should not be present"))
 	}
 
-	state, err := auth.SetNewLoginStateCookie(srv.Store.LoginStates(), &srv.Config.Server, w)
+	cookie, state, err := auth.CreateLoginState(srv.Store.LoginStates(), &srv.Config.Server)
 	service.MustNotBeError(err)
+	http.SetCookie(w, cookie)
 
 	redirectURL := getOAuthConfig(&srv.Config.Auth).AuthCodeURL(state, oauth2.SetAuthURLParam("approval_prompt", "auto"))
 	http.Redirect(w, r, redirectURL, http.StatusFound)

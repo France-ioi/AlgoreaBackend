@@ -13,13 +13,13 @@ import (
 const loginStateLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 const loginCsrfCookieName = "login_csrf"
 
-// SetNewLoginStateCookie creates a new cookie/state pair for the login process and sets the cookie.
-// Returns the generated state value.
-func SetNewLoginStateCookie(s *database.LoginStateStore, conf *config.Server, w http.ResponseWriter) (string, error) {
+// CreateLoginState creates a new cookie/state pair for the login process.
+// Returns the generated cookie/state pair.
+func CreateLoginState(s *database.LoginStateStore, conf *config.Server) (*http.Cookie, string, error) {
 	var state string
 	state, err := GenerateKey()
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	var cookie string
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
@@ -34,15 +34,14 @@ func SetNewLoginStateCookie(s *database.LoginStateStore, conf *config.Server, w 
 		})
 	})
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
-	http.SetCookie(w, &http.Cookie{
+	return &http.Cookie{
 		Name:    loginCsrfCookieName,
 		Value:   cookie,
 		Expires: time.Now().Add(time.Duration(loginStateLifetimeInSeconds) * time.Second),
 		MaxAge:  int(loginStateLifetimeInSeconds),
 		Domain:  conf.Domain, Path: conf.RootPath,
 		HttpOnly: true,
-	})
-	return state, nil
+	}, state, nil
 }

@@ -2,13 +2,12 @@ package auth
 
 import (
 	"errors"
-	"net/http/httptest"
 	"regexp"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/DATA-DOG/go-sqlmock"
+	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
@@ -16,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-func TestSetNewLoginStateCookie(t *testing.T) {
+func TestCreateLoginState(t *testing.T) {
 	counter := -1
 	randomStrings := []string{"randomstate", "randomcookie"}
 	monkey.Patch(GenerateKey, func() (string, error) {
@@ -37,15 +36,14 @@ func TestSetNewLoginStateCookie(t *testing.T) {
 		Domain:   "backend.algorea.org",
 		RootPath: "/in/subdirectory/",
 	}
-	response := httptest.ResponseRecorder{}
-	state, err := SetNewLoginStateCookie(database.NewDataStore(db).LoginStates(), &conf, &response)
+	cookie, state, err := CreateLoginState(database.NewDataStore(db).LoginStates(), &conf)
 	assert.NoError(t, err)
 	assert.Equal(t, "randomstate", state)
 
 	assert.Equal(t, "login_csrf=randomcookie; Path=/in/subdirectory/; Domain=backend.algorea.org; Expires="+
 		currentTime.Add(2*time.Hour).Truncate(time.Second).UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT")+
 		"; Max-Age=7200; HttpOnly",
-		response.Header().Get("Set-Cookie"))
+		cookie.String())
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -59,12 +57,10 @@ func TestCreateLoginState_HandlesGenerateKeyError(t *testing.T) {
 	db, mock := database.NewDBMock()
 
 	conf := config.Server{}
-	response := httptest.ResponseRecorder{}
-	state, err := SetNewLoginStateCookie(database.NewDataStore(db).LoginStates(), &conf, &response)
+	cookie, state, err := CreateLoginState(database.NewDataStore(db).LoginStates(), &conf)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", state)
-
-	assert.Equal(t, "", response.Header().Get("Set-Cookie"))
+	assert.Nil(t, cookie)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -83,16 +79,14 @@ func TestCreateLoginState_HandlesGenerateKeyErrorForCookie(t *testing.T) {
 	db, mock := database.NewDBMock()
 
 	conf := config.Server{}
-	response := httptest.ResponseRecorder{}
-	state, err := SetNewLoginStateCookie(database.NewDataStore(db).LoginStates(), &conf, &response)
+	cookie, state, err := CreateLoginState(database.NewDataStore(db).LoginStates(), &conf)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", state)
-
-	assert.Equal(t, "", response.Header().Get("Set-Cookie"))
+	assert.Nil(t, cookie)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSetNewLoginStateCookie_RetriesOnCollision(t *testing.T) {
+func TestCreateLoginState_RetriesOnCollision(t *testing.T) {
 	counter := -1
 	randomStrings := []string{"randomstate", "randomcookie", "newrandomcookie"}
 	monkey.Patch(GenerateKey, func() (string, error) {
@@ -117,14 +111,13 @@ func TestSetNewLoginStateCookie_RetriesOnCollision(t *testing.T) {
 		Domain:   "backend.algorea.org",
 		RootPath: "/in/subdirectory/",
 	}
-	response := httptest.ResponseRecorder{}
-	state, err := SetNewLoginStateCookie(database.NewDataStore(db).LoginStates(), &conf, &response)
+	cookie, state, err := CreateLoginState(database.NewDataStore(db).LoginStates(), &conf)
 	assert.NoError(t, err)
 	assert.Equal(t, "randomstate", state)
 
 	assert.Equal(t, "login_csrf=newrandomcookie; Path=/in/subdirectory/; Domain=backend.algorea.org; Expires="+
 		currentTime.Add(2*time.Hour).Truncate(time.Second).UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT")+
 		"; Max-Age=7200; HttpOnly",
-		response.Header().Get("Set-Cookie"))
+		cookie.String())
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
