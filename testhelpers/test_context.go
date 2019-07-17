@@ -66,6 +66,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.lastResponse = nil
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
+	ctx.requestHeaders = map[string][]string{}
 	ctx.dbTableData = make(map[string]*gherkin.DataTable)
 	ctx.templateSet = ctx.constructTemplateSet()
 
