@@ -13,7 +13,7 @@ import (
 const loginStateLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 const loginCsrfCookieName = "login_csrf"
 
-// CreateLoginState creates a new cookie/state pair for the login process.
+// CreateLoginState creates a new cookie/state pair for the login process and stores it into the DB.
 // Returns the generated cookie/state pair.
 func CreateLoginState(s *database.LoginStateStore, conf *config.Server) (*http.Cookie, string, error) {
 	var state string
