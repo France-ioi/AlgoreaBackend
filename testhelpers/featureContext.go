@@ -19,7 +19,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group password is "([^"]*)"$`, ctx.TheGeneratedGroupPasswordIs)
 	s.Step(`^the generated group passwords are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupPasswordsAre)
-	s.Step(`^the generated access token is "([^"]*)"$`, ctx.TheGeneratedAccessTokenIs)
+	s.Step(`^the generated auth random string is "([^"]*)"$`, ctx.TheGeneratedAuthRandomStringIs)
 
 	s.Step(`^the "([^"]*)" request header is "(.*)"$`, ctx.TheRequestHeaderIs)
 	s.Step(`^I send a (GET|POST|PUT|DELETE) request to "([^"]*)"$`, ctx.ISendrequestTo)

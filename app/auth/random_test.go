@@ -1,0 +1,40 @@
+package auth
+
+import (
+	"crypto/rand"
+	"errors"
+	"io"
+	"math/big"
+	"testing"
+
+	"bou.ke/monkey"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestGenerateRandomString(t *testing.T) {
+	got1, err := GenerateRandomString()
+
+	assert.NoError(t, err)
+	assert.Len(t, got1, 32)
+	assert.Regexp(t, `^[0-9a-z]{32}$`, got1)
+
+	got2, err := GenerateRandomString()
+
+	assert.NoError(t, err)
+	assert.Len(t, got2, 32)
+	assert.Regexp(t, `^[0-9a-z]{32}$`, got2)
+
+	assert.NotEqual(t, got2, got1)
+}
+
+func TestGenerateRandomString_HandlesError(t *testing.T) {
+	expectedError := errors.New("some error")
+	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
+		return nil, expectedError
+	})
+	defer monkey.UnpatchAll()
+
+	_, err := GenerateRandomString()
+	assert.Equal(t, expectedError, err)
+}

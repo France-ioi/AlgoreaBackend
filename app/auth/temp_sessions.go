@@ -1,8 +1,6 @@
 package auth
 
 import (
-	crand "crypto/rand"
-	"math/big"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -18,7 +16,7 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-		accessToken, err = GenerateTempAccessToken()
+		accessToken, err = GenerateRandomString()
 		if err != nil {
 			return err
 		}
@@ -35,22 +33,4 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 	}
 
 	return
-}
-
-// GenerateTempAccessToken generate a random access token for a temporary user's session.
-// Entropy of the generated token (assuming "crypto/rand" is well implemented) is 36^32, so ~165 bits.
-func GenerateTempAccessToken() (string, error) {
-	const allowedCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
-	const allowedCharactersLength = len(allowedCharacters)
-	const tokenLength = 32
-
-	result := make([]byte, 0, tokenLength)
-	for i := 0; i < tokenLength; i++ {
-		index, err := crand.Int(crand.Reader, big.NewInt(int64(allowedCharactersLength)))
-		if err != nil {
-			return "", err
-		}
-		result = append(result, allowedCharacters[index.Int64()])
-	}
-	return string(result), nil
 }

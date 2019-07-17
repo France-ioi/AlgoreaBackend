@@ -86,8 +86,8 @@ func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string)
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAccessTokenIs(generatedToken string) error { // nolint
-	monkey.Patch(auth.GenerateTempAccessToken, func() (string, error) { return generatedToken, nil }) // nolint:unparam
+func (ctx *TestContext) TheGeneratedAuthRandomStringIs(generatedString string) error { // nolint
+	monkey.Patch(auth.GenerateRandomString, func() (string, error) { return generatedString, nil }) // nolint:unparam
 	return nil
 }
 
