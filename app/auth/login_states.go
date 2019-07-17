@@ -17,13 +17,13 @@ const loginCsrfCookieName = "login_csrf"
 // Returns the generated state value.
 func SetNewLoginStateCookie(s *database.LoginStateStore, conf *config.Server, w http.ResponseWriter) (string, error) {
 	var state string
-	state, err := GenerateRandomString()
+	state, err := GenerateKey()
 	if err != nil {
 		return "", err
 	}
 	var cookie string
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-		cookie, err = GenerateRandomString()
+		cookie, err = GenerateKey()
 		if err != nil {
 			return err
 		}

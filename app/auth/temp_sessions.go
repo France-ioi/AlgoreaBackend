@@ -16,7 +16,7 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-		accessToken, err = GenerateRandomString()
+		accessToken, err = GenerateKey()
 		if err != nil {
 			return err
 		}

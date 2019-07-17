@@ -16,7 +16,7 @@ import (
 
 func TestCreateNewTempSession(t *testing.T) {
 	expectedAccessToken := "tmp-01abcdefghijklmnopqrstuvwxyz"
-	monkey.Patch(GenerateRandomString, func() (string, error) { return expectedAccessToken, nil })
+	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -39,7 +39,7 @@ func TestCreateNewTempSession(t *testing.T) {
 func TestCreateNewTempSession_Retries(t *testing.T) {
 	expectedAccessTokens := []string{"tmp-02abcdefghijklmnopqrstuvwxyz", "tmp-03abcdefghijklmnopqrstuvwxyz"}
 	accessTokensIndex := -1
-	monkey.Patch(GenerateRandomString, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
+	monkey.Patch(GenerateKey, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -69,7 +69,7 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 
 func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(GenerateRandomString, func() (string, error) { return "", expectedError })
+	monkey.Patch(GenerateKey, func() (string, error) { return "", expectedError })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -87,7 +87,7 @@ func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 
 func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 	expectedAccessToken := "tmp-04abcdefghijklmnopqrstuvwxyz"
-	monkey.Patch(GenerateRandomString, func() (string, error) { return expectedAccessToken, nil })
+	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()

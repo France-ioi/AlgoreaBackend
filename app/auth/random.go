@@ -5,10 +5,10 @@ import (
 	"math/big"
 )
 
-// GenerateRandomString generate a random random string that can be used
-// as an access token for a temporary user's session or a state/cookie needed by the login process.
+// GenerateKey generate a random string that can be used as an access token for a temporary user's session or
+// as a state/cookie needed by the login process.
 // Entropy of the generated string (assuming "crypto/rand" is well implemented) is 36^32, so ~165 bits.
-func GenerateRandomString() (string, error) {
+func GenerateKey() (string, error) {
 	const allowedCharacters = "0123456789abcdefghijklmnopqrstuvwxyz"
 	const allowedCharactersLength = len(allowedCharacters)
 	const stringLength = 32

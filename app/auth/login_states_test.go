@@ -19,7 +19,7 @@ import (
 func TestSetNewLoginStateCookie(t *testing.T) {
 	counter := -1
 	randomStrings := []string{"randomstate", "randomcookie"}
-	monkey.Patch(GenerateRandomString, func() (string, error) {
+	monkey.Patch(GenerateKey, func() (string, error) {
 		counter++
 		return randomStrings[counter], nil
 	})
@@ -49,9 +49,9 @@ func TestSetNewLoginStateCookie(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSetNewLoginStateCookie_HandlesGenerateRandomStringError(t *testing.T) {
+func TestCreateLoginState_HandlesGenerateKeyError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(GenerateRandomString, func() (string, error) {
+	monkey.Patch(GenerateKey, func() (string, error) {
 		return "", expectedError
 	})
 	defer monkey.UnpatchAll()
@@ -68,10 +68,10 @@ func TestSetNewLoginStateCookie_HandlesGenerateRandomStringError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestSetNewLoginStateCookie_HandlesGenerateRandomStringErrorForCookie(t *testing.T) {
+func TestCreateLoginState_HandlesGenerateKeyErrorForCookie(t *testing.T) {
 	expectedError := errors.New("some error")
 	counter := -1
-	monkey.Patch(GenerateRandomString, func() (string, error) {
+	monkey.Patch(GenerateKey, func() (string, error) {
 		counter++
 		if counter == 0 {
 			return "randomstate", nil
@@ -95,7 +95,7 @@ func TestSetNewLoginStateCookie_HandlesGenerateRandomStringErrorForCookie(t *tes
 func TestSetNewLoginStateCookie_RetriesOnCollision(t *testing.T) {
 	counter := -1
 	randomStrings := []string{"randomstate", "randomcookie", "newrandomcookie"}
-	monkey.Patch(GenerateRandomString, func() (string, error) {
+	monkey.Patch(GenerateKey, func() (string, error) {
 		counter++
 		return randomStrings[counter], nil
 	})

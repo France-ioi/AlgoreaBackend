@@ -86,14 +86,14 @@ func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string)
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthRandomStringIs(generatedString string) error { // nolint
-	monkey.Patch(auth.GenerateRandomString, func() (string, error) { return generatedString, nil }) // nolint:unparam
+func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedString string) error { // nolint
+	monkey.Patch(auth.GenerateKey, func() (string, error) { return generatedString, nil }) // nolint:unparam
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAuthRandomStringsAre(generatedStrings string) error { // nolint
+func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error { // nolint
 	currentIndex := 0
-	monkey.Patch(auth.GenerateRandomString, func() (string, error) {
+	monkey.Patch(auth.GenerateKey, func() (string, error) {
 		currentIndex++
 		randomString := multipleStringsRegexp.FindStringSubmatch(generatedStrings)
 		if randomString == nil {
