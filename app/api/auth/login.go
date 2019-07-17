@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"math/rand"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -29,10 +28,6 @@ import (
 func (srv *Service) login(w http.ResponseWriter, r *http.Request) service.APIError {
 	if len(r.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("'Authorization' header should not be present"))
-	}
-
-	if rand.Intn(10) == 1 {
-		service.MustNotBeError(srv.Store.LoginStates().DeleteExpired())
 	}
 
 	state, err := auth.SetNewLoginStateCookie(srv.Store.LoginStates(), &srv.Config.Server, w)
