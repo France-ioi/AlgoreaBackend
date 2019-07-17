@@ -16,6 +16,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -136,4 +137,13 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	}
 	ctx.templateSet.AddGlobal(varName, token.Generate(payload, privateKey))
 	return nil
+}
+
+func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { // nolint
+	viperConfig := viper.New()
+	viperConfig.SetConfigType("yaml")
+	if err := viperConfig.MergeConfig(strings.NewReader(body.Content)); err != nil {
+		return err
+	}
+	return viperConfig.UnmarshalExact(ctx.application.Config)
 }
