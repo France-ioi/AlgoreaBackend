@@ -131,11 +131,11 @@ func testRequest(ts *httptest.Server, method, path string, headers map[string][]
 		}
 	}
 
-	// set a dummy auth cookie
-	req.AddCookie(&http.Cookie{Name: "PHPSESSID", Value: "dummy"})
-
+	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
 	// execute the query
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, "", err
 	}
