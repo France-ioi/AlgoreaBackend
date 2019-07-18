@@ -1,11 +1,8 @@
 package auth
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
-	"io"
-	"math/big"
 	"regexp"
 	"testing"
 
@@ -17,36 +14,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
-func TestGenerateTempAccessToken(t *testing.T) {
-	got1, err := GenerateTempAccessToken()
-
-	assert.NoError(t, err)
-	assert.Len(t, got1, 32)
-	assert.Regexp(t, `^[0-9a-z]{32}$`, got1)
-
-	got2, err := GenerateTempAccessToken()
-
-	assert.NoError(t, err)
-	assert.Len(t, got2, 32)
-	assert.Regexp(t, `^[0-9a-z]{32}$`, got2)
-
-	assert.NotEqual(t, got2, got1)
-}
-
-func TestGenerateTempAccessToken_HandlesError(t *testing.T) {
-	expectedError := errors.New("some error")
-	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
-		return nil, expectedError
-	})
-	defer monkey.UnpatchAll()
-
-	_, err := GenerateTempAccessToken()
-	assert.Equal(t, expectedError, err)
-}
-
 func TestCreateNewTempSession(t *testing.T) {
 	expectedAccessToken := "tmp-01abcdefghijklmnopqrstuvwxyz"
-	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
+	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -69,7 +39,7 @@ func TestCreateNewTempSession(t *testing.T) {
 func TestCreateNewTempSession_Retries(t *testing.T) {
 	expectedAccessTokens := []string{"tmp-02abcdefghijklmnopqrstuvwxyz", "tmp-03abcdefghijklmnopqrstuvwxyz"}
 	accessTokensIndex := -1
-	monkey.Patch(GenerateTempAccessToken, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
+	monkey.Patch(GenerateKey, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -99,7 +69,7 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 
 func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return "", expectedError })
+	monkey.Patch(GenerateKey, func() (string, error) { return "", expectedError })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()
@@ -117,7 +87,7 @@ func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 
 func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 	expectedAccessToken := "tmp-04abcdefghijklmnopqrstuvwxyz"
-	monkey.Patch(GenerateTempAccessToken, func() (string, error) { return expectedAccessToken, nil })
+	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
 
 	db, mock := database.NewDBMock()

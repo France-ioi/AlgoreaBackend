@@ -14,7 +14,7 @@ Feature: Create a temporary user
       | 3  | 2             | 4            | 1           |
 
   Scenario: Create a new temporary user
-    Given the generated access token is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
+    Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
     When I send a POST request to "/auth/temp-user"
     Then the response code should be 201
     And the response body should be, in JSON:

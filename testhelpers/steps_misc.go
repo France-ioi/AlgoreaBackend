@@ -16,6 +16,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -86,8 +87,22 @@ func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string)
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedAccessTokenIs(generatedToken string) error { // nolint
-	monkey.Patch(auth.GenerateTempAccessToken, func() (string, error) { return generatedToken, nil }) // nolint:unparam
+func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedString string) error { // nolint
+	monkey.Patch(auth.GenerateKey, func() (string, error) { return generatedString, nil }) // nolint:unparam
+	return nil
+}
+
+func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error { // nolint
+	currentIndex := 0
+	monkey.Patch(auth.GenerateKey, func() (string, error) {
+		currentIndex++
+		randomString := multipleStringsRegexp.FindStringSubmatch(generatedStrings)
+		if randomString == nil {
+			return "", errors.New("not enough generated random strings")
+		}
+		generatedStrings = generatedStrings[len(randomString[1]):]
+		return randomString[2], nil
+	})
 	return nil
 }
 
@@ -122,4 +137,13 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 	}
 	ctx.templateSet.AddGlobal(varName, token.Generate(payload, privateKey))
 	return nil
+}
+
+func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { // nolint
+	viperConfig := viper.New()
+	viperConfig.SetConfigType("yaml")
+	if err := viperConfig.MergeConfig(strings.NewReader(body.Content)); err != nil {
+		return err
+	}
+	return viperConfig.UnmarshalExact(ctx.application.Config)
 }
