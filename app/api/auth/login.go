@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"golang.org/x/oauth2"
 
@@ -32,6 +33,9 @@ func (srv *Service) login(w http.ResponseWriter, r *http.Request) service.APIErr
 
 	cookie, state, err := auth.CreateLoginState(srv.Store.LoginStates(), &srv.Config.Server)
 	service.MustNotBeError(err)
+	if strings.HasPrefix(srv.Config.Auth.CallbackURL, "https") {
+		cookie.Secure = true
+	}
 	http.SetCookie(w, cookie)
 
 	redirectURL := getOAuthConfig(&srv.Config.Auth).AuthCodeURL(state, oauth2.SetAuthURLParam("approval_prompt", "auto"))
