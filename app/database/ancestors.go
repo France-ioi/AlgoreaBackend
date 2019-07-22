@@ -60,27 +60,12 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	/* #nosec */
 	query = `
 		UPDATE ` + objectName + `_propagate AS children
-		LEFT JOIN (
-			SELECT
-				` + relationsTable + `.id` + upObjectName + `Child,
-				MIN(parents.sAncestorsComputationState) AS min_parents_state,
-				MAX(parents.sAncestorsComputationState) AS max_parents_state
-			FROM ` + relationsTable + `
-			JOIN ` + objectName + `_propagate AS parents
-				ON parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent
-			WHERE 1` + groupsAcceptedCondition + `
-			GROUP BY id` + upObjectName + `Child
-		) AS not_ready ON (
-			not_ready.id` + upObjectName + `Child=children.ID AND
-			(
-				not_ready.min_parents_state <> 'done' OR
-				not_ready.max_parents_state <> 'done'
-			)
-		)
-		SET sAncestorsComputationState = 'processing'
-		WHERE
-			sAncestorsComputationState = 'todo' AND
-			not_ready.id` + upObjectName + `Child IS NULL`
+		LEFT JOIN ` + relationsTable + `
+			ON ` + relationsTable + `.id` + upObjectName + `Child = children.ID ` + groupsAcceptedCondition + `
+		LEFT JOIN ` + objectName + `_propagate AS parents
+			ON parents.ID = ` + relationsTable + `.id` + upObjectName + `Parent AND parents.sAncestorsComputationState <> 'done'
+		SET children.sAncestorsComputationState='processing'
+		WHERE children.sAncestorsComputationState = 'todo' AND parents.ID IS NULL`
 	markAsProcessing, err := s.db.CommonDB().Prepare(query)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
