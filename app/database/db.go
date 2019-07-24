@@ -418,6 +418,16 @@ func Now() interface{} {
 	return nowExpr
 }
 
+// MockNow changes the DB expression for getting current DB time so that it will return the given timestamp
+func MockNow(timestamp string) {
+	nowExpr = gorm.Expr("?", timestamp)
+}
+
+// RestoreNow sets the DB expression for getting current DB time to its default value (gorm.Expr("NOW()"))
+func RestoreNow() {
+	nowExpr = gorm.Expr("NOW()")
+}
+
 // insertMap reads fields from the given map and inserts the values which have been set
 // into the given table
 func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {

@@ -287,8 +287,8 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 
 var nowRegexp = regexp.MustCompile(`(?i)\bNOW\s*\(\s*\)`)
 
-func (ctx *TestContext) DbTimeNow(timeStr string) error { // nolint
-	timeStr = fmt.Sprintf("%q", timeStr)
+func (ctx *TestContext) DbTimeNow(timeStrRaw string) error { // nolint
+	timeStr := fmt.Sprintf("%q", timeStrRaw)
 
 	// patch database.DB's methods
 	standardDBMethods := [...]string{
@@ -431,22 +431,16 @@ func (ctx *TestContext) DbTimeNow(timeStr string) error { // nolint
 			return db.Delete(where...)
 		})
 
-	// Patch Gorm's methods
-	var gormExprGuard *monkey.PatchGuard
-	gormExprGuard = monkey.Patch(gorm.Expr, reflect.MakeFunc(reflect.TypeOf(gorm.Expr), func(args []reflect.Value) (results []reflect.Value) {
-		gormExprGuard.Unpatch()
-		defer gormExprGuard.Restore()
-		args[0] = reflect.ValueOf(nowRegexp.ReplaceAllString(args[0].Interface().(string), timeStr))
-		return reflect.ValueOf(gorm.Expr).Call(args)
-	}).Interface())
+	database.MockNow(timeStrRaw)
 
-	var execGuard, rawGuard, prepareGuard, prepareContextGuard *monkey.PatchGuard
+	// Patch Gorm's methods
+	var execGuard, rawGuard, prepareContextGuard, queryContextGuard *monkey.PatchGuard
 	execGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&gorm.DB{}), "Exec",
 		func(db *gorm.DB, query string, args ...interface{}) *gorm.DB {
 			execGuard.Unpatch()
 			defer execGuard.Restore()
-			nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllString(query, timeStr)
 			return db.Exec(query, args...)
 		})
 	rawGuard = monkey.PatchInstanceMethod(
@@ -454,25 +448,28 @@ func (ctx *TestContext) DbTimeNow(timeStr string) error { // nolint
 		func(db *gorm.DB, query string, args ...interface{}) *gorm.DB {
 			rawGuard.Unpatch()
 			defer rawGuard.Restore()
-			nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllString(query, timeStr)
 			return db.Raw(query, args...)
 		})
-	prepareGuard = monkey.PatchInstanceMethod(
-		reflect.TypeOf(&sql.DB{}), "Prepare",
-		func(db *sql.DB, query string) (*sql.Stmt, error) {
-			prepareGuard.Unpatch()
-			defer prepareGuard.Restore()
-			nowRegexp.ReplaceAllString(query, timeStr)
-			return db.Prepare(query)
-		})
+
+	// db methods
 	prepareContextGuard = monkey.PatchInstanceMethod(
 		reflect.TypeOf(&sql.DB{}), "PrepareContext",
 		func(db *sql.DB, c context.Context, query string) (*sql.Stmt, error) {
 			prepareContextGuard.Unpatch()
 			defer prepareContextGuard.Restore()
-			nowRegexp.ReplaceAllString(query, timeStr)
+			query = nowRegexp.ReplaceAllString(query, timeStr)
 			return db.PrepareContext(c, query)
 		})
+	queryContextGuard = monkey.PatchInstanceMethod(
+		reflect.TypeOf(&sql.DB{}), "QueryContext",
+		func(db *sql.DB, c context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+			queryContextGuard.Unpatch()
+			defer queryContextGuard.Restore()
+			query = nowRegexp.ReplaceAllString(query, timeStr)
+			return db.QueryContext(c, query, args...)
+		})
+
 	return nil
 }
 

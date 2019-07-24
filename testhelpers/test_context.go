@@ -18,6 +18,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 
 	"github.com/France-ioi/AlgoreaBackend/app"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
@@ -99,6 +100,7 @@ func (ctx *TestContext) tearDownApp() {
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	monkey.UnpatchAll()
+	database.RestoreNow()
 	ctx.logsRestoreFunc()
 
 	db, err := gorm.Open("mysql", ctx.db())
