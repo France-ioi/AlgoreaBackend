@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -30,13 +29,13 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 			Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"idAttemptActive":            groupsAttemptID,
-				"sLastActivityDate":          gorm.Expr("NOW()"),
+				"sLastActivityDate":          database.Now(),
 				"sAncestorsComputationState": "todo",
 			}).Error())
 		service.MustNotBeError(store.GroupAttempts().
 			ByID(groupsAttemptID).
 			UpdateColumn(map[string]interface{}{
-				"sLastActivityDate": gorm.Expr("NOW()"),
+				"sLastActivityDate": database.Now(),
 			}).Error())
 		service.MustNotBeError(userItemStore.ComputeAllUserItems())
 		return nil

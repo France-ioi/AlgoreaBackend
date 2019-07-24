@@ -1312,3 +1312,10 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestNow(t *testing.T) {
+	expectedExpr := gorm.Expr("123")
+	nowExpr = expectedExpr
+	defer func() { nowExpr = gorm.Expr("NOW()") }()
+	assert.Equal(t, expectedExpr, Now())
+}

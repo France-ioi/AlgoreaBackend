@@ -75,8 +75,8 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 			} else {
 				attemptID = groupsAttemptInfo.ID
 				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
-					"sStartDate":        gorm.Expr("IFNULL(sStartDate, NOW())"),
-					"sLastActivityDate": gorm.Expr("NOW()"),
+					"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
+					"sLastActivityDate": database.Now(),
 				}).Error())
 			}
 			activeAttemptID = &attemptID
@@ -84,8 +84,8 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"idAttemptActive":   *activeAttemptID,
-				"sStartDate":        gorm.Expr("IFNULL(sStartDate, NOW())"),
-				"sLastActivityDate": gorm.Expr("NOW()"),
+				"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
+				"sLastActivityDate": database.Now(),
 			}).Error())
 		service.MustNotBeError(store.GroupAttempts().After())
 		return nil

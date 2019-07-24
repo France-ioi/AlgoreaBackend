@@ -351,7 +351,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 func (s *ItemStore) closeContest(itemID int64, user *User) {
 	mustNotBeError(s.UserItems().
 		Where("idItem = ? AND idUser = ?", itemID, user.ID).
-		UpdateColumn("sFinishDate", gorm.Expr("NOW()")).Error())
+		UpdateColumn("sFinishDate", Now()).Error())
 
 	groupItemStore := s.GroupItems()
 
@@ -382,7 +382,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 			Joins(`JOIN groups_groups
 				ON groups_groups.idGroupChild = users.idGroupSelf AND groups_groups.idGroupParent = ?`, teamGroupID).
 			Where("users_items.idItem = ?", itemID).
-			UpdateColumn("sFinishDate", gorm.Expr("NOW()")).Error())
+			UpdateColumn("sFinishDate", Now()).Error())
 	*/ // nolint:gocritic
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items

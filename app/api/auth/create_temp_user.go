@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 
 	authlib "github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -52,7 +51,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 					"loginID":           0,
 					"sLogin":            login,
 					"tempUser":          true,
-					"sRegistrationDate": gorm.Expr("NOW()"),
+					"sRegistrationDate": database.Now(),
 					"idGroupSelf":       nil,
 					"idGroupOwned":      nil,
 					"sLastIP":           strings.SplitN(r.RemoteAddr, ":", 2)[0],
@@ -67,7 +66,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 				"sName":        login,
 				"sType":        "UserSelf",
 				"sDescription": login,
-				"sDateCreated": gorm.Expr("NOW()"),
+				"sDateCreated": database.Now(),
 				"bOpened":      false,
 				"bSendEmails":  false,
 			})

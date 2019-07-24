@@ -30,7 +30,7 @@ func CreateLoginState(s *database.LoginStateStore, conf *config.Server) (*http.C
 		return retryStore.LoginStates().InsertMap(map[string]interface{}{
 			"sCookie":         cookie,
 			"sState":          state,
-			"sExpirationDate": gorm.Expr("NOW() + INTERVAL ? SECOND", loginStateLifetimeInSeconds),
+			"sExpirationDate": gorm.Expr("? + INTERVAL ? SECOND", database.Now(), loginStateLifetimeInSeconds),
 		})
 	})
 	if err != nil {

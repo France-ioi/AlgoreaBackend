@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -24,7 +24,7 @@ func (srv *Service) updateNotificationReadDate(w http.ResponseWriter, r *http.Re
 	user := srv.GetUser(r)
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).
-		UpdateColumn("sNotificationReadDate", gorm.Expr("NOW()")).Error())
+		UpdateColumn("sNotificationReadDate", database.Now()).Error())
 
 	response := service.Response{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)

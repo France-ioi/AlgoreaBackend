@@ -411,6 +411,13 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...))
 }
 
+var nowExpr = gorm.Expr("NOW()")
+
+// Now returns a DB expression that returns current DB time (it is usually gorm.Expr("NOW()"))
+func Now() interface{} {
+	return nowExpr
+}
+
 // insertMap reads fields from the given map and inserts the values which have been set
 // into the given table
 func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
