@@ -42,7 +42,7 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				return
 			}
 
-			if len(accessToken) < 255 {
+			if len(accessToken) <= 2000 {
 				err := sessionStore.
 					Select(`
 						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,

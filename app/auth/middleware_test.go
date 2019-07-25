@@ -86,10 +86,19 @@ func TestUserMiddleware(t *testing.T) {
 		},
 		{
 			name:                     "token is too long (should not query the DB)",
-			authHeaders:              []string{"Bearer " + strings.Repeat("1", 256)},
+			authHeaders:              []string{"Bearer " + strings.Repeat("1", 2001)},
 			expectedStatusCode:       401,
 			expectedServiceWasCalled: false,
 			expectedBody:             "Invalid access token",
+		},
+		{
+			name:                     "works fine with long tokens",
+			authHeaders:              []string{"Bearer " + strings.Repeat("1", 2000)},
+			expectedStatusCode:       200,
+			expectedAccessToken:      strings.Repeat("1", 2000),
+			userIDReturnedByDB:       78234,
+			expectedServiceWasCalled: true,
+			expectedBody:             "user_id:78234",
 		},
 		{
 			name:                     "takes the first access token from headers",
@@ -115,8 +124,12 @@ func TestUserMiddleware(t *testing.T) {
 			assert.Equal("application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
 			assert.Contains(string(bodyBytes), tt.expectedBody)
-			assert.Contains((&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs(), tt.expectedLogs)
-
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+			if tt.expectedLogs == "" {
+				assert.Empty(logs)
+			} else {
+				assert.Contains(logs, tt.expectedLogs)
+			}
 			assert.NoError(mock.ExpectationsWereMet())
 		})
 	}
