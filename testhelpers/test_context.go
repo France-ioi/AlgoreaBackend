@@ -16,6 +16,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
+	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -106,6 +107,13 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	monkey.UnpatchAll()
 	database.RestoreNow()
 	ctx.logsRestoreFunc()
+
+	defer func() {
+		if err := httpmock.AllStubsCalled(); err != nil {
+			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/DATA-DOG/godog/issues/88)
+		}
+		httpmock.DeactivateAndReset()
+	}()
 
 	db, err := gorm.Open("mysql", ctx.db())
 	if err != nil {

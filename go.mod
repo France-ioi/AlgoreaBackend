@@ -2,6 +2,10 @@ module github.com/France-ioi/AlgoreaBackend
 
 exclude github.com/SermoDigital/jose v0.9.1
 
+exclude github.com/thingful/httpmock v0.0.2
+
+exclude github.com/thingful/httpmock v0.0.1
+
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
@@ -18,6 +22,7 @@ require (
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/goware/urlx v0.2.0 // indirect
 	github.com/jinzhu/gorm v1.9.2
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
@@ -30,6 +35,8 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.2.2
+	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/go-playground/validator.v9 v9.29.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v2 v2.2.2
