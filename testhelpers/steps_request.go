@@ -11,6 +11,10 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { // nolint
 	if ctx.requestHeaders == nil {
 		ctx.requestHeaders = make(map[string][]string)
 	}
+	value, err := ctx.preprocessString(value)
+	if err != nil {
+		return err
+	}
 	ctx.requestHeaders[name] = append(ctx.requestHeaders[name], value)
 	return nil
 }
@@ -41,6 +45,11 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	reqBody, err := ctx.preprocessString(reqBody)
+	if err != nil {
+		return err
+	}
+
+	path, err = ctx.preprocessString(path)
 	if err != nil {
 		return err
 	}

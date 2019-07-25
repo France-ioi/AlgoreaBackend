@@ -107,7 +107,11 @@ func (ctx *TestContext) TheGeneratedAuthKeysAre(generatedStrings string) error {
 }
 
 func (ctx *TestContext) LogsShouldContain(docString *gherkin.DocString) error { // nolint
-	stringToSearch := strings.TrimSpace(docString.Content)
+	preprocessed, err := ctx.preprocessString(docString.Content)
+	if err != nil {
+		return err
+	}
+	stringToSearch := strings.TrimSpace(preprocessed)
 	logs := ctx.logsHook.GetAllLogs()
 	if !strings.Contains(logs, stringToSearch) {
 		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
@@ -142,7 +146,12 @@ func (ctx *TestContext) SignedTokenIsDistributed(varName, signerName string, doc
 func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { // nolint
 	viperConfig := viper.New()
 	viperConfig.SetConfigType("yaml")
-	if err := viperConfig.MergeConfig(strings.NewReader(body.Content)); err != nil {
+	preprocessedConfig, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	err = viperConfig.MergeConfig(strings.NewReader(preprocessedConfig))
+	if err != nil {
 		return err
 	}
 	return viperConfig.UnmarshalExact(ctx.application.Config)
