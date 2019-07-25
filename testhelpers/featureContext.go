@@ -9,6 +9,9 @@ func FeatureContext(s *godog.Suite) {
 	ctx := &TestContext{}
 	s.BeforeScenario(ctx.SetupTestContext)
 
+	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
+	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
+
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
 	s.Step(`^the table "([^"]*)" has a unique key "([^"]*)" on "([^"]*)"$`, ctx.TableHasUniqueKey)
