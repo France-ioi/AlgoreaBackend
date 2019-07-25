@@ -225,10 +225,10 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	// exec sql
 	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
 	sqlRows, err := db.Query(query)
-	defer func() { _ = sqlRows.Close() }()
 	if err != nil {
 		return err
 	}
+	defer func() { _ = sqlRows.Close() }()
 	dataCols := data.Rows[0].Cells
 	idColumnIndex := -1
 	for index, cell := range dataCols {
