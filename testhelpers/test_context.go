@@ -55,8 +55,12 @@ var db *sql.DB
 const testAccessToken = "testsessiontestsessiontestsessio"
 
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
-	scenario := data.(*gherkin.Scenario)
-	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	switch scenario := data.(type) {
+	case *gherkin.Scenario:
+		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	case *gherkin.ScenarioOutline:
+		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	}
 
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
