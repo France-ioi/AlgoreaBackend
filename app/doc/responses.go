@@ -29,6 +29,18 @@ type CreatedResponse struct {
 	Success bool `json:"success"`
 }
 
+// The request has successfully deleted the object
+// swagger:response deletedResponse
+type deletedResponse struct {
+	// "deleted"
+	// enum: deleted
+	// required: true
+	Message string `json:"message"`
+	// true
+	// required: true
+	Success bool `json:"success"`
+}
+
 // OK. Success response with the requested answer
 // swagger:response itemAnswerGetResponse
 type itemAnswerGetResponse struct {
