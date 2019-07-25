@@ -2,12 +2,13 @@ package auth
 
 import (
 	"errors"
+	"net/http"
 	"regexp"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
@@ -119,5 +120,132 @@ func TestCreateLoginState_RetriesOnCollision(t *testing.T) {
 		currentTime.Add(2*time.Hour).Truncate(time.Second).UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT")+
 		"; Max-Age=7200; HttpOnly",
 		cookie.String())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestLoadLoginState(t *testing.T) {
+	expectedError := errors.New("some error")
+	tests := []struct {
+		name           string
+		stateInDB      string
+		stateToCompare string
+		dbError        error
+		expectedResult *LoginState
+		expectedError  error
+	}{
+		{name: "success", stateInDB: "somestate", stateToCompare: "somestate", expectedResult: &LoginState{ok: true, cookie: "somecookie"}},
+		{name: "expired", stateToCompare: "somestate", expectedResult: &LoginState{ok: false}},
+		{name: "wrong state", stateInDB: "somestate", stateToCompare: "wrongstate", expectedResult: &LoginState{ok: false}},
+		{name: "db error", stateInDB: "somestate", stateToCompare: "somestate", dbError: expectedError,
+			expectedResult: &LoginState{ok: false}, expectedError: expectedError},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db, mock := database.NewDBMock()
+			expectation := mock.ExpectQuery("^" + regexp.QuoteMeta(
+				"SELECT sState FROM `login_states` WHERE (sCookie = ?) AND (sExpirationDate > NOW()) LIMIT 1",
+			) + "$").WithArgs("somecookie")
+			if test.dbError != nil {
+				expectation.WillReturnError(test.dbError)
+			} else {
+				rowsToReturn := mock.NewRows([]string{"sState"})
+				if test.stateInDB != "" {
+					rowsToReturn = rowsToReturn.AddRow(test.stateInDB)
+				}
+				expectation.WillReturnRows(rowsToReturn)
+			}
+
+			request, err := http.NewRequest("GET", "/", nil)
+			assert.NoError(t, err)
+			request.AddCookie(&http.Cookie{Name: "login_csrf", Value: "somecookie"})
+			loginState, err := LoadLoginState(database.NewDataStore(db).LoginStates(), request, test.stateToCompare)
+
+			assert.Equal(t, test.expectedError, err)
+			assert.Equal(t, test.expectedResult, loginState)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestLoadLoginState_NoCookie(t *testing.T) {
+	db, mock := database.NewDBMock()
+
+	request, err := http.NewRequest("GET", "/", nil)
+	assert.NoError(t, err)
+	loginState, err := LoadLoginState(database.NewDataStore(db).LoginStates(), request, "somestate")
+
+	assert.NoError(t, err)
+	assert.Equal(t, &LoginState{ok: false}, loginState)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestLoginState_IsOK(t *testing.T) {
+	assert.False(t, (&LoginState{ok: false}).IsOK())
+	assert.True(t, (&LoginState{ok: true}).IsOK())
+}
+
+func TestLoginState_Delete(t *testing.T) {
+	currentTime := time.Now()
+	monkey.Patch(time.Now, func() time.Time { return currentTime })
+	defer monkey.UnpatchAll()
+
+	cookieValue := "anothercookie"
+
+	db, mock := database.NewDBMock()
+	mock.ExpectExec("^" + regexp.QuoteMeta(
+		"DELETE FROM `login_states` WHERE (sCookie = ?)",
+	) + "$").WithArgs(cookieValue).WillReturnResult(sqlmock.NewResult(-1, 1))
+
+	conf := config.Server{
+		Domain:   "backend.algorea.org",
+		RootPath: "/in/subdirectory/",
+	}
+
+	cookie, err := (&LoginState{ok: true, cookie: cookieValue}).Delete(database.NewDataStore(db).LoginStates(), &conf)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "login_csrf=; Path=/in/subdirectory/; Domain=backend.algorea.org; Expires="+
+		currentTime.Add(-24*365*time.Hour).Truncate(time.Second).UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT")+
+		"; Max-Age=0; HttpOnly", cookie.String())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestLoginState_Delete_InvalidState(t *testing.T) {
+	currentTime := time.Now()
+	monkey.Patch(time.Now, func() time.Time { return currentTime })
+	defer monkey.UnpatchAll()
+
+	db, mock := database.NewDBMock()
+
+	conf := config.Server{}
+
+	cookie, err := (&LoginState{ok: false}).Delete(database.NewDataStore(db).LoginStates(), &conf)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "login_csrf=; Expires="+
+		currentTime.Add(-24*365*time.Hour).Truncate(time.Second).UTC().Format("Mon, 02 Jan 2006 15:04:05 GMT")+
+		"; Max-Age=0; HttpOnly", cookie.String())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestLoginState_Delete_HandlesDBError(t *testing.T) {
+	currentTime := time.Now()
+	monkey.Patch(time.Now, func() time.Time { return currentTime })
+	defer monkey.UnpatchAll()
+
+	cookieValue := "somecookie"
+	expectedError := errors.New("some error")
+
+	db, mock := database.NewDBMock()
+	mock.ExpectExec("^" + regexp.QuoteMeta(
+		"DELETE FROM `login_states` WHERE (sCookie = ?)",
+	) + "$").WithArgs(cookieValue).WillReturnError(expectedError)
+
+	conf := config.Server{}
+	cookie, err := (&LoginState{ok: true, cookie: cookieValue}).Delete(database.NewDataStore(db).LoginStates(), &conf)
+
+	assert.Nil(t, cookie)
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
