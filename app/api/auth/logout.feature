@@ -16,13 +16,13 @@ Feature: Sign the current user out
       | 2      | somerefreshtoken    |
       | 3      | refreshtokenforjane |
     And the "Authorization" request header is "Bearer someaccesstoken"
-    When I send a DELETE request to "/current-user"
+    When I send a POST request to "/auth/logout"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
       "success": true,
-      "message": "deleted"
+      "message": "success"
     }
     """
     And the table "sessions" should be:

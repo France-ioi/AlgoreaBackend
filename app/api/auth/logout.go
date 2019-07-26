@@ -1,4 +1,4 @@
-package currentuser
+package auth
 
 import (
 	"net/http"
@@ -9,13 +9,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /current-user users auth userLogout
+// swagger:operation POST /auth/logout users auth authLogout
 // ---
 // summary: Sign the current user out
 // description: Removes the current user’s session (all access and refresh tokens)
 // responses:
 //   "200":
-//     "$ref": "#/responses/deletedResponse"
+//     "$ref": "#/responses/successResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "500":
@@ -29,7 +29,6 @@ func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIEr
 		return nil
 	}))
 
-	render.Respond(w, r, service.DeletionSuccess(nil))
-
+	render.Respond(w, r, &service.Response{Success: true, Message: "success"})
 	return service.NoError
 }
