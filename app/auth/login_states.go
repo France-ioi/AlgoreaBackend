@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const loginStateLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
@@ -90,6 +91,9 @@ func LoadLoginState(s *database.LoginStateStore, r *http.Request, state string) 
 		return &LoginState{ok: false}, err
 	}
 	if len(stateFromDB) == 0 || stateFromDB[0] != state {
+		if len(stateFromDB) > 0 {
+			logging.GetLogEntry(r).Warn("Wrong login state")
+		}
 		return &LoginState{ok: false}, nil
 	}
 	return &LoginState{ok: true, cookie: cookie.Value}, nil

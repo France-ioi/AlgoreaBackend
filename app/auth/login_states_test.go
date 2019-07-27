@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"regexp"
@@ -9,11 +10,14 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
 func TestCreateLoginState(t *testing.T) {
@@ -132,10 +136,12 @@ func TestLoadLoginState(t *testing.T) {
 		dbError        error
 		expectedResult *LoginState
 		expectedError  error
+		expectedLogs   string
 	}{
 		{name: "success", stateInDB: "somestate", stateToCompare: "somestate", expectedResult: &LoginState{ok: true, cookie: "somecookie"}},
 		{name: "expired", stateToCompare: "somestate", expectedResult: &LoginState{ok: false}},
-		{name: "wrong state", stateInDB: "somestate", stateToCompare: "wrongstate", expectedResult: &LoginState{ok: false}},
+		{name: "wrong state", stateInDB: "somestate", stateToCompare: "wrongstate", expectedResult: &LoginState{ok: false},
+			expectedLogs: `level=warning msg="Wrong login state"`},
 		{name: "db error", stateInDB: "somestate", stateToCompare: "somestate", dbError: expectedError,
 			expectedResult: &LoginState{ok: false}, expectedError: expectedError},
 	}
@@ -156,13 +162,21 @@ func TestLoadLoginState(t *testing.T) {
 				expectation.WillReturnRows(rowsToReturn)
 			}
 
+			logHook, restoreFunc := logging.MockSharedLoggerHook()
+			defer restoreFunc()
+
 			request, err := http.NewRequest("GET", "/", nil)
+			assert.NoError(t, err)
+			request = request.WithContext(context.WithValue(request.Context(),
+				middleware.LogEntryCtxKey, (&logging.StructuredLogger{Logger: logging.SharedLogger.Logger}).NewLogEntry(request)))
 			assert.NoError(t, err)
 			request.AddCookie(&http.Cookie{Name: "login_csrf", Value: "somecookie"})
 			loginState, err := LoadLoginState(database.NewDataStore(db).LoginStates(), request, test.stateToCompare)
 
 			assert.Equal(t, test.expectedError, err)
 			assert.Equal(t, test.expectedResult, loginState)
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+			assert.Contains(t, logs, test.expectedLogs)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
