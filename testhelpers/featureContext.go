@@ -9,6 +9,9 @@ func FeatureContext(s *godog.Suite) {
 	ctx := &TestContext{}
 	s.BeforeScenario(ctx.SetupTestContext)
 
+	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
+	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
+
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
 	s.Step(`^the table "([^"]*)" has a unique key "([^"]*)" on "([^"]*)"$`, ctx.TableHasUniqueKey)
@@ -36,6 +39,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^it should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
+	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
 	s.Step(`^the table "([^"]*)" at IDs? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
 	s.Step(`^the table "([^"]*)" should not contain IDs? "([^"]*)"$`, ctx.TableShouldNotContainID)
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
@@ -44,6 +48,10 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^logs should contain:$`, ctx.LogsShouldContain)
+
+	s.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`, ctx.TheLoginModuleTokenEndpointForCodeReturns)
+	s.Step(`^the login module "account" endpoint for token "([^"]*)" returns (\d+) with body:$`,
+		ctx.TheLoginModuleAccountEndpointForTokenReturns)
 
 	s.AfterScenario(ctx.ScenarioTeardown)
 }

@@ -86,6 +86,11 @@ func (s *DataStore) Platforms() *PlatformStore {
 	return &PlatformStore{NewDataStoreWithTable(s.DB, "platforms")}
 }
 
+// RefreshTokens returns a RefreshTokenStore
+func (s *DataStore) RefreshTokens() *RefreshTokenStore {
+	return &RefreshTokenStore{NewDataStoreWithTable(s.DB, "refresh_tokens")}
+}
+
 // Sessions returns a SessionStore
 func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}

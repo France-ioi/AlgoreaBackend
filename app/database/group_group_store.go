@@ -29,6 +29,12 @@ var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
 
+// ParentChild represents a (ParentID, ChildID) pair
+type ParentChild struct {
+	ParentID int64
+	ChildID  int64
+}
+
 // CreateRelation creates a direct relation between two groups
 func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err error) {
 	s.mustBeInTransaction()
@@ -49,19 +55,40 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		}
 
 		groupGroupStore := store.GroupGroups()
+		groupGroupStore.createRelation(parentGroupID, childGroupID)
+		groupGroupStore.createNewAncestors()
+		return nil
+	}))
+	return err
+}
 
-		mustNotBeError(groupGroupStore.db.Exec(
-			"SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` WHERE `idGroupParent` = ? FOR UPDATE), 0)",
-			parentGroupID).Error)
+func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
+	s.mustBeInTransaction()
+	mustNotBeError(s.db.Exec(
+		"SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` WHERE `idGroupParent` = ? FOR UPDATE), 0)",
+		parentGroupID).Error)
 
-		mustNotBeError(groupGroupStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-			store := NewDataStore(db).GroupGroups()
-			newID := store.NewID()
-			return store.db.Exec(
-				"INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, iChildOrder) VALUES (?, ?, ?, @maxIChildOrder+1)",
-				newID, parentGroupID, childGroupID).Error
-		}))
+	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		store := NewDataStore(db).GroupGroups()
+		newID := store.NewID()
+		return store.db.Exec(
+			"INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, iChildOrder) VALUES (?, ?, ?, @maxIChildOrder+1)",
+			newID, parentGroupID, childGroupID).Error
+	}))
+}
 
+// CreateRelationsWithoutChecking creates multiple direct relations between group pairs at once
+// without checking for possible cycles in the graph and without deletion of old relations.
+// This method is only suitable to create relations with new groups.
+func (s *GroupGroupStore) CreateRelationsWithoutChecking(pairs []ParentChild) (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
+		groupGroupStore := store.GroupGroups()
+		for _, pair := range pairs {
+			groupGroupStore.createRelation(pair.ParentID, pair.ChildID)
+		}
 		groupGroupStore.createNewAncestors()
 		return nil
 	}))

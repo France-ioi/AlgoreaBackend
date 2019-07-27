@@ -63,6 +63,20 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	return nil
 }
 
+func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
+	db := ctx.db()
+	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec
+	if err != nil {
+		return err
+	}
+	defer func() { _ = sqlRows.Close() }()
+	if sqlRows.Next() {
+		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
+	}
+
+	return nil
+}
+
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
 	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
 }
@@ -214,6 +228,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	if err != nil {
 		return err
 	}
+	defer func() { _ = sqlRows.Close() }()
 	dataCols := data.Rows[0].Cells
 	idColumnIndex := -1
 	for index, cell := range dataCols {

@@ -78,7 +78,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 			Where("sType = 'UserSelf'").
 			Where("sName = 'RootTemp'").
 			Where("sTextId = 'RootTemp'").PluckFirst("ID", &rootTempGroupID).Error())
-		service.MustNotBeError(store.GroupGroups().CreateRelation(rootTempGroupID, selfGroupID))
+		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
+			[]database.ParentChild{{ParentID: rootTempGroupID, ChildID: selfGroupID}}))
 
 		var err error
 		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userID)

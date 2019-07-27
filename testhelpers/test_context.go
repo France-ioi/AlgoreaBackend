@@ -16,6 +16,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/jinzhu/gorm"
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
+	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -55,8 +56,12 @@ var db *sql.DB
 const testAccessToken = "testsessiontestsessiontestsessio"
 
 func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
-	scenario := data.(*gherkin.Scenario)
-	log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	switch scenario := data.(type) {
+	case *gherkin.Scenario:
+		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	case *gherkin.ScenarioOutline:
+		log.WithField("type", "test").Infof("Starting test scenario: %s", scenario.Name)
+	}
 
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
@@ -102,6 +107,13 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 	monkey.UnpatchAll()
 	database.RestoreNow()
 	ctx.logsRestoreFunc()
+
+	defer func() {
+		if err := httpmock.AllStubsCalled(); err != nil {
+			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/DATA-DOG/godog/issues/88)
+		}
+		httpmock.DeactivateAndReset()
+	}()
 
 	db, err := gorm.Open("mysql", ctx.db())
 	if err != nil {
