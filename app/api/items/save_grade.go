@@ -99,9 +99,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 	values := []interface{}{
 		1,
-		gorm.Expr("NOW()"),
-		gorm.Expr("IF(? > iScore, NOW(), sBestAnswerDate)", score),
-		gorm.Expr("NOW()"),
+		database.Now(),
+		gorm.Expr("IF(? > iScore, ?, sBestAnswerDate)", score, database.Now()),
+		database.Now(),
 		gorm.Expr("GREATEST(?, iScore)", score),
 	}
 	if validated {
@@ -110,7 +110,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 			"sAncestorsComputationState", "bValidated", "sValidationDate",
 		)
 		values = append(values,
-			todo, 1, gorm.Expr("IFNULL(sValidationDate, NOW())"))
+			todo, 1, gorm.Expr("IFNULL(sValidationDate, ?)", database.Now()))
 	}
 	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
 		keyObtained = true
@@ -151,7 +151,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 
 	updateResult := userAnswerScope.Where("iScore = ? OR iScore IS NULL", score).
 		UpdateColumn(map[string]interface{}{
-			"sGradingDate": gorm.Expr("NOW()"),
+			"sGradingDate": database.Now(),
 			"bValidated":   validated,
 			"iScore":       score,
 		})

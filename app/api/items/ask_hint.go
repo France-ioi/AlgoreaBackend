@@ -74,8 +74,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		columnsToUpdate := map[string]interface{}{
 			"nbTasksWithHelp":            1,
 			"sAncestorsComputationState": "todo",
-			"sLastActivityDate":          gorm.Expr("NOW()"),
-			"sLastHintDate":              gorm.Expr("NOW()"),
+			"sLastActivityDate":          database.Now(),
+			"sLastHintDate":              database.Now(),
 		}
 		// Update users_items with the hint request
 		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.ID).

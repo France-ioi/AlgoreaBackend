@@ -93,7 +93,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			groupAttemptsScope.WithWriteLock().Select("sHintsRequested, nbHintsCached").Scan(&hintsInfo).Error())
 		columnsToUpdate := map[string]interface{}{
 			"nbSubmissionsAttempts": gorm.Expr("nbSubmissionsAttempts + 1"),
-			"sLastActivityDate":     gorm.Expr("NOW()"),
+			"sLastActivityDate":     database.Now(),
 		}
 		service.MustNotBeError(userItemStore.
 			Where("idUser = ? AND idItem = ?", user.ID, requestData.TaskToken.LocalItemID).

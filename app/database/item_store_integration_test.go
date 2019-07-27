@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -143,7 +142,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("idItem = ?", 500). // chapter
 					Where("idUser = ?", 4).
-					UpdateColumn("sContestStartDate", gorm.Expr("NOW()")).Error()
+					UpdateColumn("sContestStartDate", database.Now()).Error()
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
@@ -151,7 +150,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("idItem = ?", 115). // chapter
 					Where("idUser = ?", 5).
-					UpdateColumn("sContestStartDate", gorm.Expr("NOW()")).Error()
+					UpdateColumn("sContestStartDate", database.Now()).Error()
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
@@ -159,7 +158,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("idItem = ?", 114). // chapter
 					Where("idUser = ?", 7).
-					UpdateColumn("sContestStartDate", gorm.Expr("NOW()")).Error()
+					UpdateColumn("sContestStartDate", database.Now()).Error()
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
 			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +

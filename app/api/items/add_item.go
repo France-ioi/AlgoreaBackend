@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -86,11 +85,11 @@ func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int
 		"idItem":          itemID,
 		"idGroup":         groupID,
 		"idUserCreated":   userID,
-		"sFullAccessDate": gorm.Expr("NOW()"),
+		"sFullAccessDate": database.Now(),
 		"bOwnerAccess":    true,
 		"bManagerAccess":  true,
 		// as the owner gets full access, there is no need to request parents' access to get the actual access level
-		"sCachedFullAccessDate": gorm.Expr("NOW()"),
+		"sCachedFullAccessDate": database.Now(),
 		"bCachedFullAccess":     true,
 	}
 }
