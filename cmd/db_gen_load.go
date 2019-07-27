@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
@@ -60,8 +61,11 @@ func init() { // nolint:gochecknoinits,gocyclo
 			db := testhelpers.SetupDBWithFixtureString(`
 			users: [{ID: 1, sLogin: owner, idGroupSelf: 21, idGroupOwned: 22}]
 			groups:
-				- {ID: 1, sType: Root}
-				- {ID: 3, sType: Root}
+				- {ID: 1, sType: Root, sName: Root, sTextId: Root}
+				- {ID: 2, sType: RootSelf, sName: RootSelf, sTextId: RootSelf}
+				- {ID: 3, sType: RootAdmin, sName: RootAdmin, sTextId: RootAdmin}
+				- {ID: 4, sType: UserSelf, sName: RootTemp, sTextId: RootTemp}
+				- {ID: 5, sType: Class}
 				- {ID: 11, sType: Class}
 				- {ID: 12, sType: Class}
 				- {ID: 13, sType: Class}
@@ -74,14 +78,20 @@ func init() { // nolint:gochecknoinits,gocyclo
 				- {ID: 21, sType: UserSelf}
 				- {ID: 22, sType: UserAdmin}
 			groups_groups:
-				- {idGroupParent: 1, idGroupChild: 11, sType: direct}
-				- {idGroupParent: 3, idGroupChild: 13, sType: direct}
+				- {idGroupParent: 1, idGroupChild: 2, sType: direct, iChildOrder: 1}
+				- {idGroupParent: 1, idGroupChild: 3, sType: direct, iChildOrder: 2}
+				- {idGroupParent: 1, idGroupChild: 5, sType: direct}
+				- {idGroupParent: 2, idGroupChild: 4, sType: direct, iChildOrder: 1}
+				- {idGroupParent: 2, idGroupChild: 21, sType: direct, iChildOrder: 1}
+				- {idGroupParent: 3, idGroupChild: 22, sType: direct}
+				- {idGroupParent: 5, idGroupChild: 11, sType: direct}
+				- {idGroupParent: 5, idGroupChild: 12, sType: direct}
+				- {idGroupParent: 5, idGroupChild: 13, sType: direct}
 				- {idGroupParent: 11, idGroupChild: 14, sType: direct}
 				- {idGroupParent: 11, idGroupChild: 17, sType: direct}
 				- {idGroupParent: 11, idGroupChild: 18, sType: direct}
 				- {idGroupParent: 20, idGroupChild: 21, sType: direct}
-				- {idGroupParent: 22, idGroupChild: 1, sType: direct}
-				- {idGroupParent: 22, idGroupChild: 3, sType: direct}
+				- {idGroupParent: 22, idGroupChild: 5, sType: direct}
 			items:
 				- {ID: 200, sType: Category}
 				- {ID: 210, sType: Chapter}
@@ -289,6 +299,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 					for j := 0; j < batchSize; j++ {
 						id := int64((i * batchSize) + j + 100)
 						groupsQueryValues = append(groupsQueryValues, fmt.Sprintf("(%d, 'UserSelf'), (%d, 'UserAdmin')", id, id+1000000))
+						groupsGroupsQueryValues = append(groupsGroupsQueryValues, fmt.Sprintf("(2, %d, 'direct'), (3, %d, 'direct')", id, id+1000000))
 
 						isInTeam := rand.Float32() < 0.9
 						parentGroupID := int64(11)
@@ -340,7 +351,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 				if i%100 == 99 {
 					// run store.GroupsGroups().createNewAncestors()
 					if err := store.InTransaction(func(txStore *database.DataStore) error {
-						return txStore.GroupGroups().DeleteRelation(1, 2, true)
+						return txStore.GroupGroups().DeleteRelation(1, 200, true)
 					}); err != nil {
 						panic(err)
 					}
@@ -352,7 +363,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 			}
 			// run store.GroupsGroups().createNewAncestors()
 			if err := store.InTransaction(func(txStore *database.DataStore) error {
-				return txStore.GroupGroups().DeleteRelation(1, 2, true)
+				return txStore.GroupGroups().DeleteRelation(1, 200, true)
 			}); err != nil {
 				panic(err)
 			}
@@ -362,6 +373,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 
 			// Success
 			fmt.Println("\nDONE")
+			fmt.Printf("%v\n", time.Now())
 		},
 	}
 
