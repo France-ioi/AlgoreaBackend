@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 // TemporaryUserSessionLifetimeInSeconds specifies the lifetime of the access token for a temporary user
@@ -31,6 +32,9 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 		accessToken = ""
 		return
 	}
+
+	logging.Infof("Generated a session token %q expiring in %d seconds for a temporary user %d",
+		accessToken, expiresIn, userID)
 
 	return
 }
