@@ -77,7 +77,9 @@ func (l *LoginState) Delete(s *database.LoginStateStore, conf *config.Server) (*
 }
 
 // LoadLoginState retrieves an expected state value from the DB (using the cookie as a key)
-// and compares it with the given state value
+// and compares it with the given state value.
+// If the given state value is invalid (no cookie in the request, or no such cookie/state pair in the DB,
+// or the pair is expired), the function returns an invalid LoginState (with IsOK() => false).
 func LoadLoginState(s *database.LoginStateStore, r *http.Request, state string) (*LoginState, error) {
 	cookie, err := r.Cookie(loginCsrfCookieName)
 	if err == http.ErrNoCookie {
