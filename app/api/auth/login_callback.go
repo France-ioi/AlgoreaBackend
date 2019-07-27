@@ -84,13 +84,7 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile)
-		service.MustNotBeError(store.Sessions().InsertMap(map[string]interface{}{
-			"sAccessToken":    token.AccessToken,
-			"sExpirationDate": token.Expiry.UTC(),
-			"idUser":          userID,
-			"sIssuer":         "login-module",
-			"sIssuedAtDate":   database.Now(),
-		}))
+		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token))
 
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO refresh_tokens (idUser, sRefreshToken) VALUES (?, ?) ON DUPLICATE KEY UPDATE sRefreshToken = ?",
