@@ -12,8 +12,8 @@ func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
 		ID: 1, Login: "login", DefaultLanguage: "fr", DefaultLanguageID: 12,
-		IsAdmin: true, SelfGroupID: 2, OwnedGroupID: 3, AccessGroupID: 4, AllowSubgroups: true,
-		NotificationReadDate: &ts}
+		IsTempUser: true, IsAdmin: true, SelfGroupID: 2, OwnedGroupID: 3, AccessGroupID: 4,
+		AllowSubgroups: true, NotificationReadDate: &ts}
 	userClone := user.Clone()
 	assert.False(t, userClone == user)
 	assert.False(t, user.NotificationReadDate == userClone.NotificationReadDate)
@@ -30,7 +30,7 @@ func (u *User) LoadByID(dataStore *DataStore, id int64) error {
 	err := dataStore.Users().ByID(id).
 		Select(`
 						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,
-						users.allowSubgroups, users.sNotificationReadDate,
+						users.tempUser, users.allowSubgroups, users.sNotificationReadDate,
 						users.sDefaultLanguage, l.ID as idDefaultLanguage`).
 		Joins("LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode").
 		Take(&u).Error()

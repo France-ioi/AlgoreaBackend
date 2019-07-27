@@ -143,7 +143,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
 				"SELECT users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess, "+
-					"users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
+					"users.tempUser, users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
 					"FROM `sessions` "+
 					"JOIN users ON users.ID = sessions.idUser "+
 					"LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode "+

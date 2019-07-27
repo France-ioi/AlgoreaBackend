@@ -47,7 +47,7 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				err := sessionStore.
 					Select(`
 						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,
-						users.allowSubgroups, users.sNotificationReadDate,
+						users.tempUser, users.allowSubgroups, users.sNotificationReadDate,
 						users.sDefaultLanguage, l.ID as idDefaultLanguage`).
 					Joins("JOIN users ON users.ID = sessions.idUser").
 					Joins("LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode").
