@@ -24,6 +24,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/auth/login-callback", service.AppHandler(srv.loginCallback).ServeHTTP)
 
 	router.With(auth.UserMiddleware(srv.Store.Sessions())).
+		Post("/auth/token", service.AppHandler(srv.createToken).ServeHTTP)
+	router.With(auth.UserMiddleware(srv.Store.Sessions())).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
 }
 
