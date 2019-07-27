@@ -15,6 +15,7 @@ type ctxKey int
 
 const (
 	ctxUser ctxKey = iota
+	ctxBearer
 )
 
 // UserMiddleware is a middleware retrieving a user from the request content.
@@ -70,7 +71,8 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxUser, &user)
+			ctx := context.WithValue(r.Context(), ctxBearer, accessToken)
+			ctx = context.WithValue(ctx, ctxUser, &user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
