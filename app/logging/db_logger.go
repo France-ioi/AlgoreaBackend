@@ -9,7 +9,7 @@ type DBLogger interface {
 	Print(v ...interface{})
 }
 
-// NewDBLogger returns a logger for the database and the `logmode`, according to the config
+// NewDBLogger returns a logger for the database and the `logMode` as well as the 'rawLogMode', according to the config
 func (l *Logger) NewDBLogger() (DBLogger, bool, bool) {
 	if l.config == nil {
 		// if cannot parse config, log on error to stdout
