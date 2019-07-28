@@ -10,18 +10,19 @@ type DBLogger interface {
 }
 
 // NewDBLogger returns a logger for the database and the `logmode`, according to the config
-func (l *Logger) NewDBLogger() (DBLogger, bool) {
+func (l *Logger) NewDBLogger() (DBLogger, bool, bool) {
 	if l.config == nil {
 		// if cannot parse config, log on error to stdout
-		return gorm.Logger{LogWriter: l}, false
+		return gorm.Logger{LogWriter: l}, false, false
 	}
 
 	logMode := l.config.LogSQLQueries
+	rawLogMode := l.config.LogRawSQLQueries
 	switch l.config.Format {
 	case formatText:
-		return gorm.Logger{LogWriter: l}, logMode
+		return gorm.Logger{LogWriter: l}, logMode, rawLogMode
 	case formatJSON:
-		return NewStructuredDBLogger(l.Logger), logMode
+		return NewStructuredDBLogger(l.Logger), logMode, rawLogMode
 	default:
 		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.Format)
 	}

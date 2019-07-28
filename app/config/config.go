@@ -32,10 +32,11 @@ type ReverseProxy struct {
 
 // Logging for all config related to logger
 type Logging struct {
-	Format        string
-	Output        string
-	Level         string
-	LogSQLQueries bool
+	Format           string
+	Output           string
+	Level            string
+	LogSQLQueries    bool
+	LogRawSQLQueries bool
 }
 
 // Auth is the part of the config related to the user authentication

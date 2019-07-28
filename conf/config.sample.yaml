@@ -24,5 +24,6 @@ logging:
   output: stdout # stdout, stderr, file
   level: debug # debug, info, warning, error, fatal, panic
   logSQLQueries: true
+  logRawSQLQueries: false
 # reverseProxy: # server to which requests which do not match any route will be sent
 #   server: "http://localhost:3000"

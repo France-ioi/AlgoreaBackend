@@ -12,9 +12,10 @@ import (
 func TestNewDBLogger_ErrorFallback(t *testing.T) {
 	assert := assertlib.New(t)
 	logger := new() // no config
-	dbLogger, logMode := logger.NewDBLogger()
+	dbLogger, logMode, rawLogMode := logger.NewDBLogger()
 	assert.IsType(gorm.Logger{}, dbLogger)
-	assert.Equal(false, logMode)
+	assert.False(logMode)
+	assert.False(rawLogMode)
 }
 
 func TestLoggerFromConfig_TextLog(t *testing.T) {
@@ -24,7 +25,7 @@ func TestLoggerFromConfig_TextLog(t *testing.T) {
 		Format: "text",
 		Output: "file",
 	})
-	dbLogger, _ := logger.NewDBLogger()
+	dbLogger, _, _ := logger.NewDBLogger()
 	assert.IsType(gorm.Logger{}, dbLogger)
 }
 
@@ -35,7 +36,7 @@ func TestLoggerFromConfig_JSONLog(t *testing.T) {
 		Format: "json",
 		Output: "file",
 	})
-	dbLogger, _ := logger.NewDBLogger()
+	dbLogger, _, _ := logger.NewDBLogger()
 	assert.IsType(&StructuredDBLogger{}, dbLogger)
 }
 
@@ -49,26 +50,36 @@ func TestLoggerFromConfig_WrongFormat(t *testing.T) {
 	assert.Panics(func() { logger.NewDBLogger() })
 }
 
-func TestLoggerFromConfig_WithoutSQL(t *testing.T) {
-	assert := assertlib.New(t)
-	logger := new()
-	logger.Configure(config.Logging{
-		LogSQLQueries: false,
-		Format:        "text",
-		Output:        "file",
-	})
-	_, logMode := logger.NewDBLogger()
-	assert.False(logMode)
-}
-
-func TestLoggerFromConfig_WithSQL(t *testing.T) {
-	assert := assertlib.New(t)
-	logger := new()
-	logger.Configure(config.Logging{
-		LogSQLQueries: true,
-		Format:        "text",
-		Output:        "file",
-	})
-	_, logMode := logger.NewDBLogger()
-	assert.True(logMode)
+func TestNewDBLogger_LogMode(t *testing.T) {
+	tests := []struct {
+		name             string
+		format           string
+		logSQLQueries    bool
+		logRawSQLQueries bool
+	}{
+		{name: "text: without SQL", format: "text", logSQLQueries: false, logRawSQLQueries: false},
+		{name: "text: with SQL", format: "text", logSQLQueries: true, logRawSQLQueries: false},
+		{name: "text: only raw SQL", format: "text", logSQLQueries: false, logRawSQLQueries: true},
+		{name: "text: full SQL logging", format: "text", logSQLQueries: true, logRawSQLQueries: true},
+		{name: "json: without SQL", format: "json", logSQLQueries: false, logRawSQLQueries: false},
+		{name: "json: with SQL", format: "json", logSQLQueries: true, logRawSQLQueries: false},
+		{name: "json: only raw SQL", format: "json", logSQLQueries: false, logRawSQLQueries: true},
+		{name: "json: full SQL logging", format: "json", logSQLQueries: true, logRawSQLQueries: true},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert := assertlib.New(t)
+			logger := new()
+			logger.Configure(config.Logging{
+				LogSQLQueries:    test.logSQLQueries,
+				LogRawSQLQueries: test.logRawSQLQueries,
+				Format:           test.format,
+				Output:           "file",
+			})
+			_, logMode, rawLogMode := logger.NewDBLogger()
+			assert.Equal(test.logSQLQueries, logMode)
+			assert.Equal(test.logRawSQLQueries, rawLogMode)
+		})
+	}
 }
