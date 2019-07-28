@@ -40,7 +40,7 @@ func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
-	logger, logMode := log.SharedLogger.NewDBLogger()
+	logger, logMode, _ := log.SharedLogger.NewDBLogger()
 
 	var rawConnection gorm.SQLCommon
 	switch src := source.(type) {
@@ -64,8 +64,6 @@ func Open(source interface{}) (*DB, error) {
 
 // OpenRawDBConnection creates a new DB connection
 func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
-	logger, logMode := log.SharedLogger.NewDBLogger()
-	rawDBLogger := log.NewRawDBLogger(logger, logMode)
 	registerDriver := true
 	for _, driverName := range sql.Drivers() {
 		if driverName == "instrumented-mysql" {
@@ -75,6 +73,8 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 	}
 
 	if registerDriver {
+		logger, _, rawLogMode := log.SharedLogger.NewDBLogger()
+		rawDBLogger := log.NewRawDBLogger(logger, rawLogMode)
 		sql.Register("instrumented-mysql",
 			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 	}
