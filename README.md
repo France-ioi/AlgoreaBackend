@@ -107,7 +107,7 @@ INFO 2019/07/10 00:15:39 Listening on :8080
 
 2. Start making many requests to the service you want to profile and wait for 10 seconds:
 ```
-ab -k -c 1 -n 10000 -C "PHPSESSID=dummy" "http://127.0.0.1:8080/groups/1/team-descendants"
+ab -k -c 1 -n 10000 -H "Authorization: Bearer 1" "http://127.0.0.1:8080/groups/5/team-descendants"
 ```
 ('-c 1' means 'concurrency = 1', you can try other values as well)
 
