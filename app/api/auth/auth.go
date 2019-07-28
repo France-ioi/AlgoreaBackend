@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"golang.org/x/oauth2"
 
+	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -21,6 +22,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/auth/temp-user", service.AppHandler(srv.createTempUser).ServeHTTP)
 	router.Post("/auth/login", service.AppHandler(srv.login).ServeHTTP)
 	router.Get("/auth/login-callback", service.AppHandler(srv.loginCallback).ServeHTTP)
+
+	router.With(auth.UserMiddleware(srv.Store.Sessions())).
+		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
 }
 
 func getOAuthConfig(conf *config.Auth) *oauth2.Config {
