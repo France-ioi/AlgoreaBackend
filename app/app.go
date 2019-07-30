@@ -132,3 +132,69 @@ func (app *Application) SelfCheck() error {
 	}
 	return nil
 }
+
+// SeedDatabase fills the database with required data
+func (app *Application) SeedDatabase() error {
+	var relationsToCreate []database.ParentChild
+	return database.NewDataStore(app.Database).InTransaction(func(store *database.DataStore) error {
+		groupStore := store.Groups()
+		groupGroupStore := store.GroupGroups()
+		var inserted bool
+		for _, domainConfig := range app.Config.Domains {
+			domainConfig := domainConfig
+			insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
+			if err != nil {
+				return err
+			}
+			inserted = inserted || insertedForDomain
+			for _, spec := range []database.ParentChild{
+				{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
+				{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
+				{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
+			} {
+				found, err := groupGroupStore.Where("sType = 'direct'").
+					Where("idGroupParent = ?", spec.ParentID).Where("idGroupChild = ?", spec.ChildID).
+					Limit(1).HasRows()
+				if err != nil {
+					return err
+				}
+				if !found {
+					relationsToCreate = append(relationsToCreate, spec)
+				}
+			}
+			if len(relationsToCreate) > 0 || inserted {
+				return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+			}
+		}
+		return nil
+	})
+}
+
+func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Domain) (bool, error) {
+	var inserted bool
+	for _, spec := range []struct {
+		name string
+		id   int64
+	}{
+		{name: "Root", id: domainConfig.RootGroup},
+		{name: "RootSelf", id: domainConfig.RootSelfGroup},
+		{name: "RootAdmin", id: domainConfig.RootAdminGroup},
+		{name: "RootTemp", id: domainConfig.RootTempGroup},
+	} {
+		found, err := groupStore.ByID(spec.id).Where("sType = 'Base'").
+			Where("sName = ?", spec.name).
+			Where("sTextId = ?", spec.name).Limit(1).HasRows()
+		if err != nil {
+			return false, err
+		}
+		if !found {
+			if err := groupStore.InsertMap(map[string]interface{}{
+				"ID": spec.id, "sType": "Base", "sName": spec.name, "sTextId": spec.name,
+			}); err != nil {
+				return false, err
+			}
+			inserted = true
+		}
+	}
+	return inserted, nil
+}

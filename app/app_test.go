@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"regexp"
 	"testing"
 
@@ -426,4 +427,254 @@ func TestApplication_SelfCheck(t *testing.T) {
 			assertlib.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
+}
+
+type groupSpec struct {
+	name          string
+	id            int64
+	exists        bool
+	error         bool
+	errorOnInsert bool
+}
+
+type seedDatabaseTestCase struct {
+	name                      string
+	config                    *config.Root
+	expectedGroupsToInsert    []groupSpec
+	expectedRelationsToCheck  []relationSpec
+	expectedRelationsToInsert []database.ParentChild
+	relationsError            bool
+	skipRelations             bool
+}
+
+func TestApplication_SeedDatabase(t *testing.T) {
+	tests := []seedDatabaseTestCase{
+		{
+			name: "create all",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootAdmin", id: 3}, {name: "RootTemp", id: 4},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
+			},
+			expectedRelationsToInsert: []database.ParentChild{
+				{ParentID: 1, ChildID: 2}, {ParentID: 1, ChildID: 3}, {ParentID: 2, ChildID: 4},
+			},
+		},
+		{
+			name: "create some",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6},
+				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}},
+			},
+			expectedRelationsToInsert: []database.ParentChild{
+				{ParentID: 5, ChildID: 6}, {ParentID: 6, ChildID: 8},
+			},
+		},
+		{
+			name: "error on group checking",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, error: true},
+			},
+		},
+		{
+			name: "error on group insertion",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, errorOnInsert: true},
+			},
+		},
+		{
+			name: "error on relation checking",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6},
+				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, error: true},
+			},
+		},
+		{
+			name: "error while creating relations",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootAdmin", id: 3}, {name: "RootTemp", id: 4},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
+			},
+			expectedRelationsToInsert: []database.ParentChild{
+				{ParentID: 1, ChildID: 2}, {ParentID: 1, ChildID: 3}, {ParentID: 2, ChildID: 4},
+			},
+			relationsError: true,
+		},
+		{
+			name: "no relations to insert",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
+			},
+			skipRelations: true,
+		},
+		{
+			name: "only one relation to insert",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
+			},
+			expectedRelationsToInsert: []database.ParentChild{
+				{ParentID: 2, ChildID: 4},
+			},
+		},
+		{
+			name: "only one group to insert",
+			config: &config.Root{Domains: []config.Domain{
+				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+			}},
+			expectedGroupsToInsert: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
+			},
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock := database.NewDBMock()
+			defer func() { _ = db.Close() }()
+
+			var expectedError error
+			var createdRelations bool
+			monkey.PatchInstanceMethod(reflect.TypeOf(&database.GroupGroupStore{}),
+				"CreateRelationsWithoutChecking",
+				func(store *database.GroupGroupStore, pairs []database.ParentChild) error {
+					assertlib.Equal(t, pairs, tt.expectedRelationsToInsert)
+					createdRelations = true
+					if tt.relationsError {
+						expectedError = errors.New("some error")
+						return expectedError
+					}
+					return nil
+				})
+			defer monkey.UnpatchAll()
+
+			expectedError = setDBExpectationsForSeedDatabase(mock, &tt, expectedError)
+
+			app := &Application{
+				Config:   tt.config,
+				Database: db,
+			}
+			err := app.SeedDatabase()
+			assertlib.Equal(t, expectedError, err)
+			assertlib.Equal(t, (expectedError == nil || tt.relationsError) && !tt.skipRelations, createdRelations)
+			assertlib.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func setDBExpectationsForSeedDatabase(mock sqlmock.Sqlmock, tt *seedDatabaseTestCase, expectedError error) error {
+	mock.ExpectBegin()
+	for _, expectedGroupToInsert := range tt.expectedGroupsToInsert {
+		expectedError = setDBExpectationsForGroupInSeedDatabase(mock, expectedGroupToInsert, expectedError)
+	}
+	if expectedError == nil {
+		for _, expectedRelationToCheck := range tt.expectedRelationsToCheck {
+			rowsToReturn := mock.NewRows([]string{"1"})
+			if expectedRelationToCheck.exists {
+				rowsToReturn.AddRow(1)
+			}
+			queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
+				"SELECT 1 FROM `groups_groups`  WHERE (sType = 'direct') AND (idGroupParent = ?) AND (idGroupChild = ?) LIMIT 1",
+			)+"$").
+				WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
+			if !expectedRelationToCheck.error {
+				queryMock.WillReturnRows(rowsToReturn)
+			} else {
+				expectedError = errors.New("some error")
+				queryMock.WillReturnError(expectedError)
+			}
+		}
+	}
+	if expectedError == nil && !tt.relationsError {
+		mock.ExpectCommit()
+	} else {
+		mock.ExpectRollback()
+	}
+	return expectedError
+}
+
+func setDBExpectationsForGroupInSeedDatabase(mock sqlmock.Sqlmock, expectedGroupToInsert groupSpec, expectedError error) error {
+	queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sType = 'Base') AND (sName = ?) AND (sTextId = ?) LIMIT 1",
+	)+"$").
+		WithArgs(expectedGroupToInsert.id, expectedGroupToInsert.name, expectedGroupToInsert.name)
+	if !expectedGroupToInsert.error {
+		rowsToReturn := mock.NewRows([]string{"1"})
+		if expectedGroupToInsert.exists {
+			rowsToReturn.AddRow(1)
+		}
+		queryMock.WillReturnRows(rowsToReturn)
+	} else {
+		expectedError = errors.New("some error")
+		queryMock.WillReturnError(expectedError)
+	}
+	if !expectedGroupToInsert.exists && !expectedGroupToInsert.error {
+		insertMock := mock.ExpectExec("^"+regexp.QuoteMeta(
+			"INSERT INTO `groups` (ID, sName, sTextId, sType) VALUES (?, ?, ?, ?)",
+		)+"$").WithArgs(expectedGroupToInsert.id, expectedGroupToInsert.name, expectedGroupToInsert.name, "Base")
+		if !expectedGroupToInsert.errorOnInsert {
+			insertMock.WillReturnResult(sqlmock.NewResult(expectedGroupToInsert.id, 1))
+		} else {
+			expectedError = errors.New("some error")
+			insertMock.WillReturnError(expectedError)
+		}
+	}
+	return expectedError
 }
