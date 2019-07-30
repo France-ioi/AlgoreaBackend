@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -79,4 +80,55 @@ func New() (*Application, error) {
 		Database:    db,
 		TokenConfig: tokenConfig,
 	}, nil
+}
+
+// SelfCheck checks that the database contains all the required data
+func (app *Application) SelfCheck() error {
+	groupStore := database.NewDataStore(app.Database).Groups()
+	groupGroupStore := groupStore.GroupGroups()
+	for _, domainConfig := range app.Config.Domains {
+		for _, spec := range []struct {
+			name string
+			id   int64
+		}{
+			{name: "Root", id: domainConfig.RootGroup},
+			{name: "RootSelf", id: domainConfig.RootSelfGroup},
+			{name: "RootAdmin", id: domainConfig.RootAdminGroup},
+			{name: "RootTemp", id: domainConfig.RootTempGroup},
+		} {
+			hasRows, err := groupStore.ByID(spec.id).
+				Where("sType = 'Base'").
+				Where("sName = ?", spec.name).
+				Where("sTextId = ?", spec.name).Limit(1).HasRows()
+			if err != nil {
+				return err
+			}
+			if !hasRows {
+				return fmt.Errorf("no %s group for domain %q", spec.name, domainConfig.Domains[0])
+			}
+		}
+
+		for _, spec := range []struct {
+			parentName string
+			childName  string
+			parentID   int64
+			childID    int64
+		}{
+			{parentName: "Root", childName: "RootSelf", parentID: domainConfig.RootGroup, childID: domainConfig.RootSelfGroup},
+			{parentName: "Root", childName: "RootAdmin", parentID: domainConfig.RootGroup, childID: domainConfig.RootAdminGroup},
+			{parentName: "RootSelf", childName: "RootTemp", parentID: domainConfig.RootSelfGroup, childID: domainConfig.RootTempGroup},
+		} {
+			hasRows, err := groupGroupStore.Where("sType = 'direct'").
+				Where("idGroupParent = ?", spec.parentID).
+				Where("idGroupChild = ?", spec.childID).Select("1").Limit(1).HasRows()
+			if err != nil {
+				return err
+			}
+			if !hasRows {
+				return fmt.Errorf("no %s -> %s link in groups_groups for domain %q",
+					spec.parentName, spec.childName, domainConfig.Domains[0])
+			}
+		}
+	}
+	return nil
 }

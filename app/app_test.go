@@ -5,9 +5,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 
 	"bou.ke/monkey"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/sirupsen/logrus" //nolint:depguard
 	assertlib "github.com/stretchr/testify/assert"
 
@@ -181,4 +183,247 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	body, err := ioutil.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Equal("", string(body))
+}
+
+type relationSpec struct {
+	database.ParentChild
+	exists bool
+	error  bool
+}
+
+func TestApplication_SelfCheck(t *testing.T) {
+	type groupSpec struct {
+		name   string
+		id     int64
+		exists bool
+		error  bool
+	}
+
+	tests := []struct {
+		name                     string
+		config                   *config.Root
+		expectedGroupsToCheck    []groupSpec
+		expectedRelationsToCheck []relationSpec
+		expectedError            error
+	}{
+		{
+			name: "everything is okay",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1", "192.168.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+				{
+					Domains:   []string{"www.france-ioi.org"},
+					RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6, exists: true},
+				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}, exists: true},
+			},
+		},
+		{
+			name: "Root is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"192.168.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1},
+			},
+			expectedError: errors.New("no Root group for domain \"192.168.0.1\""),
+		},
+		{
+			name: "RootSelf is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"192.168.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2},
+			},
+			expectedError: errors.New("no RootSelf group for domain \"192.168.0.1\""),
+		},
+		{
+			name: "RootAdmin is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3},
+			},
+			expectedError: errors.New("no RootAdmin group for domain \"127.0.0.1\""),
+		},
+		{
+			name: "RootTemp is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4},
+			},
+			expectedError: errors.New("no RootTemp group for domain \"127.0.0.1\""),
+		},
+		{
+			name: "Root -> RootSelf relation is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
+			},
+			expectedError: errors.New("no Root -> RootSelf link in groups_groups for domain \"127.0.0.1\""),
+		},
+		{
+			name: "Root -> RootAdmin relation is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
+			},
+			expectedError: errors.New("no Root -> RootAdmin link in groups_groups for domain \"127.0.0.1\""),
+		},
+		{
+			name: "RootSelf -> RootTemp relation is missing",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
+			},
+			expectedError: errors.New("no RootSelf -> RootTemp link in groups_groups for domain \"127.0.0.1\""),
+		},
+		{
+			name: "error on group checking",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, error: true},
+			},
+			expectedError: errors.New("some error"),
+		},
+		{
+			name: "error on relation checking",
+			config: &config.Root{Domains: []config.Domain{
+				{
+					Domains:   []string{"127.0.0.1"},
+					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+				},
+			}},
+			expectedGroupsToCheck: []groupSpec{
+				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
+				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+			},
+			expectedRelationsToCheck: []relationSpec{
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, error: true},
+			},
+			expectedError: errors.New("some error"),
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock := database.NewDBMock()
+			defer func() { _ = db.Close() }()
+			mock.MatchExpectationsInOrder(false)
+
+			var expectedError error
+
+			for _, expectedGroupToCheck := range tt.expectedGroupsToCheck {
+				queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
+					"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sType = 'Base') AND (sName = ?) AND (sTextId = ?) LIMIT 1",
+				)+"$").
+					WithArgs(expectedGroupToCheck.id, expectedGroupToCheck.name, expectedGroupToCheck.name)
+				if !expectedGroupToCheck.error {
+					rowsToReturn := mock.NewRows([]string{"1"})
+					if expectedGroupToCheck.exists {
+						rowsToReturn.AddRow(1)
+					}
+					queryMock.WillReturnRows(rowsToReturn)
+				} else {
+					expectedError = errors.New("some error")
+					queryMock.WillReturnError(expectedError)
+				}
+			}
+			if expectedError == nil {
+				for _, expectedRelationToCheck := range tt.expectedRelationsToCheck {
+					rowsToReturn := mock.NewRows([]string{"1"})
+					if expectedRelationToCheck.exists {
+						rowsToReturn.AddRow(1)
+					}
+					queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
+						"SELECT 1 FROM `groups_groups`  WHERE (sType = 'direct') AND (idGroupParent = ?) AND (idGroupChild = ?) LIMIT 1",
+					)+"$").
+						WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
+					if !expectedRelationToCheck.error {
+						queryMock.WillReturnRows(rowsToReturn)
+					} else {
+						expectedError = errors.New("some error")
+						queryMock.WillReturnError(expectedError)
+					}
+				}
+			}
+
+			app := &Application{
+				Config:   tt.config,
+				Database: db,
+			}
+			err := app.SelfCheck()
+			assertlib.Equal(t, tt.expectedError, err)
+			assertlib.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }

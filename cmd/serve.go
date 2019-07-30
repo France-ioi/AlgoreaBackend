@@ -31,6 +31,11 @@ func init() { // nolint:gochecknoinits
 				log.Fatal(err)
 			}
 
+			err = application.SelfCheck()
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			var server *app.Server
 			server, err = app.NewServer(application)
 			if err != nil {
