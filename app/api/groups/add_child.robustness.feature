@@ -12,9 +12,9 @@ Feature: Add a parent-child relation between two groups - robustness
       | 11 | Group A   | Class     |
       | 13 | Group B   | Class     |
       | 14 | UserAdmin | UserAdmin |
-      | 15 | Root      | Root      |
-      | 16 | RootSelf  | RootSelf  |
-      | 17 | RootAdmin | RootAdmin |
+      | 15 | Root      | Base      |
+      | 16 | RootSelf  | Base      |
+      | 17 | RootAdmin | Base      |
       | 18 | UserSelf  | UserSelf  |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |

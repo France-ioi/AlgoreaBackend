@@ -17,6 +17,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -82,8 +83,10 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 		return apiErr
 	}
 
+	domainConfig := domain.ConfigFromContext(r.Context())
+
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		userID := createOrUpdateUser(store.Users(), userProfile)
+		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
 		service.MustNotBeError(store.Sessions().InsertMap(map[string]interface{}{
 			"sAccessToken":    token.AccessToken,
 			"sExpirationDate": token.Expiry.UTC(),
@@ -207,7 +210,7 @@ func convertUserProfile(source map[string]interface{}, remoteAddr string) (map[s
 	return dest, nil
 }
 
-func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}) int64 {
+func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
 	var userID int64
 	err := s.WithWriteLock().
 		Where("loginID = ?", userData["loginID"]).PluckFirst("ID", &userID).Error()
@@ -216,7 +219,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}) 
 	userData["sLastActivityDate"] = database.Now()
 
 	if gorm.IsRecordNotFoundError(err) {
-		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["sLogin"].(string))
+		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["sLogin"].(string), domainConfig)
 		userData["tempUser"] = 0
 		userData["sRegistrationDate"] = database.Now()
 		userData["idGroupSelf"] = selfGroupID
@@ -235,7 +238,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}) 
 	return userID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string) (ownedGroupID, selfGroupID int64) {
+func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (ownedGroupID, selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
@@ -262,13 +265,9 @@ func createGroupsFromLogin(store *database.GroupStore, login string) (ownedGroup
 		})
 	}))
 
-	var rootAdminGroupID int64
-	service.MustNotBeError(store.Groups().Where("sType = 'RootAdmin'").PluckFirst("ID", &rootAdminGroupID).Error())
-	var rootSelfGroupID int64
-	service.MustNotBeError(store.Groups().Where("sType = 'RootSelf'").PluckFirst("ID", &rootSelfGroupID).Error())
 	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]database.ParentChild{
-		{ParentID: rootSelfGroupID, ChildID: selfGroupID},
-		{ParentID: rootAdminGroupID, ChildID: ownedGroupID},
+		{ParentID: domainConfig.RootSelfGroupID, ChildID: selfGroupID},
+		{ParentID: domainConfig.RootAdminGroupID, ChildID: ownedGroupID},
 	}))
 
 	return ownedGroupID, selfGroupID

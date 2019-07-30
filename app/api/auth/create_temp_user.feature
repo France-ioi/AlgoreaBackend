@@ -1,11 +1,21 @@
 Feature: Create a temporary user
 
   Background:
+    Given the application config is:
+      """
+      domains:
+        -
+          domains: [127.0.0.1]
+          rootGroup: 1
+          rootSelfGroup: 2
+          rootAdminGroup: 3
+          rootTempGroup: 4
+      """
     And the database has the following table 'groups':
       | ID | sName      | sType     | sTextId   |
-      | 1  | Root       | Root      | Root      |
-      | 2  | RootSelf   | RootSelf  | RootSelf  |
-      | 3  | RootAdmin  | RootAdmin | RootAdmin |
+      | 1  | Root       | Base      | Root      |
+      | 2  | RootSelf   | Base      | RootSelf  |
+      | 3  | RootAdmin  | Base      | RootAdmin |
       | 4  | RootTemp   | UserSelf  | RootTemp  |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | iChildOrder |

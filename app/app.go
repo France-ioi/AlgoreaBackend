@@ -12,6 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
@@ -65,6 +66,7 @@ func New() (*Application, error) {
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
+	router.Use(domain.Middleware(conf.Domains))
 
 	if appenv.IsEnvDev() {
 		router.Mount("/debug", middleware.Profiler())

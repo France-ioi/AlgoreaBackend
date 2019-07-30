@@ -27,7 +27,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Config)
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
-	assert.Len(app.HTTPHandler.Middlewares(), 6)
+	assert.Len(app.HTTPHandler.Middlewares(), 7)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 }
 

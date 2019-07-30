@@ -11,6 +11,7 @@ import (
 
 	authlib "github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -73,13 +74,9 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		}))
 		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn("idGroupSelf", selfGroupID).Error())
 
-		var rootTempGroupID int64
-		service.MustNotBeError(store.Groups().
-			Where("sType = 'UserSelf'").
-			Where("sName = 'RootTemp'").
-			Where("sTextId = 'RootTemp'").PluckFirst("ID", &rootTempGroupID).Error())
+		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
-			[]database.ParentChild{{ParentID: rootTempGroupID, ChildID: selfGroupID}}))
+			[]database.ParentChild{{ParentID: domainConfig.RootTempGroupID, ChildID: selfGroupID}}))
 
 		var err error
 		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userID)

@@ -25,5 +25,12 @@ logging:
   level: debug # debug, info, warning, error, fatal, panic
   logSQLQueries: true
   logRawSQLQueries: false
+domains:
+  -
+    domains: [127.0.0.1]
+    rootGroup: 1
+    rootSelfGroup: 2
+    rootAdminGroup: 3
+    rootTempGroup: 4
 # reverseProxy: # server to which requests which do not match any route will be sent
 #   server: "http://localhost:3000"

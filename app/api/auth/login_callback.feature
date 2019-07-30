@@ -2,8 +2,8 @@ Feature: Login callback
   Background:
     Given the database has the following table 'groups':
       | ID | sType     | sName     | sDateCreated         |
-      | 2  | RootSelf  | RootSelf  | 2015-08-10T12:34:55Z |
-      | 3  | RootAdmin | RootAdmin | 2015-08-10T12:34:56Z |
+      | 2  | Base      | RootSelf  | 2015-08-10T12:34:55Z |
+      | 3  | Base      | RootAdmin | 2015-08-10T12:34:56Z |
     And the application config is:
       """
       auth:
@@ -11,6 +11,11 @@ Feature: Login callback
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
         callbackURL: "https://backend.algorea.org/auth/login-callback"
+      domains:
+        -
+          domains: [127.0.0.1]
+          rootSelfGroup: 2
+          rootAdminGroup: 3
       """
 
   Scenario: Create a new user
@@ -72,8 +77,8 @@ Feature: Login callback
       | 3916589616287113937 | 5577006791947779410 | 8674665223082153551 | 2019-07-16T22:02:28Z | 2019-07-16T22:02:28Z | 0        | 2019-07-16T22:02:28Z | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02T00:00:00Z | 2020            | 0      | null     | null     | null  | null            | null             | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
       | ID                  | sName          | sType     | sDescription   | sDateCreated         | bOpened | bSendEmails |
-      | 2                   | RootSelf       | RootSelf  | null           | 2015-08-10T12:34:55Z | false   | false       |
-      | 3                   | RootAdmin      | RootAdmin | null           | 2015-08-10T12:34:56Z | false   | false       |
+      | 2                   | RootSelf       | Base      | null           | 2015-08-10T12:34:55Z | false   | false       |
+      | 3                   | RootAdmin      | Base      | null           | 2015-08-10T12:34:56Z | false   | false       |
       | 5577006791947779410 | mohammed       | UserSelf  | mohammed       | 2019-07-16T22:02:28Z | false   | false       |
       | 8674665223082153551 | mohammed-admin | UserAdmin | mohammed-admin | 2019-07-16T22:02:28Z | false   | false       |
     And the table "groups_groups" should be:
@@ -166,6 +171,10 @@ Feature: Login callback
       | 3                   | 3            | true    |
       | 3                   | 12           | false   |
       | 3                   | 14           | false   |
+      | 11                  | 11           | true    |
+      | 12                  | 12           | true    |
+      | 13                  | 13           | true    |
+      | 14                  | 14           | true    |
     And the database has the following table 'login_states':
       | sCookie                          | sState                           | sExpirationDate      |
       | {{cookie}}                       | {{state}}                        | 2019-07-16T22:02:29Z |

@@ -15,8 +15,8 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 20 | janee  | 69          | 70           |
     And the database has the following table 'groups':
       | ID | sType     | sName          |
-      | 1  | Root      | Root 1         |
-      | 3  | Root      | Root 2         |
+      | 1  | Base      | Root 1         |
+      | 3  | Base      | Root 2         |
       | 11 | Class     | Our Class      |
       | 12 | Class     | Other Class    |
       | 13 | Class     | Special Class  |
