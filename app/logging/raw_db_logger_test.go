@@ -13,12 +13,12 @@ import (
 func TestNewRawDBLogger_TextLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
 	logger := &Logger{nulllogger, &config.Logging{
-		Format:        "text",
-		LogSQLQueries: true,
+		Format:           "text",
+		LogRawSQLQueries: true,
 	}}
-	dbLogger, logMode := logger.NewDBLogger()
+	dbLogger, _, rawLogMode := logger.NewDBLogger()
 
-	rawLogger := NewRawDBLogger(dbLogger, logMode)
+	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
@@ -26,11 +26,11 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
 	logger := &Logger{nulllogger, &config.Logging{
-		Format:        "text",
-		LogSQLQueries: false,
+		Format:           "text",
+		LogRawSQLQueries: false,
 	}}
-	dbLogger, logMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, logMode)
+	dbLogger, _, rawLogMode := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
@@ -38,11 +38,11 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
 	logger := &Logger{nulllogger, &config.Logging{
-		Format:        "json",
-		LogSQLQueries: true,
+		Format:           "json",
+		LogRawSQLQueries: true,
 	}}
-	dbLogger, logMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, logMode)
+	dbLogger, _, rawLogMode := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "some message", "err", nil) //lint:ignore SA1012 sql often uses nil context
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
@@ -51,11 +51,11 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	nulllogger, hook := loggingtest.NewNullLogger()
 	logger := &Logger{nulllogger, &config.Logging{
-		Format:        "json",
-		LogSQLQueries: true,
+		Format:           "json",
+		LogRawSQLQueries: true,
 	}}
-	dbLogger, logMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, logMode)
+	dbLogger, _, rawLogMode := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
 	rawLogger.Log(nil, "sql-stmt-exec", "err", driver.ErrSkip) //lint:ignore SA1012 we check the nil context here
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }

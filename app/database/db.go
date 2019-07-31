@@ -40,7 +40,7 @@ func Open(source interface{}) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	var driverName = "mysql"
-	logger, logMode := log.SharedLogger.NewDBLogger()
+	logger, logMode, _ := log.SharedLogger.NewDBLogger()
 
 	var rawConnection gorm.SQLCommon
 	switch src := source.(type) {
@@ -64,8 +64,6 @@ func Open(source interface{}) (*DB, error) {
 
 // OpenRawDBConnection creates a new DB connection
 func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
-	logger, logMode := log.SharedLogger.NewDBLogger()
-	rawDBLogger := log.NewRawDBLogger(logger, logMode)
 	registerDriver := true
 	for _, driverName := range sql.Drivers() {
 		if driverName == "instrumented-mysql" {
@@ -75,6 +73,8 @@ func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
 	}
 
 	if registerDriver {
+		logger, _, rawLogMode := log.SharedLogger.NewDBLogger()
+		rawDBLogger := log.NewRawDBLogger(logger, rawLogMode)
 		sql.Register("instrumented-mysql",
 			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 	}
@@ -409,23 +409,6 @@ func (conn *DB) Error() error {
 // Exec executes raw sql
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...))
-}
-
-var nowExpr = gorm.Expr("NOW()")
-
-// Now returns a DB expression that returns current DB time (it is usually gorm.Expr("NOW()"))
-func Now() interface{} {
-	return nowExpr
-}
-
-// MockNow changes the DB expression for getting current DB time so that it will return the given timestamp
-func MockNow(timestamp string) {
-	nowExpr = gorm.Expr("?", timestamp)
-}
-
-// RestoreNow sets the DB expression for getting current DB time to its default value (gorm.Expr("NOW()"))
-func RestoreNow() {
-	nowExpr = gorm.Expr("NOW()")
 }
 
 // insertMap reads fields from the given map and inserts the values which have been set

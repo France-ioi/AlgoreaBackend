@@ -11,10 +11,10 @@ import (
 
 var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<nil>|[\w.]+) )|$)`)
 
-// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and logMode setting
-func NewRawDBLogger(logger DBLogger, logMode bool) instrumentedsql.Logger {
+// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and rawLogMode setting
+func NewRawDBLogger(logger DBLogger, rawLogMode bool) instrumentedsql.Logger {
 	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
-		if !logMode {
+		if !rawLogMode {
 			return
 		}
 

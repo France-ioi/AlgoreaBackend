@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 const loginStateLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
@@ -76,7 +77,9 @@ func (l *LoginState) Delete(s *database.LoginStateStore, conf *config.Server) (*
 }
 
 // LoadLoginState retrieves an expected state value from the DB (using the cookie as a key)
-// and compares it with the given state value
+// and compares it with the given state value.
+// If the given state value is invalid (no cookie in the request, or no such cookie/state pair in the DB,
+// or the pair is expired), the function returns an invalid LoginState (with IsOK() => false).
 func LoadLoginState(s *database.LoginStateStore, r *http.Request, state string) (*LoginState, error) {
 	cookie, err := r.Cookie(loginCsrfCookieName)
 	if err == http.ErrNoCookie {
@@ -90,6 +93,9 @@ func LoadLoginState(s *database.LoginStateStore, r *http.Request, state string) 
 		return &LoginState{ok: false}, err
 	}
 	if len(stateFromDB) == 0 || stateFromDB[0] != state {
+		if len(stateFromDB) > 0 {
+			logging.GetLogEntry(r).Warn("Wrong login state")
+		}
 		return &LoginState{ok: false}, nil
 	}
 	return &LoginState{ok: true, cookie: cookie.Value}, nil
