@@ -14,8 +14,8 @@ import (
 // nolint:gosec
 func init() { // nolint:gochecknoinits,gocyclo
 
-	var dbSeedCmd = &cobra.Command{
-		Use:   "db-seed  [environment]",
+	var installCmd = &cobra.Command{
+		Use:   "install [environment]",
 		Short: "fill the database with required data",
 		Run: func(cmd *cobra.Command, args []string) {
 			// if arg given, replace the env
@@ -42,5 +42,5 @@ func init() { // nolint:gochecknoinits,gocyclo
 		},
 	}
 
-	rootCmd.AddCommand(dbSeedCmd)
+	rootCmd.AddCommand(installCmd)
 }
