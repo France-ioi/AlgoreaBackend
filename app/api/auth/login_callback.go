@@ -118,8 +118,7 @@ func (srv *Service) retrieveUserProfile(r *http.Request, token *oauth2.Token) (m
 	_ = response.Body.Close()
 	service.MustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q, accessToken = %q)",
-			response.StatusCode, body, token.AccessToken)
+		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, service.ErrUnexpected(fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode))
 	}
 	var decoded map[string]interface{}
@@ -127,15 +126,13 @@ func (srv *Service) retrieveUserProfile(r *http.Request, token *oauth2.Token) (m
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
 	if err != nil {
-		logging.Warnf("Can't parse user's profile (response = %q, error = %s, accessToken = %q)",
-			body, err, token.AccessToken)
+		logging.Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, service.ErrUnexpected(errors.New("can't parse user's profile"))
 	}
 
 	converted, err := convertUserProfile(decoded, strings.SplitN(r.RemoteAddr, ":", 2)[0])
 	if err != nil {
-		logging.Warnf("User's profile is invalid (response = %q, error = %s, accessToken = %q)",
-			body, err, token.AccessToken)
+		logging.Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
 		return nil, service.ErrUnexpected(errors.New("user's profile is invalid"))
 	}
 	return converted, service.NoError

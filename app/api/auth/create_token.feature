@@ -40,7 +40,7 @@ Feature: Request a new access token
       """
     And logs should contain:
       """
-      Generated a session token "newaccesstoken" expiring in 7200 seconds for a temporary user 2
+      Generated a session token expiring in 7200 seconds for a temporary user 2
       """
     And the table "sessions" should be:
       | idUser | sExpirationDate      | sAccessToken              |

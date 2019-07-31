@@ -94,7 +94,7 @@ Feature: Login callback - robustness
     And the response error message should contain "Can't retrieve user's profile (status code = 500)"
     And logs should contain:
       """
-      Can't retrieve user's profile (status code = 500, response = "Unknown error", accessToken = "accesstoken")
+      Can't retrieve user's profile (status code = 500, response = "Unknown error")
       """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
@@ -128,7 +128,7 @@ Feature: Login callback - robustness
     And the response error message should contain "Can't parse user's profile"
     And logs should contain:
       """
-      Can't parse user's profile (response = "Not a JSON", error = invalid character 'N' looking for beginning of value, accessToken = "accesstoken")
+      Can't parse user's profile (response = "Not a JSON", error = "invalid character 'N' looking for beginning of value")
       """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
@@ -162,7 +162,7 @@ Feature: Login callback - robustness
     And the response error message should contain "User's profile is invalid"
     And logs should contain:
       """
-      User's profile is invalid (response = "{{`<profile_body>`|safeJs}}", error = <error_text>, accessToken = "accesstoken")
+      User's profile is invalid (response = "{{`<profile_body>`|safeJs}}", error = "<error_text>")
       """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged

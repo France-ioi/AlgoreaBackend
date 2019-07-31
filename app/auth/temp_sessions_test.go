@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"bou.ke/monkey"
@@ -39,8 +40,8 @@ func TestCreateNewTempSession(t *testing.T) {
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token %q expiring in %d seconds for a temporary user %d",
-			expectedAccessToken, int32(2*60*60), expectedUserID)))
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID)))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -77,11 +78,11 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token %q expiring in %d seconds for a temporary user %d",
-			expectedAccessTokens[1], int32(2*60*60), expectedUserID)))
-	assert.NotContains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token %q expiring in %d seconds for a temporary user %d",
-			expectedAccessTokens[0], int32(2*60*60), expectedUserID)))
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID)))
+	assert.Equal(t, 1, strings.Count(logs, fmt.Sprintf("level=info msg=%q",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID))))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
