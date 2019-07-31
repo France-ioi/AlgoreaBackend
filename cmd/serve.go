@@ -10,6 +10,7 @@ import (
 )
 
 func init() { // nolint:gochecknoinits
+	var skipChecks bool
 
 	var serveCmd = &cobra.Command{
 		Use:   "serve [environment]",
@@ -31,9 +32,11 @@ func init() { // nolint:gochecknoinits
 				log.Fatal(err)
 			}
 
-			err = application.SelfCheck()
-			if err != nil {
-				log.Fatal(err)
+			if !skipChecks {
+				err = application.SelfCheck()
+				if err != nil {
+					log.Fatalf("Integrity check failed: %s\nUse --skip-checks to bypass the integrity check\n", err)
+				}
 			}
 
 			var server *app.Server
@@ -45,5 +48,6 @@ func init() { // nolint:gochecknoinits
 		},
 	}
 
+	serveCmd.Flags().BoolVar(&skipChecks, "skip-checks", false, "skip the integrity check at startup")
 	rootCmd.AddCommand(serveCmd)
 }
