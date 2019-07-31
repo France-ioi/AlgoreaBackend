@@ -24,7 +24,7 @@ type Configuration struct {
 	RootTempGroupID  int64
 }
 
-// Middleware is a middleware
+// Middleware is a middleware setting domain-specific configuration into the request context
 func Middleware(domains []config.Domain) func(next http.Handler) http.Handler {
 	domainsMap := map[string]*Configuration{}
 	for _, domain := range domains {
