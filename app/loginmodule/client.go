@@ -39,8 +39,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q, accessToken = %q)",
-			response.StatusCode, body, accessToken)
+		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
 	}
 	var decoded map[string]interface{}
@@ -48,15 +47,13 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
 	if err != nil {
-		logging.Warnf("Can't parse user's profile (response = %q, error = %s, accessToken = %q)",
-			body, err, accessToken)
+		logging.Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, errors.New("can't parse user's profile")
 	}
 
 	profile, err = convertUserProfile(decoded)
 	if err != nil {
-		logging.Warnf("User's profile is invalid (response = %q, error = %s, accessToken = %q)",
-			body, err, accessToken)
+		logging.Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
 		return nil, errors.New("user's profile is invalid")
 	}
 	return profile, nil

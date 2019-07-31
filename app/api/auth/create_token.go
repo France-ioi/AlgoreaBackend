@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -11,10 +12,31 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-var userIDsInProgress sync.Map
+type userIDsInProgressMap sync.Map
+
+func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() error) error {
+	userMutex := make(chan bool)
+	defer close(userMutex)
+	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userID, userMutex)
+	// retry storing our mutex into the map
+	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userID, userMutex) {
+		select { // like mutex.Lock(), but with cancel/deadline
+		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
+		case <-r.Context().Done():
+			logging.GetLogEntry(r).Warnf("The request is cancelled: %s", r.Context().Err())
+			return r.Context().Err()
+		}
+	}
+	defer (*sync.Map)(m).Delete(userID)
+
+	return f()
+}
+
+var userIDsInProgress userIDsInProgressMap
 
 // swagger:operation POST /auth/token auth authTokenCreate
 // ---
@@ -54,43 +76,8 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 		// We should not allow concurrency in this part because the login module generates not only
 		// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 		// usage of the old refresh token for that reason.
-		userMutex := make(chan bool)
-		defer close(userMutex)
-		userMutexInterface, loaded := userIDsInProgress.LoadOrStore(user.ID, userMutex)
-		// retry storing our mutex into the map
-		for ; loaded; userMutexInterface, loaded = userIDsInProgress.LoadOrStore(user.ID, userMutex) {
-			select { // like mutex.Lock(), but with cancel/deadline
-			case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
-			case <-r.Context().Done():
-				return service.ErrUnexpected(r.Context().Err())
-			}
-		}
-		defer userIDsInProgress.Delete(user.ID)
-
-		var refreshToken string
-		service.MustNotBeError(
-			srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
-				PluckFirst("sRefreshToken", &refreshToken).Error())
-
-		// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
-		oldToken := &oauth2.Token{RefreshToken: refreshToken}
-		oauthConfig := getOAuthConfig(&srv.Config.Auth)
-		token, err := oauthConfig.TokenSource(r.Context(), oldToken).Token()
-		service.MustNotBeError(err)
-
-		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-			sessionStore := store.Sessions()
-			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(sessionStore.Delete("idUser = ? AND sAccessToken != ?",
-				user.ID, oldAccessToken).Error())
-			// insert the new access token
-			service.MustNotBeError(sessionStore.InsertNewOAuth(user.ID, token))
-			if refreshToken != token.RefreshToken {
-				service.MustNotBeError(store.RefreshTokens().Where("idUser = ?", user.ID).
-					UpdateColumn("sRefreshToken", token.RefreshToken).Error())
-			}
-			newToken = token.AccessToken
-			expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
+		service.MustNotBeError(userIDsInProgress.withLock(user.ID, r, func() error {
+			newToken, expiresIn = srv.refreshTokens(r.Context(), user, oldAccessToken)
 			return nil
 		}))
 	}
@@ -101,4 +88,32 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 	})))
 
 	return service.NoError
+}
+
+func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (newToken string, expiresIn int32) {
+	var refreshToken string
+	service.MustNotBeError(
+		srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
+			PluckFirst("sRefreshToken", &refreshToken).Error())
+	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
+	oldToken := &oauth2.Token{RefreshToken: refreshToken}
+	oauthConfig := getOAuthConfig(&srv.Config.Auth)
+	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
+	service.MustNotBeError(err)
+	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
+		sessionStore := store.Sessions()
+		// delete all the user's access tokens keeping the input token only
+		service.MustNotBeError(sessionStore.Delete("idUser = ? AND sAccessToken != ?",
+			user.ID, oldAccessToken).Error())
+		// insert the new access token
+		service.MustNotBeError(sessionStore.InsertNewOAuth(user.ID, token))
+		if refreshToken != token.RefreshToken {
+			service.MustNotBeError(store.RefreshTokens().Where("idUser = ?", user.ID).
+				UpdateColumn("sRefreshToken", token.RefreshToken).Error())
+		}
+		newToken = token.AccessToken
+		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
+		return nil
+	}))
+	return newToken, expiresIn
 }

@@ -123,7 +123,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 			responseCode: 200,
 			response:     "{",
 			expectedErr:  errors.New("can't parse user's profile"),
-			expectedLog:  `level=warning msg="Can't parse user's profile (response = \"{\", error = unexpected EOF, accessToken = \"accesstoken\")"`,
+			expectedLog:  `level=warning msg="Can't parse user's profile (response = \"{\", error = \"unexpected EOF\")"`,
 		},
 		{
 			name:         "invalid profile",
@@ -131,7 +131,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 			response:     "{}",
 			expectedErr:  errors.New("user's profile is invalid"),
 			expectedLog: `level=warning msg="User's profile is invalid (response = \"{}\", ` +
-				`error = no id in user's profile, accessToken = \"accesstoken\")"`,
+				`error = \"no id in user's profile\")"`,
 		},
 	}
 	const moduleURL = "http://login.url.com"

@@ -27,7 +27,7 @@ Feature: Create a temporary user
       """
     And logs should contain:
       """
-      Generated a session token "ny93zqri9a2adn4v1ut6izd76xb3pccw" expiring in 7200 seconds for a temporary user 5577006791947779410
+      Generated a session token expiring in 7200 seconds for a temporary user 5577006791947779410
       """
     And the table "users" at ID "5577006791947779410" should be:
       | ID                  | loginID | sLogin       | tempUser | ABS(TIMESTAMPDIFF(SECOND, sRegistrationDate, NOW())) < 3 | idGroupSelf         | idGroupOwned | sLastIp   |
