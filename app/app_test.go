@@ -194,7 +194,7 @@ type relationSpec struct {
 
 func TestApplication_SelfCheck(t *testing.T) {
 	type groupSpec struct {
-		name   string
+		textID string
 		id     int64
 		exists bool
 		error  bool
@@ -220,10 +220,10 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
-				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6, exists: true},
-				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8, exists: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4, exists: true},
+				{textID: "Root", id: 5, exists: true}, {textID: "RootSelf", id: 6, exists: true},
+				{textID: "RootAdmin", id: 7, exists: true}, {textID: "RootTemp", id: 8, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
@@ -243,7 +243,7 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1},
+				{textID: "Root", id: 1},
 			},
 			expectedError: errors.New("no Root group for domain \"192.168.0.1\""),
 		},
@@ -256,7 +256,7 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2},
 			},
 			expectedError: errors.New("no RootSelf group for domain \"192.168.0.1\""),
 		},
@@ -269,8 +269,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3},
 			},
 			expectedError: errors.New("no RootAdmin group for domain \"127.0.0.1\""),
 		},
@@ -283,8 +283,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4},
 			},
 			expectedError: errors.New("no RootTemp group for domain \"127.0.0.1\""),
 		},
@@ -297,8 +297,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
@@ -314,8 +314,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
@@ -332,8 +332,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
@@ -351,7 +351,7 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, error: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, error: true},
 			},
 			expectedError: errors.New("some error"),
 		},
@@ -364,8 +364,8 @@ func TestApplication_SelfCheck(t *testing.T) {
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
-				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{textID: "Root", id: 1, exists: true}, {textID: "RootSelf", id: 2, exists: true},
+				{textID: "RootAdmin", id: 3, exists: true}, {textID: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
@@ -385,9 +385,9 @@ func TestApplication_SelfCheck(t *testing.T) {
 
 			for _, expectedGroupToCheck := range tt.expectedGroupsToCheck {
 				queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-					"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sType = 'Base') AND (sName = ?) AND (sTextId = ?) LIMIT 1",
+					"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sTextId = ?) LIMIT 1",
 				)+"$").
-					WithArgs(expectedGroupToCheck.id, expectedGroupToCheck.name, expectedGroupToCheck.name)
+					WithArgs(expectedGroupToCheck.id, expectedGroupToCheck.textID)
 				if !expectedGroupToCheck.error {
 					rowsToReturn := mock.NewRows([]string{"1"})
 					if expectedGroupToCheck.exists {

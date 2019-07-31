@@ -97,9 +97,7 @@ func (app *Application) SelfCheck() error {
 			{name: "RootTemp", id: domainConfig.RootTempGroup},
 		} {
 			hasRows, err := groupStore.ByID(spec.id).
-				Where("sType = 'Base'").
-				Where("sName = ?", spec.name).
-				Where("sTextId = ?", spec.name).Limit(1).HasRows()
+				Where("sTextId = ?", spec.name).HasRows()
 			if err != nil {
 				return err
 			}
