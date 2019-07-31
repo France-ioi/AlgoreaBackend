@@ -32,7 +32,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 				log.Fatal(err)
 			}
 
-			err = application.SeedDatabase()
+			err = application.CreateMissingData()
 			if err != nil {
 				log.Fatal(err)
 			}

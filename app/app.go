@@ -131,41 +131,43 @@ func (app *Application) CheckConfig() error {
 	return nil
 }
 
-// SeedDatabase fills the database with required data
-func (app *Application) SeedDatabase() error {
+// CreateMissingData fills the database with required data (if missing)
+func (app *Application) CreateMissingData() error {
+	return database.NewDataStore(app.Database).InTransaction(app.insertRootGroupsAndRelations)
+}
+
+func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) error {
+	groupStore := store.Groups()
+	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []database.ParentChild
-	return database.NewDataStore(app.Database).InTransaction(func(store *database.DataStore) error {
-		groupStore := store.Groups()
-		groupGroupStore := store.GroupGroups()
-		var inserted bool
-		for _, domainConfig := range app.Config.Domains {
-			domainConfig := domainConfig
-			insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
+	var inserted bool
+	for _, domainConfig := range app.Config.Domains {
+		domainConfig := domainConfig
+		insertedForDomain, err := insertRootGroups(groupStore, &domainConfig)
+		if err != nil {
+			return err
+		}
+		inserted = inserted || insertedForDomain
+		for _, spec := range []database.ParentChild{
+			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
+			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
+			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
+		} {
+			found, err := groupGroupStore.Where("sType = 'direct'").
+				Where("idGroupParent = ?", spec.ParentID).Where("idGroupChild = ?", spec.ChildID).
+				Limit(1).HasRows()
 			if err != nil {
 				return err
 			}
-			inserted = inserted || insertedForDomain
-			for _, spec := range []database.ParentChild{
-				{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
-				{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
-				{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
-			} {
-				found, err := groupGroupStore.Where("sType = 'direct'").
-					Where("idGroupParent = ?", spec.ParentID).Where("idGroupChild = ?", spec.ChildID).
-					Limit(1).HasRows()
-				if err != nil {
-					return err
-				}
-				if !found {
-					relationsToCreate = append(relationsToCreate, spec)
-				}
-			}
-			if len(relationsToCreate) > 0 || inserted {
-				return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+			if !found {
+				relationsToCreate = append(relationsToCreate, spec)
 			}
 		}
-		return nil
-	})
+		if len(relationsToCreate) > 0 || inserted {
+			return groupStore.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+		}
+	}
+	return nil
 }
 
 func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Domain) (bool, error) {

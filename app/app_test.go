@@ -437,7 +437,7 @@ type groupSpec struct {
 	errorOnInsert bool
 }
 
-type seedDatabaseTestCase struct {
+type createMissingDataTestCase struct {
 	name                      string
 	config                    *config.Root
 	expectedGroupsToInsert    []groupSpec
@@ -447,8 +447,8 @@ type seedDatabaseTestCase struct {
 	skipRelations             bool
 }
 
-func TestApplication_SeedDatabase(t *testing.T) {
-	tests := []seedDatabaseTestCase{
+func TestApplication_CreateMissingData(t *testing.T) {
+	tests := []createMissingDataTestCase{
 		{
 			name: "create all",
 			config: &config.Root{Domains: []config.Domain{
@@ -605,13 +605,13 @@ func TestApplication_SeedDatabase(t *testing.T) {
 				})
 			defer monkey.UnpatchAll()
 
-			expectedError = setDBExpectationsForSeedDatabase(mock, &tt, expectedError)
+			expectedError = setDBExpectationsForCreateMissingData(mock, &tt, expectedError)
 
 			app := &Application{
 				Config:   tt.config,
 				Database: db,
 			}
-			err := app.SeedDatabase()
+			err := app.CreateMissingData()
 			assertlib.Equal(t, expectedError, err)
 			assertlib.Equal(t, (expectedError == nil || tt.relationsError) && !tt.skipRelations, createdRelations)
 			assertlib.NoError(t, mock.ExpectationsWereMet())
@@ -619,10 +619,10 @@ func TestApplication_SeedDatabase(t *testing.T) {
 	}
 }
 
-func setDBExpectationsForSeedDatabase(mock sqlmock.Sqlmock, tt *seedDatabaseTestCase, expectedError error) error {
+func setDBExpectationsForCreateMissingData(mock sqlmock.Sqlmock, tt *createMissingDataTestCase, expectedError error) error {
 	mock.ExpectBegin()
 	for _, expectedGroupToInsert := range tt.expectedGroupsToInsert {
-		expectedError = setDBExpectationsForGroupInSeedDatabase(mock, expectedGroupToInsert, expectedError)
+		expectedError = setDBExpectationsForGroupInCreateMissingData(mock, expectedGroupToInsert, expectedError)
 	}
 	if expectedError == nil {
 		for _, expectedRelationToCheck := range tt.expectedRelationsToCheck {
@@ -650,7 +650,7 @@ func setDBExpectationsForSeedDatabase(mock sqlmock.Sqlmock, tt *seedDatabaseTest
 	return expectedError
 }
 
-func setDBExpectationsForGroupInSeedDatabase(mock sqlmock.Sqlmock, expectedGroupToInsert groupSpec, expectedError error) error {
+func setDBExpectationsForGroupInCreateMissingData(mock sqlmock.Sqlmock, expectedGroupToInsert groupSpec, expectedError error) error {
 	queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sType = 'Base') AND (sName = ?) AND (sTextId = ?) LIMIT 1",
 	)+"$").
