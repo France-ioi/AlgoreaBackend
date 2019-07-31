@@ -32,7 +32,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	userProfile["sLastActivityDate"] = database.Now()
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).UpdateColumn(userProfile).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.UpdateSuccess(nil)
 	render.Respond(w, r, &response)
 
 	return service.NoError
