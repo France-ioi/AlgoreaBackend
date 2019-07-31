@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"sync"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -35,7 +36,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	}))
 	done := make(chan bool)
 	doRequest := func(timeout bool) {
-		response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
+		response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 			"POST", "/auth/token", "", 2,
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
@@ -70,6 +71,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 		assert.NoError(t, err)
 		if timeout {
 			assert.Equal(t, 500, response.StatusCode)
+			assert.Contains(t, logs, "The request is cancelled: context deadline exceeded")
 		} else {
 			assert.Equal(t, 201, response.StatusCode)
 			body, _ := ioutil.ReadAll(response.Body)
@@ -83,17 +85,17 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 
 	// check that the service waits while the user is locked
 	mutexChannel := make(chan bool, 1)
-	userIDsInProgress.Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
 	mutexChannel <- true
 	go doRequest(false)
 	mutexChannel <- true // wait until createToken() reads from the channel (meaning the service is inside the for loop)
 	close(mutexChannel)
-	userIDsInProgress.Delete(int64(2)) // here the service gets unlocked
-	<-done                             // wait until the service finishes
+	(*sync.Map)(&userIDsInProgress).Delete(int64(2)) // here the service gets unlocked
+	<-done                                           // wait until the service finishes
 
 	// check that the service timeouts if the user is locked for too long
 	mutexChannel = make(chan bool, 1)
-	userIDsInProgress.Store(int64(2), mutexChannel) // lock the user
+	(*sync.Map)(&userIDsInProgress).Store(int64(2), mutexChannel) // lock the user
 	mutexChannel <- true
 	go doRequest(true)
 	<-done // wait until the service finishes
