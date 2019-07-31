@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /current-user/notification-read-date userNotificationReadDateUpdate
+// swagger:operation PUT /current-user/notification-read-date users userNotificationReadDateUpdate
 // ---
 // summary: Update user's notification read date
 // description: Set users.sNotificationReadDate to NOW() for the current user
