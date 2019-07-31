@@ -192,7 +192,7 @@ type relationSpec struct {
 	error  bool
 }
 
-func TestApplication_SelfCheck(t *testing.T) {
+func TestApplication_CheckConfig(t *testing.T) {
 	type groupSpec struct {
 		textID string
 		id     int64
@@ -422,7 +422,7 @@ func TestApplication_SelfCheck(t *testing.T) {
 				Config:   tt.config,
 				Database: db,
 			}
-			err := app.SelfCheck()
+			err := app.CheckConfig()
 			assertlib.Equal(t, tt.expectedError, err)
 			assertlib.NoError(t, mock.ExpectationsWereMet())
 		})

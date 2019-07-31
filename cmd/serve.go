@@ -33,7 +33,7 @@ func init() { // nolint:gochecknoinits
 			}
 
 			if !skipChecks {
-				err = application.SelfCheck()
+				err = application.CheckConfig()
 				if err != nil {
 					log.Fatalf("Integrity check failed: %s\nUse --skip-checks to bypass the integrity check\n", err)
 				}

@@ -82,8 +82,8 @@ func New() (*Application, error) {
 	}, nil
 }
 
-// SelfCheck checks that the database contains all the required data
-func (app *Application) SelfCheck() error {
+// CheckConfig checks that the database contains all the data needed by the config
+func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
 	groupGroupStore := groupStore.GroupGroups()
 	for _, domainConfig := range app.Config.Domains {
