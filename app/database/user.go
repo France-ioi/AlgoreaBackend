@@ -11,6 +11,7 @@ type User struct {
 	DefaultLanguage      string     `sql:"column:sDefaultLanguage"`
 	DefaultLanguageID    int64      `sql:"column:idDefaultLanguage"`
 	IsAdmin              bool       `sql:"column:bIsAdmin"`
+	IsTempUser           bool       `sql:"column:tempUser"`
 	SelfGroupID          int64      `sql:"column:idGroupSelf"`
 	OwnedGroupID         int64      `sql:"column:idGroupOwned"`
 	AccessGroupID        int64      `sql:"column:idGroupAccess"`

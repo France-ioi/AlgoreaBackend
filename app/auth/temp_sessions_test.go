@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"bou.ke/monkey"
@@ -12,12 +13,16 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
 
 func TestCreateNewTempSession(t *testing.T) {
 	expectedAccessToken := "tmp-01abcdefghijklmnopqrstuvwxyz"
 	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
 	defer monkey.UnpatchAll()
+	logHook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -33,6 +38,11 @@ func TestCreateNewTempSession(t *testing.T) {
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 
+	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID)))
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -41,6 +51,8 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	accessTokensIndex := -1
 	monkey.Patch(GenerateKey, func() (string, error) { accessTokensIndex++; return expectedAccessTokens[accessTokensIndex], nil })
 	defer monkey.UnpatchAll()
+	logHook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -63,6 +75,14 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessTokens[1], accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
+
+	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID)))
+	assert.Equal(t, 1, strings.Count(logs, fmt.Sprintf("level=info msg=%q",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+			int32(2*60*60), expectedUserID))))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

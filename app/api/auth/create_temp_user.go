@@ -12,7 +12,6 @@ import (
 	authlib "github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -87,7 +86,5 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		"access_token": token,
 		"expires_in":   expiresIn,
 	})))
-	logging.Infof("Generated a session token %q expiring in %d seconds for a temporary user %d",
-		token, expiresIn, userID)
 	return service.NoError
 }
