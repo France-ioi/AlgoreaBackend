@@ -17,6 +17,9 @@ func init() { // nolint:gochecknoinits,gocyclo
 	var installCmd = &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",
+		Long: `If the root group IDs specified in the config file
+do not exist or have missing relations, creates them all
+(groups, groups_groups, and groups_ancestors)`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// if arg given, replace the env
 			if len(args) > 0 {
