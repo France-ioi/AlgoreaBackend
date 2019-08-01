@@ -184,6 +184,30 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, s
 	return nil
 }
 
+func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *gherkin.DocString) error { // nolint
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	params := url.Values{
+		"client_id":     {ctx.application.Config.Auth.ClientID},
+		"client_secret": {ctx.application.Config.Auth.ClientSecret},
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {preprocessedRefreshToken},
+	}
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
+		httpmock.WithBody(
+			bytes.NewBufferString(params.Encode()))))
+	return nil
+}
+
 func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token string, statusCode int, body *gherkin.DocString) error { // nolint
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedToken, err := ctx.preprocessString(token)

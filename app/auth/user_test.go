@@ -19,3 +19,13 @@ func TestUserFromContext(t *testing.T) {
 	assert.False(myUser == user)
 	assert.EqualValues(myUser, user)
 }
+
+func TestBearerTokenFromContext(t *testing.T) {
+	assert := assertlib.New(t)
+
+	expectedToken := "sometoken"
+	ctx := context.WithValue(context.Background(), ctxBearer, expectedToken)
+	token := BearerTokenFromContext(ctx)
+
+	assert.Equal(expectedToken, token)
+}

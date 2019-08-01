@@ -37,7 +37,7 @@ func TestUserMiddleware(t *testing.T) {
 			userIDReturnedByDB:       890123,
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
-			expectedBody:             "user_id:890123",
+			expectedBody:             "user_id:890123\nBearer:1234567",
 		},
 		{
 			name:                     "missing access token",
@@ -98,7 +98,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedAccessToken:      strings.Repeat("1", 2000),
 			userIDReturnedByDB:       78234,
 			expectedServiceWasCalled: true,
-			expectedBody:             "user_id:78234",
+			expectedBody:             "user_id:78234\nBearer:" + strings.Repeat("1", 2000),
 		},
 		{
 			name:                     "takes the first access token from headers",
@@ -143,7 +143,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
 				"SELECT users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess, "+
-					"users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
+					"users.tempUser, users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
 					"FROM `sessions` "+
 					"JOIN users ON users.ID = sessions.idUser "+
 					"LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode "+
@@ -166,7 +166,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		body := "user_id:" + strconv.FormatInt(user.ID, 10)
+		body := "user_id:" + strconv.FormatInt(user.ID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))
