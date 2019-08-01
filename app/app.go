@@ -96,8 +96,7 @@ func (app *Application) CheckConfig() error {
 			{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 			{name: "RootTemp", id: domainConfig.RootTempGroup},
 		} {
-			hasRows, err := groupStore.ByID(spec.id).
-				Where("sTextId = ?", spec.name).HasRows()
+			hasRows, err := groupStore.ByID(spec.id).HasRows()
 			if err != nil {
 				return err
 			}
