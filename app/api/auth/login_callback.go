@@ -1,23 +1,17 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
-	"golang.org/x/oauth2"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -77,10 +71,9 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 	token, err := oauthConfig.Exchange(r.Context(), code)
 	service.MustNotBeError(err)
 
-	userProfile, apiErr := srv.retrieveUserProfile(r, token)
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), token.AccessToken)
+	service.MustNotBeError(err)
+	userProfile["sLastIP"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile)
@@ -105,97 +98,6 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 		"expires_in":   time.Until(token.Expiry).Round(time.Second) / time.Second,
 	})))
 	return service.NoError
-}
-
-func (srv *Service) retrieveUserProfile(r *http.Request, token *oauth2.Token) (map[string]interface{}, service.APIError) {
-	request, err := http.NewRequest("GET", srv.Config.Auth.LoginModuleURL+"/user_api/account", nil)
-	service.MustNotBeError(err)
-	request.Header.Set("Authorization", "Bearer "+token.AccessToken)
-	request = request.WithContext(r.Context())
-	response, err := http.DefaultClient.Do(request)
-	service.MustNotBeError(err)
-	body, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
-	_ = response.Body.Close()
-	service.MustNotBeError(err)
-	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
-		return nil, service.ErrUnexpected(fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode))
-	}
-	var decoded map[string]interface{}
-	decoder := json.NewDecoder(bytes.NewReader(body))
-	decoder.UseNumber()
-	err = decoder.Decode(&decoded)
-	if err != nil {
-		logging.Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
-		return nil, service.ErrUnexpected(errors.New("can't parse user's profile"))
-	}
-
-	converted, err := convertUserProfile(decoded, strings.SplitN(r.RemoteAddr, ":", 2)[0])
-	if err != nil {
-		logging.Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
-		return nil, service.ErrUnexpected(errors.New("user's profile is invalid"))
-	}
-	return converted, service.NoError
-}
-
-func convertUserProfile(source map[string]interface{}, remoteAddr string) (map[string]interface{}, error) {
-	dest := make(map[string]interface{}, len(source)+2)
-	mapping := map[string]string{
-		"loginID":          "id", // unsigned int
-		"sLogin":           "login",
-		"sEmail":           "primary_email",
-		"sFirstName":       "first_name",
-		"sLastName":        "last_name",
-		"sStudentId":       "student_id",
-		"sCountryCode":     "country_code",
-		"sBirthDate":       "birthday",
-		"iGraduationYear":  "graduation_year",  // int
-		"iGrade":           "graduation_grade", // int
-		"sAddress":         "address",
-		"sZipcode":         "zipcode",
-		"sCity":            "city",
-		"sLandLineNumber":  "primary_phone",
-		"sCellPhoneNumber": "secondary_phone",
-		"sDefaultLanguage": "language",
-		"sFreeText":        "presentation",
-		"sWebSite":         "website",
-		"bEmailVerified":   "primary_email_verified",
-	}
-	for destKey, sourceKey := range mapping {
-		dest[destKey] = source[sourceKey]
-		if number, ok := dest[destKey].(json.Number); ok {
-			dest[destKey], _ = number.Int64()
-		}
-	}
-	dest["sSex"] = nil
-	switch source["gender"] {
-	case "m":
-		dest["sSex"] = "Male"
-	case "f":
-		dest["sSex"] = "Female"
-	}
-	dest["bEmailVerified"] = (dest["bEmailVerified"] == true) || (dest["bEmailVerified"] == int64(1))
-	if countryCode, ok := dest["sCountryCode"].(string); ok {
-		dest["sCountryCode"] = strings.ToLower(countryCode)
-	} else {
-		dest["sCountryCode"] = ""
-	}
-	dest["sLastIP"] = remoteAddr
-
-	if dest["loginID"] == nil {
-		return dest, errors.New("no id in user's profile")
-	}
-	fmt.Printf("LoginID type: %t", dest["loginID"])
-
-	if _, ok := dest["sLogin"].(string); !ok {
-		return dest, errors.New("no login in user's profile")
-	}
-
-	if dest["iGraduationYear"] == nil {
-		dest["iGraduationYear"] = 0
-	}
-
-	return dest, nil
 }
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}) int64 {
