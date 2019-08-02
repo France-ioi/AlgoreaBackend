@@ -108,7 +108,7 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		}
 
 		// at least one of the item's parents should be visible to the group
-		itemsVisibleToGroupSubQuery := s.GroupItems().AccessRightsForItemsVisibleToGroup(groupID).SubQuery()
+		itemsVisibleToGroupSubQuery := s.GroupItems().AccessRightsForItemsVisibleToGroup(&groupID).SubQuery()
 
 		found, err = s.ItemItems().
 			Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemParent", itemsVisibleToGroupSubQuery).

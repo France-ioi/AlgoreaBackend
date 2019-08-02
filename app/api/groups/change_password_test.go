@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
@@ -41,7 +42,7 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, _ := assertMockedChangePasswordRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
-			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
+			WithArgs(ptrInt64(10), 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'sPassword'"))
@@ -54,7 +55,7 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 func assertMockedChangePasswordRequest(t *testing.T,
 	setMockExpectationsFunc func(sqlmock.Sqlmock)) (*http.Response, sqlmock.Sqlmock, string, error) {
 	response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"POST", "/groups/1/change_password", ``, 2,
+		"POST", "/groups/1/change_password", ``, &database.User{ID: 2, OwnedGroupID: ptrInt64(10)},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}
@@ -64,3 +65,5 @@ func assertMockedChangePasswordRequest(t *testing.T,
 	assert.NoError(t, mock.ExpectationsWereMet())
 	return response, mock, logs, err
 }
+
+func ptrInt64(i int64) *int64 { return &i }

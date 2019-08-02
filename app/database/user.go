@@ -12,9 +12,9 @@ type User struct {
 	DefaultLanguageID    int64      `sql:"column:idDefaultLanguage"`
 	IsAdmin              bool       `sql:"column:bIsAdmin"`
 	IsTempUser           bool       `sql:"column:tempUser"`
-	SelfGroupID          int64      `sql:"column:idGroupSelf"`
-	OwnedGroupID         int64      `sql:"column:idGroupOwned"`
-	AccessGroupID        int64      `sql:"column:idGroupAccess"`
+	SelfGroupID          *int64     `sql:"column:idGroupSelf"`
+	OwnedGroupID         *int64     `sql:"column:idGroupOwned"`
+	AccessGroupID        *int64     `sql:"column:idGroupAccess"`
 	AllowSubgroups       bool       `sql:"column:allowSubgroups"`
 	NotificationReadDate *time.Time `sql:"column:sNotificationReadDate"`
 }

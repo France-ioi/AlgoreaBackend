@@ -1,8 +1,9 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'users':
-      | ID | idGroupSelf | idGroupOwned |
-      | 1  | 21          | 22           |
+      | ID | idGroupSelf | idGroupOwned | sLogin |
+      | 1  | 21          | 22           | john   |
+      | 2  | null        | null         | guest  |
     And the database has the following table 'groups':
       | ID | bFreeAccess |
       | 11 | 1           |
@@ -69,6 +70,14 @@ Feature: User sends a request to join a group - robustness
     When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
+
+  Scenario: Fails when the user's idGroupSelf is NULL
+    Given I am the user with ID "2"
+    When I send a POST request to "/current-user/group-requests/14"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Can't send request to a group having bFreeAccess=0
     Given I am the user with ID "1"

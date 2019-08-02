@@ -39,7 +39,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
-			user := &database.User{ID: 1, SelfGroupID: 11, OwnedGroupID: 12, DefaultLanguageID: 2}
+			user := &database.User{ID: 1, SelfGroupID: ptrInt64(11), OwnedGroupID: ptrInt64(12), DefaultLanguageID: 2}
 			dataStore := database.NewDataStore(db)
 			itemStore := dataStore.Items()
 
@@ -62,7 +62,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
+	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
@@ -84,7 +84,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
-	user := &database.User{ID: 1, SelfGroupID: 10}
+	user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 
 	tests := []struct {
 		name          string
@@ -361,7 +361,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
 				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		user := &database.User{ID: 1, SelfGroupID: 10}
+		user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 		store.Items().CloseTeamContest(11, user)
 		return nil
 	}))
@@ -428,7 +428,7 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 	var result []resultType
 
 	assert.NoError(t, database.NewDataStore(db).Items().
-		Visible(&database.User{ID: 1, SelfGroupID: 10}).
+		Visible(&database.User{ID: 1, SelfGroupID: ptrInt64(10)}).
 		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
 	assert.Equal(t, []resultType{
 		{ID: 11, AccessSolutions: true},

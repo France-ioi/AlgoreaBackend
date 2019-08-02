@@ -34,7 +34,8 @@ func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {
 // AccessRightsForItemsVisibleToGroup returns a composable query for getting access rights
 // (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
 // for all the items that are visible to the given group.
-func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID int64) *DB {
+// Note that the `groupID` can be nil.
+func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB {
 	return s.
 		Select(`
 			idItem,
