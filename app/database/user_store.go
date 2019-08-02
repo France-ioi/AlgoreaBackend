@@ -17,7 +17,7 @@ func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		userScope := store.Users().
-			Joins("LEFT JOIN sessions ON sessions.idUser = users.ID AND sessions.sExpirationDate > NOW()").
+			Joins("LEFT JOIN sessions ON sessions.idUser = users.ID AND NOW() < sessions.sExpirationDate").
 			Where("sessions.idUser IS NULL").Where("tempUser = 1")
 		return store.Users().deleteWithTraps(userScope)
 	})
