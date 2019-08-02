@@ -59,7 +59,7 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	return len(ids)
 }
 
-func deleteOneBatchOfUsers(db *DB, ids []int64, selfGroupsIDs []*int64, ownedGroupsIDs []*int64) {
+func deleteOneBatchOfUsers(db *DB, ids []int64, selfGroupsIDs, ownedGroupsIDs []*int64) {
 	db.mustBeInTransaction()
 
 	allGroups := make([]*int64, 0, len(selfGroupsIDs)+len(ownedGroupsIDs))
