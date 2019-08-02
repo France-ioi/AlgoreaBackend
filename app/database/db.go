@@ -386,9 +386,6 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if reflectValue.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
 	}
-	if reflectValue.Len() > 0 {
-		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
-	}
 	return newDB(conn.db.Pluck(column, values))
 }
 
