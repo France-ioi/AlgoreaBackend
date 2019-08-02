@@ -13,9 +13,9 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 21 | Self      | UserSelf  |
       | 22 | Owned     | UserAdmin |
       | 51 | UserAdmin | UserAdmin |
-      | 52 | Root      | Root      |
-      | 53 | RootSelf  | RootSelf  |
-      | 54 | RootAdmin | RootAdmin |
+      | 52 | Root      | Base      |
+      | 53 | RootSelf  | Base      |
+      | 54 | RootAdmin | Base      |
       | 55 | UserSelf  | UserSelf  |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType       |
