@@ -7,8 +7,6 @@ import (
 
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/AlgoreaBackend/app/databasetest"
 )
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
@@ -296,7 +294,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 }
 
 func (ctx *TestContext) DbTimeNow(timeStrRaw string) error { // nolint
-	databasetest.MockDBTime(timeStrRaw)
+	MockDBTime(timeStrRaw)
 	return nil
 }
 

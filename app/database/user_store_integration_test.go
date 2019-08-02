@@ -9,14 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/databasetest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
 func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	databasetest.MockDBTime(currentTime.Format(time.RFC3339))
-	defer databasetest.RestoreDBTime()
+	testhelpers.MockDBTime(currentTime.Format(time.RFC3339))
+	defer testhelpers.RestoreDBTime()
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups_propagate: [{ID: 5000}, {ID: 5001}, {ID: 5002}, {ID: 6000}, {ID: 6001}, {ID: 6002}]
