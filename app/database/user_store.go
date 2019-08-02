@@ -11,7 +11,21 @@ type UserStore struct {
 
 const deleteWithTrapsBatchSize = 1000
 
-// DeleteTemporaryWithTraps deletes temporary users and all their stuff
+// DeleteTemporaryWithTraps deletes temporary users and all rows in the tables:
+// 1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
+//     `filters`, `history_filters`, `sessions`, `refresh_tokens`]
+//    having `idUser` = `users.ID`;
+// 2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
+//		 `groups_login_prefixes, `history_groups_login_prefixes`]
+//    having `idGroup` = `users.idGroupSelf` or `idGroup` = `users.idGroupOwned`;
+// 3. `groups_items_propagate` having the same `ID`s as the rows removed from `groups_items`;
+// 4. [`groups_groups`, `history_groups_groups`] having `idGroupParent` or `idGroupChild` equal
+//    to one of `users.idGroupSelf`/`users.idGroupOwned`;
+// 5. [`groups_ancestors`, `history_groups_ancestors`] having `idGroupAncestor` or `idGroupChild` equal
+//    to one of `users.idGroupSelf`/`users.idGroupOwned`;
+// 6. [`groups_propagate`, `groups`, `history_groups`] having `ID` equal to one of
+//    `users.idGroupSelf`/`users.idGroupOwned`;
+// 7. `history_users` having `ID` = `users.ID`
 func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 	defer recoverPanics(&err)
 
