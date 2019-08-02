@@ -19,7 +19,7 @@ import (
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/app/databasetest"
 	log "github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 )
@@ -104,8 +104,8 @@ func (ctx *TestContext) tearDownApp() {
 }
 
 func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
+	databasetest.RestoreDBTime()
 	monkey.UnpatchAll()
-	database.RestoreNow()
 	ctx.logsRestoreFunc()
 
 	defer func() {
