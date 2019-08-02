@@ -11,7 +11,8 @@ type UserStore struct {
 
 const deleteWithTrapsBatchSize = 1000
 
-// DeleteTemporaryWithTraps deletes temporary users and all rows in the tables:
+// DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.
+// It also removes linked rows in the tables:
 // 1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
 //     `filters`, `history_filters`, `sessions`, `refresh_tokens`]
 //    having `idUser` = `users.ID`;
