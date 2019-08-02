@@ -61,10 +61,10 @@ func init() { // nolint:gochecknoinits,gocyclo
 			db := testhelpers.SetupDBWithFixtureString(`
 			users: [{ID: 1, sLogin: owner, idGroupSelf: 21, idGroupOwned: 22}]
 			groups:
-				- {ID: 1, sType: Root, sName: Root, sTextId: Root}
-				- {ID: 2, sType: RootSelf, sName: RootSelf, sTextId: RootSelf}
-				- {ID: 3, sType: RootAdmin, sName: RootAdmin, sTextId: RootAdmin}
-				- {ID: 4, sType: UserSelf, sName: RootTemp, sTextId: RootTemp}
+				- {ID: 1, sType: Base, sName: Root, sTextId: Root}
+				- {ID: 2, sType: Base, sName: RootSelf, sTextId: RootSelf}
+				- {ID: 3, sType: Base, sName: RootAdmin, sTextId: RootAdmin}
+				- {ID: 4, sType: Base, sName: RootTemp, sTextId: RootTemp}
 				- {ID: 5, sType: Class}
 				- {ID: 11, sType: Class}
 				- {ID: 12, sType: Class}

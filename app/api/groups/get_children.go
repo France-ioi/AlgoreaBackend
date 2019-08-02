@@ -22,18 +22,18 @@ import (
 //   type: integer
 // - name: types_include
 //   in: query
-//   default: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+//   default: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
 //   type: array
 //   items:
 //     type: string
-//     enum: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+//     enum: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
 // - name: types_exclude
 //   in: query
 //   default: []
 //   type: array
 //   items:
 //     type: string
-//     enum: [Root,Class,Team,Club,Friends,Other,UserSelf,UserAdmin,RootSelf,RootAdmin]
+//     enum: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
 // - name: from.name
 //   description: Start the page from the sub-group next to the sub-group with `sName` = `from.name` and `ID` = `from.id`
 //                (`from.id` is required when `from.name` is present,
@@ -91,8 +91,8 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 
 	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
 		map[string]bool{
-			"Root": true, "Class": true, "Team": true, "Club": true, "Friends": true,
-			"Other": true, "UserSelf": true, "UserAdmin": true, "RootSelf": true, "RootAdmin": true,
+			"Base": true, "Class": true, "Team": true, "Club": true, "Friends": true,
+			"Other": true, "UserSelf": true, "UserAdmin": true,
 		})
 	if err != nil {
 		return service.ErrInvalidRequest(err)

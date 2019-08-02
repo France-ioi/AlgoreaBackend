@@ -54,6 +54,15 @@ type Token struct {
 	PrivateKeyFile string
 }
 
+// Domain is the part of the config related to domains
+type Domain struct {
+	Domains        []string
+	RootGroup      int64
+	RootSelfGroup  int64
+	RootAdminGroup int64
+	RootTempGroup  int64
+}
+
 // Root is the root of the app configuration
 type Root struct {
 	Server       Server
@@ -62,6 +71,7 @@ type Root struct {
 	Logging      Logging
 	Auth         Auth
 	Token        Token
+	Domains      []Domain
 }
 
 const defaultConfigName = "config"

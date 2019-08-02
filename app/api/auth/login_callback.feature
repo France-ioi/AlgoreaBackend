@@ -2,8 +2,8 @@ Feature: Login callback
   Background:
     Given the database has the following table 'groups':
       | ID | sType     | sName     | sDateCreated         |
-      | 2  | RootSelf  | RootSelf  | 2015-08-10T12:34:55Z |
-      | 3  | RootAdmin | RootAdmin | 2015-08-10T12:34:56Z |
+      | 2  | Base      | RootSelf  | 2015-08-10T12:34:55Z |
+      | 3  | Base      | RootAdmin | 2015-08-10T12:34:56Z |
     And the application config is:
       """
       auth:
@@ -11,6 +11,11 @@ Feature: Login callback
         clientID: "1"
         clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
         callbackURL: "https://backend.algorea.org/auth/login-callback"
+      domains:
+        -
+          domains: [127.0.0.1]
+          rootSelfGroup: 2
+          rootAdminGroup: 3
       """
 
   Scenario: Create a new user
@@ -72,8 +77,8 @@ Feature: Login callback
       | 3916589616287113937 | 5577006791947779410 | 8674665223082153551 | 2019-07-16T22:02:28Z | 2019-07-16T22:02:28Z | 0        | 2019-07-16T22:02:28Z | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02T00:00:00Z | 2020            | 0      | null     | null     | null  | null            | null             | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
       | ID                  | sName          | sType     | sDescription   | sDateCreated         | bOpened | bSendEmails |
-      | 2                   | RootSelf       | RootSelf  | null           | 2015-08-10T12:34:55Z | false   | false       |
-      | 3                   | RootAdmin      | RootAdmin | null           | 2015-08-10T12:34:56Z | false   | false       |
+      | 2                   | RootSelf       | Base      | null           | 2015-08-10T12:34:55Z | false   | false       |
+      | 3                   | RootAdmin      | Base      | null           | 2015-08-10T12:34:56Z | false   | false       |
       | 5577006791947779410 | mohammed       | UserSelf  | mohammed       | 2019-07-16T22:02:28Z | false   | false       |
       | 8674665223082153551 | mohammed-admin | UserAdmin | mohammed-admin | 2019-07-16T22:02:28Z | false   | false       |
     And the table "groups_groups" should be:
@@ -166,6 +171,10 @@ Feature: Login callback
       | 3                   | 3            | true    |
       | 3                   | 12           | false   |
       | 3                   | 14           | false   |
+      | 11                  | 11           | true    |
+      | 12                  | 12           | true    |
+      | 13                  | 13           | true    |
+      | 14                  | 14           | true    |
     And the database has the following table 'login_states':
       | sCookie                          | sState                           | sExpirationDate      |
       | {{cookie}}                       | {{state}}                        | 2019-07-16T22:02:29Z |
@@ -229,6 +238,79 @@ Feature: Login callback
     | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date           | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified |
     | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03T00:00:00Z | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           |
     | profile_with_null_fields    | null              | null       | null      | null       |              | null                 | 0               | null  |                  | null         | null                      | null   | false          |
+
+  Scenario: Creates relations with domain root groups on first login of an existing user
+    Given the time now is "2019-07-16T22:02:29Z"
+    And the DB time now is "2019-07-16T22:02:28Z"
+    And the application config is:
+      """
+      auth:
+        loginModuleURL: "https://login.algorea.org"
+        clientID: "2"
+        clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
+        callbackURL: "http://backend.algorea.org/auth/login-callback"
+      """
+    And the template constant "cookie" is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
+    And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
+    And the template constant "code_from_oauth" is "somecode"
+    And the database has the following table 'users':
+      | ID | idGroupSelf | idGroupOwned | sLastLoginDate       | sLastActivityDate    | sRegistrationDate    | loginID   | sLogin   | sEmail               | sFirstName | sLastName | sStudentId | sCountryCode | sBirthDate           | iGraduationYear | iGrade | sAddress          | sZipcode | sCity               | sLandLineNumber   | sCellPhoneNumber | sDefaultLanguage | sFreeText           | sWebSite                      | sSex | bEmailVerified | sLastIP     |
+      | 1  | 11          | 12           | 2019-06-16T21:01:25Z | 2019-06-16T22:05:44Z | 2019-05-10T10:42:11Z | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02T00:00:00Z | 2020            | 0      | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null             | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
+    And the database has the following table 'groups_ancestors':
+      | idGroupAncestor     | idGroupChild | bIsSelf |
+      | 11                  | 11           | true    |
+      | 12                  | 12           | true    |
+    And the database has the following table 'login_states':
+      | sCookie    | sState    | sExpirationDate      |
+      | {{cookie}} | {{state}} | 2019-07-16T22:02:29Z |
+    And the "Cookie" request header is "login_csrf={{cookie}}"
+    And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":31622420,
+        "access_token":"accesstoken",
+        "refresh_token":"refreshtoken"
+      }
+      """
+    And the login module "account" endpoint for token "accesstoken" returns 200 with body:
+      """
+      {
+        "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
+        "last_name":"Amrani","real_name_visible":false,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
+        "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
+        "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
+        "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
+        "logout_config":null,"last_password_recovery_at":null,"merge_group_id":null,
+        "origin_instance_id":null,"creator_client_id":null,"nationality":"AL",
+        "primary_email":"mohammedam@gmail.com","secondary_email":"mohammed.amrani@gmail.com",
+        "primary_email_verified":null,"secondary_email_verified":null,"has_picture":false,
+        "badges":[],"client_id":1,"verification":[]
+      }
+      """
+    When I send a GET request to "/auth/login-callback?state={{state}}&code={{code_from_oauth}}"
+    Then the response code should be 201
+    And the table "users" should stay unchanged but the row with ID "1"
+    And the table "users" at ID "1" should be:
+      | ID | idGroupSelf | idGroupOwned |
+      | 1  | 11          | 12           |
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should be:
+      | idGroupParent | idGroupChild | sType  |
+      | 2             | 11           | direct |
+      | 3             | 12           | direct |
+    And the table "groups_ancestors" should be:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 2               | 2            | true    |
+      | 2               | 11           | false   |
+      | 3               | 3            | true    |
+      | 3               | 12           | false   |
+      | 11              | 11           | true    |
+      | 12              | 12           | true    |
 
   Scenario: Sets insecure cookies for HTTP
     Given the time now is "2019-07-16T22:02:29Z"

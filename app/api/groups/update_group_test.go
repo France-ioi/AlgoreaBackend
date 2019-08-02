@@ -27,11 +27,9 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		{"sType=Friends", `{"type":"Friends"}`, false},
 		{"sType=Other", `{"type":"Other"}`, false},
 
-		{"sType=Root", `{"type":"Root"}`, true},
+		{"sType=Base", `{"type":"Base"}`, true},
 		{"sType=UserSelf", `{"type":"UserSelf"}`, true},
 		{"sType=UserAdmin", `{"type":"UserAdmin"}`, true},
-		{"sType=RootSelf", `{"type":"RootSelf"}`, true},
-		{"sType=RootAdmin", `{"type":"RootAdmin"}`, true},
 		{"sType=unknown", `{"type":"unknown"}`, true},
 		{"sType=", `{"type":""}`, true},
 

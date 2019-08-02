@@ -31,7 +31,19 @@ Environment-specific configurations can be defined using `conf/config.ENV.yml` f
 
 ## Seeding the database
 
-An empty dump (schema without data) can be loaded using the `./bin/AlgoreaBackend db-restore` followed by `./bin/AlgoreaBackend db-migrate`.
+An empty dump (schema without data) can be loaded using the
+```
+./bin/AlgoreaBackend db-restore
+```
+followed by
+```
+./bin/AlgoreaBackend db-migrate
+```
+Probably you may also want to run
+```
+./bin/AlgoreaBackend install
+```
+to insert the data required by the config.
 
 ## Testing
 

@@ -6,8 +6,8 @@
 - {ID: 6, sType: "Class"}
 - {ID: 7, sType: "Other"}
 
-- {ID: 8, sType: "Root"}
+- {ID: 8, sType: "Base", sName: "Root"}
 - {ID: 9, sType: "UserSelf"}
 - {ID: 10, sType: "UserAdmin"}
-- {ID: 11, sType: "RootSelf"}
-- {ID: 12, sType: "RootAdmin"}
+- {ID: 11, sType: "Base", sName: "RootSelf"}
+- {ID: 12, sType: "Base", sName: "RootAdmin"}
