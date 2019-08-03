@@ -1,12 +1,12 @@
 package database
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )

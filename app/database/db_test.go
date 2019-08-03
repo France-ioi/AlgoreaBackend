@@ -803,6 +803,102 @@ func TestDB_insertMap(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_ScanIntoSlices(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID, Field FROM `myTable`")).
+		WillReturnRows(
+			mock.NewRows([]string{"ID", "Field"}).
+				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
+
+	db = db.Table("myTable").Select("ID, Field")
+
+	ids := make([]int64, 0, 3)
+	fields := make([]*string, 0, 3)
+
+	dbScan := db.ScanIntoSlices(&ids, &fields)
+	assert.Equal(t, dbScan, db)
+	assert.NoError(t, dbScan.Error())
+
+	assert.Equal(t, []int64{1, 2, 3}, ids)
+	assert.Equal(t, []*string{ptrString("value"), ptrString("another value"), nil}, fields)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSlices_DoesNothingIfErrorIsSet(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	_ = db.db.AddError(expectedError)
+	var result []int64
+	dbScan := db.ScanIntoSlices(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []int64(nil), result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
+		WillReturnRows(
+			mock.NewRows([]string{"ID", "Field"}).
+				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
+
+	db = db.Table("myTable")
+
+	ids := []int64{10, 20, 30}
+	fields := []*string{ptrString("old value1"), ptrString("old value2"), ptrString("old value3")}
+
+	db.ScanIntoSlices(&ids, &fields)
+	assert.Equal(t, []int64{1, 2, 3}, ids)
+	assert.Equal(t, []*string{ptrString("value"), ptrString("another value"), nil}, fields)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSlices_RowsError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
+		WillReturnError(expectedError)
+	db = db.Table("myTable")
+
+	var result []int64
+	dbScan := db.ScanIntoSlices(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Nil(t, result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_ScanIntoSlices_ErrorOnScan(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Scan", func(*sql.Rows, ...interface{}) error { return expectedError })
+	defer monkey.UnpatchAll()
+	db = db.Table("myTable")
+
+	var result []int64
+	dbScan := db.ScanIntoSlices(&result)
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+
+	assert.Equal(t, []int64(nil), result)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -1312,3 +1408,5 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 		})
 	}
 }
+
+func ptrString(s string) *string { return &s }

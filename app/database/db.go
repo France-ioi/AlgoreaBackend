@@ -269,6 +269,44 @@ func (conn *DB) Scan(dest interface{}) *DB {
 	return newDB(conn.db.Scan(dest))
 }
 
+// ScanIntoSlices scans multiple columns into slices
+func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
+	if conn.db.Error != nil {
+		return conn
+	}
+
+	valuesPointers := make([]interface{}, len(pointersToSlices))
+	for index := range pointersToSlices {
+		reflSlice := reflect.ValueOf(pointersToSlices[index]).Elem()
+		if reflSlice.Len() > 0 {
+			reflSlice.Set(reflect.MakeSlice(reflSlice.Type(), 0, reflSlice.Cap()))
+		}
+		valuesPointers[index] = reflect.New(reflSlice.Type().Elem()).Interface()
+	}
+
+	rows, err := conn.db.Rows()
+	if rows != nil {
+		defer func() {
+			_ = conn.db.AddError(rows.Close())
+		}()
+	}
+	if conn.db.AddError(err) != nil {
+		return conn
+	}
+
+	for rows.Next() {
+		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil {
+			return conn
+		}
+		for index, valuePointer := range valuesPointers {
+			reflSlice := reflect.ValueOf(pointersToSlices[index]).Elem()
+			reflSlice.Set(reflect.Append(reflSlice, reflect.ValueOf(valuePointer).Elem()))
+		}
+	}
+	_ = conn.db.AddError(rows.Err())
+	return conn
+}
+
 // ScanIntoSliceOfMaps scans value into a slice of maps
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	*dest = *new([]map[string]interface{})
@@ -347,9 +385,6 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	reflectValue := reflectPtr.Elem()
 	if reflectValue.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
-	}
-	if reflectValue.Len() > 0 {
-		reflectValue.Set(reflect.MakeSlice(reflectValue.Type(), 0, reflectValue.Cap()))
 	}
 	return newDB(conn.db.Pluck(column, values))
 }
