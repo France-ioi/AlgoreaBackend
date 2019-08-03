@@ -20,7 +20,7 @@ import (
 // auth.UserIDFromContext is stubbed to return the given userID.
 // The test should provide functions that prepare the router and the sql mock
 func GetResponseForRouteWithMockedDBAndUser(
-	method, path, requestBody string, userID int64,
+	method, path, requestBody string, user *database.User,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *service.Base)) (*http.Response, sqlmock.Sqlmock, string, error) {
 
@@ -33,7 +33,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 
 	base := service.Base{Store: database.NewDataStore(db), Config: nil}
 	router := chi.NewRouter()
-	router.Use(auth.MockUserMiddleware(&database.User{ID: userID}))
+	router.Use(auth.MockUserMiddleware(user))
 	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))
 	setRouterFunc(router, &base)
 

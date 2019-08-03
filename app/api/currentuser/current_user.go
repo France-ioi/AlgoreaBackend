@@ -56,6 +56,10 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 	user := srv.GetUser(r)
 
+	if user.SelfGroupID == nil {
+		return service.InsufficientAccessRightsError
+	}
+
 	if action == createGroupRequestAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).Where("bFreeAccess").HasRows()
@@ -73,10 +77,10 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 				rejectInvitationAction:   database.UserRefusesInvitation,
 				createGroupRequestAction: database.UserCreatesRequest,
 				leaveGroupAction:         database.UserLeavesGroup,
-			}[action], groupID, []int64{user.SelfGroupID}, user.ID)
+			}[action], groupID, []int64{*user.SelfGroupID}, user.ID)
 		return err
 	}))
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[user.SelfGroupID],
+	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID],
 		action == createGroupRequestAction, action == leaveGroupAction)
 }

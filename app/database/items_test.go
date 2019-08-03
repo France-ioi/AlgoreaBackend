@@ -13,7 +13,7 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
+	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (idItem) " +
@@ -32,7 +32,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &database.User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
+	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT `items`.* FROM `items` JOIN (SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+

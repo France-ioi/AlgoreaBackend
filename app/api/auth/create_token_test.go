@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/config"
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
@@ -37,7 +38,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	done := make(chan bool)
 	doRequest := func(timeout bool) {
 		response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-			"POST", "/auth/token", "", 2,
+			"POST", "/auth/token", "", &database.User{ID: 2},
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
 					mock.ExpectQuery("^" +

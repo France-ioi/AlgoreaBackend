@@ -356,8 +356,9 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 	groupItemStore := s.GroupItems()
 
 	// TODO: "remove partial access if other access were present" (what did he mean???)
-	groupItemStore.removePartialAccess(user.SelfGroupID, itemID)
-	mustNotBeError(groupItemStore.db.Exec(`
+	if user.SelfGroupID != nil {
+		groupItemStore.removePartialAccess(*user.SelfGroupID, itemID)
+		mustNotBeError(groupItemStore.db.Exec(`
 		DELETE groups_items
 		FROM groups_items
 		JOIN items_ancestors ON
@@ -365,9 +366,10 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 			items_ancestors.idItemAncestor = ?
 		WHERE groups_items.idGroup = ? AND
 			(sCachedFullAccessDate IS NULL OR sCachedFullAccessDate > NOW()) AND
-			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, user.SelfGroupID).Error)
-	// we do not need to call GroupItemStore.After() because we do not grant new access here
-	groupItemStore.computeAllAccess()
+			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, *user.SelfGroupID).Error)
+		// we do not need to call GroupItemStore.After() because we do not grant new access here
+		groupItemStore.computeAllAccess()
+	}
 }
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {

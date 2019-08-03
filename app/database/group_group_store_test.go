@@ -14,7 +14,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
+	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
 		"WHERE (groups_groups.idGroupChild = ?) AND (groups_groups.sType IN ('invitationAccepted','requestAccepted'))")).

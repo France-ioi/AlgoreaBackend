@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
@@ -74,7 +75,7 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
 			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(0, 1).WillReturnError(errors.New("error"))
+			WithArgs(ptrInt64(11), 1).WillReturnError(errors.New("error"))
 		mock.ExpectRollback()
 	})
 }
@@ -85,7 +86,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
 			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(true))
+			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(true))
 		mock.ExpectExec("UPDATE `groups_groups` .+").WithArgs("requestRefused", 1).
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -98,7 +99,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
 			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(0, 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(false))
+			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -107,7 +108,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"PUT", "/groups/1", `{"free_access":false}`, 2,
+		"PUT", "/groups/1", `{"free_access":false}`, &database.User{ID: 2, OwnedGroupID: ptrInt64(11)},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}

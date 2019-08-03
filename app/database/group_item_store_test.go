@@ -76,7 +76,7 @@ func TestGroupItemStore_AccessRightsForItemsVisibleToUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: 2, OwnedGroupID: 3, DefaultLanguageID: 4}
+	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+

@@ -54,7 +54,7 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			WithWriteLock().PluckFirst("idAttemptActive", &activeAttemptID).Error())
 		if activeAttemptID == nil {
-			groupID := user.SelfGroupID
+			groupID := *user.SelfGroupID // not null since we have passed the access rights checking
 			if itemInfo.HasAttempts {
 				err = store.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
 				if gorm.IsRecordNotFoundError(err) {

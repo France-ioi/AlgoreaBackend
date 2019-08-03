@@ -1,8 +1,9 @@
 Feature: User rejects an invitation to join a group - robustness
   Background:
     Given the database has the following table 'users':
-      | ID | idGroupSelf | idGroupOwned |
-      | 1  | 21          | 22           |
+      | ID | idGroupSelf | idGroupOwned | sLogin |
+      | 1  | 21          | 22           | john   |
+      | 2  | null        | null         | guest  |
     And the database has the following table 'groups':
       | ID |
       | 11 |
@@ -40,6 +41,14 @@ Feature: User rejects an invitation to join a group - robustness
     When I send a POST request to "/current-user/group-invitations/abc/reject"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user's idGroupSelf is NULL
+    Given I am the user with ID "2"
+    When I send a POST request to "/current-user/group-invitations/14/reject"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 

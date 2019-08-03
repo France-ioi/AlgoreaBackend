@@ -272,7 +272,8 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemMap["idDefaultLanguage"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
-		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.ID, user.SelfGroupID, itemID)))
+		// user.SelfGroupID is not null since we have successfully passed the validation
+		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.ID, *user.SelfGroupID, itemID)))
 
 		stringMap["ID"] = s.NewID()
 		stringMap["idItem"] = itemID
