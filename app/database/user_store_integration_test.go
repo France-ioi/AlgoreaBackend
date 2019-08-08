@@ -83,7 +83,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	for _, table := range []string{"groups", "history_groups"} {
 		assertTableColumn(t, db, table, "ID", []int64{5001, 5002, 6001, 6002})
 	}
-	assertTableColumn(t, db, "groups_propagate", "ID", []int64{1, 5001, 5002, 6001, 6002, 7000})
+	assertTableColumn(t, db, "groups_propagate", "ID", []int64{5001, 5002, 6001, 6002, 7000})
 	for _, table := range []string{"groups_ancestors", "history_groups_ancestors"} {
 		assertTableColumn(t, db, table, "idGroupAncestor", []int64{1, 5001, 5002, 6001, 6002})
 		assertTableColumn(t, db, table, "idGroupChild", []int64{5001, 5002, 6001, 6002, 7000})
