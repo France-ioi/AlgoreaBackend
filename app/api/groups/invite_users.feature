@@ -17,18 +17,6 @@ Feature: Invite users
       | 111 |
       | 112 |
       | 113 |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 13              | 13           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
-      | 101             | 101          | 1       |
-      | 102             | 102          | 1       |
-      | 103             | 103          | 1       |
-      | 111             | 111          | 1       |
-      | 112             | 112          | 1       |
-      | 113             | 113          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
       | 15 | 22            | 13           | direct             | null                 |
@@ -67,4 +55,3 @@ Feature: Invite users
       | 1           |
       | 2           |
       | 3           |
-    And the table "groups_ancestors" should stay unchanged

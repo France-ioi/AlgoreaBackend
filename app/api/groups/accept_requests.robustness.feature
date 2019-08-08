@@ -18,22 +18,6 @@ Feature: Accept group requests - robustness
       | 123 |
       | 131 |
       | 141 |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 13              | 13           | 1       |
-      | 13              | 111          | 0       |
-      | 13              | 121          | 0       |
-      | 13              | 123          | 0       |
-      | 14              | 14           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
-      | 31              | 31           | 1       |
-      | 111             | 111          | 1       |
-      | 121             | 121          | 1       |
-      | 122             | 122          | 1       |
-      | 123             | 123          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate               |
       | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} |
@@ -57,7 +41,6 @@ Feature: Accept group requests - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
     Given I am the user with ID "404"
@@ -65,7 +48,6 @@ Feature: Accept group requests - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
@@ -73,7 +55,6 @@ Feature: Accept group requests - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when group_ids is wrong
     Given I am the user with ID "1"
@@ -81,4 +62,3 @@ Feature: Accept group requests - robustness
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged

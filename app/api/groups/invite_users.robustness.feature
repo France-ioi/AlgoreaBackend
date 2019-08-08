@@ -11,14 +11,6 @@ Feature: Invite users - robustness
       | 13  |
       | 21  |
       | 22  |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 12              | 12           | 1       |
-      | 13              | 13           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
       | 15 | 22            | 13           | direct             | null                 |
@@ -34,7 +26,6 @@ Feature: Invite users - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
     Given I am the user with ID "404"
@@ -47,7 +38,6 @@ Feature: Invite users - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group ID is wrong
     Given I am the user with ID "1"
@@ -60,7 +50,6 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are wrong
     Given I am the user with ID "1"
@@ -73,7 +62,6 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal number into Go struct field .logins of type string"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are not present
     Given I am the user with ID "1"
@@ -85,7 +73,6 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are empty
     Given I am the user with ID "1"
@@ -98,7 +85,6 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when too many logins
     Given I am the user with ID "1"
@@ -123,4 +109,3 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be no more than 100 logins"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged

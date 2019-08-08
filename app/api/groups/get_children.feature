@@ -5,69 +5,6 @@ Feature: Get group children (groupChildrenView)
       | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  |
       | 2  | john   | 51          | 52           | John        | Doe       |
       | 3  | jane   | 53          | 54           | Jane        | Doe       |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 13              | 11           | 0       |
-      | 13              | 13           | 1       |
-      | 13              | 21           | 0       |
-      | 13              | 23           | 0       |
-      | 13              | 24           | 0       |
-      | 13              | 25           | 0       |
-      | 13              | 26           | 0       |
-      | 13              | 27           | 0       |
-      | 13              | 28           | 0       |
-      | 13              | 29           | 0       |
-      | 13              | 30           | 0       |
-      | 13              | 31           | 0       |
-      | 13              | 51           | 0       |
-      | 13              | 53           | 0       |
-      | 13              | 90           | 0       |
-      | 14              | 14           | 1       |
-      | 14              | 22           | 0       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 14           | 0       |
-      | 22              | 21           | 0       |
-      | 22              | 22           | 1       |
-      | 22              | 23           | 0       |
-      | 22              | 24           | 0       |
-      | 22              | 25           | 0       |
-      | 22              | 26           | 0       |
-      | 22              | 27           | 0       |
-      | 22              | 28           | 0       |
-      | 22              | 29           | 0       |
-      | 22              | 30           | 0       |
-      | 22              | 31           | 0       |
-      | 22              | 51           | 0       |
-      | 22              | 53           | 0       |
-      | 22              | 90           | 0       |
-      | 23              | 23           | 1       |
-      | 23              | 51           | 0       |
-      | 23              | 53           | 0       |
-      | 23              | 90           | 0       |
-      | 24              | 24           | 1       |
-      | 25              | 25           | 1       |
-      | 26              | 26           | 1       |
-      | 27              | 27           | 1       |
-      | 27              | 53           | 0       |
-      | 28              | 28           | 1       |
-      | 29              | 29           | 1       |
-      | 30              | 30           | 1       |
-      | 31              | 31           | 1       |
-      | 42              | 42           | 1       |
-      | 43              | 43           | 1       |
-      | 44              | 44           | 1       |
-      | 45              | 45           | 1       |
-      | 46              | 46           | 1       |
-      | 47              | 47           | 1       |
-      | 51              | 51           | 1       |
-      | 52              | 52           | 1       |
-      | 53              | 53           | 1       |
-      | 54              | 54           | 1       |
-      | 90              | 51           | 0       |
-      | 90              | 53           | 0       |
-      | 90              | 90           | 1       |
     And the database has the following table 'groups':
       | ID | sName         | iGrade | sType     | bOpened | bFreeAccess | sPassword  |
       | 11 | Group A       | -3     | Class     | true    | true        | ybqybxnlyo |
@@ -114,6 +51,7 @@ Feature: Get group children (groupChildrenView)
       | 13            | 45           | requestRefused     |
       | 13            | 46           | left               |
       | 13            | 47           | removed            |
+      | 22            | 13           | direct             |
       | 23            | 51           | invitationAccepted |
       | 23            | 90           | direct             |
       | 27            | 53           | invitationAccepted |

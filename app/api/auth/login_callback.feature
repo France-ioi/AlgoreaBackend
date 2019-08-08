@@ -163,18 +163,6 @@ Feature: Login callback
       | 2             | 13           | direct | 1           |
       | 3             | 12           | direct | 2           |
       | 3             | 14           | direct | 2           |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor     | idGroupChild | bIsSelf |
-      | 2                   | 2            | true    |
-      | 2                   | 11           | false   |
-      | 2                   | 13           | false   |
-      | 3                   | 3            | true    |
-      | 3                   | 12           | false   |
-      | 3                   | 14           | false   |
-      | 11                  | 11           | true    |
-      | 12                  | 12           | true    |
-      | 13                  | 13           | true    |
-      | 14                  | 14           | true    |
     And the database has the following table 'login_states':
       | sCookie                          | sState                           | sExpirationDate      |
       | {{cookie}}                       | {{state}}                        | 2019-07-16T22:02:29Z |
@@ -221,7 +209,6 @@ Feature: Login callback
       | 1  | 11          | 12           | 2019-07-16T22:02:28Z | 2019-07-16T22:02:28Z | 0        | 2019-05-10T10:42:11Z | 100000001 | jane   | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null     | null     | null  | null            | null             | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
     And the table "login_states" should be:
       | sCookie                          | sState                           | sExpirationDate      |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16T22:02:29Z |

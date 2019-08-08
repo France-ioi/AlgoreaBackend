@@ -17,27 +17,6 @@ Feature: Reject group requests
       | 123 |
       | 131 |
       | 141 |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 13              | 13           | 1       |
-      | 13              | 111          | 0       |
-      | 13              | 121          | 0       |
-      | 13              | 123          | 0       |
-      | 14              | 14           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
-      | 22              | 111          | 0       |
-      | 22              | 121          | 0       |
-      | 22              | 123          | 0       |
-      | 31              | 31           | 1       |
-      | 111             | 111          | 1       |
-      | 121             | 121          | 1       |
-      | 122             | 122          | 1       |
-      | 123             | 123          | 1       |
-      | 131             | 131          | 1       |
-      | 141             | 141          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate               |
       | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} |
@@ -78,4 +57,3 @@ Feature: Reject group requests
       | ID | idGroupParent | idGroupChild | sType          | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
       | 3  | 13            | 31           | requestRefused | 1                                                                                  |
       | 14 | 13            | 141          | requestRefused | 1                                                                                  |
-    And the table "groups_ancestors" should stay unchanged

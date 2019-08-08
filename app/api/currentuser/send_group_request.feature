@@ -9,13 +9,6 @@ Feature: User sends a request to join a group
       | 14 | 1           |
       | 21 | 0           |
       | 22 | 0           |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 14              | 14           | 1       |
-      | 14              | 21           | 0       |
-      | 21              | 21           | 1       |
-      | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType       | sStatusDate          |
       | 7  | 14            | 21           | requestSent | 2017-02-21T06:38:38Z |
@@ -35,7 +28,6 @@ Feature: User sends a request to join a group
       | idGroupParent | idGroupChild | sType       | ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3 |
       | 11            | 21           | requestSent | 1                                                  |
       | 14            | 21           | requestSent | 0                                                  |
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
     Given I am the user with ID "1"
@@ -49,4 +41,3 @@ Feature: User sends a request to join a group
     }
     """
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged

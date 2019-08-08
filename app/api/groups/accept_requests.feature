@@ -17,22 +17,6 @@ Feature: Accept group requests
       | 123 |
       | 131 |
       | 141 |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 13              | 13           | 1       |
-      | 13              | 111          | 0       |
-      | 13              | 121          | 0       |
-      | 13              | 123          | 0       |
-      | 14              | 14           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
-      | 31              | 31           | 1       |
-      | 111             | 111          | 1       |
-      | 121             | 121          | 1       |
-      | 122             | 122          | 1       |
-      | 123             | 123          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate               |
       | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} |

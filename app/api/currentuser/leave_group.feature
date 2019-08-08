@@ -9,13 +9,6 @@ Feature: User leaves a group
       | 14 |
       | 21 |
       | 22 |
-    And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 1  | 11              | 11           | 1       |
-      | 2  | 11              | 21           | 0       |
-      | 3  | 14              | 14           | 1       |
-      | 4  | 21              | 21           | 1       |
-      | 5  | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
       | 1  | 11            | 21           | invitationAccepted | 2017-04-29T06:38:38Z |
@@ -36,8 +29,6 @@ Feature: User leaves a group
     And the table "groups_groups" at ID "1" should be:
       | ID | idGroupParent | idGroupChild | sType | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
       | 1  | 11            | 21           | left  | 1                                                                                  |
-    And the table "groups_ancestors" should stay unchanged but the row with ID "2"
-    And the table "groups_ancestors" should not contain ID "2"
 
   Scenario: Leave a group that already have been left
     Given I am the user with ID "1"
@@ -51,5 +42,4 @@ Feature: User leaves a group
     }
     """
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 

@@ -31,30 +31,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 22            | 55           | direct      |
       | 24            | 11           | direct      |
       | 55            | 14           | direct      |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 13              | 11           | 0       |
-      | 13              | 13           | 1       |
-      | 14              | 14           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 11           | 0       |
-      | 22              | 13           | 0       |
-      | 22              | 14           | 0       |
-      | 22              | 22           | 1       |
-      | 22              | 51           | 0       |
-      | 22              | 52           | 0       |
-      | 22              | 53           | 0       |
-      | 22              | 54           | 0       |
-      | 22              | 55           | 0       |
-      | 24              | 11           | 0       |
-      | 24              | 24           | 1       |
-      | 51              | 51           | 1       |
-      | 52              | 52           | 1       |
-      | 53              | 53           | 1       |
-      | 54              | 54           | 1       |
-      | 55              | 14           | 0       |
-      | 55              | 55           | 1       |
 
   Scenario: User tries to delete a relation making a child group an orphan
     Given I am the user with ID "1"
@@ -62,7 +38,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 400
     And the response error message should contain "Group 13 would become an orphan: confirm that you want to delete it"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
 
   Scenario: Parent group ID is wrong
@@ -71,7 +46,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group ID is missing
     Given I am the user with ID "1"
@@ -79,7 +53,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for child_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: delete_orphans is wrong
     Given I am the user with ID "1"
@@ -87,7 +60,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for delete_orphans (should have a boolean value (0 or 1))"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the child group, but is not an owner of the parent group
     Given I am the user with ID "2"
@@ -95,7 +67,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: User does not exist
     Given I am the user with ID "404"
@@ -103,7 +74,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is UserAdmin
     Given I am the user with ID "1"
@@ -111,7 +81,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is Root
     Given I am the user with ID "1"
@@ -119,7 +88,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootSelf
     Given I am the user with ID "1"
@@ -127,7 +95,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootAdmin
     Given I am the user with ID "1"
@@ -135,7 +102,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent group is UserSelf
     Given I am the user with ID "1"
@@ -143,7 +109,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent and child are the same
     Given I am the user with ID "1"
@@ -151,7 +116,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Relation doesn't exist
     Given I am the user with ID "1"
@@ -159,7 +123,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Relation is not direct
     Given I am the user with ID "1"
@@ -167,5 +130,4 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 

@@ -78,7 +78,8 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 				groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild AND
 				groups_ancestors.idGroupAncestor = ?`, groupID).
 		Joins("JOIN users ON users.idGroupSelf = groups.ID").
-		Where("groups.sType = 'UserSelf'")
+		Where("groups.sType = 'UserSelf'").
+		Group("groups_ancestors.idGroupAncestor, groups_ancestors.idGroupChild")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
@@ -109,6 +110,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Joins(`
 			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = groups.ID AND
 				parent_ancestors.idGroupAncestor = ?`, groupID).
+		Group("parent_ancestors.idGroupAncestor, parent_ancestors.idGroupChild").
 		Order("groups.ID").
 		Scan(&parentsResult).Error())
 

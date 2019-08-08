@@ -9,13 +9,6 @@ Feature: User accepts an invitation to join a group
       | 14 |
       | 21 |
       | 22 |
-    And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 14              | 14           | 1       |
-      | 14              | 21           | 0       |
-      | 21              | 21           | 1       |
-      | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
       | 1  | 11            | 21           | invitationSent     | 2017-04-29T06:38:38Z |
@@ -57,4 +50,3 @@ Feature: User accepts an invitation to join a group
     }
     """
     And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
