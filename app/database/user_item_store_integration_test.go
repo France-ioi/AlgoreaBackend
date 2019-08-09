@@ -50,6 +50,7 @@ func TestUserItemStore_ComputeAllUserItems_Concurrent(t *testing.T) {
 
 func TestUserItemStore_CreateIfMissing(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture()
+	defer func() { _ = db.Close() }()
 
 	userItemStore := database.NewDataStore(db).UserItems()
 	err := userItemStore.CreateIfMissing(12, 34)
@@ -87,6 +88,7 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 			- {ID: 335, idGroupParent: 102, idGroupChild: 200}
 		users:
 			- {ID: 500, idGroupSelf: 200}`)
+	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		err := store.UserItems().PropagateAttempts()
