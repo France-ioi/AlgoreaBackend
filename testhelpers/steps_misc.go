@@ -2,7 +2,9 @@ package testhelpers
 
 import (
 	"bytes"
+	"crypto/aes"
 	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -222,5 +224,42 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token strin
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
 		ctx.application.Config.Auth.LoginModuleURL+"/user_api/account", responder,
 		httpmock.WithHeader(&http.Header{"Authorization": {"Bearer " + preprocessedToken}})))
+	return nil
+}
+
+func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns( // nolint
+	userID string, statusCode int, body *gherkin.DocString) error {
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedUserID, err := ctx.preprocessString(userID)
+	if err != nil {
+		return err
+	}
+	preprocessedBody, err := ctx.preprocessString(body.Content)
+	if err != nil {
+		return err
+	}
+	const size = 16
+	mod := len(preprocessedBody) % size
+	if mod != 0 {
+		padding := byte(size - mod)
+		preprocessedBody += strings.Repeat(string(padding), int(padding))
+	}
+
+	data := []byte(preprocessedBody)
+	cipher, err := aes.NewCipher([]byte(ctx.application.Config.Auth.ClientSecret)[0:16])
+	if err != nil {
+		return err
+	}
+	encrypted := make([]byte, len(data))
+	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {
+		cipher.Encrypt(encrypted[bs:be], data[bs:be])
+	}
+
+	bodyBase64 := base64.StdEncoding.EncodeToString(encrypted)
+
+	responder := httpmock.NewStringResponder(statusCode, bodyBase64)
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+		ctx.application.Config.Auth.LoginModuleURL+"/platform_api/accounts_manager/unlink_client?client_id="+
+			url.QueryEscape(ctx.application.Config.Auth.ClientID)+"&user_id="+url.QueryEscape(preprocessedUserID), responder))
 	return nil
 }

@@ -2,9 +2,12 @@ package loginmodule
 
 import (
 	"context"
+	"crypto/aes"
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -266,6 +269,97 @@ func Test_convertUserProfile(t *testing.T) {
 			got, err := convertUserProfile(tt.source)
 			assert.Equal(t, tt.expectedError, err)
 			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func encodeUnlinkClientResponse(response, clientSecret string) string {
+	const size = 16
+	mod := len(response) % size
+	if mod != 0 {
+		padding := byte(size - mod)
+		response += strings.Repeat(string(padding), int(padding))
+	}
+
+	data := []byte(response)
+	cipher, err := aes.NewCipher([]byte(clientSecret)[0:16])
+	if err != nil {
+		panic(err)
+	}
+	encrypted := make([]byte, len(data))
+	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {
+		cipher.Encrypt(encrypted[bs:be], data[bs:be])
+	}
+
+	return base64.StdEncoding.EncodeToString(encrypted)
+}
+
+func TestClient_UnlinkClient(t *testing.T) {
+	tests := []struct {
+		name         string
+		responseCode int
+		response     string
+		expectedErr  error
+		expectedLog  string
+	}{
+		{
+			name:         "success",
+			responseCode: 200,
+			response:     encodeUnlinkClientResponse(`{"success":true}`, "clientKeyclientKey"),
+		},
+		{
+			name:         "wrong status code",
+			responseCode: 500,
+			response:     "Unexpected error",
+			expectedErr:  errors.New("can't unlink the user"),
+			expectedLog:  `level=warning msg="Can't unlink the user (status code = 500, response = \"Unexpected error\")"`,
+		},
+		{
+			name:         "corrupted base64",
+			responseCode: 200,
+			response:     "Some text",
+			expectedErr:  errors.New("can't unlink the user"),
+			expectedLog: `level=warning msg="Can't decode response from the login module ` +
+				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+		},
+		{
+			name:         "can't unmarshal",
+			responseCode: 200,
+			response:     encodeUnlinkClientResponse(`{"success":true}`, "anotherClientKey"),
+			expectedErr:  errors.New("can't unlink the user"),
+			expectedLog: `level=warning msg="Can't parse response from the login module ` +
+				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
+				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+		},
+		{
+			name:         "'success' is false",
+			responseCode: 200,
+			response:     encodeUnlinkClientResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
+			expectedErr:  errors.New("can't unlink the user"),
+			expectedLog:  `level=warning msg="Can't unlink the user. The login module returned an error: unknown error"`,
+		},
+	}
+	const moduleURL = "http://login.url.com"
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{url: moduleURL}
+			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+			defer httpmock.DeactivateAndReset()
+			responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
+			httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
+				moduleURL+"/platform_api/accounts_manager/unlink_client?client_id=clientID&user_id=123456", responder))
+
+			hook, restoreLogFunc := logging.MockSharedLoggerHook()
+			defer restoreLogFunc()
+
+			err := client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
+
+			assert.Equal(t, tt.expectedErr, err)
+			if tt.expectedLog != "" {
+				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+			}
+			assert.NoError(t, httpmock.AllStubsCalled())
 		})
 	}
 }
