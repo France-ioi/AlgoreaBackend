@@ -27,7 +27,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	groupsAcceptedCondition := ""
 	if objectName == groups {
 		groupsAcceptedCondition = ` AND (
-			groups_groups.sType IN('invitationAccepted', 'requestAccepted','direct')
+			groups_groups.sType IN('invitationAccepted', 'requestAccepted', 'direct')
 		)`
 	}
 
