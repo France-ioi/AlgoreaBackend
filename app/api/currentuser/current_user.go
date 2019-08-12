@@ -37,6 +37,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Put("/current-user/notification-read-date", service.AppHandler(srv.updateNotificationReadDate).ServeHTTP)
 	router.Put("/current-user/refresh", service.AppHandler(srv.refresh).ServeHTTP)
+
+	router.Get("/current-user/export-data", service.AppHandler(srv.exportData).ServeHTTP)
 }
 
 type userGroupRelationAction string
