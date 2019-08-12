@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -56,6 +57,9 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	service.MustNotBeError(err)
 
 	if doNotDelete {
+		logging.GetLogEntry(r).
+			Infof("A user with ID = %d tried to delete himself, but he is a member of a group with lockUserDeletionDate >= NOW()",
+				user.ID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
 	}
 

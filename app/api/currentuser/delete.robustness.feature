@@ -55,6 +55,10 @@ Feature: Delete the current user - robustness
     When I send a DELETE request to "/current-user"
     Then the response code should be 403
     And the response error message should contain "You cannot delete yourself right now"
+    And logs should contain:
+      """
+      A user with ID = 11 tried to delete himself, but he is a member of a group with lockUserDeletionDate >= NOW()
+      """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
