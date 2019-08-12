@@ -1,7 +1,6 @@
 package testhelpers
 
 import (
-	"bytes"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
@@ -18,7 +17,6 @@ import (
 	"github.com/DATA-DOG/godog/gherkin"
 	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
-	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
@@ -157,70 +155,4 @@ func (ctx *TestContext) TheApplicationConfigIs(body *gherkin.DocString) error { 
 		return err
 	}
 	return viperConfig.UnmarshalExact(ctx.application.Config)
-}
-
-func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(code string, statusCode int, body *gherkin.DocString) error { // nolint
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedCode, err := ctx.preprocessString(code)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
-	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
-		"grant_type":    {"authorization_code"},
-		"code":          {preprocessedCode},
-		"redirect_uri":  {ctx.application.Config.Auth.CallbackURL},
-	}
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
-		httpmock.WithBody(
-			bytes.NewBufferString(params.Encode()))))
-	return nil
-}
-
-func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(refreshToken string, statusCode int, body *gherkin.DocString) error { // nolint
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
-	params := url.Values{
-		"client_id":     {ctx.application.Config.Auth.ClientID},
-		"client_secret": {ctx.application.Config.Auth.ClientSecret},
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {preprocessedRefreshToken},
-	}
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.application.Config.Auth.LoginModuleURL+"/oauth/token", responder,
-		httpmock.WithBody(
-			bytes.NewBufferString(params.Encode()))))
-	return nil
-}
-
-func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(token string, statusCode int, body *gherkin.DocString) error { // nolint
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedToken, err := ctx.preprocessString(token)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
-		ctx.application.Config.Auth.LoginModuleURL+"/user_api/account", responder,
-		httpmock.WithHeader(&http.Header{"Authorization": {"Bearer " + preprocessedToken}})))
-	return nil
 }

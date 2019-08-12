@@ -3,13 +3,16 @@ package loginmodule
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/France-ioi/AlgoreaBackend/app/logging"
@@ -57,6 +60,52 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 		return nil, errors.New("user's profile is invalid")
 	}
 	return profile, nil
+}
+
+// UnlinkClient discards our client authorization for the login module user
+func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) (err error) {
+	defer recoverPanics(&err)
+
+	request, err := http.NewRequest("POST", client.url+"/platform_api/accounts_manager/unlink_client"+
+		"?client_id="+url.QueryEscape(clientID)+"&user_id="+strconv.FormatInt(userLoginID, 10),
+		nil)
+	mustNotBeError(err)
+	request = request.WithContext(ctx)
+	response, err := http.DefaultClient.Do(request)
+	mustNotBeError(err)
+	body, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	_ = response.Body.Close()
+	mustNotBeError(err)
+	if response.StatusCode != http.StatusOK {
+		logging.Warnf("Can't unlink the user (status code = %d, response = %q)", response.StatusCode, body)
+		return fmt.Errorf("can't unlink the user")
+	}
+
+	decodedBody := make([]byte, base64.StdEncoding.DecodedLen(len(body)))
+	n, err := base64.StdEncoding.Decode(decodedBody, body)
+	decodedBody = decodedBody[0:n]
+	if err != nil {
+		logging.Warnf("Can't decode response from the login module (status code = %d, response = %q): %s", response.StatusCode, body, err)
+		return fmt.Errorf("can't unlink the user")
+	}
+	decryptedBody := decryptAes128Ecb(decodedBody, []byte(clientKey)[:16]) // note that only the first 16 bytes are used
+	var decodedResponse struct {
+		Success bool   `json:"success"`
+		Error   string `json:"error"`
+	}
+	err = json.Unmarshal(decryptedBody, &decodedResponse)
+	if err != nil {
+		logging.Warnf("Can't parse response from the login module (decrypted response = %q, encrypted response = %q): %s",
+			decryptedBody, decodedBody, err)
+		return fmt.Errorf("can't unlink the user")
+	}
+
+	if !decodedResponse.Success {
+		logging.Warnf("Can't unlink the user. The login module returned an error: %s", decodedResponse.Error)
+		return fmt.Errorf("can't unlink the user")
+
+	}
+	return nil
 }
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {

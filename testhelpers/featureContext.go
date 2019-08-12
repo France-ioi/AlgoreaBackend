@@ -54,6 +54,8 @@ func FeatureContext(s *godog.Suite) {
 		ctx.TheLoginModuleTokenEndpointForRefreshTokenReturns)
 	s.Step(`^the login module "account" endpoint for token "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleAccountEndpointForTokenReturns)
+	s.Step(`^the login module "unlink_client" endpoint for user ID "([^"]*)" returns (\d+) with encoded body:$`,
+		ctx.TheLoginModuleUnlinkClientEndpointForUserIDReturns)
 
 	s.AfterScenario(ctx.ScenarioTeardown)
 }
