@@ -37,7 +37,7 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) exportData(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
