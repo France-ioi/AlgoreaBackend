@@ -41,13 +41,11 @@ func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 
 // DeleteWithTraps deletes a given user. It also removes linked rows in the same way as DeleteTemporaryWithTraps.
 func (s *UserStore) DeleteWithTraps(user *User) (err error) {
-	defer recoverPanics(&err)
-	mustNotBeError(s.InTransaction(func(store *DataStore) error {
+	return s.InTransaction(func(store *DataStore) error {
 		deleteOneBatchOfUsers(store.DB, []int64{user.ID}, []*int64{user.SelfGroupID}, []*int64{user.OwnedGroupID})
 		store.GroupGroups().createNewAncestors()
 		return nil
-	}))
-	return nil
+	})
 }
 
 func (s *UserStore) executeBatchesInTransactions(f func(store *DataStore) int) {
