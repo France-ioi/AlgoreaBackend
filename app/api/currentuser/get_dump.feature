@@ -1,7 +1,6 @@
 Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16T22:02:28Z"
-    And the time now is "2019-07-16T22:02:28Z"
     And the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
       | 2  | user   | 11          | 12           | John        | Doe       | 1      |
@@ -26,19 +25,19 @@ Feature: Export the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate               | idUserInviting |
-      | 2  | 1             | 11           | invitationSent     | {{relativeTime("-169h")}} | null           |
-      | 3  | 2             | 11           | invitationAccepted | {{relativeTime("-168h")}} | 1              |
-      | 4  | 3             | 11           | requestSent        | {{relativeTime("-167h")}} | 1              |
-      | 5  | 4             | 11           | requestRefused     | {{relativeTime("-166h")}} | 2              |
-      | 6  | 5             | 11           | invitationAccepted | {{relativeTime("-165h")}} | 2              |
-      | 7  | 6             | 11           | requestAccepted    | {{relativeTime("-164h")}} | 2              |
-      | 8  | 7             | 11           | removed            | {{relativeTime("-163h")}} | 1              |
-      | 9  | 8             | 11           | left               | {{relativeTime("-162h")}} | 1              |
-      | 10 | 9             | 11           | direct             | {{relativeTime("-161h")}} | 2              |
-      | 11 | 1             | 12           | invitationSent     | {{relativeTime("-170h")}} | 2              |
-      | 12 | 12            | 1            | direct             | null                      | null           |
-      | 13 | 12            | 2            | direct             | null                      | null           |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          | idUserInviting |
+      | 2  | 1             | 11           | invitationSent     | 2019-07-09T21:02:28Z | null           |
+      | 3  | 2             | 11           | invitationAccepted | 2019-07-09T22:02:28Z | 1              |
+      | 4  | 3             | 11           | requestSent        | 2019-07-09T23:02:28Z | 1              |
+      | 5  | 4             | 11           | requestRefused     | 2019-07-10T00:02:28Z | 2              |
+      | 6  | 5             | 11           | invitationAccepted | 2019-07-10T01:02:28Z | 2              |
+      | 7  | 6             | 11           | requestAccepted    | 2019-07-10T02:02:28Z | 2              |
+      | 8  | 7             | 11           | removed            | 2019-07-10T03:02:28Z | 1              |
+      | 9  | 8             | 11           | left               | 2019-07-10T04:02:28Z | 1              |
+      | 10 | 9             | 11           | direct             | 2019-07-10T05:02:28Z | 2              |
+      | 11 | 1             | 12           | invitationSent     | 2019-07-09T20:02:28Z | 2              |
+      | 12 | 12            | 1            | direct             | null                 | null           |
+      | 13 | 12            | 2            | direct             | null                 | null           |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 1            | true    |
