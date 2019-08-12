@@ -13,11 +13,31 @@ import (
 // swagger:operation DELETE /current-user users currentUserDeletion
 // ---
 // summary: Delete the current user
-// description: Deletes all information stored in the platform related to the current user
-//              and calls the “UnlinkClient” service of the login module
+// description: >
+//                Deletes all information stored in the platform related to the current user
+//                and calls the “UnlinkClient” service of the login module.
 //
-//              * The deletion is rejected if the user is a member of at least one group with
-//              `now() < lockUserDeletionDate`
+//                The data to be deleted:
+//
+//                1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
+//                    `filters`, `history_filters`, `sessions`, `refresh_tokens`]
+//                   having `idUser` = `users.ID`;
+//                2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
+//                    `groups_login_prefixes`, `history_groups_login_prefixes`]
+//                   having `idGroup` = `users.idGroupSelf` or `idGroup` = `users.idGroupOwned`;
+//                3. `groups_items_propagate` having the same `ID`s as the rows removed from `groups_items`;
+//
+//                4. [`groups_groups`, `history_groups_groups`] having `idGroupParent` or `idGroupChild` equal
+//                   to one of `users.idGroupSelf`/`users.idGroupOwned`;
+//                5. [`groups_ancestors`, `history_groups_ancestors`] having `idGroupAncestor` or `idGroupChild` equal
+//                   to one of `users.idGroupSelf`/`users.idGroupOwned`;
+//                6. [`groups_propagate`, `groups`, `history_groups`] having `ID` equal to one of
+//                   `users.idGroupSelf`/`users.idGroupOwned`;
+//                7. `users`, `history_users` having `ID` = `users.ID`.
+//
+//
+//                The deletion is rejected if the user is a member of at least one group with
+//                `now() < lockUserDeletionDate`.
 // responses:
 //   "200":
 //     "$ref": "#/responses/deletedResponse"
