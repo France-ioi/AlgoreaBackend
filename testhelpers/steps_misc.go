@@ -50,6 +50,7 @@ func (ctx *TestContext) IAmUserWithID(id int64) error { // nolint
 	return database.NewDataStore(db).Sessions().InsertMap(map[string]interface{}{
 		"sAccessToken":    testAccessToken,
 		"idUser":          ctx.userID,
+		"sIssuedAtDate":   database.Now(),
 		"sExpirationDate": gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
 	})
 }
