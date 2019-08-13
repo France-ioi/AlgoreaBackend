@@ -36,6 +36,19 @@ import (
 // - name: attempt_id
 //   in: query
 //   type: integer
+// - name: sort
+//   in: query
+//   default: [-submission_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [submission_date,-submission_date,id,-id]
+// - name: limit
+//   description: Display the first N answers
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
 // responses:
 //   "200":
 //     description: OK. Success response with an array of answers
@@ -57,8 +70,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	dataQuery := srv.Store.UserAnswers().WithUsers().
 		Select(`users_answers.ID, users_answers.sName, users_answers.sType, users_answers.sLangProg,
             users_answers.sSubmissionDate, users_answers.iScore, users_answers.bValidated,
-            users.sLogin, users.sFirstName, users.sLastName`).
-		Order("sSubmissionDate DESC")
+            users.sLogin, users.sFirstName, users.sLastName`)
 
 	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
@@ -82,6 +94,15 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 		dataQuery = dataQuery.Where("idItem = ? AND idUser = ?", itemID, userID)
 	}
+
+	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
+		"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
+		"id":              {ColumnName: "users_answers.ID", FieldType: "int64"},
+	}, "-submission_date,id")
+	if apiError != service.NoError {
+		return apiError
+	}
+	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
 
 	var result []rawAnswersData
 	if err := dataQuery.Scan(&result).Error(); err != nil {
