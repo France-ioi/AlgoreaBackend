@@ -16,7 +16,7 @@ import (
 // description: >
 //                Return one group matching the name and satisfying:
 //
-//                  * the authenticated user has access to the contest (grayed, partial or full);
+//                  * the group has access to the contest (grayed, partial or full);
 //                  * the authenticated user is an owner of the group;
 //                  * the `groups.sName` (matching `sLogin` if a "UserSelf" group) is matching exactly the input `name` parameter.
 //
@@ -68,15 +68,14 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	hasAccessToItem, err := srv.Store.Items().VisibleByID(user, itemID).HasRows()
-	service.MustNotBeError(err)
-	if !hasAccessToItem {
-		return service.InsufficientAccessRightsError
-	}
-
 	var groupID int64
-	if err = srv.Store.Groups().OwnedBy(user).Where("BINARY sName = ?", groupName).
-		Order("groups.ID").PluckFirst("groups.ID", &groupID).Error(); gorm.IsRecordNotFoundError(err) {
+	if err = srv.Store.Groups().OwnedBy(user).Where("BINARY groups.sName = ?", groupName).
+		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.idGroupChild = groups.ID").
+		Joins("JOIN groups_items ON groups_items.idGroup = found_group_ancestors.idGroupAncestor AND groups_items.idItem = ?", itemID).
+		Group("groups_items.idGroup").
+		Having("MIN(sCachedFullAccessDate) <= NOW() OR MIN(sCachedPartialAccessDate) <= NOW() OR MIN(sCachedGrayedAccessDate) <= NOW()").
+		Order("groups_items.idGroup").
+		PluckFirst("groups.ID", &groupID).Error(); gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

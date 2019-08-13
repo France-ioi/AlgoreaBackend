@@ -22,9 +22,9 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 70 |
     And the database has the following table 'groups_items':
       | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate |
-      | 21      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  |
-      | 21      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  |
-      | 21      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  |
+      | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  |
+      | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  |
+      | 13      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  |
 
   Scenario: Wrong item_id
     Given I am the user with ID "1"
