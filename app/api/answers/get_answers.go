@@ -43,6 +43,18 @@ import (
 //   items:
 //     type: string
 //     enum: [submission_date,-submission_date,id,-id]
+// - name: from.submission_date
+//   description: Start the page from the answer next to the answer with `sSubmissionDate` = `from.submission_date`
+//                and `users_answers.ID` = `from.id`
+//                (`from.id` is required when `from.submission_date` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the answer next to the answer with `sSubmissionDate`=`from.submission_date`
+//                and `users_answers.ID`=`from.id`
+//                (`from.submission_date` is required when from.id is present)
+//   in: query
+//   type: integer
 // - name: limit
 //   description: Display the first N answers
 //   in: query
@@ -140,6 +152,7 @@ type answersResponseAnswerUser struct {
 
 // swagger:model
 type answersResponseAnswer struct {
+	// `users_answers.ID`
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable
