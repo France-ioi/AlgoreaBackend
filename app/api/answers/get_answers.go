@@ -105,9 +105,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
 
 	var result []rawAnswersData
-	if err := dataQuery.Scan(&result).Error(); err != nil {
-		return service.ErrUnexpected(err)
-	}
+	service.MustNotBeError(dataQuery.Scan(&result).Error())
 
 	responseData := srv.convertDBDataToResponse(result)
 
