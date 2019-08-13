@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// Service is the mount point for services related to `items`
+// Service is the mount point for services related to `currentuser`
 type Service struct {
 	service.Base
 }
