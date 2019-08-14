@@ -64,3 +64,14 @@ Feature: Get group by name (contestGetGroupByName)
       "group_id": "13"
     }
     """
+
+  Scenario: Should ignore case
+    Given I am the user with ID "1"
+    When I send a GET request to "/contests/50/group-by-name?name=group%20b"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "group_id": "13"
+    }
+    """

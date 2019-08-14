@@ -18,7 +18,7 @@ import (
 //
 //                  * the group has access to the contest (grayed, partial or full);
 //                  * the authenticated user is an owner of the group;
-//                  * the `groups.sName` (matching `sLogin` if a "UserSelf" group) is matching exactly the input `name` parameter.
+//                  * the `groups.sName` (matching `sLogin` if a "UserSelf" group) is matching the input `name` parameter (case-insensitive)
 //
 //                If there are several groups or users matching, return the first one (by `ID`).
 //
@@ -69,7 +69,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	var groupID int64
-	if err = srv.Store.Groups().OwnedBy(user).Where("BINARY groups.sName = ?", groupName).
+	if err = srv.Store.Groups().OwnedBy(user).Where("groups.sName LIKE ?", groupName).
 		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.idGroupChild = groups.ID").
 		Joins("JOIN groups_items ON groups_items.idGroup = found_group_ancestors.idGroupAncestor AND groups_items.idItem = ?", itemID).
 		Group("groups_items.idGroup").
