@@ -26,6 +26,9 @@ import (
 //     * `users_items`: all attributes except `iVersion`;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes except `iVersion`;
 //     * `groups_groups`: where the user’s `idGroupSelf` is the `idGroupChild`, all attributes except `iVersion` + `groups.sName`.
+//
+//   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
+//   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
 // produces:
 //   - application/json
 // responses:
