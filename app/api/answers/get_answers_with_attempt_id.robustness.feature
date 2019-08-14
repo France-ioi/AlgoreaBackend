@@ -10,8 +10,8 @@ Background:
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
     | 13 | Group B    |         | -2     | Class     | 0        |
   And the database has the following table 'groups_groups':
-    | ID | idGroupParent | idGroupChild | iVersion |
-    | 61 | 13            | 11           | 0        |
+    | ID | idGroupParent | idGroupChild | sType              |
+    | 61 | 13            | 11           | invitationAccepted |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
     | 71 | 11              | 11           | 1       | 0        |
@@ -32,6 +32,7 @@ Background:
     | ID  | idGroup | idItem |
     | 100 | 13      | 190    |
     | 110 | 13      | 210    |
+    | 120 | 13      | 200    |
 
   Scenario: Should fail when the user has only grayed access to the item
     Given I am the user with ID "1"
@@ -63,3 +64,8 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Should fail when 'sort' is wrong
+    Given I am the user with ID "1"
+    When I send a GET request to "/answers?attempt_id=120&sort=name"
+    Then the response code should be 400
+    And the response error message should contain "Unallowed field in sorting parameters: "name""
