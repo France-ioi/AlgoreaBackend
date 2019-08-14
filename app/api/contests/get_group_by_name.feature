@@ -26,7 +26,9 @@ Feature: Get group by name (contestGetGroupByName)
       | 70 |
     And the database has the following table 'groups_items':
       | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate |
+      | 11      | 50     | null                     | null                    | null                  |
       | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  |
+      | 11      | 60     | null                     | null                    | null                  |
       | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  |
       | 11      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  |
 
