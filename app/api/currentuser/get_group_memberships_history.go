@@ -10,7 +10,7 @@ import (
 
 // swagger:operation GET /current-user/group-memberships-history groups users groupsMembershipHistory
 // ---
-// summary: Display a history of invitations/requests for the current user
+// summary: Get a history of invitations/requests for the current user
 // description:
 //   Returns the records from `groups_groups` having `sStatusDate` >= `users.sNotificationReadDate`
 //   and any user-related type (`sType` != "direct") with the corresponding `groups` for the current user.
@@ -35,7 +35,7 @@ import (
 //   in: query
 //   type: integer
 // - name: limit
-//   description: Display the first N invitations/requests
+//   description: Return the first N invitations/requests
 //   in: query
 //   type: integer
 //   maximum: 1000
