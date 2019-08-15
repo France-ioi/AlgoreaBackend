@@ -29,16 +29,16 @@ Feature: Get group by name (contestGetGroupByName)
       | 10 | 00:00:02  |
       | 70 | 00:00:03  |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime     |
-      | 10      | 50     | null                     | null                    | null                  | null                       | 0000-00-00T01:00:00 |
-      | 11      | 50     | null                     | null                    | null                  | null                       | 0000-00-00T00:01:00 |
-      | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       | 0000-00-00T00:00:01 |
-      | 11      | 60     | null                     | null                    | null                  | null                       | null                |
-      | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  | null                       | 0000-00-00T00:00:30 |
-      | 11      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  | null                       | null                |
-      | 21      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       | 0000-00-00T00:01:00 |
-      | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 0000-00-00T00:01:00 |
-      | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 0000-00-00T00:01:00 |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
+      | 10      | 50     | null                     | null                    | null                  | null                       | 01:00:00        |
+      | 11      | 50     | null                     | null                    | null                  | null                       | 00:01:00        |
+      | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       | 00:00:01        |
+      | 11      | 60     | null                     | null                    | null                  | null                       | null            |
+      | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  | null                       | 00:00:30        |
+      | 11      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  | null                       | null            |
+      | 21      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       | 00:01:00        |
+      | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
+      | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
 
   Scenario: Partial access for group, solutions access for user, additional time from parent groups
     Given I am the user with ID "1"
