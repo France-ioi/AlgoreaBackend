@@ -4,8 +4,10 @@ groups_groups: [{idGroupParent: 26, idGroupChild: 17}]
 groups_ancestors:
   - {idGroupAncestor: 17, idGroupChild: 17}
   - {idGroupAncestor: 26, idGroupChild: 17}
+  - {idGroupAncestor: 26, idGroupChild: 26}
 groups_items:
-  - {idGroup: 26, idItem: 114, sPartialAccessDate: 2019-03-22T08:44:55Z, sCachedPartialAccessDate: 2019-03-22T08:44:55Z}
+  - {idGroup: 26, idItem: 114, sPartialAccessDate: 2019-03-22T08:44:55Z, sCachedPartialAccessDate: 2019-03-22T08:44:55Z,
+     sAdditionalTime: 0000-00-00 01:00:00}
   - {idGroup: 26, idItem: 115, sPartialAccessDate: 2019-03-22T08:44:55Z, sCachedPartialAccessDate: 2019-03-22T08:44:55Z}
-users_items: [{idUser: 7, idItem: 114, sAdditionalTime: 0000-00-00 01:00:00}]
+users_items: [{idUser: 7, idItem: 114}]
 

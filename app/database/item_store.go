@@ -305,6 +305,7 @@ func (contest *activeContestInfo) IsOver() bool {
 func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Get info for the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
+	// Note: both users_items & groups_items rows should exist to make this function return the info
 	var results []struct {
 		Now                     time.Time `gorm:"column:now"`
 		DurationInSeconds       int32     `gorm:"column:duration"`
@@ -319,11 +320,16 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			TIME_TO_SEC(items.sDuration) AS duration,
 			items.ID AS idItem,
 			items.sTeamMode,
-			IF(users_items.sAdditionalTime IS NULL, 0, TIME_TO_SEC(users_items.sAdditionalTime)) AS additionalTime,
+			IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS additionalTime,
 			users_items.sContestStartDate AS sContestStartDate`).
+		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
+		Joins(`
+			JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup AND
+				groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
 		Joins(`
 			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
 				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.ID).
+		Group("items.ID").
 		Order("users_items.sContestStartDate DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
