@@ -18,6 +18,29 @@ type userCreateTmpResponse struct {
 	} `json:"data"`
 }
 
+// swagger:model groupsMembershipHistoryResponseRow
+type groupsMembershipHistoryResponseRow struct {
+	// `groups_groups.ID`
+	// required: true
+	ID int64 `json:"id"`
+	// `groups_groups.sStatusDate`
+	// required: true
+	StatusDate time.Time `json:"status_date"`
+	// `groups_groups.sType`
+	// required: true
+	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,requestRefused,removed,left
+	Type string `json:"type"`
+
+	// required: true
+	Group struct {
+		// required: true
+		Name string `json:"name"`
+		// required: true
+		// enum: Class,Team,Club,Friends,Other
+		Type string `json:"type"`
+	} `json:"group"`
+}
+
 // swagger:model invitationsViewResponseRow
 type invitationsViewResponseRow struct {
 	// `groups_groups.ID`
