@@ -8,6 +8,51 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /current-user/group-memberships groups users membershipsView
+// ---
+// summary: List groups that the current user has joined
+// description:
+//   Returns the list of groups memberships of the current user
+//   (`groups_groups.sType` is “requestAccepted”, “invitationAccepted” or “direct”).
+// parameters:
+// - name: sort
+//   in: query
+//   default: [-status_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [status_date,-status_date,id,-id]
+// - name: from.status_date
+//   description: Start the page from the membership next to one with `sStatusDate` = `from.status_date`
+//                and `groups_groups.ID` = `from.id`
+//                (`from.id` is required when `from.status_date` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the membership next to one with `sStatusDate`=`from.status_date`
+//                and `groups_groups.ID`=`from.id`
+//                (`from.status_date` is required when from.id is present)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display the first N memberships
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. Success response with an array of groups memberships
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/membershipsViewResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 

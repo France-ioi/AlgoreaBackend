@@ -8,6 +8,55 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /current-user/group-invitations groups users invitationsView
+// ---
+// summary: List current invitations and requests to groups
+// description:
+//   Returns the list of invitations that the current user received and requests sent by him
+//   (`groups_groups.sType` is “invitationSent” or “requestSent” or “requestRefused”)
+//   with `groups_groups.sStatusDate` within `within_weeks` back from now (if `within_weeks` is present).
+// parameters:
+// - name: within_weeks
+//   in: query
+//   type: integer
+// - name: sort
+//   in: query
+//   default: [-status_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [status_date,-status_date,id,-id]
+// - name: from.status_date
+//   description: Start the page from the request/invitation next to one with `sStatusDate` = `from.status_date`
+//                and `groups_groups.ID` = `from.id`
+//                (`from.id` is required when `from.status_date` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the request/invitation next to one with `sStatusDate`=`from.status_date`
+//                and `groups_groups.ID`=`from.id`
+//                (`from.status_date` is required when from.id is present)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display the first N requests/invitations
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. Success response with an array of invitations/requests
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/invitationsViewResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
