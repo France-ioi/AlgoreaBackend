@@ -36,6 +36,31 @@ import (
 // - name: attempt_id
 //   in: query
 //   type: integer
+// - name: sort
+//   in: query
+//   default: [-submission_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [submission_date,-submission_date,id,-id]
+// - name: from.submission_date
+//   description: Start the page from the answer next to the answer with `sSubmissionDate` = `from.submission_date`
+//                and `users_answers.ID` = `from.id`
+//                (`from.id` is required when `from.submission_date` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the answer next to the answer with `sSubmissionDate`=`from.submission_date`
+//                and `users_answers.ID`=`from.id`
+//                (`from.submission_date` is required when from.id is present)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display the first N answers
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
 // responses:
 //   "200":
 //     description: OK. Success response with an array of answers
@@ -57,8 +82,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	dataQuery := srv.Store.UserAnswers().WithUsers().
 		Select(`users_answers.ID, users_answers.sName, users_answers.sType, users_answers.sLangProg,
             users_answers.sSubmissionDate, users_answers.iScore, users_answers.bValidated,
-            users.sLogin, users.sFirstName, users.sLastName`).
-		Order("sSubmissionDate DESC")
+            users.sLogin, users.sFirstName, users.sLastName`)
 
 	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
@@ -83,10 +107,17 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 		dataQuery = dataQuery.Where("idItem = ? AND idUser = ?", itemID, userID)
 	}
 
-	var result []rawAnswersData
-	if err := dataQuery.Scan(&result).Error(); err != nil {
-		return service.ErrUnexpected(err)
+	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
+		"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
+		"id":              {ColumnName: "users_answers.ID", FieldType: "int64"},
+	}, "-submission_date,id")
+	if apiError != service.NoError {
+		return apiError
 	}
+	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
+
+	var result []rawAnswersData
+	service.MustNotBeError(dataQuery.Scan(&result).Error())
 
 	responseData := srv.convertDBDataToResponse(result)
 
@@ -121,6 +152,7 @@ type answersResponseAnswerUser struct {
 
 // swagger:model
 type answersResponseAnswer struct {
+	// `users_answers.ID`
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable
