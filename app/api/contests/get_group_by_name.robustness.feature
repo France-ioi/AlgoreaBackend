@@ -53,7 +53,7 @@ Feature: Get group by name (contestGetGroupByName) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is not a time contest
+  Scenario: The item is not a timed contest
     Given I am the user with ID "1"
     When I send a GET request to "/contests/60/group-by-name?name=Group%20B"
     Then the response code should be 403
