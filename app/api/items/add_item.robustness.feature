@@ -693,7 +693,7 @@ Feature: Add item - robustness
       """
       {
         "type": "Chapter",
-        "duration": "100:34:56",
+        "duration": "839:34:56",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
