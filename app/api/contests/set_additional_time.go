@@ -16,9 +16,9 @@ import (
 // summary: Set additional time in the contest for the group
 // description: >
 //                For the input group and item, sets the `groups_items.sAdditionalTime` to the `time` value.
-//                If there is no `groups_items` for the given `group_id`, `item_id` and the `time` != 0, creates it
+//                If there is no `groups_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
 //                (with default values in other columns).
-//                If no `groups_items` and `time` == 0, succeed without doing any change.
+//                If no `groups_items` and `seconds` == 0, succeed without doing any change.
 //
 //
 //                Restrictions:
@@ -37,7 +37,7 @@ import (
 //   in: query
 //   type: integer
 //   required: true
-// - name: time
+// - name: seconds
 //   description: additional time in seconds (can be negative)
 //   in: query
 //   type: integer
@@ -66,14 +66,14 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	seconds, err := service.ResolveURLQueryGetInt64Field(r, "time")
+	seconds, err := service.ResolveURLQueryGetInt64Field(r, "seconds")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	const maxSeconds = 838*3600 + 59*60 + 59 // 838:59:59 is the maximum possible TIME value in MySQL
 	if seconds < -maxSeconds || maxSeconds < seconds {
-		return service.ErrInvalidRequest(fmt.Errorf("'time' should be between %d and %d", -maxSeconds, maxSeconds))
+		return service.ErrInvalidRequest(fmt.Errorf("'seconds' should be between %d and %d", -maxSeconds, maxSeconds))
 	}
 
 	groupIsOwnedByUser, err := srv.Store.GroupAncestors().OwnedByUser(user).

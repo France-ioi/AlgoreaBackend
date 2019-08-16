@@ -42,7 +42,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Updates an existing row
     Given I am the user with ID "1"
-    When I send a PUT request to "/contests/50/additional-time?group_id=13&time=3020399"
+    When I send a PUT request to "/contests/50/additional-time?group_id=13&seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with ID "3"
@@ -52,7 +52,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Creates a new row
     Given I am the user with ID "1"
-    When I send a PUT request to "/contests/70/additional-time?group_id=13&time=-3020399"
+    When I send a PUT request to "/contests/70/additional-time?group_id=13&seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with ID "5577006791947779410"
@@ -60,9 +60,9 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | ID                  | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
       | 5577006791947779410 | 13      | 70     | null                     | null                    | null                  | null                       | -838:59:59      |
 
-  Scenario: Doesn't create a new row when time=0
+  Scenario: Doesn't create a new row when seconds=0
     Given I am the user with ID "1"
-    When I send a PUT request to "/contests/70/additional-time?group_id=13&time=0"
+    When I send a PUT request to "/contests/70/additional-time?group_id=13&seconds=0"
     Then the response code should be 200
     And the response should be "updated"
     And the table "groups_items" should stay unchanged
