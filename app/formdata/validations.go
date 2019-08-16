@@ -26,7 +26,7 @@ func validateDuration(fl validator.FieldLevel) bool {
 	if err != nil {
 		return false
 	}
-	return hours >= 0 && hours <= 99 && minutes >= 0 && minutes <= 59 && seconds >= 0 && seconds <= 59
+	return hours >= 0 && hours <= 838 && minutes >= 0 && minutes <= 59 && seconds >= 0 && seconds <= 59
 }
 
 var dmyDateRegexp = regexp.MustCompile(`^[0-3][0-9]-[0-1][0-9]-[\d]{4}$`)

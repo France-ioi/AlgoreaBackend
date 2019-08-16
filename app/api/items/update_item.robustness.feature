@@ -474,7 +474,7 @@ Feature: Update item - robustness
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "duration": "100:34:56"
+        "duration": "839:34:56"
       }
       """
     Then the response code should be 400
