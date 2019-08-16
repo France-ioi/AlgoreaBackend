@@ -99,7 +99,7 @@ Feature: Export the current user's data
     			"iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
     			"idGroup": "11", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
     			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAdditionalTime": null, "sAllLangProg": null, "sAncestorsComputationState": "done",
+    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
     			"sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
     			"sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
     			"sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
@@ -109,7 +109,7 @@ Feature: Export the current user's data
     			"iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
     			"idGroup": "2", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
     			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAdditionalTime": null, "sAllLangProg": null, "sAncestorsComputationState": "done",
+    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
     			"sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
     			"sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
     			"sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
@@ -183,7 +183,7 @@ Feature: Export the current user's data
     			"iAutonomy": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
     			"idAttemptActive": null, "idItem": "0", "idUser": "2", "nbChildrenValidated": 0,
     			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAdditionalTime": null, "sAllLangProg": null, "sAncestorsComputationState": "todo",
+    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "todo",
     			"sAnswer": null, "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null,
     			"sHintsRequested": null, "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null,
     			"sScoreDiffComment": "", "sStartDate": null, "sState": null, "sThreadStartDate": null, "sValidationDate": null
