@@ -311,6 +311,14 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	*dest = *new([]map[string]interface{})
 
+	return conn.ScanAndHandleMaps(func(rowMap map[string]interface{}) error {
+		*dest = append(*dest, rowMap)
+		return nil
+	})
+}
+
+// ScanAndHandleMaps scans values into maps and calls the given handler for each row
+func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *DB {
 	if conn.db.Error != nil {
 		return conn
 	}
@@ -330,8 +338,12 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	}
 
 	for rows.Next() {
-		conn.readRowIntoMap(cols, rows, dest)
+		mapValue := conn.readRowIntoMap(cols, rows)
 		if conn.db.Error != nil {
+			return conn
+		}
+		err = handler(mapValue)
+		if conn.db.AddError(err) != nil {
 			return conn
 		}
 	}
@@ -339,7 +351,7 @@ func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
 	return conn
 }
 
-func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows, dest *[]map[string]interface{}) {
+func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interface{} {
 	columns := make([]interface{}, len(cols))
 	columnPointers := make([]interface{}, len(cols))
 	for i := range columns {
@@ -347,7 +359,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows, dest *[]map[string
 	}
 
 	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil {
-		return
+		return nil
 	}
 
 	rowMap := make(map[string]interface{})
@@ -357,7 +369,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows, dest *[]map[string
 		}
 		rowMap[columnName] = columns[i]
 	}
-	*dest = append(*dest, rowMap)
+	return rowMap
 }
 
 // Count gets how many records for a model
