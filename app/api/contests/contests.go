@@ -20,6 +20,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 
+	router.Put("/contests/{item_id}/additional-time", service.AppHandler(srv.setAdditionalTime).ServeHTTP)
 	router.Get("/contests/{item_id}/group-by-name", service.AppHandler(srv.getGroupByName).ServeHTTP)
 }
 
