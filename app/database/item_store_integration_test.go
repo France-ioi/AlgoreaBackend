@@ -192,20 +192,34 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		users:
-			- {ID: 1, sLogin: 1}
-			- {ID: 2, sLogin: 2}
-			- {ID: 3, sLogin: 3}
-			- {ID: 4, sLogin: 4}
-			- {ID: 5, sLogin: 5}
-			- {ID: 6, sLogin: 6}
+			- {ID: 1, sLogin: 1, idGroupSelf: 101}
+			- {ID: 2, sLogin: 2, idGroupSelf: 102}
+			- {ID: 3, sLogin: 3, idGroupSelf: 103}
+			- {ID: 4, sLogin: 4, idGroupSelf: 104}
+			- {ID: 5, sLogin: 5, idGroupSelf: 105}
+			- {ID: 6, sLogin: 6, idGroupSelf: 106}
 		items: [{ID: 12}, {ID: 13}, {ID: 14, sDuration: 10:00:00}, {ID: 15, sTeamMode: "None"}]
+		groups_ancestors:
+			- {idGroupAncestor: 101, idGroupChild: 101}
+			- {idGroupAncestor: 102, idGroupChild: 102}
+			- {idGroupAncestor: 103, idGroupChild: 103}
+			- {idGroupAncestor: 104, idGroupChild: 104}
+			- {idGroupAncestor: 105, idGroupChild: 105}
+			- {idGroupAncestor: 106, idGroupChild: 106}
 		users_items:
 			- {idUser: 2, idItem: 12} # not started
 			- {idUser: 3, idItem: 13, sContestStartDate: 2019-03-22T08:44:55Z, sFinishDate: 2019-03-23T08:44:55Z} #finished
-			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z, sAdditionalTime: 0000-00-00 00:01:00} # ok
+			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z} # ok
 			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22T08:44:55Z} # ok with team mode
-			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z, sAdditionalTime: 0000-00-00 00:01:00} # multiple
-			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22T08:43:55Z, sAdditionalTime: 0000-00-00 00:01:00} # multiple`)
+			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z} # multiple
+			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22T08:43:55Z} # multiple
+		groups_items:
+			- {idGroup: 102, idItem: 12}
+			- {idGroup: 103, idItem: 13}
+			- {idGroup: 104, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00}
+			- {idGroup: 105, idItem: 15}
+			- {idGroup: 106, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00}
+			- {idGroup: 106, idItem: 15, sAdditionalTime: 0000-00-00 00:01:00}`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
