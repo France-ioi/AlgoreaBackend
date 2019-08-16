@@ -80,115 +80,115 @@ Feature: Export the current user's data
     And the response body should be, in JSON:
     """
     {
-    	"current_user": {
-    		"ID": "2", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0,
-    		"bNoRanking": 0, "bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0,
-    		"creatorID": null, "iGrade": 1, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0,
-    		"idGroupAccess": null, "idGroupOwned": "12", "idGroupSelf": "11", "idUserGodfather": null, "loginID": null,
-    		"loginModulePrefix": null, "nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null,
-    		"sCellPhoneNumber": null, "sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null,
-    		"sFirstName": "John", "sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python",
-    		"sLastActivityDate": null, "sLastIP": null, "sLastLoginDate": null, "sLastName": "Doe", "sLogin": "user",
-    		"sNotificationReadDate": null, "sNotify": "Answers", "sOpenIdIdentity": null, "sPasswordMd5": null,
-    		"sRecover": null, "sRegistrationDate": null, "sSalt": null, "sSex": null, "sStudentId": null, "sTimeZone": null,
-    		"sWebSite": null, "sZipcode": null, "tempUser": 0
-    	},
-    	"groups_attempts": [
-    		{
-    			"ID": "111", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
-    			"iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-    			"idGroup": "11", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
-    			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
-    			"sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
-    			"sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
-    			"sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
-    		},
-    		{
-    			"ID": "112", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
-    			"iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-    			"idGroup": "2", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
-    			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
-    			"sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
-    			"sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
-    			"sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
-    		}
-    	],
-    	"groups_groups": [
-    		{
-    		  "ID": "2", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "1", "idUserInviting": null,
-    			"sName": "Our Class", "sRole": "member", "sStatusDate": "2019-07-09T21:02:28Z", "sType": "invitationSent"
-    		},
-    		{
-    			"ID": "3", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "2", "idUserInviting": "1",
-    			"sName": "Our Team", "sRole": "member", "sStatusDate": "2019-07-09T22:02:28Z", "sType": "invitationAccepted"
-    		},
-    		{
-    			"ID": "4", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "3", "idUserInviting": "1",
-    			"sName": "Our Club", "sRole": "member", "sStatusDate": "2019-07-09T23:02:28Z", "sType": "requestSent"
-    		},
-    		{
-    			"ID": "5", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "4", "idUserInviting": "2",
-    			"sName": "Our Friends", "sRole": "member", "sStatusDate": "2019-07-10T00:02:28Z", "sType": "requestRefused"
-    		},
-    		{
-    			"ID": "6", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "5", "idUserInviting": "2",
-    			"sName": "Other people", "sRole": "member", "sStatusDate": "2019-07-10T01:02:28Z", "sType": "invitationAccepted"
-    		},
-    		{
-    			"ID": "7", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "6", "idUserInviting": "2",
-    			"sName": "Another Class", "sRole": "member", "sStatusDate": "2019-07-10T02:02:28Z", "sType": "requestAccepted"
-    		},
-    		{
-    			"ID": "8", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "7", "idUserInviting": "1",
-    			"sName": "Another Team", "sRole": "member", "sStatusDate": "2019-07-10T03:02:28Z", "sType": "removed"
-    		},
-    		{
-    			"ID": "9", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "8", "idUserInviting": "1",
-    			"sName": "Another Club", "sRole": "member", "sStatusDate": "2019-07-10T04:02:28Z", "sType": "left"
-    		},
-    		{
-    			"ID": "10", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "9", "idUserInviting": "2",
-    			"sName": "Some other friends", "sRole": "member", "sStatusDate": "2019-07-10T05:02:28Z", "sType": "direct"
-    		}
-    	],
-    	"joined_groups": [
-    		{"ID": "2", "sName": "Our Team"},
-    		{"ID": "5", "sName": "Other people"},
-    		{"ID": "6", "sName": "Another Class"},
-    		{"ID": "9", "sName": "Some other friends"}
-    	],
-    	"owned_groups": [
-    		{"ID": "1", "sName": "Our Class"},
-    		{"ID": "2", "sName": "Our Team"}
-    	],
-    	"refresh_token": {"idUser": "2", "sRefreshToken": "***"},
-    	"sessions": [
-    		{
-    			"idUser": "2", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
-    			"sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
-    		}
-    	],
-    	"users_answers": [
-    		{
-    			"ID": "1", "bValidated": null, "iScore": null, "iVersion": 0, "idAttempt": null, "idItem": "0",
-    			"idUser": "2", "idUserGrader": null, "sAnswer": null, "sGradingDate": null, "sLangProg": null,
-    			"sName": null, "sState": null, "sSubmissionDate": "0001-01-01T00:00:00Z", "sType": "Submission"
-    		}
-    	],
-    	"users_items": [
-    		{
-    			"ID": "11", "bFinished": 0, "bKeyObtained": 0, "bPlatformDataRemoved": 0, "bRanked": 0, "bValidated": 0,
-    			"iAutonomy": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-    			"idAttemptActive": null, "idItem": "0", "idUser": "2", "nbChildrenValidated": 0,
-    			"nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
-    			"nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "todo",
-    			"sAnswer": null, "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null,
-    			"sHintsRequested": null, "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null,
-    			"sScoreDiffComment": "", "sStartDate": null, "sState": null, "sThreadStartDate": null, "sValidationDate": null
-    		}
-    	]
+      "current_user": {
+        "ID": "2", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0,
+        "bNoRanking": 0, "bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0,
+        "creatorID": null, "iGrade": 1, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0,
+        "idGroupAccess": null, "idGroupOwned": "12", "idGroupSelf": "11", "idUserGodfather": null, "loginID": null,
+        "loginModulePrefix": null, "nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null,
+        "sCellPhoneNumber": null, "sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null,
+        "sFirstName": "John", "sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python",
+        "sLastActivityDate": null, "sLastIP": null, "sLastLoginDate": null, "sLastName": "Doe", "sLogin": "user",
+        "sNotificationReadDate": null, "sNotify": "Answers", "sOpenIdIdentity": null, "sPasswordMd5": null,
+        "sRecover": null, "sRegistrationDate": null, "sSalt": null, "sSex": null, "sStudentId": null, "sTimeZone": null,
+        "sWebSite": null, "sZipcode": null, "tempUser": 0
+      },
+      "groups_attempts": [
+        {
+          "ID": "111", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
+          "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idGroup": "11", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
+          "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
+          "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
+          "sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
+        },
+        {
+          "ID": "112", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
+          "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idGroup": "2", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
+          "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
+          "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
+          "sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
+        }
+      ],
+      "groups_groups": [
+        {
+          "ID": "2", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "1", "idUserInviting": null,
+          "sName": "Our Class", "sRole": "member", "sStatusDate": "2019-07-09T21:02:28Z", "sType": "invitationSent"
+        },
+        {
+          "ID": "3", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "2", "idUserInviting": "1",
+          "sName": "Our Team", "sRole": "member", "sStatusDate": "2019-07-09T22:02:28Z", "sType": "invitationAccepted"
+        },
+        {
+          "ID": "4", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "3", "idUserInviting": "1",
+          "sName": "Our Club", "sRole": "member", "sStatusDate": "2019-07-09T23:02:28Z", "sType": "requestSent"
+        },
+        {
+          "ID": "5", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "4", "idUserInviting": "2",
+          "sName": "Our Friends", "sRole": "member", "sStatusDate": "2019-07-10T00:02:28Z", "sType": "requestRefused"
+        },
+        {
+          "ID": "6", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "5", "idUserInviting": "2",
+          "sName": "Other people", "sRole": "member", "sStatusDate": "2019-07-10T01:02:28Z", "sType": "invitationAccepted"
+        },
+        {
+          "ID": "7", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "6", "idUserInviting": "2",
+          "sName": "Another Class", "sRole": "member", "sStatusDate": "2019-07-10T02:02:28Z", "sType": "requestAccepted"
+        },
+        {
+          "ID": "8", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "7", "idUserInviting": "1",
+          "sName": "Another Team", "sRole": "member", "sStatusDate": "2019-07-10T03:02:28Z", "sType": "removed"
+        },
+        {
+          "ID": "9", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "8", "idUserInviting": "1",
+          "sName": "Another Club", "sRole": "member", "sStatusDate": "2019-07-10T04:02:28Z", "sType": "left"
+        },
+        {
+          "ID": "10", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "9", "idUserInviting": "2",
+          "sName": "Some other friends", "sRole": "member", "sStatusDate": "2019-07-10T05:02:28Z", "sType": "direct"
+        }
+      ],
+      "joined_groups": [
+        {"ID": "2", "sName": "Our Team"},
+        {"ID": "5", "sName": "Other people"},
+        {"ID": "6", "sName": "Another Class"},
+        {"ID": "9", "sName": "Some other friends"}
+      ],
+      "owned_groups": [
+        {"ID": "1", "sName": "Our Class"},
+        {"ID": "2", "sName": "Our Team"}
+      ],
+      "refresh_token": {"idUser": "2", "sRefreshToken": "***"},
+      "sessions": [
+        {
+          "idUser": "2", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
+          "sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
+        }
+      ],
+      "users_answers": [
+        {
+          "ID": "1", "bValidated": null, "iScore": null, "iVersion": 0, "idAttempt": null, "idItem": "0",
+          "idUser": "2", "idUserGrader": null, "sAnswer": null, "sGradingDate": null, "sLangProg": null,
+          "sName": null, "sState": null, "sSubmissionDate": "0001-01-01T00:00:00Z", "sType": "Submission"
+        }
+      ],
+      "users_items": [
+        {
+          "ID": "11", "bFinished": 0, "bKeyObtained": 0, "bPlatformDataRemoved": 0, "bRanked": 0, "bValidated": 0,
+          "iAutonomy": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idAttemptActive": null, "idItem": "0", "idUser": "2", "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "todo",
+          "sAnswer": null, "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null,
+          "sHintsRequested": null, "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null,
+          "sScoreDiffComment": "", "sStartDate": null, "sState": null, "sThreadStartDate": null, "sValidationDate": null
+        }
+      ]
     }
     """
 
@@ -201,30 +201,30 @@ Feature: Export the current user's data
     And the response body should be, in JSON:
     """
     {
-    	"current_user": {
-    		"ID": "4", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0, "bNoRanking": 0,
-    		"bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0, "creatorID": null,
-    		"iGrade": 2, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0, "idGroupAccess": null,
-    		"idGroupOwned": "32", "idGroupSelf": "31", "idUserGodfather": null, "loginID": null, "loginModulePrefix": null,
-    		"nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null, "sCellPhoneNumber": null,
-    		"sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null, "sFirstName": "Jane",
-    		"sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python", "sLastActivityDate": null, "sLastIP": null,
-    		"sLastLoginDate": null, "sLastName": "Doe", "sLogin": "jane", "sNotificationReadDate": null, "sNotify": "Answers",
-    		"sOpenIdIdentity": null, "sPasswordMd5": null, "sRecover": null, "sRegistrationDate": null, "sSalt": null,
-    		"sSex": null, "sStudentId": null, "sTimeZone": null, "sWebSite": null, "sZipcode": null, "tempUser": 0
-    	},
-    	"groups_attempts": [],
-    	"groups_groups": [],
-    	"joined_groups": [],
-    	"owned_groups": [],
-    	"refresh_token": null,
-    	"sessions": [
-    		{
-    			"idUser": "4", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
-    			"sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
-    		}
-    	],
-    	"users_answers": [],
-    	"users_items": []
+      "current_user": {
+        "ID": "4", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0, "bNoRanking": 0,
+        "bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0, "creatorID": null,
+        "iGrade": 2, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0, "idGroupAccess": null,
+        "idGroupOwned": "32", "idGroupSelf": "31", "idUserGodfather": null, "loginID": null, "loginModulePrefix": null,
+        "nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null, "sCellPhoneNumber": null,
+        "sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null, "sFirstName": "Jane",
+        "sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python", "sLastActivityDate": null, "sLastIP": null,
+        "sLastLoginDate": null, "sLastName": "Doe", "sLogin": "jane", "sNotificationReadDate": null, "sNotify": "Answers",
+        "sOpenIdIdentity": null, "sPasswordMd5": null, "sRecover": null, "sRegistrationDate": null, "sSalt": null,
+        "sSex": null, "sStudentId": null, "sTimeZone": null, "sWebSite": null, "sZipcode": null, "tempUser": 0
+      },
+      "groups_attempts": [],
+      "groups_groups": [],
+      "joined_groups": [],
+      "owned_groups": [],
+      "refresh_token": null,
+      "sessions": [
+        {
+          "idUser": "4", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
+          "sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
+        }
+      ],
+      "users_answers": [],
+      "users_items": []
     }
     """
