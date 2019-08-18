@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/dump-full users currentUserDataExport
+// swagger:operation GET /current-user/dump-full users currentFullUserDataExport
 // ---
 // summary: Export the current user's data
 // description: >
