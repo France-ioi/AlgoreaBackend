@@ -73,7 +73,7 @@ Feature: Export the current user's data
 
   Scenario: Full data
     Given I am the user with ID "2"
-    When I send a GET request to "/current-user/dump"
+    When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
@@ -194,7 +194,7 @@ Feature: Export the current user's data
 
   Scenario: All optional arrays and objects are empty
     Given I am the user with ID "4"
-    When I send a GET request to "/current-user/dump"
+    When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"

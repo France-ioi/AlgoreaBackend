@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/export-data users currentUserDataExport
+// swagger:operation GET /current-user/dump-full users currentUserDataExport
 // ---
 // summary: Export the current user's data
 // description: >
@@ -40,9 +40,12 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) getFullDump(w http.ResponseWriter, r *http.Request) service.APIError {
+	return srv.getDumpCommon(r, w, true)
+}
 
+func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full bool) service.APIError {
+	user := srv.GetUser(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=user_data.json")
 	w.WriteHeader(200)
@@ -58,75 +61,79 @@ func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) service.APIE
 		service.MustNotBeError(srv.Store.Users().ByID(user.ID).Select(columns).ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
 	})
-	writeComma(w)
 
-	writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"sAccessToken"})
-		service.MustNotBeError(srv.Store.Sessions().Where("idUser = ?", user.ID).
-			Select(columns + ", '***' AS sAccessToken").ScanAndHandleMaps(streamerFunc(w)).Error())
-	})
-	writeComma(w)
+	if full {
+		writeComma(w)
+		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"sAccessToken"})
+			service.MustNotBeError(srv.Store.Sessions().Where("idUser = ?", user.ID).
+				Select(columns + ", '***' AS sAccessToken").ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
 
-	writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"sRefreshToken"})
-		var refreshTokens []map[string]interface{}
-		service.MustNotBeError(srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
-			Select(columns + ", '***' AS sRefreshToken").ScanIntoSliceOfMaps(&refreshTokens).Error())
-		if len(refreshTokens) > 0 {
-			writeValue(w, refreshTokens[0])
-		} else {
-			writeValue(w, nil)
-		}
-	})
-	writeComma(w)
+		writeComma(w)
+		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"sRefreshToken"})
+			var refreshTokens []map[string]interface{}
+			service.MustNotBeError(srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
+				Select(columns + ", '***' AS sRefreshToken").ScanIntoSliceOfMaps(&refreshTokens).Error())
+			if len(refreshTokens) > 0 {
+				writeValue(w, refreshTokens[0])
+			} else {
+				writeValue(w, nil)
+			}
+		})
+	}
 
+	writeComma(w)
 	writeJSONObjectArrayElement("owned_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild != idGroupAncestor").
 			Joins("JOIN groups ON groups.ID = idGroupChild").
 			Select("groups.ID, groups.sName").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
-	writeComma(w)
 
+	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().UserAncestors(user).
 			Where("idGroupChild != idGroupAncestor").
 			Joins("JOIN groups ON groups.ID = idGroupAncestor").
 			Select("groups.ID, groups.sName").Order("groups.ID").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
-	writeComma(w)
 
-	writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
-		service.MustNotBeError(srv.Store.UserAnswers().Where("idUser = ?", user.ID).
-			ScanAndHandleMaps(streamerFunc(w)).Error())
-	})
-	writeComma(w)
+	if full {
+		writeComma(w)
+		writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
+			service.MustNotBeError(srv.Store.UserAnswers().Where("idUser = ?", user.ID).
+				ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
 
-	writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "users_items", []string{"iVersion"})
-		service.MustNotBeError(srv.Store.UserItems().Where("idUser = ?", user.ID).
-			Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
-	})
-	writeComma(w)
+		writeComma(w)
+		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "users_items", []string{"iVersion"})
+			service.MustNotBeError(srv.Store.UserItems().Where("idUser = ?", user.ID).
+				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
 
-	writeJSONObjectArrayElement("groups_attempts", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "groups_attempts", []string{"iVersion"})
-		service.MustNotBeError(srv.Store.GroupAttempts().
-			Select(columns).
-			Where("idGroup = ?", user.SelfGroupID).
-			UnionAll(
-				srv.Store.GroupAttempts().
-					Select(columns).
-					Where("idGroup IN (?)",
-						srv.Store.GroupGroups().WhereUserIsMember(user).
-							Select("groups.ID").
-							Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType = 'Team'").
-							QueryExpr()).
-					QueryExpr()).
-			ScanAndHandleMaps(streamerFunc(w)).Error())
-	})
-	writeComma(w)
+		writeComma(w)
+		writeJSONObjectArrayElement("groups_attempts", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", []string{"iVersion"})
+			service.MustNotBeError(srv.Store.GroupAttempts().
+				Select(columns).
+				Where("idGroup = ?", user.SelfGroupID).
+				UnionAll(
+					srv.Store.GroupAttempts().
+						Select(columns).
+						Where("idGroup IN (?)",
+							srv.Store.GroupGroups().WhereUserIsMember(user).
+								Select("groups.ID").
+								Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType = 'Team'").
+								QueryExpr()).
+						QueryExpr()).
+				ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
+	}
 
+	writeComma(w)
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"iVersion"})
 		service.MustNotBeError(srv.Store.GroupGroups().
