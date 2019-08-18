@@ -55,7 +55,7 @@ test-bdd: $(GODOG)
 	# to pass args: make ARGS="--tags=wip" test-bdd
 	$(GODOG) --format=progress $(ARGS) .
 lint: $(GOLANGCILINT)
-	$(GOLANGCILINT) run --deadline 5m0s
+	$(GOLANGCILINT) run --deadline 10m0s
 
 clean:
 	$(GOCLEAN)
