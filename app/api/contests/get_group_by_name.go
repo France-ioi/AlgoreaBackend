@@ -14,6 +14,10 @@ type getGroupByNameResult struct {
 	// required: true
 	GroupID int64 `gorm:"column:idGroup" json:"group_id,string"`
 	// required: true
+	Name string `gorm:"column:sName" json:"name"`
+	// required: true
+	Type string `gorm:"column:sType" json:"type"`
+	// required: true
 	AdditionalTime int32 `gorm:"column:iAdditionalTime" json:"additional_time"`
 	// required: true
 	TotalAdditionalTime int32 `gorm:"column:iTotalAdditionalTime" json:"total_additional_time"`
@@ -30,6 +34,10 @@ type getGroupByNameResult struct {
 //                  * the `groups.sName` (matching `sLogin` if a "UserSelf" group) is matching the input `name` parameter (case-insensitive)
 //
 //                If there are several groups or users matching, returns the first one (by `ID`).
+//
+//
+//                If the contest is a team-only contest (`teams.bHasAttempts` is true) and the name matches an end-user,
+//                returns his team instead of user’s 'selfgroup'.
 //
 //
 //                Restrictions:
@@ -78,25 +86,55 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := srv.checkThatUserCanManageTimedContest(itemID, user); apiError != service.NoError {
-		return apiError
+	isTeamOnly, err := srv.getTeamModeForTimedContestManagedByUser(itemID, user)
+	if gorm.IsRecordNotFoundError(err) {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
-	var result getGroupByNameResult
-	if err = srv.Store.Groups().OwnedBy(user).Where("groups.sName LIKE ?", groupName).
+	query := srv.Store.Groups().OwnedBy(user).
 		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.idGroupChild = groups.ID").
 		Joins("LEFT JOIN groups_items ON groups_items.idGroup = found_group_ancestors.idGroupAncestor AND groups_items.idItem = ?", itemID).
 		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.idGroup = groups.ID AND main_group_item.idItem = ?", itemID).
+		Select(`
+				groups.ID AS idGroup,
+				groups.sName,
+				groups.sType,
+				IFNULL(TIME_TO_SEC(main_group_item.sAdditionalTime), 0) AS iAdditionalTime,
+				IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS iTotalAdditionalTime`).
 		Group("groups.ID").
 		Having(`
 			MIN(groups_items.sCachedFullAccessDate) <= NOW() OR MIN(groups_items.sCachedPartialAccessDate) <= NOW() OR
 			MIN(groups_items.sCachedGrayedAccessDate) <= NOW()`).
-		Order("groups.ID").
-		Select(`
-			groups.ID AS idGroup,
-			IFNULL(TIME_TO_SEC(main_group_item.sAdditionalTime), 0) AS iAdditionalTime,
-			IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS iTotalAdditionalTime`).
-		Take(&result).Error(); gorm.IsRecordNotFoundError(err) {
+		Order("groups.ID")
+
+	if isTeamOnly {
+		query = query.
+			Joins(`
+				LEFT JOIN groups_ancestors AS found_group_descendants
+					ON found_group_descendants.idGroupAncestor = groups.ID`).
+			Joins(`
+				LEFT JOIN groups AS team
+					ON team.ID = found_group_descendants.idGroupChild AND team.sType = 'Team' AND
+						(groups.idTeamItem IN (SELECT idItemAncestor FROM items_ancestors WHERE idItemChild = ?) OR
+						 groups.idTeamItem = ?)`, itemID, itemID).
+			Joins(`
+				LEFT JOIN groups_groups
+					ON groups_groups.sType IN ('requestAccepted', 'invitationAccepted') AND
+						groups_groups.idGroupParent = team.ID`).
+			Joins(`
+				LEFT JOIN groups AS user_group
+					ON user_group.ID = groups_groups.idGroupChild AND user_group.sType = 'UserSelf' AND
+						user_group.sName LIKE ?`, groupName).
+			Group("groups.ID, user_group.ID").
+			Having("MAX(user_group.ID) IS NOT NULL OR groups.sName LIKE ?", groupName)
+	} else {
+		query = query.
+			Where("groups.sName LIKE ?", groupName)
+	}
+
+	var result getGroupByNameResult
+	if err = query.Take(&result).Error(); gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)

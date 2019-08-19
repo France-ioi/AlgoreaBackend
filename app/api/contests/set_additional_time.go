@@ -23,8 +23,9 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `bCachedAccessSolutions` or `bCachedFullAccess` on the input item;
-//                  * the authenticated user should own the `group_id`.
+//                  * the authenticated user should have `solutions` or `full` access on the input item;
+//                  * the authenticated user should own the `group_id`;
+//                  * if the contest is team-only (`items.bHasAttempts` = 1), then the group should not be a user group.
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
@@ -76,17 +77,27 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(fmt.Errorf("'seconds' should be between %d and %d", -maxSeconds, maxSeconds))
 	}
 
-	groupIsOwnedByUser, err := srv.Store.GroupAncestors().OwnedByUser(user).
-		Where("groups_ancestors.idGroupChild = ?", groupID).HasRows()
-	service.MustNotBeError(err)
-	if !groupIsOwnedByUser {
+	var groupType string
+	err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).
+		PluckFirst("groups.sType", &groupType).Error()
+	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
-	if apiError := srv.checkThatUserCanManageTimedContest(itemID, user); apiError != service.NoError {
-		return apiError
+	isTeamOnly, err := srv.getTeamModeForTimedContestManagedByUser(itemID, user)
+	if gorm.IsRecordNotFoundError(err) || (isTeamOnly && groupType == "UserSelf") {
+		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
+	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds)
+
+	render.Respond(w, r, service.UpdateSuccess(nil))
+	return service.NoError
+}
+
+func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds int64) {
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		groupItemStore := store.GroupItems()
 		scope := groupItemStore.Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
@@ -104,7 +115,4 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		}
 		return nil
 	}))
-
-	render.Respond(w, r, service.UpdateSuccess(nil))
-	return service.NoError
 }
