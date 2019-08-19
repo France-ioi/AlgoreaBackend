@@ -25,18 +25,15 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/contests/{item_id}/group-by-name", service.AppHandler(srv.getGroupByName).ServeHTTP)
 }
 
-func (srv *Service) checkThatUserCanManageTimedContest(itemID int64, user *database.User) service.APIError {
-	ok, err := srv.Store.Items().ByID(itemID).Where("items.sDuration IS NOT NULL").
+func (srv *Service) getTeamModeForTimedContestManagedByUser(itemID int64, user *database.User) (bool, error) {
+	var isTeamOnly bool
+	err := srv.Store.Items().ByID(itemID).Where("items.sDuration IS NOT NULL").
 		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup AND
 				groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
 		Group("items.ID").
 		Having("MIN(groups_items.sCachedFullAccessDate) <= NOW() OR MIN(groups_items.sCachedAccessSolutionsDate) <= NOW()").
-		HasRows()
-	service.MustNotBeError(err)
-	if !ok {
-		return service.InsufficientAccessRightsError
-	}
-	return service.NoError
+		PluckFirst("items.bHasAttempts", &isTeamOnly).Error()
+	return isTeamOnly, err
 }
