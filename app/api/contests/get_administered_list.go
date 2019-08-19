@@ -11,6 +11,8 @@ import (
 type parentTitle struct {
 	// required: true
 	Title string `json:"title"`
+	// required: true
+	LanguageID int64 `json:"language_id,string"`
 }
 
 // swagger:model
@@ -20,6 +22,9 @@ type contestAdminListRow struct {
 	// Nullable
 	// required: true
 	Title *string `gorm:"column:sTitleTranslation" json:"title"`
+	// Nullable
+	// required: true
+	LanguageID *int64 `gorm:"column:idTitleLanguage" json:"language_id,string"`
 	// required: true
 	TeamOnlyContest bool `gorm:"column:bTeamOnlyContest" json:"team_only_contest"`
 	// required: true
@@ -37,7 +42,8 @@ type contestAdminListRow struct {
 //
 //                Each title is returned in the user's default language if exists,
 //                otherwise the item's default language is used. If there are no titles for these languages,
-//                then the title gets skipped.
+//                then the title gets skipped (i.e. omitted in the parents array (for a parent) or
+//                having `title` = null (for the item itself)).
 // parameters:
 // - name: from.title
 //   description: Start the page from the contest next to the contest with `title` = `from.title` and `ID` = `from.id`
@@ -80,7 +86,8 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.Items().Select(`
 			items.ID AS idItem,
 			items.bHasAttempts AS bTeamOnlyContest,
-			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleTranslation`).
+			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleTranslation,
+			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idTitleLanguage`).
 		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
 		Joins("JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup").
 		JoinsUserAndDefaultItemStrings(user).
@@ -106,8 +113,9 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			itemIDs[index] = rows[index].ItemID
 		}
 		var parents []struct {
-			ChildID     int64  `gorm:"column:idChild"`
-			ParentTitle string `gorm:"column:sTitleParent"`
+			ChildID          int64  `gorm:"column:idChild"`
+			ParentTitle      string `gorm:"column:sTitleParent"`
+			ParentLanguageID int64  `gorm:"column:idLanguageParent"`
 		}
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.idItemParent = items.ID AND items_items.idItemChild IN (?)", itemIDs).
@@ -128,7 +136,8 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			Order("COALESCE(user_strings.sTitle, default_strings.sTitle)").
 			Select(`
 				items_items.idItemChild as idChild,
-				COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleParent`).
+				COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleParent,
+				COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguageParent`).
 			Scan(&parents).Error())
 
 		parentTitlesMap := make(map[int64][]parentTitle, len(rows))
@@ -137,7 +146,10 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 				parentTitlesMap[parents[index].ChildID] = make([]parentTitle, 0, 1)
 			}
 			parentTitlesMap[parents[index].ChildID] =
-				append(parentTitlesMap[parents[index].ChildID], parentTitle{Title: parents[index].ParentTitle})
+				append(parentTitlesMap[parents[index].ChildID], parentTitle{
+					Title:      parents[index].ParentTitle,
+					LanguageID: parents[index].ParentLanguageID,
+				})
 		}
 		for index := range rows {
 			rows[index].Parents = parentTitlesMap[rows[index].ItemID]
