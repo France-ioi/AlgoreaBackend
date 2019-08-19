@@ -1,4 +1,4 @@
-Feature: Export the short version of the current user's data
+Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16T22:02:28Z"
     And the database has the following table 'users':
@@ -73,7 +73,7 @@ Feature: Export the short version of the current user's data
 
   Scenario: Full data
     Given I am the user with ID "2"
-    When I send a GET request to "/current-user/dump"
+    When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
@@ -93,6 +93,28 @@ Feature: Export the short version of the current user's data
         "sRecover": null, "sRegistrationDate": null, "sSalt": null, "sSex": null, "sStudentId": null, "sTimeZone": null,
         "sWebSite": null, "sZipcode": null, "tempUser": 0
       },
+      "groups_attempts": [
+        {
+          "ID": "111", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
+          "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idGroup": "11", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
+          "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
+          "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
+          "sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
+        },
+        {
+          "ID": "112", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
+          "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idGroup": "2", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
+          "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
+          "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null, "sScoreDiffComment": "",
+          "sStartDate": null, "sThreadStartDate": null, "sValidationDate": null
+        }
+      ],
       "groups_groups": [
         {
           "ID": "2", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "1", "idUserInviting": null,
@@ -140,13 +162,39 @@ Feature: Export the short version of the current user's data
       "owned_groups": [
         {"ID": "1", "sName": "Our Class"},
         {"ID": "2", "sName": "Our Team"}
+      ],
+      "refresh_token": {"idUser": "2", "sRefreshToken": "***"},
+      "sessions": [
+        {
+          "idUser": "2", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
+          "sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
+        }
+      ],
+      "users_answers": [
+        {
+          "ID": "1", "bValidated": null, "iScore": null, "iVersion": 0, "idAttempt": null, "idItem": "0",
+          "idUser": "2", "idUserGrader": null, "sAnswer": null, "sGradingDate": null, "sLangProg": null,
+          "sName": null, "sState": null, "sSubmissionDate": "0001-01-01T00:00:00Z", "sType": "Submission"
+        }
+      ],
+      "users_items": [
+        {
+          "ID": "11", "bFinished": 0, "bKeyObtained": 0, "bPlatformDataRemoved": 0, "bRanked": 0, "bValidated": 0,
+          "iAutonomy": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
+          "idAttemptActive": null, "idItem": "0", "idUser": "2", "nbChildrenValidated": 0,
+          "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
+          "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "todo",
+          "sAnswer": null, "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null,
+          "sHintsRequested": null, "sLastActivityDate": null, "sLastAnswerDate": null, "sLastHintDate": null,
+          "sScoreDiffComment": "", "sStartDate": null, "sState": null, "sThreadStartDate": null, "sValidationDate": null
+        }
       ]
     }
     """
 
   Scenario: All optional arrays and objects are empty
     Given I am the user with ID "4"
-    When I send a GET request to "/current-user/dump"
+    When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
@@ -165,8 +213,18 @@ Feature: Export the short version of the current user's data
         "sOpenIdIdentity": null, "sPasswordMd5": null, "sRecover": null, "sRegistrationDate": null, "sSalt": null,
         "sSex": null, "sStudentId": null, "sTimeZone": null, "sWebSite": null, "sZipcode": null, "tempUser": 0
       },
+      "groups_attempts": [],
       "groups_groups": [],
       "joined_groups": [],
-      "owned_groups": []
+      "owned_groups": [],
+      "refresh_token": null,
+      "sessions": [
+        {
+          "idUser": "4", "sAccessToken": "***", "sExpirationDate": "2019-07-17T00:02:28Z",
+          "sIssuedAtDate": "2019-07-16T22:02:28Z", "sIssuer": null
+        }
+      ],
+      "users_answers": [],
+      "users_items": []
     }
     """
