@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /contests/{item_id}/members-additional-times contests groups contestListMembersAdditionalTime
+// swagger:operation GET /contests/{item_id}/groups/{group_id}/members/additional-times contests groups contestListMembersAdditionalTime
 // ---
 // summary: Get additional times for a group of users/teams on a contest
 // description: >
@@ -30,7 +30,7 @@ import (
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have `solutions` or `full` access on the input item;
-//                  * the authenticated user should own the `group_id`;
+//                  * the authenticated user should own the `group_id`.
 // parameters:
 // - name: item_id
 //   description: "`ID` of a timed contest"
@@ -38,7 +38,7 @@ import (
 //   type: integer
 //   required: true
 // - name: group_id
-//   in: query
+//   in: path
 //   type: integer
 //   required: true
 // - name: from.name
@@ -85,7 +85,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryGetInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}

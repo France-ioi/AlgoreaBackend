@@ -107,7 +107,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Non-team contest
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/members-additional-times?group_id=11"
+    When I send a GET request to "/contests/50/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -131,7 +131,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Team-only contest
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/members-additional-times?group_id=11"
+    When I send a GET request to "/contests/60/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -155,7 +155,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Team-only contest (only the first row)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/members-additional-times?group_id=11&limit=1"
+    When I send a GET request to "/contests/60/groups/11/members/additional-times?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -172,7 +172,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Non-team contest (only the first row, inverse order)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/members-additional-times?group_id=11&limit=1&sort=-name"
+    When I send a GET request to "/contests/50/groups/11/members/additional-times?limit=1&sort=-name"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -189,7 +189,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Team-only contest (start from the second row)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/members-additional-times?group_id=11&from.name=Group%20B&from.id=13"
+    When I send a GET request to "/contests/60/groups/11/members/additional-times?from.name=Group%20B&from.id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

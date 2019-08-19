@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /contests/{item_id}/additional-time contests groups contestSetAdditionalTime
+// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests groups contestSetAdditionalTime
 // ---
 // summary: Set additional time in the contest for the group
 // description: >
@@ -35,7 +35,7 @@ import (
 //   type: integer
 //   required: true
 // - name: group_id
-//   in: query
+//   in: path
 //   type: integer
 //   required: true
 // - name: seconds
@@ -62,7 +62,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryGetInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
