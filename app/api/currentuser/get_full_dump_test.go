@@ -19,7 +19,7 @@ import (
 
 func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"GET", "/current-user/dump", ``,
+		"GET", "/current-user/full-dump", ``,
 		&database.User{ID: 1, OwnedGroupID: ptrInt64(10), SelfGroupID: ptrInt64(11)},
 		func(sqlmock sqlmock.Sqlmock) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
@@ -33,7 +33,7 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}
 			srv.Config = &config.Root{Database: config.Database{Connection: mysql.Config{DBName: "test_db"}}}
-			router.Get("/current-user/dump", service.AppHandler(srv.getDump).ServeHTTP)
+			router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 		})
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.StatusCode)
