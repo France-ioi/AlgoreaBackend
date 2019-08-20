@@ -71,6 +71,14 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		if !found {
 			return service.InsufficientAccessRightsError
 		}
+	} else if action == leaveGroupAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).
+			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.InsufficientAccessRightsError
+		}
 	}
 
 	var results database.GroupGroupTransitionResults

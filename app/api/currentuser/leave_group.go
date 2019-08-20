@@ -17,6 +17,8 @@ import (
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
 //     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`/`left`.
 //     Otherwise the unprocessable entity error is returned.
+//
+//   * The user cannot leave the group if `NOW()` < `groups.lockUserDeletionDate`.
 // parameters:
 // - name: group_id
 //   in: path
