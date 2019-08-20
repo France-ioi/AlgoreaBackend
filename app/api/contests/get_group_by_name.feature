@@ -83,7 +83,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Partial access for group, solutions access for user, additional time from parent groups
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/group-by-name?name=Group%20B"
+    When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -98,7 +98,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Grayed access for group, full access for user
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/group-by-name?name=Group%20B"
+    When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -113,7 +113,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Full access for group, full access for user, additional time is null
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/70/group-by-name?name=Group%20B"
+    When I send a GET request to "/contests/70/groups/by-name?name=Group%20B"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -128,7 +128,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Should ignore case
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/group-by-name?name=group%20b"
+    When I send a GET request to "/contests/50/groups/by-name?name=group%20b"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -143,7 +143,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is a user group (non-team contest)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/group-by-name?name=john"
+    When I send a GET request to "/contests/50/groups/by-name?name=john"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -158,7 +158,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is a user group (team contest) [through invitationAccepted]
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/group-by-name?name=john"
+    When I send a GET request to "/contests/60/groups/by-name?name=john"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -173,7 +173,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is a user group (team contest) [through requestAccepted]
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/group-by-name?name=jane"
+    When I send a GET request to "/contests/60/groups/by-name?name=jane"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -188,7 +188,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is an ancestor group (team contest)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/group-by-name?name=Group%20A"
+    When I send a GET request to "/contests/60/groups/by-name?name=Group%20A"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -203,7 +203,7 @@ Feature: Get group by name (contestGetGroupByName)
 
   Scenario: Group is an ancestor group (non-team contest)
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/group-by-name?name=Group%20A"
+    When I send a GET request to "/contests/50/groups/by-name?name=Group%20A"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
