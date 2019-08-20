@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-memberships groups users groupsJoinByPassword
+// swagger:operation POST /current-user/group-memberships/by-password groups users groupsJoinByPassword
 // ---
 // summary: Join a team using a password
 // description:
