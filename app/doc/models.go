@@ -2,6 +2,17 @@ package doc
 
 import "time"
 
+// swagger:model createdResponse
+type CreatedResponse struct {
+	// "created"
+	// enum: created
+	// required: true
+	Message string `json:"message"`
+	// true
+	// required: true
+	Success bool `json:"success"`
+}
+
 // swagger:model userCreateTmpResponse
 type userCreateTmpResponse struct {
 	// description

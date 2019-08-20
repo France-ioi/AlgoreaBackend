@@ -68,6 +68,9 @@ const (
 	AdminAddsDirectRelation
 	// AdminRemovesDirectRelation removes a direct relation
 	AdminRemovesDirectRelation
+	// UserJoinsGroupByPassword means a user joins a group using a group's password
+	// We don't check the password here (a calling service should check the password by itself)
+	UserJoinsGroupByPassword
 )
 
 type groupGroupTransitionRule struct {
@@ -103,6 +106,17 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			RequestRefused:    RequestSent,
 			Removed:           RequestSent,
 			Left:              RequestSent,
+		},
+	},
+	UserJoinsGroupByPassword: {
+		Transitions: map[GroupGroupType]GroupGroupType{
+			NoRelation:        RequestAccepted,
+			RequestSent:       RequestAccepted,
+			InvitationRefused: RequestAccepted,
+			InvitationSent:    RequestAccepted,
+			RequestRefused:    RequestAccepted,
+			Removed:           RequestAccepted,
+			Left:              RequestAccepted,
 		},
 	},
 	UserAcceptsInvitation: {
