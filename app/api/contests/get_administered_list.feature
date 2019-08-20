@@ -7,10 +7,12 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 3  | administrateur | 41          | 42           | fr               |
       | 4  | admin          | 51          | 52           | en               |
       | 5  | guest          | 61          | 62           | en               |
+      | 6  | panas          | 71          | 72           | uk               |
     And the database has the following table 'languages':
       | ID | sCode |
       | 1  | en    |
       | 2  | fr    |
+      | 3  | uk    |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 21              | 21           | 1       |
@@ -25,17 +27,22 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 52              | 52           | 1       |
       | 61              | 61           | 1       |
       | 62              | 62           | 1       |
+      | 71              | 71           | 1       |
+      | 72              | 72           | 1       |
     And the database has the following table 'items':
       | ID | sDuration | idDefaultLanguage | bHasAttempts |
       | 50 | 00:00:00  | 2                 | 0            |
       | 60 | 00:00:01  | 1                 | 1            |
       | 10 | 00:00:02  | 1                 | 0            |
       | 70 | 00:00:03  | 2                 | 0            |
+      | 80 | 00:00:03  | 3                 | 0            |
+      | 90 | 00:00:03  | 3                 | 0            |
     And the database has the following table 'items_items':
       | idItemParent | idItemChild |
       | 10           | 60          |
       | 10           | 70          |
       | 60           | 70          |
+      | 90           | 80          |
     And the database has the following table 'items_strings':
       | idItem | idLanguage | sTitle     |
       | 10     | 1          | Chapter    |
@@ -59,6 +66,8 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 51      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       |
       | 51      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | 2018-05-29T06:38:38Z       |
       | 51      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
+      | 71      | 80     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
+      | 71      | 90     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with ID "1"
@@ -166,5 +175,18 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       {"id": "60", "team_only_contest": true, "parents": [{"title": "Chapter", "language_id": "1"}],
        "title": "Contest", "language_id": "1"},
       {"id": "50", "team_only_contest": false, "parents": [], "title": null, "language_id": null}
+    ]
+    """
+
+  Scenario: Keeps parents with nil titles
+    Given I am the user with ID "6"
+    When I send a GET request to "/contests/administered"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {"id": "80", "team_only_contest": false, "parents": [{"language_id": null, "title": null}],
+       "title": null, "language_id": null},
+      {"id": "90", "team_only_contest": false, "parents": [], "title": null, "language_id": null}
     ]
     """

@@ -9,10 +9,12 @@ import (
 )
 
 type parentTitle struct {
+	// Nullable
 	// required: true
-	Title string `json:"title"`
+	Title *string `json:"title"`
+	// Nullable
 	// required: true
-	LanguageID int64 `json:"language_id,string"`
+	LanguageID *int64 `json:"language_id,string"`
 }
 
 // swagger:model
@@ -41,9 +43,7 @@ type contestAdminListRow struct {
 //
 //
 //                Each title is returned in the user's default language if exists,
-//                otherwise the item's default language is used. If there are no titles for these languages,
-//                then the title gets skipped (i.e. omitted in the parents array (for a parent) or
-//                having `title` = null (for the item itself)).
+//                otherwise the item's default language is used.
 // parameters:
 // - name: from.title
 //   description: Start the page from the contest next to the contest with `title` = `from.title` and `ID` = `from.id`
@@ -113,9 +113,9 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			itemIDs[index] = rows[index].ItemID
 		}
 		var parents []struct {
-			ChildID          int64  `gorm:"column:idChild"`
-			ParentTitle      string `gorm:"column:sTitleParent"`
-			ParentLanguageID int64  `gorm:"column:idLanguageParent"`
+			ChildID          int64   `gorm:"column:idChild"`
+			ParentTitle      *string `gorm:"column:sTitleParent"`
+			ParentLanguageID *int64  `gorm:"column:idLanguageParent"`
 		}
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.idItemParent = items.ID AND items_items.idItemChild IN (?)", itemIDs).
@@ -131,7 +131,6 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 					ON parent_groups_ancestors.idGroupAncestor = parent_groups_items.idGroup AND
 						parent_groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
 			JoinsUserAndDefaultItemStrings(user).
-			Where("COALESCE(user_strings.sTitle, default_strings.sTitle) IS NOT NULL").
 			Group("items_items.idItemParent, items_items.idItemChild").
 			Order("COALESCE(user_strings.sTitle, default_strings.sTitle)").
 			Select(`
