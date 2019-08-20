@@ -26,7 +26,9 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     "$ref": "#/responses/deletedOrNotChangedResponse"
+//     "$ref": "#/responses/deletedResponse"
+//   "205":
+//     "$ref": "#/responses/notChangedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
