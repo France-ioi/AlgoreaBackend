@@ -19,6 +19,20 @@ type updatedResponse struct {
 	}
 }
 
+// The request has succeeded. The message shows if the object has been updated.
+// swagger:response updatedOrNotChangedResponse
+type updatedOrNotChangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: updated,not changed
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+	}
+}
+
 // Success
 // swagger:response successResponse
 type successResponse struct {
@@ -41,6 +55,20 @@ type deletedResponse struct {
 	Body struct {
 		// "deleted"
 		// enum: deleted
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+	}
+}
+
+// The request has succeeded. The message shows if the object has been deleted.
+// swagger:response deletedOrNotChangedResponse
+type deletedOrNotChangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: deleted,not changed
 		// required: true
 		Message string `json:"message"`
 		// true
