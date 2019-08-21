@@ -48,7 +48,7 @@ Feature: User accepts an invitation to join a group
   Scenario: Accept an already accepted invitation
     Given I am the user with ID "1"
     When I send a PUT request to "/current-user/group-invitations/14/accept"
-    Then the response code should be 205
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {

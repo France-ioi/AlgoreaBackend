@@ -40,7 +40,7 @@ Feature: User rejects an invitation to join a group
   Scenario: Reject an already rejected invitation
     Given I am the user with ID "1"
     When I send a PUT request to "/current-user/group-invitations/14/reject"
-    Then the response code should be 205
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {

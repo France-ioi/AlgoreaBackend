@@ -71,10 +71,10 @@ Feature: User leaves a group - robustness
     And I am the user with ID "3"
     When I send a DELETE request to "/current-user/group-memberships/15"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "User deletion is locked for this group"
 
   Scenario: Fails if lockUserDeletionDate > NOW()
     Given I am the user with ID "3"
     When I send a DELETE request to "/current-user/group-memberships/15"
     Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
+    And the response error message should contain "User deletion is locked for this group"
