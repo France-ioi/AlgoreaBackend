@@ -17,7 +17,7 @@ import (
 //   and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationRefused`.
 //   Otherwise the unprocessable entity error is returned.
 //
-//   * If `groups_groups.sType` is `invitationRefused` already, the "not changed" (205) response is returned.
+//   * If `groups_groups.sType` is `invitationRefused` already, the "not changed" (200) response is returned.
 // parameters:
 // - name: group_id
 //   in: path
