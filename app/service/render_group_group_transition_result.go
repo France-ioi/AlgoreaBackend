@@ -21,7 +21,11 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		}
 		return ErrNotFound(errors.New("no such relation"))
 	case database.Unchanged:
-		MustNotBeError(render.Render(w, r, NotChangedSuccess()))
+		if treatSuccessAsDeleted {
+			MustNotBeError(render.Render(w, r, NotChangedSuccess(http.StatusOK)))
+		} else {
+			MustNotBeError(render.Render(w, r, NotChangedSuccess(http.StatusCreated)))
+		}
 	case database.Success:
 		if treatSuccessAsDeleted {
 			MustNotBeError(render.Render(w, r, DeletionSuccess(nil)))

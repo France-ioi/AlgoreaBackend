@@ -42,10 +42,17 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 				`"error_text":"A conflicting relation exists"}`,
 		},
 		{
-			name:             "unchanged",
+			name:             "unchanged (created)",
 			result:           database.Unchanged,
-			wantStatusCode:   http.StatusResetContent,
+			wantStatusCode:   http.StatusCreated,
 			wantResponseBody: `{"success":true,"message":"not changed"}`,
+		},
+		{
+			name:                  "unchanged (ok)",
+			result:                database.Unchanged,
+			treatSuccessAdDeleted: true,
+			wantStatusCode:        http.StatusOK,
+			wantResponseBody:      `{"success":true,"message":"not changed"}`,
 		},
 		{
 			name:             "success (created)",
