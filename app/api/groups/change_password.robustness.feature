@@ -36,7 +36,6 @@ Feature: Change the password of the given group - robustness
 
   Scenario: User is an admin of the group, but the generated password is not unique
     Given I am the user with ID "1"
-    And the table "groups" has a unique key "sPassword" on "sPassword"
     And the generated group passwords are "ybqybxnlyo","newpassword"
     When I send a POST request to "/groups/13/password"
     Then the response code should be 200
@@ -51,7 +50,6 @@ Feature: Change the password of the given group - robustness
 
   Scenario: User is an admin of the group, but the generated password is not unique 3 times in a row
     Given I am the user with ID "1"
-    And the table "groups" has a unique key "sPassword" on "sPassword"
     And the generated group passwords are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
     When I send a POST request to "/groups/13/password"
     Then the response code should be 500

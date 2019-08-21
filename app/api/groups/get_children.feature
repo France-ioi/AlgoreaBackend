@@ -85,10 +85,10 @@ Feature: Get group children (groupChildrenView)
       | 30 | RootSelf      |  0     | Base      | true    | false       | null       |
       | 31 | RootAdmin     |  0     | Base      | true    | false       | null       |
       | 42 | Their Class   | -3     | Class     | true    | false       | null       |
-      | 43 | Other Root    | -2     | Base      | true    | false       | 3456789abc |
-      | 44 | Other Team    | -1     | Team      | true    | false       | 456789abcd |
+      | 43 | Other Root    | -2     | Base      | true    | false       | 3567894abc |
+      | 44 | Other Team    | -1     | Team      | true    | false       | 678934abcd |
       | 45 | Their Club    |  0     | Club      | true    | false       | null       |
-      | 46 | Their Friends |  0     | Friends   | true    | false       | 56789abcde |
+      | 46 | Their Friends |  0     | Friends   | true    | false       | 98765abcde |
       | 47 | Other         |  0     | Other     | true    | false       | null       |
       | 51 | john          |  0     | UserSelf  | false   | false       | null       |
       | 52 | john-admin    |  0     | UserAdmin | false   | false       | null       |

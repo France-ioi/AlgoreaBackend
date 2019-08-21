@@ -39,7 +39,6 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 			newPassword, err = GenerateGroupPassword()
 			service.MustNotBeError(err)
 
-			// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
 			err = store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
 			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 				continue
