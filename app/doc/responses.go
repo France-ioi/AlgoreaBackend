@@ -87,6 +87,20 @@ type CreatedResponse struct {
 	Success bool `json:"success"`
 }
 
+// The request has succeeded. The message shows if the object has been deleted.
+// swagger:response createdOrNotChangedResponse
+type createdOrNotChangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: created,not changed
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+	}
+}
+
 // OK. Success response with the requested answer
 // swagger:response itemAnswerGetResponse
 type itemAnswerGetResponse struct {
