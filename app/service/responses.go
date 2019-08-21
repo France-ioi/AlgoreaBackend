@@ -53,7 +53,7 @@ func DeletionSuccess(data interface{}) render.Renderer {
 	}
 }
 
-// NotChangedSuccess generated a success response for a POST action if no data have been modified
+// NotChangedSuccess generated a success response for a POST/PUT/DELETE action if no data have been modified
 func NotChangedSuccess() render.Renderer {
 	return &Response{
 		HTTPStatusCode: http.StatusResetContent,

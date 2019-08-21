@@ -23,13 +23,13 @@ Feature: User accepts an invitation to join a group
 
   Scenario: Successfully accept an invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-invitations/11/accept"
-    Then the response code should be 201
+    When I send a PUT request to "/current-user/group-invitations/11/accept"
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
       "success": true,
-      "message": "created"
+      "message": "updated"
     }
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
@@ -47,7 +47,7 @@ Feature: User accepts an invitation to join a group
 
   Scenario: Accept an already accepted invitation
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-invitations/14/accept"
+    When I send a PUT request to "/current-user/group-invitations/14/accept"
     Then the response code should be 205
     And the response body should be, in JSON:
     """
