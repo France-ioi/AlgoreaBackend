@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -77,7 +78,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError
+			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
 		}
 	}
 
