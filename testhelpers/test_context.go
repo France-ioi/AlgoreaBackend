@@ -13,8 +13,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
 	"github.com/DATA-DOG/godog/gherkin"
-	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
-	"github.com/jinzhu/gorm"
+	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 	"github.com/thingful/httpmock"
 
@@ -26,11 +25,6 @@ import (
 type dbquery struct {
 	sql    string
 	values []interface{}
-}
-
-type addedDBIndex struct {
-	Table string
-	Index string
 }
 
 // TestContext implements context for tests
@@ -45,7 +39,6 @@ type TestContext struct {
 	logsRestoreFunc  func()
 	inScenario       bool
 	dbTableData      map[string]*gherkin.DataTable
-	addedDBIndices   []*addedDBIndex
 	templateSet      *jet.Set
 	requestHeaders   map[string][]string
 }
@@ -113,20 +106,6 @@ func (ctx *TestContext) ScenarioTeardown(interface{}, error) { // nolint
 		}
 		httpmock.DeactivateAndReset()
 	}()
-
-	db, err := gorm.Open("mysql", ctx.db())
-	if err != nil {
-		panic(err)
-	}
-
-	for _, indexDefinition := range ctx.addedDBIndices {
-		if oneErr := db.Table(indexDefinition.Table).RemoveIndex(indexDefinition.Index).Error; oneErr != nil {
-			_ = db.AddError(oneErr) // nolint: gosec
-		}
-	}
-	if db.Error != nil {
-		panic(db.Error)
-	}
 
 	ctx.tearDownApp()
 }
