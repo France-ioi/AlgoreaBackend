@@ -15,8 +15,10 @@ import (
 //   It also refreshes the access rights.
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
-//   and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationAccepted`.
-//   Otherwise the unprocessable entity error is returned.
+//     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationAccepted`.
+//     Otherwise the unprocessable entity error is returned.
+//
+//   * If `groups_groups.sType` is `invitationAccepted` already, the "not changed" (205) response is returned.
 // parameters:
 // - name: group_id
 //   in: path
