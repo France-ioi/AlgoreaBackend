@@ -16,7 +16,9 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
-			ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, user.SelfGroupID).
+			ON groups_groups.idGroupParent = groups.ID AND
+				groups_groups.sType IN ('invitationAccepted', 'requestAccepted') AND
+				groups_groups.idGroupChild = ?`, user.SelfGroupID).
 		Where("groups.idTeamItem = ?", itemID).
 		Where("groups.sType = 'Team'").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
@@ -26,7 +28,9 @@ func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
 func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
-			ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, user.SelfGroupID).
+			ON groups_groups.idGroupParent = groups.ID AND
+				groups_groups.sType IN ('invitationAccepted', 'requestAccepted') AND
+				groups_groups.idGroupChild = ?`, user.SelfGroupID).
 		Joins(`LEFT JOIN items_ancestors
 			ON items_ancestors.idItemAncestor = groups.idTeamItem`).
 		Where("groups.sType = 'Team'").

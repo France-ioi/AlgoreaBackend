@@ -83,9 +83,9 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 			- {ID: 223, idItem: 1, idGroup: 101, iScore: 20.0, bValidated: 0, sAncestorsComputationState: todo}
 			- {ID: 224, idItem: 1, idGroup: 102, iScore: 30.0, bValidated: 0, sAncestorsComputationState: done}
 		groups_groups:
-			- {ID: 333, idGroupParent: 100, idGroupChild: 200}
-			- {ID: 334, idGroupParent: 101, idGroupChild: 200}
-			- {ID: 335, idGroupParent: 102, idGroupChild: 200}
+			- {ID: 333, idGroupParent: 100, idGroupChild: 200, sType: direct}
+			- {ID: 334, idGroupParent: 101, idGroupChild: 200, sType: invitationAccepted}
+			- {ID: 335, idGroupParent: 102, idGroupChild: 200, sType: requestAccepted}
 		users:
 			- {ID: 500, idGroupSelf: 200}`)
 	defer func() { _ = db.Close() }()

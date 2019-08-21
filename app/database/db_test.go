@@ -1019,6 +1019,24 @@ func TestDB_ScanIntoSliceOfMaps_ErrorOnScan(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).
+		AddRow(1).AddRow(2))
+	db = db.Table("myTable")
+
+	dbScan := db.ScanAndHandleMaps(func(map[string]interface{}) error {
+		return expectedError
+	})
+	assert.Equal(t, dbScan, db)
+	assert.Equal(t, expectedError, dbScan.Error())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_Updates(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()

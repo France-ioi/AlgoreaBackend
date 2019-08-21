@@ -1,6 +1,6 @@
 users: [{ID: 7, idGroupSelf: 17, sLogin: 7}]
 groups: [{ID: 17}, {ID: 26}]
-groups_groups: [{idGroupParent: 26, idGroupChild: 17}]
+groups_groups: [{idGroupParent: 26, idGroupChild: 17, sType: requestAccepted}]
 groups_ancestors:
   - {idGroupAncestor: 17, idGroupChild: 17}
   - {idGroupAncestor: 26, idGroupChild: 17}

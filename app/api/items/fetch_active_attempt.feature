@@ -10,8 +10,8 @@ Feature: Fetch active attempt for an item
       | 102 | 10         | Team     |
       | 111 | null       | UserSelf |
     And the database has the following table 'groups_groups':
-      | idGroupParent | idGroupChild |
-      | 102           | 101          |
+      | idGroupParent | idGroupChild | sType              |
+      | 102           | 101          | invitationAccepted |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 101             | 101          | 1       |

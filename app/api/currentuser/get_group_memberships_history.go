@@ -8,6 +8,51 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /current-user/group-memberships-history groups users groupsMembershipHistory
+// ---
+// summary: Get a history of invitations/requests for the current user
+// description:
+//   Returns the records from `groups_groups` having `sStatusDate` >= `users.sNotificationReadDate`
+//   and any user-related type (`sType` != "direct") with the corresponding `groups` for the current user.
+// parameters:
+// - name: sort
+//   in: query
+//   default: [-status_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [status_date,-status_date,id,-id]
+// - name: from.status_date
+//   description: Start the page from the invitation/request next to one with `sStatusDate` = `from.status_date`
+//                and `groups_groups.ID` = `from.id`
+//                (`from.id` is required when `from.status_date` is present)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the invitation/request next to one with `sStatusDate`=`from.status_date`
+//                and `groups_groups.ID`=`from.id`
+//                (`from.status_date` is required when from.id is present)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Return the first N invitations/requests
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. Success response with an array of invitations/requests
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupsMembershipHistoryResponseRow"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
