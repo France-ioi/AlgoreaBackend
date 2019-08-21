@@ -14,7 +14,6 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
-	s.Step(`^the table "([^"]*)" has a unique key "([^"]*)" on "([^"]*)"$`, ctx.TableHasUniqueKey)
 
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
 	s.Step(`^I am the user with ID "([^"]*)"$`, ctx.IAmUserWithID)

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
-	"github.com/jinzhu/gorm"
 )
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
@@ -99,23 +98,6 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gh
 func (ctx *TestContext) TableShouldNotContainID(tableName string, ids string) error { // nolint
 	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false,
 		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "ID"}}}}})
-}
-
-func (ctx *TestContext) TableHasUniqueKey(tableName, indexName, columns string) error { // nolint
-	db, err := gorm.Open("mysql", ctx.db())
-	if err != nil {
-		return err
-	}
-
-	if db.Dialect().HasIndex(tableName, indexName) {
-		return nil
-	}
-
-	if err := db.Table(tableName).AddUniqueIndex(indexName, strings.Split(columns, ",")...).Error; err != nil {
-		return err
-	}
-	ctx.addedDBIndices = append(ctx.addedDBIndices, &addedDBIndex{Table: tableName, Index: indexName})
-	return nil
 }
 
 func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
