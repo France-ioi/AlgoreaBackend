@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /current-user/group-invitations/{group_id}/reject groups users groupInvitationReject
+// swagger:operation POST /current-user/group-invitations/{group_id}/reject groups users groupInvitationReject
 // ---
 // summary: Reject a group invitation
 // description:
@@ -25,9 +25,7 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     "$ref": "#/responses/updatedResponse"
-//   "205":
-//     "$ref": "#/responses/notChangedResponse"
+//     "$ref": "#/responses/updatedOrNotChangedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
