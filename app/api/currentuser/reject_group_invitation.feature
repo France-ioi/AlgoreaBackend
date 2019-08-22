@@ -22,7 +22,7 @@ Feature: User rejects an invitation to join a group
 
   Scenario: Successfully reject an invitation
     Given I am the user with ID "1"
-    When I send a PUT request to "/current-user/group-invitations/11/reject"
+    When I send a POST request to "/current-user/group-invitations/11/reject"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -39,8 +39,8 @@ Feature: User rejects an invitation to join a group
 
   Scenario: Reject an already rejected invitation
     Given I am the user with ID "1"
-    When I send a PUT request to "/current-user/group-invitations/14/reject"
-    Then the response code should be 205
+    When I send a POST request to "/current-user/group-invitations/14/reject"
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {

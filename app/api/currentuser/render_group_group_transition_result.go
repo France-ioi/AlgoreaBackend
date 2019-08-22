@@ -22,7 +22,11 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		}
 		return service.ErrNotFound(errors.New("no such relation"))
 	case database.Unchanged:
-		service.MustNotBeError(render.Render(w, r, service.NotChangedSuccess()))
+		statusCode := 200
+		if action == createGroupRequestAction {
+			statusCode = 201
+		}
+		service.MustNotBeError(render.Render(w, r, service.NotChangedSuccess(statusCode)))
 	case database.Success:
 		var successRenderer render.Renderer
 		switch action {
