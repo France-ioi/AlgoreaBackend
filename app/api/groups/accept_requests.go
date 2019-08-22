@@ -26,6 +26,7 @@ import (
 //
 //   The action should not create cycles in the groups relations graph, otherwise
 //   the `group_id` gets skipped with `cycle` as the result.
+//   The response status code on success (200) doesn't depend on per-group results.
 // parameters:
 // - name: parent_group_id
 //   in: path
