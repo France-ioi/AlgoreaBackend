@@ -8,9 +8,9 @@ import (
 
 // swagger:operation POST /current-user/group-requests/{group_id} groups users groupRequestCreate
 // ---
-// summary: Send a request to join a group
+// summary: Create a request to join a group
 // description:
-//   Lets a user send a request to join a group.
+//   Lets a user create a request to join a group.
 //   On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
 //   `idGroupChild` = `group_id`, `groups_groups.sType` = `requestSent` and `sStatusDate` equal to current UTC time.
 //
