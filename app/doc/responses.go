@@ -81,6 +81,28 @@ type updatedGroupRelationsResponse struct {
 	}
 }
 
+// enum: [cycle, invalid, success, unchanged, not_found]
+type loginTransitionResult string
+
+// Created. Success response with the per-login results
+// swagger:response createdLoginRelationsResponse
+type createdLoginRelationsResponse struct {
+	// in:body
+	Body struct {
+		// "created"
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// enum: true
+		// required: true
+		Success bool `json:"success"`
+		// `login` -> `result`
+		// required: true
+		Data map[string]loginTransitionResult `json:"data"`
+	}
+}
+
 // OK. Success response with the requested answer
 // swagger:response itemAnswerGetResponse
 type itemAnswerGetResponse struct {
