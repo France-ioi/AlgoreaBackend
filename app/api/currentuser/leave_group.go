@@ -18,11 +18,9 @@ import (
 //     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`/`left`.
 //     Otherwise the unprocessable entity error is returned.
 //
-//   * If `groups_groups.sType` is `left` already, the "not changed" (200) response is returned.
+//   * If `groups_groups.sType` is `left` already, the "unchanged" (200) response is returned.
 //
 //   * The user cannot leave the group if `NOW()` < `groups.lockUserDeletionDate`.
-//
-//   * If `groups_groups.sType` is `left` already, the "unchanged" (200) response is returned.
 // parameters:
 // - name: group_id
 //   in: path
