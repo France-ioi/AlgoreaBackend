@@ -23,7 +23,7 @@ import (
 //   * If `groups_groups.sType` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'direct',
 //     the unprocessable entity error is returned
 //
-//   * If `groups_groups.sType` is `requestSent` already, the "not changed" (201) response is returned.
+//   * If `groups_groups.sType` is `requestSent` already, the "unchanged" (201) response is returned.
 // parameters:
 // - name: group_id
 //   in: path

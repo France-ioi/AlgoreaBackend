@@ -19,17 +19,22 @@ type updatedResponse struct {
 	}
 }
 
-// The request has succeeded. The message shows if the object has been updated.
+// The request has succeeded. The `data.changed` shows if the object has been updated.
 // swagger:response updatedOrNotChangedResponse
 type updatedOrNotChangedResponse struct {
 	// in: body
 	Body struct {
-		// enum: updated,not changed
+		// enum: updated,unchanged
 		// required: true
 		Message string `json:"message"`
 		// true
 		// required: true
 		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
 	}
 }
 
@@ -63,17 +68,22 @@ type deletedResponse struct {
 	}
 }
 
-// The request has succeeded. The message shows if the object has been deleted.
+// The request has succeeded. The `data.changed` shows if the object has been deleted.
 // swagger:response deletedOrNotChangedResponse
 type deletedOrNotChangedResponse struct {
 	// in: body
 	Body struct {
-		// enum: deleted,not changed
+		// enum: deleted,unchanged
 		// required: true
 		Message string `json:"message"`
 		// true
 		// required: true
 		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
 	}
 }
 
@@ -87,17 +97,22 @@ type CreatedResponse struct {
 	Success bool `json:"success"`
 }
 
-// The request has succeeded. The message shows if the object has been deleted.
+// The request has succeeded. The `data.changed` shows if the object has been created.
 // swagger:response createdOrNotChangedResponse
 type createdOrNotChangedResponse struct {
 	// in: body
 	Body struct {
-		// enum: created,not changed
+		// enum: created,unchanged
 		// required: true
 		Message string `json:"message"`
 		// true
 		// required: true
 		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
 	}
 }
 
