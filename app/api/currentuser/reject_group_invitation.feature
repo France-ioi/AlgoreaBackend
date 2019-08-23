@@ -28,7 +28,8 @@ Feature: User rejects an invitation to join a group
     """
     {
       "success": true,
-      "message": "created"
+      "message": "created",
+      "data": {"changed": true}
     }
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
@@ -45,7 +46,8 @@ Feature: User rejects an invitation to join a group
     """
     {
       "success": true,
-      "message": "not changed"
+      "message": "unchanged",
+      "data": {"changed": false}
     }
     """
     And the table "groups_groups" should stay unchanged

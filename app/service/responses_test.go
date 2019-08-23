@@ -63,7 +63,7 @@ func TestNotChangedSuccess(t *testing.T) {
 	assert := assertlib.New(t)
 
 	recorder := httpResponseForResponse(NotChangedSuccess(http.StatusResetContent))
-	assert.Equal(`{"success":true,"message":"not changed"}`+"\n", recorder.Body.String())
+	assert.Equal(`{"success":true,"message":"unchanged","data":{"changed":false}}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusResetContent, recorder.Code)
 }
 

@@ -45,27 +45,27 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 			name:             "unchanged (created)",
 			result:           database.Unchanged,
 			wantStatusCode:   http.StatusCreated,
-			wantResponseBody: `{"success":true,"message":"not changed"}`,
+			wantResponseBody: `{"success":true,"message":"unchanged","data":{"changed":false}}`,
 		},
 		{
 			name:                  "unchanged (ok)",
 			result:                database.Unchanged,
 			treatSuccessAdDeleted: true,
 			wantStatusCode:        http.StatusOK,
-			wantResponseBody:      `{"success":true,"message":"not changed"}`,
+			wantResponseBody:      `{"success":true,"message":"unchanged","data":{"changed":false}}`,
 		},
 		{
 			name:             "success (created)",
 			result:           database.Success,
 			wantStatusCode:   http.StatusCreated,
-			wantResponseBody: `{"success":true,"message":"created"}`,
+			wantResponseBody: `{"success":true,"message":"created","data":{"changed":true}}`,
 		},
 		{
 			name:                  "success (deleted)",
 			treatSuccessAdDeleted: true,
 			result:                database.Success,
 			wantStatusCode:        http.StatusOK,
-			wantResponseBody:      `{"success":true,"message":"deleted"}`,
+			wantResponseBody:      `{"success":true,"message":"deleted","data":{"changed":true}}`,
 		},
 	}
 	for _, tt := range tests {

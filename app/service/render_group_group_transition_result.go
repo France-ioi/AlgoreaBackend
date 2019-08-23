@@ -28,9 +28,9 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		}
 	case database.Success:
 		if treatSuccessAsDeleted {
-			MustNotBeError(render.Render(w, r, DeletionSuccess(nil)))
+			MustNotBeError(render.Render(w, r, DeletionSuccess(map[string]bool{"changed": true})))
 		} else {
-			MustNotBeError(render.Render(w, r, CreationSuccess(nil)))
+			MustNotBeError(render.Render(w, r, CreationSuccess(map[string]bool{"changed": true})))
 		}
 	}
 	return NoError

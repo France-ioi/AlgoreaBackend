@@ -29,7 +29,8 @@ Feature: User leaves a group
     """
     {
       "success": true,
-      "message": "deleted"
+      "message": "deleted",
+      "data": {"changed": true}
     }
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
@@ -47,7 +48,8 @@ Feature: User leaves a group
     """
     {
       "success": true,
-      "message": "not changed"
+      "message": "unchanged",
+      "data": {"changed": false}
     }
     """
     And the table "groups_groups" should stay unchanged
@@ -62,7 +64,8 @@ Feature: User leaves a group
     """
     {
       "success": true,
-      "message": "deleted"
+      "message": "deleted",
+      "data": {"changed": true}
     }
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
