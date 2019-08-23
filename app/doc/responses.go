@@ -1,6 +1,10 @@
 package doc
 
-import "time"
+import (
+	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+)
 
 // These definitions are unused by code, just used to generate documentation
 
@@ -57,6 +61,24 @@ type CreatedResponse struct {
 	// true
 	// required: true
 	Success bool `json:"success"`
+}
+
+// OK. Success response with the per-group update statuses
+// swagger:response
+type updatedGroupRelationsResponse struct {
+	// in:body
+	Body struct {
+		// "updated"
+		// enum: updated
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// `group_id` -> `result`
+		// required: true
+		Data map[string]database.GroupGroupTransitionResult `json:"data"`
+	}
 }
 
 // enum: [cycle, invalid, success, unchanged, not_found]
