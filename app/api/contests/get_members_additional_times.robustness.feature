@@ -1,4 +1,4 @@
-Feature: Get group by name (contestGetGroupByName) - robustness
+Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime) - robustness
   Background:
     Given the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned |
@@ -31,48 +31,55 @@ Feature: Get group by name (contestGetGroupByName) - robustness
 
   Scenario: Wrong item_id
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/abc/groups/by-name?name=Group%20B"
+    When I send a GET request to "/contests/abc/groups/13/members/additional-times"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario: name is missing
-    Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/groups/by-name"
-    Then the response code should be 400
-    And the response error message should contain "Missing name"
-
   Scenario: No such item
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/90/groups/by-name?name=Group%20B"
+    When I send a GET request to "/contests/90/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No access to the item
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/10/groups/by-name?name=Group%20B"
+    When I send a GET request to "/contests/10/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is not a timed contest
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
+    When I send a GET request to "/contests/60/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The user is not a contest admin
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
+    When I send a GET request to "/contests/50/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Wrong group_id
+    Given I am the user with ID "1"
+    When I send a GET request to "/contests/70/groups/abc/members/additional-times"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: The group is not owned by the user
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/70/groups/by-name?name=Group%20A"
+    When I send a GET request to "/contests/70/groups/12/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No such group (space)
+  Scenario: No such group
     Given I am the user with ID "1"
-    When I send a GET request to "/contests/70/groups/by-name?name=Group%20B%20"
+    When I send a GET request to "/contests/70/groups/404/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Wrong sort
+    Given I am the user with ID "1"
+    When I send a GET request to "/contests/70/groups/13/members/additional-times?sort=title"
+    Then the response code should be 400
+    And the response error message should contain "Unallowed field in sorting parameters: "title""
+
