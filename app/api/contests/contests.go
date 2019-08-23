@@ -11,6 +11,7 @@ import (
 )
 
 // Service is the mount point for services related to `contests`
+// swagger:ignore
 type Service struct {
 	service.Base
 }
@@ -20,8 +21,28 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 
-	router.Put("/contests/{item_id}/additional-time", service.AppHandler(srv.setAdditionalTime).ServeHTTP)
-	router.Get("/contests/{item_id}/group-by-name", service.AppHandler(srv.getGroupByName).ServeHTTP)
+	router.Get("/contests/{item_id}/groups/by-name", service.AppHandler(srv.getGroupByName).ServeHTTP)
+
+	router.Get("/contests/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
+
+	router.Put("/contests/{item_id}/groups/{group_id}/additional-times",
+		service.AppHandler(srv.setAdditionalTime).ServeHTTP)
+	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
+		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+}
+
+// swagger:model contestInfo
+type contestInfo struct {
+	// required: true
+	GroupID int64 `gorm:"column:idGroup" json:"group_id,string"`
+	// required: true
+	Name string `gorm:"column:sName" json:"name"`
+	// required: true
+	Type string `gorm:"column:sType" json:"type"`
+	// required: true
+	AdditionalTime int32 `gorm:"column:iAdditionalTime" json:"additional_time"`
+	// required: true
+	TotalAdditionalTime int32 `gorm:"column:iTotalAdditionalTime" json:"total_additional_time"`
 }
 
 func (srv *Service) getTeamModeForTimedContestManagedByUser(itemID int64, user *database.User) (bool, error) {
