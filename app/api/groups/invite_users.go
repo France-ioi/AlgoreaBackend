@@ -21,6 +21,74 @@ import (
 
 const maxAllowedLoginsToInvite = 100
 
+// swagger:operation POST /groups/{parent_group_id}/invitations groups users groupInviteUsers
+// ---
+// summary: Invite users to a group
+// description:
+//   Lets an admin invite users, based on list of their logins, to join a group.
+//   On success the service creates new rows in `groups_groups` with
+//
+//     * `sType` = "invitationSent"
+//
+//     * `sStatusDate` = current UTC time
+//
+//     * `idUserInviting` = `users.ID` of the authorized user,
+//
+//     * `sRole` = "member",
+//
+//     * correct `iChildOrder`, so that the row becomes the last child of the parent group.
+//
+//
+//   It also refreshes the access rights.
+//
+//
+//   * Logins not corresponding to valid users are ignored (result = "not_found").
+//
+//   * Pending group requests from users listed in `logins` become accepted (result = "success").
+//
+//   * Pending invitations stay unchanged (result = "unchanged).
+//
+//   * Group members (`groups_groups.sType` = "invitationAccepted"/"requestAccepted"/"direct")
+//     are skipped (result = "invalid").
+//
+//
+//   The action should not create cycles in the groups relations graph, otherwise
+//   the login gets skipped with `cycle` as the result.
+//
+//
+//   The response status code on success (201) doesn't depend on per-group results.
+//
+//
+//   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
+// consumes:
+// - application/json
+// parameters:
+// - name: parent_group_id
+//   in: path
+//   type: integer
+//   required: true
+// - in: body
+//   name: logins_info
+//   required: true
+//   schema:
+//     type: object
+//     required: [logins]
+//     properties:
+//       logins:
+//         type: array
+//         items:
+//           type: string
+// responses:
+//   "201":
+//     "$ref": "#/responses/createdLoginRelationsResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {

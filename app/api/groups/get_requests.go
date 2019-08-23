@@ -8,6 +8,138 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /groups/{group_id}/requests groups users groupRequestsView
+// ---
+// summary: List pending requests and invitations for a group
+// description: >
+//
+//   Returns a list of group requests and invitations
+//   (rows from the `groups_groups` table with `idGroupParent` = `group_id` and
+//   `sType` = "invitationSent"/"requestSent"/"invitationRefused"/"requestRefused")
+//   with basic info on joining (invited/requesting) users and inviting users.
+//
+//
+//   When `old_rejections_weeks` is given, only those rejected invitations/requests
+//   (`groups_groups.sType` is "invitationRefused" or "requestRefused") are shown
+//   whose `sStatusDate` has changed in the last `old_rejections_weeks` weeks.
+//   Otherwise all rejected invitations/requests are shown.
+//
+//
+//   Invited user’s `sFirstName` and `sLastName` are nulls
+//   if `groups_groups.sType` = "invitationSent" or "invitationRefused".
+//
+//
+//   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
+// parameters:
+// - name: group_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: old_rejections_weeks
+//   in: query
+//   type: integer
+// - name: sort
+//   in: query
+//   default: [-status_date,id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [status_date,-status_date,joining_user.login,-joining_user.login,type,-type,id,-id]
+// - name: from.status_date
+//   description: Start the page from the request/invitation next to the request/invitation with
+//                `groups_groups.sStatusDate` = `from.status_date`
+//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//   in: query
+//   type: string
+// - name: from.joining_user.login
+//   description: Start the page from the request/invitation next to the request/invitation
+//                whose joining user's login is `from.joining_user.login`
+//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//   in: query
+//   type: string
+// - name: from.type
+//   description: Start the page from the request/invitation next to the request/invitation with
+//                `groups_groups.sType` = `from.type`, sorted numerically.
+//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//   in: query
+//   type: string
+// - name: from.id
+//   description: Start the page from the request/invitation next to the request/invitation with `groups_groups.ID`=`from.id`
+//                (depending on the `sort` parameter, some other `from.*` parameters may be required)
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display the first N requests/invitations
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. The array of group requests/invitations
+//     schema:
+//       type: array
+//       items:
+//         type: object
+//         required: [id, status_date, type, joining_user, inviting_user]
+//         properties:
+//           id:
+//             description: "`groups_groups.ID`"
+//             type: string
+//             format: int64
+//           status_date:
+//             type: string
+//             description: Nullable
+//             format: date-time
+//           type:
+//             type: string
+//             description: "`groups_groups.sType`"
+//             enum: [invitationSent, requestSent, invitationRefused, requestRefused]
+//           joining_user:
+//             type: object
+//             description: Nullable
+//             required: [id, login, first_name, last_name, grade]
+//             properties:
+//               id:
+//                 description: "`users.ID`"
+//                 type: string
+//                 format: int64
+//               login:
+//                 type: string
+//               first_name:
+//                 description: Nullable
+//                 type: string
+//               last_name:
+//                 description: Nullable
+//                 type: string
+//               grade:
+//                 description: Nullable
+//                 type: integer
+//           inviting_user:
+//             type: object
+//             description: Nullable
+//             required: [id, login, first_name, last_name]
+//             properties:
+//               id:
+//                 description: "`users.ID`"
+//                 type: string
+//                 format: int64
+//               login:
+//                 type: string
+//               first_name:
+//                 description: Nullable
+//                 type: string
+//               last_name:
+//                 description: Nullable
+//                 type: string
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
