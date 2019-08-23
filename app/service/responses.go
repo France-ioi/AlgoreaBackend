@@ -58,6 +58,9 @@ func NotChangedSuccess(httpStatus int) render.Renderer {
 	return &Response{
 		HTTPStatusCode: httpStatus,
 		Success:        true,
-		Message:        "not changed",
+		Message:        "unchanged",
+		Data: map[string]bool{
+			"changed": false,
+		},
 	}
 }
