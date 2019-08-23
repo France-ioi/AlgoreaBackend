@@ -9,21 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model contestGetGroupByNameResult
-type getGroupByNameResult struct {
-	// required: true
-	GroupID int64 `gorm:"column:idGroup" json:"group_id,string"`
-	// required: true
-	Name string `gorm:"column:sName" json:"name"`
-	// required: true
-	Type string `gorm:"column:sType" json:"type"`
-	// required: true
-	AdditionalTime int32 `gorm:"column:iAdditionalTime" json:"additional_time"`
-	// required: true
-	TotalAdditionalTime int32 `gorm:"column:iTotalAdditionalTime" json:"total_additional_time"`
-}
-
-// swagger:operation GET /contests/{item_id}/group-by-name contests groups contestGetGroupByName
+// swagger:operation GET /contests/{item_id}/groups/by-name contests groups contestGetGroupByName
 // ---
 // summary: Get a group by name
 // description: >
@@ -66,7 +52,7 @@ type getGroupByNameResult struct {
 //   "200":
 //     description: OK. Success response with the `group_id`, `additional_time`, `total_additional_time`
 //     schema:
-//       "$ref": "#/definitions/contestGetGroupByNameResult"
+//       "$ref": "#/definitions/contestInfo"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
@@ -133,7 +119,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 			Where("groups.sName LIKE ?", groupName)
 	}
 
-	var result getGroupByNameResult
+	var result contestInfo
 	if err = query.Take(&result).Error(); gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}

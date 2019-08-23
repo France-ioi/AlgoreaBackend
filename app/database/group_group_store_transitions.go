@@ -191,7 +191,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 }
 
-// GroupGroupTransitionResult is an enum{Cycle, Invalid, Success, Unchanged}
+// GroupGroupTransitionResult is an enum{cycle, invalid, success, unchanged}
 type GroupGroupTransitionResult string
 
 const (
