@@ -40,7 +40,7 @@ Feature: User sends a request to join a group
   Scenario: Try to recreate a request that already exists
     Given I am the user with ID "1"
     When I send a POST request to "/current-user/group-requests/14"
-    Then the response code should be 205
+    Then the response code should be 201
     And the response body should be, in JSON:
     """
     {
