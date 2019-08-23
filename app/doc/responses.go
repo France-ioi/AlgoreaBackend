@@ -77,9 +77,6 @@ type updatedGroupRelationsResponse struct {
 		Success bool `json:"success"`
 		// `group_id` -> `result`
 		// required: true
-		// example:
-		//   "1234": success
-		//   "5678": invalid
 		Data map[string]database.GroupGroupTransitionResult `json:"data"`
 	}
 }
