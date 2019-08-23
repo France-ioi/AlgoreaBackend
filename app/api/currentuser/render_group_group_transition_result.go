@@ -31,11 +31,11 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		var successRenderer render.Renderer
 		switch action {
 		case leaveGroupAction:
-			successRenderer = service.DeletionSuccess(nil)
+			successRenderer = service.DeletionSuccess(map[string]bool{"changed": true})
 		case createGroupRequestAction:
-			successRenderer = service.CreationSuccess(nil)
+			successRenderer = service.CreationSuccess(map[string]bool{"changed": true})
 		default:
-			successRenderer = service.UpdateSuccess(nil)
+			successRenderer = service.UpdateSuccess(map[string]bool{"changed": true})
 		}
 		service.MustNotBeError(render.Render(w, r, successRenderer))
 	}
