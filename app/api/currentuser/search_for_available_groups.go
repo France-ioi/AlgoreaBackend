@@ -17,10 +17,16 @@ const minSearchStringLength = 3
 // swagger:operation GET /current-user/available-groups groups users groupsAvailableSearch
 // ---
 // summary: Search for available groups
-// description:
+// description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
 //   Returns groups with `bFreeAccess`=1, whose `sName` has `search` as a substring, and for that the current user
 //   is not already a member and don’t have pending requests/invitations.
+//
+//
+//   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
+//   at the beginning. This causes MySQL to explore every row having `bFreeAccess`=1. Moreover, actually
+//   it has to examine every row of the `groups` table since there is no index for the `bFreeAccess` column.
+//   But since there are not too many groups and the result rows count is limited, the search works almost well.
 // parameters:
 // - name: search
 //   in: query
