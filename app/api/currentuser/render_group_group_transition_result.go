@@ -26,7 +26,7 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		if action == createGroupRequestAction {
 			statusCode = 201
 		}
-		service.MustNotBeError(render.Render(w, r, service.NotChangedSuccess(statusCode)))
+		service.MustNotBeError(render.Render(w, r, service.UnchangedSuccess(statusCode)))
 	case database.Success:
 		var successRenderer render.Renderer
 		switch action {

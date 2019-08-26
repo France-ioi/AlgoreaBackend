@@ -24,8 +24,8 @@ type updatedResponse struct {
 }
 
 // The request has succeeded. The `data.changed` shows if the object has been updated.
-// swagger:response updatedOrNotChangedResponse
-type updatedOrNotChangedResponse struct {
+// swagger:response updatedOrUnchangedResponse
+type updatedOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: updated,unchanged
@@ -73,8 +73,8 @@ type deletedResponse struct {
 }
 
 // The request has succeeded. The `data.changed` shows if the object has been deleted.
-// swagger:response deletedOrNotChangedResponse
-type deletedOrNotChangedResponse struct {
+// swagger:response deletedOrUnchangedResponse
+type deletedOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: deleted,unchanged
@@ -102,8 +102,8 @@ type CreatedResponse struct {
 }
 
 // The request has succeeded. The `data.changed` shows if the object has been created.
-// swagger:response createdOrNotChangedResponse
-type createdOrNotChangedResponse struct {
+// swagger:response createdOrUnchangedResponse
+type createdOrUnchangedResponse struct {
 	// in: body
 	Body struct {
 		// enum: created,unchanged
