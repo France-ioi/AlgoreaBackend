@@ -94,6 +94,5 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		return err
 	}))
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID],
-		action == createGroupRequestAction, action == leaveGroupAction)
+	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], action)
 }

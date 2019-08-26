@@ -19,6 +19,8 @@ import (
 //     Otherwise the unprocessable entity error is returned.
 //
 //   * The user cannot leave the group if `NOW()` < `groups.lockUserDeletionDate`.
+//
+//   * If `groups_groups.sType` is `left` already, the "unchanged" (200) response is returned.
 // parameters:
 // - name: group_id
 //   in: path

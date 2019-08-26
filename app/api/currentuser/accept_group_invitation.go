@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-invitations/{group_id}/accept groups users acceptGroupInvitation
+// swagger:operation POST /current-user/group-invitations/{group_id}/accept groups users groupInvitationAccept
 // ---
 // summary: Accept a group invitation
 // description:
@@ -18,14 +18,14 @@ import (
 //     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationAccepted`.
 //     Otherwise the unprocessable entity error is returned.
 //
-//   * If `groups_groups.sType` is `invitationAccepted` already, the "unchanged" (201) response is returned.
+//   * If `groups_groups.sType` is `invitationAccepted` already, the "unchanged" (200) response is returned.
 // parameters:
 // - name: group_id
 //   in: path
 //   type: integer
 //   required: true
 // responses:
-//   "201":
+//   "200":
 //     "$ref": "#/responses/updatedOrNotChangedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
