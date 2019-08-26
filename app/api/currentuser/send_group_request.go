@@ -31,7 +31,7 @@ import (
 //   required: true
 // responses:
 //   "201":
-//     "$ref": "#/responses/createdOrNotChangedResponse"
+//     "$ref": "#/responses/createdOrUnchangedResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
