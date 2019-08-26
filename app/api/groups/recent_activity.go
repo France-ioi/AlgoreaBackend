@@ -167,9 +167,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var result []map[string]interface{}
-	if err := query.ScanIntoSliceOfMaps(&result).Error(); err != nil {
-		return service.ErrUnexpected(err)
-	}
+	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
 	render.Respond(w, r, convertedResult)

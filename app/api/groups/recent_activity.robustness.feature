@@ -27,6 +27,18 @@ Feature: Get recent activity for group_id and item_id - robustness
       | ID | idItemAncestor | idItemChild | iVersion |
       | 1  | 200            | 200         | 0        |
 
+  Scenario: Wrong group
+    Given I am the user with ID "3"
+    When I send a GET request to "/groups/abc/recent_activity?item_id=200"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for group_id (should be int64)"
+
+  Scenario: Wrong item
+    Given I am the user with ID "3"
+    When I send a GET request to "/groups/13/recent_activity?item_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for item_id (should be int64)"
+
   Scenario: Should fail when user is not an admin of the group
     Given I am the user with ID "1"
     When I send a GET request to "/groups/13/recent_activity?item_id=200"
