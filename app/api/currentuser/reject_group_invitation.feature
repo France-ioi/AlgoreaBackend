@@ -23,12 +23,13 @@ Feature: User rejects an invitation to join a group
   Scenario: Successfully reject an invitation
     Given I am the user with ID "1"
     When I send a POST request to "/current-user/group-invitations/11/reject"
-    Then the response code should be 201
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
       "success": true,
-      "message": "created"
+      "message": "updated",
+      "data": {"changed": true}
     }
     """
     And the table "groups_groups" should stay unchanged but the row with ID "1"
@@ -40,12 +41,13 @@ Feature: User rejects an invitation to join a group
   Scenario: Reject an already rejected invitation
     Given I am the user with ID "1"
     When I send a POST request to "/current-user/group-invitations/14/reject"
-    Then the response code should be 205
+    Then the response code should be 200
     And the response body should be, in JSON:
     """
     {
       "success": true,
-      "message": "not changed"
+      "message": "unchanged",
+      "data": {"changed": false}
     }
     """
     And the table "groups_groups" should stay unchanged

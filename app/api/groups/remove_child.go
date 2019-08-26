@@ -10,6 +10,56 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation DELETE /groups/{parent_group_id}/relations/{child_group_id} groups groupRemoveChild
+// ---
+// summary: Remove a child group from a parent group and optionally delete that group and its subgroups.
+// description: >
+//   Deletes the relation from `groups_groups`. If `delete_orphans` is true and the child group becomes an orphan
+//   then the service also deletes that group, its parent-child relations, and recursively deletes each
+//   new orphaned group.
+//
+//
+//   If a group gets deleted, the service also deletes `groups_groups`, `groups_attempts`,
+//   `groups_items`, `groups_login_prefixes`, and `filters` linked to the group.
+//   Access rights are updated accordingly too.
+//
+//
+//   If `delete_orphans` is false and the child removal would make it an orphan (it doesn't have other parent groups),
+//   the service doesn't change anything, and returns the "unprocessable entity" (422) response
+//   so that the user can consider setting `delete_orphans` to true.
+//
+//
+//   Restrictions (otherwise the 'forbidden' error is returned):
+//     * the authenticated user should be an owner of both `parent_group_id` and `child_group_id,
+//     * the parent group should not be of type "UserSelf",
+//     * the child group should not be of types "Base" or "UserAdmin",
+//     * the relation should be direct (`sType` = "direct").
+// parameters:
+// - name: parent_group_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: child_group_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: delete_orphans
+//   in: query
+//   type: boolean
+//   default: false
+// responses:
+//   "201":
+//     "$ref": "#/responses/deletedResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "422":
+//     "$ref": "#/responses/unprocessableEntityResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
@@ -56,7 +106,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	if err == database.ErrGroupBecomesOrphan {
-		return service.ErrInvalidRequest(
+		return service.ErrUnprocessableEntity(
 			fmt.Errorf("group %d would become an orphan: confirm that you want to delete it", childGroupID))
 	}
 

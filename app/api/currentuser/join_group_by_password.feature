@@ -30,7 +30,8 @@ Feature: Join a group using a password (groupsJoinByPassword)
     """
     {
       "success": true,
-      "message": "created"
+      "message": "created",
+      "data": {"changed": true}
     }
     """
     And the table "groups" should stay unchanged
@@ -55,7 +56,8 @@ Feature: Join a group using a password (groupsJoinByPassword)
     """
     {
       "success": true,
-      "message": "created"
+      "message": "created",
+      "data": {"changed": true}
     }
     """
     And the table "groups" should stay unchanged but the row with ID "12"
@@ -84,7 +86,8 @@ Feature: Join a group using a password (groupsJoinByPassword)
     """
     {
       "success": true,
-      "message": "created"
+      "message": "created",
+      "data": {"changed": true}
     }
     """
     And the table "groups" should stay unchanged

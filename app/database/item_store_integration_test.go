@@ -348,8 +348,9 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {ID: 3, sLogin: 3, idGroupSelf: 30}
 		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}]
 		groups_groups:
-			- {idGroupParent: 40, idGroupChild: 10}
-			- {idGroupParent: 40, idGroupChild: 30}
+			- {idGroupParent: 40, idGroupChild: 10, sType: invitationAccepted}
+			- {idGroupParent: 40, idGroupChild: 20, sType: requestRefused}
+			- {idGroupParent: 40, idGroupChild: 30, sType: requestAccepted}
 		groups_ancestors:
 			- {idGroupAncestor: 10, idGroupChild: 10}
 			- {idGroupAncestor: 20, idGroupChild: 20}

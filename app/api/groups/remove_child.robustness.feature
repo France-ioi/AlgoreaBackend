@@ -59,7 +59,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
   Scenario: User tries to delete a relation making a child group an orphan
     Given I am the user with ID "1"
     When I send a DELETE request to "/groups/22/relations/13"
-    Then the response code should be 400
+    Then the response code should be 422
     And the response error message should contain "Group 13 would become an orphan: confirm that you want to delete it"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

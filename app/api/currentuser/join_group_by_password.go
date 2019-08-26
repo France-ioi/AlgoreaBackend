@@ -90,5 +90,5 @@ func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) 
 	}
 	service.MustNotBeError(err)
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], true, false)
+	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], joinGroupByCodeAction)
 }

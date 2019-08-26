@@ -14,6 +14,39 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation POST /groups/{group_id}/password groups groupChangePassword
+// ---
+// summary: Generate a new password for joining a group
+// description: >
+//
+//   Generates a new password using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
+//   Makes sure it doesn’t correspond to any existing group password. Saves and returns it.
+//
+//
+//   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
+// parameters:
+// - name: group_id
+//   in: path
+//   type: integer
+//   required: true
+// responses:
+//   "200":
+//     description: OK. The new password has been set.
+//     schema:
+//       type: object
+//       properties:
+//         password:
+//           type: string
+//       required:
+//       - password
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
