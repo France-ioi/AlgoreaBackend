@@ -27,7 +27,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	groupsAcceptedCondition := ""
 	if objectName == groups {
 		groupsAcceptedCondition = ` AND (
-			groups_groups.sType IN('invitationAccepted', 'requestAccepted', 'direct')
+			groups_groups.sType IN('invitationAccepted', 'requestAccepted', 'joinedByCode', 'direct')
 		)`
 	}
 
@@ -136,7 +136,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	if objectName == groups {
 		insertQueries[2] += `
 			AND (
-				groups_groups_join.sType IN('invitationAccepted', 'requestAccepted', 'direct')
+				groups_groups_join.sType IN('invitationAccepted', 'requestAccepted', 'joinedByCode', 'direct')
 			)`
 		insertQueries = append(insertQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors

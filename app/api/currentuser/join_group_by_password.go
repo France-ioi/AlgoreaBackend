@@ -82,7 +82,7 @@ func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) 
 				UpdateColumn("sPasswordEnd", gorm.Expr("ADDTIME(NOW(), sPasswordTimer)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByPassword, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)
+			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)
 		return errInTransaction
 	})
 	if apiError != service.NoError {

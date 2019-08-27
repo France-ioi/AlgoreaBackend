@@ -104,7 +104,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Select("parent_links.idGroupChild AS idLinkedGroup, groups.ID, groups.sName").
 		Joins(`
 			JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
-				parent_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
+				parent_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode') AND
 				parent_links.idGroupChild IN (?)`, groupIDs).
 		Joins(`
 			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = groups.ID AND

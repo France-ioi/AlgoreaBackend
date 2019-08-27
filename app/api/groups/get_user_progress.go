@@ -136,7 +136,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
-			ON team_links.sType IN ('direct', 'requestAccepted', 'invitationAccepted') AND
+			ON team_links.sType IN ('direct', 'requestAccepted', 'invitationAccepted', 'joinedByCode') AND
 				team_links.idGroupChild = groups.ID`).
 		Joins(`
 			JOIN groups AS teams

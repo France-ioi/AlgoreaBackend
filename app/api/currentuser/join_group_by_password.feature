@@ -36,9 +36,9 @@ Feature: Join a group using a password (groupsJoinByPassword)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType           | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
-      | 11            | 21           | requestAccepted | 1                                                                                  |
-      | 14            | 21           | requestSent     | 0                                                                                  |
+      | idGroupParent | idGroupChild | sType        | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
+      | 11            | 21           | joinedByCode | 1                                                                                  |
+      | 14            | 21           | requestSent  | 0                                                                                  |
     And the table "groups_ancestors" should be:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -65,10 +65,10 @@ Feature: Join a group using a password (groupsJoinByPassword)
       | ID | sType | sPassword  | sPasswordTimer | bFreeAccess | TIMESTAMPDIFF(SECOND, sPasswordEnd, ADDTIME(NOW(), "12:34:56")) < 3 |
       | 12 | Team  | abc3456789 | 12:34:56       | true        | 1                                                                   |
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType           | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
-      | 11            | 21           | invitationSent  | 0                                                                                  |
-      | 12            | 21           | requestAccepted | 1                                                                                  |
-      | 14            | 21           | requestSent     | 0                                                                                  |
+      | idGroupParent | idGroupChild | sType          | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
+      | 11            | 21           | invitationSent | 0                                                                                  |
+      | 12            | 21           | joinedByCode   | 1                                                                                  |
+      | 14            | 21           | requestSent    | 0                                                                                  |
     And the table "groups_ancestors" should be:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -92,9 +92,9 @@ Feature: Join a group using a password (groupsJoinByPassword)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType           | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
-      | 11            | 21           | invitationSent  | 0                                                                                  |
-      | 14            | 21           | requestAccepted | 1                                                                                  |
+      | idGroupParent | idGroupChild | sType          | (sStatusDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sStatusDate, NOW())) < 3) |
+      | 11            | 21           | invitationSent | 0                                                                                  |
+      | 14            | 21           | joinedByCode   | 1                                                                                  |
     And the table "groups_ancestors" should be:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |

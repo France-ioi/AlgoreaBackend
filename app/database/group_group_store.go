@@ -16,7 +16,7 @@ type GroupGroupStore struct {
 // i.e. groups of which he is a direct member
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	return s.Where("groups_groups.idGroupChild = ?", user.SelfGroupID).
-		Where("groups_groups.sType IN ('invitationAccepted','requestAccepted')")
+		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'joinedByCode')")
 }
 
 func (s *GroupGroupStore) createNewAncestors() {

@@ -26,7 +26,7 @@ func (s *UserItemStore) PropagateAttempts() (err error) {
 		UPDATE users_items
 		JOIN groups_attempts ON groups_attempts.idItem = users_items.idItem
 		JOIN groups_groups ON groups_groups.idGroupParent = groups_attempts.idGroup AND
-			groups_groups.sType IN ('direct', 'invitationAccepted', 'requestAccepted')
+			groups_groups.sType IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode')
 		JOIN users ON users.ID = users_items.idUser AND users.idGroupSelf = groups_groups.idGroupChild
 		SET users_items.sAncestorsComputationState = 'todo'
 		WHERE groups_attempts.sAncestorsComputationState = 'todo'`).Error)
@@ -43,7 +43,7 @@ func (s *UserItemStore) PropagateAttempts() (err error) {
 			JOIN groups_attempts AS attempts
 			JOIN groups_groups AS attempt_group
 				ON attempts.idGroup = attempt_group.idGroupParent AND attempt_user.idGroupSelf = attempt_group.idGroupChild AND
-					attempt_group.sType IN ('direct', 'invitationAccepted', 'requestAccepted')
+					attempt_group.sType IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode')
 			WHERE attempts.sAncestorsComputationState = 'todo'
 			GROUP BY attempt_user.ID, attempts.idItem
 		) AS attempts_data

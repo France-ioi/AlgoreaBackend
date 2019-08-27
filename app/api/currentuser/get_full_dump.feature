@@ -20,6 +20,7 @@ Feature: Export the current user's data
       | 7  | Team      | Another Team       | Another team group     |
       | 8  | Club      | Another Club       | Another club group     |
       | 9  | Friends   | Some other friends | Another friends group  |
+      | 10 | Other     | Secret group       | Secret group           |
       | 11 | UserSelf  | user self          |                        |
       | 12 | UserAdmin | user admin         |                        |
       | 31 | UserSelf  | jane               |                        |
@@ -38,6 +39,7 @@ Feature: Export the current user's data
       | 11 | 1             | 12           | invitationSent     | 2019-07-09T20:02:28Z | 2              |
       | 12 | 12            | 1            | direct             | null                 | null           |
       | 13 | 12            | 2            | direct             | null                 | null           |
+      | 14 | 10            | 11           | joinedByCode       | 2019-07-10T05:02:28Z | null           |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 1            | true    |
@@ -53,6 +55,7 @@ Feature: Export the current user's data
       | 8               | 8            | true    |
       | 9               | 9            | true    |
       | 9               | 11           | false   |
+      | 10              | 11           | false   |
       | 11              | 11           | true    |
       | 12              | 1            | false   |
       | 12              | 2            | false   |
@@ -151,13 +154,18 @@ Feature: Export the current user's data
         {
           "ID": "10", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "9", "idUserInviting": "2",
           "sName": "Some other friends", "sRole": "member", "sStatusDate": "2019-07-10T05:02:28Z", "sType": "direct"
+        },
+        {
+          "ID": "14", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "10", "idUserInviting": null,
+          "sName": "Secret group", "sRole": "member", "sStatusDate": "2019-07-10T05:02:28Z", "sType": "joinedByCode"
         }
       ],
       "joined_groups": [
         {"ID": "2", "sName": "Our Team"},
         {"ID": "5", "sName": "Other people"},
         {"ID": "6", "sName": "Another Class"},
-        {"ID": "9", "sName": "Some other friends"}
+        {"ID": "9", "sName": "Some other friends"},
+        {"ID": "10", "sName": "Secret group"}
       ],
       "owned_groups": [
         {"ID": "1", "sName": "Our Class"},

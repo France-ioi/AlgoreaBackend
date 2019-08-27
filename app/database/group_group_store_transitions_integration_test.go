@@ -44,13 +44,16 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 8, ChildGroupID: 8, IsSelf: true},
 		{AncestorGroupID: 9, ChildGroupID: 9, IsSelf: true},
 		{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
+		{AncestorGroupID: 11, ChildGroupID: 11, IsSelf: true},
 		{AncestorGroupID: 20, ChildGroupID: 4},
 		{AncestorGroupID: 20, ChildGroupID: 5},
 		{AncestorGroupID: 20, ChildGroupID: 10},
+		{AncestorGroupID: 20, ChildGroupID: 11},
 		{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
 		{AncestorGroupID: 30, ChildGroupID: 4},
 		{AncestorGroupID: 30, ChildGroupID: 5},
 		{AncestorGroupID: 30, ChildGroupID: 10},
+		{AncestorGroupID: 30, ChildGroupID: 11},
 		{AncestorGroupID: 30, ChildGroupID: 20},
 		{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
 	}
@@ -64,10 +67,11 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{ParentGroupID: 20, ChildGroupID: 8, Type: "removed"},
 		{ParentGroupID: 20, ChildGroupID: 9, Type: "left"},
 		{ParentGroupID: 20, ChildGroupID: 10, Type: "direct"},
+		{ParentGroupID: 20, ChildGroupID: 11, Type: "joinedByCode"},
 		{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
 	}
 
-	allTheIDs := []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30}
+	allTheIDs := []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 30}
 	allPossibleGroupsAncestors := []groupAncestor{
 		{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
 		{AncestorGroupID: 2, ChildGroupID: 2, IsSelf: true},
@@ -79,6 +83,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 8, ChildGroupID: 8, IsSelf: true},
 		{AncestorGroupID: 9, ChildGroupID: 9, IsSelf: true},
 		{AncestorGroupID: 10, ChildGroupID: 10, IsSelf: true},
+		{AncestorGroupID: 11, ChildGroupID: 11, IsSelf: true},
 		{AncestorGroupID: 20, ChildGroupID: 1},
 		{AncestorGroupID: 20, ChildGroupID: 2},
 		{AncestorGroupID: 20, ChildGroupID: 3},
@@ -89,6 +94,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 20, ChildGroupID: 8},
 		{AncestorGroupID: 20, ChildGroupID: 9},
 		{AncestorGroupID: 20, ChildGroupID: 10},
+		{AncestorGroupID: 20, ChildGroupID: 11},
 		{AncestorGroupID: 20, ChildGroupID: 20, IsSelf: true},
 		{AncestorGroupID: 30, ChildGroupID: 1},
 		{AncestorGroupID: 30, ChildGroupID: 2},
@@ -100,6 +106,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 30, ChildGroupID: 8},
 		{AncestorGroupID: 30, ChildGroupID: 9},
 		{AncestorGroupID: 30, ChildGroupID: 10},
+		{AncestorGroupID: 30, ChildGroupID: 11},
 		{AncestorGroupID: 30, ChildGroupID: 20},
 		{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
 	}
@@ -122,7 +129,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 3: "success", 6: "success", 7: "success", 8: "success", 9: "success",
 				2: "unchanged",
-				4: "invalid", 5: "invalid", 10: "invalid", 20: "invalid",
+				4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
 				30: "cycle",
 			},
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, database.RequestSent,
@@ -155,7 +162,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 6: "success", 7: "success", 8: "success", 9: "success",
 				3: "unchanged",
-				2: "invalid", 4: "invalid", 5: "invalid", 10: "invalid", 20: "invalid",
+				2: "invalid", 4: "invalid", 5: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
 				30: "cycle",
 			},
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
@@ -254,15 +261,16 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:            database.AdminRemovesUser,
 			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
-				4: "success", 5: "success", 8: "unchanged",
+				4: "success", 5: "success", 8: "unchanged", 11: "success",
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_4": {ParentGroupID: 20, ChildGroupID: 4, Type: "removed", StatusDate: currentTimePtr},
-					"20_5": {ParentGroupID: 20, ChildGroupID: 5, Type: "removed", StatusDate: currentTimePtr},
+					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "removed", StatusDate: currentTimePtr},
+					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "removed", StatusDate: currentTimePtr},
+					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "removed", StatusDate: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
-				map[string]*groupAncestor{"20_4": nil, "20_5": nil, "30_4": nil, "30_5": nil}, nil),
+				map[string]*groupAncestor{"20_4": nil, "20_5": nil, "20_11": nil, "30_4": nil, "30_5": nil, "30_11": nil}, nil),
 			shouldRunListeners: true,
 		},
 		{
@@ -282,7 +290,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:            database.UserLeavesGroup,
 			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
-				4: "success", 5: "success", 10: "success",
+				4: "success", 5: "success", 10: "success", 11: "success",
 				9: "unchanged",
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
@@ -290,11 +298,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "left", StatusDate: currentTimePtr},
 					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "left", StatusDate: currentTimePtr},
 					"20_10": {ParentGroupID: 20, ChildGroupID: 10, Type: "left", StatusDate: currentTimePtr},
+					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "left", StatusDate: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{
-					"20_4": nil, "20_5": nil, "20_10": nil,
-					"30_4": nil, "30_5": nil, "30_10": nil,
+					"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil,
+					"30_4": nil, "30_5": nil, "30_10": nil, "30_11": nil,
 				}, nil),
 			shouldRunListeners: true,
 		},
@@ -316,7 +325,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			relationsToChange: allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 2: "success", 3: "success", 4: "success", 5: "success", 6: "success", 7: "success", 8: "success",
-				9: "success",
+				9: "success", 11: "success",
 
 				10: "unchanged",
 				20: "invalid",
@@ -333,34 +342,35 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				{ParentGroupID: 20, ChildGroupID: 8, Type: "direct", ChildOrder: 8, StatusDate: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 9, Type: "direct", ChildOrder: 9, StatusDate: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 10, Type: "direct", ChildOrder: 10},
+				{ParentGroupID: 20, ChildGroupID: 11, Type: "direct", ChildOrder: 11, StatusDate: currentTimePtr},
 				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
 			},
 			wantGroupAncestors: allPossibleGroupsAncestors,
 			shouldRunListeners: true,
 		},
 		{
-			name:              "UserJoinsGroupByPassword",
-			action:            database.UserJoinsGroupByPassword,
+			name:              "UserJoinsGroupByCode",
+			action:            database.UserJoinsGroupByCode,
 			relationsToChange: allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 2: "success", 3: "success", 4: "invalid", 5: "invalid", 6: "success", 7: "success", 8: "success",
 				9: "success",
 
-				10: "invalid",
-				20: "invalid",
+				10: "invalid", 11: "invalid", 20: "invalid",
 				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
-				{ParentGroupID: 20, ChildGroupID: 1, Type: "requestAccepted", ChildOrder: 1, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 2, Type: "requestAccepted", ChildOrder: 2, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", ChildOrder: 3, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 1, Type: "joinedByCode", ChildOrder: 1, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 2, Type: "joinedByCode", ChildOrder: 2, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 3, Type: "joinedByCode", ChildOrder: 3, StatusDate: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 4, Type: "invitationAccepted"},
 				{ParentGroupID: 20, ChildGroupID: 5, Type: "requestAccepted"},
-				{ParentGroupID: 20, ChildGroupID: 6, Type: "requestAccepted", ChildOrder: 4, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 7, Type: "requestAccepted", ChildOrder: 5, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 8, Type: "requestAccepted", ChildOrder: 6, StatusDate: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 9, Type: "requestAccepted", ChildOrder: 7, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 6, Type: "joinedByCode", ChildOrder: 4, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 7, Type: "joinedByCode", ChildOrder: 5, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 8, Type: "joinedByCode", ChildOrder: 6, StatusDate: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 9, Type: "joinedByCode", ChildOrder: 7, StatusDate: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 10, Type: "direct"},
+				{ParentGroupID: 20, ChildGroupID: 11, Type: "joinedByCode"},
 				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
 			},
 			wantGroupAncestors: allPossibleGroupsAncestors,
@@ -471,7 +481,7 @@ func patchGroupAncestors(old []groupAncestor, diff map[string]*groupAncestor, ad
 func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitionResults) database.GroupGroupTransitionResults {
 	result := make(database.GroupGroupTransitionResults, 12)
 	const invalid = "invalid"
-	for i := int64(1); i <= 10; i++ {
+	for i := int64(1); i <= 11; i++ {
 		result[i] = invalid
 	}
 	result[20] = invalid

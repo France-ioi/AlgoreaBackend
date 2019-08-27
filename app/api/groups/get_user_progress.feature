@@ -62,7 +62,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 13            | 16           | direct             |
       | 13            | 69           | invitationAccepted |
       | 14            | 51           | requestAccepted    |
-      | 14            | 53           | requestAccepted    |
+      | 14            | 53           | joinedByCode       |
       | 14            | 55           | invitationAccepted |
       | 15            | 57           | direct             |
       | 15            | 59           | requestAccepted    |

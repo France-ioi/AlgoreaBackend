@@ -48,6 +48,7 @@ Feature: Get group children (groupChildrenView)
       | 23              | 90           | 0       |
       | 24              | 24           | 1       |
       | 25              | 25           | 1       |
+      | 25              | 53           | 0       |
       | 26              | 26           | 1       |
       | 27              | 27           | 1       |
       | 27              | 53           | 0       |
@@ -116,6 +117,7 @@ Feature: Get group children (groupChildrenView)
       | 13            | 47           | removed            |
       | 23            | 51           | invitationAccepted |
       | 23            | 90           | direct             |
+      | 25            | 53           | joinedByCode       |
       | 27            | 53           | invitationAccepted |
       | 90            | 51           | requestAccepted    |
 
@@ -130,7 +132,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null, "user_count": 2},
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc", "user_count": 0},
       {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
@@ -149,7 +151,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null, "user_count": 2},
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc", "user_count": 0},
       {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
@@ -169,7 +171,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null, "user_count": 2},
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde", "user_count": 1},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc", "user_count": 0},
       {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
@@ -204,7 +206,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null, "user_count": 2},
       {"id": "21", "name": "user-admin", "type": "UserAdmin", "free_access": false, "grade": -2, "opened": true, "password": null, "user_count": 0},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "password": "3456789abc", "user_count": 0},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
@@ -221,7 +223,7 @@ Feature: Get group children (groupChildrenView)
     """
     [
       {"id": "23", "name": "Our Class", "type": "Class", "free_access": false, "grade": -3, "opened": true, "password": null, "user_count": 2},
-      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 0},
+      {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "password": "456789abcd", "user_count": 1},
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "password": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "password": null, "user_count": 0},

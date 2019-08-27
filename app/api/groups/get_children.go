@@ -115,7 +115,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			) AS iUserCount`).
 		Joins(`
 			JOIN groups_groups ON groups.ID = groups_groups.idGroupChild AND
-				groups_groups.sType IN ('direct', 'requestAccepted', 'invitationAccepted') AND
+				groups_groups.sType IN ('direct', 'requestAccepted', 'invitationAccepted', 'joinedByCode') AND
 				groups_groups.idGroupParent = ?`, groupID).
 		Where("groups.sType IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)

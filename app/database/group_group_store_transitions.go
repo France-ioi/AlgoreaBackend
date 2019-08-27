@@ -18,6 +18,8 @@ const (
 	RequestAccepted GroupGroupType = "requestAccepted"
 	// InvitationRefused means a user refused an invitation to join a group
 	InvitationRefused GroupGroupType = "invitationRefused"
+	// JoinedByCode means a user joined a group by the group's code
+	JoinedByCode GroupGroupType = "joinedByCode"
 	// RequestRefused means an admin refused a user's request to join a group
 	RequestRefused GroupGroupType = "requestRefused"
 	// Removed means a user was removed from a group
@@ -32,7 +34,7 @@ const (
 
 func (groupType GroupGroupType) isActive() bool {
 	switch groupType {
-	case InvitationAccepted, RequestAccepted, Direct:
+	case InvitationAccepted, RequestAccepted, JoinedByCode, Direct:
 		return true
 	}
 	return false
@@ -68,9 +70,9 @@ const (
 	AdminAddsDirectRelation
 	// AdminRemovesDirectRelation removes a direct relation
 	AdminRemovesDirectRelation
-	// UserJoinsGroupByPassword means a user joins a group using a group's password
-	// We don't check the password here (a calling service should check the password by itself)
-	UserJoinsGroupByPassword
+	// UserJoinsGroupByCode means a user joins a group using a group's code
+	// We don't check the code here (a calling service should check the code by itself)
+	UserJoinsGroupByCode
 )
 
 type groupGroupTransitionRule struct {
@@ -108,15 +110,15 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			Left:              RequestSent,
 		},
 	},
-	UserJoinsGroupByPassword: {
+	UserJoinsGroupByCode: {
 		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:        RequestAccepted,
-			RequestSent:       RequestAccepted,
-			InvitationRefused: RequestAccepted,
-			InvitationSent:    RequestAccepted,
-			RequestRefused:    RequestAccepted,
-			Removed:           RequestAccepted,
-			Left:              RequestAccepted,
+			NoRelation:        JoinedByCode,
+			RequestSent:       JoinedByCode,
+			InvitationRefused: JoinedByCode,
+			InvitationSent:    JoinedByCode,
+			RequestRefused:    JoinedByCode,
+			Removed:           JoinedByCode,
+			Left:              JoinedByCode,
 		},
 	},
 	UserAcceptsInvitation: {
@@ -151,10 +153,12 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 		UpdateFromType: map[GroupGroupType]bool{
 			InvitationAccepted: true,
 			RequestAccepted:    true,
+			JoinedByCode:       true,
 		},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationAccepted: Removed,
 			RequestAccepted:    Removed,
+			JoinedByCode:       Removed,
 			Removed:            Removed,
 		},
 	},
@@ -167,11 +171,13 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 		UpdateFromType: map[GroupGroupType]bool{
 			InvitationAccepted: true,
 			RequestAccepted:    true,
+			JoinedByCode:       true,
 			Direct:             true,
 		},
 		Transitions: map[GroupGroupType]GroupGroupType{
 			InvitationAccepted: Left,
 			RequestAccepted:    Left,
+			JoinedByCode:       Left,
 			Left:               Left,
 			Direct:             Left,
 		},
@@ -190,6 +196,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			RequestSent:        Direct,
 			InvitationAccepted: Direct,
 			RequestAccepted:    Direct,
+			JoinedByCode:       Direct,
 			InvitationRefused:  Direct,
 			RequestRefused:     Direct,
 			Removed:            Direct,

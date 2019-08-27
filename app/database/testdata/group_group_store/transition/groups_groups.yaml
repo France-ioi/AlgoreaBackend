@@ -7,5 +7,6 @@
 - {ID: 7, idGroupParent: 20, idGroupChild: 8, sType: removed}
 - {ID: 8, idGroupParent: 20, idGroupChild: 9, sType: left}
 - {ID: 9, idGroupParent: 20, idGroupChild: 10, sType: direct}
+- {ID: 10, idGroupParent: 20, idGroupChild: 11, sType: joinedByCode}
 
 - {ID: 30, idGroupParent: 30, idGroupChild: 20, sType: direct}
