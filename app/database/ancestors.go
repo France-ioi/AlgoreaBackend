@@ -26,9 +26,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 
 	groupsAcceptedCondition := ""
 	if objectName == groups {
-		groupsAcceptedCondition = ` AND (
-			groups_groups.sType IN('invitationAccepted', 'requestAccepted', 'joinedByCode', 'direct')
-		)`
+		groupsAcceptedCondition = " AND (groups_groups.sType" + GroupRelationIsActiveCondition + ")"
 	}
 
 	relationsTable := objectName + "_" + objectName
@@ -134,10 +132,7 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 		WHERE 
 			`+objectName+`_propagate.sAncestorsComputationState = 'processing'`) // #nosec
 	if objectName == groups {
-		insertQueries[2] += `
-			AND (
-				groups_groups_join.sType IN('invitationAccepted', 'requestAccepted', 'joinedByCode', 'direct')
-			)`
+		insertQueries[2] += "AND (groups_groups_join.sType" + GroupRelationIsActiveCondition + ")"
 		insertQueries = append(insertQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(

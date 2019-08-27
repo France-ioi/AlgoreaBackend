@@ -130,7 +130,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			users.sLastName AS user__sLastName,
 			users.iGrade AS user__iGrade`).
 		Joins("LEFT JOIN users ON users.idGroupSelf = groups_groups.idGroupChild").
-		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'joinedByCode', 'direct')").
+		WhereGroupRelationIsActive().
 		Where("groups_groups.idGroupParent = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
