@@ -13,7 +13,7 @@ import (
 // summary: Discard the group’s code
 // description: >
 //
-//   Sets `groups.sPassword` = NULL for a given group.
+//   Sets `groups.sCode` = NULL for a given group.
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -48,7 +48,7 @@ func (srv *Service) discardCode(w http.ResponseWriter, r *http.Request) service.
 
 	service.MustNotBeError(
 		srv.Store.Groups().Where("ID = ?", groupID).
-			UpdateColumn("sPassword", nil).Error())
+			UpdateColumn("sCode", nil).Error())
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
 	return service.NoError

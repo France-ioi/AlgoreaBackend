@@ -19,7 +19,7 @@ import (
 //   with `sType`=`requestAccepted` and `sStatusDate` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `bFreeAccess` = 1, `sPasswordEnd` > NOW() (or NULL), and `sPassword` = `code`,
+//   * If there is no team with `bFreeAccess` = 1, `sCodeEnd` > NOW() (or NULL), and `sCode` = `code`,
 //     the forbidden error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
@@ -60,15 +60,15 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
-			ID                  int64 `gorm:"column:ID"`
-			PasswordEndIsNull   bool  `gorm:"column:bPasswordEndIsNull"`
-			PasswordTimerIsNull bool  `gorm:"column:bPasswordTimerIsNull"`
+			ID              int64 `gorm:"column:ID"`
+			CodeEndIsNull   bool  `gorm:"column:bCodeEndIsNull"`
+			CodeTimerIsNull bool  `gorm:"column:bCodeTimerIsNull"`
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("sType = 'Team'").Where("bFreeAccess").
-			Where("sPassword LIKE ?", code).
-			Where("sPasswordEnd IS NULL OR NOW() < sPasswordEnd").
-			Select("ID, sPasswordEnd IS NULL AS bPasswordEndIsNull, sPasswordTimer IS NULL AS bPasswordTimerIsNull").
+			Where("sCode LIKE ?", code).
+			Where("sCodeEnd IS NULL OR NOW() < sCodeEnd").
+			Select("ID, sCodeEnd IS NULL AS bCodeEndIsNull, sCodeTimer IS NULL AS bCodeTimerIsNull").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
 			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired code", user.ID)
@@ -77,9 +77,9 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 		}
 		service.MustNotBeError(errInTransaction)
 
-		if groupInfo.PasswordEndIsNull && !groupInfo.PasswordTimerIsNull {
+		if groupInfo.CodeEndIsNull && !groupInfo.CodeTimerIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
-				UpdateColumn("sPasswordEnd", gorm.Expr("ADDTIME(NOW(), sPasswordTimer)")).Error())
+				UpdateColumn("sCodeEnd", gorm.Expr("ADDTIME(NOW(), sCodeTimer)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
 			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)

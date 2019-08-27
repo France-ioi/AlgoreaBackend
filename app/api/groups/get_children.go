@@ -105,7 +105,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	query := srv.Store.Groups().
 		Select(`
 			groups.ID as ID, groups.sName, groups.sType, groups.iGrade,
-			groups.bOpened, groups.bFreeAccess, groups.sPassword,
+			groups.bOpened, groups.bFreeAccess, groups.sCode,
 			(
 				SELECT COUNT(*) FROM groups AS user_groups
 				JOIN groups_ancestors

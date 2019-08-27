@@ -45,7 +45,7 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 			WithArgs(ptrInt64(10), 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
-			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'sPassword'"))
+			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'sCode'"))
 		mock.ExpectExec("UPDATE `groups` .+").WillReturnResult(sqlmock.NewResult(-1, 1))
 		mock.ExpectCommit()
 	})

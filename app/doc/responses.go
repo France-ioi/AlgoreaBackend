@@ -345,7 +345,7 @@ type groupChildrenViewResponse struct {
 		FreeAccess bool `json:"free_access"`
 		// Nullable
 		// required:true
-		Password *string `json:"password"`
+		Code *string `json:"code"`
 		// The number of descendant users
 		// required:true
 		UserCount int32 `json:"user_count"`

@@ -25,13 +25,13 @@ type groupUpdateInput struct {
 	Opened      bool    `json:"opened" sql:"column:bOpened"`
 	// If changed from true to false, automatically switch all requests to join this group from requestSent to requestRefused
 	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
-	// Duration after the first use of the password it will expire
+	// Duration after the first use of the code when it will expire
 	// Nullable
 	// pattern: ^\d{1,2}:\d{1,2}:\d{1,2}$
 	// example: 79:56:22
-	PasswordTimer *string `json:"password_timer" sql:"column:sPasswordTimer" validate:"omitempty,duration"`
+	CodeTimer *string `json:"code_timer" sql:"column:sCodeTimer" validate:"omitempty,duration"`
 	// Nullable
-	PasswordEnd *time.Time `json:"password_end" sql:"column:sPasswordEnd"`
+	CodeEnd *time.Time `json:"code_end" sql:"column:sCodeEnd"`
 	// Nullable
 	// pattern:  ^(\d+(/\d+))$
 	RedirectPath *string `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`

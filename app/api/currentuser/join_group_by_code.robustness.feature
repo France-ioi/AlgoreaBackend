@@ -5,14 +5,14 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 1  | john   | 21          | 22           |
       | 2  | nobody | null        | null         |
     And the database has the following table 'groups':
-      | ID | sType     | sPassword  | sPasswordEnd         | sPasswordTimer | bFreeAccess |
-      | 11 | Team      | 3456789abc | 2017-04-29T06:38:38Z | null           | true        |
-      | 12 | Team      | abc3456789 | null                 | null           | true        |
-      | 14 | Team      | cba9876543 | null                 | null           | true        |
-      | 15 | Team      | 75987654ab | null                 | null           | false       |
-      | 16 | Class     | dcef123492 | null                 | null           | false       |
-      | 21 | UserSelf  | null       | null                 | null           | false       |
-      | 22 | UserAdmin | null       | null                 | null           | false       |
+      | ID | sType     | sCode      | sCodeEnd             | sCodeTimer | bFreeAccess |
+      | 11 | Team      | 3456789abc | 2017-04-29T06:38:38Z | null       | true        |
+      | 12 | Team      | abc3456789 | null                 | null       | true        |
+      | 14 | Team      | cba9876543 | null                 | null       | true        |
+      | 15 | Team      | 75987654ab | null                 | null       | false       |
+      | 16 | Class     | dcef123492 | null                 | null       | false       |
+      | 21 | UserSelf  | null       | null                 | null       | false       |
+      | 22 | UserAdmin | null       | null                 | null       | false       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
