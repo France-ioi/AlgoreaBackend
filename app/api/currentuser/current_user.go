@@ -34,7 +34,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
 
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
-	router.Post("/current-user/group-memberships/by-password", service.AppHandler(srv.joinGroupByPassword).ServeHTTP)
+	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
 

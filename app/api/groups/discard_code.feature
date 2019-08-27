@@ -1,4 +1,4 @@
-Feature: Discard the password of the given group
+Feature: Discard the code of the given group
 
   Background:
     Given the database has the following table 'users':
@@ -18,7 +18,7 @@ Feature: Discard the password of the given group
 
   Scenario: User is an admin of the group
     Given I am the user with ID "1"
-    When I send a DELETE request to "/groups/13/password"
+    When I send a DELETE request to "/groups/13/code"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

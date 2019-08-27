@@ -10,23 +10,23 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-memberships/by-password groups users groupsJoinByPassword
+// swagger:operation POST /current-user/group-memberships/by-code groups users groupsJoinByCode
 // ---
-// summary: Join a team using a password
+// summary: Join a team using a code
 // description:
-//   Lets a user to join a team group by a password.
+//   Lets a user to join a team group by a code.
 //   On success the service inserts a row into `groups_groups` (or updates an existing one)
 //   with `sType`=`requestAccepted` and `sStatusDate` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `bFreeAccess` = 1, `sPasswordEnd` > NOW() (or NULL), and `sPassword` = `password`,
+//   * If there is no team with `bFreeAccess` = 1, `sPasswordEnd` > NOW() (or NULL), and `sPassword` = `code`,
 //     the forbidden error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s ID as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`,
 //     the unprocessable entity error is returned.
 // parameters:
-// - name: password
+// - name: code
 //   in: query
 //   type: string
 //   required: true
@@ -45,8 +45,8 @@ import (
 //     "$ref": "#/responses/unprocessableEntityResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) service.APIError {
-	password, err := service.ResolveURLQueryGetStringField(r, "password")
+func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) service.APIError {
+	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -66,12 +66,12 @@ func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) 
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("sType = 'Team'").Where("bFreeAccess").
-			Where("sPassword LIKE ?", password).
+			Where("sPassword LIKE ?", code).
 			Where("sPasswordEnd IS NULL OR NOW() < sPasswordEnd").
 			Select("ID, sPasswordEnd IS NULL AS bPasswordEndIsNull, sPasswordTimer IS NULL AS bPasswordTimerIsNull").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
-			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired password", user.ID)
+			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired code", user.ID)
 			apiError = service.InsufficientAccessRightsError
 			return errInTransaction
 		}

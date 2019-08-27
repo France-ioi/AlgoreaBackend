@@ -1,4 +1,4 @@
-Feature: Join a group using a password (groupsJoinByPassword) - robustness
+Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned |
@@ -28,45 +28,45 @@ Feature: Join a group using a password (groupsJoinByPassword) - robustness
       | 1  | 11            | 21           | invitationSent     | 2017-04-29T06:38:38Z |
       | 7  | 14            | 21           | invitationAccepted | 2017-02-21T06:38:38Z |
 
-  Scenario: No password
+  Scenario: No code
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password"
+    When I send a POST request to "/current-user/group-memberships/by-code"
     Then the response code should be 400
-    And the response error message should contain "Missing password"
+    And the response error message should contain "Missing code"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User's self group is NULL
     Given I am the user with ID "2"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=cba9876543"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Join with a wrong password
+  Scenario: Join with a wrong code
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=abcdef"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=abcdef"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And logs should contain:
       """
-      A user with ID = 1 tried to join a group using a wrong/expired password
+      A user with ID = 1 tried to join a group using a wrong/expired code
       """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Join with an expired password
+  Scenario: Join with an expired code
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=3456789abc"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=3456789abc"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And logs should contain:
       """
-      A user with ID = 1 tried to join a group using a wrong/expired password
+      A user with ID = 1 tried to join a group using a wrong/expired code
       """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -74,12 +74,12 @@ Feature: Join a group using a password (groupsJoinByPassword) - robustness
 
   Scenario: Join a group that is not a team
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=dcef123492"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=dcef123492"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And logs should contain:
       """
-      A user with ID = 1 tried to join a group using a wrong/expired password
+      A user with ID = 1 tried to join a group using a wrong/expired code
       """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -87,12 +87,12 @@ Feature: Join a group using a password (groupsJoinByPassword) - robustness
 
   Scenario: Join a closed team
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=75987654ab"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=75987654ab"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And logs should contain:
       """
-      A user with ID = 1 tried to join a group using a wrong/expired password
+      A user with ID = 1 tried to join a group using a wrong/expired code
       """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -100,7 +100,7 @@ Feature: Join a group using a password (groupsJoinByPassword) - robustness
 
   Scenario: Join an already joined group
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=cba9876543"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
     Then the response code should be 422
     And the response body should be, in JSON:
       """

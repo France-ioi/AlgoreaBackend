@@ -19,27 +19,27 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
 )
 
-func TestGenerateGroupPassword(t *testing.T) {
-	got, err := GenerateGroupPassword()
+func TestGenerateGroupCode(t *testing.T) {
+	got, err := GenerateGroupCode()
 
 	assert.NoError(t, err)
 	assert.Len(t, got, 10)
 	assert.Regexp(t, `^[3-9a-kmnp-y]+$`, got)
 }
 
-func TestGenerateGroupPassword_HandlesError(t *testing.T) {
+func TestGenerateGroupCode_HandlesError(t *testing.T) {
 	expectedError := errors.New("some error")
 	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
 		return nil, expectedError
 	})
 	defer monkey.UnpatchAll()
 
-	_, err := GenerateGroupPassword()
+	_, err := GenerateGroupCode()
 	assert.Equal(t, expectedError, err)
 }
 
-func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
-	response, _, logs, _ := assertMockedChangePasswordRequest(t, func(mock sqlmock.Sqlmock) {
+func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
+	response, _, logs, _ := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
 			"WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
 			WithArgs(ptrInt64(10), 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
@@ -52,14 +52,14 @@ func TestService_changePassword_RetriesOnDuplicateEntryError(t *testing.T) {
 	assert.Equal(t, 200, response.StatusCode, logs)
 }
 
-func assertMockedChangePasswordRequest(t *testing.T,
+func assertMockedChangeCodeRequest(t *testing.T,
 	setMockExpectationsFunc func(sqlmock.Sqlmock)) (*http.Response, sqlmock.Sqlmock, string, error) {
 	response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"POST", "/groups/1/change_password", ``, &database.User{ID: 2, OwnedGroupID: ptrInt64(10)},
+		"POST", "/groups/1/code", ``, &database.User{ID: 2, OwnedGroupID: ptrInt64(10)},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}
-			router.Post("/groups/{group_id}/change_password", service.AppHandler(srv.changePassword).ServeHTTP)
+			router.Post("/groups/{group_id}/code", service.AppHandler(srv.changeCode).ServeHTTP)
 		})
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

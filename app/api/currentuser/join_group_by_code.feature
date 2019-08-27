@@ -1,4 +1,4 @@
-Feature: Join a group using a password (groupsJoinByPassword)
+Feature: Join a group using a code (groupsJoinByCode)
   Background:
     Given the database has the following table 'users':
       | ID | idGroupSelf | idGroupOwned |
@@ -24,7 +24,7 @@ Feature: Join a group using a password (groupsJoinByPassword)
 
   Scenario: Successfully join an group
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=3456789abc"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=3456789abc"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -50,7 +50,7 @@ Feature: Join a group using a password (groupsJoinByPassword)
 
   Scenario: Updates the sPasswordEnd
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=abc3456789"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=abc3456789"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -80,7 +80,7 @@ Feature: Join a group using a password (groupsJoinByPassword)
 
   Scenario: Doesn't update the sPasswordEnd if sPasswordTimer is null
     Given I am the user with ID "1"
-    When I send a POST request to "/current-user/group-memberships/by-password?password=cba9876543"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
