@@ -43,7 +43,7 @@ Feature: Add item
       {
         "success": true,
         "message": "created",
-        "data": { "ID": "5577006791947779410" }
+        "data": { "id": "5577006791947779410" }
       }
       """
     And the table "items" at ID "5577006791947779410" should be:
@@ -130,7 +130,7 @@ Feature: Add item
       {
         "success": true,
         "message": "created",
-        "data": { "ID": "5577006791947779410" }
+        "data": { "id": "5577006791947779410" }
       }
       """
     And the table "items" at ID "5577006791947779410" should be:
@@ -174,7 +174,7 @@ Feature: Add item
     {
       "success": true,
       "message": "created",
-      "data": { "ID": "5577006791947779410" }
+      "data": { "id": "5577006791947779410" }
     }
     """
     And the table "items" at ID "5577006791947779410" should be:
