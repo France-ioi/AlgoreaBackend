@@ -25,7 +25,7 @@ import (
 //     * is of type "Team".
 //
 //
-//   If there are several matching teams, returns the first one (in the `group_id` order) is returned.
+//   If there are several matching teams, returns the first one in the order of `groups.ID`.
 // parameters:
 // - name: item_id
 //   type: integer
