@@ -37,13 +37,13 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
 
   Scenario: Invalid item_id
     Given I am the user with ID "9"
-    When I send a GET request to "/current-user/team-by-item/abc"
+    When I send a GET request to "/current-user/teams/by-item/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario Outline: Wrong groups_groups.sType
     Given I am the user with ID "<user_id>"
-    When I send a GET request to "/current-user/team-by-item/100"
+    When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
     Examples:
@@ -59,12 +59,12 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
 
   Scenario: Wrong groups.sType
     Given I am the user with ID "9"
-    When I send a GET request to "/current-user/team-by-item/100"
+    When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
 
   Scenario: No team for item
     Given I am the user with ID "9"
-    When I send a GET request to "/current-user/team-by-item/101"
+    When I send a GET request to "/current-user/teams/by-item/101"
     Then the response code should be 404
     And the response error message should contain "No team for this item"

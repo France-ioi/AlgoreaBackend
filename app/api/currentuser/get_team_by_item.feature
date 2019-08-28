@@ -23,7 +23,7 @@ Feature: Get current user's team for item (teamGetByItemID)
 
   Scenario: The user joined the team by invitation
     Given I am the user with ID "2"
-    When I send a GET request to "/current-user/team-by-item/100"
+    When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -34,7 +34,7 @@ Feature: Get current user's team for item (teamGetByItemID)
 
   Scenario: The user joined the team by request
     Given I am the user with ID "3"
-    When I send a GET request to "/current-user/team-by-item/100"
+    When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -45,7 +45,7 @@ Feature: Get current user's team for item (teamGetByItemID)
 
   Scenario: The user joined the team by code
     Given I am the user with ID "3"
-    When I send a GET request to "/current-user/team-by-item/100"
+    When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

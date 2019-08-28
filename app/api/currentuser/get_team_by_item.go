@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/team-by-item/{item_id} users groups teamGetByItemID
+// swagger:operation GET /current-user/teams/by-item/{item_id} users groups teamGetByItemID
 // ---
 // summary: Get current user's team for item
 // description: >
