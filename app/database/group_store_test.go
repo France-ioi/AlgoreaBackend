@@ -35,7 +35,7 @@ func TestGroupStore_TeamGroupByTeamItemAndUser(t *testing.T) {
 		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND "+
 		"groups_groups.sType"+GroupUserRelationIsActiveCondition+" AND "+
 		"groups_groups.idGroupChild = ? "+
-		"WHERE (groups.idTeamItem = ?) AND (groups.sType = 'Team') LIMIT 1")).
+		"WHERE (groups.idTeamItem = ?) AND (groups.sType = 'Team') ORDER BY `groups`.`ID` LIMIT 1")).
 		WithArgs(2, 1234).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
@@ -57,7 +57,7 @@ func TestGroupStore_TeamGroupByItemAndUser(t *testing.T) {
 		"groups_groups.idGroupChild = ? "+
 		"LEFT JOIN items_ancestors ON items_ancestors.idItemAncestor = groups.idTeamItem "+
 		"WHERE (groups.sType = 'Team') AND (items_ancestors.idItemChild = ? OR groups.idTeamItem = ?) "+
-		"GROUP BY groups.ID LIMIT 1")).
+		"GROUP BY groups.ID ORDER BY `groups`.`ID` LIMIT 1")).
 		WithArgs(2, 1234, 1234).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
