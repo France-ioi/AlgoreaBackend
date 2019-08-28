@@ -43,6 +43,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 	router.Get("/current-user/dump", service.AppHandler(srv.getDump).ServeHTTP)
+
+	router.Get("/current-user/team-by-item/{item_id}", service.AppHandler(srv.getTeamByItem).ServeHTTP)
 }
 
 type userGroupRelationAction string
