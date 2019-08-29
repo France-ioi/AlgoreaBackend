@@ -19,7 +19,9 @@ Feature: Get groups attempts for current user and item_id
       | ID | idGroupParent | idGroupChild | sType              |
       | 61 | 13            | 11           | invitationAccepted |
       | 62 | 13            | 21           | requestAccepted    |
-      | 63 | 23            | 21           | direct             |
+      | 63 | 13            | 31           | joinedByCode       |
+      | 64 | 23            | 21           | direct             |
+      | 65 | 23            | 31           | direct             |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf |
       | 71 | 11              | 11           | 1       |
@@ -27,10 +29,12 @@ Feature: Get groups attempts for current user and item_id
       | 73 | 13              | 13           | 1       |
       | 74 | 13              | 11           | 0       |
       | 75 | 13              | 21           | 0       |
-      | 76 | 23              | 21           | 0       |
-      | 77 | 23              | 23           | 1       |
-      | 78 | 31              | 31           | 1       |
-      | 79 | 32              | 32           | 1       |
+      | 76 | 13              | 31           | 0       |
+      | 77 | 23              | 21           | 0       |
+      | 78 | 23              | 23           | 1       |
+      | 79 | 23              | 31           | 0       |
+      | 80 | 31              | 31           | 1       |
+      | 81 | 32              | 32           | 1       |
     And the database has the following table 'items':
       | ID  | bHasAttempts |
       | 200 | 0            |
@@ -45,7 +49,7 @@ Feature: Get groups attempts for current user and item_id
       | 151 | 11      | 200    | 99     | 0      | false      | 2018-05-29 06:38:38 | null          |
       | 250 | 13      | 210    | 99     | 0      | true       | 2019-05-29 06:38:38 | 1             |
 
-  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID
+  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (sType='invitationAccepted')
     Given I am the user with ID "1"
     When I send a GET request to "/items/200/attempts"
     Then the response code should be 200
@@ -123,8 +127,30 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1)
+  Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1, sType='requestAccepted')
     Given I am the user with ID "2"
+    When I send a GET request to "/items/210/attempts"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "250",
+        "order": 0,
+        "score": 99,
+        "start_date": "2019-05-29T06:38:38Z",
+        "user_creator": {
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "jdoe"
+        },
+        "validated": true
+      }
+    ]
+    """
+
+  Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1, sType='joinedByCode')
+    Given I am the user with ID "3"
     When I send a GET request to "/items/210/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:

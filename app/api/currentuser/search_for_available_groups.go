@@ -14,6 +14,72 @@ import (
 
 const minSearchStringLength = 3
 
+// swagger:operation GET /current-user/available-groups groups users groupsAvailableSearch
+// ---
+// summary: Search for available groups
+// description: >
+//   Searches for groups that can be joined freely, based on a substring of their name.
+//   Returns groups with `bFreeAccess`=1, whose `sName` has `search` as a substring, and for that the current user
+//   is not already a member and don’t have pending requests/invitations.
+//
+//
+//   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
+//   at the beginning. This causes MySQL to explore every row having `bFreeAccess`=1. Moreover, actually
+//   it has to examine every row of the `groups` table since there is no index for the `bFreeAccess` column.
+//   But since there are not too many groups and the result rows count is limited, the search works almost well.
+// parameters:
+// - name: search
+//   in: query
+//   type: string
+//   minLength: 3
+//   required: true
+// - name: sort
+//   in: query
+//   default: [id]
+//   type: array
+//   items:
+//     type: string
+//     enum: [id,-id]
+// - name: from.id
+//   description: Start the page from the group next to one with `groups.ID`=`from.id`
+//   in: query
+//   type: integer
+// - name: limit
+//   description: Display the first N groups
+//   in: query
+//   type: integer
+//   maximum: 1000
+//   default: 500
+// responses:
+//   "200":
+//     description: OK. Success response with an array of found groups
+//     schema:
+//       type: array
+//       items:
+//         type: object
+//         properties:
+//           id:
+//             type: string
+//             format: int64
+//           name:
+//             type: string
+//           type:
+//             type: string
+//             enum: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
+//           description:
+//             description: Nullable
+//             type: string
+//         required:
+//           - id
+//           - name
+//           - type
+//           - description
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) service.APIError {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {

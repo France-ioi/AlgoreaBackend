@@ -10,23 +10,23 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-memberships/by-password groups users groupsJoinByPassword
+// swagger:operation POST /current-user/group-memberships/by-code groups users groupsJoinByCode
 // ---
-// summary: Join a team using a password
+// summary: Join a team using a code
 // description:
-//   Lets a user to join a team group by a password.
+//   Lets a user to join a team group by a code.
 //   On success the service inserts a row into `groups_groups` (or updates an existing one)
 //   with `sType`=`requestAccepted` and `sStatusDate` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `bFreeAccess` = 1, `sPasswordEnd` > NOW() (or NULL), and `sPassword` = `password`,
+//   * If there is no team with `bFreeAccess` = 1, `sCodeEnd` > NOW() (or NULL), and `sCode` = `code`,
 //     the forbidden error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s ID as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`,
 //     the unprocessable entity error is returned.
 // parameters:
-// - name: password
+// - name: code
 //   in: query
 //   type: string
 //   required: true
@@ -45,8 +45,8 @@ import (
 //     "$ref": "#/responses/unprocessableEntityResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) service.APIError {
-	password, err := service.ResolveURLQueryGetStringField(r, "password")
+func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) service.APIError {
+	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -60,29 +60,29 @@ func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) 
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
-			ID                  int64 `gorm:"column:ID"`
-			PasswordEndIsNull   bool  `gorm:"column:bPasswordEndIsNull"`
-			PasswordTimerIsNull bool  `gorm:"column:bPasswordTimerIsNull"`
+			ID              int64 `gorm:"column:ID"`
+			CodeEndIsNull   bool  `gorm:"column:bCodeEndIsNull"`
+			CodeTimerIsNull bool  `gorm:"column:bCodeTimerIsNull"`
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("sType = 'Team'").Where("bFreeAccess").
-			Where("sPassword LIKE ?", password).
-			Where("sPasswordEnd IS NULL OR NOW() < sPasswordEnd").
-			Select("ID, sPasswordEnd IS NULL AS bPasswordEndIsNull, sPasswordTimer IS NULL AS bPasswordTimerIsNull").
+			Where("sCode LIKE ?", code).
+			Where("sCodeEnd IS NULL OR NOW() < sCodeEnd").
+			Select("ID, sCodeEnd IS NULL AS bCodeEndIsNull, sCodeTimer IS NULL AS bCodeTimerIsNull").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
-			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired password", user.ID)
+			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired code", user.ID)
 			apiError = service.InsufficientAccessRightsError
 			return errInTransaction
 		}
 		service.MustNotBeError(errInTransaction)
 
-		if groupInfo.PasswordEndIsNull && !groupInfo.PasswordTimerIsNull {
+		if groupInfo.CodeEndIsNull && !groupInfo.CodeTimerIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
-				UpdateColumn("sPasswordEnd", gorm.Expr("ADDTIME(NOW(), sPasswordTimer)")).Error())
+				UpdateColumn("sCodeEnd", gorm.Expr("ADDTIME(NOW(), sCodeTimer)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByPassword, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)
+			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)
 		return errInTransaction
 	})
 	if apiError != service.NoError {
@@ -90,5 +90,5 @@ func (srv *Service) joinGroupByPassword(w http.ResponseWriter, r *http.Request) 
 	}
 	service.MustNotBeError(err)
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], true, false)
+	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], joinGroupByCodeAction)
 }

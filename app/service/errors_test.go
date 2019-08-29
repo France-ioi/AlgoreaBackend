@@ -89,6 +89,13 @@ func TestUnexpected(t *testing.T) {
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
+func TestNotFound(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForError(service.ErrNotFound(errors.New("some error")))
+	assert.Equal(`{"success":false,"message":"Not Found","error_text":"Some error"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusNotFound, recorder.Code)
+}
+
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {

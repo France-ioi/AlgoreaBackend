@@ -39,7 +39,7 @@ type groupsMembershipHistoryResponseRow struct {
 	StatusDate time.Time `json:"status_date"`
 	// `groups_groups.sType`
 	// required: true
-	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,requestRefused,removed,left
+	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,joinedByCode,requestRefused,removed,left
 	Type string `json:"type"`
 
 	// required: true
@@ -107,7 +107,7 @@ type membershipsViewResponseRow struct {
 	StatusDate time.Time `json:"status_date"`
 	// `groups_groups.sType`
 	// required: true
-	// enum: invitationAccepted,requestAccepted,direct
+	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
 	Type string `json:"type"`
 
 	// required: true

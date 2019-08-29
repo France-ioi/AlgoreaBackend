@@ -7,7 +7,7 @@ Feature: Get group children (groupChildrenView) - robustness
       | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
       | 75 | 22              | 13           | 0       | 0        |
     And the database has the following table 'groups':
-      | ID | sName       | iGrade | sType     | bOpened | bFreeAccess | sPassword  |
+      | ID | sName       | iGrade | sType     | bOpened | bFreeAccess | sCode      |
       | 11 | Group A     | -3     | Class     | true    | true        | ybqybxnlyo |
       | 13 | Group B     | -2     | Class     | true    | true        | ybabbxnlyo |
 
@@ -31,9 +31,9 @@ Feature: Get group children (groupChildrenView) - robustness
 
   Scenario: Invalid sorting rules given
     Given I am the user with ID "1"
-    When I send a GET request to "/groups/13/children?sort=password"
+    When I send a GET request to "/groups/13/children?sort=code"
     Then the response code should be 400
-    And the response error message should contain "Unallowed field in sorting parameters: "password""
+    And the response error message should contain "Unallowed field in sorting parameters: "code""
 
   Scenario: Invalid type in types_include
     Given I am the user with ID "1"

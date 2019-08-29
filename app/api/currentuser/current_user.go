@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -33,7 +34,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
 
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
-	router.Post("/current-user/group-memberships/by-password", service.AppHandler(srv.joinGroupByPassword).ServeHTTP)
+	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
 
@@ -51,6 +52,7 @@ const (
 	rejectInvitationAction   userGroupRelationAction = "rejectInvitation"
 	createGroupRequestAction userGroupRelationAction = "createRequest"
 	leaveGroupAction         userGroupRelationAction = "leaveGroup"
+	joinGroupByCodeAction    userGroupRelationAction = "joinGroupByCode"
 )
 
 func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
@@ -72,6 +74,14 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		if !found {
 			return service.InsufficientAccessRightsError
 		}
+	} else if action == leaveGroupAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).
+			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
+		}
 	}
 
 	var results database.GroupGroupTransitionResults
@@ -86,6 +96,5 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		return err
 	}))
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID],
-		action == createGroupRequestAction, action == leaveGroupAction)
+	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], action)
 }

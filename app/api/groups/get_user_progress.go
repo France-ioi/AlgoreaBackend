@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -136,7 +137,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
-			ON team_links.sType IN ('direct', 'requestAccepted', 'invitationAccepted') AND
+			ON team_links.sType`+database.GroupRelationIsActiveCondition+` AND
 				team_links.idGroupChild = groups.ID`).
 		Joins(`
 			JOIN groups AS teams

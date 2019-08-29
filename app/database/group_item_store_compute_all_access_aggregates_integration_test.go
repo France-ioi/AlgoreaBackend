@@ -729,7 +729,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 
 func ptrTime(t time.Time) *time.Time { return &t }
 func ptrString(s string) *string     { return &s }
-func ptrInt64(i int64) *int64        { return &i }
 
 func assertGroupsItemsAggregatesResultRowsEqual(t *testing.T, expected, got []groupItemsAggregatesResultRow) {
 	if len(got) != len(expected) {

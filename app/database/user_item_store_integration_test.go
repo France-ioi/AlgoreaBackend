@@ -82,10 +82,12 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 			- {ID: 222, idItem: 1, idGroup: 100, iScore: 10.0, bValidated: 1, sAncestorsComputationState: todo}
 			- {ID: 223, idItem: 1, idGroup: 101, iScore: 20.0, bValidated: 0, sAncestorsComputationState: todo}
 			- {ID: 224, idItem: 1, idGroup: 102, iScore: 30.0, bValidated: 0, sAncestorsComputationState: done}
+			- {ID: 225, idItem: 1, idGroup: 103, iScore: 40.0, bValidated: 0, sAncestorsComputationState: done}
 		groups_groups:
-			- {ID: 333, idGroupParent: 100, idGroupChild: 200}
-			- {ID: 334, idGroupParent: 101, idGroupChild: 200}
-			- {ID: 335, idGroupParent: 102, idGroupChild: 200}
+			- {ID: 333, idGroupParent: 100, idGroupChild: 200, sType: direct}
+			- {ID: 334, idGroupParent: 101, idGroupChild: 200, sType: invitationAccepted}
+			- {ID: 335, idGroupParent: 102, idGroupChild: 200, sType: requestAccepted}
+			- {ID: 336, idGroupParent: 103, idGroupChild: 200, sType: joinedByCode}
 		users:
 			- {ID: 500, idGroupSelf: 200}`)
 	defer func() { _ = db.Close() }()
@@ -142,6 +144,7 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 		{ItemID: 1, GroupID: 100, AncestorsComputationState: "done"},
 		{ItemID: 1, GroupID: 101, AncestorsComputationState: "done"},
 		{ItemID: 1, GroupID: 102, AncestorsComputationState: "done"},
+		{ItemID: 1, GroupID: 103, AncestorsComputationState: "done"},
 	}, groupAttempts)
 }
 

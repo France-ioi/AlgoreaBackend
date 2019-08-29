@@ -67,12 +67,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 22              | 18           | 0       |
       | 22              | 22           | 1       |
 
-  Scenario: One group with 3 grand children (different parents; one connected as "direct", one as "invitationAccepted", one as "requestAccepted")
+  Scenario: One group with 4 grand children (different parents; one connected as "direct", one as "invitationAccepted", one as "requestAccepted", one as "joinedByCode")
     Given the database table 'users' has also the following rows:
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
       | 11 | johna  | 51          | 52           | null        | Adams     | 1      |
       | 12 | johnb  | 53          | 54           | John        | Baker     | null   |
       | 13 | johnc  | 55          | 56           | John        | null      | 3      |
+      | 14 | johnd  | 57          | 58           | John        | Doe       | 3      |
     And the database table 'groups' has also the following rows:
       | ID | sType     | sName          | iGrade |
       | 51 | UserSelf  | johna          | -2     |
@@ -81,22 +82,28 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 54 | UserAdmin | johnb-admin    | -2     |
       | 55 | UserSelf  | johnc          | -2     |
       | 56 | UserAdmin | johnc-admin    | -2     |
+      | 57 | UserSelf  | johnd          | -2     |
+      | 58 | UserAdmin | johnd-admin    | -2     |
     And the database table 'groups_groups' has also the following rows:
       | idGroupParent | idGroupChild | sType              |
       | 11            | 51           | invitationAccepted |
       | 17            | 53           | requestAccepted    |
       | 16            | 55           | direct             |
+      | 18            | 57           | joinedByCode       |
     And the database table 'groups_ancestors' has also the following rows:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 51           | 0       |
       | 1               | 53           | 0       |
       | 1               | 55           | 0       |
+      | 1               | 57           | 0       |
       | 3               | 53           | 0       |
       | 11              | 51           | 0       |
       | 11              | 53           | 0       |
       | 11              | 55           | 0       |
+      | 11              | 57           | 0       |
       | 16              | 55           | 0       |
       | 17              | 53           | 0       |
+      | 18              | 57           | 0       |
       | 22              | 51           | 0       |
       | 22              | 53           | 0       |
       | 22              | 55           | 0       |
@@ -129,6 +136,12 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
         "user": {"first_name": "John", "grade": 3, "id": "13", "last_name": null, "login": "johnc"}
+      },
+      {
+        "id": "57",
+        "name": "johnd",
+        "parents": [{"id": "18", "name": "Our Club"}],
+        "user": {"first_name": "John", "grade": 3, "id": "14", "last_name": "Doe", "login": "johnd"}
       }
     ]
     """
@@ -161,6 +174,12 @@ Feature: List user descendants of the group (groupUserDescendantView)
         "name": "johnc",
         "parents": [{"id": "16", "name": "First Team"}],
         "user": {"first_name": "John", "grade": 3, "id": "13", "last_name": null, "login": "johnc"}
+      },
+      {
+        "id": "57",
+        "name": "johnd",
+        "parents": [{"id": "18", "name": "Our Club"}],
+        "user": {"first_name": "John", "grade": 3, "id": "14", "last_name": "Doe", "login": "johnd"}
       }
     ]
     """

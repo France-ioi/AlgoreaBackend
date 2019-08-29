@@ -2,7 +2,7 @@ users: [{ID: 4, idGroupSelf: 14, sLogin: 4}]
 items: [{ID: 500}]
 users_items: [{idUser: 4, idItem: 500}]
 groups: [{ID: 14}, {ID: 23}]
-groups_groups: [{idGroupParent: 23, idGroupChild: 14}]
+groups_groups: [{idGroupParent: 23, idGroupChild: 14, sType: invitationAccepted}]
 groups_ancestors:
   - {idGroupAncestor: 14, idGroupChild: 14}
   - {idGroupAncestor: 23, idGroupChild: 14}

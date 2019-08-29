@@ -32,7 +32,9 @@ func TestGroupStore_TeamGroupByTeamItemAndUser(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
-		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ? "+
+		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND "+
+		"groups_groups.sType"+GroupRelationIsActiveCondition+" AND "+
+		"groups_groups.idGroupChild = ? "+
 		"WHERE (groups.idTeamItem = ?) AND (groups.sType = 'Team') LIMIT 1")).
 		WithArgs(2, 1234).
 		WillReturnRows(mock.NewRows([]string{"ID"}))
@@ -50,7 +52,9 @@ func TestGroupStore_TeamGroupByItemAndUser(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
-		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ? "+
+		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND "+
+		"groups_groups.sType"+GroupRelationIsActiveCondition+" AND "+
+		"groups_groups.idGroupChild = ? "+
 		"LEFT JOIN items_ancestors ON items_ancestors.idItemAncestor = groups.idTeamItem "+
 		"WHERE (groups.sType = 'Team') AND (items_ancestors.idItemChild = ? OR groups.idTeamItem = ?) "+
 		"GROUP BY groups.ID LIMIT 1")).

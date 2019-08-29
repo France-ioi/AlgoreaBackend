@@ -346,16 +346,20 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {ID: 1, sLogin: 1, idGroupSelf: 10}
 			- {ID: 2, sLogin: 2, idGroupSelf: 20}
 			- {ID: 3, sLogin: 3, idGroupSelf: 30}
-		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}]
+			- {ID: 4, sLogin: 4, idGroupSelf: 50}
+		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}, {ID: 50}]
 		groups_groups:
-			- {idGroupParent: 40, idGroupChild: 10}
-			- {idGroupParent: 40, idGroupChild: 30}
+			- {idGroupParent: 40, idGroupChild: 10, sType: invitationAccepted}
+			- {idGroupParent: 40, idGroupChild: 20, sType: requestRefused}
+			- {idGroupParent: 40, idGroupChild: 30, sType: requestAccepted}
+			- {idGroupParent: 40, idGroupChild: 50, sType: joinedByCode}
 		groups_ancestors:
 			- {idGroupAncestor: 10, idGroupChild: 10}
 			- {idGroupAncestor: 20, idGroupChild: 20}
 			- {idGroupAncestor: 30, idGroupChild: 30}
 			- {idGroupAncestor: 40, idGroupChild: 10}
 			- {idGroupAncestor: 40, idGroupChild: 30}
+			- {idGroupAncestor: 40, idGroupChild: 50}
 		items: [{ID: 11}, {ID: 12}, {ID: 13}]
 		items_ancestors:
 			- {idItemAncestor: 11, idItemChild: 12}
@@ -365,6 +369,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {idUser: 1, idItem: 12}
 			- {idUser: 2, idItem: 11}
 			- {idUser: 3, idItem: 11}
+			- {idUser: 4, idItem: 11}
 		groups_items:
 			- {idGroup: 20, idItem: 11, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
 				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
@@ -373,7 +378,11 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {idGroup: 20, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
 				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
 			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}`)
+				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
+			- {idGroup: 50, idItem: 11, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
+				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
+			- {idGroup: 50, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
+			   sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 		store.Items().CloseTeamContest(11, user)
@@ -396,6 +405,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		{UserID: 1, ItemID: 12, FinishDateSet: false},
 		{UserID: 2, ItemID: 11, FinishDateSet: false},
 		{UserID: 3, ItemID: 11, FinishDateSet: true},
+		{UserID: 4, ItemID: 11, FinishDateSet: true},
 	}, userItems)
 
 	type groupItemInfo struct {
@@ -416,6 +426,8 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		{GroupID: 20, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
 		{GroupID: 40, ItemID: 11, PartialAccessDate: nil, CachedPartialAccessDate: nil, CachedPartialAccess: false},
 		{GroupID: 40, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
+		{GroupID: 50, ItemID: 11, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
+		{GroupID: 50, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
 	}, groupItems)
 }
 

@@ -1,6 +1,10 @@
 package doc
 
-import "time"
+import (
+	"time"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
+)
 
 // These definitions are unused by code, just used to generate documentation
 
@@ -16,6 +20,25 @@ type updatedResponse struct {
 		// true
 		// required: true
 		Success bool `json:"success"`
+	}
+}
+
+// The request has succeeded. The `data.changed` shows if the object has been updated.
+// swagger:response updatedOrUnchangedResponse
+type updatedOrUnchangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: updated,unchanged
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
 	}
 }
 
@@ -46,6 +69,84 @@ type deletedResponse struct {
 		// true
 		// required: true
 		Success bool `json:"success"`
+	}
+}
+
+// The request has succeeded. The `data.changed` shows if the object has been deleted.
+// swagger:response deletedOrUnchangedResponse
+type deletedOrUnchangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: deleted,unchanged
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
+	}
+}
+
+// The request has succeeded. The `data.changed` shows if the object has been created.
+// swagger:response createdOrUnchangedResponse
+type createdOrUnchangedResponse struct {
+	// in: body
+	Body struct {
+		// enum: created,unchanged
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			Changed bool `json:"changed"`
+		} `json:"data"`
+	}
+}
+
+// OK. Success response with the per-group update statuses
+// swagger:response
+type updatedGroupRelationsResponse struct {
+	// in:body
+	Body struct {
+		// "updated"
+		// enum: updated
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// `group_id` -> `result`
+		// required: true
+		Data map[string]database.GroupGroupTransitionResult `json:"data"`
+	}
+}
+
+// enum: [cycle, invalid, success, unchanged, not_found]
+type loginTransitionResult string
+
+// Created. Success response with the per-login results
+// swagger:response createdLoginRelationsResponse
+type createdLoginRelationsResponse struct {
+	// in:body
+	Body struct {
+		// "created"
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// enum: true
+		// required: true
+		Success bool `json:"success"`
+		// `login` -> `result`
+		// required: true
+		Data map[string]loginTransitionResult `json:"data"`
 	}
 }
 
@@ -244,7 +345,7 @@ type groupChildrenViewResponse struct {
 		FreeAccess bool `json:"free_access"`
 		// Nullable
 		// required:true
-		Password *string `json:"password"`
+		Code *string `json:"code"`
 		// The number of descendant users
 		// required:true
 		UserCount int32 `json:"user_count"`

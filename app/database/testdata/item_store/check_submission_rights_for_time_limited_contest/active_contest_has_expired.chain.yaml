@@ -1,7 +1,7 @@
 users: [{ID: 3, idGroupSelf: 13, sLogin: 3}]
 users_items: [{idUser: 3, idItem: 115, sContestStartDate: 2019-03-22T08:44:55Z}]
 groups: [{ID: 13}, {ID: 22}]
-groups_groups: [{idGroupParent: 22, idGroupChild: 13}]
+groups_groups: [{idGroupParent: 22, idGroupChild: 13, sType: invitationAccepted}]
 groups_ancestors:
   - {idGroupAncestor: 13, idGroupChild: 13}
   - {idGroupAncestor: 22, idGroupChild: 13}
