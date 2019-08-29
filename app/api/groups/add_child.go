@@ -22,7 +22,10 @@ import (
 //     * the authenticated user should have `users.allowSubgroups` set to 1,
 //     * the parent group should not be of type "UserSelf",
 //     * the child group should not be of types "Base" or "UserAdmin",
-//     * the action should not create cycles in the groups relations graph.
+//     * the action should not create cycles in the groups relations graph,
+//     * if the parent group is a team:
+//       * the child group should be of type "UserSelf",
+//       * the child group should not be a member of another team with the same `idTeamItem` (if set).
 // parameters:
 // - name: parent_group_id
 //   in: path
@@ -68,7 +71,13 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
+		var parentGroup, childGroup *groupRow
+		parentGroup, childGroup, apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
+		if apiErr != service.NoError {
+			return apiErr.Error // rollback
+		}
+
+		apiErr = checkPreconditionsForAddingIntoTeams(s, parentGroup, childGroup)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}

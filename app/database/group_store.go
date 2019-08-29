@@ -12,19 +12,24 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 		Where("groups_ancestors.idGroupAncestor=?", user.OwnedGroupID)
 }
 
-// TeamGroupByTeamItemAndUser returns a composable query for getting a team for the current user by the team's main item
+// TeamGroupByTeamItemAndUser returns a composable query for getting a team for a user by the team's main item
 func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
+	return s.TeamGroupByTeamItemAndSelfGroup(itemID, user.SelfGroupID)
+}
+
+// TeamGroupByTeamItemAndSelfGroup returns a composable query for getting a team for a user self group by the team's main item
+func (s *GroupStore) TeamGroupByTeamItemAndSelfGroup(itemID int64, selfGroupID *int64) *DB {
 	return s.
 		Joins(`JOIN groups_groups
 			ON groups_groups.idGroupParent = groups.ID AND
 				groups_groups.sType`+GroupRelationIsActiveCondition+` AND
-				groups_groups.idGroupChild = ?`, user.SelfGroupID).
+				groups_groups.idGroupChild = ?`, selfGroupID).
 		Where("groups.idTeamItem = ?", itemID).
 		Where("groups.sType = 'Team'").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
 
-// TeamGroupByItemAndUser returns a composable query for getting a team for the current user by one of team's items
+// TeamGroupByItemAndUser returns a composable query for getting a team for a user by one of team's items
 func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups

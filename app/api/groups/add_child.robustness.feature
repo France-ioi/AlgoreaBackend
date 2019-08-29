@@ -16,6 +16,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | 16 | RootSelf  | Base      |
       | 17 | RootAdmin | Base      |
       | 18 | UserSelf  | UserSelf  |
+      | 19 | Team      | Team      |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 13              | 11           | 1       |
@@ -31,9 +32,22 @@ Feature: Add a parent-child relation between two groups - robustness
       | 28              | 16           | 0       |
       | 28              | 17           | 0       |
       | 28              | 18           | 0       |
+      | 28              | 19           | 0       |
     And the database has the following table 'groups_groups':
-      | idGroupParent | idGroupChild | iChildOrder |
-      | 13            | 11           | 1           |
+      | idGroupParent | idGroupChild | sType  |
+      | 13            | 11           | direct |
+      | 22            | 11           | direct |
+      | 22            | 13           | direct |
+      | 24            | 13           | direct |
+      | 26            | 11           | direct |
+      | 28            | 11           | direct |
+      | 28            | 13           | direct |
+      | 28            | 14           | direct |
+      | 28            | 15           | direct |
+      | 28            | 16           | direct |
+      | 28            | 17           | direct |
+      | 28            | 18           | direct |
+      | 28            | 19           | direct |
 
   Scenario: Parent group ID is wrong
     Given I am the user with ID "1"
@@ -138,3 +152,39 @@ Feature: Add a parent-child relation between two groups - robustness
     And the response error message should contain "A group cannot become its own parent"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Parent is a team and child is not a user self group
+    Given I am the user with ID "4"
+    When I send a POST request to "/groups/19/relations/13"
+    Then the response code should be 403
+    And the response error message should contain "Only users can be team members"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario Outline: Parent is a team and child is a member of another team for the same item
+    Given the database table 'groups' has also the following rows:
+      | ID | sName        | sType | idTeamItem |
+      | 30 | Team         | Team  | 100        |
+      | 31 | Another team | Team  | 100        |
+    And the database table 'groups_groups' has also the following row:
+      | idGroupParent | idGroupChild | sType  |
+      | 28            | 30           | direct |
+      | 31            | 18           | <type> |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 28              | 30           | 0       |
+      | 30              | 30           | 1       |
+      | 31              | 18           | 0       |
+      | 31              | 31           | 1       |
+    And I am the user with ID "4"
+    When I send a POST request to "/groups/30/relations/18"
+    Then the response code should be 403
+    And the response error message should contain "The user is a member of another team with the same item"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+  Examples:
+    | type               |
+    | direct             |
+    | invitationAccepted |
+    | requestAccepted    |
+    | joinedByCode       |

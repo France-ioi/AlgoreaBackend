@@ -82,7 +82,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
+		_, _, apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}

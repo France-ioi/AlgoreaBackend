@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -58,31 +59,60 @@ func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, g
 	return service.NoError
 }
 
+type groupRow struct {
+	ID         int64  `gorm:"column:ID"`
+	Type       string `gorm:"column:sType"`
+	TeamItemID *int64 `gorm:"column:idTeamItem"`
+}
+
+const groupTypeUserSelf = "UserSelf"
+
 func checkThatUserHasRightsForDirectRelation(
-	store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
+	store *database.DataStore, user *database.User, parentGroupID, childGroupID int64,
+) (parentGroup, childGroup *groupRow, apiErr service.APIError) {
 	groupStore := store.Groups()
 
-	var groupData []struct {
-		ID   int64  `gorm:"column:ID"`
-		Type string `gorm:"column:sType"`
-	}
+	var groupData []groupRow
 
 	err := groupStore.OwnedBy(user).
 		WithWriteLock().
-		Select("groups.ID, sType").
+		Select("groups.ID, sType, idTeamItem").
 		Where("groups.ID IN(?, ?)", parentGroupID, childGroupID).
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
 	if len(groupData) < 2 {
-		return service.InsufficientAccessRightsError
+		return nil, nil, service.InsufficientAccessRightsError
 	}
 
-	for _, groupRow := range groupData {
-		if (groupRow.ID == parentGroupID && groupRow.Type == "UserSelf") ||
-			(groupRow.ID == childGroupID &&
-				map[string]bool{"Base": true, "UserAdmin": true}[groupRow.Type]) {
-			return service.InsufficientAccessRightsError
+	for index := range groupData {
+		if groupData[index].ID == parentGroupID {
+			parentGroup = &groupData[index]
+		} else {
+			childGroup = &groupData[index]
+		}
+	}
+
+	if (parentGroup.Type == groupTypeUserSelf) ||
+		map[string]bool{"Base": true, "UserAdmin": true}[childGroup.Type] {
+		return nil, nil, service.InsufficientAccessRightsError
+	}
+
+	return parentGroup, childGroup, service.NoError
+}
+
+func checkPreconditionsForAddingIntoTeams(store *database.DataStore, parentGroup, childGroup *groupRow) service.APIError {
+	if parentGroup.Type == "Team" {
+		if childGroup.Type != groupTypeUserSelf {
+			return service.ErrForbidden(errors.New("only users can be team members"))
+		}
+		if parentGroup.TeamItemID != nil {
+			hasRows, err := store.Groups().TeamGroupByTeamItemAndSelfGroup(*parentGroup.TeamItemID, &childGroup.ID).
+				Where("groups.ID != ?", parentGroup.ID).HasRows()
+			service.MustNotBeError(err)
+			if hasRows {
+				return service.ErrForbidden(errors.New("the user is a member of another team with the same item"))
+			}
 		}
 	}
 	return service.NoError
