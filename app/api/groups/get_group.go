@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -16,7 +17,11 @@ import (
 //   Returns general information about the group from the `groups` table.
 //
 //
-//   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `bFreeAccess`=1,
+//   otherwise the 'forbidden' error is returned.
+//
+//
+//   Note: `code_*` fields are nulls when the user is not an owner of the group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -63,8 +68,14 @@ import (
 //           type: string
 //         open_contest:
 //           type: boolean
+//         current_user_is_owner:
+//           type: boolean
+//         current_user_is_member:
+//           description: >
+//                          `True` when there is an active group->user relation in `groups_groups`
+//           type: boolean
 //       required: [id, name, grade, description, date_created, type, redirect_path, opened, free_access,
-//                  code, code_timer, code_end, open_contest]
+//                  code, code_timer, code_end, open_contest, current_user_is_owner, current_user_is_member]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -81,11 +92,27 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	user := srv.GetUser(r)
 
-	query := srv.Store.Groups().OwnedBy(user).
+	query := srv.Store.Groups().
+		Joins(`
+			LEFT JOIN groups_ancestors
+				ON groups_ancestors.idGroupChild = groups.ID AND groups_ancestors.idGroupAncestor = ?`, user.OwnedGroupID).
+		Joins(`
+			LEFT JOIN groups_ancestors AS groups_descendants
+				ON groups_descendants.idGroupAncestor = groups.ID AND groups_descendants.idGroupChild = ?`, user.SelfGroupID).
+		Joins(`
+			LEFT JOIN groups_groups
+				ON groups_groups.sType `+database.GroupRelationIsActiveCondition+` AND
+					groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, user.SelfGroupID).
+		Where("groups_ancestors.ID IS NOT NULL OR groups_descendants.ID IS NOT NULL OR groups.bFreeAccess").
 		Where("groups.ID = ?", groupID).Select(
 		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated,
-     groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
-     groups.sCode, groups.sCodeTimer, groups.sCodeEnd, groups.bOpenContest`).Limit(1)
+			groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
+			IF(groups_ancestors.ID IS NOT NULL, groups.sCode, NULL) AS sCode,
+			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeTimer, NULL) AS sCodeTimer,
+			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeEnd, NULL) AS sCodeEnd,
+			groups.bOpenContest,
+			groups_ancestors.ID IS NOT NULL AS bCurrentUserIsOwner,
+			groups_groups.ID IS NOT NULL AS bCurrentUserIsMember`).Limit(1)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
