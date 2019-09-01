@@ -15,10 +15,10 @@ import (
 type createGroupRequest struct {
 	// required: true
 	// minLength: 1
-	Name *string `json:"name" validate:"required,min=1"`
+	Name *string `json:"name" validate:"set,min=1"`
 	// required: true
 	// enum: Class,Team,Club,Friends,Other
-	Type *string `json:"type" validate:"required,oneof=Class Team Club Friends Other"`
+	Type *string `json:"type" validate:"set,oneof=Class Team Club Friends Other"`
 	// only if `type` = "Team"
 	// required: true
 	// type: string

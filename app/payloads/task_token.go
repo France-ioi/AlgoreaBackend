@@ -9,7 +9,7 @@ import (
 // TaskToken represents data inside a task token
 type TaskToken struct {
 	// Nullable fields are of pointer types
-	Date               string  `json:"date" validate:"required,dmy-date"` // dd-mm-yyyy
+	Date               string  `json:"date" validate:"set,dmy-date"` // dd-mm-yyyy
 	UserID             string  `json:"idUser"`
 	ItemID             *string `json:"idItem,omitempty"` // always is nil?
 	AttemptID          string  `json:"idAttempt"`

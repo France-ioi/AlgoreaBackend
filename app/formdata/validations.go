@@ -1,6 +1,7 @@
 package formdata
 
 import (
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -9,11 +10,19 @@ import (
 )
 
 func validateDuration(fl validator.FieldLevel) bool {
-	hms := strings.Split(fl.Field().Interface().(string), ":")
+	field := fl.Field()
+	if field.Kind() != reflect.String {
+		return false
+	}
+	hms := strings.Split(field.String(), ":")
 	if len(hms) != 3 {
 		return false
 	}
 
+	return validateHMSForDuration(hms)
+}
+
+func validateHMSForDuration(hms []string) bool {
 	hours, err := strconv.Atoi(hms[0])
 	if err != nil {
 		return false
@@ -32,5 +41,9 @@ func validateDuration(fl validator.FieldLevel) bool {
 var dmyDateRegexp = regexp.MustCompile(`^[0-3][0-9]-[0-1][0-9]-[\d]{4}$`)
 
 func validateDMYDate(fl validator.FieldLevel) bool {
-	return dmyDateRegexp.MatchString(fl.Field().Interface().(string))
+	field := fl.Field()
+	if field.Kind() != reflect.String {
+		return false
+	}
+	return dmyDateRegexp.MatchString(field.String())
 }

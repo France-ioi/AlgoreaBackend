@@ -26,6 +26,7 @@ func Test_validateDuration(t *testing.T) {
 		{name: "max possible value", fl: &FieldLevel{FieldValue: "838:59:59"}, want: true},
 		{name: "min possible value", fl: &FieldLevel{FieldValue: "00:00:00"}, want: true},
 		{name: "short notation", fl: &FieldLevel{FieldValue: "0:0:0"}, want: true},
+		{name: "nil", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: false},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -52,6 +53,7 @@ func Test_validateDMYDate(t *testing.T) {
 		{name: "max possible value", fl: &FieldLevel{FieldValue: "01-11-2019"}, want: true},
 		{name: "min possible value", fl: &FieldLevel{FieldValue: "01-01-0000"}, want: true},
 		{name: "with letter", fl: &FieldLevel{FieldValue: "a1-01-0000"}, want: false},
+		{name: "nil", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: false},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -74,6 +76,8 @@ func (fl *FieldLevel) Parent() reflect.Value   { return reflect.ValueOf(nil) }
 func (fl *FieldLevel) Field() reflect.Value    { return reflect.ValueOf(fl.FieldValue) }
 func (fl *FieldLevel) FieldName() string       { return "" }
 func (fl *FieldLevel) StructFieldName() string { return "" }
+func (fl *FieldLevel) Path() string            { return "" }
+func (fl *FieldLevel) StructPath() string      { return "" }
 func (fl *FieldLevel) Param() string           { return "" }
 func (fl *FieldLevel) ExtractType(reflect.Value) (reflect.Value, reflect.Kind, bool) {
 	return reflect.ValueOf(nil), reflect.Ptr, true

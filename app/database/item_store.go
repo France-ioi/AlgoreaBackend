@@ -59,8 +59,11 @@ func (s *ItemStore) AccessRights(user *User) *DB {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (found bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (hasAccess bool, err error) {
 	var count int64
+	if len(itemIDs) == 0 {
+		return true, nil
+	}
 
 	idsMap := make(map[int64]bool, len(itemIDs))
 	for _, itemID := range itemIDs {
