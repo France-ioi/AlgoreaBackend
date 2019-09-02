@@ -54,7 +54,7 @@ func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Requ
 
 	var teamID int64
 	user := srv.GetUser(r)
-	err = srv.Store.Groups().TeamGroupByTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamID).Error()
+	err = srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.ErrNotFound(errors.New("no team for this item"))
 	}

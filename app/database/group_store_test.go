@@ -25,7 +25,7 @@ func TestGroupStore_OwnedBy(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupStore_TeamGroupByTeamItemAndUser(t *testing.T) {
+func TestGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -40,12 +40,12 @@ func TestGroupStore_TeamGroupByTeamItemAndUser(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	var result []interface{}
-	err := NewDataStore(db).Groups().TeamGroupByTeamItemAndUser(1234, mockUser).Scan(&result).Error()
+	err := NewDataStore(db).Groups().TeamGroupForTeamItemAndUser(1234, mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupStore_TeamGroupByItemAndUser(t *testing.T) {
+func TestGroupStore_TeamGroupForItemAndUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -62,7 +62,7 @@ func TestGroupStore_TeamGroupByItemAndUser(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"ID"}))
 
 	var result []interface{}
-	err := NewDataStore(db).Groups().TeamGroupByItemAndUser(1234, mockUser).Scan(&result).Error()
+	err := NewDataStore(db).Groups().TeamGroupForItemAndUser(1234, mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
