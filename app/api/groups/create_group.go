@@ -20,7 +20,6 @@ type createGroupRequest struct {
 	// enum: Class,Team,Club,Friends,Other
 	Type *string `json:"type" validate:"required,oneof=Class Team Club Friends Other"`
 	// only if `type` = "Team"
-	// required: true
 	// type: string
 	// format: int64
 	// minimum: 1
