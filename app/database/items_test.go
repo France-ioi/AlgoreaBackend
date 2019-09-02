@@ -50,3 +50,5 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func ptrInt64(i int64) *int64 { return &i }

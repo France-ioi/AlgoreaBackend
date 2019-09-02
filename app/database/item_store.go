@@ -397,7 +397,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		JOIN users ON users.ID = users_items.idUser
 		JOIN groups_groups
 			ON groups_groups.idGroupChild = users.idGroupSelf AND
-				groups_groups.sType IN ('invitationAccepted', 'requestAccepted') AND
+				groups_groups.sType`+GroupRelationIsActiveCondition+` AND
 				groups_groups.idGroupParent = ?
 		SET sFinishDate = NOW()
 		WHERE users_items.idItem = ?`, teamGroupID, itemID).Error)

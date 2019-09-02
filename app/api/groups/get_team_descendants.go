@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -120,7 +121,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 			users.idGroupSelf, users.ID, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
 		Joins(`
 			JOIN groups_groups AS member_links ON
-				member_links.sType IN ('direct', 'invitationAccepted', 'requestAccepted') AND
+				member_links.sType`+database.GroupRelationIsActiveCondition+` AND
 				member_links.idGroupChild = users.idGroupSelf AND
 				member_links.idGroupParent IN (?)`, groupIDs).
 		Order("member_links.idGroupParent, member_links.idGroupChild").

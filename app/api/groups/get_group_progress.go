@@ -124,7 +124,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			JOIN groups_ancestors
 			ON groups_ancestors.idGroupAncestor IN (?) AND
 				groups_ancestors.idGroupChild = parent.ID`, ancestorGroupIDs).
-		Where("groups_groups.sType IN ('direct', 'invitationAccepted', 'requestAccepted')").
+		WhereGroupRelationIsActive().
 		Group("child.ID")
 
 	teams := srv.Store.Table("groups FORCE INDEX(sType)").

@@ -8,12 +8,15 @@
 - {ID: 8, idGroupAncestor: 8, idGroupChild: 8, bIsSelf: 1}
 - {ID: 9, idGroupAncestor: 9, idGroupChild: 9, bIsSelf: 1}
 - {ID: 10, idGroupAncestor: 10, idGroupChild: 10, bIsSelf: 1}
+- {ID: 11, idGroupAncestor: 11, idGroupChild: 11, bIsSelf: 1}
 - {ID: 23, idGroupAncestor: 20, idGroupChild: 4}
 - {ID: 24, idGroupAncestor: 20, idGroupChild: 5}
 - {ID: 25, idGroupAncestor: 20, idGroupChild: 10}
-- {ID: 26, idGroupAncestor: 20, idGroupChild: 20, bIsSelf: 1}
-- {ID: 27, idGroupAncestor: 30, idGroupChild: 4}
-- {ID: 28, idGroupAncestor: 30, idGroupChild: 5}
-- {ID: 29, idGroupAncestor: 30, idGroupChild: 10}
-- {ID: 30, idGroupAncestor: 30, idGroupChild: 20}
-- {ID: 31, idGroupAncestor: 30, idGroupChild: 30, bIsSelf: 1}
+- {ID: 26, idGroupAncestor: 20, idGroupChild: 11}
+- {ID: 27, idGroupAncestor: 20, idGroupChild: 20, bIsSelf: 1}
+- {ID: 28, idGroupAncestor: 30, idGroupChild: 4}
+- {ID: 29, idGroupAncestor: 30, idGroupChild: 5}
+- {ID: 30, idGroupAncestor: 30, idGroupChild: 10}
+- {ID: 31, idGroupAncestor: 30, idGroupChild: 11}
+- {ID: 32, idGroupAncestor: 30, idGroupChild: 20}
+- {ID: 33, idGroupAncestor: 30, idGroupChild: 30, bIsSelf: 1}

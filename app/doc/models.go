@@ -2,6 +2,17 @@ package doc
 
 import "time"
 
+// swagger:model createdResponse
+type CreatedResponse struct {
+	// "created"
+	// enum: created
+	// required: true
+	Message string `json:"message"`
+	// true
+	// required: true
+	Success bool `json:"success"`
+}
+
 // swagger:model userCreateTmpResponse
 type userCreateTmpResponse struct {
 	// description
@@ -28,7 +39,7 @@ type groupsMembershipHistoryResponseRow struct {
 	StatusDate time.Time `json:"status_date"`
 	// `groups_groups.sType`
 	// required: true
-	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,requestRefused,removed,left
+	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,joinedByCode,requestRefused,removed,left
 	Type string `json:"type"`
 
 	// required: true
@@ -96,7 +107,7 @@ type membershipsViewResponseRow struct {
 	StatusDate time.Time `json:"status_date"`
 	// `groups_groups.sType`
 	// required: true
-	// enum: invitationAccepted,requestAccepted,direct
+	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
 	Type string `json:"type"`
 
 	// required: true

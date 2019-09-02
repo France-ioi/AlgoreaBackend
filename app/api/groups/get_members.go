@@ -15,7 +15,7 @@ import (
 //
 //   Returns a list of group members
 //   (rows from the `groups_groups` table with `idGroupParent` = `group_id` and
-//   `sType` = "invitationAccepted"/"requestAccepted"/"direct").
+//   `sType` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
 //   Rows related to users contain basic user info.
 //
 //
@@ -78,7 +78,7 @@ import (
 //           type:
 //             type: string
 //             description: "`groups_groups.sType`"
-//             enum: [invitationAccepted, requestAccepted, direct]
+//             enum: [invitationAccepted, requestAccepted, joinedByCode, direct]
 //           user:
 //             type: object
 //             description: Nullable
@@ -130,7 +130,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			users.sLastName AS user__sLastName,
 			users.iGrade AS user__iGrade`).
 		Joins("LEFT JOIN users ON users.idGroupSelf = groups_groups.idGroupChild").
-		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
+		WhereGroupRelationIsActive().
 		Where("groups_groups.idGroupParent = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)

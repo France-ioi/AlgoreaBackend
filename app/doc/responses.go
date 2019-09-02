@@ -91,16 +91,6 @@ type deletedOrUnchangedResponse struct {
 	}
 }
 
-type CreatedResponse struct {
-	// "created"
-	// enum: created
-	// required: true
-	Message string `json:"message"`
-	// true
-	// required: true
-	Success bool `json:"success"`
-}
-
 // The request has succeeded. The `data.changed` shows if the object has been created.
 // swagger:response createdOrUnchangedResponse
 type createdOrUnchangedResponse struct {
@@ -355,7 +345,7 @@ type groupChildrenViewResponse struct {
 		FreeAccess bool `json:"free_access"`
 		// Nullable
 		// required:true
-		Password *string `json:"password"`
+		Code *string `json:"code"`
 		// The number of descendant users
 		// required:true
 		UserCount int32 `json:"user_count"`
