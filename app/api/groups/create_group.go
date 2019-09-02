@@ -46,7 +46,8 @@ type createGroupRequest struct {
 //   After everything, it propagates group ancestors.
 //
 //
-//   The user should not be temporary, otherwise the "forbidden" response is returned.
+//   The user should have both `idGroupSelf` and `idGroupOwned` set (in particular the user should not be temporary),
+//   otherwise the "forbidden" response is returned.
 // consumes:
 // - application/json
 // parameters:
@@ -101,6 +102,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(errors.New("only teams can be created with item_id set"))
 	}
 
+	// both fields should be set (normal users have them)
 	if user.SelfGroupID == nil || user.OwnedGroupID == nil {
 		return service.InsufficientAccessRightsError
 	}
