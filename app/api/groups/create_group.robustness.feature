@@ -111,9 +111,15 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
   Examples:
-    | type    |
-    |         |
-    | Unknown |
+    | type      |
+    |           |
+    | Unknown   |
+    | UserSelf  |
+    | UserAdmin |
+    | Base      |
+    | RootSelf  |
+    | Root      |
+    | RootTemp  |
 
   Scenario: Zero item_id
     Given I am the user with ID "1"
