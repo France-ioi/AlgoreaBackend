@@ -4,17 +4,20 @@ Feature: Create a group (groupCreate) - robustness
     Given the database has the following table 'users':
       | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
       | 1  | owner  | 0        | 21          | 22           |
-      | 2  | tmp12  | 1        | 31          | null         |
+      | 2  | tmp12  | 1        | 31          | 32           |
       | 3  | noself | 0        | null        | 42           |
       | 4  | john   | 0        | 51          | 52           |
+      | 5  | weird  | 0        | 61          | null         |
     And the database has the following table 'groups':
       | ID | sName        | sType     | idTeamItem |
       | 21 | owner        | UserSelf  | null       |
       | 22 | owner-admin  | UserAdmin | null       |
       | 31 | tmp12        | UserSelf  | null       |
+      | 32 | tmp12-admin  | UserAdmin | null       |
       | 42 | noself-admin | UserAdmin | null       |
       | 51 | john         | UserSelf  | null       |
       | 52 | john-admin   | UserAdmin | null       |
+      | 61 | weird        | UserSelf  | null       |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType              |
     And the database has the following table 'groups_ancestors':
@@ -22,9 +25,11 @@ Feature: Create a group (groupCreate) - robustness
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
       | 31              | 31           | 1       |
+      | 32              | 32           | 1       |
       | 42              | 42           | 1       |
       | 51              | 51           | 1       |
       | 52              | 52           | 1       |
+      | 61              | 61           | 1       |
     And the database has the following table 'groups_items':
       | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate |
       | 21      | 10     | 2019-07-16T21:28:47Z  | null                     | null                    |
@@ -167,6 +172,18 @@ Feature: Create a group (groupCreate) - robustness
 
   Scenario: User with empty self group
     Given I am the user with ID "3"
+    When I send a POST request to "/groups" with the following body:
+    """
+    {"name": "some name", "type": "Class"}
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: User with empty owned group
+    Given I am the user with ID "5"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}

@@ -46,7 +46,7 @@ type createGroupRequest struct {
 //   After everything, it propagates group ancestors.
 //
 //
-//   The user should have both `idGroupSelf` and `idGroupOwned` set (in particular the user should not be temporary),
+//   The user should have both `idGroupSelf` and `idGroupOwned` set and should not be temporary,
 //   otherwise the "forbidden" response is returned.
 // parameters:
 // - in: body
@@ -101,7 +101,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	// both fields should be set (normal users have them)
-	if user.SelfGroupID == nil || user.OwnedGroupID == nil {
+	if user.IsTempUser || user.SelfGroupID == nil || user.OwnedGroupID == nil {
 		return service.InsufficientAccessRightsError
 	}
 
