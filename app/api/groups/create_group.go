@@ -48,8 +48,6 @@ type createGroupRequest struct {
 //
 //   The user should have both `idGroupSelf` and `idGroupOwned` set (in particular the user should not be temporary),
 //   otherwise the "forbidden" response is returned.
-// consumes:
-// - application/json
 // parameters:
 // - in: body
 //   name: data
