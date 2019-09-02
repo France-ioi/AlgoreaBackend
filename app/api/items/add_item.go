@@ -150,7 +150,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 
 	// response
 	response := struct {
-		ItemID int64 `json:"ID,string"`
+		ItemID int64 `json:"id,string"`
 	}{ItemID: itemID}
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
 	return service.NoError

@@ -47,6 +47,13 @@ type forbidden struct {
 	Message string `json:"message"`
 }
 
+type notFound struct {
+	genericError
+	// required: true
+	// enum: Not Found
+	Message string `json:"message"`
+}
+
 type unprocessableEntity struct {
 	genericError
 	// required: true

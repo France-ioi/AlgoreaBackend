@@ -31,6 +31,14 @@ type forbiddenResponse struct {
 	Body struct{ forbidden }
 }
 
+// Not Found. The requested object (or its scope) is not found
+// (note that this error may be caused by insufficient access rights)
+// swagger:response notFoundResponse
+type notFoundResponse struct {
+	// in: body
+	Body struct{ notFound }
+}
+
 // Unprocessable Entity. Returned by services performing groups relations transitions to indicate
 // that the transition is impossible.
 // swagger:response unprocessableEntityResponse

@@ -380,7 +380,7 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	var teamGroupID int64
-	mustNotBeError(s.Groups().TeamGroupByTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+	mustNotBeError(s.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
 
 	// Set contest as finished
 	/*
@@ -397,7 +397,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		JOIN users ON users.ID = users_items.idUser
 		JOIN groups_groups
 			ON groups_groups.idGroupChild = users.idGroupSelf AND
-				groups_groups.sType`+GroupUserRelationIsActiveCondition+` AND
+				groups_groups.sType`+GroupRelationIsActiveCondition+` AND
 				groups_groups.idGroupParent = ?
 		SET sFinishDate = NOW()
 		WHERE users_items.idItem = ?`, teamGroupID, itemID).Error)
