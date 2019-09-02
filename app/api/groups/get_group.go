@@ -21,7 +21,7 @@ import (
 //   otherwise the 'forbidden' error is returned.
 //
 //
-//   Note: `code_*` fields are nulls when the user is not an owner of the group.
+//   Note: `code*` fields are omitted when the user is not an owner of the group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -75,7 +75,7 @@ import (
 //                          `True` when there is an active group->user relation in `groups_groups`
 //           type: boolean
 //       required: [id, name, grade, description, date_created, type, redirect_path, opened, free_access,
-//                  code, code_timer, code_end, open_contest, current_user_is_owner, current_user_is_member]
+//                  open_contest, current_user_is_owner, current_user_is_member]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -120,7 +120,15 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	if len(result) == 0 {
 		return service.InsufficientAccessRightsError
 	}
-	render.Respond(w, r, service.ConvertMapFromDBToJSON(result[0]))
+
+	jsonResult := service.ConvertMapFromDBToJSON(result[0])
+	if !jsonResult["current_user_is_owner"].(bool) {
+		delete(jsonResult, "code")
+		delete(jsonResult, "code_timer")
+		delete(jsonResult, "code_end")
+	}
+
+	render.Respond(w, r, jsonResult)
 
 	return service.NoError
 }

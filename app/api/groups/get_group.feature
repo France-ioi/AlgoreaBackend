@@ -113,9 +113,6 @@ Feature: Get group by groupID (groupView)
       "redirect_path": "182529188317717610/1672978871462145461",
       "opened": true,
       "free_access": false,
-      "code": null,
-      "code_timer": null,
-      "code_end": null,
       "open_contest": true,
       "current_user_is_owner": false,
       "current_user_is_member": false
@@ -138,9 +135,6 @@ Feature: Get group by groupID (groupView)
       "redirect_path": "182529188317717610/1672978871462145461",
       "opened": true,
       "free_access": false,
-      "code": null,
-      "code_timer": null,
-      "code_end": null,
       "open_contest": true,
       "current_user_is_owner": false,
       "current_user_is_member": true
@@ -169,9 +163,6 @@ Feature: Get group by groupID (groupView)
       "redirect_path": null,
       "opened": false,
       "free_access": true,
-      "code": null,
-      "code_timer": null,
-      "code_end": null,
       "open_contest": false,
       "current_user_is_owner": false,
       "current_user_is_member": false
