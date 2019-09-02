@@ -11,12 +11,12 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/France-ioi/validator"
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
-	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/go-playground/validator.v9/translations/en"
 
 	"github.com/France-ioi/mapstructure"
+	"github.com/France-ioi/validator/translations/en"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB

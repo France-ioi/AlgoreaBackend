@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/France-ioi/validator"
 )
 
 func validateDuration(fl validator.FieldLevel) bool {

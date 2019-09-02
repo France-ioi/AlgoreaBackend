@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	validator "gopkg.in/go-playground/validator.v9"
+	validator "github.com/France-ioi/validator"
 )
 
 func Test_validateDuration(t *testing.T) {
