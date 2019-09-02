@@ -57,26 +57,7 @@ type createGroupRequest struct {
 //     "$ref": "#/definitions/createGroupRequest"
 // responses:
 //   "201":
-//     description: "Created. Success response with the created group's ID"
-//     schema:
-//       type: object
-//       required: [success, message, data]
-//       properties:
-//         success:
-//           description: "true"
-//           type: boolean
-//           enum: [true]
-//         message:
-//           description: created
-//           type: string
-//           enum: [created]
-//         data:
-//           type: object
-//           required: [id]
-//           properties:
-//             id:
-//               type: string
-//               format: int64
+//     "$ref": "#/responses/createdWithIDResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":

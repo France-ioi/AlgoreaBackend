@@ -471,7 +471,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			map[string]interface{}{},
 		},
 		{
-			"skips unexported fields",
+			"skips fields without json tag",
 			&struct {
 				name string
 			}{},
