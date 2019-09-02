@@ -12,8 +12,9 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 		Where("groups_ancestors.idGroupAncestor=?", user.OwnedGroupID)
 }
 
-// TeamGroupByTeamItemAndUser returns a composable query for getting a team for the current user by the team's main item
-func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
+// TeamGroupForTeamItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
+// for the current user by the team's main item
+func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
 			ON groups_groups.idGroupParent = groups.ID AND
@@ -21,11 +22,13 @@ func (s *GroupStore) TeamGroupByTeamItemAndUser(itemID int64, user *User) *DB {
 				groups_groups.idGroupChild = ?`, user.SelfGroupID).
 		Where("groups.idTeamItem = ?", itemID).
 		Where("groups.sType = 'Team'").
+		Order("groups.ID").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
 
-// TeamGroupByItemAndUser returns a composable query for getting a team for the current user by one of team's items
-func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
+// TeamGroupForItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
+// for the current user by one of team's items
+func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
 			ON groups_groups.idGroupParent = groups.ID AND
@@ -36,5 +39,6 @@ func (s *GroupStore) TeamGroupByItemAndUser(itemID int64, user *User) *DB {
 		Where("groups.sType = 'Team'").
 		Where("items_ancestors.idItemChild = ? OR groups.idTeamItem = ?", itemID, itemID).
 		Group("groups.ID").
+		Order("groups.ID").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
