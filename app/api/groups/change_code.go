@@ -14,13 +14,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{group_id}/password groups groupChangePassword
+// swagger:operation POST /groups/{group_id}/code groups groupChangeCode
 // ---
-// summary: Generate a new password for joining a group
+// summary: Generate a new code for joining a group
 // description: >
 //
-//   Generates a new password using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
-//   Makes sure it doesn’t correspond to any existing group password. Saves and returns it.
+//   Generates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].
+//   Makes sure it doesn’t correspond to any existing group code. Saves and returns it.
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -31,14 +31,14 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     description: OK. The new password has been set.
+//     description: OK. The new code has been set.
 //     schema:
 //       type: object
 //       properties:
-//         password:
+//         code:
 //           type: string
 //       required:
-//       - password
+//       - code
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -47,7 +47,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) changeCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
 
@@ -60,20 +60,20 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 		return apiError
 	}
 
-	var newPassword string
+	var newCode string
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
 			if retryCount > 3 {
-				generatorErr := errors.New("the password generator is broken")
+				generatorErr := errors.New("the code generator is broken")
 				logging.GetLogEntry(r).Error(generatorErr)
 				return generatorErr
 			}
 
-			newPassword, err = GenerateGroupPassword()
+			newCode, err = GenerateGroupCode()
 			service.MustNotBeError(err)
 
-			// `CREATE UNIQUE INDEX sPassword ON groups(sPassword)` must be done
-			err = store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sPassword": newPassword}).Error()
+			// `CREATE UNIQUE INDEX sCode ON groups(sCode)` must be done
+			err = store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sCode": newCode}).Error()
 			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 				continue
 			}
@@ -85,20 +85,20 @@ func (srv *Service) changePassword(w http.ResponseWriter, r *http.Request) servi
 	}))
 
 	render.Respond(w, r, struct {
-		Password string `json:"password"`
-	}{newPassword})
+		Code string `json:"code"`
+	}{newCode})
 
 	return service.NoError
 }
 
-// GenerateGroupPassword generate a random password for a group
-func GenerateGroupPassword() (string, error) {
+// GenerateGroupCode generate a random code for a group
+func GenerateGroupCode() (string, error) {
 	const allowedCharacters = "3456789abcdefghijkmnpqrstuvwxy" // copied from the JS code
 	const allowedCharactersLength = len(allowedCharacters)
-	const passwordLength = 10
+	const codeLength = 10
 
-	result := make([]byte, 0, passwordLength)
-	for i := 0; i < passwordLength; i++ {
+	result := make([]byte, 0, codeLength)
+	for i := 0; i < codeLength; i++ {
 		index, err := rand.Int(rand.Reader, big.NewInt(int64(allowedCharactersLength)))
 		if err != nil {
 			return "", err

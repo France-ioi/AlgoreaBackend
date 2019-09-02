@@ -26,6 +26,7 @@ Feature: Get requests for group_id
       | 11 | 13            | 131          | removed            | null                      | 1              |
       | 12 | 13            | 122          | left               | null                      | 2              |
       | 13 | 13            | 123          | direct             | null                      | 2              |
+      | 14 | 13            | 124          | joinedByCode       | null                      | 2              |
 
   Scenario: User is an admin of the group (default sort)
     Given I am the user with ID "1"

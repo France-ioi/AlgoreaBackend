@@ -8,12 +8,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /groups/{group_id}/password groups groupDiscardPassword
+// swagger:operation DELETE /groups/{group_id}/code groups groupDiscardCode
 // ---
-// summary: Discard the group’s password
+// summary: Discard the group’s code
 // description: >
 //
-//   Sets `groups.sPassword` = NULL for a given group.
+//   Sets `groups.sCode` = NULL for a given group.
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -33,7 +33,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) discardPassword(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) discardCode(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
 
@@ -48,7 +48,7 @@ func (srv *Service) discardPassword(w http.ResponseWriter, r *http.Request) serv
 
 	service.MustNotBeError(
 		srv.Store.Groups().Where("ID = ?", groupID).
-			UpdateColumn("sPassword", nil).Error())
+			UpdateColumn("sCode", nil).Error())
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
 	return service.NoError

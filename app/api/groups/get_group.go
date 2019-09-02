@@ -52,19 +52,19 @@ import (
 //           type: boolean
 //         free_access:
 //           type: boolean
-//         password:
+//         code:
 //           description: Nullable
 //           type: string
-//         password_timer:
+//         code_timer:
 //           description: Nullable
 //           type: string
-//         password_end:
+//         code_end:
 //           description: Nullable
 //           type: string
 //         open_contest:
 //           type: boolean
 //       required: [id, name, grade, description, date_created, type, redirect_path, opened, free_access,
-//                  password, password_timer, password_end, open_contest]
+//                  code, code_timer, code_end, open_contest]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -85,7 +85,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Where("groups.ID = ?", groupID).Select(
 		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated,
      groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
-     groups.sPassword, groups.sPasswordTimer, groups.sPasswordEnd, groups.bOpenContest`).Limit(1)
+     groups.sCode, groups.sCodeTimer, groups.sCodeEnd, groups.bOpenContest`).Limit(1)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())

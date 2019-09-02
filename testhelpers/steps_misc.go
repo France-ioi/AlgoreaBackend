@@ -67,23 +67,23 @@ func (ctx *TestContext) TimeIsFrozen() error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) TheGeneratedGroupPasswordIs(generatedPassword string) error { // nolint
-	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) { return generatedPassword, nil }) // nolint:unparam
+func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error { // nolint
+	monkey.Patch(groups.GenerateGroupCode, func() (string, error) { return generatedCode, nil }) // nolint:unparam
 	return nil
 }
 
 var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
 
-func (ctx *TestContext) TheGeneratedGroupPasswordsAre(generatedPasswords string) error { // nolint
+func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error { // nolint
 	currentIndex := 0
-	monkey.Patch(groups.GenerateGroupPassword, func() (string, error) {
+	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
 		currentIndex++
-		password := multipleStringsRegexp.FindStringSubmatch(generatedPasswords)
-		if password == nil {
-			return "", errors.New("not enough generated passwords")
+		code := multipleStringsRegexp.FindStringSubmatch(generatedCodes)
+		if code == nil {
+			return "", errors.New("not enough generated codes")
 		}
-		generatedPasswords = generatedPasswords[len(password[1]):]
-		return password[2], nil
+		generatedCodes = generatedCodes[len(code[1]):]
+		return code[2], nil
 	})
 	return nil
 }

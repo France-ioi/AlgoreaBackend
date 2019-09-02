@@ -56,7 +56,7 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		if activeAttemptID == nil {
 			groupID := *user.SelfGroupID // not null since we have passed the access rights checking
 			if itemInfo.HasAttempts {
-				err = store.Groups().TeamGroupByItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
+				err = store.Groups().TeamGroupForItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
 				if gorm.IsRecordNotFoundError(err) {
 					apiError = service.ErrForbidden(errors.New("no team found for the user"))
 					return err // rollback
