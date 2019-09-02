@@ -9,7 +9,6 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 5  | jack   | 15          |
       | 6  | james  | 16          |
       | 7  | jeremy | 17          |
-      | 8  | jude   | 18          |
       | 9  | jacob  | 19          |
     And the database has the following table 'groups':
       | ID | sType    | idTeamItem |
@@ -20,7 +19,6 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 15 | UserSelf | null       |
       | 16 | UserSelf | null       |
       | 17 | UserSelf | null       |
-      | 18 | UserSelf | null       |
       | 19 | UserSelf | null       |
       | 20 | Team     | 100        |
       | 21 | Class    | 100        |
@@ -32,7 +30,6 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 20            | 15           | requestRefused    |
       | 20            | 16           | removed           |
       | 20            | 17           | left              |
-      | 20            | 18           | direct            |
       | 21            | 19           | joinedByCode      |
 
   Scenario: Invalid item_id
@@ -55,7 +52,6 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 5       |
       | 6       |
       | 7       |
-      | 8       |
 
   Scenario: Wrong groups.sType
     Given I am the user with ID "9"
