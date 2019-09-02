@@ -90,7 +90,7 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	assert.Equal("SELECT 2", hook.Entries[1].Message)
 	data = hook.Entries[1].Data
 	assert.Equal("db", data["type"])
-	assert.True(data["duration"].(float64) < 0.01, "unexpected duration: %v", data["duration"])
+	assert.True(data["duration"].(float64) < 1.0, "unexpected duration: %v", data["duration"])
 	assert.NotNil(data["ts"])
 	assert.Equal(int64(0), data["rows"].(int64))
 	assert.NoError(mock.ExpectationsWereMet())
