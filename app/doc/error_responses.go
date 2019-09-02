@@ -31,7 +31,8 @@ type forbiddenResponse struct {
 	Body struct{ forbidden }
 }
 
-// Not Found. The requested object is not found.
+// Not Found. The requested object (or its scope) is not found
+// (note that this error may be caused by insufficient access rights)
 // swagger:response notFoundResponse
 type notFoundResponse struct {
 	// in: body
