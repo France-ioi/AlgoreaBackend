@@ -11,12 +11,12 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/France-ioi/validator"
 	english "github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
-	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/go-playground/validator.v9/translations/en"
 
 	"github.com/France-ioi/mapstructure"
+	"github.com/France-ioi/validator/translations/en"
 )
 
 // FormData can parse JSON, validate it and construct a map for updating DB
@@ -25,10 +25,14 @@ type FormData struct {
 	fieldErrors         FieldErrors
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
+	decodeErrors        map[string]bool
 
 	validate *validator.Validate
 	trans    ut.Translator
 }
+
+const set = "set"
+const squash = "squash"
 
 // NewFormData creates a new FormData object for given definitions
 func NewFormData(definitionStructure interface{}) *FormData {
@@ -63,6 +67,14 @@ func NewFormData(definitionStructure interface{}) *FormData {
 	}
 
 	// Register global custom validations
+
+	// This one is needed to check if the field is set
+	formData.RegisterValidation(set, func(fl validator.FieldLevel) bool {
+		path := formData.getUsedKeysPathFromValidatorPath(fl.Path())
+		return formData.usedKeys[path]
+	})
+	formData.RegisterTranslation(set, "missing field")
+
 	formData.RegisterValidation("duration", validator.Func(validateDuration))
 	formData.RegisterTranslation("duration", "invalid duration")
 
@@ -162,7 +174,8 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 
 func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	f.fieldErrors = make(FieldErrors)
-	f.usedKeys = map[string]bool{}
+	f.usedKeys = make(map[string]bool)
+	f.decodeErrors = make(map[string]bool)
 
 	var decoder *mapstructure.Decoder
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
@@ -193,11 +206,13 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 				copy(value, matches[2])
 				f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], string(value))
 				f.usedKeys[string(key)] = true
+				f.decodeErrors[string(key)] = true
 			} else if matches := mapstructDecodingErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
 				key := make([]byte, len(matches[1]))
 				copy(key, matches[1])
 				f.fieldErrors[string(key)] = append(f.fieldErrors[string(key)], "decoding error: "+matches[2])
 				f.usedKeys[string(key)] = true
+				f.decodeErrors[string(key)] = true
 			} else {
 				f.fieldErrors[""] = append(f.fieldErrors[""], fieldErrorString) // should never happen
 			}
@@ -211,29 +226,31 @@ func (f *FormData) validateFieldValues() {
 	}
 }
 
-const required = "required"
-const squash = "squash"
-
 func (f *FormData) processValidatorErrors(err error) {
 	validatorErrors := err.(validator.ValidationErrors)
 	for _, validatorError := range validatorErrors {
 		path := validatorError.Namespace()
-		prefix := ""
-		structType := reflect.TypeOf(f.definitionStructure)
-		for structType.Kind() == reflect.Ptr {
-			structType = structType.Elem()
-		}
-		structName := structType.Name()
-		if structName != "" {
-			prefix = structName + "."
-		}
-		path = strings.TrimPrefix(path, prefix)
-		path = strings.Replace(path, "<squash>.", "", -1)
-		if f.usedKeys[path] && validatorError.Tag() != required {
+		path = f.getUsedKeysPathFromValidatorPath(path)
+		if (f.usedKeys[path] || validatorError.Tag() == set) && !f.decodeErrors[path] {
 			errorMsg := validatorError.Translate(f.trans)
 			f.fieldErrors[path] = append(f.fieldErrors[path], errorMsg)
 		}
 	}
+}
+
+func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
+	prefix := ""
+	structType := reflect.TypeOf(f.definitionStructure)
+	for structType.Kind() == reflect.Ptr {
+		structType = structType.Elem()
+	}
+	structName := structType.Name()
+	if structName != "" {
+		prefix = structName + "."
+	}
+	path = strings.TrimPrefix(path, prefix)
+	path = strings.Replace(path, "<squash>.", "", -1)
+	return path
 }
 
 func (f *FormData) checkProvidedFields() {
@@ -243,20 +260,6 @@ func (f *FormData) checkProvidedFields() {
 	for _, usedKey := range f.metadata.Keys {
 		f.usedKeys[usedKey] = true
 	}
-
-	traverseStructure(func(field reflect.Value, structField reflect.StructField, jsonName string) bool {
-		validTag := structField.Tag.Get("validate")
-		tags := strings.Split(validTag, ",")
-		for _, value := range tags {
-			if value == required {
-				if !f.usedKeys[jsonName] {
-					f.fieldErrors[jsonName] = append(f.fieldErrors[jsonName], "missing field")
-				}
-				break
-			}
-		}
-		return true
-	}, reflect.ValueOf(f.definitionStructure), "")
 }
 
 func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValue reflect.Value, prefix string) {

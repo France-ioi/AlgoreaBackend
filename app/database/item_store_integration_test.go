@@ -497,6 +497,7 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 		{name: "manager access", ids: []int64{13}, userID: 2, wantResult: true},
 		{name: "two items", ids: []int64{12, 13}, userID: 2, wantResult: true},
 		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 2, wantResult: true},
+		{name: "empty ids list", ids: []int64{}, userID: 2, wantResult: true},
 	}
 	for _, test := range tests {
 		test := test

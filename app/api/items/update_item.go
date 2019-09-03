@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
-	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
