@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-chi/render"
-	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -18,7 +20,7 @@ import (
 
 type itemChild struct {
 	// required: true
-	ItemID int64 `json:"item_id,string" sql:"column:idItemChild" validate:"required,child_item_id"`
+	ItemID int64 `json:"item_id,string" sql:"column:idItemChild" validate:"set,child_item_id"`
 	// default: 0
 	Order int32 `json:"order" sql:"column:iChildOrder"`
 }
@@ -90,7 +92,7 @@ type itemWithRequiredType struct {
 	item `json:"item,squash"`
 	// required: true
 	// enum: Root,Category,Chapter,Task,Course
-	Type string `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
+	Type string `json:"type" validate:"set,oneof=Root Category Chapter Task Course" sql:"column:sType"`
 }
 
 // swagger:ignore
@@ -109,15 +111,14 @@ type newItemString struct {
 // swagger:model itemCreateRequest
 type NewItemRequest struct {
 	// Nullable fields are of pointer types
-	// swagger:allOf
 	itemWithRequiredType `json:"item,squash"`
 	// `idDefaultLanguage` of the item
 	// required: true
-	LanguageID    int64 `json:"language_id" validate:"required,language_id"`
+	LanguageID    int64 `json:"language_id" validate:"set,language_id"`
 	newItemString `json:"string,squash"`
 
 	// required: true
-	ParentItemID int64 `json:"parent_item_id,string" validate:"required,parent_item_id"`
+	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
 	// default: 0
 	Order int32 `json:"order"`
 
@@ -270,8 +271,12 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 // The validator checks that the group in the TeamInGroupID field is owned by the user.
 func constructTeamInGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
+		field := fl.Field()
+		if field.Kind() == reflect.Ptr { // nil
+			return true
+		}
 		found, err := store.Groups().
-			OwnedBy(user).Where("groups.ID = ?", fl.Field().Interface().(int64)).
+			OwnedBy(user).Where("groups.ID = ?", field.Int()).
 			WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
@@ -282,7 +287,11 @@ func constructTeamInGroupIDValidator(store *database.DataStore, user *database.U
 // The validator checks that the user has access rights to manage all the listed items (bOwnerAccess or bManagerAccess).
 func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		ids := strings.Split(fl.Field().Interface().(string), ",")
+		field := fl.Field()
+		if field.Kind() == reflect.Ptr { // nil
+			return true
+		}
+		ids := strings.Split(field.String(), ",")
 		int64IDs := make([]int64, 0, len(ids))
 		for _, id := range ids {
 			int64ID, err := strconv.ParseInt(id, 10, 64)

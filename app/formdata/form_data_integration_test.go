@@ -98,7 +98,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"multiple errors",
 			&struct {
-				ID *int64 `json:"id" validate:"required"`
+				ID *int64 `json:"id" validate:"set"`
 			}{},
 			`{"my_id":1, "id":null}`,
 			"invalid input data",
@@ -110,14 +110,14 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required"`
+					Name        string `json:"name" validate:"set"`
 					OtherStruct *struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct" validate:"set"`
 					OtherStruct2 *struct {
-						Name *string `json:"name" validate:"required"`
-					} `validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"id":null, "struct":{"other_struct":null, "OtherStruct2": null}}`,
 			"invalid input data",
@@ -130,14 +130,14 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"nested structure with squash",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required"`
+					Name        string `json:"name" validate:"set"`
 					OtherStruct struct {
-						Name *string `json:"name1" validate:"required"`
-					} `json:"other_struct,squash" validate:"required"`
+						Name *string `json:"name1" validate:"set"`
+					} `json:"other_struct,squash" validate:"set"`
 					OtherStruct2 struct {
-						Name *string `json:"name2" validate:"required"`
-					} `json:"other_struct2,squash" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name2" validate:"set"`
+					} `json:"other_struct2,squash" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"id":null, "struct":{"name1": "my name"}}`,
 			"invalid input data",
@@ -152,7 +152,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			&struct {
 				Struct struct {
 					Name string `json:"name" validate:"min=1"`
-				} `json:"struct,squash" validate:"required"`
+				} `json:"struct,squash" validate:"set"`
 			}{},
 			`{"name": ""}}`,
 			"invalid input data",
@@ -164,14 +164,14 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"nested structure2",
 			&struct {
 				Struct struct {
-					Name        *string `json:"name" validate:"required"`
+					Name        *string `json:"name" validate:"set"`
 					OtherStruct struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct" validate:"set"`
 					OtherStruct2 struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct2" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct2" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"id":null, "struct":{"name":null, "other_struct":{}, "other_struct2":{}}}`,
 			"invalid input data",
@@ -185,14 +185,14 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			"nested structure with nils",
 			&struct {
 				Struct struct {
-					Name        *string `json:"name" validate:"required"`
+					Name        *string `json:"name" validate:"set"`
 					OtherStruct *struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct" validate:"set"`
 					OtherStruct2 *struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct2" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct2" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":null, "other_struct":null, "other_struct2":null}}`,
 			"",
@@ -207,6 +207,58 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			`{}`,
 			"",
 			nil,
+		},
+		{
+			"ignores errors related to scalar fields that are not given, but should be set",
+			&struct {
+				ID   int64  `json:"id" validate:"set,min=1"`
+				Name string `json:"name" validate:"set,min=1"` // length >= 1
+			}{},
+			`{}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":   {"missing field"},
+				"name": {"missing field"},
+			},
+		},
+		{
+			"validates fields with empty values",
+			&struct {
+				ID   int64  `json:"id" validate:"set,min=1"`
+				Name string `json:"name" validate:"set,min=1"` // length >= 1
+			}{},
+			`{"id":0, "name":""}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":   {"id must be 1 or greater"},
+				"name": {"name must be at least 1 character in length"},
+			},
+		},
+		{
+			"validates pointer fields with empty values",
+			&struct {
+				ID   *int64  `json:"id" validate:"set,min=1"`
+				Name *string `json:"name" validate:"set,min=1"` // length >= 1
+			}{},
+			`{"id":0, "name":""}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":   {"id must be 1 or greater"},
+				"name": {"name must be at least 1 character in length"},
+			},
+		},
+		{
+			"validates pointer fields with null values",
+			&struct {
+				ID   *int64  `json:"id" validate:"set,min=1"`
+				Name *string `json:"name" validate:"set,min=1"` // length >= 1
+			}{},
+			`{"id":null, "name":null}`,
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":   {"id must be 1 or greater"},
+				"name": {"name must be at least 1 character in length"},
+			},
 		},
 		{
 			"named structure",
@@ -332,7 +384,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 		{
 			"multiple errors",
 			&struct {
-				ID *int64 `json:"id" validate:"required"`
+				ID *int64 `json:"id" validate:"set"`
 			}{},
 			map[string]interface{}{"my_id": 1, "id": nil},
 			"invalid input data",
@@ -344,14 +396,14 @@ func TestFormData_ParseMapData(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required"`
+					Name        string `json:"name" validate:"set"`
 					OtherStruct *struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct" validate:"set"`
 					OtherStruct2 *struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct2" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct2" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			map[string]interface{}{"id": nil, "struct": map[string]interface{}{"other_struct": nil, "other_struct2": nil}},
 			"invalid input data",
@@ -364,14 +416,14 @@ func TestFormData_ParseMapData(t *testing.T) {
 			"nested structure2",
 			&struct {
 				Struct struct {
-					Name        *string `json:"name" validate:"required"`
+					Name        *string `json:"name" validate:"set"`
 					OtherStruct struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct" validate:"set"`
 					OtherStruct2 struct {
-						Name *string `json:"name" validate:"required"`
-					} `json:"other_struct2" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name *string `json:"name" validate:"set"`
+					} `json:"other_struct2" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			map[string]interface{}{
 				"id": nil,
@@ -399,6 +451,19 @@ func TestFormData_ParseMapData(t *testing.T) {
 			map[string]interface{}{},
 			"",
 			nil,
+		},
+		{
+			"runs validators for pointers",
+			&struct {
+				ID   *int64  `json:"id" validate:"min=1"`
+				Name *string `json:"name" validate:"min=1"` // length >= 1
+			}{},
+			map[string]interface{}{"id": 0, "name": ""},
+			"invalid input data",
+			formdata.FieldErrors{
+				"id":   []string{"id must be 1 or greater"},
+				"name": []string{"name must be at least 1 character in length"},
+			},
 		},
 		{
 			"rare errors (unsupported type)",
@@ -481,7 +546,8 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips fields ignored by json",
 			&struct {
-				Name string `json:"-" sql:"column:sName"`
+				Name        string `json:"-" sql:"column:sName"`
+				Description string `sql:"column:sDescription"`
 			}{},
 			`{}`,
 			map[string]interface{}{},
@@ -504,13 +570,26 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required" sql:"column:structs.sName"`
+					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"required" sql:"column:structs.otherStructs.sName"`
-					} `json:"other_struct" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
+			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+		},
+		{
+			"structure with squash",
+			&struct {
+				Struct struct {
+					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					OtherStruct struct {
+						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"set"`
+				} `json:"struct,squash" validate:"set"`
+			}{},
+			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
@@ -571,11 +650,11 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required" sql:"column:structs.sName"`
+					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"required" sql:"column:structs.otherStructs.sName"`
-					} `json:"other_struct" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
@@ -584,11 +663,11 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"pointer to structure",
 			&struct {
 				Struct *struct {
-					Name        string `json:"name" validate:"required" sql:"column:structs.sName"`
+					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"required" sql:"column:structs.otherStructs.sName"`
-					} `json:"other_struct" validate:"required"`
-				} `json:"struct" validate:"required"`
+						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"set"`
+				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
@@ -597,11 +676,11 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"structure with squash",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"required" sql:"column:structs.sName"`
+					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"required" sql:"column:structs.otherStructs.sName"`
-					} `json:"other_struct" validate:"required"`
-				} `json:"struct,squash" validate:"required"`
+						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+					} `json:"other_struct" validate:"set"`
+				} `json:"struct,squash" validate:"set"`
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
 			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
