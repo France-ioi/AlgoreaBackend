@@ -59,7 +59,7 @@ Feature: Ask for a hint
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -120,7 +120,7 @@ Feature: Ask for a hint
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -181,7 +181,7 @@ Feature: Ask for a hint
         "askedHint": "hint"
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -242,7 +242,7 @@ Feature: Ask for a hint
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
