@@ -539,8 +539,9 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			"skips fields without json tag",
 			&struct {
 				name string
+				Name string
 			}{},
-			`{"name":"test"}`,
+			`{"name":"test", "Name":"Test"}`,
 			map[string]interface{}{},
 		},
 		{
