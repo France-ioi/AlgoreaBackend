@@ -69,7 +69,9 @@ type item struct {
 	AccessOpenDate *time.Time `json:"access_open_date" sql:"column:sAccessOpenDate"`
 	// Nullable
 	//
-	// MySQL time
+	// MySQL time (max value is 838:59:59)
+	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+	// example: 838:59:59
 	Duration *string `json:"duration" sql:"column:sDuration" validate:"duration"`
 	// Nullable
 	EndContestDate *time.Time `json:"end_contest_date" sql:"column:sEndContestDate"`
@@ -164,11 +166,11 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //   Creates an item with parameters from the input data with `items.idDefaultLanguage` = `language_id`.
 //   Also it
 //
-//     * inserts a row into `users_items` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
+//     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
-//     * creates a new `groups_items` row with: `idItem` = `items.ID`, `idGroup` = `idGroupSelf` of the current user,
+//     * gives full access to the item for the current user (creates a new `groups_items` row with: `idItem` = `items.ID`, `idGroup` = `idGroupSelf` of the current user,
 //       `idUserCreated` = `users.ID` of the current user, `sFullAccessDate` = now(), `sCachedFullAccessDate` = now(),
-//       `bCachedFullAccess` = 1, `bOwnerAccess` = 1, `bManagerAccess` = 1.
+//       `bCachedFullAccess` = 1, `bOwnerAccess` = 1, `bManagerAccess` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `groups_items`.
 //
