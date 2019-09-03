@@ -169,9 +169,10 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
-//     * gives full access to the item for the current user (creates a new `groups_items` row with: `idItem` = `items.ID`, `idGroup` = `idGroupSelf` of the current user,
-//       `idUserCreated` = `users.ID` of the current user, `sFullAccessDate` = now(), `sCachedFullAccessDate` = now(),
-//       `bCachedFullAccess` = 1, `bOwnerAccess` = 1, `bManagerAccess` = 1).
+//     * gives full access to the item for the current user (creates a new `groups_items` row with: `idItem` = `items.ID`,
+//       `idGroup` = `idGroupSelf` of the current user, `idUserCreated` = `users.ID` of the current user,
+//       `sFullAccessDate` = now(), `sCachedFullAccessDate` = now(), `bCachedFullAccess` = 1, `bOwnerAccess` = 1,
+//       `bManagerAccess` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `groups_items`.
 //
