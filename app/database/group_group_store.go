@@ -3,6 +3,8 @@ package database
 import (
 	"errors"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 // GroupGroupStore implements database operations on `groups_groups`
@@ -29,10 +31,12 @@ var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
 
-// ParentChild represents a (ParentID, ChildID) pair
+// ParentChild represents a (ParentID, ChildID) pair with a role.
+// If the role is empty, the default value ("member") is used.
 type ParentChild struct {
 	ParentID int64
 	ChildID  int64
+	Role     string
 }
 
 // CreateRelation creates a direct relation between two groups
@@ -55,14 +59,14 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		}
 
 		groupGroupStore := store.GroupGroups()
-		groupGroupStore.createRelation(parentGroupID, childGroupID)
+		groupGroupStore.createRelation(parentGroupID, childGroupID, "")
 		groupGroupStore.createNewAncestors()
 		return nil
 	}))
 	return err
 }
 
-func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
+func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64, role string) {
 	s.mustBeInTransaction()
 	mustNotBeError(s.db.Exec(
 		"SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` WHERE `idGroupParent` = ? FOR UPDATE), 0)",
@@ -71,9 +75,16 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		store := NewDataStore(db).GroupGroups()
 		newID := store.NewID()
-		return store.db.Exec(
-			"INSERT INTO groups_groups (ID, idGroupParent, idGroupChild, iChildOrder) VALUES (?, ?, ?, @maxIChildOrder+1)",
-			newID, parentGroupID, childGroupID).Error
+		relationMap := map[string]interface{}{
+			"ID":            newID,
+			"idGroupParent": parentGroupID,
+			"idGroupChild":  childGroupID,
+			"iChildOrder":   gorm.Expr("@maxIChildOrder+1"),
+		}
+		if role != "" {
+			relationMap["sRole"] = role
+		}
+		return store.GroupGroups().InsertMap(relationMap)
 	}))
 }
 
@@ -87,7 +98,7 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(pairs []ParentChild) (e
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
 		groupGroupStore := store.GroupGroups()
 		for _, pair := range pairs {
-			groupGroupStore.createRelation(pair.ParentID, pair.ChildID)
+			groupGroupStore.createRelation(pair.ParentID, pair.ChildID, pair.Role)
 		}
 		groupGroupStore.createNewAncestors()
 		return nil
