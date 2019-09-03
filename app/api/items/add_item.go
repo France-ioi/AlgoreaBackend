@@ -184,8 +184,6 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //   and be an owner of `team_in_group_id` (if given),
 //   otherwise the "bad request" response is returned.
-// consumes:
-// - application/json
 // parameters:
 // - in: body
 //   name: data
