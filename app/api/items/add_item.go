@@ -98,7 +98,7 @@ type itemWithRequiredType struct {
 // swagger:ignore
 type newItemString struct {
 	// required: true
-	Title string `json:"title" validate:"required" sql:"column:sTitle"`
+	Title string `json:"title" validate:"set" sql:"column:sTitle"`
 	// Nullable
 	ImageURL *string `json:"image_url" sql:"column:sImageUrl"`
 	// Nullable
