@@ -13,7 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation PUT /items/{item_id}/active-attempt items itemTaskTokenRefresh
+// swagger:operation PUT /items/{item_id}/active-attempt items itemActiveAttemptRefresh
 // ---
 // summary: Refresh an active attempt and fetch a task token
 // description: >
