@@ -13,6 +13,60 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
+// swagger:operation PUT /items/{item_id}/active-attempt items itemActiveAttemptFetch
+// ---
+// summary: Fetch an active attempt
+// description: >
+//
+//   Returns a task token for the active attempt for the given item. If the active attempt doesn't exist,
+//   the service creates it. A row in `users_items` is also created if needed.
+//
+//
+//   Depending on the `items.bHasAttempts` the active attempt is linked to the user's self group (if `items.bHasAttempts`=0)
+//   or to the user’s team (if `items.bHasAttempts`=1). The user’s team is a user's parent group with `groups.idTeamItem`
+//   pointing to one of the item's ancestors or the item itself.
+//
+//
+//   Restrictions:
+//
+//     * the user should have at least partial access to the item,
+//     * the item should be either 'Task' or 'Course',
+//
+//   otherwise the 'forbidden' error is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   required: true
+// responses:
+//   "200":
+//     description: "Updated. Success response with the task token"
+//     schema:
+//       type: object
+//       required: [success, message, data]
+//       properties:
+//         success:
+//           description: "true"
+//           type: boolean
+//           enum: [true]
+//         message:
+//           description: updated
+//           type: string
+//           enum: [updated]
+//         data:
+//           type: object
+//           required: [task_token]
+//           properties:
+//             task_token:
+//               type: string
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
