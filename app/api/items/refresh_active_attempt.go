@@ -24,7 +24,7 @@ import (
 //   the service chooses the most recent one among all the user's attempts (or the team's attempts if
 //   `items.bHasAttempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
 //
-//   * Then `sStartDate` and `sLastActivity` of `groups_attemts` & `user_items` are set to the current time.
+//   * Then `sStartDate` and `sLastActivity` of `groups_attempts` & `user_items` are set to the current time.
 //
 //   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
 //
