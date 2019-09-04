@@ -13,13 +13,20 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation PUT /items/{item_id}/active-attempt items itemActiveAttemptFetch
+// swagger:operation PUT /items/{item_id}/active-attempt items itemTaskTokenRefresh
 // ---
-// summary: Fetch an active attempt
+// summary: Refresh an active attempt and fetch a task token
 // description: >
 //
-//   Returns a task token for the active attempt for the given item. If the active attempt doesn't exist,
-//   the service creates it. A row in `users_items` is also created if needed.
+//   * If there is no row for the current user and the given item in `users_items`, the service creates one.
+//
+//   * If the active attempt (`idAttemptActive`) is not set in the `users_items` for the item and the user,
+//   the service chooses the most recent one among all the user's attempts (or the team's attempts if
+//   `items.bHasAttempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
+//
+//   * Then `sStartDate` and `sLastActivity` of `groups_attemts` & `user_items` are set to the current time.
+//
+//   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
 //
 //
 //   Depending on the `items.bHasAttempts` the active attempt is linked to the user's self group (if `items.bHasAttempts`=0)
@@ -31,6 +38,7 @@ import (
 //
 //     * the user should have at least partial access to the item,
 //     * the item should be either 'Task' or 'Course',
+//     * for items with `bHasAttempts`=1 the user's team should exist when a new attempt is being created,
 //
 //   otherwise the 'forbidden' error is returned.
 // parameters:
@@ -40,7 +48,7 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     description: "Updated. Success response with the task token"
+//     description: "Updated. Success response with the fresh task token"
 //     schema:
 //       type: object
 //       required: [success, message, data]
@@ -67,7 +75,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) refreshActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")

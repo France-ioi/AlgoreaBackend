@@ -1,4 +1,4 @@
-Feature: Fetch active attempt for an item
+Feature: Refresh an active attempt and fetch a task token for an item
   Background:
     Given the database has the following table 'users':
       | ID  | sLogin | idGroupSelf |
