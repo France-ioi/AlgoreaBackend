@@ -155,6 +155,25 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 	return nil
 }
 
+// ResolveURLQueryPathInt64SliceField extracts a list of integers separated by commas (',') from the query path of the request
+func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
+	paramValue := chi.URLParam(req, paramName)
+	paramValue = strings.Trim(paramValue, "/")
+	var ids []int64
+	if paramValue == "" {
+		return ids, nil
+	}
+	idsStr := strings.Split(paramValue, "/")
+	for _, idStr := range idsStr {
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse one of the integers given as query args (value: '%s', param: '%s')", idStr, paramName)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
 // ConvertSliceOfMapsFromDBToJSON given a slice of maps that represents DB result data,
 // converts it to a slice of maps for rendering JSON so that:
 // 1) all maps keys with "__" are considered as paths in JSON (converts "User__ID":... to "user":{"id": ...})

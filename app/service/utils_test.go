@@ -157,6 +157,84 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 	}
 }
 
+func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
+	testCases := []struct {
+		desc           string
+		queryString    string
+		expectedList   []int64
+		expectedErrMsg string
+	}{
+		{
+			desc:         "no param",
+			queryString:  "/something",
+			expectedList: nil,
+		},
+		{
+			desc:         "empty param",
+			queryString:  "///something",
+			expectedList: nil,
+		},
+		{
+			desc:         "single value",
+			queryString:  "/3/something",
+			expectedList: []int64{3},
+		},
+		{
+			desc:         "multiple values",
+			queryString:  "/4/5/something",
+			expectedList: []int64{4, 5},
+		},
+		{
+			desc:         "multiple value with slashes",
+			queryString:  "////4/5////something",
+			expectedList: []int64{4, 5},
+		},
+		{
+			desc:           "not an int64 (string)",
+			queryString:    "/6/7/etc/something",
+			expectedList:   nil,
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: 'etc', param: 'ids')",
+		},
+		{
+			desc:           "not an int64 (empty val)",
+			queryString:    "/8//9/something",
+			expectedList:   nil,
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '', param: 'ids')",
+		},
+		{
+			desc:           "too big for int64",
+			queryString:    "/123456789012345678901234567890/something",
+			expectedList:   nil,
+			expectedErrMsg: "unable to parse one of the integers given as query args (value: '123456789012345678901234567890', param: 'ids')",
+		},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.desc, func(t *testing.T) {
+			assert := assertlib.New(t)
+
+			called := false
+			r := chi.NewRouter()
+			handler := func(w http.ResponseWriter, r *http.Request) {
+				called = true
+				value, err := ResolveURLQueryPathInt64SliceField(r, "ids")
+				if testCase.expectedErrMsg != "" {
+					assert.EqualError(err, testCase.expectedErrMsg)
+				} else {
+					assert.NoError(err)
+				}
+				assert.Equal(testCase.expectedList, value)
+			}
+			r.Get(`/{ids:.*}something`, handler)
+			ts := httptest.NewServer(r)
+			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, nil)
+			_, _ = http.DefaultClient.Do(request)
+			ts.Close()
+			assert.True(called, "The handler was not called")
+		})
+	}
+}
+
 func TestResolveURLQueryGetStringField(t *testing.T) {
 	testCases := []struct {
 		desc           string

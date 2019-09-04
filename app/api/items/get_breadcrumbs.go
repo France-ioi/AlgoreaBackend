@@ -99,12 +99,9 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 }
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	ids, err := service.ResolveURLQueryGetInt64SliceField(r, "ids")
+	ids, err := service.ResolveURLQueryPathInt64SliceField(r, "ids")
 	if err != nil {
 		return nil, err
-	}
-	if len(ids) == 0 {
-		return nil, errors.New("no ids given")
 	}
 	if len(ids) > 10 {
 		return nil, errors.New("no more than 10 ids expected")

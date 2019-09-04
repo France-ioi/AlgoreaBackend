@@ -46,7 +46,7 @@ Scenario: Full access on all breadcrumb
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
   """
@@ -68,7 +68,7 @@ Scenario: Partial access on all breadcrumb
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
     """
@@ -90,7 +90,7 @@ Scenario: Partial access to all items except for last which is greyed
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
     """
