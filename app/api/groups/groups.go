@@ -82,9 +82,9 @@ func checkThatUserHasRightsForDirectRelation(
 	}
 
 	for _, groupRow := range groupData {
-		if (groupRow.ID == parentGroupID && groupRow.Type == "UserSelf") ||
+		if (groupRow.ID == parentGroupID && map[string]bool{"UserSelf": true, "Team": true}[groupRow.Type]) ||
 			(groupRow.ID == childGroupID &&
-				map[string]bool{"Base": true, "UserAdmin": true}[groupRow.Type]) {
+				map[string]bool{"Base": true, "UserAdmin": true, "UserSelf": true}[groupRow.Type]) {
 			return service.InsufficientAccessRightsError
 		}
 	}

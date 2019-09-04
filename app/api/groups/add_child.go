@@ -20,8 +20,8 @@ import (
 //   Restrictions (otherwise the 'forbidden' error is returned):
 //     * the authenticated user should be an owner of both `parent_group_id` and `child_group_id,
 //     * the authenticated user should have `users.allowSubgroups` set to 1,
-//     * the parent group should not be of type "UserSelf",
-//     * the child group should not be of types "Base" or "UserAdmin",
+//     * the parent group should not be of type "UserSelf" or "Team",
+//     * the child group should not be of types "Base", "UserSelf", or "UserAdmin",
 //     * the action should not create cycles in the groups relations graph.
 // parameters:
 // - name: parent_group_id
