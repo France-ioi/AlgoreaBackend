@@ -3,8 +3,10 @@ package items
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
@@ -31,9 +33,18 @@ func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(errors.New("the IDs chain is corrupt"))
 	}
 
+	idsInterface := make([]interface{}, 0, len(ids))
+	for _, id := range ids {
+		idsInterface = append(idsInterface, id)
+	}
 	var result []map[string]interface{}
-	service.MustNotBeError(srv.Store.ItemStrings().Select("idItem, sTitle, idLanguage").
-		Where("idItem IN (?)", ids).
+	service.MustNotBeError(srv.Store.Items().Select(`
+			items.ID AS idItem,
+			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitle,
+			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguage`).
+		JoinsUserAndDefaultItemStrings(user).
+		Where("items.ID IN (?)", ids).
+		Order(gorm.Expr("FIELD(items.ID"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		ScanIntoSliceOfMaps(&result).Error())
 
 	render.Respond(w, r, service.ConvertSliceOfMapsFromDBToJSON(result))
