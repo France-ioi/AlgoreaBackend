@@ -9,21 +9,34 @@ import (
 // swagger:operation POST /current-user/group-requests/{group_id} groups users groupRequestCreate
 // ---
 // summary: Create a request to join a group
-// description:
-//   Lets a user create a request to join a group.
-//   On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
-//   `idGroupChild` = `group_id`, `groups_groups.sType` = `requestSent` and `sStatusDate` equal to current UTC time.
+// description: >
+//   Lets a user create a request to join a group. There are two possible cases:
 //
-//   * `groups.bFreeAccess` should be 1, otherwise the 'forbidden' response is returned.
+//   #### The user doesn't own the group
 //
-//   * There should be a row in `groups_groups` with the `group_id` as a parent
-//     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationRefused`.
-//     Otherwise the unprocessable entity error is returned.
+//     On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
+//     `idGroupChild` = `group_id`, `groups_groups.sType` = `requestSent` and `sStatusDate` equal to current UTC time.
 //
-//   * If `groups_groups.sType` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'direct',
-//     the unprocessable entity error is returned
+//     * `groups.bFreeAccess` should be 1, otherwise the 'forbidden' response is returned.
 //
-//   * If `groups_groups.sType` is `requestSent` already, the "unchanged" (201) response is returned.
+//     * If there is already a row in `groups_groups` with
+//       `sType` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'joinedByCode'/'direct',
+//       the unprocessable entity error is returned.
+//
+//     * If `groups_groups.sType` is `requestSent` already, the "unchanged" (201) response is returned.
+//
+//   #### The user owns the group
+//
+//     On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
+//     `idGroupChild` = `group_id`, `groups_groups.sType` = `requestAccepted` and `sStatusDate` equal to current UTC time.
+//
+//     * If there is already a row in `groups_groups` with
+//       `sType` = 'invitationAccepted'/'joinedByCode'/'direct',
+//       the unprocessable entity error is returned.
+//
+//     * If `groups_groups.sType` is `requestAccepted` already, the "unchanged" (201) response is returned.
+//
+//     On success, the service propagates group ancestors in this case.
 // parameters:
 // - name: group_id
 //   in: path

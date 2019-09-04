@@ -349,6 +349,29 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: true,
 		},
 		{
+			name:              "UserCreatesAcceptedRequest",
+			action:            database.UserCreatesAcceptedRequest,
+			relationsToChange: allTheIDs,
+			wantResult: database.GroupGroupTransitionResults{
+				1: "success", 2: "success", 3: "success", 6: "success", 7: "success", 8: "success", 9: "success",
+				5: "unchanged",
+				4: "invalid", 10: "invalid", 11: "invalid", 20: "invalid",
+				30: "cycle",
+			},
+			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "", map[string]*groupGroup{
+				"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "requestAccepted", ChildOrder: 2, StatusDate: currentTimePtr},
+				"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", ChildOrder: 3, StatusDate: currentTimePtr},
+				"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "requestAccepted", ChildOrder: 4, StatusDate: currentTimePtr},
+				"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "requestAccepted", ChildOrder: 5, StatusDate: currentTimePtr},
+				"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "requestAccepted", ChildOrder: 6, StatusDate: currentTimePtr},
+				"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "requestAccepted", ChildOrder: 7, StatusDate: currentTimePtr},
+			}, []groupGroup{
+				{ParentGroupID: 20, ChildGroupID: 1, Type: "requestAccepted", ChildOrder: 1, StatusDate: currentTimePtr},
+			}),
+			wantGroupAncestors: allPossibleGroupsAncestors,
+			shouldRunListeners: true,
+		},
+		{
 			name:              "UserJoinsGroupByCode",
 			action:            database.UserJoinsGroupByCode,
 			relationsToChange: allTheIDs,

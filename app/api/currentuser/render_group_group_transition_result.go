@@ -13,7 +13,9 @@ import (
 // RenderGroupGroupTransitionResult renders database.GroupGroupTransitionResult as a response or returns an APIError
 func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
 	action userGroupRelationAction) service.APIError {
-	isCreateAction := action == createGroupRequestAction || action == joinGroupByCodeAction
+	isCreateAction := map[userGroupRelationAction]bool{
+		createGroupRequestAction: true, joinGroupByCodeAction: true, createAcceptedGroupRequestAction: true,
+	}[action]
 	switch result {
 	case database.Cycle:
 		return service.ErrUnprocessableEntity(errors.New("cycles in the group relations graph are not allowed"))
