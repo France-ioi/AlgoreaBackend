@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-func (srv *Service) getList(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
 	// Get IDs from request and validate it.
 	ids, err := idsFromRequest(r)
 	if err != nil {
