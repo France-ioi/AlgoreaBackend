@@ -11,6 +11,53 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation GET /items items itemsBreadCrumbsData
+// ---
+// summary: Get breadcrumbs
+// description: >
+//
+//   Returns titles for items listed in `ids` in the user's preferred language (if exist) or the items'
+//   default language.
+//
+//
+//   Restrictions:
+//     * the list of item IDs should be a valid path from a root item (`sType`=’Root’), otherwise the 'bad request'
+//       error is returned)
+//     * the user should have partial or full access for each listed item except the last one through that path,
+//       and at least gray access for the last item, otherwise the 'forbidden' error is returned.
+// parameters:
+// - name: ids
+//   in: query
+//   type: array
+//   items:
+//     type: integer
+//     format: int64
+//   required: true
+// responses:
+//   "200":
+//     description: OK. Breadcrumbs data
+//     schema:
+//       type: array
+//       items:
+//         type: object
+//         properties:
+//           item_id:
+//             type: string
+//             format: int64
+//           title:
+//             type: string
+//           language_id:
+//             type: string
+//             format: int64
+//         required: [item_id, title, language_id]
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
 	// Get IDs from request and validate it.
 	ids, err := idsFromRequest(r)
