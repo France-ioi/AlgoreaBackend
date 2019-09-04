@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /items items itemsBreadCrumbsData
+// swagger:operation GET /items/{ids}/breadcrumbs items itemsBreadCrumbsData
 // ---
 // summary: Get breadcrumbs
 // description: >
@@ -27,11 +27,9 @@ import (
 //       and at least gray access for the last item, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: ids
-//   in: query
-//   type: array
-//   items:
-//     type: integer
-//     format: int64
+//   in: path
+//   type: string
+//   description: slash-separated list of IDs
 //   required: true
 // responses:
 //   "200":
