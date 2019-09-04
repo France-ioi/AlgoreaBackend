@@ -109,3 +109,21 @@ Feature: Get item information for breadcrumb - robustness
     When I send a GET request to "/items?ids=21,22,23"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
+
+  Scenario: Missing ids
+    And I am the user with ID "1"
+    When I send a GET request to "/items"
+    Then the response code should be 400
+    And the response error message should contain "Missing ids"
+
+  Scenario: Empty ids
+    And I am the user with ID "1"
+    When I send a GET request to "/items?ids="
+    Then the response code should be 400
+    And the response error message should contain "No ids given"
+
+  Scenario: More than 10 ids
+    And I am the user with ID "1"
+    When I send a GET request to "/items?ids=1,2,3,4,5,6,7,8,9,10,11"
+    Then the response code should be 400
+    And the response error message should contain "No more than 10 ids expected"

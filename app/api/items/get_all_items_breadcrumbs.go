@@ -67,16 +67,16 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 
 	// Validate that the user can see the item IDs.
 	user := srv.GetUser(r)
-	if valid, err := srv.Store.Items().ValidateUserAccess(user, ids); err != nil {
-		return service.ErrUnexpected(err)
-	} else if !valid {
+	valid, err := srv.Store.Items().ValidateUserAccess(user, ids)
+	service.MustNotBeError(err)
+	if !valid {
 		return service.ErrForbidden(errors.New("insufficient access rights on given item ids"))
 	}
 
 	// Validate the hierarchy
-	if valid, err := srv.Store.Items().IsValidHierarchy(ids); err != nil {
-		return service.ErrUnexpected(err)
-	} else if !valid {
+	valid, err = srv.Store.Items().IsValidHierarchy(ids)
+	service.MustNotBeError(err)
+	if !valid {
 		return service.ErrInvalidRequest(errors.New("the IDs chain is corrupt"))
 	}
 
