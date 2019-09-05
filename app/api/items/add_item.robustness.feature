@@ -28,7 +28,7 @@ Feature: Add item - robustness
 
   Scenario: Missing type
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "language_id": "3",
@@ -57,7 +57,7 @@ Feature: Add item - robustness
 
   Scenario: Missing language_id
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -86,7 +86,7 @@ Feature: Add item - robustness
 
   Scenario: Missing title
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -115,7 +115,7 @@ Feature: Add item - robustness
 
   Scenario: Missing parent_item_id
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -144,7 +144,7 @@ Feature: Add item - robustness
 
   Scenario: language_id is not a number
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -174,7 +174,7 @@ Feature: Add item - robustness
 
   Scenario: language_id doesn't exist
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -204,7 +204,7 @@ Feature: Add item - robustness
 
   Scenario: parent_item_id is not a number
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "id": "2",
@@ -235,7 +235,7 @@ Feature: Add item - robustness
 
   Scenario: Non-existing parent
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -268,7 +268,7 @@ Feature: Add item - robustness
       | ID | sName      | sTextId | iGrade | sType     | iVersion |
       | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     And I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -298,7 +298,7 @@ Feature: Add item - robustness
 
   Scenario: The user doesn't exist
     And I am the user with ID "121"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -318,7 +318,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong full_screen
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -349,7 +349,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong type
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Wrong",
@@ -379,7 +379,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong validation_type
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -410,7 +410,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong validation_min
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -441,7 +441,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong unlocked_item_ids
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -472,7 +472,7 @@ Feature: Add item - robustness
 
   Scenario: Non-existent ID in unlocked_item_ids
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -503,7 +503,7 @@ Feature: Add item - robustness
 
   Scenario: unlocked_item_ids not owned/managed by the user
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -534,7 +534,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong team_mode
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -565,7 +565,7 @@ Feature: Add item - robustness
 
   Scenario: Non-existent group ID in team_in_group_id
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -596,7 +596,7 @@ Feature: Add item - robustness
 
   Scenario: team_in_group_id is not owned by the user
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -627,7 +627,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (wrong format)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -658,7 +658,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (negative hours)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -689,7 +689,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (too many hours)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -720,7 +720,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (negative minutes)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -751,7 +751,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (too many minutes)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -782,7 +782,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (negative seconds)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -813,7 +813,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong duration (too many seconds)
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -844,7 +844,7 @@ Feature: Add item - robustness
 
   Scenario: Wrong contest_phase
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -875,7 +875,7 @@ Feature: Add item - robustness
 
   Scenario: Non-unique children item IDs
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -909,7 +909,7 @@ Feature: Add item - robustness
 
   Scenario: User doesn't have manager/owner access to children items
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -943,7 +943,7 @@ Feature: Add item - robustness
 
   Scenario: The parent is a child item
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
@@ -966,7 +966,7 @@ Feature: Add item - robustness
 
   Scenario: The parent is a descendant of a child item
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",

@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/France-ioi/validator"
 	english "github.com/go-playground/locales/en"
@@ -310,10 +308,6 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 	for i := 0; i < numberOfFields; i++ {
 		field := reflValue.Field(i)
 		structField := reflValue.Type().Field(i)
-		firstRune, _ := utf8.DecodeRuneInString(structField.Name)
-		if !unicode.IsUpper(firstRune) { // skip unexported fields
-			continue
-		}
 
 		jsonName := getJSONFieldName(&structField)
 		if jsonName == "-" { // skip fields ignored in json

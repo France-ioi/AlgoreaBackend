@@ -536,11 +536,19 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			map[string]interface{}{},
 		},
 		{
-			"skips unexported fields",
+			"skips fields without json tag",
 			&struct {
-				name string
+				Name string
 			}{},
-			`{"name":"test"}`,
+			`{"Name":"Test"}`,
+			map[string]interface{}{},
+		},
+		{
+			"skips unexported attributes",
+			&struct {
+				name string `json:"name" gorm:"column:name"` // nolint:govet
+			}{},
+			`{"name":"Test"}`,
 			map[string]interface{}{},
 		},
 		{
