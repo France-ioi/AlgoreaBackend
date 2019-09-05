@@ -48,6 +48,9 @@ const (
 	AdminCreatesInvitation GroupGroupTransitionAction = iota
 	// UserCreatesRequest means a user sends request to become a group member
 	UserCreatesRequest
+	// UserCreatesAcceptedRequest means a user adds himself into a group that he owns
+	// It doesn't check if the user owns the group (a calling service should check that)
+	UserCreatesAcceptedRequest
 	// UserAcceptsInvitation means a user accepts a group invitation
 	UserAcceptsInvitation
 	// AdminAcceptsRequest means a group admin accepts a request
@@ -108,6 +111,18 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			RequestRefused:    RequestSent,
 			Removed:           RequestSent,
 			Left:              RequestSent,
+		},
+	},
+	UserCreatesAcceptedRequest: {
+		Transitions: map[GroupGroupType]GroupGroupType{
+			NoRelation:        RequestAccepted,
+			RequestSent:       RequestAccepted,
+			InvitationSent:    RequestAccepted,
+			InvitationRefused: RequestAccepted,
+			RequestRefused:    RequestAccepted,
+			RequestAccepted:   RequestAccepted,
+			Removed:           RequestAccepted,
+			Left:              RequestAccepted,
 		},
 	},
 	UserJoinsGroupByCode: {
