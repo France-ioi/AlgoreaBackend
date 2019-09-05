@@ -13,7 +13,69 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+// swagger:operation GET /items/{item_id}/task-token items itemTaskTokenGet
+// ---
+// summary: Get a task token with a refreshed active attempt
+// description: >
+//
+//   * If there is no row for the current user and the given item in `users_items`, the service creates one.
+//
+//   * If the active attempt (`idAttemptActive`) is not set in the `users_items` for the item and the user,
+//   the service chooses the most recent one among all the user's attempts (or the team's attempts if
+//   `items.bHasAttempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
+//
+//   * Then `sStartDate` (if it is NULL) and `sLastActivity` of `groups_attempts` & `user_items` are set to the current time.
+//
+//   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
+//
+//
+//   Depending on the `items.bHasAttempts` the active attempt is linked to the user's self group (if `items.bHasAttempts`=0)
+//   or to the user’s team (if `items.bHasAttempts`=1). The user’s team is a user's parent group with `groups.idTeamItem`
+//   pointing to one of the item's ancestors or the item itself.
+//
+//
+//   Restrictions:
+//
+//     * the user should have at least partial access to the item,
+//     * the item should be either 'Task' or 'Course',
+//     * for items with `bHasAttempts`=1 the user's team should exist when a new attempt is being created,
+//
+//   otherwise the 'forbidden' error is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   required: true
+// responses:
+//   "200":
+//     description: "OK. Success response with the fresh task token"
+//     schema:
+//       type: object
+//       required: [success, message, data]
+//       properties:
+//         success:
+//           description: "true"
+//           type: boolean
+//           enum: [true]
+//         message:
+//           description: updated
+//           type: string
+//           enum: [updated]
+//         data:
+//           type: object
+//           required: [task_token]
+//           properties:
+//             task_token:
+//               type: string
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
+func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -53,8 +115,12 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			WithWriteLock().PluckFirst("idAttemptActive", &activeAttemptID).Error())
+
+		// No active attempt set in `users_items` so we should choose or create one
 		if activeAttemptID == nil {
 			groupID := *user.SelfGroupID // not null since we have passed the access rights checking
+
+			// if items.bHasAttempts = 1, we use use a team group instead of the user's self group
 			if itemInfo.HasAttempts {
 				err = store.Groups().TeamGroupForItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
 				if gorm.IsRecordNotFoundError(err) {
@@ -63,16 +129,20 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 				}
 				service.MustNotBeError(err)
 			}
+
+			// find the freshest one among all the group's attempts for the item
 			var attemptID int64
 			groupAttemptScope := store.GroupAttempts().
 				Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
 			err = groupAttemptScope.Order("sLastActivityDate DESC").
 				Select("ID, sHintsRequested, nbHintsCached").Limit(1).
 				Take(&groupsAttemptInfo).Error()
+
+			// if no attempt found, create a new one
 			if gorm.IsRecordNotFoundError(err) {
 				attemptID, err = store.GroupAttempts().CreateNew(groupID, itemID)
 				service.MustNotBeError(err)
-			} else {
+			} else { // otherwise, update groups_attempts.sStartDate (if it is NULL) & groups_attempts.sLastActivityDate
 				attemptID = groupsAttemptInfo.ID
 				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
 					"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
@@ -81,13 +151,18 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 			}
 			activeAttemptID = &attemptID
 		}
+
+		// update users_items.idAttemptActive, users_items.sStartDate (if it is NULL), and users_items.sLastActivityDate
 		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"idAttemptActive":   *activeAttemptID,
 				"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
 				"sLastActivityDate": database.Now(),
 			}).Error())
+
+		// propagate groups_attempts and compute users_items
 		service.MustNotBeError(store.GroupAttempts().After())
+
 		return nil
 	})
 	if apiError != service.NoError {
@@ -115,9 +190,9 @@ func (srv *Service) fetchActiveAttempt(w http.ResponseWriter, r *http.Request) s
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
+	render.Respond(w, r, map[string]interface{}{
 		"task_token": signedTaskToken,
-	})))
+	})
 	return service.NoError
 }
 
