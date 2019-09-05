@@ -32,7 +32,8 @@ import (
 //   Restrictions (otherwise the 'forbidden' error is returned):
 //     * the authenticated user should be an owner of both `parent_group_id` and `child_group_id,
 //     * the parent group should not be of type "UserSelf" or "Team",
-//     * the child group should not be of types "Base", "UserSelf" or "UserAdmin",
+//     * the child group should not be of types "Base", "UserAdmin, or "UserSelf"
+//       (since there are more appropriate services for removing users from groups: groupLeave and groupRemoveMembers),
 //     * the relation should be direct (`sType` = "direct").
 // parameters:
 // - name: parent_group_id
