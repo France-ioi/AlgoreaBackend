@@ -91,6 +91,25 @@ type deletedOrUnchangedResponse struct {
 	}
 }
 
+// Created. Success response with the created object's ID.
+// swagger:response createdWithIDResponse
+type createdWithIDResponse struct {
+	// in: body
+	Body struct {
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// required: true
+			ID int64 `json:"id,string"`
+		} `json:"data"`
+	}
+}
+
 // The request has succeeded. The `data.changed` shows if the object has been created.
 // swagger:response createdOrUnchangedResponse
 type createdOrUnchangedResponse struct {
