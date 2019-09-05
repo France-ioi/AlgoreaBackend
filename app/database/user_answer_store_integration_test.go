@@ -169,6 +169,17 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			expectedFound: true,
 		},
 		{
+			name:         "okay (bHasAttempts=1, groups_groups.sType=joinedByCode)",
+			userID:       10,
+			userAnswerID: 200,
+			fixture: `
+				users_answers:
+					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100}
+				groups_attempts:
+					- {ID: 100, idGroup: 140, idItem: 60}`,
+			expectedFound: true,
+		},
+		{
 			name:         "okay (bHasAttempts=1, groups_groups.sType=invitationAccepted)",
 			userID:       10,
 			userAnswerID: 200,
@@ -312,6 +323,7 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 					- {idGroupParent: 108, idGroupChild: 101, sType: left}
 					- {idGroupParent: 109, idGroupChild: 101, sType: direct}
 					- {idGroupParent: 110, idGroupChild: 101, sType: invitationAccepted}
+					- {idGroupParent: 140, idGroupChild: 101, sType: joinedByCode}
 				groups_ancestors:
 					- {idGroupAncestor: 101, idGroupChild: 101, bIsSelf: 1}
 					- {idGroupAncestor: 102, idGroupChild: 101, bIsSelf: 0}
@@ -320,6 +332,10 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 					- {idGroupAncestor: 121, idGroupChild: 121, bIsSelf: 1}
 					- {idGroupAncestor: 109, idGroupChild: 101, bIsSelf: 0}
 					- {idGroupAncestor: 109, idGroupChild: 109, bIsSelf: 1}
+					- {idGroupAncestor: 110, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 110, idGroupChild: 110, bIsSelf: 1}
+					- {idGroupAncestor: 140, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 140, idGroupChild: 140, bIsSelf: 1}
 				items:
 					- {ID: 10, bHasAttempts: 0}
 					- {ID: 50, bHasAttempts: 0}

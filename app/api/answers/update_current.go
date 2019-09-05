@@ -12,12 +12,14 @@ import (
 
 // swagger:model
 type updateCurrentRequest struct {
-	// required:true
-	AttemptID int64 `json:"attempt_id,string" validate:"required"`
-	// required:true
-	Answer string `json:"answer" validate:"required"`
-	// required:true
-	State string `json:"state" validate:"required"`
+	// required: true
+	AttemptID int64 `json:"attempt_id,string" validate:"set"`
+	// required: true
+	// minLength: 1
+	Answer string `json:"answer" validate:"set,min=1"`
+	// required: true
+	// minLength: 1
+	State string `json:"state" validate:"set,min=1"`
 }
 
 // swagger:operation PUT /answers/current answers itemAnswerUpdateCurrent

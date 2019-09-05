@@ -15,6 +15,7 @@ Feature: Get group invitations for the current user
       | 7  | Team      | Another Team       | Another team group     |
       | 8  | Club      | Another Club       | Another club group     |
       | 9  | Friends   | Some other friends | Another friends group  |
+      | 10 | Other     | Secret group       | Our secret group       |
       | 11 | UserSelf  | user self          |                        |
       | 12 | UserAdmin | user admin         |                        |
       | 21 | UserSelf  | owner self         |                        |
@@ -31,6 +32,7 @@ Feature: Get group invitations for the current user
       | 9  | 8             | 21           | left               | {{relativeTime("-162h")}} | 1              |
       | 10 | 9             | 21           | direct             | {{relativeTime("-161h")}} | 2              |
       | 11 | 1             | 22           | invitationSent     | {{relativeTime("-170h")}} | 2              |
+      | 12 | 10            | 21           | joinedByCode       | {{relativeTime("-180h")}} | null           |
 
   Scenario: Show all invitations
     Given I am the user with ID "1"

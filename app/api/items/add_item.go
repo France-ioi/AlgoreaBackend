@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-chi/render"
-	"gopkg.in/go-playground/validator.v9"
+
+	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -17,63 +19,108 @@ import (
 )
 
 type itemChild struct {
-	ItemID int64 `json:"item_id,string" sql:"column:idItemChild" validate:"required,child_item_id"`
-	Order  int32 `json:"order" sql:"column:iChildOrder"`
+	// required: true
+	ItemID int64 `json:"item_id,string" sql:"column:idItemChild" validate:"set,child_item_id"`
+	// default: 0
+	Order int32 `json:"order" sql:"column:iChildOrder"`
 }
 
 type item struct {
-	URL                    *string `json:"url" sql:"column:sUrl"`
-	TeamsEditable          bool    `json:"teams_editable" sql:"column:bTeamsEditable"`
-	NoScore                bool    `json:"no_score" sql:"column:bNoScore"`
-	TextID                 *string `json:"text_id" sql:"column:sTextId"`
-	CustomChapter          *bool   `json:"custom_chapter" sql:"column:bCustomChapter"`
-	DisplayDetailsInParent bool    `json:"display_details_in_parent" sql:"column:bDisplayDetailsInParent"`
-	ReadOnly               bool    `json:"read_only" sql:"column:bReadOnly"`
-	FullScreen             string  `json:"full_screen" sql:"column:sFullScreen" validate:"omitempty,oneof=forceYes forceNo default"`
-	ShowDifficulty         bool    `json:"show_difficulty" sql:"column:bShowDifficulty"`
-	ShowSource             bool    `json:"show_source" sql:"column:bShowSource"`
-	HintsAllowed           bool    `json:"hints_allowed" sql:"column:bHintsAllowed"`
-	FixedRanks             bool    `json:"fixed_ranks" sql:"column:bFixedRanks"`
+	// Nullable
+	URL *string `json:"url" sql:"column:sUrl"`
+	// default: false
+	TeamsEditable bool `json:"teams_editable" sql:"column:bTeamsEditable"`
+	// default: false
+	NoScore bool `json:"no_score" sql:"column:bNoScore"`
+	// Nullable
+	TextID *string `json:"text_id" sql:"column:sTextId"`
+	// Nullable
+	CustomChapter          *bool `json:"custom_chapter" sql:"column:bCustomChapter"`
+	DisplayDetailsInParent bool  `json:"display_details_in_parent" sql:"column:bDisplayDetailsInParent"`
+	ReadOnly               bool  `json:"read_only" sql:"column:bReadOnly"`
+	// enum: forceYes,forceNo,default,
+	FullScreen     string `json:"full_screen" sql:"column:sFullScreen" validate:"omitempty,oneof=forceYes forceNo default"`
+	ShowDifficulty bool   `json:"show_difficulty" sql:"column:bShowDifficulty"`
+	ShowSource     bool   `json:"show_source" sql:"column:bShowSource"`
+	HintsAllowed   bool   `json:"hints_allowed" sql:"column:bHintsAllowed"`
+	FixedRanks     bool   `json:"fixed_ranks" sql:"column:bFixedRanks"`
 
+	// enum: None,All,AllButOne,Categories,One,Manual
+	// default: All
 	ValidationType string `json:"validation_type" sql:"column:sValidationType" validate:"oneof=None All AllButOne Categories One Manual"`
 
-	ValidationMin   *int32     `json:"validation_min" sql:"column:iValidationMin"`
-	UnlockedItemIDs *string    `json:"unlocked_item_ids" sql:"column:idItemUnlocked" validate:"unlocked_item_ids"`
-	ScoreMinUnlock  *int32     `json:"score_min_unlock" sql:"column:iScoreMinUnlock"`
-	TeamMode        *string    `json:"team_mode" sql:"column:sTeamMode" validate:"oneof=All Half One None"`
-	TeamInGroupID   *int64     `json:"team_in_group_id" sql:"column:idTeamInGroup" validate:"team_in_group_id"`
-	TeamMaxMembers  int32      `json:"team_max_members" sql:"column:iTeamMaxMembers"`
-	TitleBarVisible bool       `json:"title_bar_visible" sql:"column:bTitleBarVisible"`
-	HasAttempts     bool       `json:"has_attempts" sql:"column:bHasAttempts"`
-	AccessOpenDate  *time.Time `json:"access_open_date" sql:"column:sAccessOpenDate"`
-	Duration        *string    `json:"duration" sql:"column:sDuration" validate:"duration"`
-	EndContestDate  *time.Time `json:"end_contest_date" sql:"column:sEndContestDate"`
-	ContestPhase    *string    `json:"contest_phase" sql:"column:sContestPhase" validate:"oneof=Running Analysis Closed"`
-	ShowUserInfos   bool       `json:"show_user_infos" sql:"column:bShowUserInfos"`
-	Level           *int32     `json:"level" sql:"column:iLevel"`
-	UsesAPI         bool       `json:"uses_api" sql:"column:bUsesAPI"`
-	GroupCodeEnter  *bool      `json:"group_code_enter" sql:"column:groupCodeEnter"`
+	// Nullable
+	ValidationMin *int32 `json:"validation_min" sql:"column:iValidationMin"`
+	// Nullable
+	//
+	// An optional comma-separated list of items' IDs to unlock (each must be owned/managed by the current user)
+	UnlockedItemIDs *string `json:"unlocked_item_ids" sql:"column:idItemUnlocked" validate:"unlocked_item_ids"`
+	// Nullable
+	ScoreMinUnlock *int32 `json:"score_min_unlock" sql:"column:iScoreMinUnlock"`
+	// Nullable
+	// enum: All,Half,One,None
+	TeamMode *string `json:"team_mode" sql:"column:sTeamMode" validate:"oneof=All Half One None"`
+	// Nullable
+	//
+	// Should be owned by the current user
+	TeamInGroupID   *int64 `json:"team_in_group_id" sql:"column:idTeamInGroup" validate:"team_in_group_id"`
+	TeamMaxMembers  int32  `json:"team_max_members" sql:"column:iTeamMaxMembers"`
+	TitleBarVisible bool   `json:"title_bar_visible" sql:"column:bTitleBarVisible"`
+	HasAttempts     bool   `json:"has_attempts" sql:"column:bHasAttempts"`
+	// Nullable
+	AccessOpenDate *time.Time `json:"access_open_date" sql:"column:sAccessOpenDate"`
+	// Nullable
+	//
+	// MySQL time (max value is 838:59:59)
+	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+	// example: 838:59:59
+	Duration *string `json:"duration" sql:"column:sDuration" validate:"duration"`
+	// Nullable
+	EndContestDate *time.Time `json:"end_contest_date" sql:"column:sEndContestDate"`
+	// Nullable
+	// enum: Running,Analysis,Closed
+	ContestPhase  *string `json:"contest_phase" sql:"column:sContestPhase" validate:"oneof=Running Analysis Closed"`
+	ShowUserInfos bool    `json:"show_user_infos" sql:"column:bShowUserInfos"`
+	// Nullable
+	Level   *int32 `json:"level" sql:"column:iLevel"`
+	UsesAPI bool   `json:"uses_api" sql:"column:bUsesAPI"`
+	// Nullable
+	GroupCodeEnter *bool `json:"group_code_enter" sql:"column:groupCodeEnter"`
 }
 
 type itemWithRequiredType struct {
-	Item item   `json:"item,squash"`
-	Type string `json:"type" validate:"required,oneof=Root Category Chapter Task Course" sql:"column:sType"`
+	item `json:"item,squash"`
+	// required: true
+	// enum: Root,Category,Chapter,Task,Course
+	Type string `json:"type" validate:"set,oneof=Root Category Chapter Task Course" sql:"column:sType"`
+}
+
+// swagger:ignore
+type newItemString struct {
+	// required: true
+	Title string `json:"title" validate:"set" sql:"column:sTitle"`
+	// Nullable
+	ImageURL *string `json:"image_url" sql:"column:sImageUrl"`
+	// Nullable
+	Subtitle *string `json:"subtitle" sql:"column:sSubtitle"`
+	// Nullable
+	Description *string `json:"description" sql:"column:sDescription"`
 }
 
 // NewItemRequest is the expected input for new created item
+// swagger:model itemCreateRequest
 type NewItemRequest struct {
 	// Nullable fields are of pointer types
-	Item       itemWithRequiredType `json:"item,squash"`
-	LanguageID int64                `json:"language_id" validate:"required,language_id"`
-	String     struct {
-		Title       string  `json:"title" validate:"required" sql:"column:sTitle"`
-		ImageURL    *string `json:"image_url" sql:"column:sImageUrl"`
-		Subtitle    *string `json:"subtitle" sql:"column:sSubtitle"`
-		Description *string `json:"description" sql:"column:sDescription"`
-	} `json:"string,squash"`
+	itemWithRequiredType `json:"item,squash"`
+	// `idDefaultLanguage` of the item
+	// required: true
+	LanguageID    int64 `json:"language_id" validate:"set,language_id"`
+	newItemString `json:"string,squash"`
 
-	ParentItemID int64 `json:"parent_item_id,string" validate:"required,parent_item_id"`
-	Order        int32 `json:"order"`
+	// required: true
+	ParentItemID int64 `json:"parent_item_id,string" validate:"set,parent_item_id"`
+	// default: 0
+	Order int32 `json:"order"`
 
 	Children []itemChild `json:"children" validate:"children"`
 }
@@ -112,6 +159,49 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 	return count == 0
 }
 
+// swagger:operation POST /items items itemCreate
+// ---
+// summary: Create an item
+// description: >
+//
+//   Creates an item with parameters from the input data with `items.idDefaultLanguage` = `language_id`.
+//   Also it
+//
+//     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
+//
+//     * gives full access to the item for the current user (creates a new `groups_items` row with: `idItem` = `items.ID`,
+//       `idGroup` = `idGroupSelf` of the current user, `idUserCreated` = `users.ID` of the current user,
+//       `sFullAccessDate` = now(), `sCachedFullAccessDate` = now(), `bCachedFullAccess` = 1, `bOwnerAccess` = 1,
+//       `bManagerAccess` = 1).
+//
+//     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `groups_items`.
+//
+//   The user should be an owner/manager of
+//
+//     * the `parent_item_id`,
+//     * `children` items (if any),
+//     * `unlocked_item_ids` items (if any),
+//
+//   and be an owner of `team_in_group_id` (if given),
+//   otherwise the "bad request" response is returned.
+// parameters:
+// - in: body
+//   name: data
+//   required: true
+//   description: The item to create
+//   schema:
+//     "$ref": "#/definitions/itemCreateRequest"
+// responses:
+//   "201":
+//     "$ref": "#/responses/createdWithIDResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 	user := srv.GetUser(r)
@@ -150,7 +240,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 
 	// response
 	response := struct {
-		ItemID int64 `json:"ID,string"`
+		ItemID int64 `json:"id,string"`
 	}{ItemID: itemID}
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
 	return service.NoError
@@ -180,8 +270,12 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 // The validator checks that the group in the TeamInGroupID field is owned by the user.
 func constructTeamInGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
+		field := fl.Field()
+		if field.Kind() == reflect.Ptr { // nil
+			return true
+		}
 		found, err := store.Groups().
-			OwnedBy(user).Where("groups.ID = ?", fl.Field().Interface().(int64)).
+			OwnedBy(user).Where("groups.ID = ?", field.Int()).
 			WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
@@ -192,7 +286,11 @@ func constructTeamInGroupIDValidator(store *database.DataStore, user *database.U
 // The validator checks that the user has access rights to manage all the listed items (bOwnerAccess or bManagerAccess).
 func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		ids := strings.Split(fl.Field().Interface().(string), ",")
+		field := fl.Field()
+		if field.Kind() == reflect.Ptr { // nil
+			return true
+		}
+		ids := strings.Split(field.String(), ",")
 		int64IDs := make([]int64, 0, len(ids))
 		for _, id := range ids {
 			int64ID, err := strconv.ParseInt(id, 10, 64)
@@ -262,8 +360,8 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest) (itemID int64, err error) {
-	itemMap := formData.ConstructPartialMapForDB("Item")
-	stringMap := formData.ConstructPartialMapForDB("String")
+	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
+	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
 	err = store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
 		itemID = s.NewID()

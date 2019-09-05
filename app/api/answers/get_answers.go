@@ -74,6 +74,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {

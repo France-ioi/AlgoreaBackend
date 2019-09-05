@@ -62,11 +62,11 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 13            | 15           | direct             |
       | 13            | 69           | invitationAccepted |
       | 14            | 51           | requestAccepted    |
-      | 14            | 53           | requestAccepted    |
+      | 14            | 53           | joinedByCode       |
       | 14            | 55           | invitationAccepted |
       | 15            | 57           | direct             |
       | 15            | 59           | requestAccepted    |
-      | 15            | 61           | invitationAccepted |
+      | 15            | 61           | joinedByCode       |
       | 15            | 63           | invitationRejected |
       | 15            | 65           | left               |
       | 15            | 67           | invitationSent     |

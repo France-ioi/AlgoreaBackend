@@ -59,8 +59,11 @@ func (s *ItemStore) AccessRights(user *User) *DB {
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
 // It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (found bool, err error) {
+func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (hasAccess bool, err error) {
 	var count int64
+	if len(itemIDs) == 0 {
+		return true, nil
+	}
 
 	idsMap := make(map[int64]bool, len(itemIDs))
 	for _, itemID := range itemIDs {
@@ -380,7 +383,7 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	var teamGroupID int64
-	mustNotBeError(s.Groups().TeamGroupByTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+	mustNotBeError(s.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
 
 	// Set contest as finished
 	/*
@@ -397,7 +400,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		JOIN users ON users.ID = users_items.idUser
 		JOIN groups_groups
 			ON groups_groups.idGroupChild = users.idGroupSelf AND
-				groups_groups.sType IN ('invitationAccepted', 'requestAccepted') AND
+				groups_groups.sType`+GroupRelationIsActiveCondition+` AND
 				groups_groups.idGroupParent = ?
 		SET sFinishDate = NOW()
 		WHERE users_items.idItem = ?`, teamGroupID, itemID).Error)

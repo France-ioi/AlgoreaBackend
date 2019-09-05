@@ -34,15 +34,15 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		{"sType=unknown", `{"type":"unknown"}`, true},
 		{"sType=", `{"type":""}`, true},
 
-		{"sPasswordTimer=99:59:59", `{"password_timer":"99:59:59"}`, false},
-		{"sPasswordTimer=00:00:00", `{"password_timer":"00:00:00"}`, false},
+		{"sCodeTimer=99:59:59", `{"code_timer":"99:59:59"}`, false},
+		{"sCodeTimer=00:00:00", `{"code_timer":"00:00:00"}`, false},
 
-		{"sPasswordTimer=99:60:59", `{"password_timer":"99:60:59"}`, true},
-		{"sPasswordTimer=99:59:60", `{"password_timer":"99:59:60"}`, true},
-		{"sPasswordTimer=59:59", `{"password_timer":"59:59"}`, true},
-		{"sPasswordTimer=59", `{"password_timer":"59"}`, true},
-		{"sPasswordTimer=59", `{"password_timer":"invalid"}`, true},
-		{"sPasswordTimer=", `{"password_timer":""}`, true},
+		{"sCodeTimer=99:60:59", `{"code_timer":"99:60:59"}`, true},
+		{"sCodeTimer=99:59:60", `{"code_timer":"99:59:60"}`, true},
+		{"sCodeTimer=59:59", `{"code_timer":"59:59"}`, true},
+		{"sCodeTimer=59", `{"code_timer":"59"}`, true},
+		{"sCodeTimer=59", `{"code_timer":"invalid"}`, true},
+		{"sCodeTimer=", `{"code_timer":""}`, true},
 
 		{"sRedirectPath=9", `{"redirect_path":"9"}`, false},
 		{"sRedirectPath=1234567890", `{"redirect_path":"1234567890"}`, false},

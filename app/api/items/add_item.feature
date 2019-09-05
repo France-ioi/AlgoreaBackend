@@ -24,7 +24,7 @@ Feature: Add item
 
   Scenario: Valid
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -43,7 +43,7 @@ Feature: Add item
       {
         "success": true,
         "message": "created",
-        "data": { "ID": "5577006791947779410" }
+        "data": { "id": "5577006791947779410" }
       }
       """
     And the table "items" at ID "5577006791947779410" should be:
@@ -78,7 +78,7 @@ Feature: Add item
       | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess |
       | 42 | 11      | 12     | true                 | false        |
       | 43 | 11      | 34     | false                | true         |
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Course",
@@ -130,7 +130,7 @@ Feature: Add item
       {
         "success": true,
         "message": "created",
-        "data": { "ID": "5577006791947779410" }
+        "data": { "id": "5577006791947779410" }
       }
       """
     And the table "items" at ID "5577006791947779410" should be:
@@ -157,7 +157,7 @@ Feature: Add item
 
   Scenario: Valid with empty full_screen
     Given I am the user with ID "1"
-    When I send a POST request to "/items/" with the following body:
+    When I send a POST request to "/items" with the following body:
     """
     {
       "type": "Course",
@@ -174,7 +174,7 @@ Feature: Add item
     {
       "success": true,
       "message": "created",
-      "data": { "ID": "5577006791947779410" }
+      "data": { "id": "5577006791947779410" }
     }
     """
     And the table "items" at ID "5577006791947779410" should be:

@@ -10,6 +10,41 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} groups groupAddChild
+// ---
+// summary: Add a group as a child to another group
+// description: >
+//   Lets a group admin add another group as a child and refreshes the access rights afterwards.
+//
+//
+//   Restrictions (otherwise the 'forbidden' error is returned):
+//     * the authenticated user should be an owner of both `parent_group_id` and `child_group_id,
+//     * the authenticated user should have `users.allowSubgroups` set to 1,
+//     * the parent group should not be of type "UserSelf",
+//     * the child group should not be of types "Base" or "UserAdmin",
+//     * the action should not create cycles in the groups relations graph.
+// parameters:
+// - name: parent_group_id
+//   in: path
+//   type: integer
+//   required: true
+// - name: child_group_id
+//   in: path
+//   type: integer
+//   required: true
+// responses:
+//   "201":
+//     description: Created. The request has successfully created the group relation.
+//     schema:
+//       "$ref": "#/definitions/createdResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {

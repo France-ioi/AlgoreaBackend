@@ -1,4 +1,4 @@
-Feature: Fetch active attempt for an item
+Feature: Get a task token with a refreshed active attempt for an item
   Background:
     Given the database has the following table 'users':
       | ID  | sLogin | idGroupSelf |
@@ -38,31 +38,27 @@ Feature: Fetch active attempt for an item
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate | sHintsRequested | nbHintsCached |
       | 11     | 50     | null            | 0      | null            | null            | null       | 1,2,3           | 3             |
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": false,
-            "bHintsAllowed": true,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "8674665223082153551",
-            "idUser": "11",
-            "idItemLocal": "50",
-            "idItem": "task1",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
-            "randomSeed": "8674665223082153551",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": false,
+          "bHintsAllowed": true,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "8674665223082153551",
+          "idUser": "11",
+          "idItemLocal": "50",
+          "idItem": "task1",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "0",
+          "randomSeed": "8674665223082153551",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -72,36 +68,32 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
       | 8674665223082153551 | 111     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
-  Scenario: User is able to fetch an active attempt (no active attempt set, only full access)
+  Scenario: User is able to fetch a task token (no active attempt set, only full access)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 50     | null            | 0      | null            | null            | null       |
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": false,
-            "bHintsAllowed": true,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "8674665223082153551",
-            "idUser": "10",
-            "idItem": "task1",
-            "idItemLocal": "50",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
-            "randomSeed": "8674665223082153551",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": false,
+          "bHintsAllowed": true,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "8674665223082153551",
+          "idUser": "10",
+          "idItem": "task1",
+          "idItemLocal": "50",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "0",
+          "randomSeed": "8674665223082153551",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -111,36 +103,32 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
       | 8674665223082153551 | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
-  Scenario: User is able to fetch an active attempt (no active attempt and item.bHasAttempts=1)
+  Scenario: User is able to fetch a task token (no active attempt and item.bHasAttempts=1)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 60     | null            | 0      | null            | null            | null       |
-    When I send a PUT request to "/items/60/active-attempt"
+    When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": true,
-            "bHintsAllowed": false,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "8674665223082153551",
-            "idUser": "10",
-            "idItemLocal": "60",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
-            "sSupportedLangProg": "c,python",
-            "randomSeed": "8674665223082153551",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": true,
+          "bHintsAllowed": false,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "8674665223082153551",
+          "idUser": "10",
+          "idItemLocal": "60",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "0",
+          "sSupportedLangProg": "c,python",
+          "randomSeed": "8674665223082153551",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -150,36 +138,32 @@ Feature: Fetch active attempt for an item
       | ID                  | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
       | 8674665223082153551 | 102     | 60     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
-  Scenario: User is able to fetch an active attempt (with active attempt set)
+  Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 50     | 100             | 0      | null            | null            | null       |
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": false,
-            "bHintsAllowed": true,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "100",
-            "idUser": "10",
-            "idItem": "task1",
-            "idItemLocal": "50",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
-            "randomSeed": "100",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": false,
+          "bHintsAllowed": true,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "100",
+          "idUser": "10",
+          "idItem": "task1",
+          "idItemLocal": "50",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "0",
+          "randomSeed": "100",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -187,7 +171,7 @@ Feature: Fetch active attempt for an item
       | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
     And the table "groups_attempts" should stay unchanged
 
-  Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB)
+  Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -198,32 +182,28 @@ Feature: Fetch active attempt for an item
       | 2  | 101     | 50     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
       | 3  | 102     | 50     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
       | 4  | 101     | 51     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": false,
-            "bHintsAllowed": true,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "2",
-            "idUser": "10",
-            "idItemLocal": "50",
-            "idItem": "task1",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "4",
-            "sHintsRequested": "[1,2,3,4]",
-            "randomSeed": "2",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": false,
+          "bHintsAllowed": true,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "2",
+          "idUser": "10",
+          "idItemLocal": "50",
+          "idItem": "task1",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "4",
+          "sHintsRequested": "[1,2,3,4]",
+          "randomSeed": "2",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -234,7 +214,7 @@ Feature: Fetch active attempt for an item
       | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sStartDate, NOW())) < 3 |
       | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 1                                                 |
 
-  Scenario: User is able to fetch an active attempt (no active attempt set, but there are some in the DB and items.bHasAttempts=1)
+  Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.bHasAttempts=1)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
@@ -245,32 +225,28 @@ Feature: Fetch active attempt for an item
       | 2  | 102     | 60     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
       | 3  | 101     | 60     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
       | 4  | 102     | 61     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-    When I send a PUT request to "/items/60/active-attempt"
+    When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": true,
-            "bHintsAllowed": false,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "2",
-            "idUser": "10",
-            "idItemLocal": "60",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "4",
-            "sHintsRequested": "[1,2,3,4]",
-            "sSupportedLangProg": "c,python",
-            "randomSeed": "2",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": true,
+          "bHintsAllowed": false,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "2",
+          "idUser": "10",
+          "idItemLocal": "60",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "4",
+          "sHintsRequested": "[1,2,3,4]",
+          "sSupportedLangProg": "c,python",
+          "randomSeed": "2",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:
@@ -289,31 +265,27 @@ Feature: Fetch active attempt for an item
     And the database has the following table 'groups_attempts':
       | ID | idGroup | idItem | sLastActivityDate    | sStartDate           | iScore | sBestAnswerDate | sValidationDate |
       | 2  | 101     | 50     | 2018-05-29T06:38:38Z | 2017-05-29T06:38:38Z | 0      | null            | null            |
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
-    And the response body decoded as "FetchActiveAttemptResponse" should be, in JSON:
+    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
       {
-        "data": {
-          "task_token": {
-            "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "bAccessSolutions": false,
-            "bHintsAllowed": true,
-            "bIsAdmin": false,
-            "bReadAnswers": true,
-            "bSubmissionPossible": true,
-            "idAttempt": "2",
-            "idUser": "10",
-            "idItemLocal": "50",
-            "idItem": "task1",
-            "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-            "nbHintsGiven": "0",
-            "randomSeed": "2",
-            "platformName": "{{app().TokenConfig.PlatformName}}"
-          }
-        },
-        "message": "updated",
-        "success": true
+        "task_token": {
+          "date": "{{currentTimeInFormat("02-01-2006")}}",
+          "bAccessSolutions": false,
+          "bHintsAllowed": true,
+          "bIsAdmin": false,
+          "bReadAnswers": true,
+          "bSubmissionPossible": true,
+          "idAttempt": "2",
+          "idUser": "10",
+          "idItemLocal": "50",
+          "idItem": "task1",
+          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+          "nbHintsGiven": "0",
+          "randomSeed": "2",
+          "platformName": "{{app().TokenConfig.PlatformName}}"
+        }
       }
       """
     And the table "users_items" should be:

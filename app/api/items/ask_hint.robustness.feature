@@ -40,7 +40,7 @@ Feature: Ask for a hint - robustness
 
   Scenario: Wrong JSON in request
     Given I am the user with ID "10"
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       []
       """
@@ -71,7 +71,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -105,7 +105,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -139,7 +139,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -173,7 +173,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -207,7 +207,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -241,7 +241,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -275,7 +275,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -309,7 +309,7 @@ Feature: Ask for a hint - robustness
         "askedHint": {"rotorIndex":1}
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",
@@ -342,7 +342,7 @@ Feature: Ask for a hint - robustness
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"
       }
       """
-    When I send a POST request to "/items/ask_hint" with the following body:
+    When I send a POST request to "/items/ask-hint" with the following body:
       """
       {
         "task_token": "{{priorUserTaskToken}}",

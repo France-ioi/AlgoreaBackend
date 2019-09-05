@@ -22,16 +22,16 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
-	router.Post("/items/", service.AppHandler(srv.addItem).ServeHTTP)
-	router.Get("/items/", service.AppHandler(srv.getList).ServeHTTP)
+	router.Post("/items", service.AppHandler(srv.addItem).ServeHTTP)
+	router.Get(`/items/{ids:(\d+/)+}breadcrumbs`, service.AppHandler(srv.getBreadcrumbs).ServeHTTP)
 	router.Get("/items/{item_id}", service.AppHandler(srv.getItem).ServeHTTP)
 	router.Put("/items/{item_id}", service.AppHandler(srv.updateItem).ServeHTTP)
 	router.Get("/items/{item_id}/as-nav-tree", service.AppHandler(srv.getNavigationData).ServeHTTP)
-	router.Put("/items/{item_id}/active-attempt", service.AppHandler(srv.fetchActiveAttempt).ServeHTTP)
+	router.Get("/items/{item_id}/task-token", service.AppHandler(srv.getTaskToken).ServeHTTP)
 	router.Put("/attempts/{groups_attempt_id}/active", service.AppHandler(srv.updateActiveAttempt).ServeHTTP)
 	router.Get("/items/{item_id}/attempts", service.AppHandler(srv.getAttempts).ServeHTTP)
 	router.Put("/items/{item_id}/strings/{language_id}", service.AppHandler(srv.updateItemString).ServeHTTP)
-	router.Post("/items/ask_hint", service.AppHandler(srv.askHint).ServeHTTP)
+	router.Post("/items/ask-hint", service.AppHandler(srv.askHint).ServeHTTP)
 	router.Post("/items/save-grade", service.AppHandler(srv.saveGrade).ServeHTTP)
 }
 

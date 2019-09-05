@@ -2,19 +2,23 @@ Feature: Get item information for breadcrumb
 
 Background:
   Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | iVersion |
-    | 1  | jdoe   | 0        | 11          | 12           | 0        |
+    | ID | sLogin | idGroupSelf | idGroupOwned | sDefaultLanguage |
+    | 1  | jdoe   | 11          | 12           | fr               |
+  Given the database has the following table 'languages':
+    | ID | sCode |
+    | 1  | en    |
+    | 2  | fr    |
   And the database has the following table 'groups':
     | ID | sName      | sTextId | iGrade | sType     | iVersion |
     | 11 | jdoe       |         | -2     | UserAdmin | 0        |
     | 12 | jdoe-admin |         | -2     | UserAdmin | 0        |
     | 13 | Group B    |         | -2     | Class     | 0        |
   And the database has the following table 'items':
-    | ID | bTeamsEditable | bNoScore | iVersion | sType    |
-    | 21 | false          | false    | 0        | Root     |
-    | 22 | false          | false    | 0        | Category |
-    | 23 | false          | false    | 0        | Chapter  |
-    | 24 | false          | false    | 0        | Task     |
+    | ID | sType    | idDefaultLanguage |
+    | 21 | Root     | 1                 |
+    | 22 | Category | 1                 |
+    | 23 | Chapter  | 1                 |
+    | 24 | Task     | 2                 |
   And the database has the following table 'items_strings':
     | ID | idItem | idLanguage | sTitle           | iVersion |
     | 31 | 21     | 1          | Graph: Methods   | 0        |
@@ -42,15 +46,14 @@ Scenario: Full access on all breadcrumb
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
   """
   [
-  { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
-  { "item_id": "22", "language_id": "1", "title": "DFS" },
-  { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
-  { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
+    { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" },
+    { "item_id": "22", "language_id": "1", "title": "DFS" },
+    { "item_id": "23", "language_id": "1", "title": "Reduce Graph" }
   ]
   """
 
@@ -65,15 +68,14 @@ Scenario: Partial access on all breadcrumb
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
     """
     [
-    { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
-    { "item_id": "22", "language_id": "1", "title": "DFS" },
-    { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
-    { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
+      { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" },
+      { "item_id": "22", "language_id": "1", "title": "DFS" },
+      { "item_id": "23", "language_id": "1", "title": "Reduce Graph" }
     ]
     """
 
@@ -88,15 +90,14 @@ Scenario: Partial access to all items except for last which is greyed
     | 51 | 21           | 22          | 1           | 0           | 0        |
     | 52 | 22           | 23          | 1           | 0           | 0        |
   And I am the user with ID "1"
-  When I send a GET request to "/items/?ids=21,22,23"
+  When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
     """
     [
-    { "item_id": "21", "language_id": "1", "title": "Graph: Methods" },
-    { "item_id": "22", "language_id": "1", "title": "DFS" },
-    { "item_id": "23", "language_id": "1", "title": "Reduce Graph" },
-    { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" }
+      { "item_id": "21", "language_id": "2", "title": "Graphe: Methodes" },
+      { "item_id": "22", "language_id": "1", "title": "DFS" },
+      { "item_id": "23", "language_id": "1", "title": "Reduce Graph" }
     ]
     """
 

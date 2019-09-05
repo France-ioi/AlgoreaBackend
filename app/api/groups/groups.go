@@ -21,12 +21,13 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Store.Sessions()))
 	router.Get("/groups/{group_id}/recent_activity", service.AppHandler(srv.getRecentActivity).ServeHTTP)
+	router.Post("/groups", service.AppHandler(srv.createGroup).ServeHTTP)
 	router.Get("/groups/{group_id}", service.AppHandler(srv.getGroup).ServeHTTP)
 	router.Put("/groups/{group_id}", service.AppHandler(srv.updateGroup).ServeHTTP)
 	router.Put("/groups/{group_id}/items/{item_id}", service.AppHandler(srv.updateGroupItem).ServeHTTP)
 
-	router.Post("/groups/{group_id}/password", service.AppHandler(srv.changePassword).ServeHTTP)
-	router.Delete("/groups/{group_id}/password", service.AppHandler(srv.discardPassword).ServeHTTP)
+	router.Post("/groups/{group_id}/code", service.AppHandler(srv.changeCode).ServeHTTP)
+	router.Delete("/groups/{group_id}/code", service.AppHandler(srv.discardCode).ServeHTTP)
 
 	router.Get("/groups/{group_id}/children", service.AppHandler(srv.getChildren).ServeHTTP)
 	router.Get("/groups/{group_id}/team-descendants", service.AppHandler(srv.getTeamDescendants).ServeHTTP)
@@ -44,6 +45,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Post("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
 	router.Delete("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
+
+	router.Get("/current-user/teams/by-item/{item_id}", service.AppHandler(srv.getCurrentUserTeamByItem).ServeHTTP)
 }
 
 func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {

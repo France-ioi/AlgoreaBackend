@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -33,6 +34,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
 
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
+	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
 
@@ -46,10 +48,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 type userGroupRelationAction string
 
 const (
-	acceptInvitationAction   userGroupRelationAction = "acceptInvitation"
-	rejectInvitationAction   userGroupRelationAction = "rejectInvitation"
-	createGroupRequestAction userGroupRelationAction = "createRequest"
-	leaveGroupAction         userGroupRelationAction = "leaveGroup"
+	acceptInvitationAction           userGroupRelationAction = "acceptInvitation"
+	rejectInvitationAction           userGroupRelationAction = "rejectInvitation"
+	createGroupRequestAction         userGroupRelationAction = "createRequest"
+	createAcceptedGroupRequestAction userGroupRelationAction = "createAcceptedRequest"
+	leaveGroupAction                 userGroupRelationAction = "leaveGroup"
+	joinGroupByCodeAction            userGroupRelationAction = "joinGroupByCode"
 )
 
 func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
@@ -66,10 +70,24 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 	if action == createGroupRequestAction {
 		var found bool
-		found, err = srv.Store.Groups().ByID(groupID).Where("bFreeAccess").HasRows()
+		found, err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
+		service.MustNotBeError(err)
+		if found {
+			action = createAcceptedGroupRequestAction
+		} else {
+			found, err = srv.Store.Groups().ByID(groupID).Where("bFreeAccess").HasRows()
+			service.MustNotBeError(err)
+			if !found {
+				return service.InsufficientAccessRightsError
+			}
+		}
+	} else if action == leaveGroupAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).
+			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError
+			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
 		}
 	}
 
@@ -77,14 +95,14 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		results, err = store.GroupGroups().Transition(
 			map[userGroupRelationAction]database.GroupGroupTransitionAction{
-				acceptInvitationAction:   database.UserAcceptsInvitation,
-				rejectInvitationAction:   database.UserRefusesInvitation,
-				createGroupRequestAction: database.UserCreatesRequest,
-				leaveGroupAction:         database.UserLeavesGroup,
+				acceptInvitationAction:           database.UserAcceptsInvitation,
+				rejectInvitationAction:           database.UserRefusesInvitation,
+				createGroupRequestAction:         database.UserCreatesRequest,
+				createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
+				leaveGroupAction:                 database.UserLeavesGroup,
 			}[action], groupID, []int64{*user.SelfGroupID}, user.ID)
 		return err
 	}))
 
-	return service.RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID],
-		action == createGroupRequestAction, action == leaveGroupAction)
+	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], action)
 }

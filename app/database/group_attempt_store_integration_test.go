@@ -90,6 +90,18 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 60,
 		},
 		{
+			name:      "okay (bHasAttempts=1, groups_groups.sType=joinedByCode)",
+			userID:    10,
+			attemptID: 200,
+			fixture: `
+				users_items:
+					- {idUser: 10, idItem: 60}
+				groups_attempts:
+					- {ID: 200, idGroup: 120, idItem: 60}`,
+			expectedFound:  true,
+			expectedItemID: 60,
+		},
+		{
 			name:      "okay (bHasAttempts=1, groups_groups.sType=invitationAccepted)",
 			userID:    10,
 			attemptID: 200,
@@ -235,6 +247,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 					- {idGroupParent: 108, idGroupChild: 101, sType: left}
 					- {idGroupParent: 109, idGroupChild: 101, sType: direct}
 					- {idGroupParent: 110, idGroupChild: 101, sType: invitationAccepted}
+					- {idGroupParent: 120, idGroupChild: 101, sType: joinedByCode}
 				groups_ancestors:
 					- {idGroupAncestor: 101, idGroupChild: 101, bIsSelf: 1}
 					- {idGroupAncestor: 102, idGroupChild: 101, bIsSelf: 0}
@@ -243,6 +256,10 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 					- {idGroupAncestor: 121, idGroupChild: 121, bIsSelf: 1}
 					- {idGroupAncestor: 109, idGroupChild: 101, bIsSelf: 0}
 					- {idGroupAncestor: 109, idGroupChild: 109, bIsSelf: 1}
+					- {idGroupAncestor: 110, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 110, idGroupChild: 110, bIsSelf: 1}
+					- {idGroupAncestor: 120, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 120, idGroupChild: 120, bIsSelf: 1}
 				items:
 					- {ID: 10, bHasAttempts: 0}
 					- {ID: 50, bHasAttempts: 0}
@@ -296,6 +313,14 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			userID:      10,
 			attemptID:   200,
 			fixture:     `groups_attempts: [{ID: 200, idGroup: 102, idItem: 60},{ID: 201, idGroup: 102, idItem: 60}]`,
+			expectedIDs: []int64{200, 201},
+			itemID:      60,
+		},
+		{
+			name:        "okay (bHasAttempts=1, groups_groups.sType=joinedByCode)",
+			userID:      10,
+			attemptID:   200,
+			fixture:     `groups_attempts: [{ID: 200, idGroup: 120, idItem: 60},{ID: 201, idGroup: 120, idItem: 60}]`,
 			expectedIDs: []int64{200, 201},
 			itemID:      60,
 		},
@@ -410,6 +435,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 					- {idGroupParent: 108, idGroupChild: 101, sType: left}
 					- {idGroupParent: 109, idGroupChild: 101, sType: direct}
 					- {idGroupParent: 110, idGroupChild: 101, sType: invitationAccepted}
+					- {idGroupParent: 120, idGroupChild: 101, sType: joinedByCode}
 				groups_ancestors:
 					- {idGroupAncestor: 101, idGroupChild: 101, bIsSelf: 1}
 					- {idGroupAncestor: 102, idGroupChild: 101, bIsSelf: 0}
@@ -418,6 +444,10 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 					- {idGroupAncestor: 121, idGroupChild: 121, bIsSelf: 1}
 					- {idGroupAncestor: 109, idGroupChild: 101, bIsSelf: 0}
 					- {idGroupAncestor: 109, idGroupChild: 109, bIsSelf: 1}
+					- {idGroupAncestor: 110, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 110, idGroupChild: 110, bIsSelf: 1}
+					- {idGroupAncestor: 120, idGroupChild: 101, bIsSelf: 0}
+					- {idGroupAncestor: 120, idGroupChild: 120, bIsSelf: 1}
 				items:
 					- {ID: 10, bHasAttempts: 0}
 					- {ID: 50, bHasAttempts: 0}

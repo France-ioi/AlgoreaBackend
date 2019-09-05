@@ -17,6 +17,7 @@ Feature: Reject group requests
       | 123 |
       | 131 |
       | 141 |
+      | 151 |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -24,6 +25,7 @@ Feature: Reject group requests
       | 13              | 111          | 0       |
       | 13              | 121          | 0       |
       | 13              | 123          | 0       |
+      | 13              | 151          | 0       |
       | 14              | 14           | 1       |
       | 21              | 21           | 1       |
       | 22              | 13           | 0       |
@@ -31,6 +33,7 @@ Feature: Reject group requests
       | 22              | 111          | 0       |
       | 22              | 121          | 0       |
       | 22              | 123          | 0       |
+      | 22              | 151          | 0       |
       | 31              | 31           | 1       |
       | 111             | 111          | 1       |
       | 121             | 121          | 1       |
@@ -38,6 +41,7 @@ Feature: Reject group requests
       | 123             | 123          | 1       |
       | 131             | 131          | 1       |
       | 141             | 141          | 1       |
+      | 151             | 151          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate               |
       | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} |
@@ -53,11 +57,12 @@ Feature: Reject group requests
       | 12 | 13            | 122          | left               | null                      |
       | 13 | 13            | 123          | direct             | null                      |
       | 14 | 13            | 141          | requestSent        | null                      |
-      | 15 | 22            | 13           | direct             | null                      |
+      | 15 | 13            | 151          | joinedByCode       | null                      |
+      | 16 | 22            | 13           | direct             | null                      |
 
   Scenario: Reject requests
     Given I am the user with ID "1"
-    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22,151"
     And the response body should be, in JSON:
     """
     {
@@ -67,7 +72,8 @@ Feature: Reject group requests
         "11": "invalid",
         "13": "invalid",
         "21": "invalid",
-        "22": "invalid"
+        "22": "invalid",
+        "151": "invalid"
       },
       "message": "updated",
       "success": true
