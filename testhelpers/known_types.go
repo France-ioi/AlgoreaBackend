@@ -74,6 +74,28 @@ func (resp *askHintResponse) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
+type getTaskTokenResponse struct {
+	TaskToken token.Task `json:"task_token"`
+
+	PublicKey *rsa.PublicKey
+}
+
+type getTaskTokenResponseWrapper struct {
+	TaskToken *string `json:"task_token"`
+}
+
+func (resp *getTaskTokenResponse) UnmarshalJSON(raw []byte) error {
+	wrapper := getTaskTokenResponseWrapper{}
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return err
+	}
+	if wrapper.TaskToken != nil {
+		resp.TaskToken.PublicKey = resp.PublicKey
+		return (&resp.TaskToken).UnmarshalString(*wrapper.TaskToken)
+	}
+	return nil
+}
+
 type saveGradeResponse struct {
 	Data struct {
 		TaskToken   token.Task `json:"task_token"`
@@ -113,11 +135,11 @@ func (resp *saveGradeResponse) UnmarshalJSON(raw []byte) error {
 }
 
 var knownTypes = map[string]reflect.Type{
-	"AnswersSubmitRequest":       reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
-	"AnswersSubmitResponse":      reflect.TypeOf(&answersSubmitResponse{}).Elem(),
-	"AskHintResponse":            reflect.TypeOf(&askHintResponse{}).Elem(),
-	"SaveGradeResponse":          reflect.TypeOf(&saveGradeResponse{}).Elem(),
-	"FetchActiveAttemptResponse": reflect.TypeOf(&askHintResponse{}).Elem(),
+	"AnswersSubmitRequest":  reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
+	"AnswersSubmitResponse": reflect.TypeOf(&answersSubmitResponse{}).Elem(),
+	"AskHintResponse":       reflect.TypeOf(&askHintResponse{}).Elem(),
+	"SaveGradeResponse":     reflect.TypeOf(&saveGradeResponse{}).Elem(),
+	"GetTaskTokenResponse":  reflect.TypeOf(&getTaskTokenResponse{}).Elem(),
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {

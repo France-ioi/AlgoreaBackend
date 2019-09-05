@@ -1,4 +1,4 @@
-Feature: Refresh an active attempt and fetch a task token for an item - robustness
+Feature: Get a task token with a refreshed active attempt for an item - robustness
   Background:
     Given the database has the following table 'users':
       | ID  | sLogin | idGroupSelf |
@@ -29,7 +29,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: Invalid item_id
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/abc/active-attempt"
+    When I send a GET request to "/items/abc/task-token"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "users_answers" should stay unchanged
@@ -38,7 +38,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: User not found
     Given I am the user with ID "404"
-    When I send a PUT request to "/items/50/active-attempt"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_answers" should stay unchanged
@@ -47,7 +47,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: No access to the item (no item)
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/404/active-attempt"
+    When I send a GET request to "/items/404/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_answers" should stay unchanged
@@ -56,7 +56,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: No access to the item (sType='Root')
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/70/active-attempt"
+    When I send a GET request to "/items/70/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_answers" should stay unchanged
@@ -65,7 +65,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: No access to the item (sType='Category')
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/80/active-attempt"
+    When I send a GET request to "/items/80/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_answers" should stay unchanged
@@ -74,7 +74,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: No access to the item (sType='Chapter')
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/90/active-attempt"
+    When I send a GET request to "/items/90/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_answers" should stay unchanged
@@ -83,7 +83,7 @@ Feature: Refresh an active attempt and fetch a task token for an item - robustne
 
   Scenario: User is not a team member
     Given I am the user with ID "10"
-    When I send a PUT request to "/items/60/active-attempt"
+    When I send a GET request to "/items/60/task-token"
     Then the response code should be 403
     And the response error message should contain "No team found for the user"
     And the table "users_answers" should stay unchanged

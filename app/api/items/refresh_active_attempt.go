@@ -13,9 +13,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation PUT /items/{item_id}/active-attempt items itemActiveAttemptRefresh
+// swagger:operation GET /items/{item_id}/task-token items itemTaskTokenGet
 // ---
-// summary: Refresh an active attempt and fetch a task token
+// summary: Get a task token with a refreshed active attempt
 // description: >
 //
 //   * If there is no row for the current user and the given item in `users_items`, the service creates one.
@@ -48,7 +48,7 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     description: "Updated. Success response with the fresh task token"
+//     description: "OK. Success response with the fresh task token"
 //     schema:
 //       type: object
 //       required: [success, message, data]
@@ -75,7 +75,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) refreshActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -190,9 +190,9 @@ func (srv *Service) refreshActiveAttempt(w http.ResponseWriter, r *http.Request)
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
+	render.Respond(w, r, map[string]interface{}{
 		"task_token": signedTaskToken,
-	})))
+	})
 	return service.NoError
 }
 
