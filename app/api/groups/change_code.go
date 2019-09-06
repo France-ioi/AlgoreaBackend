@@ -72,7 +72,6 @@ func (srv *Service) changeCode(w http.ResponseWriter, r *http.Request) service.A
 			newCode, err = GenerateGroupCode()
 			service.MustNotBeError(err)
 
-			// `CREATE UNIQUE INDEX sCode ON groups(sCode)` must be done
 			err = store.Groups().Where("ID = ?", groupID).Updates(map[string]interface{}{"sCode": newCode}).Error()
 			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 				continue

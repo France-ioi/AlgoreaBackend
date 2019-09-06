@@ -36,7 +36,6 @@ Feature: Change the code of the given group - robustness
 
   Scenario: User is an admin of the group, but the generated code is not unique
     Given I am the user with ID "1"
-    And the table "groups" has a unique key "sCode" on "sCode"
     And the generated group codes are "ybqybxnlyo","newpassword"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 200
@@ -51,7 +50,6 @@ Feature: Change the code of the given group - robustness
 
   Scenario: User is an admin of the group, but the generated code is not unique 3 times in a row
     Given I am the user with ID "1"
-    And the table "groups" has a unique key "sCode" on "sCode"
     And the generated group codes are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 500
