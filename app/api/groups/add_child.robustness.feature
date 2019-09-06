@@ -8,22 +8,45 @@ Feature: Add a parent-child relation between two groups - robustness
       | 3  | student | 25          | 26           | Jane        | Doe       | 1              |
       | 4  | admin   | 27          | 28           | John        | Doe       | 1              |
     And the database has the following table 'groups':
-      | ID | sName     | sType     |
-      | 11 | Group A   | Class     |
-      | 13 | Group B   | Class     |
-      | 14 | UserAdmin | UserAdmin |
-      | 15 | Root      | Base      |
-      | 16 | RootSelf  | Base      |
-      | 17 | RootAdmin | Base      |
-      | 18 | UserSelf  | UserSelf  |
+      | ID | sName         | sType     |
+      | 11 | Group A       | Class     |
+      | 13 | Group B       | Class     |
+      | 14 | UserAdmin     | UserAdmin |
+      | 15 | Root          | Base      |
+      | 16 | RootSelf      | Base      |
+      | 17 | RootAdmin     | Base      |
+      | 18 | UserSelf      | UserSelf  |
+      | 19 | Team          | Team      |
+      | 21 | owner         | UserSelf  |
+      | 22 | owner-admin   | UserAdmin |
+      | 23 | teacher       | UserSelf  |
+      | 24 | teacher-admin | UserAdmin |
+      | 25 | student       | UserSelf  |
+      | 26 | student-admin | UserAdmin |
+      | 27 | admin         | UserSelf  |
+      | 28 | admin-admin   | UserAdmin |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
-      | 13              | 11           | 1       |
+      | 11              | 11           | 1       |
+      | 13              | 11           | 0       |
+      | 13              | 13           | 1       |
+      | 14              | 14           | 1       |
+      | 15              | 15           | 1       |
+      | 16              | 16           | 1       |
+      | 17              | 17           | 1       |
+      | 18              | 18           | 1       |
+      | 19              | 19           | 1       |
       | 21              | 21           | 1       |
       | 22              | 11           | 0       |
       | 22              | 13           | 0       |
+      | 22              | 22           | 1       |
+      | 23              | 23           | 1       |
       | 24              | 13           | 0       |
+      | 24              | 24           | 1       |
+      | 25              | 25           | 1       |
       | 26              | 11           | 0       |
+      | 26              | 26           | 1       |
+      | 27              | 27           | 1       |
       | 28              | 11           | 0       |
       | 28              | 13           | 0       |
       | 28              | 14           | 0       |
@@ -31,6 +54,8 @@ Feature: Add a parent-child relation between two groups - robustness
       | 28              | 16           | 0       |
       | 28              | 17           | 0       |
       | 28              | 18           | 0       |
+      | 28              | 19           | 0       |
+      | 28              | 28           | 1       |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | iChildOrder |
       | 13            | 11           | 1           |
@@ -115,9 +140,25 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Child group is UserSelf
+    Given I am the user with ID "4"
+    When I send a POST request to "/groups/13/relations/18"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Parent group is UserSelf
     Given I am the user with ID "4"
     When I send a POST request to "/groups/18/relations/11"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Parent group is Team
+    Given I am the user with ID "4"
+    When I send a POST request to "/groups/19/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

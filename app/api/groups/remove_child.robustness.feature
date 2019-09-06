@@ -10,6 +10,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 11 | Group A   | Class     |
       | 13 | Group B   | Class     |
       | 14 | Group C   | Class     |
+      | 15 | Team      | Team      |
       | 21 | Self      | UserSelf  |
       | 22 | Owned     | UserAdmin |
       | 51 | UserAdmin | UserAdmin |
@@ -18,29 +19,35 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 54 | RootAdmin | Base      |
       | 55 | UserSelf  | UserSelf  |
     And the database has the following table 'groups_groups':
-      | idGroupParent | idGroupChild | sType       |
-      | 13            | 11           | direct      |
-      | 13            | 14           | requestSent |
-      | 22            | 11           | direct      |
-      | 22            | 13           | direct      |
-      | 22            | 14           | direct      |
-      | 22            | 51           | direct      |
-      | 22            | 52           | direct      |
-      | 22            | 53           | direct      |
-      | 22            | 54           | direct      |
-      | 22            | 55           | direct      |
-      | 24            | 11           | direct      |
-      | 55            | 14           | direct      |
+      | idGroupParent | idGroupChild | sType              |
+      | 13            | 11           | direct             |
+      | 13            | 14           | requestSent        |
+      | 13            | 55           | invitationAccepted |
+      | 15            | 55           | requestAccepted    |
+      | 22            | 11           | direct             |
+      | 22            | 13           | direct             |
+      | 22            | 14           | direct             |
+      | 22            | 51           | direct             |
+      | 22            | 52           | direct             |
+      | 22            | 53           | direct             |
+      | 22            | 54           | direct             |
+      | 22            | 55           | direct             |
+      | 24            | 11           | direct             |
+      | 55            | 14           | direct             |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
       | 13              | 11           | 0       |
       | 13              | 13           | 1       |
+      | 13              | 55           | 0       |
       | 14              | 14           | 1       |
+      | 15              | 15           | 1       |
+      | 15              | 55           | 0       |
       | 21              | 21           | 1       |
       | 22              | 11           | 0       |
       | 22              | 13           | 0       |
       | 22              | 14           | 0       |
+      | 22              | 15           | 0       |
       | 22              | 22           | 1       |
       | 22              | 51           | 0       |
       | 22              | 52           | 0       |
@@ -137,9 +144,25 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: Child group is UserSelf
+    Given I am the user with ID "1"
+    When I send a DELETE request to "/groups/13/relations/55"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: Parent group is UserSelf
     Given I am the user with ID "1"
     When I send a DELETE request to "/groups/55/relations/14"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Parent group is Team
+    Given I am the user with ID "1"
+    When I send a DELETE request to "/groups/55/relations/15"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
