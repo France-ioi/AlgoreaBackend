@@ -137,6 +137,8 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 		Type       string `gorm:"column:sType"`
 		TeamItemID *int64 `gorm:"column:idTeamItem"`
 	}
+
+	// The group should exist (and optionally should have `bFreeAccess` = 1)
 	query := store.Groups().ByID(groupID).WithWriteLock().Select("sType, idTeamItem")
 	if requireFreeAccess {
 		query = query.Where("bFreeAccess")
@@ -147,6 +149,8 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 	service.MustNotBeError(err)
 
+	// If the group is a team and its `idTeamItem` is set, ensure that the current user is not a member of
+	// another team with the same `idTeamItem'.
 	if parentGroupInfo.Type == "Team" && parentGroupInfo.TeamItemID != nil {
 		var found bool
 		found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *parentGroupInfo.TeamItemID).
