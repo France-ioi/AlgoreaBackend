@@ -44,6 +44,9 @@ const maxAllowedLoginsToInvite = 100
 //
 //   * Logins not corresponding to valid users are ignored (result = "not_found").
 //
+//   * If the `parent_group_id` corresponds to a team with `idTeamItem` set, the service skips users
+//     who are members of other teams with the same `idTeamItem` (result = "in_another_team").
+//
 //   * Pending group requests from users listed in `logins` become accepted (result = "success").
 //
 //   * Pending invitations stay unchanged (result = "unchanged).
@@ -136,6 +139,8 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToInvite) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+			groupsToInvite = filterOtherTeamsMembersOutForLogins(store, parentGroupID, groupsToInvite, results, groupIDToLoginMap)
+
 			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.ID)
 			return err
 		})
@@ -150,4 +155,43 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(results)))
 
 	return service.NoError
+}
+
+func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupID int64, groupsToCheck []int64,
+	results map[string]string, groupIDToLoginMap map[int64]string) []int64 {
+	groupsToCheckMap := make(map[int64]bool, len(groupsToCheck))
+	for _, id := range groupsToCheck {
+		groupsToCheckMap[id] = true
+	}
+
+	otherTeamsMembers := getOtherTeamsMembers(store, parentGroupID, groupsToCheck)
+	for _, id := range otherTeamsMembers {
+		results[groupIDToLoginMap[id]] = inAnotherTeam
+		delete(groupsToCheckMap, id)
+	}
+	newGroupsList := make([]int64, 0, len(groupsToCheckMap))
+	for _, id := range groupsToCheck {
+		if groupsToCheckMap[id] {
+			newGroupsList = append(newGroupsList, id)
+		}
+	}
+	return newGroupsList
+}
+
+func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groupsToCheck []int64) []int64 {
+	var parentGroupInfo struct {
+		Type       string `gorm:"column:sType"`
+		TeamItemID *int64 `gorm:"column:idTeamItem"`
+	}
+	const teamType = "Team"
+	service.MustNotBeError(store.Groups().ByID(parentGroupID).WithWriteLock().Select("sType, idTeamItem").
+		Take(&parentGroupInfo).Error())
+	if parentGroupInfo.Type != teamType || parentGroupInfo.TeamItemID == nil {
+		return nil
+	}
+	var otherTeamsMembers []int64
+	service.MustNotBeError(store.Groups().TeamsMembersForItem(groupsToCheck, *parentGroupInfo.TeamItemID).WithWriteLock().
+		Where("groups.ID != ?", parentGroupID).
+		Pluck("idGroupChild", &otherTeamsMembers).Error())
+	return otherTeamsMembers
 }

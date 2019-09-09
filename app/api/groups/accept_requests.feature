@@ -4,20 +4,22 @@ Feature: Accept group requests
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
       | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  | 3      |
     And the database has the following table 'groups':
-      | ID  |
-      | 11  |
-      | 13  |
-      | 14  |
-      | 21  |
-      | 22  |
-      | 31  |
-      | 111 |
-      | 121 |
-      | 122 |
-      | 123 |
-      | 131 |
-      | 141 |
-      | 151 |
+      | ID  | sType     | idTeamItem |
+      | 11  | Class     | null       |
+      | 13  | Team      | 1234       |
+      | 14  | Friends   | null       |
+      | 21  | UserSelf  | null       |
+      | 22  | UserAdmin | null       |
+      | 31  | UserSelf  | null       |
+      | 111 | UserSelf  | null       |
+      | 121 | UserSelf  | null       |
+      | 122 | UserSelf  | null       |
+      | 123 | UserSelf  | null       |
+      | 131 | UserSelf  | null       |
+      | 141 | UserSelf  | null       |
+      | 151 | UserSelf  | null       |
+      | 161 | UserSelf  | null       |
+      | 444 | Team      | 1234       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -36,6 +38,7 @@ Feature: Accept group requests
       | 122             | 122          | 1       |
       | 123             | 123          | 1       |
       | 151             | 151          | 1       |
+      | 161             | 161          | 1       |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate               |
       | 1  | 13            | 21           | invitationSent     | {{relativeTime("-170h")}} |
@@ -53,6 +56,7 @@ Feature: Accept group requests
       | 14 | 13            | 141          | requestSent        | null                      |
       | 15 | 22            | 13           | direct             | null                      |
       | 16 | 13            | 151          | joinedByCode       | null                      |
+      | 17 | 13            | 161          | requestSent        | null                      |
 
   Scenario: Accept requests
     Given I am the user with ID "1"
@@ -107,3 +111,40 @@ Feature: Accept group requests
       | 131             | 131          | 1       |
       | 141             | 141          | 1       |
       | 151             | 151          | 1       |
+      | 161             | 161          | 1       |
+      | 444             | 444          | 1       |
+
+  Scenario: Accept requests for a team while skipping members of other teams with the same idTeamItem
+    Given I am the user with ID "1"
+    And the database table 'groups_groups' has also the following rows:
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
+      | 18 | 444           | 31           | joinedByCode       | null                 |
+      | 19 | 444           | 141          | invitationAccepted | null                 |
+      | 20 | 444           | 161          | requestAccepted    | null                 |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 444             | 31           | 0       |
+      | 444             | 141          | 0       |
+      | 444             | 161          | 0       |
+      | 444             | 444          | 1       |
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22,151,161"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "31": "in_another_team",
+          "141": "in_another_team",
+          "11": "invalid",
+          "13": "invalid",
+          "21": "invalid",
+          "22": "invalid",
+          "151": "invalid",
+          "161": "in_another_team"
+        },
+        "message": "updated",
+        "success": true
+      }
+      """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged

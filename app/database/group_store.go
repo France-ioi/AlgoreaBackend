@@ -42,3 +42,16 @@ func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 		Order("groups.ID").
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
+
+// TeamsMembersForItem returns a composable query for getting all the actual team members for given teamItemID.
+// IDs of members' self groups can be fetched as `groups_groups.idGroupChild` while the teams go as `groups`.
+func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64) *DB {
+	return s.
+		Joins(`
+			JOIN groups_groups
+				ON groups_groups.idGroupParent = groups.ID AND
+					groups_groups.sType`+GroupRelationIsActiveCondition).
+		Where("groups.sType = 'Team'").
+		Where("groups_groups.idGroupChild IN (?)", groupsToCheck).
+		Where("groups.idTeamItem = ?", teamItemID)
+}

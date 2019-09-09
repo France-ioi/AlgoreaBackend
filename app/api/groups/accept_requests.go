@@ -19,6 +19,10 @@ import (
 //   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
 //
 //
+//   If the `parent_group_id` corresponds to a team with `idTeamItem` set, the service skips users
+//   who are members of other teams with the same `idTeamItem` (result = "in_another_team").
+//
+//
 //   The input `group_id` should have the input `parent_group_id` as a parent group and the
 //   `groups_groups.sType` should be "requestSent", otherwise the `group_id` gets skipped with
 //   `unchanged` (if `sType` = "requestAccepted") or `invalid` as the result.

@@ -7,16 +7,17 @@ Feature: Invite users
       | 11  | jane   | 102         | 112          | Jane        | Doe       |
       | 12  | Jane   | 103         | 113          | Jane        | Smith     |
     And the database has the following table 'groups':
-      | ID  |
-      | 13  |
-      | 21  |
-      | 22  |
-      | 101 |
-      | 102 |
-      | 103 |
-      | 111 |
-      | 112 |
-      | 113 |
+      | ID  | sType     | idTeamItem |
+      | 13  | Team      | 1234       |
+      | 21  | UserSelf  | null       |
+      | 22  | UserAdmin | null       |
+      | 101 | UserSelf  | null       |
+      | 102 | UserSelf  | null       |
+      | 103 | UserSelf  | null       |
+      | 111 | UserAdmin | null       |
+      | 112 | UserAdmin | null       |
+      | 113 | UserAdmin | null       |
+      | 444 | Team      | 1234       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 13              | 13           | 1       |
@@ -30,11 +31,14 @@ Feature: Invite users
       | 112             | 112          | 1       |
       | 113             | 113          | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 15 | 22            | 13           | direct             | null                 |
+      | idGroupParent | idGroupChild | sType              | sStatusDate          |
+      | 22            | 13           | direct             | null                 |
 
-  Scenario: Accept requests
+  Scenario: Successfully invite users
     Given I am the user with ID "1"
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 444             | 444          | 1       |
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -67,4 +71,40 @@ Feature: Invite users
       | 1           |
       | 2           |
       | 3           |
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Successfully invite users into a team skipping those who are members of other teams with the same idTeamItem
+    Given I am the user with ID "1"
+    And the database table 'groups_groups' has also the following rows:
+      | idGroupParent | idGroupChild | sType              | sStatusDate          |
+      | 444           | 21           | joinedByCode       | null                 |
+      | 444           | 101          | invitationAccepted | null                 |
+      | 444           | 102          | requestAccepted    | null                 |
+    And the database table 'groups_ancestors' has also the following rows:
+      | idGroupAncestor | idGroupChild | bIsSelf |
+      | 444             | 21           | 0       |
+      | 444             | 101          | 0       |
+      | 444             | 102          | 0       |
+      | 444             | 444          | 1       |
+    When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": ["john", "jane", "owner", "barack"]
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "john": "in_another_team",
+          "jane": "in_another_team",
+          "owner": "in_another_team",
+          "barack": "not_found"
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

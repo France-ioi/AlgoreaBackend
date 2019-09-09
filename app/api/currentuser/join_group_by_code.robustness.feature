@@ -5,14 +5,15 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 1  | john   | 21          | 22           |
       | 2  | nobody | null        | null         |
     And the database has the following table 'groups':
-      | ID | sType     | sCode      | sCodeEnd             | sCodeTimer | bFreeAccess |
-      | 11 | Team      | 3456789abc | 2017-04-29T06:38:38Z | null       | true        |
-      | 12 | Team      | abc3456789 | null                 | null       | true        |
-      | 14 | Team      | cba9876543 | null                 | null       | true        |
-      | 15 | Team      | 75987654ab | null                 | null       | false       |
-      | 16 | Class     | dcef123492 | null                 | null       | false       |
-      | 21 | UserSelf  | null       | null                 | null       | false       |
-      | 22 | UserAdmin | null       | null                 | null       | false       |
+      | ID | sType     | sCode      | sCodeEnd             | sCodeTimer | bFreeAccess | idTeamItem |
+      | 11 | Team      | 3456789abc | 2017-04-29T06:38:38Z | null       | true        | null       |
+      | 12 | Team      | abc3456789 | null                 | null       | true        | null       |
+      | 14 | Team      | cba9876543 | null                 | null       | true        | 1234       |
+      | 15 | Team      | 75987654ab | null                 | null       | false       | null       |
+      | 16 | Class     | dcef123492 | null                 | null       | false       | null       |
+      | 17 | Team      | 5987654abc | null                 | null       | true        | 1234       |
+      | 21 | UserSelf  | null       | null                 | null       | false       | null       |
+      | 22 | UserAdmin | null       | null                 | null       | false       | null       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -21,6 +22,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 14              | 21           | 0       |
       | 15              | 15           | 1       |
       | 16              | 16           | 1       |
+      | 17              | 17           | 1       |
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
@@ -111,5 +113,20 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       }
       """
     And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Join a team while being a member of another team with the same idTeamItem
+    Given I am the user with ID "1"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=5987654abc"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "You are already on a team for this item"
+    }
+    """
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

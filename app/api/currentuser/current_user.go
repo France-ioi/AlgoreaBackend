@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -68,20 +69,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		return service.InsufficientAccessRightsError
 	}
 
-	if action == createGroupRequestAction {
-		var found bool
-		found, err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
-		service.MustNotBeError(err)
-		if found {
-			action = createAcceptedGroupRequestAction
-		} else {
-			found, err = srv.Store.Groups().ByID(groupID).Where("bFreeAccess").HasRows()
-			service.MustNotBeError(err)
-			if !found {
-				return service.InsufficientAccessRightsError
-			}
-		}
-	} else if action == leaveGroupAction {
+	if action == leaveGroupAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).
 			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
@@ -91,18 +79,83 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		results, err = store.GroupGroups().Transition(
-			map[userGroupRelationAction]database.GroupGroupTransitionAction{
-				acceptInvitationAction:           database.UserAcceptsInvitation,
-				rejectInvitationAction:           database.UserRefusesInvitation,
-				createGroupRequestAction:         database.UserCreatesRequest,
-				createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
-				leaveGroupAction:                 database.UserLeavesGroup,
-			}[action], groupID, []int64{*user.SelfGroupID}, user.ID)
-		return err
-	}))
+	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		apiError, results = performUserGroupRelationAction(action, store, user, groupID)
+		if apiError != service.NoError {
+			return apiError.Error // rollback
+		}
+		return nil
+	})
+
+	if apiError != service.NoError {
+		return apiError
+	}
+	service.MustNotBeError(err)
 
 	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], action)
+}
+
+func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,
+	groupID int64) (service.APIError, database.GroupGroupTransitionResults) {
+	var err error
+	apiError := service.NoError
+
+	if action == createGroupRequestAction {
+		var found bool
+		found, err = store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
+		service.MustNotBeError(err)
+		if found {
+			action = createAcceptedGroupRequestAction
+		}
+	}
+	if map[userGroupRelationAction]bool{
+		createGroupRequestAction: true, acceptInvitationAction: true, createAcceptedGroupRequestAction: true,
+	}[action] {
+		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action == createGroupRequestAction)
+		if apiError != service.NoError {
+			return apiError, nil
+		}
+	}
+	var results database.GroupGroupTransitionResults
+	results, err = store.GroupGroups().Transition(
+		map[userGroupRelationAction]database.GroupGroupTransitionAction{
+			acceptInvitationAction:           database.UserAcceptsInvitation,
+			rejectInvitationAction:           database.UserRefusesInvitation,
+			createGroupRequestAction:         database.UserCreatesRequest,
+			createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
+			leaveGroupAction:                 database.UserLeavesGroup,
+		}[action], groupID, []int64{*user.SelfGroupID}, user.ID)
+	service.MustNotBeError(err)
+	return apiError, results
+}
+
+func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
+	groupID int64, requireFreeAccess bool) service.APIError {
+	var parentGroupInfo struct {
+		Type       string `gorm:"column:sType"`
+		TeamItemID *int64 `gorm:"column:idTeamItem"`
+	}
+	query := store.Groups().ByID(groupID).WithWriteLock().Select("sType, idTeamItem")
+	if requireFreeAccess {
+		query = query.Where("bFreeAccess")
+	}
+	err := query.Take(&parentGroupInfo).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	if parentGroupInfo.Type == "Team" && parentGroupInfo.TeamItemID != nil {
+		var found bool
+		found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *parentGroupInfo.TeamItemID).
+			WithWriteLock().
+			Where("groups.ID != ?", groupID).HasRows()
+		service.MustNotBeError(err)
+		if found {
+			return service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))
+		}
+	}
+	return service.NoError
 }
