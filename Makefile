@@ -17,6 +17,8 @@ endif
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GODOG=$(BIN_DIR)/godog
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
+MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
+SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 
 # extract AWS_PROFILE if given
 ifdef AWS_PROFILE
@@ -31,6 +33,19 @@ else
 	Q :=
 	vecho = @echo
 endif
+
+# Check that given variables are set and all have non-empty values,
+# die with an error otherwise.
+#
+# Params:
+#   1. Variable name(s) to test.
+#   2. (optional) Error message to print.
+check_defined = \
+    $(strip $(foreach 1,$1, \
+        $(call __check_defined,$1,$(strip $(value 2)))))
+__check_defined = \
+    $(if $(value $1),, \
+      $(error Undefined $1$(if $2, ($2))))
 
 all: build
 build: $(BIN_PATH)
@@ -57,6 +72,12 @@ test-bdd: $(GODOG)
 lint: $(GOLANGCILINT)
 	$(GOLANGCILINT) run --deadline 10m0s
 
+dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
+	$(call check_defined, DBNAME)
+	$(call check_defined, DBHOST)
+	$(call check_defined, DBUSER)
+	$(call check_defined, DBPASS)
+	java -jar $(SCHEMASPY) -t mysql -dp $(MYSQL_CONNECTOR_JAVA) -db $(DBNAME) -host $(DBHOST) -port 3306 -u $(DBUSER) -p $(DBPASS) -o db/doc -s $(DBNAME)
 clean:
 	$(GOCLEAN)
 	$(GOCLEAN) -testcache
@@ -76,6 +97,12 @@ $(GODOG):
 	$(GOGET) -u github.com/DATA-DOG/godog/cmd/godog
 $(GOLANGCILINT):
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.16.0
+$(MYSQL_CONNECTOR_JAVA):
+	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
+	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)
+	rm -rf mysql-connector-java-8.0.16
+$(SCHEMASPY):
+	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.0.0/schemaspy-6.0.0.jar
 
 .FORCE: # force the rule using it to always re-run
-.PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate gen-keys
+.PHONY: all build test test-unit test-bdd lint clean lambda-build lambda-archive lambda-upload db-restore db-migrate gen-keys dbdoc

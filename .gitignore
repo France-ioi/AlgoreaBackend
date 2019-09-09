@@ -30,3 +30,6 @@ conf/config.yaml
 swagger.yaml
 swagger.yml
 swagger.json
+
+# Generated doc
+/db/doc
