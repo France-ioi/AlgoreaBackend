@@ -119,7 +119,7 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 
 	results := make(map[string]string, len(requestData.Logins))
 	for _, login := range requestData.Logins {
-		results[login] = "not_found"
+		results[login] = notFound
 	}
 
 	var groupsToInviteRows []struct {

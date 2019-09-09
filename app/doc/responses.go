@@ -147,6 +147,27 @@ type updatedGroupRelationsResponse struct {
 	}
 }
 
+// enum: [invalid, success, unchanged, not_found]
+type memberRemovalResult string
+
+// OK. Success response with the per-user deletion statuses
+// swagger:response
+type deletedMembersResponse struct {
+	// in:body
+	Body struct {
+		// "deleted"
+		// enum: deleted
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// `user_id` -> `result`
+		// required: true
+		Data map[string]memberRemovalResult `json:"data"`
+	}
+}
+
 // enum: [cycle, invalid, success, unchanged, not_found]
 type loginTransitionResult string
 
