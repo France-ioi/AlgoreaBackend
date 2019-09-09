@@ -13,7 +13,7 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
-// for the current user by the team's main item
+// for the given user by the team's main item
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
@@ -27,7 +27,7 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 }
 
 // TeamGroupForItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
-// for the current user by one of team's items
+// for the given user by one of team's items
 func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
