@@ -112,6 +112,64 @@ jobs:
           from: swagger.yaml
           to: 's3://franceioi-algorea/spec/swagger.yaml'
           arguments: '--acl public-read'
+  dbdoc-gen:
+    docker:
+      - image: circleci/golang:1.11-browsers
+      - image: circleci/mysql:5.6
+        environment:
+          MYSQL_USER: algorea
+          MYSQL_PASSWORD: dummy_password
+          MYSQL_DATABASE: ci_db
+          MYSQL_ROOT_PASSWORD: root
+    environment:
+      ALGOREA_ENV: test
+      ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
+      ALGOREA_DATABASE.CONNECTION.USER: algorea
+      ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
+      ALGOREA_DATABASE.CONNECTION.DBNAME: ci_db
+      DBUSER: algorea
+      DBPASS: dummy_password
+      DBNAME: ci_db
+      DBHOST: 127.0.0.1
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_cache: *CACHEKEYMOD
+      - run: sudo apt-get install default-mysql-client             # required for db-restore
+      - run: cp conf/config.sample.yaml conf/config.yaml           # as env var are not loaded for entries not in config file (bug)
+      - run: cp conf/config.test.sample.yaml conf/config.test.yaml # the dbname is specified in conf/config.test.yaml
+      - run: make gen-keys
+      - run:
+          name: Wait for MySQL
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
+      - run:
+          name: Seed database
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
+          command: |
+            make db-restore
+            make db-migrate
+      - run: sudo apt-get install graphviz # dependency for schemaspy
+      - run: make dbdoc
+      - store_test_results: &TESTPATH
+          path: db/doc
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - db/doc
+  dbdoc-deploy:
+    docker:
+      - image: 'circleci/python:2.7'
+    environment:
+      AWS_REGION: eu-west-3
+    steps:
+      - attach_workspace:
+          at: ./
+      - aws-s3/copy:
+          from: db/doc
+          to: 's3://franceioi-algorea/dbdoc/'
+          arguments: '--acl public-read --recursive'
 
 workflows:
   version: 2
@@ -131,3 +189,15 @@ workflows:
           filters:
             branches:
               only: master
+      - dbdoc-gen:
+          filters:
+            branches:
+              only: master
+          requires:
+          - deps
+      - dbdoc-deploy:
+          filters:
+            branches:
+              only: master
+          requires:
+          - dbdoc-gen
