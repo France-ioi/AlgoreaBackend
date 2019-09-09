@@ -40,6 +40,9 @@ import (
 //     * If `groups_groups.sType` is `requestAccepted` already, the "unchanged" (201) response is returned.
 //
 //     On success, the service propagates group ancestors in this case.
+//
+//
+//   _Warning:_ The service doesn't check if the user has access rights on `idTeamItem` when the group is a team.
 // parameters:
 // - name: group_id
 //   in: path

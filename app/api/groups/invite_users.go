@@ -63,6 +63,10 @@ const maxAllowedLoginsToInvite = 100
 //
 //
 //   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
+//
+//
+//   _Warning:_ The service doesn't check if the authenticated user or listed users have access rights
+//   on `idTeamItem` when the `parent_group_id` represents a team.
 // consumes:
 // - application/json
 // parameters:
