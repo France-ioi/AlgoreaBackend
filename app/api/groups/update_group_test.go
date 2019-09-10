@@ -22,18 +22,6 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		json    string
 		wantErr bool
 	}{
-		{"sType=Class", `{"type":"Class"}`, false},
-		{"sType=Team", `{"type":"Team"}`, false},
-		{"sType=Club", `{"type":"Club"}`, false},
-		{"sType=Friends", `{"type":"Friends"}`, false},
-		{"sType=Other", `{"type":"Other"}`, false},
-
-		{"sType=Base", `{"type":"Base"}`, true},
-		{"sType=UserSelf", `{"type":"UserSelf"}`, true},
-		{"sType=UserAdmin", `{"type":"UserAdmin"}`, true},
-		{"sType=unknown", `{"type":"unknown"}`, true},
-		{"sType=", `{"type":""}`, true},
-
 		{"sCodeTimer=99:59:59", `{"code_timer":"99:59:59"}`, false},
 		{"sCodeTimer=00:00:00", `{"code_timer":"00:00:00"}`, false},
 
