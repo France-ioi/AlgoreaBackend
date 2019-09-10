@@ -22,6 +22,9 @@ import (
 //     Otherwise the unprocessable entity error is returned.
 //
 //   * If `groups_groups.sType` is `invitationAccepted` already, the "unchanged" (200) response is returned.
+//
+//
+//   _Warning:_ The service doesn't check if the user has access rights on `idTeamItem` when the group is a team.
 // parameters:
 // - name: group_id
 //   in: path

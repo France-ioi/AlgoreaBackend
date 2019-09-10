@@ -31,6 +31,10 @@ import (
 //   The action should not create cycles in the groups relations graph, otherwise
 //   the `group_id` gets skipped with `cycle` as the result.
 //   The response status code on success (200) doesn't depend on per-group results.
+//
+//
+//   _Warning:_ The service doesn't check if the authenticated user or requesting users have access rights
+//   on `idTeamItem` when the `parent_group_id` represents a team.
 // parameters:
 // - name: parent_group_id
 //   in: path

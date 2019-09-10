@@ -29,6 +29,9 @@ import (
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s ID as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`,
 //     the unprocessable entity error is returned.
+//
+//
+//   _Warning:_ The service doesn't check if the user has access rights on `idTeamItem` of the team.
 // parameters:
 // - name: code
 //   in: query
