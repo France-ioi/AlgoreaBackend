@@ -72,7 +72,8 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
 	// the user should have at least partial access to the item
-	itemsQuery := s.Items().Visible(user).Where("partialAccess > 0 OR fullAccess > 0")
+	itemsQuery := s.Items().Visible(user).Where("items.ID = ?", itemID).
+		Where("partialAccess > 0 OR fullAccess > 0")
 
 	return s.
 		// the user should have at least partial access to the users_answers.idItem
