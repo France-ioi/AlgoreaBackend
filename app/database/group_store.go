@@ -12,8 +12,10 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 		Where("groups_ancestors.idGroupAncestor=?", user.OwnedGroupID)
 }
 
-// TeamGroupForTeamItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
-// for the current user by the team's main item
+// TeamGroupForTeamItemAndUser returns a composable query for getting a team that
+//  1) the given user is a member of
+//  2) has `idTeamItem` equal to the given `itemID`.
+// If more than one team is found (which should be impossible), the one with the smallest `groups.ID` is returned.
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
@@ -26,8 +28,10 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
 
-// TeamGroupForItemAndUser returns a composable query for getting a team (the first one in the order of`groups.ID`)
-// for the current user by one of team's items
+// TeamGroupForItemAndUser returns a composable query for getting a team that
+//  1) the given user is a member of
+//  2) has `idTeamItem` equal to the given `itemID` or one of its ancestors.
+// If more than one team is found, the one with the smallest `groups.ID` is returned.
 func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
@@ -40,7 +44,7 @@ func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 		Where("items_ancestors.idItemChild = ? OR groups.idTeamItem = ?", itemID, itemID).
 		Group("groups.ID").
 		Order("groups.ID").
-		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
+		Limit(1)
 }
 
 // TeamsMembersForItem returns a composable query for getting all the actual team members for given teamItemID.
