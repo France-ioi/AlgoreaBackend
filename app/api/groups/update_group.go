@@ -17,8 +17,6 @@ import (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	// enum: Class,Team,Club,Friends,Other
-	Type  string `json:"type" sql:"column:sType" validate:"oneof=Class Team Club Friends Other"`
 	Name  string `json:"name" sql:"column:sName"`
 	Grade int32  `json:"grade" sql:"column:iGrade"`
 	// Nullable

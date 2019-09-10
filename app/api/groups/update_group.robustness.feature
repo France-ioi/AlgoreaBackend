@@ -41,7 +41,7 @@ Feature: Update a group (groupEdit) - robustness
     Given I am the user with ID "2"
     When I send a PUT request to "/groups/15" with the following body:
     """
-    {"type":"Club"}
+    {"name":"Club"}
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -53,7 +53,6 @@ Feature: Update a group (groupEdit) - robustness
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "type": "Root",
       "free_access": 15,
       "name": 123,
       "grade": "grade",
@@ -79,8 +78,7 @@ Feature: Update a group (groupEdit) - robustness
         "opened": ["expected type 'bool', got unconvertible type 'string'"],
         "code_end": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
         "code_timer": ["expected type 'string', got unconvertible type 'float64'"],
-        "redirect_path": ["invalid redirect path"],
-        "type": ["type must be one of [Class Team Club Friends Other]"]
+        "redirect_path": ["invalid redirect path"]
       },
       "message": "Bad Request",
       "success": false
