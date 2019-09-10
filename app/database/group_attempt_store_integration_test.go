@@ -293,8 +293,11 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "okay (full access)",
-			fixture:     `groups_attempts: [{ID: 100, idGroup: 111, idItem: 50},{ID: 101, idGroup: 111, idItem: 50}]`,
+			name: "okay (full access)",
+			fixture: `groups_attempts:
+			                - {ID: 100, idGroup: 111, idItem: 50}
+			                - {ID: 101, idGroup: 111, idItem: 50}
+			                - {ID: 102, idGroup: 111, idItem: 70}`,
 			attemptID:   100,
 			userID:      11,
 			expectedIDs: []int64{100, 101},
@@ -452,11 +455,15 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 					- {ID: 10, bHasAttempts: 0}
 					- {ID: 50, bHasAttempts: 0}
 					- {ID: 60, bHasAttempts: 1}
+					- {ID: 70, bHasAttempts: 0}
 				groups_items:
 					- {idGroup: 101, idItem: 50, sCachedPartialAccessDate: "2017-05-29T06:38:38Z"}
 					- {idGroup: 101, idItem: 60, sCachedPartialAccessDate: "2017-05-29T06:38:38Z"}
+					- {idGroup: 101, idItem: 70, sCachedPartialAccessDate: "2017-05-29T06:38:38Z"}
 					- {idGroup: 111, idItem: 50, sCachedFullAccessDate: "2017-05-29T06:38:38Z"}
-					- {idGroup: 121, idItem: 50, sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}`,
+					- {idGroup: 111, idItem: 70, sCachedFullAccessDate: "2017-05-29T06:38:38Z"}
+					- {idGroup: 121, idItem: 50, sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}
+					- {idGroup: 121, idItem: 70, sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
