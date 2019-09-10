@@ -26,7 +26,6 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "type": "Team",
       "free_access": false,
       "name": "Team B",
       "grade": 10,
@@ -42,7 +41,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription   | sDateCreated         | sType     | sRedirectPath | bOpened | bFreeAccess | sCode      | sCodeTimer | sCodeEnd             | bOpenContest |
-      | 13 | Team B  | 10     | Team B is here | 2019-03-06T09:26:40Z | Team      | 1234/5678     | false   | false       | ybabbxnlyo | 99:59:59   | 2019-12-31T23:59:59Z | false        |
+      | 13 | Team B  | 10     | Team B is here | 2019-03-06T09:26:40Z | Class     | 1234/5678     | false   | false       | ybabbxnlyo | 99:59:59   | 2019-12-31T23:59:59Z | false        |
     And the table "groups_groups" should be:
       | ID | idGroupParent | idGroupChild | sType              |
       | 75 | 13            | 21           | invitationSent     |
@@ -56,7 +55,6 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "type": "Club",
       "free_access": false,
       "name": "Club B",
       "description": null,
@@ -72,14 +70,13 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription | sDateCreated         | sType | sRedirectPath | bOpened | bFreeAccess | sCode      | sCodeTimer | sCodeEnd | bOpenContest |
-      | 13 | Club B  | 0      | null         | 2019-03-06T09:26:40Z | Club  | null          | false   | false       | ybabbxnlyo | null       | null     | false        |
+      | 13 | Club B  | 0      | null         | 2019-03-06T09:26:40Z | Class | null          | false   | false       | ybabbxnlyo | null       | null     | false        |
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is still true)
     Given I am the user with ID "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "type": "Club",
       "free_access": true,
       "name": "Club B",
       "description": null,
@@ -95,7 +92,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sRedirectPath | bOpened | bFreeAccess | sCode      | sCodeTimer | sCodeEnd | bOpenContest |
-      | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Club  | null          | false   | true        | ybabbxnlyo | null       | null     | false        |
+      | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Class | null          | false   | true        | ybabbxnlyo | null       | null     | false        |
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is not changed)
@@ -103,7 +100,6 @@ Feature: Update a group (groupEdit)
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
-      "type": "Club",
       "name": "Club B",
       "description": null,
       "opened": false,
@@ -118,7 +114,7 @@ Feature: Update a group (groupEdit)
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
       | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sRedirectPath | bOpened | bFreeAccess | sCode      | sCodeTimer | sCodeEnd | bOpenContest |
-      | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Club  | null          | false   | true        | ybabbxnlyo | null       | null     | false        |
+      | 13 | Club B  | 0      | null            | 2019-03-06T09:26:40Z | Class | null          | false   | true        | ybabbxnlyo | null       | null     | false        |
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access changes from false to true)
