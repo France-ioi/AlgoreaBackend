@@ -19,6 +19,9 @@ import (
 //
 //     * `groups.bFreeAccess` should be 1, otherwise the 'forbidden' response is returned.
 //
+//     * If the group is a team with `idTeamItem` set and the user is already on a team with the same `idTeamItem`,
+//       the unprocessable entity error is returned.
+//
 //     * If there is already a row in `groups_groups` with
 //       `sType` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'joinedByCode'/'direct',
 //       the unprocessable entity error is returned.

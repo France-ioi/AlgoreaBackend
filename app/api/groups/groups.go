@@ -98,6 +98,8 @@ const (
 	rejectRequestsAction acceptOrRejectRequestsAction = "reject"
 )
 
+const inAnotherTeam = "in_another_team"
+
 func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
 	action acceptOrRejectRequestsAction) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
@@ -116,8 +118,13 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 	}
 
 	var results database.GroupGroupTransitionResults
+	var filteredIDs []int64
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
+			if action == acceptRequestsAction {
+				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
+			}
+
 			results, err = store.GroupGroups().Transition(
 				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
 					acceptRequestsAction: database.AdminAcceptsRequest,
@@ -129,6 +136,9 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 
 	service.MustNotBeError(err)
 
+	for _, id := range filteredIDs {
+		results[id] = inAnotherTeam
+	}
 	renderGroupGroupTransitionResults(w, r, results)
 	return service.NoError
 }
@@ -140,4 +150,24 @@ type descendantParent struct {
 	Name string `sql:"column:sName" json:"name"`
 
 	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
+}
+
+func filterOtherTeamsMembersOut(
+	store *database.DataStore, parentGroupID int64, groups []int64) (filteredGroupsList, excludedGroups []int64) {
+	groupsToInviteMap := make(map[int64]bool, len(groups))
+	for _, id := range groups {
+		groupsToInviteMap[id] = true
+	}
+
+	otherTeamsMembers := getOtherTeamsMembers(store, parentGroupID, groups)
+	for _, id := range otherTeamsMembers {
+		delete(groupsToInviteMap, id)
+	}
+	newGroupsToInvite := make([]int64, 0, len(groupsToInviteMap))
+	for _, id := range groups {
+		if groupsToInviteMap[id] {
+			newGroupsToInvite = append(newGroupsToInvite, id)
+		}
+	}
+	return newGroupsToInvite, otherTeamsMembers
 }

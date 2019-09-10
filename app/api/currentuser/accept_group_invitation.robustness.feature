@@ -5,12 +5,13 @@ Feature: User accepts an invitation to join a group - robustness
       | 1  | 21          | 22           | john   |
       | 2  | null        | null         | guest  |
     And the database has the following table 'groups':
-      | ID |
-      | 11 |
-      | 13 |
-      | 14 |
-      | 21 |
-      | 22 |
+      | ID | sType     | idTeamItem |
+      | 11 | Class     | null       |
+      | 13 | Friends   | null       |
+      | 14 | Team      | 1234       |
+      | 15 | Team      | 1234       |
+      | 21 | UserSelf  | null       |
+      | 22 | UserAdmin | null       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -26,7 +27,8 @@ Feature: User accepts an invitation to join a group - robustness
       | 1  | 11            | 21           | requestSent        | 2017-04-29T06:38:38Z |
       | 2  | 13            | 21           | invitationSent     | 2017-03-29T06:38:38Z |
       | 7  | 14            | 21           | invitationAccepted | 2017-02-21T06:38:38Z |
-      | 8  | 21            | 13           | direct             | 2017-01-29T06:38:38Z |
+      | 8  | 15            | 21           | invitationSent     | 2017-03-29T06:38:38Z |
+      | 10 | 21            | 13           | direct             | 2017-01-29T06:38:38Z |
 
   Scenario: User tries to create a cycle in the group relations graph
     Given I am the user with ID "1"
@@ -53,6 +55,21 @@ Feature: User accepts an invitation to join a group - robustness
       "success": false,
       "message": "Not Found",
       "error_text": "No such relation"
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: User tries to accept an invitation to join a team while being a member of another team with the same idTeamItem
+    Given I am the user with ID "1"
+    When I send a POST request to "/current-user/group-invitations/15/accept"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "You are already on a team for this item"
     }
     """
     And the table "groups_groups" should stay unchanged

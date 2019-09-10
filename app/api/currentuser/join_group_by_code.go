@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
@@ -21,6 +22,9 @@ import (
 //
 //   * If there is no team with `bFreeAccess` = 1, `sCodeEnd` > NOW() (or NULL), and `sCode` = `code`,
 //     the forbidden error is returned.
+//
+//   * If the team has `idTeamItem` set and the user is already on a team with the same `idTeamItem`,
+//     the unprocessable entity error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s ID as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`,
@@ -60,22 +64,35 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
-			ID              int64 `gorm:"column:ID"`
-			CodeEndIsNull   bool  `gorm:"column:bCodeEndIsNull"`
-			CodeTimerIsNull bool  `gorm:"column:bCodeTimerIsNull"`
+			ID              int64  `gorm:"column:ID"`
+			TeamItemID      *int64 `gorm:"column:idTeamItem"`
+			CodeEndIsNull   bool   `gorm:"column:bCodeEndIsNull"`
+			CodeTimerIsNull bool   `gorm:"column:bCodeTimerIsNull"`
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("sType = 'Team'").Where("bFreeAccess").
 			Where("sCode LIKE ?", code).
 			Where("sCodeEnd IS NULL OR NOW() < sCodeEnd").
-			Select("ID, sCodeEnd IS NULL AS bCodeEndIsNull, sCodeTimer IS NULL AS bCodeTimerIsNull").
+			Select("ID, idTeamItem, sCodeEnd IS NULL AS bCodeEndIsNull, sCodeTimer IS NULL AS bCodeTimerIsNull").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
 			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired code", user.ID)
 			apiError = service.InsufficientAccessRightsError
-			return errInTransaction
+			return apiError.Error // rollback
 		}
 		service.MustNotBeError(errInTransaction)
+
+		if groupInfo.TeamItemID != nil {
+			var found bool
+			found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *groupInfo.TeamItemID).
+				WithWriteLock().
+				Where("groups.ID != ?", groupInfo.ID).HasRows()
+			service.MustNotBeError(err)
+			if found {
+				apiError = service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))
+				return apiError.Error // rollback
+			}
+		}
 
 		if groupInfo.CodeEndIsNull && !groupInfo.CodeTimerIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).

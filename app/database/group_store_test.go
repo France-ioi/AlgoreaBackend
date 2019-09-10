@@ -66,3 +66,19 @@ func TestGroupStore_TeamGroupForItemAndUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGroupStore_TeamsMembersForItem(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` JOIN groups_groups "+
+		"ON groups_groups.idGroupParent = groups.ID AND groups_groups.sType "+GroupRelationIsActiveCondition+
+		" WHERE (groups.sType = 'Team') AND (groups_groups.idGroupChild IN (?,?,?)) AND (groups.idTeamItem = ?)")).
+		WithArgs(1, 2, 3, 1234).
+		WillReturnRows(mock.NewRows([]string{"ID"}))
+
+	var result []interface{}
+	err := NewDataStore(db).Groups().TeamsMembersForItem([]int64{1, 2, 3}, 1234).Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
