@@ -33,6 +33,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/team-descendants", service.AppHandler(srv.getTeamDescendants).ServeHTTP)
 	router.Get("/groups/{group_id}/user-descendants", service.AppHandler(srv.getUserDescendants).ServeHTTP)
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
+	router.Delete("/groups/{group_id}/members", service.AppHandler(srv.removeMembers).ServeHTTP)
 
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
@@ -99,6 +100,7 @@ const (
 )
 
 const inAnotherTeam = "in_another_team"
+const notFound = "not_found"
 
 func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
 	action acceptOrRejectRequestsAction) service.APIError {

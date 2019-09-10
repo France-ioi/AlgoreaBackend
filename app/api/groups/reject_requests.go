@@ -18,7 +18,7 @@ import (
 //   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   The input `group_id` should have the input `parent_group_id` as a parent group and the
+//   The input `group_ids` should have the input `parent_group_id` as a parent group and the
 //   `groups_groups.sType` should be "requestSent", otherwise the `group_id` gets skipped with
 //   `unchanged` (if `sType` = "requestRefused") or `invalid` as the result.
 //   The response status code on success (200) doesn't depend on per-group results.
