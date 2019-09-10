@@ -127,6 +127,24 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
+  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (reverse order, start from the second row)
+    Given I am the user with ID "1"
+    When I send a GET request to "/items/200/attempts?sort=-order&from.order=1&from.id=150"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "151",
+        "order": 0,
+        "score": 99,
+        "start_date": "2018-05-29T06:38:38Z",
+        "user_creator": null,
+        "validated": false
+      }
+    ]
+    """
+
   Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1, sType='requestAccepted')
     Given I am the user with ID "2"
     When I send a GET request to "/items/210/attempts"

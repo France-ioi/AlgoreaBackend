@@ -23,6 +23,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"order": {ColumnName: "groups_attempts.iOrder", FieldType: "int64"},
+		"id":    {ColumnName: "groups_attempts.ID", FieldType: "int64"},
 	}, "order")
 	if apiError != service.NoError {
 		return apiError
