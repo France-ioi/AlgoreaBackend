@@ -42,7 +42,24 @@ import (
 //   required: true
 // responses:
 //   "200":
-//     "$ref": "#/responses/deletedMembersResponse"
+//     description: OK. Success response with the per-user deletion statuses
+//     schema:
+//       type: object
+//       required: [message, success, data]
+//       properties:
+//         message:
+//           type: string
+//           description: success
+//           enum: [success]
+//         success:
+//           type: string
+//           description: "true"
+//         data:
+//           description: "`user_id` -> `result`"
+//           type: object
+//           additionalProperties:
+//             type: string
+//             enum: [invalid, success, unchanged, not_found]
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
