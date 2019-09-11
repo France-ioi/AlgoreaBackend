@@ -26,8 +26,8 @@ type groupUpdateInput struct {
 	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
 	// Duration after the first use of the code when it will expire
 	// Nullable
-	// pattern: ^\d{1,2}:\d{1,2}:\d{1,2}$
-	// example: 79:56:22
+	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+	// example: 838:59:59
 	CodeTimer *string `json:"code_timer" sql:"column:sCodeTimer" validate:"omitempty,duration"`
 	// Nullable
 	CodeEnd *time.Time `json:"code_end" sql:"column:sCodeEnd"`
