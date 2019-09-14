@@ -1,13 +1,13 @@
--- MySQL dump 10.13  Distrib 5.7.25, for osx10.12 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.13, for osx10.12 (x86_64)
 --
 -- Host: 127.0.0.1    Database: algorea_db
 -- ------------------------------------------------------
--- Server version	5.6.43
+-- Server version	8.0.17
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8 */;
+ SET NAMES utf8mb4 ;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `badges`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `badges` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idUser` bigint(20) NOT NULL,
@@ -46,13 +46,13 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `error_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `error_log` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `url` text COLLATE utf8_unicode_ci NOT NULL,
-  `browser` text COLLATE utf8_unicode_ci NOT NULL,
-  `details` text COLLATE utf8_unicode_ci NOT NULL,
+  `url` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `browser` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `details` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -72,7 +72,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `filters`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `filters` (
   `ID` bigint(20) NOT NULL,
   `idUser` bigint(20) NOT NULL,
@@ -173,7 +173,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `gorp_migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `gorp_migrations` (
   `id` varchar(255) NOT NULL,
   `applied_at` datetime DEFAULT NULL,
@@ -196,7 +196,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups` (
   `ID` bigint(20) NOT NULL,
   `sName` varchar(200) NOT NULL DEFAULT '',
@@ -315,7 +315,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_ancestors`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_ancestors` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idGroupAncestor` bigint(20) NOT NULL,
@@ -404,7 +404,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_attempts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_attempts` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idGroup` bigint(20) NOT NULL,
@@ -527,7 +527,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_groups` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idGroupParent` bigint(20) NOT NULL,
@@ -621,7 +621,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_items` (
   `ID` bigint(20) NOT NULL,
   `idGroup` bigint(20) NOT NULL,
@@ -746,7 +746,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_items_propagate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_items_propagate` (
   `ID` bigint(20) NOT NULL,
   `sPropagateAccess` enum('self','children','done') NOT NULL,
@@ -770,11 +770,11 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `groups_login_prefixes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_login_prefixes` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idGroup` bigint(20) NOT NULL,
-  `prefix` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `prefix` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `iVersion` bigint(20) NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `prefix` (`prefix`),
@@ -857,7 +857,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `groups_propagate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `groups_propagate` (
   `ID` bigint(20) NOT NULL,
   `sAncestorsComputationState` enum('todo','done','processing','') NOT NULL,
@@ -881,7 +881,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_filters`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_filters` (
   `history_ID` int(11) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -928,7 +928,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -977,7 +977,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups_ancestors`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups_ancestors` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1013,7 +1013,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups_attempts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups_attempts` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1079,7 +1079,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups_groups` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1116,7 +1116,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1169,12 +1169,12 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_groups_login_prefixes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_groups_login_prefixes` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
   `idGroup` bigint(20) NOT NULL,
-  `prefix` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `prefix` varchar(100) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `iVersion` bigint(20) NOT NULL,
   `iNextVersion` bigint(20) DEFAULT NULL,
   `bDeleted` tinyint(4) NOT NULL DEFAULT '0',
@@ -1197,7 +1197,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1266,7 +1266,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_items_ancestors`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_items_ancestors` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1301,7 +1301,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_items_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_items_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1341,7 +1341,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_items_strings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_items_strings` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1380,7 +1380,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_languages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_languages` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1411,7 +1411,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_messages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_messages` (
   `history_ID` int(11) NOT NULL AUTO_INCREMENT,
   `ID` int(11) NOT NULL,
@@ -1452,7 +1452,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_threads`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_threads` (
   `history_ID` int(11) NOT NULL AUTO_INCREMENT,
   `ID` int(11) NOT NULL,
@@ -1489,7 +1489,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_users` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1573,7 +1573,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_users_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_users_items` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1642,7 +1642,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `history_users_threads`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_users_threads` (
   `history_ID` int(11) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
@@ -1680,7 +1680,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `items` (
   `ID` bigint(20) NOT NULL,
   `sUrl` varchar(200) DEFAULT NULL,
@@ -1816,7 +1816,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `items_ancestors`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `items_ancestors` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idItemAncestor` bigint(20) NOT NULL,
@@ -1904,7 +1904,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `items_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `items_items` (
   `ID` bigint(20) NOT NULL,
   `idItemParent` bigint(20) NOT NULL,
@@ -2014,7 +2014,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `items_propagate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `items_propagate` (
   `ID` bigint(20) NOT NULL,
   `sAncestorsComputationState` enum('todo','done','processing','') NOT NULL,
@@ -2038,7 +2038,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `items_strings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `items_strings` (
   `ID` bigint(20) NOT NULL,
   `idItem` bigint(20) NOT NULL,
@@ -2133,7 +2133,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `languages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `languages` (
   `ID` bigint(20) NOT NULL,
   `sName` varchar(100) NOT NULL DEFAULT '',
@@ -2220,7 +2220,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `messages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `messages` (
   `ID` bigint(20) NOT NULL,
   `idThread` bigint(20) DEFAULT NULL,
@@ -2314,7 +2314,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `platforms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `platforms` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `sName` varchar(50) NOT NULL DEFAULT '',
@@ -2342,7 +2342,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `schema_revision`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `schema_revision` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `executed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -2367,7 +2367,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `synchro_version`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `synchro_version` (
   `ID` tinyint(1) NOT NULL,
   `iVersion` int(11) NOT NULL,
@@ -2394,7 +2394,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `threads`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `threads` (
   `ID` bigint(20) NOT NULL,
   `sType` enum('Help','Bug','General') NOT NULL,
@@ -2485,7 +2485,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `users` (
   `ID` bigint(20) NOT NULL,
   `loginID` bigint(20) DEFAULT NULL COMMENT 'the ''userId'' returned by login platform',
@@ -2627,7 +2627,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `users_answers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `users_answers` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idUser` bigint(20) NOT NULL,
@@ -2665,7 +2665,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `users_items`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `users_items` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
   `idUser` bigint(20) NOT NULL,
@@ -2790,7 +2790,7 @@ DELIMITER ;
 
 DROP TABLE IF EXISTS `users_threads`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+ SET character_set_client = utf8mb4 ;
 CREATE TABLE `users_threads` (
   `ID` bigint(20) NOT NULL,
   `idUser` bigint(20) NOT NULL,
@@ -2875,6 +2875,14 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Dumping events for database 'algorea_db'
+--
+
+--
+-- Dumping routines for database 'algorea_db'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -2885,4 +2893,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2019-03-12 12:32:21
+-- Dump completed on 2019-09-11 19:47:24
