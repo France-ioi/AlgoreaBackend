@@ -28,7 +28,7 @@ Feature: Search for groups available to the current user
       | 9  | 8             | 21           | left               | 2017-09-29T06:38:38Z |
       | 10 | 9             | 21           | direct             | 2017-10-29T06:38:38Z |
       | 11 | 10            | 21           | joinedByCode       | 2017-10-29 06:38:38  |
-      | 11 | 1             | 22           | direct             | 2017-11-29T06:38:38Z |
+      | 12 | 1             | 22           | direct             | 2017-11-29T06:38:38Z |
 
   Scenario: Search for groups with "the"
     Given I am the user with ID "1"
