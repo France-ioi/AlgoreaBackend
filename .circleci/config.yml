@@ -23,6 +23,7 @@ jobs:
     docker:
       - image: circleci/golang:1.11
       - image: circleci/mysql:8.0
+        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:
           MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
@@ -117,6 +118,7 @@ jobs:
     docker:
       - image: circleci/golang:1.11-browsers
       - image: circleci/mysql:8.0
+        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:
           MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
