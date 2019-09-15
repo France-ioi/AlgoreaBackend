@@ -188,3 +188,27 @@ Background:
       }
     ]
     """
+
+  Scenario: Start from the second row
+    Given I am the user with ID "2"
+    When I send a GET request to "/answers?item_id=200&user_id=1&from.submission_date=2017-05-29T06:38:38Z&from.id=2"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "1",
+        "lang_prog": "python",
+        "name": "My answer",
+        "score": 100,
+        "submission_date": "2017-05-29T06:37:38Z",
+        "type": "Submission",
+        "user": {
+          "login": "jdoe",
+          "first_name": "John",
+          "last_name": "Doe"
+        },
+        "validated": true
+      }
+    ]
+    """
