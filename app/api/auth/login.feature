@@ -2,7 +2,7 @@ Feature: Generate a login state, set the cookie, and redirect to the auth url
   Scenario: Successful redirect
     Given the generated auth keys are "o5yuy6wmpe607bknrmvrrduy5xe60zd7","ny93zqri9a2adn4v1ut6izd76xb3pccw"
     And the time now is "2019-07-16T22:02:29Z"
-    And the DB time now is "2019-07-16T22:02:29Z"
+    And the DB time now is "2019-07-16 22:02:29"
     And the application config is:
     """
     auth:

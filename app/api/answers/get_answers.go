@@ -129,16 +129,16 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 // swagger:ignore
 type rawAnswersData struct {
-	ID             int64    `sql:"column:ID"`
-	Name           *string  `sql:"column:sName"`
-	Type           string   `sql:"column:sType"`
-	LangProg       *string  `sql:"column:sLangProg"`
-	SubmissionDate string   `sql:"column:sSubmissionDate"`
-	Score          *float32 `sql:"column:iScore"`
-	Validated      *bool    `sql:"column:bValidated"`
-	UserLogin      string   `sql:"column:sLogin"`
-	UserFirstName  *string  `sql:"column:sFirstName"`
-	UserLastName   *string  `sql:"column:sLastName"`
+	ID             int64         `sql:"column:ID"`
+	Name           *string       `sql:"column:sName"`
+	Type           string        `sql:"column:sType"`
+	LangProg       *string       `sql:"column:sLangProg"`
+	SubmissionDate database.Time `sql:"column:sSubmissionDate"`
+	Score          *float32      `sql:"column:iScore"`
+	Validated      *bool         `sql:"column:bValidated"`
+	UserLogin      string        `sql:"column:sLogin"`
+	UserFirstName  *string       `sql:"column:sFirstName"`
+	UserLastName   *string       `sql:"column:sLastName"`
 }
 
 type answersResponseAnswerUser struct {
@@ -167,7 +167,7 @@ type answersResponseAnswer struct {
 	// required: true
 	LangProg *string `json:"lang_prog"`
 	// required: true
-	SubmissionDate string `json:"submission_date"`
+	SubmissionDate database.Time `json:"submission_date"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`

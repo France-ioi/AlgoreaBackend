@@ -89,21 +89,21 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 10             | 70          |
       | 60             | 70          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
-      | 10      | 50     | null                     | null                    | null                  | null                       | 01:00:00        |
-      | 11      | 50     | null                     | null                    | null                  | null                       | 00:01:00        |
-      | 11      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  | null                       | null            |
-      | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       | 00:00:01        |
-      | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  | null                       | 00:00:30        |
-      | 15      | 60     | null                     | 2018-05-29T06:38:38Z    | null                  | null                       | 00:00:45        |
-      | 16      | 60     | null                     | 2018-05-29T06:38:38Z    | null                  | null                       | 00:00:45        |
-      | 21      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       | 00:01:00        |
-      | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
-      | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
-      | 31      | 50     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
-      | 31      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
-      | 41      | 50     | 2018-05-29T06:38:38Z     | null                    | null                  | null                       | null            |
-      | 41      | 70     | 2018-05-29T06:38:38Z     | null                    | null                  | null                       | 00:01:00        |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime | idUserCreated |
+      | 10      | 50     | null                     | null                    | null                  | null                       | 01:00:00        | 1             |
+      | 11      | 50     | null                     | null                    | null                  | null                       | 00:01:00        | 1             |
+      | 11      | 70     | null                     | null                    | 2017-05-29 06:38:38   | null                       | null            | 1             |
+      | 13      | 50     | 2017-05-29 06:38:38      | null                    | null                  | null                       | 00:00:01        | 1             |
+      | 13      | 60     | null                     | 2017-05-29 06:38:38     | null                  | null                       | 00:00:30        | 1             |
+      | 15      | 60     | null                     | 2018-05-29 06:38:38     | null                  | null                       | 00:00:45        | 1             |
+      | 16      | 60     | null                     | 2018-05-29 06:38:38     | null                  | null                       | 00:00:45        | 1             |
+      | 21      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 00:01:00        | 1             |
+      | 21      | 60     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 1             |
+      | 21      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 1             |
+      | 31      | 50     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 1             |
+      | 31      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 1             |
+      | 41      | 50     | 2018-05-29 06:38:38      | null                    | null                  | null                       | null            | 1             |
+      | 41      | 70     | 2018-05-29 06:38:38      | null                    | null                  | null                       | 00:01:00        | 1             |
 
   Scenario: Non-team contest
     Given I am the user with ID "1"

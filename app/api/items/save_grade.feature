@@ -18,40 +18,40 @@ Feature: Save grading result
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
       | ID | idPlatform | sUrl                                                                    | idItemUnlocked | iScoreMinUnlock | sValidationType |
-      | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 |                |                 |                 |
-      | 60 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 50             | 98              |                 |
-      | 10 | null       | null                                                                    |                |                 | AllButOne       |
-      | 70 | 20         | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  |                |                 |                 |
+      | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 |                | 100             | All             |
+      | 60 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 50             | 98              | All             |
+      | 10 | null       | null                                                                    |                | 100             | AllButOne       |
+      | 70 | 20         | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  |                | 100             | All             |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 50          |
-      | 10           | 60          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 50          | 0           |
+      | 10           | 60          | 1           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 10             | 50          |
       | 10             | 60          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
-      | 101     | 60     | 2017-05-29T06:38:38Z     |
-      | 101     | 70     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 60     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 70     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate      | sValidationDate      |
-      | 10     | 10     | null            | 0      | null                 | null                 |
-      | 10     | 50     | 100             | 0      | null                 | null                 |
-      | 10     | 60     | 101             | 10     | 2017-05-29T06:38:38Z | 2019-03-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate     | sValidationDate     |
+      | 10     | 10     | null            | 0      | null                | null                |
+      | 10     | 50     | 100             | 0      | null                | null                |
+      | 10     | 60     | 101             | 10     | 2017-05-29 06:38:38 | 2019-03-29 06:38:38 |
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem |
-      | 123 | 10     | 50     |
-      | 124 | 10     | 60     |
-      | 125 | 10     | 70     |
+      | ID  | idUser | idItem | sSubmissionDate     |
+      | 123 | 10     | 50     | 2017-05-29 06:38:38 |
+      | 124 | 10     | 60     | 2017-05-29 06:38:38 |
+      | 125 | 10     | 70     | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: User is able to save the grading result with a high score and idAttempt
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -119,8 +119,8 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score and idAttempt
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -187,8 +187,8 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sBestAnswerDate      |
-      | 100 | 101     | 60     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sBestAnswerDate     | iOrder |
+      | 100 | 101     | 60     | 2017-05-29 06:38:38 | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -256,8 +256,8 @@ Feature: Save grading result
   Scenario: Should keep previous score if it is greater
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | iScore | sBestAnswerDate      |
-      | 100 | 101     | 60     | 20     | 2018-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | iScore | sBestAnswerDate     | iOrder |
+      | 100 | 101     | 60     | 20     | 2018-05-29 06:38:38 | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -322,8 +322,8 @@ Feature: Save grading result
   Scenario: Should keep previous sValidationDate if it is earlier
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sValidationDate      |
-      | 100 | 101     | 60     | 2018-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sValidationDate     | iOrder |
+      | 100 | 101     | 60     | 2018-05-29 06:38:38 | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

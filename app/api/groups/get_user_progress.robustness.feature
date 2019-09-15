@@ -18,15 +18,15 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 210 | Chapter  |
       | 211 | Task     |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate |
-      | 21      | 211    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 20      | 212    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 21      | 213    | 2017-05-29T06:38:38Z  | null                     | null                    |
+      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated |
+      | 21      | 211    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 20      | 212    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 21      | 213    | 2017-05-29 06:38:38   | null                     | null                    | 1             |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 200          | 210         |
-      | 200          | 220         |
-      | 210          | 211         |
+      | idItemParent | idItemChild | iChildOrder |
+      | 200          | 210         | 0           |
+      | 200          | 220         | 1           |
+      | 210          | 211         | 0           |
 
   Scenario: User is not an admin of the group
     Given I am the user with ID "2"

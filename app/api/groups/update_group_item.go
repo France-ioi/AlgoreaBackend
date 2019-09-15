@@ -125,7 +125,7 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 			}
 		}
 
-		saveGroupItemDataIntoDB(groupID, itemID, data, s)
+		saveGroupItemDataIntoDB(groupID, itemID, user.ID, data, s)
 		return nil
 	})
 
@@ -141,7 +141,7 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
-func saveGroupItemDataIntoDB(groupID, itemID int64, data *formdata.FormData, s *database.DataStore) {
+func saveGroupItemDataIntoDB(groupID, itemID, creatorUserID int64, data *formdata.FormData, s *database.DataStore) {
 	dbMap := data.ConstructMapForDB()
 	groupItemScope := s.GroupItems().
 		Where("idGroup = ?", groupID).
@@ -155,6 +155,7 @@ func saveGroupItemDataIntoDB(groupID, itemID int64, data *formdata.FormData, s *
 		dbMap["idItem"] = itemID
 		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 			dbMap["ID"] = retryStore.NewID()
+			dbMap["idUserCreated"] = creatorUserID
 			return s.GroupItems().InsertMap(dbMap)
 		}))
 	}

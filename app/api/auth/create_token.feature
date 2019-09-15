@@ -5,13 +5,13 @@ Feature: Request a new access token
       | 2  | tmp-1234567 | true     |
       | 3  | jane        | false    |
       | 4  | john        | false    |
-    And the DB time now is "2019-07-16T22:02:28Z"
+    And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | idUser | sExpirationDate      | sAccessToken              |
-      | 2      | 2019-07-16T22:02:29Z | someaccesstoken           |
-      | 2      | 2019-07-16T22:02:40Z | anotheraccesstoken        |
-      | 3      | 2019-07-16T22:02:29Z | accesstokenforjane        |
-      | 3      | 2019-07-16T22:02:31Z | anotheraccesstokenforjane |
+      | idUser | sExpirationDate     | sAccessToken              |
+      | 2      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 2      | 2019-07-16 22:02:40 | anotheraccesstoken        |
+      | 3      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 3      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the database has the following table 'refresh_tokens':
       | idUser | sRefreshToken       |
       | 3      | refreshtokenforjane |
@@ -43,11 +43,11 @@ Feature: Request a new access token
       Generated a session token expiring in 7200 seconds for a temporary user 2
       """
     And the table "sessions" should be:
-      | idUser | sExpirationDate      | sAccessToken              |
-      | 2      | 2019-07-16T22:02:29Z | someaccesstoken           |
-      | 2      | 2019-07-17T00:02:28Z | newaccesstoken            |
-      | 3      | 2019-07-16T22:02:29Z | accesstokenforjane        |
-      | 3      | 2019-07-16T22:02:31Z | anotheraccesstokenforjane |
+      | idUser | sExpirationDate     | sAccessToken              |
+      | 2      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 2      | 2019-07-17 00:02:28 | newaccesstoken            |
+      | 3      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 3      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the table "refresh_tokens" should stay unchanged
 
   Scenario: Request a new access token for a normal user
@@ -73,11 +73,11 @@ Feature: Request a new access token
       }
       """
     And the table "sessions" should be:
-      | idUser | sExpirationDate      | sAccessToken          |
-      | 2      | 2019-07-16T22:02:29Z | someaccesstoken       |
-      | 2      | 2019-07-16T22:02:40Z | anotheraccesstoken    |
-      | 3      | 2019-07-16T22:02:29Z | accesstokenforjane    |
-      | 3      | 2020-07-16T22:02:29Z | newaccesstokenforjane |
+      | idUser | sExpirationDate     | sAccessToken          |
+      | 2      | 2019-07-16 22:02:29 | someaccesstoken       |
+      | 2      | 2019-07-16 22:02:40 | anotheraccesstoken    |
+      | 3      | 2019-07-16 22:02:29 | accesstokenforjane    |
+      | 3      | 2020-07-16 22:02:29 | newaccesstokenforjane |
     And the table "refresh_tokens" should be:
       | idUser | sRefreshToken          |
       | 3      | newrefreshtokenforjane |

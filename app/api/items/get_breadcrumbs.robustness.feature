@@ -33,9 +33,9 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
     Given the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 41 | 13      | 21     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 42 | 13      | 22     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 43 | 13      | 23     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+      | 41 | 13      | 21     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 42 | 13      | 22     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 43 | 13      | 23     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
       | 52 | 22           | 23          | 1           | 0           | 0        |
@@ -47,10 +47,10 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing at the end), but user has full access to all
     Given the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 41 | 13      | 21     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 42 | 13      | 22     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 43 | 13      | 23     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 44 | 13      | 24     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+      | 41 | 13      | 21     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 42 | 13      | 22     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 43 | 13      | 23     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 44 | 13      | 24     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
       | 52 | 21           | 22          | 1           | 0           | 0        |
@@ -63,9 +63,9 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
     Given the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 41 | 13      | 21     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 42 | 13      | 22     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 44 | 13      | 24     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+      | 41 | 13      | 21     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 42 | 13      | 22     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 44 | 13      | 24     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
       | 51 | 21           | 22          | 1           | 0           | 0        |
@@ -79,8 +79,8 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
     Given the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 42 | 13      | 22     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 44 | 13      | 23     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+      | 42 | 13      | 22     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 44 | 13      | 23     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
       | 52 | 22           | 23          | 1           | 0           | 0        |
@@ -93,9 +93,9 @@ Feature: Get item information for breadcrumb - robustness
   Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
     Given the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 41 | 13      | 21     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-      | 42 | 13      | 22     | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
-      | 43 | 13      | 23     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+      | 41 | 13      | 21     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+      | 42 | 13      | 22     | 2037-05-29 06:38:38   | 2037-05-29 06:38:38      | 2017-05-29 06:38:38     | 0             | 0        |
+      | 43 | 13      | 23     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
       | 52 | 22           | 23          | 1           | 0           | 0        |

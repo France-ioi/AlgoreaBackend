@@ -620,6 +620,17 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"pi":        float32(3.1415927),
 			}},
 		},
+		{
+			"handles datetime",
+			[]map[string]interface{}{{
+				"myDate":   "2019-05-30 11:00:00",
+				"nullDate": nil,
+			}},
+			[]map[string]interface{}{{
+				"my_date":   "2019-05-30T11:00:00Z",
+				"null_date": nil,
+			}},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -628,4 +639,10 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			assertlib.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestConvertSliceOfMapsFromDBToJSON_PanicsWhenDatetimeIsInvalid(t *testing.T) {
+	assertlib.Panics(t, func() {
+		ConvertSliceOfMapsFromDBToJSON([]map[string]interface{}{{"some_date": "1234:13:05 24:60:60"}})
+	})
 }

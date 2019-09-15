@@ -5,8 +5,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  | 10     |
     And the database has the following table 'groups':
       | ID | sType     | sName          | iGrade |
-      | 1  | Root      | Root 1         | -2     |
-      | 3  | Root      | Root 2         | -2     |
+      | 1  | Base      | Root 1         | -2     |
+      | 3  | Base      | Root 2         | -2     |
       | 11 | Class     | Our Class      | -2     |
       | 12 | Class     | Other Class    | -2     |
       | 13 | Class     | Special Class  | -2     |

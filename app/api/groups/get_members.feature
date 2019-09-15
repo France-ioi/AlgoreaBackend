@@ -45,21 +45,21 @@ Feature: Get members of group_id
       | 92              | 92           | 1       |
       | 22              | 11           | 0       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          | idUserInviting |
-      | 2  | 13            | 11           | invitationRefused  | 2017-11-29T06:38:38Z | 3              |
-      | 1  | 13            | 21           | invitationSent     | 2017-10-29T06:38:38Z | 2              |
-      | 3  | 13            | 31           | requestSent        | 2017-09-29T06:38:38Z | 1              |
-      | 4  | 13            | 41           | requestRefused     | 2017-08-29T06:38:38Z | 2              |
-      | 9  | 13            | 51           | invitationAccepted | 2017-07-29T06:38:38Z | 2              |
-      | 10 | 13            | 61           | requestAccepted    | 2017-06-29T06:38:38Z | 3              |
-      | 11 | 13            | 71           | removed            | 2017-05-29T06:38:38Z | 1              |
-      | 12 | 13            | 81           | left               | 2017-04-29T06:38:38Z | 2              |
-      | 13 | 13            | 91           | direct             | 2017-03-29T06:38:38Z | null           |
-      | 5  | 14            | 11           | invitationAccepted | 2017-02-29T06:38:38Z | 2              |
-      | 6  | 14            | 31           | requestAccepted    | 2017-01-29T06:38:38Z | 3              |
-      | 7  | 14            | 21           | direct             | 2016-12-29T06:38:38Z | null           |
-      | 8  | 14            | 22           | requestRefused     | 2016-11-29T06:38:38Z | 2              |
-      | 15 | 22            | 13           | direct             | 2016-10-29T06:38:38Z | null           |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         | idUserInviting |
+      | 2  | 13            | 11           | invitationRefused  | 2017-11-29 06:38:38 | 3              |
+      | 1  | 13            | 21           | invitationSent     | 2017-10-29 06:38:38 | 2              |
+      | 3  | 13            | 31           | requestSent        | 2017-09-29 06:38:38 | 1              |
+      | 4  | 13            | 41           | requestRefused     | 2017-08-29 06:38:38 | 2              |
+      | 9  | 13            | 51           | invitationAccepted | 2017-07-29 06:38:38 | 2              |
+      | 10 | 13            | 61           | requestAccepted    | 2017-06-29 06:38:38 | 3              |
+      | 11 | 13            | 71           | removed            | 2017-05-29 06:38:38 | 1              |
+      | 12 | 13            | 81           | left               | 2017-04-29 06:38:38 | 2              |
+      | 13 | 13            | 91           | direct             | 2017-03-29 06:38:38 | null           |
+      | 5  | 14            | 11           | invitationAccepted | 2017-02-28 06:38:38 | 2              |
+      | 6  | 14            | 31           | requestAccepted    | 2017-01-29 06:38:38 | 3              |
+      | 7  | 14            | 21           | direct             | 2016-12-29 06:38:38 | null           |
+      | 8  | 14            | 22           | requestRefused     | 2016-11-29 06:38:38 | 2              |
+      | 15 | 22            | 13           | direct             | 2016-10-29 06:38:38 | null           |
 
   Scenario: User is an admin of the group (default sort)
     Given I am the user with ID "1"

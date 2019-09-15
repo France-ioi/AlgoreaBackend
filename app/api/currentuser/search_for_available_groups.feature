@@ -16,17 +16,17 @@ Feature: Search for groups available to the current user
       | 9  | Friends   | Some other friends                        | Another friends group  | 1           |
       | 21 | UserSelf  | (the) user self                           |                        | 0           |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 2  | 1             | 21           | invitationSent     | 2017-02-29T06:38:38Z |
-      | 3  | 2             | 21           | invitationRefused  | 2017-03-29T06:38:38Z |
-      | 4  | 3             | 21           | requestSent        | 2017-04-29T06:38:38Z |
-      | 5  | 4             | 21           | requestRefused     | 2017-05-29T06:38:38Z |
-      | 6  | 5             | 21           | invitationAccepted | 2017-06-29T06:38:38Z |
-      | 7  | 6             | 21           | requestAccepted    | 2017-07-29T06:38:38Z |
-      | 8  | 7             | 21           | removed            | 2017-08-29T06:38:38Z |
-      | 9  | 8             | 21           | left               | 2017-09-29T06:38:38Z |
-      | 10 | 9             | 21           | direct             | 2017-10-29T06:38:38Z |
-      | 11 | 1             | 22           | direct             | 2017-11-29T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
+      | 2  | 1             | 21           | invitationSent     | 2017-02-28 06:38:38 |
+      | 3  | 2             | 21           | invitationRefused  | 2017-03-29 06:38:38 |
+      | 4  | 3             | 21           | requestSent        | 2017-04-29 06:38:38 |
+      | 5  | 4             | 21           | requestRefused     | 2017-05-29 06:38:38 |
+      | 6  | 5             | 21           | invitationAccepted | 2017-06-29 06:38:38 |
+      | 7  | 6             | 21           | requestAccepted    | 2017-07-29 06:38:38 |
+      | 8  | 7             | 21           | removed            | 2017-08-29 06:38:38 |
+      | 9  | 8             | 21           | left               | 2017-09-29 06:38:38 |
+      | 10 | 9             | 21           | direct             | 2017-10-29 06:38:38 |
+      | 12 | 1             | 22           | direct             | 2017-11-29 06:38:38 |
 
   Scenario: Search for groups with "the"
     Given I am the user with ID "1"

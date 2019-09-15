@@ -91,13 +91,13 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 	service.MustNotBeError(err)
 
-	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds)
+	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds, user.ID)
 
 	render.Respond(w, r, service.UpdateSuccess(nil))
 	return service.NoError
 }
 
-func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds int64) {
+func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds, creatorUserID int64) {
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		groupItemStore := store.GroupItems()
 		scope := groupItemStore.Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
@@ -109,8 +109,8 @@ func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds 
 			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 				id := retryStore.NewID()
 				return retryStore.Exec(
-					"INSERT INTO groups_items (ID, idGroup, idItem, sAdditionalTime) VALUES(?, ?, ?, SEC_TO_TIME(?))",
-					id, groupID, itemID, seconds).Error()
+					"INSERT INTO groups_items (ID, idGroup, idItem, sAdditionalTime, idUserCreated) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
+					id, groupID, itemID, seconds, creatorUserID).Error()
 			}))
 		}
 		return nil

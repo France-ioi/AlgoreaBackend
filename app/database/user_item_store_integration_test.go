@@ -79,10 +79,10 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 			- {ID: 112, idItem: 2, idUser: 500, sAncestorsComputationState: done}
 			- {ID: 113, idItem: 1, idUser: 501, sAncestorsComputationState: done}
 		groups_attempts:
-			- {ID: 222, idItem: 1, idGroup: 100, iScore: 10.0, bValidated: 1, sAncestorsComputationState: todo}
-			- {ID: 223, idItem: 1, idGroup: 101, iScore: 20.0, bValidated: 0, sAncestorsComputationState: todo}
-			- {ID: 224, idItem: 1, idGroup: 102, iScore: 30.0, bValidated: 0, sAncestorsComputationState: done}
-			- {ID: 225, idItem: 1, idGroup: 103, iScore: 40.0, bValidated: 0, sAncestorsComputationState: done}
+			- {ID: 222, idItem: 1, idGroup: 100, iScore: 10.0, bValidated: 1, sAncestorsComputationState: todo, iOrder: 0}
+			- {ID: 223, idItem: 1, idGroup: 101, iScore: 20.0, bValidated: 0, sAncestorsComputationState: todo, iOrder: 0}
+			- {ID: 224, idItem: 1, idGroup: 102, iScore: 30.0, bValidated: 0, sAncestorsComputationState: done, iOrder: 0}
+			- {ID: 225, idItem: 1, idGroup: 103, iScore: 40.0, bValidated: 0, sAncestorsComputationState: done, iOrder: 0}
 		groups_groups:
 			- {ID: 333, idGroupParent: 100, idGroupChild: 200, sType: direct}
 			- {ID: 334, idGroupParent: 101, idGroupChild: 200, sType: invitationAccepted}

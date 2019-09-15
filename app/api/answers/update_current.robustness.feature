@@ -16,14 +16,14 @@ Feature: Update the 'current' answer
       | ID |
       | 50 |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem | idAttempt |
-      | 100 | 10     | 50     | 200       |
+      | ID  | idUser | idItem | idAttempt | sSubmissionDate     |
+      | 100 | 10     | 50     | 200       | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem |
-      | 200 | 101     | 50     |
+      | ID  | idGroup | idItem | iOrder |
+      | 200 | 101     | 50     | 0      |
 
   Scenario: Missing attempt_id
     Given I am the user with ID "10"

@@ -19,12 +19,12 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
       | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Category | 1            |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter  | 1            |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
-      | 101     | 60     | 2017-05-29T06:38:38Z     |
-      | 101     | 70     | 2017-05-29T06:38:38Z     |
-      | 101     | 80     | 2017-05-29T06:38:38Z     |
-      | 101     | 90     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 60     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 70     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 80     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 90     | 2017-05-29 06:38:38      | 10            |
     And time is frozen
 
   Scenario: Invalid item_id

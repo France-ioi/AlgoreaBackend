@@ -1,2 +1,2 @@
-- {idGroup: 1}
-- {idGroup: 2}
+- {idGroup: 1, idUser: 1}
+- {idGroup: 2, idUser: 1}

@@ -65,7 +65,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			groups.sName AS group__sName,
 			groups.sDescription AS group__sDescription,
 			groups.sType AS group__sType`).
-		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
+		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
 		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
 

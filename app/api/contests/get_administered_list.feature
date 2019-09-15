@@ -38,11 +38,11 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 80 | 00:00:03  | 3                 | 0            |
       | 90 | 00:00:03  | 3                 | 0            |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 60          |
-      | 10           | 70          |
-      | 60           | 70          |
-      | 90           | 80          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 60          | 0           |
+      | 10           | 70          | 1           |
+      | 60           | 70          | 0           |
+      | 90           | 80          | 0           |
     And the database has the following table 'items_strings':
       | idItem | idLanguage | sTitle     |
       | 10     | 1          | Chapter    |
@@ -51,23 +51,23 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70     | 1          | Contest 2  |
       | 70     | 2          | Concours 2 |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate |
-      | 21      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       |
-      | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 31      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       |
-      | 31      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 31      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 41      | 10     | 2018-05-29T06:38:38Z     | null                    | null                  | null                       |
-      | 41      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       |
-      | 41      | 60     | null                     | 2018-05-29T06:38:38Z    | null                  | 2018-05-29T06:38:38Z       |
-      | 41      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 51      | 10     | null                     | 2018-05-29T06:38:38Z    | null                  | null                       |
-      | 51      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       |
-      | 51      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | 2018-05-29T06:38:38Z       |
-      | 51      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 71      | 80     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 71      | 90     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | idUserCreated |
+      | 21      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 4             |
+      | 21      | 60     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 21      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 31      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 4             |
+      | 31      | 60     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 31      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 41      | 10     | 2018-05-29 06:38:38      | null                    | null                  | null                       | 4             |
+      | 41      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 4             |
+      | 41      | 60     | null                     | 2018-05-29 06:38:38     | null                  | 2018-05-29 06:38:38        | 4             |
+      | 41      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 51      | 10     | null                     | 2018-05-29 06:38:38     | null                  | null                       | 4             |
+      | 51      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 4             |
+      | 51      | 60     | null                     | null                    | 2018-05-29 06:38:38   | 2018-05-29 06:38:38        | 4             |
+      | 51      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 71      | 80     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
+      | 71      | 90     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 4             |
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with ID "1"

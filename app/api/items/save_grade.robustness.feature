@@ -18,28 +18,28 @@ Feature: Save grading result - robustness
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
       | ID | idPlatform | sUrl                                                                    | bReadOnly | idItemUnlocked | iScoreMinUnlock | sValidationType |
-      | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |                |                 |                 |
-      | 70 | 20         | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         |                |                 |                 |
-      | 80 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         |                |                 |                 |
-      | 10 | null       | null                                                                    | 0         |                |                 | AllButOne       |
+      | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |                | 100             | All             |
+      | 70 | 20         | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         |                | 100             | All             |
+      | 80 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         |                | 100             | All             |
+      | 10 | null       | null                                                                    | 0         |                | 100             | AllButOne       |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 50          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 50          | 0           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 10             | 50          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
-      | 101     | 70     | 2017-05-29T06:38:38Z     |
-      | 101     | 80     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 70     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 80     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate      | sValidationDate      |
       | 10     | 10     | null            | 0      | null                 | null                 |
       | 10     | 50     | 100             | 0      | null                 | null                 |
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem |
-      | 123 | 10     | 50     |
+      | ID  | idUser | idItem | sSubmissionDate     |
+      | 123 | 10     | 50     | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: Wrong JSON in request
@@ -693,8 +693,8 @@ Feature: Save grading result - robustness
   Scenario: The answer has been already graded
     Given I am the user with ID "10"
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem | iScore |
-      | 124 | 10     | 80     | 0      |
+      | ID  | idUser | idItem | iScore | sSubmissionDate     |
+      | 124 | 10     | 80     | 0      | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

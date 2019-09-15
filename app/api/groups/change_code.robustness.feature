@@ -7,10 +7,10 @@ Feature: Change the code of the given group - robustness
       | 2  | user   | 0        | 11          | 12           | John        | Doe       | en               |
       | 3  | jane   | 0        | 31          | 32           | Jane        | Doe       | en               |
     And the database has the following table 'groups':
-      | ID | sName   | iGrade | sDescription    | sDateCreated         | sType     | sCode      | sCodeTimer | sCodeEnd             |
-      | 11 | Group A | -3     | Group A is here | 2019-02-06T09:26:40Z | Class     | ybqybxnlyo | 01:00:00   | 2017-10-13T05:39:48Z |
-      | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class     | 3456789abc | 01:00:00   | 2017-10-14T05:39:48Z |
-      | 14 | Group C | -4     | Admin Group     | 2019-04-06T09:26:40Z | UserAdmin | null       | null       | null                 |
+      | ID | sName   | iGrade | sDescription    | sDateCreated        | sType     | sCode      | sCodeTimer | sCodeEnd            |
+      | 11 | Group A | -3     | Group A is here | 2019-02-06 09:26:40 | Class     | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 |
+      | 13 | Group B | -2     | Group B is here | 2019-03-06 09:26:40 | Class     | 3456789abc | 01:00:00   | 2017-10-14 05:39:48 |
+      | 14 | Group C | -4     | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null       | null       | null                |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
       | 75 | 22              | 13           | 0       | 0        |
@@ -45,8 +45,8 @@ Feature: Change the code of the given group - robustness
     """
     And the table "groups" should stay unchanged but the row with ID "13"
     And the table "groups" at ID "13" should be:
-      | ID | sName   | iGrade | sDescription    | sDateCreated         | sType | sCode       | sCodeTimer | sCodeEnd             |
-      | 13 | Group B | -2     | Group B is here | 2019-03-06T09:26:40Z | Class | newpassword | 01:00:00   | 2017-10-14T05:39:48Z |
+      | ID | sName   | iGrade | sDescription    | sDateCreated        | sType | sCode       | sCodeTimer | sCodeEnd            |
+      | 13 | Group B | -2     | Group B is here | 2019-03-06 09:26:40 | Class | newpassword | 01:00:00   | 2017-10-14 05:39:48 |
 
   Scenario: User is an admin of the group, but the generated code is not unique 3 times in a row
     Given I am the user with ID "1"

@@ -107,14 +107,14 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	if isTeamOnly {
 		query = query.
 			Joins(`
-				JOIN groups AS found_group
+				JOIN `+"`groups`"+` AS found_group
 					ON found_group.ID = groups_ancestors.idGroupChild AND found_group.sType = 'Team' AND
 						(found_group.idTeamItem IN (SELECT idItemAncestor FROM items_ancestors WHERE idItemChild = ?) OR
 						 found_group.idTeamItem = ?)`, itemID, itemID)
 	} else {
 		query = query.
 			Joins(`
-				JOIN groups AS found_group
+				JOIN ` + "`groups`" + ` AS found_group
 					ON found_group.ID = groups_ancestors.idGroupChild AND found_group.sType = 'UserSelf'`)
 	}
 
@@ -126,7 +126,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				found_group.ID AS idGroup,
 				found_group.sName,
 				found_group.sType,
-				IFNULL(TIME_TO_SEC(main_group_item.sAdditionalTime), 0) AS iAdditionalTime,
+				IFNULL(TIME_TO_SEC(MAX(main_group_item.sAdditionalTime)), 0) AS iAdditionalTime,
 				IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS iTotalAdditionalTime`).
 		Group("found_group.ID").
 		Having(`

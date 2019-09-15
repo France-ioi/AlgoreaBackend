@@ -85,7 +85,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 3  | 13            | 41           | requestSent        | {{relativeTime("-168h")}} |
       | 6  | 14            | 41           | invitationAccepted | null                      |
       | 7  | 14            | 51           | requestSent        | null                      |
-      | 9  | 13            | 51           | invitationAccepted | 2017-05-29T06:38:38Z      |
+      | 9  | 13            | 51           | invitationAccepted | 2017-05-29 06:38:38       |
       | 10 | 13            | 61           | requestAccepted    | null                      |
       | 11 | 13            | 71           | removed            | null                      |
       | 12 | 13            | 81           | left               | null                      |

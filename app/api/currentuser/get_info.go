@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -19,7 +20,7 @@ type getInfoData struct {
 	Login string `gorm:"column:sLogin" json:"login"`
 	// Nullable
 	// required: true
-	RegistrationDate *string `gorm:"column:sRegistrationDate" json:"registration_date"`
+	RegistrationDate *database.Time `gorm:"column:sRegistrationDate" json:"registration_date"`
 	// Nullable
 	// required: true
 	Email *string `gorm:"column:sEmail" json:"email"`

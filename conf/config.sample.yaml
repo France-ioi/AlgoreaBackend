@@ -18,7 +18,6 @@ database:
     addr: localhost
     #dbname: algorea_db
     allownativepasswords: true
-    parseTime: true # required for the migration system
 logging:
   format: text # text, json
   output: stdout # stdout, stderr, file

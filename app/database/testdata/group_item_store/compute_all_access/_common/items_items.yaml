@@ -1,13 +1,13 @@
-- {ID: 1, idItemParent: 1, idItemChild: 11, bAccessRestricted: 0}
-- {ID: 2, idItemParent: 2, idItemChild: 11, bAccessRestricted: 0}
-- {ID: 3, idItemParent: 3, idItemChild: 11, bAccessRestricted: 0}
+- {ID: 1, idItemParent: 1, idItemChild: 11, bAccessRestricted: 0, iChildOrder: 0}
+- {ID: 2, idItemParent: 2, idItemChild: 11, bAccessRestricted: 0, iChildOrder: 0}
+- {ID: 3, idItemParent: 3, idItemChild: 11, bAccessRestricted: 0, iChildOrder: 0}
 
-- {ID: 4, idItemParent: 1, idItemChild: 12, bAccessRestricted: 1}
-- {ID: 5, idItemParent: 2, idItemChild: 12, bAccessRestricted: 0}
-- {ID: 6, idItemParent: 11, idItemChild: 12, bAccessRestricted: 1}
+- {ID: 4, idItemParent: 1, idItemChild: 12, bAccessRestricted: 1, iChildOrder: 1}
+- {ID: 5, idItemParent: 2, idItemChild: 12, bAccessRestricted: 0, iChildOrder: 1}
+- {ID: 6, idItemParent: 11, idItemChild: 12, bAccessRestricted: 1, iChildOrder: 0}
 
-- {ID: 41, idItemParent: 4, idItemChild: 1, bAccessRestricted: 0}
-- {ID: 42, idItemParent: 4, idItemChild: 2, bAccessRestricted: 0}
-- {ID: 43, idItemParent: 4, idItemChild: 3, bAccessRestricted: 0}
-- {ID: 44, idItemParent: 4, idItemChild: 11, bAccessRestricted: 0}
-- {ID: 45, idItemParent: 4, idItemChild: 12, bAccessRestricted: 0}
+- {ID: 41, idItemParent: 4, idItemChild: 1, bAccessRestricted: 0, iChildOrder: 0}
+- {ID: 42, idItemParent: 4, idItemChild: 2, bAccessRestricted: 0, iChildOrder: 1}
+- {ID: 43, idItemParent: 4, idItemChild: 3, bAccessRestricted: 0, iChildOrder: 2}
+- {ID: 44, idItemParent: 4, idItemChild: 11, bAccessRestricted: 0, iChildOrder: 3}
+- {ID: 45, idItemParent: 4, idItemChild: 12, bAccessRestricted: 0, iChildOrder: 4}

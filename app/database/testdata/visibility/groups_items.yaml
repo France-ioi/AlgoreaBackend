@@ -1,38 +1,38 @@
 # lev1 items
-- { ID: 41, idGroup: 11, idItem: 190, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
-- { ID: 42, idGroup: 11, idItem: 191, sCachedPartialAccessDate: 2019-03-22T08:00:00Z }
-- { ID: 43, idGroup: 11, idItem: 192, sCachedGrayedAccessDate: 2019-03-22T08:00:00Z }
-- { ID: 44, idGroup: 11, idItem: 193 }
+- { ID: 41, idGroup: 11, idItem: 190, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 42, idGroup: 11, idItem: 191, sCachedPartialAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 43, idGroup: 11, idItem: 192, sCachedGrayedAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 44, idGroup: 11, idItem: 193, idUserCreated: 1 }
 # group 12 does not get any access to items
-- { ID: 45, idGroup: 12, idItem: 190 }
-- { ID: 46, idGroup: 12, idItem: 191 }
-- { ID: 47, idGroup: 12, idItem: 192 }
-- { ID: 48, idGroup: 12, idItem: 193 }
+- { ID: 45, idGroup: 12, idItem: 190, idUserCreated: 1 }
+- { ID: 46, idGroup: 12, idItem: 191, idUserCreated: 1 }
+- { ID: 47, idGroup: 12, idItem: 192, idUserCreated: 1 }
+- { ID: 48, idGroup: 12, idItem: 193, idUserCreated: 1 }
 # group 19 should have no impact on our user
-- { ID: 49, idGroup: 19, idItem: 194, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
+- { ID: 49, idGroup: 19, idItem: 194, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
 
 # lev 2
-- { ID: 401, idGroup: 11, idItem: 1900, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
-- { ID: 402, idGroup: 11, idItem: 1901, sCachedPartialAccessDate: 2018-03-22T08:00:00Z }
-- { ID: 403, idGroup: 11, idItem: 1902, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
-- { ID: 404, idGroup: 11, idItem: 1903 }
+- { ID: 401, idGroup: 11, idItem: 1900, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 402, idGroup: 11, idItem: 1901, sCachedPartialAccessDate: 2018-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 403, idGroup: 11, idItem: 1902, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 404, idGroup: 11, idItem: 1903, idUserCreated: 1 }
 # group 12 does not get any access to items
-- { ID: 405, idGroup: 12, idItem: 1900 }
-- { ID: 406, idGroup: 12, idItem: 1901 }
-- { ID: 407, idGroup: 12, idItem: 1902 }
-- { ID: 408, idGroup: 12, idItem: 1903 }
+- { ID: 405, idGroup: 12, idItem: 1900, idUserCreated: 1 }
+- { ID: 406, idGroup: 12, idItem: 1901, idUserCreated: 1 }
+- { ID: 407, idGroup: 12, idItem: 1902, idUserCreated: 1 }
+- { ID: 408, idGroup: 12, idItem: 1903, idUserCreated: 1 }
 # group 19 should have no impact on our user
-- { ID: 409, idGroup: 19, idItem: 1904, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
+- { ID: 409, idGroup: 19, idItem: 1904, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
 
 # lev 3
-- { ID: 4001, idGroup: 11, idItem: 19000, sCachedFullAccessDate: 2019-03-22T08:00:00Z }
-- { ID: 4002, idGroup: 11, idItem: 19001, sCachedPartialAccessDate: 2018-03-22T08:00:00Z }
-- { ID: 4003, idGroup: 11, idItem: 19002, sCachedGrayedAccessDate: 2017-03-22T08:00:00Z }
-- { ID: 4004, idGroup: 11, idItem: 19003 }
+- { ID: 4001, idGroup: 11, idItem: 19000, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 4002, idGroup: 11, idItem: 19001, sCachedPartialAccessDate: 2018-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 4003, idGroup: 11, idItem: 19002, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
+- { ID: 4004, idGroup: 11, idItem: 19003, idUserCreated: 1 }
 # group 12 does not get any access to items
-- { ID: 4005, idGroup: 12, idItem: 19000 }
-- { ID: 4006, idGroup: 12, idItem: 19001 }
-- { ID: 4007, idGroup: 12, idItem: 19002 }
-- { ID: 4008, idGroup: 12, idItem: 19003 }
+- { ID: 4005, idGroup: 12, idItem: 19000, idUserCreated: 1 }
+- { ID: 4006, idGroup: 12, idItem: 19001, idUserCreated: 1 }
+- { ID: 4007, idGroup: 12, idItem: 19002, idUserCreated: 1 }
+- { ID: 4008, idGroup: 12, idItem: 19003, idUserCreated: 1 }
 # group 19 should have no impact on our user
-- { ID: 4009, idGroup: 19, idItem: 19004, sCachedFullAccessDate: 2019-03-22T08:00:00Z, sCachedPartialAccessDate: 2018-03-22T08:00:00Z, sCachedGrayedAccessDate: 2019-03-22T08:00:00Z }
+- { ID: 4009, idGroup: 19, idItem: 19004, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }

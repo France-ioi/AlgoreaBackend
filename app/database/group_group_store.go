@@ -149,9 +149,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 		// groups_propagate & groups_items_propagate as well,
 		// but the `before_delete_groups_groups` trigger inserts into groups_propagate again :(
 		const deleteGroupsQuery = `
-			DELETE groups, group_children, group_parents, groups_attempts,
+			DELETE ` + "`groups`" + `, group_children, group_parents, groups_attempts,
 						 groups_items, groups_login_prefixes, filters
-			FROM groups
+			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
 				ON group_children.idGroupParent = groups.ID
 			LEFT JOIN groups_groups AS group_parents

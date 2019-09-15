@@ -208,18 +208,18 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {idGroupAncestor: 106, idGroupChild: 106}
 		users_items:
 			- {idUser: 2, idItem: 12} # not started
-			- {idUser: 3, idItem: 13, sContestStartDate: 2019-03-22T08:44:55Z, sFinishDate: 2019-03-23T08:44:55Z} #finished
-			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z} # ok
-			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22T08:44:55Z} # ok with team mode
-			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22T08:44:55Z} # multiple
-			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22T08:43:55Z} # multiple
+			- {idUser: 3, idItem: 13, sContestStartDate: 2019-03-22 08:44:55, sFinishDate: 2019-03-23 08:44:55} #finished
+			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22 08:44:55} # ok
+			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22 08:44:55} # ok with team mode
+			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22 08:44:55} # multiple
+			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22 08:43:55} # multiple
 		groups_items:
-			- {idGroup: 102, idItem: 12}
-			- {idGroup: 103, idItem: 13}
-			- {idGroup: 104, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00}
-			- {idGroup: 105, idItem: 15}
-			- {idGroup: 106, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00}
-			- {idGroup: 106, idItem: 15, sAdditionalTime: 0000-00-00 00:01:00}`)
+			- {idGroup: 102, idItem: 12, idUserCreated: 1}
+			- {idGroup: 103, idItem: 13, idUserCreated: 1}
+			- {idGroup: 104, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}
+			- {idGroup: 105, idItem: 15, idUserCreated: 1}
+			- {idGroup: 106, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}
+			- {idGroup: 106, idItem: 15, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -292,13 +292,13 @@ func TestItemStore_CloseContest(t *testing.T) {
 			- {idItemAncestor: 11, idItemChild: 16}
 		users_items: [{idUser: 1, idItem: 11}, {idUser: 1, idItem: 12}, {idUser: 2, idItem: 11}]
 		groups_items:
-			- {idGroup: 20, idItem: 11}
-			- {idGroup: 20, idItem: 12}
-			- {idGroup: 20, idItem: 13, sCachedFullAccessDate: 2030-03-22T08:44:55Z} # no full access
-			- {idGroup: 20, idItem: 14, sCachedFullAccessDate: 2018-03-22T08:44:55Z} # full access
-			- {idGroup: 20, idItem: 15, bOwnerAccess: 1}
-			- {idGroup: 20, idItem: 16, bManagerAccess: 1}
-			- {idGroup: 21, idItem: 12}`)
+			- {idGroup: 20, idItem: 11, idUserCreated: 1}
+			- {idGroup: 20, idItem: 12, idUserCreated: 1}
+			- {idGroup: 20, idItem: 13, sCachedFullAccessDate: 2030-03-22 08:44:55, idUserCreated: 1} # no full access
+			- {idGroup: 20, idItem: 14, sCachedFullAccessDate: 2018-03-22 08:44:55, idUserCreated: 1} # full access
+			- {idGroup: 20, idItem: 15, bOwnerAccess: 1, idUserCreated: 1}
+			- {idGroup: 20, idItem: 16, bManagerAccess: 1, idUserCreated: 1}
+			- {idGroup: 21, idItem: 12, idUserCreated: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{}
 		assert.NoError(t, user.LoadByID(store, 1))
@@ -371,18 +371,18 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {idUser: 3, idItem: 11}
 			- {idUser: 4, idItem: 11}
 		groups_items:
-			- {idGroup: 20, idItem: 11, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
-			- {idGroup: 40, idItem: 11, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
-			- {idGroup: 20, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
-			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
-			- {idGroup: 50, idItem: 11, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-				sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}
-			- {idGroup: 50, idItem: 12, sCachedPartialAccessDate: 2018-03-22T08:44:55Z,
-			   sPartialAccessDate: 2018-03-22T08:44:55Z, bCachedPartialAccess: 1}`)
+			- {idGroup: 20, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
+			- {idGroup: 40, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
+			- {idGroup: 20, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
+			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
+			- {idGroup: 50, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
+			- {idGroup: 50, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
+			   sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 		store.Items().CloseTeamContest(11, user)
@@ -409,18 +409,18 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	}, userItems)
 
 	type groupItemInfo struct {
-		GroupID                 int64      `gorm:"column:idGroup"`
-		ItemID                  int64      `gorm:"column:idItem"`
-		PartialAccessDate       *time.Time `gorm:"column:sPartialAccessDate"`
-		CachedPartialAccessDate *time.Time `gorm:"column:sCachedPartialAccessDate"`
-		CachedPartialAccess     bool       `gorm:"column:bCachedPartialAccess"`
+		GroupID                 int64          `gorm:"column:idGroup"`
+		ItemID                  int64          `gorm:"column:idItem"`
+		PartialAccessDate       *database.Time `gorm:"column:sPartialAccessDate"`
+		CachedPartialAccessDate *database.Time `gorm:"column:sCachedPartialAccessDate"`
+		CachedPartialAccess     bool           `gorm:"column:bCachedPartialAccess"`
 	}
 	var groupItems []groupItemInfo
 	assert.NoError(t, store.GroupItems().
 		Select("idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess").
 		Order("idGroup, idItem").
 		Scan(&groupItems).Error())
-	expectedDate := ptrTime(time.Date(2018, 3, 22, 8, 44, 55, 0, time.UTC))
+	expectedDate := (*database.Time)(ptrTime(time.Date(2018, 3, 22, 8, 44, 55, 0, time.UTC)))
 	assert.Equal(t, []groupItemInfo{
 		{GroupID: 20, ItemID: 11, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
 		{GroupID: 20, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
@@ -443,10 +443,13 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 			- {idGroupAncestor: 40, idGroupChild: 10}
 			- {idGroupAncestor: 40, idGroupChild: 40}
 		groups_items:
-			- {idGroup: 40, idItem: 11, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2018-03-22T08:44:55Z}
-			- {idGroup: 10, idItem: 11, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2019-03-22T08:44:55Z}
-			- {idGroup: 10, idItem: 12, sCachedFullAccessDate: 2018-03-22T08:44:55Z, sCachedAccessSolutionsDate: 2019-04-22T08:44:55Z}
-			- {idGroup: 10, idItem: 13, sCachedFullAccessDate: 2018-03-22T08:44:55Z}`)
+			- {idGroup: 40, idItem: 11, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2018-03-22 08:44:55,
+		     idUserCreated: 1}
+			- {idGroup: 10, idItem: 11, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2019-03-22 08:44:55,
+			   idUserCreated: 1}
+			- {idGroup: 10, idItem: 12, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2019-04-22 08:44:55,
+			   idUserCreated: 1}
+			- {idGroup: 10, idItem: 13, sCachedFullAccessDate: 2018-03-22 08:44:55, idUserCreated: 1}`)
 	type resultType struct {
 		ID              int64 `gorm:"column:ID"`
 		AccessSolutions bool  `gorm:"column:accessSolutions"`
@@ -476,12 +479,12 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 			- {idGroupAncestor: 400, idGroupChild: 100}
 			- {idGroupAncestor: 400, idGroupChild: 400}
 		groups_items:
-			- {idGroup: 400, idItem: 11, bCachedManagerAccess: 1}
-			- {idGroup: 100, idItem: 11, bOwnerAccess: 1}
-			- {idGroup: 100, idItem: 12}
-			- {idGroup: 100, idItem: 13}
-			- {idGroup: 110, idItem: 12, bOwnerAccess: 1}
-			- {idGroup: 110, idItem: 13, bCachedManagerAccess: 1}`)
+			- {idGroup: 400, idItem: 11, bCachedManagerAccess: 1, idUserCreated: 1}
+			- {idGroup: 100, idItem: 11, bOwnerAccess: 1, idUserCreated: 1}
+			- {idGroup: 100, idItem: 12, idUserCreated: 1}
+			- {idGroup: 100, idItem: 13, idUserCreated: 1}
+			- {idGroup: 110, idItem: 12, bOwnerAccess: 1, idUserCreated: 1}
+			- {idGroup: 110, idItem: 13, bCachedManagerAccess: 1, idUserCreated: 1}`)
 
 	tests := []struct {
 		name       string

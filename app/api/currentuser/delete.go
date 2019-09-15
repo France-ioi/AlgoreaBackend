@@ -52,8 +52,8 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	user := srv.GetUser(r)
 
 	doNotDelete, err := srv.Store.GroupGroups().WhereUserIsMember(user).
-		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
-		Where("NOW() < groups.lockUserDeletionDate").HasRows()
+		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
+		Where("NOW() < `groups`.lockUserDeletionDate").HasRows()
 	service.MustNotBeError(err)
 
 	if doNotDelete {

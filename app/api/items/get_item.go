@@ -33,17 +33,17 @@ type itemString struct {
 
 type itemUserNotGrayed struct {
 	// only if not grayed
-	ActiveAttemptID     *int64  `json:"active_attempt_id,string"`
-	Score               float32 `json:"score"`
-	SubmissionsAttempts int32   `json:"submissions_attempts"`
-	Validated           bool    `json:"validated"`
-	Finished            bool    `json:"finished"`
-	KeyObtained         bool    `json:"key_obtained"`
-	HintsCached         int32   `json:"hints_cached"`
-	StartDate           *string `json:"start_date"`         // iso8601 str
-	ValidationDate      *string `json:"validation_date"`    // iso8601 str
-	FinishDate          *string `json:"finish_date"`        // iso8601 str
-	ContestStartDate    *string `json:"contest_start_date"` // iso8601 str
+	ActiveAttemptID     *int64         `json:"active_attempt_id,string"`
+	Score               float32        `json:"score"`
+	SubmissionsAttempts int32          `json:"submissions_attempts"`
+	Validated           bool           `json:"validated"`
+	Finished            bool           `json:"finished"`
+	KeyObtained         bool           `json:"key_obtained"`
+	HintsCached         int32          `json:"hints_cached"`
+	StartDate           *database.Time `json:"start_date"`         // iso8601 str
+	ValidationDate      *database.Time `json:"validation_date"`    // iso8601 str
+	FinishDate          *database.Time `json:"finish_date"`        // iso8601 str
+	ContestStartDate    *database.Time `json:"contest_start_date"` // iso8601 str
 }
 
 type itemUserRootNodeNotChapter struct {
@@ -60,21 +60,21 @@ type itemUser struct {
 
 type itemCommonFields struct {
 	// items
-	ID                     int64   `json:"id,string"`
-	Type                   string  `json:"type"`
-	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
-	ValidationType         string  `json:"validation_type"`
-	HasUnlockedItems       bool    `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int32   `json:"score_min_unlock"`
-	TeamMode               *string `json:"team_mode"`
-	TeamsEditable          bool    `json:"teams_editable"`
-	TeamMaxMembers         int32   `json:"team_max_members"`
-	HasAttempts            bool    `json:"has_attempts"`
-	AccessOpenDate         *string `json:"access_open_date"` // iso8601 str
-	Duration               *string `json:"duration"`
-	EndContestDate         *string `json:"end_contest_date"` // iso8601 str
-	NoScore                bool    `json:"no_score"`
-	GroupCodeEnter         *bool   `json:"group_code_enter"`
+	ID                     int64          `json:"id,string"`
+	Type                   string         `json:"type"`
+	DisplayDetailsInParent bool           `json:"display_details_in_parent"`
+	ValidationType         string         `json:"validation_type"`
+	HasUnlockedItems       bool           `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int32          `json:"score_min_unlock"`
+	TeamMode               *string        `json:"team_mode"`
+	TeamsEditable          bool           `json:"teams_editable"`
+	TeamMaxMembers         int32          `json:"team_max_members"`
+	HasAttempts            bool           `json:"has_attempts"`
+	AccessOpenDate         *database.Time `json:"access_open_date"` // iso8601 str
+	Duration               *string        `json:"duration"`
+	EndContestDate         *database.Time `json:"end_contest_date"` // iso8601 str
+	NoScore                bool           `json:"no_score"`
+	GroupCodeEnter         *bool          `json:"group_code_enter"`
 
 	String itemString `json:"string"`
 	User   itemUser   `json:"user"`
@@ -140,21 +140,21 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 // rawItem represents one row of the getItem service data returned from the DB
 type rawItem struct {
 	// items
-	ID                     int64   `sql:"column:ID"`
-	Type                   string  `sql:"column:sType"`
-	DisplayDetailsInParent bool    `sql:"column:bDisplayDetailsInParent"`
-	ValidationType         string  `sql:"column:sValidationType"`
-	HasUnlockedItems       bool    `sql:"column:hasUnlockedItems"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int32   `sql:"column:iScoreMinUnlock"`
-	TeamMode               *string `sql:"column:sTeamMode"`
-	TeamsEditable          bool    `sql:"column:bTeamsEditable"`
-	TeamMaxMembers         int32   `sql:"column:iTeamMaxMembers"`
-	HasAttempts            bool    `sql:"column:bHasAttempts"`
-	AccessOpenDate         *string `sql:"column:sAccessOpenDate"` // iso8601 str
-	Duration               *string `sql:"column:sDuration"`
-	EndContestDate         *string `sql:"column:sEndContestDate"` // iso8601 str
-	NoScore                bool    `sql:"column:bNoScore"`
-	GroupCodeEnter         *bool   `sql:"column:groupCodeEnter"`
+	ID                     int64          `sql:"column:ID"`
+	Type                   string         `sql:"column:sType"`
+	DisplayDetailsInParent bool           `sql:"column:bDisplayDetailsInParent"`
+	ValidationType         string         `sql:"column:sValidationType"`
+	HasUnlockedItems       bool           `sql:"column:hasUnlockedItems"` // whether items.idItemUnlocked is empty
+	ScoreMinUnlock         int32          `sql:"column:iScoreMinUnlock"`
+	TeamMode               *string        `sql:"column:sTeamMode"`
+	TeamsEditable          bool           `sql:"column:bTeamsEditable"`
+	TeamMaxMembers         int32          `sql:"column:iTeamMaxMembers"`
+	HasAttempts            bool           `sql:"column:bHasAttempts"`
+	AccessOpenDate         *database.Time `sql:"column:sAccessOpenDate"` // iso8601 str
+	Duration               *string        `sql:"column:sDuration"`
+	EndContestDate         *database.Time `sql:"column:sEndContestDate"` // iso8601 str
+	NoScore                bool           `sql:"column:bNoScore"`
+	GroupCodeEnter         *bool          `sql:"column:groupCodeEnter"`
 
 	// root node only
 	TitleBarVisible bool    `sql:"column:bTitleBarVisible"`
@@ -177,19 +177,19 @@ type rawItem struct {
 	StringEduComment  *string `sql:"column:sEduComment"`
 
 	// from users_items for current user
-	UserActiveAttemptID     *int64  `sql:"column:idAttemptActive"`
-	UserScore               float32 `sql:"column:iScore"`
-	UserSubmissionsAttempts int32   `sql:"column:nbSubmissionsAttempts"`
-	UserValidated           bool    `sql:"column:bValidated"`
-	UserFinished            bool    `sql:"column:bFinished"`
-	UserKeyObtained         bool    `sql:"column:bKeyObtained"`
-	UserHintsCached         int32   `sql:"column:nbHintsCached"`
-	UserStartDate           *string `sql:"column:sStartDate"`        // iso8601 str
-	UserValidationDate      *string `sql:"column:sValidationDate"`   // iso8601 str
-	UserFinishDate          *string `sql:"column:sFinishDate"`       // iso8601 str
-	UserContestStartDate    *string `sql:"column:sContestStartDate"` // iso8601 str
-	UserState               *string `sql:"column:sState"`            // only if not a chapter
-	UserAnswer              *string `sql:"column:sAnswer"`           // only if not a chapter
+	UserActiveAttemptID     *int64         `sql:"column:idAttemptActive"`
+	UserScore               float32        `sql:"column:iScore"`
+	UserSubmissionsAttempts int32          `sql:"column:nbSubmissionsAttempts"`
+	UserValidated           bool           `sql:"column:bValidated"`
+	UserFinished            bool           `sql:"column:bFinished"`
+	UserKeyObtained         bool           `sql:"column:bKeyObtained"`
+	UserHintsCached         int32          `sql:"column:nbHintsCached"`
+	UserStartDate           *database.Time `sql:"column:sStartDate"`        // iso8601 str
+	UserValidationDate      *database.Time `sql:"column:sValidationDate"`   // iso8601 str
+	UserFinishDate          *database.Time `sql:"column:sFinishDate"`       // iso8601 str
+	UserContestStartDate    *database.Time `sql:"column:sContestStartDate"` // iso8601 str
+	UserState               *string        `sql:"column:sState"`            // only if not a chapter
+	UserAnswer              *string        `sql:"column:sAnswer"`           // only if not a chapter
 
 	// items_items
 	Order            int32  `sql:"column:iChildOrder"`

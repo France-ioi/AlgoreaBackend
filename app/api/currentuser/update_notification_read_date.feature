@@ -3,7 +3,7 @@ Feature: Set users.sNotificationReadDate to NOW() for the current user
     Given the database has the following table 'users':
       | ID | sLogin | sNotificationReadDate |
       | 1  | user   | null                  |
-      | 2  | admin  | 2017-02-21T06:38:38Z  |
+      | 2  | admin  | 2017-02-21 06:38:38   |
 
   Scenario: Successfully send a request
     Given I am the user with ID "1"

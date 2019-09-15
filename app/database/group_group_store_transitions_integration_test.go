@@ -15,12 +15,12 @@ import (
 )
 
 type groupGroup struct {
-	ParentGroupID  int64      `gorm:"column:idGroupParent"`
-	ChildGroupID   int64      `gorm:"column:idGroupChild"`
-	Type           string     `gorm:"column:sType"`
-	InvitingUserID *int64     `gorm:"column:idUserInviting"`
-	ChildOrder     int64      `gorm:"column:iChildOrder"`
-	StatusDate     *time.Time `gorm:"column:sStatusDate"`
+	ParentGroupID  int64          `gorm:"column:idGroupParent"`
+	ChildGroupID   int64          `gorm:"column:idGroupChild"`
+	Type           string         `gorm:"column:sType"`
+	InvitingUserID *int64         `gorm:"column:idUserInviting"`
+	ChildOrder     int64          `gorm:"column:iChildOrder"`
+	StatusDate     *database.Time `gorm:"column:sStatusDate"`
 }
 
 type groupAncestor struct {
@@ -30,7 +30,7 @@ type groupAncestor struct {
 }
 
 func TestGroupGroupStore_Transition(t *testing.T) {
-	currentTimePtr := ptrTime(time.Now().UTC())
+	currentTimePtr := (*database.Time)(ptrTime(time.Now().UTC()))
 	userID := int64(12)
 	userIDPtr := &userID
 	groupAncestorsUnchanged := []groupAncestor{
@@ -545,8 +545,8 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 		} else {
 			assert.NotNil(t, groupsGroups[index].StatusDate, "StatusDate should not be nil in row %#v", groupsGroups[index])
 			if groupsGroups[index].StatusDate != nil {
-				assert.True(t, groupsGroups[index].StatusDate.Sub(time.Now().UTC())/time.Second < 5)
-				assert.True(t, time.Now().UTC().Sub(*groupsGroups[index].StatusDate)/time.Second > -5)
+				assert.True(t, (*time.Time)(groupsGroups[index].StatusDate).Sub(time.Now().UTC())/time.Second < 5)
+				assert.True(t, time.Now().UTC().Sub(time.Time(*groupsGroups[index].StatusDate))/time.Second > -5)
 			}
 		}
 	}
