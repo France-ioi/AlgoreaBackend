@@ -11,106 +11,240 @@ import (
 )
 
 type itemStringCommon struct {
-	LanguageID int64   `json:"language_id,string"`
-	Title      string  `json:"title"`
-	ImageURL   *string `json:"image_url"`
+	// required: true
+	LanguageID int64 `json:"language_id,string"`
+	// required: true
+	Title string `json:"title"`
+	// Nullable
+	// required: true
+	ImageURL *string `json:"image_url"`
 }
 
 type itemStringNotGrayed struct {
-	Subtitle    *string `json:"subtitle"`
+	// Nullable; only if not grayed
+	Subtitle *string `json:"subtitle"`
+	// Nullable; only if not grayed
 	Description *string `json:"description"`
 }
 
 type itemStringRootNodeWithSolutionAccess struct {
+	// Nullable; only if the user has access to solutions
 	EduComment *string `json:"edu_comment"`
 }
 
+// Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
 type itemString struct {
+	*itemStringCommon
+	*itemStringNotGrayed
+}
+
+// Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
+type itemStringRoot struct {
 	*itemStringCommon
 	*itemStringNotGrayed
 	*itemStringRootNodeWithSolutionAccess
 }
 
 type itemUserNotGrayed struct {
+	// Nullable; only if not grayed
+	ActiveAttemptID *int64 `json:"active_attempt_id,string"`
 	// only if not grayed
-	ActiveAttemptID     *int64         `json:"active_attempt_id,string"`
-	Score               float32        `json:"score"`
-	SubmissionsAttempts int32          `json:"submissions_attempts"`
-	Validated           bool           `json:"validated"`
-	Finished            bool           `json:"finished"`
-	KeyObtained         bool           `json:"key_obtained"`
-	HintsCached         int32          `json:"hints_cached"`
-	StartDate           *database.Time `json:"start_date"`
-	ValidationDate      *database.Time `json:"validation_date"`
-	FinishDate          *database.Time `json:"finish_date"`
-	ContestStartDate    *database.Time `json:"contest_start_date"`
+	Score float32 `json:"score"`
+	// only if not grayed
+	SubmissionsAttempts int32 `json:"submissions_attempts"`
+	// only if not grayed
+	Validated bool `json:"validated"`
+	// only if not grayed
+	Finished bool `json:"finished"`
+	// only if not grayed
+	KeyObtained bool `json:"key_obtained"`
+	// only if not grayed
+	HintsCached int32 `json:"hints_cached"`
+	// Nullable; only if not grayed
+	// example: 2019-09-11T07:30:56Z
+	StartDate *database.Time `json:"start_date,string"`
+	// only if not grayed
+	// example: 2019-09-11T07:30:56Z
+	// type: string
+	ValidationDate *database.Time `json:"validation_date,string"`
+	// Nullable; only if not grayed
+	// example: 2019-09-11T07:30:56Z
+	FinishDate *database.Time `json:"finish_date,string"`
+	// Nullable; only if not grayed
+	// example: 2019-09-11T07:30:56Z
+	ContestStartDate *database.Time `json:"contest_start_date,string"`
 }
 
 type itemUserRootNodeNotChapter struct {
-	// only if not a chapter
-	State  *string `json:"state"`
+	// Nullable; only if not a chapter
+	State *string `json:"state"`
+	// Nullable; only if not a chapter
 	Answer *string `json:"answer"`
 }
 
+// from `users_items`
 type itemUser struct {
-	// from users_items for current user
+	*itemUserNotGrayed
+}
+
+// from `users_items`
+type itemUserRoot struct {
 	*itemUserNotGrayed
 	*itemUserRootNodeNotChapter
 }
 
 type itemCommonFields struct {
 	// items
-	ID                     int64          `json:"id,string"`
-	Type                   string         `json:"type"`
-	DisplayDetailsInParent bool           `json:"display_details_in_parent"`
-	ValidationType         string         `json:"validation_type"`
-	HasUnlockedItems       bool           `json:"has_unlocked_items"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int32          `json:"score_min_unlock"`
-	TeamMode               *string        `json:"team_mode"`
-	TeamsEditable          bool           `json:"teams_editable"`
-	TeamMaxMembers         int32          `json:"team_max_members"`
-	HasAttempts            bool           `json:"has_attempts"`
-	AccessOpenDate         *database.Time `json:"access_open_date"`
-	Duration               *string        `json:"duration"`
-	EndContestDate         *database.Time `json:"end_contest_date"`
-	NoScore                bool           `json:"no_score"`
-	GroupCodeEnter         *bool          `json:"group_code_enter"`
 
-	String itemString `json:"string"`
-	User   itemUser   `json:"user"`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	// enum: Root,Category,Chapter,Task,Course
+	Type string `json:"type"`
+	// required: true
+	DisplayDetailsInParent bool `json:"display_details_in_parent"`
+	// required: true
+	// enum: None,All,AllButOne,Categories,One,Manual
+	ValidationType string `json:"validation_type"`
+	// whether `items.idItemUnlocked` is empty
+	// required: true
+	HasUnlockedItems bool `json:"has_unlocked_items"`
+	// required: true
+	ScoreMinUnlock int32 `json:"score_min_unlock"`
+	// Nullable
+	// required: true
+	// enum: All,Half,One,None
+	TeamMode *string `json:"team_mode"`
+	// required: true
+	TeamsEditable bool `json:"teams_editable"`
+	// required: true
+	TeamMaxMembers int32 `json:"team_max_members"`
+	// required: true
+	HasAttempts bool `json:"has_attempts"`
+	// Nullable
+	// required: true
+	// example: 2019-09-11T07:30:56Z
+	AccessOpenDate *database.Time `json:"access_open_date"`
+	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+	// example: 838:59:59
+	// Nullable
+	// required: true
+	Duration *string `json:"duration"`
+	// Nullable
+	// required: true
+	// example: 2019-09-11T07:30:56Z
+	EndContestDate *database.Time `json:"end_contest_date"`
+	// required: true
+	NoScore bool `json:"no_score"`
+	// Nullable
+	// required: true
+	GroupCodeEnter *bool `json:"group_code_enter"`
 }
 
 type itemRootNodeNotChapterFields struct {
-	URL          *string `json:"url"`
-	UsesAPI      bool    `json:"uses_api"`
-	HintsAllowed bool    `json:"hints_allowed"`
+	// Nullable; only if not a chapter
+	URL *string `json:"url"`
+	// only if not a chapter
+	UsesAPI bool `json:"uses_api"`
+	// only if not a chapter
+	HintsAllowed bool `json:"hints_allowed"`
 }
 
 type itemChildNode struct {
 	*itemCommonFields
+
+	// required: true
+	String itemString `json:"string"`
+
 	// items_items (child nodes only)
-	Order            int32  `json:"order"`
-	Category         string `json:"category"`
-	AlwaysVisible    bool   `json:"always_visible"`
-	AccessRestricted bool   `json:"access_restricted"`
+
+	// `items_items.iOrder`
+	// required: true
+	Order int32 `json:"order"`
+	// `items_items.sCategory`
+	// required: true
+	Category string `json:"category"`
+	// `items_items.bAlwaysVisible`
+	// enum: Undefined,Discovery,Application,Validation,Challenge
+	// required: true
+	AlwaysVisible bool `json:"always_visible"`
+	// `items_items.bAccessRestricted`
+	// required: true
+	AccessRestricted bool `json:"access_restricted"`
+
+	// from `users_items`
+	// required: true
+	User itemUser `json:"user"`
 }
 
+// swagger:model itemResponse
 type itemResponse struct {
 	*itemCommonFields
 
 	// root node only
-	TitleBarVisible bool   `json:"title_bar_visible"`
-	ReadOnly        bool   `json:"read_only"`
-	FullScreen      string `json:"full_screen"`
-	ShowSource      bool   `json:"show_source"`
-	ValidationMin   *int32 `json:"validation_min"`
-	ShowUserInfos   bool   `json:"show_user_infos"`
-	ContestPhase    string `json:"contest_phase"`
+
+	// required: true
+	TitleBarVisible bool `json:"title_bar_visible"`
+	// required: true
+	ReadOnly bool `json:"read_only"`
+	// required: true
+	// enum: forceYes,,forceNo,default
+	FullScreen string `json:"full_screen"`
+	// required: true
+	ShowSource bool `json:"show_source"`
+	// Nullable
+	// required: true
+	ValidationMin *int32 `json:"validation_min"`
+	// required: true
+	ShowUserInfos bool `json:"show_user_infos"`
+	// required: true
+	// enum: Running,Analysis,Closed
+	ContestPhase string `json:"contest_phase"`
+
+	// required: true
+	User itemUserRoot `json:"user"`
+
+	// required: true
+	String itemStringRoot `json:"string"`
 
 	*itemRootNodeNotChapterFields
+
+	// required: true
 	Children []itemChildNode `json:"children"`
 }
 
+// swagger:operation GET /items/{item_id} items itemView
+// ---
+// summary: Get an item
+// description: Returns data related to the specified item, its children,
+//              and the current user's interactions with them
+//              (from tables `items`, `items_items`, `items_string`, and `users_items`).
+//
+//
+//              * If the specified item is not visible by the current user, the 'not found' response is returned.
+//
+//              * If the current user has only grayed access on the specified item, the 'forbidden' error is returned.
+// parameters:
+// - name: item_id
+//   in: path
+//   type: integer
+//   format: int64
+//   required: true
+// responses:
+//   "200":
+//     description: OK. Success response with item data
+//     schema:
+//       "$ref": "#/definitions/itemResponse"
+//   "400":
+//     "$ref": "#/responses/badRequestResponse"
+//   "401":
+//     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
+//   "500":
+//     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	req := &GetItemRequest{}
 	if err := req.Bind(httpReq); err != nil {
@@ -348,7 +482,52 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {
 }
 
 func constructItemResponseFromDBData(rawData *rawItem) *itemResponse {
-	return &itemResponse{itemCommonFields: fillItemCommonFieldsWithDBData(rawData)}
+	result := &itemResponse{
+		itemCommonFields: fillItemCommonFieldsWithDBData(rawData),
+		String: itemStringRoot{
+			itemStringCommon: constructItemStringCommon(rawData),
+		},
+	}
+	result.String.itemStringNotGrayed = constructStringNotGrayed(rawData)
+	result.User.itemUserNotGrayed = constructUserNotGrayed(rawData)
+	return result
+}
+
+func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
+	return &itemStringCommon{
+		LanguageID: rawData.StringLanguageID,
+		Title:      rawData.StringTitle,
+		ImageURL:   rawData.StringImageURL,
+	}
+}
+
+func constructStringNotGrayed(rawData *rawItem) *itemStringNotGrayed {
+	if !rawData.FullAccess && !rawData.PartialAccess {
+		return nil
+	}
+	return &itemStringNotGrayed{
+		Subtitle:    rawData.StringSubtitle,
+		Description: rawData.StringDescription,
+	}
+}
+
+func constructUserNotGrayed(rawData *rawItem) *itemUserNotGrayed {
+	if !rawData.FullAccess && !rawData.PartialAccess {
+		return nil
+	}
+	return &itemUserNotGrayed{
+		ActiveAttemptID:     rawData.UserActiveAttemptID,
+		Score:               rawData.UserScore,
+		SubmissionsAttempts: rawData.UserSubmissionsAttempts,
+		Validated:           rawData.UserValidated,
+		Finished:            rawData.UserFinished,
+		KeyObtained:         rawData.UserKeyObtained,
+		HintsCached:         rawData.UserHintsCached,
+		StartDate:           rawData.UserStartDate,
+		ValidationDate:      rawData.UserValidationDate,
+		FinishDate:          rawData.UserFinishDate,
+		ContestStartDate:    rawData.UserContestStartDate,
+	}
 }
 
 func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
@@ -368,32 +547,6 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		EndContestDate:         rawData.EndContestDate,
 		NoScore:                rawData.NoScore,
 		GroupCodeEnter:         rawData.GroupCodeEnter,
-
-		String: itemString{
-			itemStringCommon: &itemStringCommon{
-				LanguageID: rawData.StringLanguageID,
-				Title:      rawData.StringTitle,
-				ImageURL:   rawData.StringImageURL,
-			},
-		},
-	}
-	if rawData.FullAccess || rawData.PartialAccess {
-		result.String.itemStringNotGrayed = &itemStringNotGrayed{}
-		result.String.Subtitle = rawData.StringSubtitle
-		result.String.Description = rawData.StringDescription
-
-		result.User.itemUserNotGrayed = &itemUserNotGrayed{}
-		result.User.ActiveAttemptID = rawData.UserActiveAttemptID
-		result.User.Score = rawData.UserScore
-		result.User.SubmissionsAttempts = rawData.UserSubmissionsAttempts
-		result.User.Validated = rawData.UserValidated
-		result.User.Finished = rawData.UserFinished
-		result.User.KeyObtained = rawData.UserKeyObtained
-		result.User.HintsCached = rawData.UserHintsCached
-		result.User.StartDate = rawData.UserStartDate
-		result.User.ValidationDate = rawData.UserValidationDate
-		result.User.FinishDate = rawData.UserFinishDate
-		result.User.ContestStartDate = rawData.UserContestStartDate
 	}
 	return result
 }
@@ -406,6 +559,9 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 		}
 
 		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
+		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
+		child.String.itemStringNotGrayed = constructStringNotGrayed(&(*rawData)[index])
+		child.User.itemUserNotGrayed = constructUserNotGrayed(&(*rawData)[index])
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
 		child.AlwaysVisible = (*rawData)[index].AlwaysVisible

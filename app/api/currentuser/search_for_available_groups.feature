@@ -14,6 +14,7 @@ Feature: Search for groups available to the current user
       | 7  | Team      | Another %%%Team                           | Another team group     | 1           |
       | 8  | Club      | Another %%%Club                           | Another club group     | 1           |
       | 9  | Friends   | Some other friends                        | Another friends group  | 1           |
+      | 10 | Class     | The third class                           | The third class        | 1           |
       | 21 | UserSelf  | (the) user self                           |                        | 0           |
     And the database has the following table 'groups_groups':
       | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
@@ -26,6 +27,7 @@ Feature: Search for groups available to the current user
       | 8  | 7             | 21           | removed            | 2017-08-29 06:38:38 |
       | 9  | 8             | 21           | left               | 2017-09-29 06:38:38 |
       | 10 | 9             | 21           | direct             | 2017-10-29 06:38:38 |
+      | 11 | 10            | 21           | joinedByCode       | 2017-10-29 06:38:38 |
       | 12 | 1             | 22           | direct             | 2017-11-29 06:38:38 |
 
   Scenario: Search for groups with "the"

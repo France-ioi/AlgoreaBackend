@@ -41,6 +41,12 @@ Background:
     | ID | idUser | idItem | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | sStartDate          | sFinishDate         | sValidationDate     | iVersion |
     | 1  | 1      | 200    | 12345  | 10                    | true        | true      | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 0        |
 
+  Scenario: Should fail when the root item is invalid
+    Given I am the user with ID "1"
+    When I send a GET request to "/items/abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for item_id (should be int64)"
+
   Scenario: Should fail when the user doesn't have access to the root item
     Given I am the user with ID "1"
     When I send a GET request to "/items/190"

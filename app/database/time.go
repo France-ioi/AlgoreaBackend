@@ -10,6 +10,8 @@ import (
 
 // Time is the same as time.Time, but it can be assigned from MySQL datetime string representation (implements Scanner interface),
 // can convert itself to sql/driver.Value (implements Valuer interface) and marshal itself as JSON (implements json.Marshaler)
+//
+// swagger:strfmt date-time
 type Time time.Time
 
 // Scan assigns a value from a database driver value ([]byte)
