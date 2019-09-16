@@ -40,10 +40,10 @@ type itemUserNotGrayed struct {
 	Finished            bool           `json:"finished"`
 	KeyObtained         bool           `json:"key_obtained"`
 	HintsCached         int32          `json:"hints_cached"`
-	StartDate           *database.Time `json:"start_date"`         // iso8601 str
-	ValidationDate      *database.Time `json:"validation_date"`    // iso8601 str
-	FinishDate          *database.Time `json:"finish_date"`        // iso8601 str
-	ContestStartDate    *database.Time `json:"contest_start_date"` // iso8601 str
+	StartDate           *database.Time `json:"start_date"`
+	ValidationDate      *database.Time `json:"validation_date"`
+	FinishDate          *database.Time `json:"finish_date"`
+	ContestStartDate    *database.Time `json:"contest_start_date"`
 }
 
 type itemUserRootNodeNotChapter struct {
@@ -70,9 +70,9 @@ type itemCommonFields struct {
 	TeamsEditable          bool           `json:"teams_editable"`
 	TeamMaxMembers         int32          `json:"team_max_members"`
 	HasAttempts            bool           `json:"has_attempts"`
-	AccessOpenDate         *database.Time `json:"access_open_date"` // iso8601 str
+	AccessOpenDate         *database.Time `json:"access_open_date"`
 	Duration               *string        `json:"duration"`
-	EndContestDate         *database.Time `json:"end_contest_date"` // iso8601 str
+	EndContestDate         *database.Time `json:"end_contest_date"`
 	NoScore                bool           `json:"no_score"`
 	GroupCodeEnter         *bool          `json:"group_code_enter"`
 
@@ -150,9 +150,9 @@ type rawItem struct {
 	TeamsEditable          bool           `sql:"column:bTeamsEditable"`
 	TeamMaxMembers         int32          `sql:"column:iTeamMaxMembers"`
 	HasAttempts            bool           `sql:"column:bHasAttempts"`
-	AccessOpenDate         *database.Time `sql:"column:sAccessOpenDate"` // iso8601 str
+	AccessOpenDate         *database.Time `sql:"column:sAccessOpenDate"`
 	Duration               *string        `sql:"column:sDuration"`
-	EndContestDate         *database.Time `sql:"column:sEndContestDate"` // iso8601 str
+	EndContestDate         *database.Time `sql:"column:sEndContestDate"`
 	NoScore                bool           `sql:"column:bNoScore"`
 	GroupCodeEnter         *bool          `sql:"column:groupCodeEnter"`
 
@@ -184,12 +184,12 @@ type rawItem struct {
 	UserFinished            bool           `sql:"column:bFinished"`
 	UserKeyObtained         bool           `sql:"column:bKeyObtained"`
 	UserHintsCached         int32          `sql:"column:nbHintsCached"`
-	UserStartDate           *database.Time `sql:"column:sStartDate"`        // iso8601 str
-	UserValidationDate      *database.Time `sql:"column:sValidationDate"`   // iso8601 str
-	UserFinishDate          *database.Time `sql:"column:sFinishDate"`       // iso8601 str
-	UserContestStartDate    *database.Time `sql:"column:sContestStartDate"` // iso8601 str
-	UserState               *string        `sql:"column:sState"`            // only if not a chapter
-	UserAnswer              *string        `sql:"column:sAnswer"`           // only if not a chapter
+	UserStartDate           *database.Time `sql:"column:sStartDate"`
+	UserValidationDate      *database.Time `sql:"column:sValidationDate"`
+	UserFinishDate          *database.Time `sql:"column:sFinishDate"`
+	UserContestStartDate    *database.Time `sql:"column:sContestStartDate"`
+	UserState               *string        `sql:"column:sState"`  // only if not a chapter
+	UserAnswer              *string        `sql:"column:sAnswer"` // only if not a chapter
 
 	// items_items
 	Order            int32  `sql:"column:iChildOrder"`

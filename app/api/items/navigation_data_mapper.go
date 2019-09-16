@@ -24,9 +24,9 @@ type rawNavigationItem struct {
 	UserFinished            bool           `sql:"column:bFinished"`
 	UserKeyObtained         bool           `sql:"column:bKeyObtained"`
 	UserSubmissionsAttempts int32          `sql:"column:nbSubmissionsAttempts"`
-	UserStartDate           *database.Time `sql:"column:sStartDate"`      // iso8601 str
-	UserValidationDate      *database.Time `sql:"column:sValidationDate"` // iso8601 str
-	UserFinishDate          *database.Time `sql:"column:sFinishDate"`     // iso8601 str
+	UserStartDate           *database.Time `sql:"column:sStartDate"`
+	UserValidationDate      *database.Time `sql:"column:sValidationDate"`
+	UserFinishDate          *database.Time `sql:"column:sFinishDate"`
 
 	// items_items
 	IDItemParent int64 `sql:"column:idItemParent"`

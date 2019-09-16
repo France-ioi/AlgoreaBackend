@@ -21,9 +21,9 @@ type navigationItemUser struct {
 	Finished            bool           `json:"finished"`
 	KeyObtained         bool           `json:"key_obtained"`
 	SubmissionsAttempts int32          `json:"submissions_attempts"`
-	StartDate           *database.Time `json:"start_date"`      // iso8601 str
-	ValidationDate      *database.Time `json:"validation_date"` // iso8601 str
-	FinishDate          *database.Time `json:"finish_date"`     // iso8601 str
+	StartDate           *database.Time `json:"start_date"`
+	ValidationDate      *database.Time `json:"validation_date"`
+	FinishDate          *database.Time `json:"finish_date"`
 }
 
 type navigationItemAccessRights struct {
