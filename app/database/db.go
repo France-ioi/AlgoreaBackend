@@ -551,3 +551,8 @@ func recoverPanics(returnErr *error) { // nolint:gocritic
 func QuoteName(name string) string {
 	return "`" + strings.Replace(name, "`", "``", -1) + "`"
 }
+
+// Default returns gorm.Expr("DEFAULT")
+func Default() interface{} {
+	return gorm.Expr("DEFAULT")
+}

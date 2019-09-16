@@ -117,7 +117,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	userData["sLastActivityDate"] = database.Now()
 
 	if defaultLanguage, ok := userData["sDefaultLanguage"]; ok && defaultLanguage == nil {
-		userData["sDefaultLanguage"] = gorm.Expr("DEFAULT")
+		userData["sDefaultLanguage"] = database.Default()
 	}
 
 	if gorm.IsRecordNotFoundError(err) {

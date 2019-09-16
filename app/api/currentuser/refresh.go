@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -32,7 +31,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 
 	userProfile["sLastActivityDate"] = database.Now()
 	if defaultLanguage, ok := userProfile["sDefaultLanguage"]; ok && defaultLanguage == nil {
-		userProfile["sDefaultLanguage"] = gorm.Expr("DEFAULT")
+		userProfile["sDefaultLanguage"] = database.Default()
 	}
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).UpdateColumn(userProfile).Error())
 
