@@ -264,11 +264,11 @@ func setConvertedValueToJSONMap(valueName string, value interface{}, result map[
 		value = strconv.FormatInt(valueInt64, 10)
 	}
 
-	value = convertDateToRFC3339(value, snakeCaseName)
+	value = convertDateToRFC3339IfDate(value, snakeCaseName)
 	result[snakeCaseName] = value
 }
 
-func convertDateToRFC3339(value interface{}, snakeCaseName string) interface{} {
+func convertDateToRFC3339IfDate(value interface{}, snakeCaseName string) interface{} {
 	if value != nil && strings.HasSuffix(snakeCaseName, "_date") {
 		parsedTime, err := time.Parse("2006-01-02 15:04:05", value.(string))
 		if err != nil {
