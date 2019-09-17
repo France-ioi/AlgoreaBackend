@@ -39,6 +39,7 @@ func New() (*Application, error) {
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	conf.Database.Connection.ParseTime = false // should be false!
 	if conf.Database.Connection.Net == "" {
 		return nil, errors.New("database.connection.net should be set")
 	}

@@ -1,11 +1,11 @@
 users: [{ID: 2, idGroupSelf: 12, sLogin: 2}]
-users_items: [{idUser: 2, idItem: 114, sContestStartDate: 2019-03-22T08:44:55Z}]
+users_items: [{idUser: 2, idItem: 114, sContestStartDate: 2019-03-22 08:44:55}]
 groups: [{ID: 12}, {ID: 21, idTeamItem: 114, sType: Team}]
 groups_groups: [{idGroupParent: 21, idGroupChild: 12, sType: invitationAccepted}]
 groups_ancestors:
   - {idGroupAncestor: 12, idGroupChild: 12}
   - {idGroupAncestor: 21, idGroupChild: 12}
   - {idGroupAncestor: 21, idGroupChild: 21}
-groups_items: [{idGroup: 21, idItem: 114, sFullAccessDate: 2019-03-22T08:44:55Z,
-                sCachedFullAccessDate: 2019-03-22T08:44:55Z, sAdditionalTime: 0000-00-00 01:00:00}]
+groups_items: [{idGroup: 21, idItem: 114, sFullAccessDate: 2019-03-22 08:44:55,
+                sCachedFullAccessDate: 2019-03-22 08:44:55, sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}]
 

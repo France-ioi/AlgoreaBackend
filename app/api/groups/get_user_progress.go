@@ -82,7 +82,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var userGroupIDs []interface{}
 	userGroupIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN groups ON groups.ID = groups_ancestors.idGroupChild AND groups.sType = 'UserSelf'").
+		Joins("JOIN `groups` ON groups.ID = groups_ancestors.idGroupChild AND groups.sType = 'UserSelf'").
 		Where("groups_ancestors.idGroupAncestor = ?", groupID).
 		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor")
 	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
@@ -122,14 +122,14 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Select(`
 			items.ID AS idItem,
 			groups.ID AS idGroup,
-			IFNULL(attempt_with_best_score.iScore, 0) AS iScore,
-			IFNULL(attempt_with_best_score.bValidated, 0) AS bValidated,
+			IFNULL(MAX(attempt_with_best_score.iScore), 0) AS iScore,
+			IFNULL(MAX(attempt_with_best_score.bValidated), 0) AS bValidated,
 			MAX(last_attempt.sLastActivityDate) AS sLastActivityDate,
-			IFNULL(attempt_with_best_score.nbHintsCached, 0) AS nbHintsRequested,
-			IFNULL(attempt_with_best_score.nbSubmissionsAttempts, 0) AS nbSubmissionAttempts,
-			IF(attempt_with_best_score.idGroup IS NULL,
+			IFNULL(MAX(attempt_with_best_score.nbHintsCached), 0) AS nbHintsRequested,
+			IFNULL(MAX(attempt_with_best_score.nbSubmissionsAttempts), 0) AS nbSubmissionAttempts,
+			IF(MAX(attempt_with_best_score.idGroup) IS NULL,
 				0,
-				IF(attempt_with_best_score.bValidated,
+				IF(MAX(attempt_with_best_score.bValidated),
 					TIMESTAMPDIFF(SECOND, MIN(first_attempt.sStartDate), MIN(first_validated_attempt.sValidationDate)),
 					TIMESTAMPDIFF(SECOND, MIN(first_attempt.sStartDate), NOW())
 				)
@@ -140,7 +140,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			ON team_links.sType`+database.GroupRelationIsActiveCondition+` AND
 				team_links.idGroupChild = groups.ID`).
 		Joins(`
-			JOIN groups AS teams
+			JOIN `+"`groups`"+` AS teams
 			ON teams.sType = 'Team' AND
 				teams.ID = team_links.idGroupParent`).
 		Joins(`
@@ -253,7 +253,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Order(gorm.Expr(
 			"FIELD(items.ID"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
-		Order("attempt_with_best_score.iMinusScore, attempt_with_best_score.sBestAnswerDate").
+		Order("MAX(attempt_with_best_score.iMinusScore), MAX(attempt_with_best_score.sBestAnswerDate)").
 		ScanIntoSliceOfMaps(&dbResult).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
 	render.Respond(w, r, convertedResult)

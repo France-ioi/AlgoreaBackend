@@ -13,6 +13,9 @@ import (
 type FieldSortingParams struct {
 	// ColumnName is a DB column name (may contain a table name as a prefix, e.g. "groups.ID")
 	ColumnName string
+	// ColumnNameForOrdering is a DB column name (may contain a table name as a prefix, e.g. "groups.ID")
+	// used (if set) in ORDER BY clause instead of 'ColumnName'
+	ColumnNameForOrdering string
 	// FieldType is one of "int64", "bool", "string", "time"
 	FieldType string
 }
@@ -135,7 +138,13 @@ func applyOrder(query *database.DB, usedFields []string, acceptedFields map[stri
 	usedFieldsNumber := len(usedFields)
 	orderStrings := make([]string, 0, usedFieldsNumber)
 	for _, field := range usedFields {
-		orderStrings = append(orderStrings, acceptedFields[field].ColumnName+" "+fieldsDirections[field].asSQL())
+		var columnName string
+		if acceptedFields[field].ColumnNameForOrdering != "" {
+			columnName = acceptedFields[field].ColumnNameForOrdering
+		} else {
+			columnName = acceptedFields[field].ColumnName
+		}
+		orderStrings = append(orderStrings, columnName+" "+fieldsDirections[field].asSQL())
 	}
 	if len(orderStrings) > 0 {
 		query = query.Order(strings.Join(orderStrings, ", "))

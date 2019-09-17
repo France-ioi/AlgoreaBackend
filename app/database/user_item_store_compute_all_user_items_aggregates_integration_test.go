@@ -13,13 +13,13 @@ import (
 )
 
 type aggregatesResultRow struct {
-	ID                        int64      `gorm:"column:ID"`
-	LastActivityDate          *time.Time `gorm:"column:sLastActivityDate"`
-	TasksTried                int64      `gorm:"column:nbTasksTried"`
-	TasksWithHelp             int64      `gorm:"column:nbTasksWithHelp"`
-	TasksSolved               int64      `gorm:"column:nbTasksSolved"`
-	ChildrenValidated         int64      `gorm:"column:nbChildrenValidated"`
-	AncestorsComputationState string     `gorm:"column:sAncestorsComputationState"`
+	ID                        int64          `gorm:"column:ID"`
+	LastActivityDate          *database.Time `gorm:"column:sLastActivityDate"`
+	TasksTried                int64          `gorm:"column:nbTasksTried"`
+	TasksWithHelp             int64          `gorm:"column:nbTasksWithHelp"`
+	TasksSolved               int64          `gorm:"column:nbTasksSolved"`
+	ChildrenValidated         int64          `gorm:"column:nbChildrenValidated"`
+	AncestorsComputationState string         `gorm:"column:sAncestorsComputationState"`
 }
 
 func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
@@ -61,11 +61,11 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := []aggregatesResultRow{
-		{ID: 11, LastActivityDate: &oldDate, TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4,
+		{ID: 11, LastActivityDate: (*database.Time)(&oldDate), TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4,
 			AncestorsComputationState: "done"},
-		{ID: 12, LastActivityDate: &currentDate, TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11,
+		{ID: 12, LastActivityDate: (*database.Time)(&currentDate), TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11,
 			ChildrenValidated: 2, AncestorsComputationState: "done"},
-		{ID: 13, LastActivityDate: &currentDate, TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
+		{ID: 13, LastActivityDate: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
 			AncestorsComputationState: "done"},
 		{ID: 14, LastActivityDate: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
 			AncestorsComputationState: "done"},

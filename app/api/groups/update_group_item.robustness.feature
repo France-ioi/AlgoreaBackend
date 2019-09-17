@@ -33,10 +33,10 @@ Feature: Change item access rights for a group - robustness
       | 102 |
       | 103 |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild | bAlwaysVisible | bAccessRestricted |
-      | 100          | 101         | true           | true              |
-      | 101          | 102         | false          | false             |
-      | 102          | 103         | false          | false             |
+      | idItemParent | idItemChild | bAlwaysVisible | bAccessRestricted | iChildOrder |
+      | 100          | 101         | true           | true              | 0           |
+      | 101          | 102         | false          | false             | 0           |
+      | 102          | 103         | false          | false             | 0           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 100            | 101         |
@@ -46,13 +46,13 @@ Feature: Change item access rights for a group - robustness
       | 101            | 103         |
       | 102            | 103         |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bOwnerAccess | sAccessReason                                  |
-      | 21      | 100    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 1            | owner owns the item                            |
-      | 21      | 101    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
-      | 21      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
-      | 21      | 103    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0            | null                                           |
-      | 25      | 100    | null            | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null            | null                  | null                | null                     | null                    | null                 | null                       | 1            | owner owns the item                            | 2             |
+      | 21      | 101    | null            | null                  | null                | null                     | null                    | null                 | null                       | 0            | null                                           | 2             |
+      | 21      | 102    | null            | null                  | null                | null                     | null                    | null                 | null                       | 0            | null                                           | 2             |
+      | 21      | 103    | null            | null                  | null                | null                     | null                    | null                 | null                       | 0            | null                                           | 2             |
+      | 25      | 100    | null            | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null            | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0            | null                                           | 2             |
 
   Scenario: Invalid group_id
     Given I am the user with ID "1"

@@ -13,41 +13,41 @@ import (
 )
 
 type groupItemsAggregatesResultRow struct {
-	GroupID                   int64      `gorm:"column:idGroup"`
-	ItemID                    int64      `gorm:"column:idItem"`
-	PropagateAccess           string     `gorm:"column:sPropagateAccess"`
-	CachedFullAccessDate      *time.Time `gorm:"column:sCachedFullAccessDate"`
-	FullAccessDate            *time.Time `gorm:"column:sFullAccessDate"`
-	CachedFullAccess          bool       `gorm:"column:bCachedFullAccess"`
-	CachedPartialAccessDate   *time.Time `gorm:"column:sCachedPartialAccessDate"`
-	PartialAccessDate         *time.Time `gorm:"column:sPartialAccessDate"`
-	CachedPartialAccess       bool       `gorm:"column:bCachedPartialAccess"`
-	ManagerAccess             bool       `gorm:"column:bManagerAccess"`
-	CachedManagerAccess       bool       `gorm:"column:bCachedManagerAccess"`
-	CachedGrayedAccessDate    *time.Time `gorm:"column:sCachedGrayedAccessDate"`
-	CachedGrayedAccess        bool       `gorm:"column:bCachedGrayedAccess"`
-	CachedAccessSolutionsDate *time.Time `gorm:"column:sCachedAccessSolutionsDate"`
-	AccessSolutionsDate       *time.Time `gorm:"column:sAccessSolutionsDate"`
-	CachedAccessSolutions     bool       `gorm:"column:bCachedAccessSolutions"`
-	CachedAccessReason        *string    `gorm:"column:sCachedAccessReason"`
-	AccessReason              *string    `gorm:"column:sAccessReason"`
+	GroupID                   int64          `gorm:"column:idGroup"`
+	ItemID                    int64          `gorm:"column:idItem"`
+	PropagateAccess           string         `gorm:"column:sPropagateAccess"`
+	CachedFullAccessDate      *database.Time `gorm:"column:sCachedFullAccessDate"`
+	FullAccessDate            *database.Time `gorm:"column:sFullAccessDate"`
+	CachedFullAccess          bool           `gorm:"column:bCachedFullAccess"`
+	CachedPartialAccessDate   *database.Time `gorm:"column:sCachedPartialAccessDate"`
+	PartialAccessDate         *database.Time `gorm:"column:sPartialAccessDate"`
+	CachedPartialAccess       bool           `gorm:"column:bCachedPartialAccess"`
+	ManagerAccess             bool           `gorm:"column:bManagerAccess"`
+	CachedManagerAccess       bool           `gorm:"column:bCachedManagerAccess"`
+	CachedGrayedAccessDate    *database.Time `gorm:"column:sCachedGrayedAccessDate"`
+	CachedGrayedAccess        bool           `gorm:"column:bCachedGrayedAccess"`
+	CachedAccessSolutionsDate *database.Time `gorm:"column:sCachedAccessSolutionsDate"`
+	AccessSolutionsDate       *database.Time `gorm:"column:sAccessSolutionsDate"`
+	CachedAccessSolutions     bool           `gorm:"column:bCachedAccessSolutions"`
+	CachedAccessReason        *string        `gorm:"column:sCachedAccessReason"`
+	AccessReason              *string        `gorm:"column:sAccessReason"`
 }
 
 var expectedRow14 = groupItemsAggregatesResultRow{
 	GroupID:                   1,
 	ItemID:                    4,
-	CachedFullAccessDate:      ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
-	FullAccessDate:            ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
+	CachedFullAccessDate:      (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
+	FullAccessDate:            (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedFullAccess:          true,
-	CachedPartialAccessDate:   ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
-	PartialAccessDate:         ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
+	CachedPartialAccessDate:   (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
+	PartialAccessDate:         (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedPartialAccess:       true,
 	CachedManagerAccess:       true,
 	ManagerAccess:             true,
-	CachedGrayedAccessDate:    ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
+	CachedGrayedAccessDate:    (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedGrayedAccess:        true,
-	CachedAccessSolutionsDate: ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
-	AccessSolutionsDate:       ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC)),
+	CachedAccessSolutionsDate: (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
+	AccessSolutionsDate:       (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedAccessSolutions:     true,
 	CachedAccessReason:        ptrString("some cached reason"),
 	AccessReason:              ptrString("some reason"),
@@ -87,8 +87,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 		{
 			GroupID:              1,
 			ItemID:               1,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
-			FullAccessDate:       ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
+			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedFullAccess:     true,
 			PropagateAccess:      "done",
 		},
@@ -96,14 +96,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			GroupID:              1,
 			ItemID:               2,
 			CachedFullAccessDate: nil, // since it has been already done
-			FullAccessDate:       ptrTime(currentDate.AddDate(0, 0, -9)),
+			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedFullAccess:     true, // since it has been already done
 			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              1,
 			ItemID:               3,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // since it has been already done
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			FullAccessDate:       nil,
 			CachedFullAccess:     true,
 			PropagateAccess:      "done",
@@ -112,7 +112,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 		{
 			GroupID:              1,
 			ItemID:               11,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedFullAccess: false, // since it is a new record and we do not set bCachedFullAccess=1 in ComputeAllAccess()
 			PropagateAccess:  "done",
@@ -120,29 +120,29 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 		{
 			GroupID:              1,
 			ItemID:               12,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_2, 1_11)
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_2, 1_11)
 			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
 			ItemID:               1,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -11)),
-			FullAccessDate:       ptrTime(currentDate.AddDate(0, 0, -11)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedFullAccess:     true,
 			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
 			ItemID:               11,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)),
-			FullAccessDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedFullAccess:     true,
 			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
 			ItemID:               12,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedFullAccess:     false, // since it is a new record and we do not set bCachedFullAccess=1 in ComputeAllAccess()
 			PropagateAccess:      "done",
 		},
@@ -182,8 +182,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		{
 			GroupID:                 1,
 			ItemID:                  1,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedPartialAccess:     true,
 			PropagateAccess:         "done",
 		},
@@ -191,14 +191,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			GroupID:                 1,
 			ItemID:                  2,
 			CachedPartialAccessDate: nil, // since it has been already done
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -9)),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedPartialAccess:     true, // since it has been already done
 			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
 			ItemID:                  3,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // since it has been already done
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			PartialAccessDate:       nil,
 			CachedPartialAccess:     true,
 			PropagateAccess:         "done",
@@ -207,7 +207,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		{
 			GroupID:                 1,
 			ItemID:                  11,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedPartialAccess: false, // since it is a new record and we do not set bCachedPartialAccess=1 in ComputeAllAccess()
 			PropagateAccess:     "done",
@@ -221,16 +221,16 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		{
 			GroupID:                 2,
 			ItemID:                  1,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -11)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -11)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedPartialAccess:     true,
 			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
 			ItemID:                  11,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedPartialAccess:     true,
 			PropagateAccess:         "done",
 		},
@@ -365,8 +365,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		{
 			GroupID:                 1,
 			ItemID:                  1,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedGrayedAccess:      false, // since we have partial access here
 			PropagateAccess:         "done",
 		},
@@ -374,14 +374,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			GroupID:                 1,
 			ItemID:                  2,
 			CachedPartialAccessDate: nil, // since it has been already done
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -9)),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedGrayedAccess:      true, // since it has been already done
 			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
 			ItemID:                  3,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // since it has been already done
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			PartialAccessDate:       nil,
 			CachedGrayedAccess:      true,
 			PropagateAccess:         "done",
@@ -392,7 +392,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			ItemID:                  11,
 			CachedPartialAccessDate: nil, // since bAccessRestricted = 1
 
-			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least sCachedPartialAccessDate(1_1, 1_3)
+			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least sCachedPartialAccessDate(1_1, 1_3)
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
 			PropagateAccess:    "done",
@@ -402,7 +402,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			ItemID:                  12,
 			CachedPartialAccessDate: nil, // since bAccessRestricted=1
 
-			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)), // from 1_1
+			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))), // from 1_1
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
 			PropagateAccess:    "done",
@@ -410,16 +410,16 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		{
 			GroupID:                 2,
 			ItemID:                  1,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -11)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -11)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
 			ItemID:                  11,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
-			CachedGrayedAccessDate:  ptrTime(currentDate.AddDate(0, 0, -11)), // from 2_1
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			CachedGrayedAccessDate:  (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))), // from 2_1
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
 			PropagateAccess:    "done",
@@ -430,7 +430,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 
 			CachedPartialAccessDate: nil, // since bAccessRestricted=1
 
-			CachedGrayedAccessDate: ptrTime(currentDate.AddDate(0, 0, -12)), // from 2_11
+			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))), // from 2_11
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set bCachedGrayedAccess=1 in ComputeAllAccess()
 			PropagateAccess:    "done",
@@ -471,8 +471,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		{
 			GroupID:                   1,
 			ItemID:                    1,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -8)),
-			AccessSolutionsDate:       ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
+			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedAccessSolutions:     true,
 			PropagateAccess:           "done",
 		},
@@ -480,14 +480,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			GroupID:                   1,
 			ItemID:                    2,
 			CachedAccessSolutionsDate: nil, // since it has been already done
-			AccessSolutionsDate:       ptrTime(currentDate.AddDate(0, 0, -9)),
+			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedAccessSolutions:     true, // since it has been already done
 			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   1,
 			ItemID:                    3,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), // since it has been already done
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			AccessSolutionsDate:       nil,
 			CachedAccessSolutions:     true,
 			PropagateAccess:           "done",
@@ -496,7 +496,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		{
 			GroupID:                   1,
 			ItemID:                    11,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_3)
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedAccessSolutions: false, // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
 			PropagateAccess:       "done",
@@ -504,7 +504,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		{
 			GroupID:                   1,
 			ItemID:                    12,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -10)), // least(1_1, 1_2, 1_11)
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_2, 1_11)
 
 			CachedAccessSolutions: false, // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
 			PropagateAccess:       "done",
@@ -512,23 +512,23 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		{
 			GroupID:                   2,
 			ItemID:                    1,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -11)),
-			AccessSolutionsDate:       ptrTime(currentDate.AddDate(0, 0, -11)),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedAccessSolutions:     true,
 			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   2,
 			ItemID:                    11,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -12)),
-			AccessSolutionsDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessSolutions:     true,
 			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   2,
 			ItemID:                    12,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessSolutions:     false, // since it is a new record and we do not set bCachedAccessSolutions=1 in ComputeAllAccess()
 			PropagateAccess:           "done",
 		},
@@ -659,8 +659,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:              1,
 			ItemID:               1,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
-			FullAccessDate:       ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
+			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedAccessReason:   nil,
 			AccessReason:         ptrString("reason 1_1"),
 			PropagateAccess:      "done",
@@ -685,7 +685,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:              1,
 			ItemID:               11,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedManagerAccess:  true,
 			CachedAccessReason:   ptrString("From ancestor group(s) reason 1_1, reason 1_2"), // concat(1_1, 1_2, 1_3)
 			PropagateAccess:      "done",
@@ -693,7 +693,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:              1,
 			ItemID:               12,
-			CachedFullAccessDate: ptrTime(currentDate.AddDate(0, 0, -8)),
+			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedManagerAccess:  true,
 			CachedAccessReason:   ptrString("From ancestor group(s) reason 1_1, reason 1_2"), // concat(1_1, 1_2, 1_11)
 			PropagateAccess:      "done",
@@ -701,8 +701,8 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:                 2,
 			ItemID:                  1,
-			CachedPartialAccessDate: ptrTime(currentDate.AddDate(0, 0, -11)),
-			PartialAccessDate:       ptrTime(currentDate.AddDate(0, 0, -11)),
+			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedAccessReason:      nil,
 			AccessReason:            ptrString("reason 2_1"),
 			PropagateAccess:         "done",
@@ -710,9 +710,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:                   2,
 			ItemID:                    11,
-			CachedPartialAccessDate:   ptrTime(currentDate.AddDate(0, 0, -11)),
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -12)),
-			AccessSolutionsDate:       ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedPartialAccessDate:   (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
+			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessReason:        ptrString("From ancestor group(s) reason 2_1"),
 			AccessReason:              ptrString("reason 2_11"),
 			PropagateAccess:           "done",
@@ -720,7 +720,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		{
 			GroupID:                   2,
 			ItemID:                    12,
-			CachedAccessSolutionsDate: ptrTime(currentDate.AddDate(0, 0, -12)),
+			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessReason:        ptrString("From ancestor group(s) reason 2_11"),
 			PropagateAccess:           "done",
 		},

@@ -8,6 +8,6 @@ groups_ancestors:
   - {idGroupAncestor: 23, idGroupChild: 14}
   - {idGroupAncestor: 23, idGroupChild: 23}
 groups_items:
-  - {idGroup: 14, idItem: 115, sFullAccessDate: 2019-03-22T08:44:55Z, sCachedFullAccessDate: 2019-03-22T08:44:55Z}
-  - {idGroup: 23, idItem: 500, sAdditionalTime: 0000-00-00 01:00:00}
-  - {idGroup: 23, idItem: 115, sPartialAccessDate: 2019-03-22T08:44:55Z, sCachedPartialAccessDate: 2019-03-22T08:44:55Z}
+  - {idGroup: 14, idItem: 115, sFullAccessDate: 2019-03-22 08:44:55, sCachedFullAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
+  - {idGroup: 23, idItem: 500, sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}
+  - {idGroup: 23, idItem: 115, sPartialAccessDate: 2019-03-22 08:44:55, sCachedPartialAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}

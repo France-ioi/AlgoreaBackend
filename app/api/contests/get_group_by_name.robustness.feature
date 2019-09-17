@@ -21,13 +21,13 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 10 | 00:00:02  |
       | 70 | 00:00:03  |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate |
-      | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       |
-      | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  | null                       |
-      | 13      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  | null                       |
-      | 21      | 50     | null                     | null                    | null                  | null                       |
-      | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
-      | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | idUserCreated |
+      | 13      | 50     | 2017-05-29 06:38:38      | null                    | null                  | null                       | 1             |
+      | 13      | 60     | null                     | 2017-05-29 06:38:38     | null                  | null                       | 1             |
+      | 13      | 70     | null                     | null                    | 2017-05-29 06:38:38   | null                       | 1             |
+      | 21      | 50     | null                     | null                    | null                  | null                       | 1             |
+      | 21      | 60     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 1             |
+      | 21      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 1             |
 
   Scenario: Wrong item_id
     Given I am the user with ID "1"

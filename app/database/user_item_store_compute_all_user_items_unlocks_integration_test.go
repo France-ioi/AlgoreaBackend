@@ -5,7 +5,6 @@ package database_test
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -16,11 +15,11 @@ import (
 )
 
 type unlocksResultRow struct {
-	GroupID                 int64      `gorm:"column:idGroup"`
-	ItemID                  int64      `gorm:"column:idItem"`
-	PartialAccessDate       *time.Time `gorm:"column:sPartialAccessDate"`
-	CachedPartialAccessDate *time.Time `gorm:"column:sCachedPartialAccessDate"`
-	CachedPartialAccess     bool       `gorm:"column:bCachedPartialAccess"`
+	GroupID                 int64          `gorm:"column:idGroup"`
+	ItemID                  int64          `gorm:"column:idItem"`
+	PartialAccessDate       *database.Time `gorm:"column:sPartialAccessDate"`
+	CachedPartialAccessDate *database.Time `gorm:"column:sCachedPartialAccessDate"`
+	CachedPartialAccess     bool           `gorm:"column:bCachedPartialAccess"`
 }
 
 func TestUserItemStore_ComputeAllUserItems_Unlocks(t *testing.T) {

@@ -35,7 +35,9 @@ func init() { // nolint:gochecknoinits
 			// open DB
 			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
 			var db *sql.DB
-			db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
+			databaseConfig := conf.Database.Connection
+			databaseConfig.ParseTime = true
+			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {
 				fmt.Println("Unable to connect to the database: ", err)
 				os.Exit(1)

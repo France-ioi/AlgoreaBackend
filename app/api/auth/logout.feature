@@ -4,13 +4,13 @@ Feature: Sign the current user out
       | ID | sLogin |
       | 2  | john   |
       | 3  | jane   |
-    And the DB time now is "2019-07-16T22:02:28Z"
+    And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | idUser | sExpirationDate      | sAccessToken              |
-      | 2      | 2019-07-16T22:02:29Z | someaccesstoken           |
-      | 2      | 2019-07-16T22:02:40Z | anotheraccesstoken        |
-      | 3      | 2019-07-16T22:02:29Z | accesstokenforjane        |
-      | 3      | 2019-07-16T22:02:31Z | anotheraccesstokenforjane |
+      | idUser | sExpirationDate     | sAccessToken              |
+      | 2      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 2      | 2019-07-16 22:02:40 | anotheraccesstoken        |
+      | 3      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 3      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the database has the following table 'refresh_tokens':
       | idUser | sRefreshToken       |
       | 2      | somerefreshtoken    |
@@ -26,9 +26,9 @@ Feature: Sign the current user out
     }
     """
     And the table "sessions" should be:
-      | idUser | sExpirationDate      | sAccessToken              |
-      | 3      | 2019-07-16T22:02:29Z | accesstokenforjane        |
-      | 3      | 2019-07-16T22:02:31Z | anotheraccesstokenforjane |
+      | idUser | sExpirationDate     | sAccessToken              |
+      | 3      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 3      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the table "refresh_tokens" should be:
       | idUser | sRefreshToken       |
       | 3      | refreshtokenforjane |

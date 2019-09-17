@@ -17,8 +17,8 @@ Feature: User sends a request to join a group
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType       | sStatusDate          |
-      | 7  | 14            | 21           | requestSent | 2017-02-21T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType       | sStatusDate         |
+      | 7  | 14            | 21           | requestSent | 2017-02-21 06:38:38 |
 
   Scenario: Successfully send a request
     Given I am the user with ID "1"
@@ -56,8 +56,8 @@ Feature: User sends a request to join a group
   Scenario: Automatically accepts the request if the user owns the group
     Given I am the user with ID "1"
     And the database table 'groups_groups' has also the following row:
-      | ID | idGroupParent | idGroupChild | sType  | sStatusDate          |
-      | 8  | 22            | 11           | direct | 2017-02-21T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType  | sStatusDate         |
+      | 8  | 22            | 11           | direct | 2017-02-21 06:38:38 |
     And the database table 'groups_ancestors' has also the following row:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 22              | 11           | 0       |

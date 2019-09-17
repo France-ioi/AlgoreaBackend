@@ -116,6 +116,10 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	userData["sLastLoginDate"] = database.Now()
 	userData["sLastActivityDate"] = database.Now()
 
+	if defaultLanguage, ok := userData["sDefaultLanguage"]; ok && defaultLanguage == nil {
+		userData["sDefaultLanguage"] = database.Default()
+	}
+
 	if gorm.IsRecordNotFoundError(err) {
 		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["sLogin"].(string), domainConfig)
 		userData["tempUser"] = 0

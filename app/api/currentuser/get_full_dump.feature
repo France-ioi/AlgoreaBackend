@@ -1,6 +1,6 @@
 Feature: Export the current user's data
   Background:
-    Given the DB time now is "2019-07-16T22:02:28Z"
+    Given the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'users':
       | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
       | 2  | user   | 11          | 12           | John        | Doe       | 1      |
@@ -26,20 +26,20 @@ Feature: Export the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          | idUserInviting |
-      | 2  | 1             | 11           | invitationSent     | 2019-07-09T21:02:28Z | null           |
-      | 3  | 2             | 11           | invitationAccepted | 2019-07-09T22:02:28Z | 1              |
-      | 4  | 3             | 11           | requestSent        | 2019-07-09T23:02:28Z | 1              |
-      | 5  | 4             | 11           | requestRefused     | 2019-07-10T00:02:28Z | 2              |
-      | 6  | 5             | 11           | invitationAccepted | 2019-07-10T01:02:28Z | 2              |
-      | 7  | 6             | 11           | requestAccepted    | 2019-07-10T02:02:28Z | 2              |
-      | 8  | 7             | 11           | removed            | 2019-07-10T03:02:28Z | 1              |
-      | 9  | 8             | 11           | left               | 2019-07-10T04:02:28Z | 1              |
-      | 10 | 9             | 11           | direct             | 2019-07-10T05:02:28Z | 2              |
-      | 11 | 1             | 12           | invitationSent     | 2019-07-09T20:02:28Z | 2              |
-      | 12 | 12            | 1            | direct             | null                 | null           |
-      | 13 | 12            | 2            | direct             | null                 | null           |
-      | 14 | 10            | 11           | joinedByCode       | 2019-07-10T05:02:28Z | null           |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         | idUserInviting |
+      | 2  | 1             | 11           | invitationSent     | 2019-07-09 21:02:28 | null           |
+      | 3  | 2             | 11           | invitationAccepted | 2019-07-09 22:02:28 | 1              |
+      | 4  | 3             | 11           | requestSent        | 2019-07-09 23:02:28 | 1              |
+      | 5  | 4             | 11           | requestRefused     | 2019-07-10 00:02:28 | 2              |
+      | 6  | 5             | 11           | invitationAccepted | 2019-07-10 01:02:28 | 2              |
+      | 7  | 6             | 11           | requestAccepted    | 2019-07-10 02:02:28 | 2              |
+      | 8  | 7             | 11           | removed            | 2019-07-10 03:02:28 | 1              |
+      | 9  | 8             | 11           | left               | 2019-07-10 04:02:28 | 1              |
+      | 10 | 9             | 11           | direct             | 2019-07-10 05:02:28 | 2              |
+      | 11 | 1             | 12           | invitationSent     | 2019-07-09 20:02:28 | 2              |
+      | 12 | 12            | 1            | direct             | null                | null           |
+      | 13 | 12            | 2            | direct             | null                | null           |
+      | 14 | 10            | 11           | joinedByCode       | 2019-07-10 05:02:28 | null           |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 1            | true    |
@@ -61,18 +61,18 @@ Feature: Export the current user's data
       | 12              | 2            | false   |
       | 12              | 12           | true    |
     And the database has the following table 'users_answers':
-      | ID | idUser |
-      | 1  | 2      |
-      | 2  | 3      |
+      | ID | idUser | idItem | sSubmissionDate     |
+      | 1  | 2      | 404    | 2019-07-09 21:02:28 |
+      | 2  | 3      | 405    | 2019-07-09 21:02:28 |
     And the database has the following table 'users_items':
-      | ID | idUser |
-      | 11 | 2      |
-      | 12 | 3      |
+      | ID | idUser | idItem |
+      | 11 | 2      | 404    |
+      | 12 | 3      | 405    |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup |
-      | 111 | 11      |
-      | 112 | 2       |
-      | 113 | 1       |
+      | ID  | idGroup | idItem | iOrder |
+      | 111 | 11      | 404    | 0      |
+      | 112 | 2       | 404    | 0      |
+      | 113 | 1       | 405    | 0      |
 
   Scenario: Full data
     Given I am the user with ID "2"
@@ -100,7 +100,7 @@ Feature: Export the current user's data
         {
           "ID": "111", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
           "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-          "idGroup": "11", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "idGroup": "11", "idItem": "404", "idUserCreator": null, "nbChildrenValidated": 0,
           "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
           "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
           "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
@@ -110,7 +110,7 @@ Feature: Export the current user's data
         {
           "ID": "112", "bFinished": 0, "bKeyObtained": 0, "bRanked": 0, "bValidated": 0, "iAutonomy": 0, "iMinusScore": -0,
           "iOrder": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-          "idGroup": "2", "idItem": "0", "idUserCreator": null, "nbChildrenValidated": 0,
+          "idGroup": "2", "idItem": "404", "idUserCreator": null, "nbChildrenValidated": 0,
           "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
           "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "done",
           "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null, "sHintsRequested": null,
@@ -180,16 +180,16 @@ Feature: Export the current user's data
       ],
       "users_answers": [
         {
-          "ID": "1", "bValidated": null, "iScore": null, "iVersion": 0, "idAttempt": null, "idItem": "0",
+          "ID": "1", "bValidated": null, "iScore": null, "idAttempt": null, "idItem": "404",
           "idUser": "2", "idUserGrader": null, "sAnswer": null, "sGradingDate": null, "sLangProg": null,
-          "sName": null, "sState": null, "sSubmissionDate": "0001-01-01T00:00:00Z", "sType": "Submission"
+          "sName": null, "sState": null, "sSubmissionDate": "2019-07-09T21:02:28Z", "sType": "Submission"
         }
       ],
       "users_items": [
         {
           "ID": "11", "bFinished": 0, "bKeyObtained": 0, "bPlatformDataRemoved": 0, "bRanked": 0, "bValidated": 0,
           "iAutonomy": 0, "iPrecision": 0, "iScore": 0, "iScoreComputed": 0, "iScoreDiffManual": 0, "iScoreReeval": 0,
-          "idAttemptActive": null, "idItem": "0", "idUser": "2", "nbChildrenValidated": 0,
+          "idAttemptActive": null, "idItem": "404", "idUser": "2", "nbChildrenValidated": 0,
           "nbCorrectionsRead": 0, "nbHintsCached": 0, "nbSubmissionsAttempts": 0, "nbTasksSolved": 0, "nbTasksTried": 0,
           "nbTasksWithHelp": 0, "sAllLangProg": null, "sAncestorsComputationState": "todo",
           "sAnswer": null, "sBestAnswerDate": null, "sContestStartDate": null, "sFinishDate": null,

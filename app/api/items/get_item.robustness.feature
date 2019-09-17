@@ -30,16 +30,16 @@ Background:
     | 200 | Category | false          | false    | 1234,2345      | true               | 0        |
   And the database has the following table 'groups_items':
     | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-    | 42 | 13      | 190    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
-    | 44 | 16      | 190    | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
-    | 45 | 16      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+    | 42 | 13      | 190    | 2037-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 43 | 13      | 200    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 2017-05-29 06:38:38     | 0             | 0        |
+    | 44 | 16      | 190    | 2037-05-29 06:38:38   | 2037-05-29 06:38:38      | 2017-05-29 06:38:38     | 0             | 0        |
+    | 45 | 16      | 200    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 2017-05-29 06:38:38     | 0             | 0        |
   And the database has the following table 'items_strings':
     | ID | idItem | idLanguage | sTitle     | iVersion |
     | 53 | 200    | 1          | Category 1 | 0        |
   And the database has the following table 'users_items':
-    | ID | idUser | idItem | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | sStartDate           | sFinishDate          | sValidationDate      | iVersion |
-    | 1  | 1      | 200    | 12345  | 10                    | true        | true      | true         | 2019-01-30T09:26:41Z | 2019-02-01T09:26:41Z | 2019-01-31T09:26:41Z | 0        |
+    | ID | idUser | idItem | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | sStartDate          | sFinishDate         | sValidationDate     | iVersion |
+    | 1  | 1      | 200    | 12345  | 10                    | true        | true      | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 0        |
 
   Scenario: Should fail when the root item is invalid
     Given I am the user with ID "1"

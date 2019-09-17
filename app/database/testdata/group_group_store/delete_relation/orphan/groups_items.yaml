@@ -1,2 +1,2 @@
-- {ID: 101, idGroup: 1}
-- {ID: 102, idGroup: 2}
+- {ID: 101, idGroup: 1, idItem: 1, idUserCreated: 1}
+- {ID: 102, idGroup: 2, idItem: 1, idUserCreated: 1}

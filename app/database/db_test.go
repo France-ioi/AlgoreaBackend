@@ -1427,4 +1427,8 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 	}
 }
 
+func TestDefault(t *testing.T) {
+	assert.Equal(t, gorm.Expr("DEFAULT"), Default())
+}
+
 func ptrString(s string) *string { return &s }

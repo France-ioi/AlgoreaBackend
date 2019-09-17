@@ -13,7 +13,7 @@ Feature: Add item
       | 21 | false          | false    |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | bCachedManagerAccess | idUserCreated |
-      | 41 | 11      | 21     | true                 | 0             |
+      | 41 | 11      | 21     | true                 | 1             |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf |
       | 71 | 11              | 11           | 1       |
@@ -75,9 +75,9 @@ Feature: Add item
       | 12 |
       | 34 |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess |
-      | 42 | 11      | 12     | true                 | false        |
-      | 43 | 11      | 34     | false                | true         |
+      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess | idUserCreated |
+      | 42 | 11      | 12     | true                 | false        | 1             |
+      | 43 | 11      | 34     | false                | true         | 1             |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -134,8 +134,8 @@ Feature: Add item
       }
       """
     And the table "items" at ID "5577006791947779410" should be:
-      | ID                  | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 5577006791947779410 | Course | http://myurl.com/ | 3                 | 1              | 1        | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 1              | Analysis      | 345    | 1        | 1              |
+      | ID                  | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
+      | 5577006791947779410 | Course | http://myurl.com/ | 3                 | 1              | 1        | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02 03:04:05 | 01:02:03  | 2019-02-03 04:05:06 | 1              | Analysis      | 345    | 1        | 1              |
     And the table "items_strings" should be:
       | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
       | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |

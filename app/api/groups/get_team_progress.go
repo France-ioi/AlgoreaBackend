@@ -76,7 +76,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
 	teamIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN groups ON groups.ID = groups_ancestors.idGroupChild AND groups.sType = 'Team'").
+		Joins("JOIN `groups` ON groups.ID = groups_ancestors.idGroupChild AND groups.sType = 'Team'").
 		Where("groups_ancestors.idGroupAncestor = ?", groupID).
 		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor")
 	teamIDQuery, apiError := service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{

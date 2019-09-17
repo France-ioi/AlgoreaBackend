@@ -13,9 +13,9 @@ import (
 )
 
 type validationDateResultRow struct {
-	ID                        int64      `gorm:"column:ID"`
-	ValidationDate            *time.Time `gorm:"column:sValidationDate"`
-	AncestorsComputationState string     `gorm:"column:sAncestorsComputationState"`
+	ID                        int64          `gorm:"column:ID"`
+	ValidationDate            *database.Time `gorm:"column:sValidationDate"`
+	AncestorsComputationState string         `gorm:"column:sAncestorsComputationState"`
 }
 
 func TestUserItemStore_ComputeAllUserItems_ValidationDateStaysTheSameIfItWasNotNull(t *testing.T) {
@@ -38,8 +38,8 @@ func TestUserItemStore_ComputeAllUserItems_ValidationDateStaysTheSameIfItWasNotN
 	var result []validationDateResultRow
 	assert.NoError(t, userItemStore.Select("ID, sValidationDate, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
-		{ID: 12, ValidationDate: &expectedOldDate, AncestorsComputationState: "done"},
+		{ID: 11, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidationDate: (*database.Time)(&expectedOldDate), AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidationDate: nil, AncestorsComputationState: "done"},
 	}, result)
@@ -65,9 +65,9 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidationDateToMax
 	var result []validationDateResultRow
 	assert.NoError(t, userItemStore.Select("ID, sValidationDate, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
-		{ID: 12, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
-		{ID: 13, ValidationDate: &oldDate, AncestorsComputationState: "done"},
+		{ID: 11, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 13, ValidationDate: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidationDate: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidationDate: nil, AncestorsComputationState: "done"},
@@ -98,9 +98,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 	var result []validationDateResultRow
 	assert.NoError(t, userItemStore.Select("ID, sValidationDate, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
+		{ID: 11, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidationDate: nil, AncestorsComputationState: "done"},
-		{ID: 13, ValidationDate: &oldDate, AncestorsComputationState: "done"},
+		{ID: 13, ValidationDate: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidationDate: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidationDate: nil, AncestorsComputationState: "done"},
@@ -132,9 +132,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 	var result []validationDateResultRow
 	assert.NoError(t, userItemStore.Select("ID, sValidationDate, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
-		{ID: 12, ValidationDate: &oldDate, AncestorsComputationState: "done"},
-		{ID: 13, ValidationDate: &oldDate, AncestorsComputationState: "done"},
+		{ID: 11, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidationDate: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
+		{ID: 13, ValidationDate: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidationDate: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidationDate: nil, AncestorsComputationState: "done"},
@@ -172,9 +172,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidationDateToMaxOfV
 	var result []validationDateResultRow
 	assert.NoError(t, userItemStore.Select("ID, sValidationDate, sAncestorsComputationState").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidationDate: &expectedDate, AncestorsComputationState: "done"},
+		{ID: 11, ValidationDate: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidationDate: nil, AncestorsComputationState: "done"},
-		{ID: 13, ValidationDate: &oldDate, AncestorsComputationState: "done"},
+		{ID: 13, ValidationDate: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidationDate: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidationDate: nil, AncestorsComputationState: "done"},

@@ -51,7 +51,7 @@ Feature: Reject group requests
       | 6  | 14            | 31           | invitationRefused  | null                      |
       | 7  | 14            | 21           | requestSent        | null                      |
       | 8  | 14            | 22           | requestRefused     | null                      |
-      | 9  | 13            | 121          | invitationAccepted | 2017-05-29T06:38:38Z      |
+      | 9  | 13            | 121          | invitationAccepted | 2017-05-29 06:38:38       |
       | 10 | 13            | 111          | requestAccepted    | null                      |
       | 11 | 13            | 131          | removed            | null                      |
       | 12 | 13            | 122          | left               | null                      |

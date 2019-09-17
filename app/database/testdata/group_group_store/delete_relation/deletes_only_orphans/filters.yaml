@@ -1,6 +1,6 @@
-- {idGroup: 1}
-- {idGroup: 2}
-- {idGroup: 3}
-- {idGroup: 4}
-- {idGroup: 5}
-- {idGroup: 10}
+- {idGroup: 1, idUser: 1}
+- {idGroup: 2, idUser: 1}
+- {idGroup: 3, idUser: 1}
+- {idGroup: 4, idUser: 1}
+- {idGroup: 5, idUser: 1}
+- {idGroup: 10, idUser: 1}

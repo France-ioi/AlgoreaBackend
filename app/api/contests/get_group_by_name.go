@@ -86,7 +86,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 				groups.ID AS idGroup,
 				groups.sName,
 				groups.sType,
-				IFNULL(TIME_TO_SEC(main_group_item.sAdditionalTime), 0) AS iAdditionalTime,
+				IFNULL(TIME_TO_SEC(MAX(main_group_item.sAdditionalTime)), 0) AS iAdditionalTime,
 				IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS iTotalAdditionalTime`).
 		Group("groups.ID").
 		Having(`
@@ -100,7 +100,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 				LEFT JOIN groups_ancestors AS found_group_descendants
 					ON found_group_descendants.idGroupAncestor = groups.ID`).
 			Joins(`
-				LEFT JOIN groups AS team
+				LEFT JOIN `+"`groups`"+` AS team
 					ON team.ID = found_group_descendants.idGroupChild AND team.sType = 'Team' AND
 						(groups.idTeamItem IN (SELECT idItemAncestor FROM items_ancestors WHERE idItemChild = ?) OR
 						 groups.idTeamItem = ?)`, itemID, itemID).
@@ -109,7 +109,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 					ON groups_groups.sType IN ('requestAccepted', 'invitationAccepted') AND
 						groups_groups.idGroupParent = team.ID`).
 			Joins(`
-				LEFT JOIN groups AS user_group
+				LEFT JOIN `+"`groups`"+` AS user_group
 					ON user_group.ID = groups_groups.idGroupChild AND user_group.sType = 'UserSelf' AND
 						user_group.sName LIKE ?`, groupName).
 			Group("groups.ID, user_group.ID").

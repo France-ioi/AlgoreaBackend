@@ -24,10 +24,10 @@ Feature: User leaves a group - robustness
       | 31              | 31           | 1       |
       | 32              | 32           | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 1  | 11            | 21           | requestSent        | 2017-04-29T06:38:38Z |
-      | 2  | 14            | 21           | direct             | 2017-03-29T06:38:38Z |
-      | 3  | 15            | 31           | invitationAccepted | 2017-03-29T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
+      | 1  | 11            | 21           | requestSent        | 2017-04-29 06:38:38 |
+      | 2  | 14            | 21           | direct             | 2017-03-29 06:38:38 |
+      | 3  | 15            | 31           | invitationAccepted | 2017-03-29 06:38:38 |
 
   Scenario: User tries to leave a group (s)he is not a member of
     Given I am the user with ID "1"
@@ -67,7 +67,7 @@ Feature: User leaves a group - robustness
     And the response error message should contain "Invalid access token"
 
   Scenario: Fails if lockUserDeletionDate = NOW() + 1
-    Given the DB time now is "2037-04-28T23:59:59Z"
+    Given the DB time now is "2037-04-28 23:59:59"
     And I am the user with ID "3"
     When I send a DELETE request to "/current-user/group-memberships/15"
     Then the response code should be 403

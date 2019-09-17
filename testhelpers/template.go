@@ -105,11 +105,25 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		if err != nil {
 			a.Panicf("can't parse duration: %s", err.Error())
 		}
-		return reflect.ValueOf(time.Now().UTC().Add(duration).Format(time.RFC3339))
+		return reflect.ValueOf(time.Now().UTC().Add(duration).Format("2006-01-02 15:04:05"))
 	})
+
+	addTimeToRFCFunction(set)
 
 	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
 	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
 
 	return set
+}
+
+func addTimeToRFCFunction(set *jet.Set) {
+	set.AddGlobalFunc("timeToRFC", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("timeToRFC", 1, 1)
+		dbTime := a.Get(0).Interface().(string)
+		parsedTime, err := time.Parse("2006-01-02 15:04:05", dbTime)
+		if err != nil {
+			a.Panicf("can't parse mysql datetime: %s", err.Error())
+		}
+		return reflect.ValueOf(parsedTime.Format(time.RFC3339))
+	})
 }

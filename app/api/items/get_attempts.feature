@@ -40,9 +40,9 @@ Feature: Get groups attempts for current user and item_id
       | 200 | 0            |
       | 210 | 1            |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate |
-      | 43 | 13      | 200    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     |
-      | 46 | 23      | 210    | 2017-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     |
+      | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | idUserCreated |
+      | 43 | 13      | 200    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 1             |
+      | 46 | 23      | 210    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 1             |
     And the database has the following table 'groups_attempts':
       | ID  | idGroup | idItem | iScore | iOrder | bValidated | sStartDate          | idUserCreator |
       | 150 | 11      | 200    | 100    | 1      | true       | 2018-05-29 06:38:38 | 3             |

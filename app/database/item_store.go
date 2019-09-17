@@ -310,12 +310,12 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Note: the current API doesn't allow users to have more than one active contest
 	// Note: both users_items & groups_items rows should exist to make this function return the info
 	var results []struct {
-		Now                     time.Time `gorm:"column:now"`
-		DurationInSeconds       int32     `gorm:"column:duration"`
-		ItemID                  int64     `gorm:"column:idItem"`
-		AdditionalTimeInSeconds int32     `gorm:"column:additionalTime"`
-		ContestStartDate        time.Time `gorm:"column:sContestStartDate"`
-		TeamMode                *string   `gorm:"column:sTeamMode"`
+		Now                     Time    `gorm:"column:now"`
+		DurationInSeconds       int32   `gorm:"column:duration"`
+		ItemID                  int64   `gorm:"column:idItem"`
+		AdditionalTimeInSeconds int32   `gorm:"column:additionalTime"`
+		ContestStartDate        Time    `gorm:"column:sContestStartDate"`
+		TeamMode                *string `gorm:"column:sTeamMode"`
 	}
 	mustNotBeError(s.
 		Select(`
@@ -324,7 +324,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			items.ID AS idItem,
 			items.sTeamMode,
 			IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS additionalTime,
-			users_items.sContestStartDate AS sContestStartDate`).
+			MIN(users_items.sContestStartDate) AS sContestStartDate`).
 		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup AND
@@ -333,7 +333,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
 				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.ID).
 		Group("items.ID").
-		Order("users_items.sContestStartDate DESC").Scan(&results).Error())
+		Order("MIN(users_items.sContestStartDate) DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
@@ -344,12 +344,12 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
-	endTime := results[0].ContestStartDate.Add(time.Duration(totalDuration) * time.Second)
+	endTime := time.Time(results[0].ContestStartDate).Add(time.Duration(totalDuration) * time.Second)
 
 	return &activeContestInfo{
-		Now:               results[0].Now,
+		Now:               time.Time(results[0].Now),
 		DurationInSeconds: totalDuration,
-		StartTime:         results[0].ContestStartDate,
+		StartTime:         time.Time(results[0].ContestStartDate),
 		EndTime:           endTime,
 		ItemID:            results[0].ItemID,
 		UserID:            user.ID,

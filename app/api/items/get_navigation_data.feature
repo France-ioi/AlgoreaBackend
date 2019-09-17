@@ -44,35 +44,35 @@ Feature: Get item for tree navigation
       | 250 | Task     | false          | false    | 1234,2345      | true               | 0        |
     And the database has the following table 'groups_items':
       | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-      | 43 | 13      | 200    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 44 | 13      | 210    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 45 | 13      | 220    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 46 | 13      | 230    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 47 | 13      | 211    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 48 | 13      | 231    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 49 | 13      | 232    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 42 | 13      | 250    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 50 | 14      | 200    | 3019-03-22T08:00:00Z  | 3019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 51 | 14      | 210    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 52 | 14      | 220    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 53 | 14      | 230    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 54 | 14      | 211    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 55 | 14      | 231    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 56 | 14      | 232    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 60 | 16      | 200    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 61 | 16      | 210    | 3019-03-22T08:00:00Z  | 3019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 62 | 16      | 220    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 63 | 16      | 230    | 3019-03-22T08:00:00Z  | 3019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 64 | 16      | 211    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 65 | 16      | 231    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 66 | 16      | 232    | 2019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 70 | 18      | 200    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 71 | 18      | 210    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 72 | 18      | 220    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 73 | 18      | 230    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 74 | 18      | 211    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 75 | 18      | 231    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
-      | 76 | 18      | 232    | 3019-03-22T08:00:00Z  | 2019-03-22T08:00:00Z     | 2019-03-22T08:00:00Z    | 0             | 0        |
+      | 43 | 13      | 200    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 44 | 13      | 210    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 45 | 13      | 220    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 46 | 13      | 230    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 47 | 13      | 211    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 48 | 13      | 231    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 49 | 13      | 232    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 42 | 13      | 250    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 50 | 14      | 200    | 3019-03-22 08:00:00   | 3019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 51 | 14      | 210    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 52 | 14      | 220    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 53 | 14      | 230    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 54 | 14      | 211    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 55 | 14      | 231    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 56 | 14      | 232    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 60 | 16      | 200    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 61 | 16      | 210    | 3019-03-22 08:00:00   | 3019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 62 | 16      | 220    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 63 | 16      | 230    | 3019-03-22 08:00:00   | 3019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 64 | 16      | 211    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 65 | 16      | 231    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 66 | 16      | 232    | 2019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 70 | 18      | 200    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 71 | 18      | 210    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 72 | 18      | 220    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 73 | 18      | 230    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 74 | 18      | 211    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 75 | 18      | 231    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
+      | 76 | 18      | 232    | 3019-03-22 08:00:00   | 2019-03-22 08:00:00      | 2019-03-22 08:00:00     | 0             | 0        |
     And the database has the following table 'items_items':
       | ID | idItemParent | idItemChild | iChildOrder | bAccessRestricted | iDifficulty | iVersion |
       | 54 | 200          | 210         | 3           | true              | 0           | 0        |
@@ -95,14 +95,14 @@ Feature: Get item for tree navigation
       | 66 | 230    | 2          | Chapitre C  | 0        |
       | 67 | 211    | 2          | Tâche 1     | 0        |
     And the database has the following table 'users_items':
-      | ID | idUser | idItem | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | sStartDate           | sFinishDate          | sValidationDate      | iVersion |
-      | 1  | 1      | 200    | 12341  | 11                    | true        | true      | true         | 2019-01-30T09:26:41Z | 2019-02-01T09:26:41Z | 2019-01-31T09:26:41Z | 0        |
-      | 2  | 1      | 210    | 12342  | 12                    | true        | true      | true         | 2019-01-30T09:26:42Z | 2019-02-01T09:26:42Z | 2019-01-31T09:26:42Z | 0        |
-      | 5  | 1      | 211    | 12343  | 13                    | true        | true      | true         | 2019-01-30T09:26:43Z | 2019-02-01T09:26:43Z | 2019-01-31T09:26:43Z | 0        |
-      | 3  | 1      | 220    | 12344  | 14                    | true        | true      | true         | 2019-01-30T09:26:44Z | 2019-02-01T09:26:44Z | 2019-01-31T09:26:44Z | 0        |
-      | 4  | 1      | 230    | 12345  | 15                    | true        | true      | true         | 2019-01-30T09:26:45Z | 2019-02-01T09:26:45Z | 2019-01-31T09:26:45Z | 0        |
-      | 6  | 1      | 231    | 12346  | 16                    | true        | true      | true         | 2019-01-30T09:26:46Z | 2019-02-01T09:26:46Z | 2019-01-31T09:26:46Z | 0        |
-      | 7  | 1      | 232    | 12347  | 17                    | true        | true      | true         | 2019-01-30T09:26:47Z | 2019-02-01T09:26:47Z | 2019-01-31T09:26:47Z | 0        |
+      | ID | idUser | idItem | iScore | nbSubmissionsAttempts | bValidated  | bFinished | bKeyObtained | sStartDate          | sFinishDate         | sValidationDate     | iVersion |
+      | 1  | 1      | 200    | 12341  | 11                    | true        | true      | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 0        |
+      | 2  | 1      | 210    | 12342  | 12                    | true        | true      | true         | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 0        |
+      | 5  | 1      | 211    | 12343  | 13                    | true        | true      | true         | 2019-01-30 09:26:43 | 2019-02-01 09:26:43 | 2019-01-31 09:26:43 | 0        |
+      | 3  | 1      | 220    | 12344  | 14                    | true        | true      | true         | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 0        |
+      | 4  | 1      | 230    | 12345  | 15                    | true        | true      | true         | 2019-01-30 09:26:45 | 2019-02-01 09:26:45 | 2019-01-31 09:26:45 | 0        |
+      | 6  | 1      | 231    | 12346  | 16                    | true        | true      | true         | 2019-01-30 09:26:46 | 2019-02-01 09:26:46 | 2019-01-31 09:26:46 | 0        |
+      | 7  | 1      | 232    | 12347  | 17                    | true        | true      | true         | 2019-01-30 09:26:47 | 2019-02-01 09:26:47 | 2019-01-31 09:26:47 | 0        |
 
   Scenario: Get tree structure
     Given I am the user with ID "1"
@@ -438,14 +438,14 @@ Feature: Get item for tree navigation
           "title": "Category 1"
         },
         "user": {
-          "finish_date": "",
+          "finish_date": null,
           "finished": false,
           "key_obtained": false,
           "score": 0,
-          "start_date": "",
+          "start_date": null,
           "submissions_attempts": 0,
           "validated": false,
-          "validation_date": ""
+          "validation_date": null
         },
         "access_rights": {
           "partial_access": false,
@@ -471,14 +471,14 @@ Feature: Get item for tree navigation
           "title": "Category 1"
         },
         "user": {
-          "finish_date": "",
+          "finish_date": null,
           "finished": false,
           "key_obtained": false,
           "score": 0,
-          "start_date": "",
+          "start_date": null,
           "submissions_attempts": 0,
           "validated": false,
-          "validation_date": ""
+          "validation_date": null
         },
         "access_rights": {
           "partial_access": true,
@@ -497,14 +497,14 @@ Feature: Get item for tree navigation
               "title": "Chapter C"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": false,
@@ -524,14 +524,14 @@ Feature: Get item for tree navigation
               "title": "Chapter B"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": true,
@@ -551,14 +551,14 @@ Feature: Get item for tree navigation
               "title": "Chapter A"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": false,
@@ -586,14 +586,14 @@ Feature: Get item for tree navigation
           "title": "Catégorie 1"
         },
         "user": {
-          "finish_date": "",
+          "finish_date": null,
           "finished": false,
           "key_obtained": false,
           "score": 0,
-          "start_date": "",
+          "start_date": null,
           "submissions_attempts": 0,
           "validated": false,
-          "validation_date": ""
+          "validation_date": null
         },
         "access_rights": {
           "partial_access": true,
@@ -612,14 +612,14 @@ Feature: Get item for tree navigation
               "title": "Chapitre C"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": true,
@@ -638,14 +638,14 @@ Feature: Get item for tree navigation
                   "title": "Task 3"
                 },
                 "user": {
-                  "finish_date": "",
+                  "finish_date": null,
                   "finished": false,
                   "key_obtained": false,
                   "score": 0,
-                  "start_date": "",
+                  "start_date": null,
                   "submissions_attempts": 0,
                   "validated": false,
-                  "validation_date": ""
+                  "validation_date": null
                 },
                 "access_rights": {
                   "partial_access": true,
@@ -665,14 +665,14 @@ Feature: Get item for tree navigation
                   "title": "Task 2"
                 },
                 "user": {
-                  "finish_date": "",
+                  "finish_date": null,
                   "finished": false,
                   "key_obtained": false,
                   "score": 0,
-                  "start_date": "",
+                  "start_date": null,
                   "submissions_attempts": 0,
                   "validated": false,
-                  "validation_date": ""
+                  "validation_date": null
                 },
                 "access_rights": {
                   "partial_access": true,
@@ -694,14 +694,14 @@ Feature: Get item for tree navigation
               "title": "Chapter B"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": true,
@@ -721,14 +721,14 @@ Feature: Get item for tree navigation
               "title": "Chapitre A"
             },
             "user": {
-              "finish_date": "",
+              "finish_date": null,
               "finished": false,
               "key_obtained": false,
               "score": 0,
-              "start_date": "",
+              "start_date": null,
               "submissions_attempts": 0,
               "validated": false,
-              "validation_date": ""
+              "validation_date": null
             },
             "access_rights": {
               "partial_access": true,
@@ -747,14 +747,14 @@ Feature: Get item for tree navigation
                   "title": "Tâche 1"
                 },
                 "user": {
-                  "finish_date": "",
+                  "finish_date": null,
                   "finished": false,
                   "key_obtained": false,
                   "score": 0,
-                  "start_date": "",
+                  "start_date": null,
                   "submissions_attempts": 0,
                   "validated": false,
-                  "validation_date": ""
+                  "validation_date": null
                 },
                 "access_rights": {
                   "partial_access": true,

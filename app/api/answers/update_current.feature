@@ -16,14 +16,14 @@ Feature: Update the 'current' answer
       | ID |
       | 50 |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem | idAttempt | sType      |
-      | 100 | 10     | 50     | 200       | Submission |
+      | ID  | idUser | idItem | idAttempt | sType      | sSubmissionDate     |
+      | 100 | 10     | 50     | 200       | Submission | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem |
-      | 200 | 101     | 50     |
+      | ID  | idGroup | idItem | iOrder |
+      | 200 | 101     | 50     | 0      |
 
   Scenario: User is able to create the 'current' answer and users_items.idAttemptActive = request.attempt_id
     Given I am the user with ID "10"
@@ -50,9 +50,9 @@ Feature: Update the 'current' answer
       | idUser | idItem | idAttemptActive | sAnswer | sState     |
       | 10     | 50     | 200             | print 1 | some state |
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer | sState     |
-      | 10     | 50     | 200       | Submission | null    | null       |
-      | 10     | 50     | 200       | Current    | print 1 | some state |
+      | idUser | idItem | idAttempt | sType      | sAnswer | sState     | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
+      | 10     | 50     | 200       | Submission | null    | null       | 0                                                      |
+      | 10     | 50     | 200       | Current    | print 1 | some state | 1                                                      |
 
   Scenario: User is able to create the 'current' answer and users_items.idAttemptActive != request.attempt_id
     Given I am the user with ID "10"
@@ -77,15 +77,15 @@ Feature: Update the 'current' answer
       """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer | sState     |
-      | 10     | 50     | 200       | Submission | null    | null       |
-      | 10     | 50     | 200       | Current    | print 1 | some state |
+      | idUser | idItem | idAttempt | sType      | sAnswer | sState     | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
+      | 10     | 50     | 200       | Submission | null    | null       | 0                                                      |
+      | 10     | 50     | 200       | Current    | print 1 | some state | 1                                                      |
 
   Scenario: User is able to update the 'current' answer
     Given I am the user with ID "10"
     And the database has the following table 'users_answers':
-      | ID  | idUser | idItem | idAttempt | sType   |
-      | 101 | 10     | 50     | 200       | Current |
+      | ID  | idUser | idItem | idAttempt | sType   | sSubmissionDate     |
+      | 101 | 10     | 50     | 200       | Current | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | idUser | idItem | idAttemptActive |
       | 10     | 50     | 200             |
@@ -109,6 +109,6 @@ Feature: Update the 'current' answer
       | idUser | idItem | idAttemptActive | sAnswer | sState     |
       | 10     | 50     | 200             | print 1 | some state |
     And the table "users_answers" should be:
-      | ID  | idUser | idItem | idAttempt | sType      | sAnswer | sState     |
-      | 100 | 10     | 50     | 200       | Submission | null    | null       |
-      | 101 | 10     | 50     | 200       | Current    | print 1 | some state |
+      | ID  | idUser | idItem | idAttempt | sType      | sAnswer | sState     | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
+      | 100 | 10     | 50     | 200       | Submission | null    | null       | 0                                                      |
+      | 101 | 10     | 50     | 200       | Current    | print 1 | some state | 0                                                      |
