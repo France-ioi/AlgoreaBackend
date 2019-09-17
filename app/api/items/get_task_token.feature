@@ -27,10 +27,10 @@ Feature: Get a task token with a refreshed active attempt for an item
       | idItemAncestor | idItemChild |
       | 10             | 60          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     | null                  | null                       |
-      | 101     | 60     | 2017-05-29T06:38:38Z     | null                  | 2017-05-29T06:38:38Z       |
-      | 111     | 50     | null                     | 2017-05-29T06:38:38Z  | null                       |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | null                  | null                       | 10            |
+      | 101     | 60     | 2017-05-29 06:38:38      | null                  | 2017-05-29 06:38:38        | 10            |
+      | 111     | 50     | null                     | 2017-05-29 06:38:38   | null                       | 10            |
     And time is frozen
 
   Scenario: User is able to fetch an active attempt (no active attempt set)
@@ -177,11 +177,11 @@ Feature: Get a task token with a refreshed active attempt for an item
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 50     | null            | 0      | null            | null            | null       |
     And the database has the following table 'groups_attempts':
-      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
-      | 1  | 101     | 50     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-      | 2  | 101     | 50     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
-      | 3  | 102     | 50     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-      | 4  | 101     | 51     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | ID | idGroup | idItem | iOrder | sLastActivityDate   | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
+      | 1  | 101     | 50     | 0      | 2017-05-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
+      | 2  | 101     | 50     | 1      | 2018-05-29 06:38:38 | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
+      | 3  | 102     | 50     | 0      | 2019-05-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
+      | 4  | 101     | 51     | 0      | 2019-04-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -220,11 +220,11 @@ Feature: Get a task token with a refreshed active attempt for an item
       | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate |
       | 10     | 60     | null            | 0      | null            | null            | null       |
     And the database has the following table 'groups_attempts':
-      | ID | idGroup | idItem | sLastActivityDate    | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
-      | 1  | 102     | 60     | 2017-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-      | 2  | 102     | 60     | 2018-05-29T06:38:38Z | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
-      | 3  | 101     | 60     | 2019-05-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
-      | 4  | 102     | 61     | 2019-04-29T06:38:38Z | null       | 0      | null            | null            | null            | 0             |
+      | ID | idGroup | idItem | iOrder | sLastActivityDate   | sStartDate | iScore | sBestAnswerDate | sValidationDate | sHintsRequested | nbHintsCached |
+      | 1  | 102     | 60     | 0      | 2017-05-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
+      | 2  | 102     | 60     | 1      | 2018-05-29 06:38:38 | null       | 0      | null            | null            | [1,2,3,4]       | 4             |
+      | 3  | 101     | 60     | 0      | 2019-05-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
+      | 4  | 102     | 61     | 0      | 2019-04-29 06:38:38 | null       | 0      | null            | null            | null            | 0             |
     When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -260,11 +260,11 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: Keeps previous sStartDate values
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate           |
-      | 10     | 50     | null            | 0      | null            | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | iScore | sBestAnswerDate | sValidationDate | sStartDate          |
+      | 10     | 50     | null            | 0      | null            | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID | idGroup | idItem | sLastActivityDate    | sStartDate           | iScore | sBestAnswerDate | sValidationDate |
-      | 2  | 101     | 50     | 2018-05-29T06:38:38Z | 2017-05-29T06:38:38Z | 0      | null            | null            |
+      | ID | idGroup | idItem | iOrder | sLastActivityDate   | sStartDate          | iScore | sBestAnswerDate | sValidationDate |
+      | 2  | 101     | 50     | 0      | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0      | null            | null            |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -289,10 +289,10 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate           |
-      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29T06:38:38Z |
+      | idUser | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate          |
+      | 10     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29 06:38:38 |
     And the table "groups_attempts" should stay unchanged but the row with ID "2"
     And the table "groups_attempts" at ID "2" should be:
-      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate           |
-      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29T06:38:38Z |
+      | ID | idGroup | idItem | iScore | nbTasksTried | bValidated | bKeyObtained | sAncestorsComputationState | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sLastAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sBestAnswerDate, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, sValidationDate, NOW())) < 3 | sStartDate          |
+      | 2  | 101     | 50     | 0      | 0            | 0          | 0            | done                       | 1                                                        | null                                                   | null                                                   | null                                                   | 2017-05-29 06:38:38 |
 

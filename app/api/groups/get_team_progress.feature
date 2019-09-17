@@ -65,7 +65,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 15            | 57           | direct             |
       | 15            | 59           | requestAccepted    |
       | 15            | 61           | invitationAccepted |
-      | 15            | 63           | invitationRejected |
+      | 15            | 63           | invitationRefused  |
       | 15            | 65           | left               |
       | 15            | 67           | invitationSent     |
       | 15            | 69           | requestSent        |
@@ -200,103 +200,103 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 418 | Task     |
       | 419 | Task     |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 200          | 210         |
-      | 200          | 220         |
-      | 210          | 211         |
-      | 210          | 212         |
-      | 210          | 213         |
-      | 210          | 214         |
-      | 210          | 215         |
-      | 210          | 216         |
-      | 210          | 217         |
-      | 210          | 218         |
-      | 210          | 219         |
-      | 220          | 221         |
-      | 220          | 222         |
-      | 220          | 223         |
-      | 220          | 224         |
-      | 220          | 225         |
-      | 220          | 226         |
-      | 220          | 227         |
-      | 220          | 228         |
-      | 220          | 229         |
-      | 300          | 310         |
-      | 310          | 311         |
-      | 310          | 312         |
-      | 310          | 313         |
-      | 310          | 314         |
-      | 310          | 315         |
-      | 310          | 316         |
-      | 310          | 317         |
-      | 310          | 318         |
-      | 310          | 319         |
-      | 400          | 410         |
-      | 410          | 411         |
-      | 410          | 412         |
-      | 410          | 413         |
-      | 410          | 414         |
-      | 410          | 415         |
-      | 410          | 416         |
-      | 410          | 417         |
-      | 410          | 418         |
-      | 410          | 419         |
+      | idItemParent | idItemChild | iChildOrder |
+      | 200          | 210         | 0           |
+      | 200          | 220         | 1           |
+      | 210          | 211         | 0           |
+      | 210          | 212         | 1           |
+      | 210          | 213         | 2           |
+      | 210          | 214         | 3           |
+      | 210          | 215         | 4           |
+      | 210          | 216         | 5           |
+      | 210          | 217         | 6           |
+      | 210          | 218         | 7           |
+      | 210          | 219         | 8           |
+      | 220          | 221         | 0           |
+      | 220          | 222         | 1           |
+      | 220          | 223         | 2           |
+      | 220          | 224         | 3           |
+      | 220          | 225         | 4           |
+      | 220          | 226         | 5           |
+      | 220          | 227         | 6           |
+      | 220          | 228         | 7           |
+      | 220          | 229         | 8           |
+      | 300          | 310         | 0           |
+      | 310          | 311         | 1           |
+      | 310          | 312         | 2           |
+      | 310          | 313         | 3           |
+      | 310          | 314         | 4           |
+      | 310          | 315         | 5           |
+      | 310          | 316         | 6           |
+      | 310          | 317         | 7           |
+      | 310          | 318         | 8           |
+      | 310          | 319         | 9           |
+      | 400          | 410         | 0           |
+      | 410          | 411         | 1           |
+      | 410          | 412         | 2           |
+      | 410          | 413         | 3           |
+      | 410          | 414         | 4           |
+      | 410          | 415         | 5           |
+      | 410          | 416         | 6           |
+      | 410          | 417         | 7           |
+      | 410          | 418         | 8           |
+      | 410          | 419         | 9           |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate |
-      | 21      | 211    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 20      | 212    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 21      | 213    | 2017-05-29T06:38:38Z  | null                     | null                    |
-      | 20      | 214    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 21      | 215    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 20      | 216    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 21      | 217    | null                  | 2037-05-29T06:38:38Z     | null                    |
-      | 20      | 218    | 2037-05-29T06:38:38Z  | null                     | null                    |
-      | 21      | 219    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 20      | 221    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 21      | 222    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 20      | 223    | 2017-05-29T06:38:38Z  | null                     | null                    |
-      | 21      | 224    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 20      | 225    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 21      | 226    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 20      | 227    | null                  | 2037-05-29T06:38:38Z     | null                    |
-      | 21      | 228    | 2037-05-29T06:38:38Z  | null                     | null                    |
-      | 20      | 229    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 21      | 311    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 20      | 312    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 21      | 313    | 2017-05-29T06:38:38Z  | null                     | null                    |
-      | 20      | 314    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 21      | 315    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 20      | 316    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 21      | 317    | null                  | 2037-05-29T06:38:38Z     | null                    |
-      | 20      | 318    | 2037-05-29T06:38:38Z  | null                     | null                    |
-      | 21      | 319    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 20      | 411    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 21      | 412    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 20      | 413    | 2017-05-29T06:38:38Z  | null                     | null                    |
-      | 21      | 414    | null                  | null                     | 2017-05-29T06:38:38Z    |
-      | 20      | 415    | null                  | 2017-05-29T06:38:38Z     | null                    |
-      | 21      | 416    | null                  | null                     | 2037-05-29T06:38:38Z    |
-      | 20      | 417    | null                  | 2037-05-29T06:38:38Z     | null                    |
-      | 21      | 418    | 2037-05-29T06:38:38Z  | null                     | null                    |
-      | 20      | 419    | null                  | null                     | 2037-05-29T06:38:38Z    |
+      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated |
+      | 21      | 211    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 20      | 212    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 21      | 213    | 2017-05-29 06:38:38   | null                     | null                    | 1             |
+      | 20      | 214    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 21      | 215    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 20      | 216    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 21      | 217    | null                  | 2037-05-29 06:38:38      | null                    | 1             |
+      | 20      | 218    | 2037-05-29 06:38:38   | null                     | null                    | 1             |
+      | 21      | 219    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 20      | 221    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 21      | 222    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 20      | 223    | 2017-05-29 06:38:38   | null                     | null                    | 1             |
+      | 21      | 224    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 20      | 225    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 21      | 226    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 20      | 227    | null                  | 2037-05-29 06:38:38      | null                    | 1             |
+      | 21      | 228    | 2037-05-29 06:38:38   | null                     | null                    | 1             |
+      | 20      | 229    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 21      | 311    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 20      | 312    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 21      | 313    | 2017-05-29 06:38:38   | null                     | null                    | 1             |
+      | 20      | 314    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 21      | 315    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 20      | 316    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 21      | 317    | null                  | 2037-05-29 06:38:38      | null                    | 1             |
+      | 20      | 318    | 2037-05-29 06:38:38   | null                     | null                    | 1             |
+      | 21      | 319    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 20      | 411    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 21      | 412    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 20      | 413    | 2017-05-29 06:38:38   | null                     | null                    | 1             |
+      | 21      | 414    | null                  | null                     | 2017-05-29 06:38:38     | 1             |
+      | 20      | 415    | null                  | 2017-05-29 06:38:38      | null                    | 1             |
+      | 21      | 416    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
+      | 20      | 417    | null                  | 2037-05-29 06:38:38      | null                    | 1             |
+      | 21      | 418    | 2037-05-29 06:38:38   | null                     | null                    | 1             |
+      | 20      | 419    | null                  | null                     | 2037-05-29 06:38:38     | 1             |
     And the database has the following table 'groups_attempts':
-      | idGroup | idItem | sStartDate           | iScore | sBestAnswerDate      | nbHintsCached | nbSubmissionsAttempts | bValidated | sValidationDate      | sLastActivityDate    |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 0      | 2017-05-29T06:38:38Z | 100           | 100                   | 0          | 2017-05-30T06:38:38Z | 2018-05-30T06:38:38Z |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 40     | 2017-05-29T06:38:38Z | 2             | 3                     | 0          | null                 | null                 |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-29T06:38:38Z | 3             | 4                     | 1          | null                 | null                 | # nbHintsCached & nbSubmissionsAttempts for 14,211 come from this line
-      | 14      | 211    | 2017-05-29T06:38:38Z | 50     | 2017-05-30T06:38:38Z | 10            | 20                    | 1          | null                 | null                 |
-      | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 | null                 |
-      | 15      | 212    | 2017-03-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 | null                 |
-      | 16      | 212    | 2019-01-01T00:00:00Z | 10     | null                 | 0             | 0                     | 0          | null                 | 2019-06-01T00:00:00Z |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 | null                 |
-      | 15      | 211    | 2017-04-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 | null                 |
-      | 15      | 212    | 2017-03-29T06:38:38Z | 100    | null                 | 0             | 0                     | 1          | null                 | null                 |
-      | 14      | 211    | 2017-05-29T06:38:38Z | 0      | null                 | 0             | 0                     | 0          | null                 | null                 |
+      | idGroup | idItem | iOrder | sStartDate          | iScore | sBestAnswerDate     | nbHintsCached | nbSubmissionsAttempts | bValidated | sValidationDate     | sLastActivityDate   |
+      | 14      | 211    | 0      | 2017-05-29 06:38:38 | 0      | 2017-05-29 06:38:38 | 100           | 100                   | 0          | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 |
+      | 14      | 211    | 1      | 2017-05-29 06:38:38 | 40     | 2017-05-29 06:38:38 | 2             | 3                     | 0          | null                | null                |
+      | 14      | 211    | 2      | 2017-05-29 06:38:38 | 50     | 2017-05-29 06:38:38 | 3             | 4                     | 1          | null                | null                | # nbHintsCached & nbSubmissionsAttempts for 14,211 come from this line
+      | 14      | 211    | 3      | 2017-05-29 06:38:38 | 50     | 2017-05-30 06:38:38 | 10            | 20                    | 1          | null                | null                |
+      | 15      | 211    | 0      | 2017-04-29 06:38:38 | 0      | null                | 0             | 0                     | 0          | null                | null                |
+      | 15      | 212    | 0      | 2017-03-29 06:38:38 | 0      | null                | 0             | 0                     | 0          | null                | null                |
+      | 16      | 212    | 0      | 2019-01-01 00:00:00 | 10     | null                | 0             | 0                     | 0          | null                | 2019-06-01 00:00:00 |
+      | 14      | 211    | 4      | 2017-05-29 06:38:38 | 0      | null                | 0             | 0                     | 0          | null                | null                |
+      | 15      | 211    | 1      | 2017-04-29 06:38:38 | 0      | null                | 0             | 0                     | 0          | null                | null                |
+      | 15      | 212    | 1      | 2017-03-29 06:38:38 | 100    | null                | 0             | 0                     | 1          | null                | null                |
+      | 14      | 211    | 5      | 2017-05-29 06:38:38 | 0      | null                | 0             | 0                     | 0          | null                | null                |
 
   Scenario: Get progress of teams
     Given I am the user with ID "1"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
+    And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/team-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -610,7 +610,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
   Scenario: Get progress of the first team
     Given I am the user with ID "1"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
+    And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/team-progress?parent_item_ids=210,220,310&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -772,7 +772,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
   Scenario: Get progress of teams skipping the first row
     Given I am the user with ID "1"
     # here we fixate time_spent even if it depends on NOW()
-    And the DB time now is "2019-06-30T20:19:05Z"
+    And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/team-progress?parent_item_ids=210,220,310&from.name=First%20Team&from.id=16"
     Then the response code should be 200
     And the response body should be, in JSON:

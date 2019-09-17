@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
@@ -88,16 +89,17 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectArrayElement("owned_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().OwnedByUser(user).
 			Where("idGroupChild != idGroupAncestor").
-			Joins("JOIN groups ON groups.ID = idGroupChild").
-			Select("groups.ID, groups.sName").ScanAndHandleMaps(streamerFunc(w)).Error())
+			Joins("JOIN `groups` ON `groups`.ID = idGroupChild").
+			Order("`groups`.`id`").
+			Select("`groups`.ID, `groups`.sName").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
 	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().UserAncestors(user).
 			Where("idGroupChild != idGroupAncestor").
-			Joins("JOIN groups ON groups.ID = idGroupAncestor").
-			Select("groups.ID, groups.sName").Order("groups.ID").ScanAndHandleMaps(streamerFunc(w)).Error())
+			Joins("JOIN `groups` ON `groups`.ID = idGroupAncestor").
+			Select("`groups`.ID, `groups`.sName").Order("`groups`.ID").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
 	if full {
@@ -125,8 +127,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 						Select(columns).
 						Where("idGroup IN (?)",
 							srv.Store.GroupGroups().WhereUserIsMember(user).
-								Select("groups.ID").
-								Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent AND groups.sType = 'Team'").
+								Select("`groups`.ID").
+								Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent AND `groups`.sType = 'Team'").
 								QueryExpr()).
 						QueryExpr()).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
@@ -138,8 +140,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"iVersion"})
 		service.MustNotBeError(srv.Store.GroupGroups().
 			Where("idGroupChild = ?", user.SelfGroupID).
-			Joins("JOIN groups ON groups.ID = idGroupParent").
-			Select(columns + ", groups.sName").
+			Joins("JOIN `groups` ON `groups`.ID = idGroupParent").
+			Select(columns + ", `groups`.sName").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
@@ -200,6 +202,9 @@ func writeValue(w io.Writer, value interface{}) {
 			if int64Number, isInt64 := valueMap[key].(int64); isInt64 && len(key) >= 2 &&
 				(strings.EqualFold(key[0:2], "id") || key[len(key)-2:] == "ID") {
 				valueMap[key] = strconv.FormatInt(int64Number, 10)
+			} else if stringValue, isString := valueMap[key].(string); isString && len(key) > 4 && key[len(key)-4:] == "Date" {
+				parsedTime, _ := time.Parse("2006-01-02 15:04:05", stringValue)
+				valueMap[key] = parsedTime.Format(time.RFC3339)
 			}
 		}
 	}

@@ -74,7 +74,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.sDescription AS group__sDescription,
 			groups.sType AS group__sType`).
 		Joins("LEFT JOIN users ON users.ID = groups_groups.idUserInviting").
-		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
+		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType IN ('invitationSent', 'requestSent', 'requestRefused')").
 		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
 

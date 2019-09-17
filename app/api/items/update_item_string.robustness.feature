@@ -17,9 +17,9 @@ Feature: Update item strings - robustness
       | 50     | 2          | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
       | 50     | 3          | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess |
-      | 40 | 11      | 50     | false          | true         |
-      | 41 | 11      | 21     | true           | false        |
+      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess | idUserCreated |
+      | 40 | 11      | 50     | false          | true         | 1             |
+      | 41 | 11      | 21     | true           | false        | 1             |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf |
       | 71 | 11              | 11           | 1       |

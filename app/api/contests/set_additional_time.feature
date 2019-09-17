@@ -37,16 +37,16 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10 | 00:00:02  |
       | 70 | 00:00:03  |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
-      | 1  | 10      | 50     | null                     | null                    | null                  | null                       | 01:00:00        |
-      | 2  | 11      | 50     | null                     | null                    | null                  | null                       | 00:01:00        |
-      | 3  | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       | 00:00:01        |
-      | 4  | 11      | 60     | null                     | null                    | null                  | null                       | null            |
-      | 5  | 13      | 60     | null                     | 2017-05-29T06:38:38Z    | null                  | null                       | 00:00:30        |
-      | 6  | 11      | 70     | null                     | null                    | 2017-05-29T06:38:38Z  | null                       | null            |
-      | 7  | 21      | 50     | null                     | null                    | null                  | 2018-05-29T06:38:38Z       | 00:01:00        |
-      | 8  | 21      | 60     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
-      | 9  | 21      | 70     | null                     | null                    | 2018-05-29T06:38:38Z  | null                       | 00:01:00        |
+      | ID | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime | idUserCreated |
+      | 1  | 10      | 50     | null                     | null                    | null                  | null                       | 01:00:00        | 3             |
+      | 2  | 11      | 50     | null                     | null                    | null                  | null                       | 00:01:00        | 3             |
+      | 3  | 13      | 50     | 2017-05-29 06:38:38      | null                    | null                  | null                       | 00:00:01        | 3             |
+      | 4  | 11      | 60     | null                     | null                    | null                  | null                       | null            | 3             |
+      | 5  | 13      | 60     | null                     | 2017-05-29 06:38:38     | null                  | null                       | 00:00:30        | 3             |
+      | 6  | 11      | 70     | null                     | null                    | 2017-05-29 06:38:38   | null                       | null            | 3             |
+      | 7  | 21      | 50     | null                     | null                    | null                  | 2018-05-29 06:38:38        | 00:01:00        | 3             |
+      | 8  | 21      | 60     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 3             |
+      | 9  | 21      | 70     | null                     | null                    | 2018-05-29 06:38:38   | null                       | 00:01:00        | 3             |
 
   Scenario: Updates an existing row
     Given I am the user with ID "1"
@@ -55,8 +55,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with ID "3"
     And the table "groups_items" at ID "3" should be:
-      | ID | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
-      | 3  | 13      | 50     | 2017-05-29T06:38:38Z     | null                    | null                  | null                       | 838:59:59       |
+      | ID | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime | idUserCreated |
+      | 3  | 13      | 50     | 2017-05-29 06:38:38      | null                    | null                  | null                       | 838:59:59       | 3             |
 
   Scenario: Creates a new row
     Given I am the user with ID "1"
@@ -65,8 +65,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with ID "5577006791947779410"
     And the table "groups_items" at ID "5577006791947779410" should be:
-      | ID                  | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
-      | 5577006791947779410 | 13      | 70     | null                     | null                    | null                  | null                       | -838:59:59      |
+      | ID                  | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime | idUserCreated |
+      | 5577006791947779410 | 13      | 70     | null                     | null                    | null                  | null                       | -838:59:59      | 1             |
 
   Scenario: Doesn't create a new row when seconds=0
     Given I am the user with ID "1"
@@ -82,5 +82,5 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with ID "5577006791947779410"
     And the table "groups_items" at ID "5577006791947779410" should be:
-      | ID                  | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime |
-      | 5577006791947779410 | 31      | 70     | null                     | null                    | null                  | null                       | -838:59:59      |
+      | ID                  | idGroup | idItem | sCachedPartialAccessDate | sCachedGrayedAccessDate | sCachedFullAccessDate | sCachedAccessSolutionsDate | sAdditionalTime | idUserCreated |
+      | 5577006791947779410 | 31      | 70     | null                     | null                    | null                  | null                       | -838:59:59      | 1             |

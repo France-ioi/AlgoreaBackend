@@ -1,6 +1,6 @@
 Feature: Delete the current user - robustness
   Background:
-    Given the DB time now is "2019-08-09T23:59:59Z"
+    Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
       | ID | sType     | sName      | lockUserDeletionDate |
       | 1  | Base      | Root       | null                 |
@@ -9,7 +9,7 @@ Feature: Delete the current user - robustness
       | 4  | Base      | RootTemp   | null                 |
       | 21 | UserSelf  | user       | null                 |
       | 22 | UserAdmin | user-admin | null                 |
-      | 50 | Class     | Our class  | 2019-08-10T00:00:00Z |
+      | 50 | Class     | Our class  | 2019-08-10           |
     And the database has the following table 'groups_groups':
       | idGroupParent | idGroupChild | sType              |
       | 1             | 2            | direct             |
@@ -66,7 +66,7 @@ Feature: Delete the current user - robustness
 
   Scenario: Login module fails
     Given I am the user with ID "11"
-    And the DB time now is "2019-08-10T00:00:00Z"
+    And the DB time now is "2019-08-10 00:00:00"
     And the login module "unlink_client" endpoint for user ID "1234567" returns 500 with encoded body:
       """
       {"success":false}
@@ -81,13 +81,13 @@ Feature: Delete the current user - robustness
       | 2  | Base      | RootSelf   | null                 |
       | 3  | Base      | RootAdmin  | null                 |
       | 4  | Base      | RootTemp   | null                 |
-      | 50 | Class     | Our class  | 2019-08-10T00:00:00Z |
+      | 50 | Class     | Our class  | 2019-08-10           |
     And the table "groups_groups" should be:
-      | idGroupParent | idGroupChild | sType              |
-      | 1             | 2            | direct             |
-      | 1             | 3            | direct             |
-      | 1             | 50           | direct             |
-      | 2             | 4            | direct             |
+      | idGroupParent | idGroupChild | sType  |
+      | 1             | 2            | direct |
+      | 1             | 3            | direct |
+      | 1             | 50           | direct |
+      | 2             | 4            | direct |
     And the table "groups_ancestors" should be:
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 1               | 1            | true    |

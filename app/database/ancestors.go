@@ -1,6 +1,8 @@
 package database
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 const groups = "groups"
 
@@ -13,11 +15,11 @@ func (s *DataStore) createNewAncestors(objectName, upObjectName string) { /* #no
 	query := `
 		INSERT INTO  ` + objectName + `_propagate (ID, sAncestorsComputationState)
 		SELECT descendants.ID, 'todo'
-		FROM ` + objectName + ` as descendants
-		JOIN ` + objectName + `_ancestors
-			ON descendants.ID = ` + objectName + `_ancestors.id` + upObjectName + `Child
-		JOIN ` + objectName + `_propagate AS ancestors
-			ON ancestors.ID = ` + objectName + `_ancestors.id` + upObjectName + `Ancestor
+		FROM ` + QuoteName(objectName) + ` AS descendants
+		JOIN ` + QuoteName(objectName+"_ancestors") + `
+			ON descendants.ID = ` + QuoteName(objectName+"_ancestors") + ".id" + upObjectName + `Child
+		JOIN ` + QuoteName(objectName+"_propagate") + ` AS ancestors
+			ON ancestors.ID = ` + QuoteName(objectName+"_ancestors") + ".id" + upObjectName + `Ancestor
 		WHERE ancestors.sAncestorsComputationState = 'todo'
 		ON DUPLICATE KEY UPDATE sAncestorsComputationState = 'todo'`
 

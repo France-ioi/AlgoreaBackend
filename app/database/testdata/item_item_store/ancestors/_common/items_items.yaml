@@ -1,8 +1,8 @@
-- {idItemParent: 1, idItemChild: 2}
-- {idItemParent: 1, idItemChild: 3}
-- {idItemParent: 1, idItemChild: 4}
+- {idItemParent: 1, idItemChild: 2, iChildOrder: 0}
+- {idItemParent: 1, idItemChild: 3, iChildOrder: 1}
+- {idItemParent: 1, idItemChild: 4, iChildOrder: 2}
 
-- {idItemParent: 2, idItemChild: 3}
-- {idItemParent: 2, idItemChild: 4}
+- {idItemParent: 2, idItemChild: 3, iChildOrder: 0}
+- {idItemParent: 2, idItemChild: 4, iChildOrder: 1}
 
-- {idItemParent: 3, idItemChild: 4}
+- {idItemParent: 3, idItemChild: 4, iChildOrder: 0}

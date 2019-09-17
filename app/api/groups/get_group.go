@@ -127,6 +127,13 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		delete(jsonResult, "code_timer")
 		delete(jsonResult, "code_end")
 	}
+	for _, key := range [...]string{"code_end", "date_created"} {
+		if value, ok := jsonResult[key]; ok && value != nil {
+			parsedTime := &database.Time{}
+			service.MustNotBeError(parsedTime.ScanString(value.(string)))
+			jsonResult[key] = parsedTime
+		}
+	}
 
 	render.Respond(w, r, jsonResult)
 

@@ -20,14 +20,14 @@ Feature: Ask for a hint
       | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 |
       | 10 | null       | null                                                                    |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 50          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 50          | 0           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 10             | 50          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested    | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
       | 10     | 50     | [{"rotorIndex":0}] | 1             | 2                     | 100             |
@@ -37,8 +37,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for a hint
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        | nbHintsCached |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] | 4             |
+      | ID  | idGroup | idItem | sHintsRequested        | nbHintsCached | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 4             | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -98,8 +98,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -159,8 +159,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for an already given hint
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -220,8 +220,8 @@ Feature: Ask for a hint
   Scenario: Can't parse sHintsRequested
     Given I am the user with ID "10"
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | not an array           |
+      | ID  | idGroup | idItem | sHintsRequested | iOrder |
+      | 100 | 101     | 50     | not an array    | 0      |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

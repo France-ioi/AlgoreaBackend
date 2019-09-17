@@ -9,24 +9,24 @@ Background:
     | 11 | jdoe       | UserSelf  |
     | 12 | jdoe-admin | UserAdmin |
   And the database has the following table 'items':
-    | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-    | 21 | Chapter | http://someurl1.com/ | 2                 | 1        | Task 1  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02T03:04:05Z | 01:20:30  | 2017-01-02T03:04:05Z | 1              | Closed        | 3      | 1              |
-    | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02T03:04:05Z | 01:20:30  | 2017-01-02T03:04:05Z | 1              | Closed        | 3      | 1              |
-    | 60 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 3  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02T03:04:05Z | 01:20:30  | 2017-01-02T03:04:05Z | 1              | Closed        | 3      | 1              |
+    | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+    | 21 | Chapter | http://someurl1.com/ | 2                 | 1        | Task 1  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
+    | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
+    | 60 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 3  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
   And the database has the following table 'items_items':
-    | idItemParent | idItemChild |
-    | 21           | 60          |
-    | 50           | 21          |
+    | idItemParent | idItemChild | iChildOrder |
+    | 21           | 60          | 0           |
+    | 50           | 21          | 0           |
   And the database has the following table 'items_ancestors':
     | idItemAncestor | idItemChild |
     | 21             | 60          |
     | 50             | 21          |
     | 50             | 60          |
   And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
-    | 40 | 11      | 50     | false          | false                | true         |
-    | 41 | 11      | 21     | true           | true                 | false        |
-    | 42 | 11      | 60     | false          | true                 | true         |
+    | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess | idUserCreated |
+    | 40 | 11      | 50     | false          | false                | true         | 1             |
+    | 41 | 11      | 21     | true           | true                 | false        | 1             |
+    | 42 | 11      | 60     | false          | true                 | true         | 1             |
   And the database has the following table 'groups_ancestors':
     | ID | idGroupAncestor | idGroupChild | bIsSelf |
     | 71 | 11              | 11           | 1       |
@@ -46,8 +46,8 @@ Scenario: Valid
     """
   Then the response should be "updated"
   And the table "items" at ID "50" should be:
-    | ID | sType  | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-    | 50 | Course | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02T03:04:05Z | 01:20:30  | 2017-01-02T03:04:05Z | 1              | Closed        | 3      | 1              |
+    | ID | sType  | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+    | 50 | Course | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
   And the table "items_strings" should stay unchanged
   And the table "items_items" should stay unchanged
   And the table "items_ancestors" should stay unchanged
@@ -73,9 +73,9 @@ Scenario: Valid
       | idLanguage | idItem |
       | 3          | 50     |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
-      | 43 | 11      | 12     | true           | true                 | false        |
-      | 44 | 11      | 34     | false          | false                | true         |
+      | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess | idUserCreated |
+      | 43 | 11      | 12     | true           | true                 | false        | 1             |
+      | 44 | 11      | 34     | false          | false                | true         | 1             |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -118,8 +118,8 @@ Scenario: Valid
       """
     Then the response should be "updated"
     And the table "items" at ID "50" should be:
-      | ID | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-      | 50 | Course | http://myurl.com/ | 3                 | 0              | 0        | Task number 1 | 1                | 0              | 0                       | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 12,34          | 34              | All       | 0              | 12345         | 2345            | 0            | 2018-01-02T03:04:05Z | 01:02:03  | 2019-02-03T04:05:06Z | 0              | Analysis      | 345    | 0              |
+      | ID | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+      | 50 | Course | http://myurl.com/ | 3                 | 0              | 0        | Task number 1 | 1                | 0              | 0                       | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 12,34          | 34              | All       | 0              | 12345         | 2345            | 0            | 2018-01-02 03:04:05 | 01:02:03  | 2019-02-03 04:05:06 | 0              | Analysis      | 345    | 0              |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | idItemParent | idItemChild |
@@ -143,8 +143,8 @@ Scenario: Valid
       """
     Then the response should be "updated"
     And the table "items" at ID "50" should be:
-      | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-      | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         |             | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02T03:04:05Z | 01:20:30  | 2017-01-02T03:04:05Z | 1              | Closed        | 3      | 1              |
+      | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
+      | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         |             | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged

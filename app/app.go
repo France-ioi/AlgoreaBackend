@@ -38,6 +38,8 @@ func New() (*Application, error) {
 	// Init the PRNG with current time
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	conf.Database.Connection.ParseTime = false // should be false!
+
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()
 	if db, err = database.Open(dbConfig); err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -15,14 +16,14 @@ type GetItemRequest struct {
 }
 
 type navigationItemUser struct {
-	Score               float32 `json:"score"`
-	Validated           bool    `json:"validated"`
-	Finished            bool    `json:"finished"`
-	KeyObtained         bool    `json:"key_obtained"`
-	SubmissionsAttempts int32   `json:"submissions_attempts"`
-	StartDate           string  `json:"start_date"`      // iso8601 str
-	ValidationDate      string  `json:"validation_date"` // iso8601 str
-	FinishDate          string  `json:"finish_date"`     // iso8601 str
+	Score               float32        `json:"score"`
+	Validated           bool           `json:"validated"`
+	Finished            bool           `json:"finished"`
+	KeyObtained         bool           `json:"key_obtained"`
+	SubmissionsAttempts int32          `json:"submissions_attempts"`
+	StartDate           *database.Time `json:"start_date"`
+	ValidationDate      *database.Time `json:"validation_date"`
+	FinishDate          *database.Time `json:"finish_date"`
 }
 
 type navigationItemAccessRights struct {

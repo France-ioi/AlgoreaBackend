@@ -120,15 +120,20 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					LEFT JOIN items_items
 						ON items_items.idItemParent = users_items.idItem
 					SET
-						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+						users_items.sLastActivityDate = IF(task_children_data.idUserItem IS NOT NULL AND
+							children_data.idUser IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.sLastActivityDate, users_items.sLastActivityDate),
-						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+						users_items.nbTasksTried = IF(task_children_data.idUserItem IS NOT NULL AND
+							children_data.idUser IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.nbTasksTried, users_items.nbTasksTried),
-						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+						users_items.nbTasksWithHelp = IF(task_children_data.idUserItem IS NOT NULL AND
+							children_data.idUser IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.nbTasksWithHelp, users_items.nbTasksWithHelp),
-						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+						users_items.nbTasksSolved = IF(task_children_data.idUserItem IS NOT NULL AND
+							children_data.idUser IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.nbTasksSolved, users_items.nbTasksSolved),
-						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
+						users_items.nbChildrenValidated = IF(task_children_data.idUserItem IS NOT NULL AND
+							children_data.idUser IS NOT NULL AND items_items.ID IS NOT NULL,
 							children_data.nbChildrenValidated, users_items.nbChildrenValidated),
 						users_items.bValidated = IF(task_children_data.idUserItem IS NOT NULL AND items_items.ID IS NOT NULL,
 							CASE
@@ -214,10 +219,10 @@ func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bo
 	}
 	query := `
 		INSERT INTO groups_items
-			(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess)
-		VALUES (?, ?, NOW(), NOW(), 1)`
+			(idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess, idUserCreated)
+		VALUES (?, ?, NOW(), NOW(), 1, -1)` // Note: idUserCreated is incorrect here, but it is required
 	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
-	valuesTemplate := ", (?, ?, NOW(), NOW(), 1)"
+	valuesTemplate := ", (?, ?, NOW(), NOW(), 1, -1)"
 	for item := range groupItemsToUnlock {
 		values = append(values, item.idGroup, item.idItem)
 	}

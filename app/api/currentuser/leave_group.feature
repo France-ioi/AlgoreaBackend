@@ -17,9 +17,9 @@ Feature: User leaves a group
       | 4  | 21              | 21           | 1       |
       | 5  | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 1  | 11            | 21           | invitationAccepted | 2017-04-29T06:38:38Z |
-      | 7  | 14            | 21           | left               | 2017-02-21T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
+      | 1  | 11            | 21           | invitationAccepted | 2017-04-29 06:38:38 |
+      | 7  | 14            | 21           | left               | 2017-02-21 06:38:38 |
 
   Scenario: Successfully leave a group
     Given I am the user with ID "1"
@@ -57,7 +57,7 @@ Feature: User leaves a group
 
   Scenario: Successfully leave a group (lockUserDeletionDate = NOW())
     Given I am the user with ID "1"
-    And the DB time now is "2019-08-20T00:00:00Z"
+    And the DB time now is "2019-08-20 00:00:00"
     When I send a DELETE request to "/current-user/group-memberships/11"
     Then the response code should be 200
     And the response body should be, in JSON:

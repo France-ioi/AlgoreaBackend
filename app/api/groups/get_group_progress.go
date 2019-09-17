@@ -96,7 +96,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Where("groups_groups.idGroupParent = ?", groupID).
 		Where("groups_groups.sType = 'direct'").
 		Joins(`
-			JOIN groups AS group_child
+			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.ID = groups_groups.idGroupChild AND group_child.sType NOT IN('Team', 'UserSelf')`)
 	ancestorGroupIDQuery, apiError := service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
@@ -118,8 +118,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 
 	users := srv.Store.GroupGroups().
 		Select("child.ID").
-		Joins("JOIN groups AS parent ON parent.ID = groups_groups.idGroupParent AND parent.sType != 'Team'").
-		Joins("JOIN groups AS child ON child.ID = groups_groups.idGroupChild and child.sType = 'UserSelf'").
+		Joins("JOIN `groups` AS parent ON parent.ID = groups_groups.idGroupParent AND parent.sType != 'Team'").
+		Joins("JOIN `groups` AS child ON child.ID = groups_groups.idGroupChild and child.sType = 'UserSelf'").
 		Joins(`
 			JOIN groups_ancestors
 			ON groups_ancestors.idGroupAncestor IN (?) AND
@@ -127,7 +127,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		WhereGroupRelationIsActive().
 		Group("child.ID")
 
-	teams := srv.Store.Table("groups FORCE INDEX(sType)").
+	teams := srv.Store.Table("`groups` FORCE INDEX(sType)").
 		Select("groups.ID").
 		Joins(`
 			JOIN groups_ancestors

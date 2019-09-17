@@ -50,6 +50,17 @@ func TestApplySorting(t *testing.T) {
 			},
 			wantSQL:      "SELECT ID FROM `users` ORDER BY sName ASC, ID DESC",
 			wantAPIError: NoError},
+		{name: "sorting (custom column name for ordering)",
+			args: args{
+				urlParameters: "",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "sName", FieldType: "string", ColumnNameForOrdering: "LOWER(sName)"},
+					"id":   {ColumnName: "ID", FieldType: "int64", ColumnNameForOrdering: "-ID"},
+				},
+				defaultRules: "-name,id",
+			},
+			wantSQL:      "SELECT ID FROM `users` ORDER BY LOWER(sName) DESC, -ID ASC",
+			wantAPIError: NoError},
 		{name: "repeated field",
 			args: args{
 				urlParameters: "?sort=name,name",

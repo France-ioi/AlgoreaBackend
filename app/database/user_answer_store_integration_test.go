@@ -83,12 +83,12 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
 				users_answers:
-					- {ID: 1, idUser: 11, idItem: 34, idAttempt: 56, sType: Current}
-					- {ID: 2, idUser: 12, idItem: 33, idAttempt: 56, sType: Current}
-					- {ID: 3, idUser: 12, idItem: 34, idAttempt: 55, sType: Current}
-					- {ID: 4, idUser: 12, idItem: 34, idAttempt: 56, sType: Submission}
-					- {ID: 5, idUser: 12, idItem: 34, sType: Current}
-					- {ID: 6, idUser: 12, idItem: 35, sType: Submission}`)
+					- {ID: 1, idUser: 11, idItem: 34, idAttempt: 56, sType: Current, sSubmissionDate: 2018-03-22 08:44:55}
+					- {ID: 2, idUser: 12, idItem: 33, idAttempt: 56, sType: Current, sSubmissionDate: 2018-03-22 08:44:55}
+					- {ID: 3, idUser: 12, idItem: 34, idAttempt: 55, sType: Current, sSubmissionDate: 2018-03-22 08:44:55}
+					- {ID: 4, idUser: 12, idItem: 34, idAttempt: 56, sType: Submission, sSubmissionDate: 2018-03-22 08:44:55}
+					- {ID: 5, idUser: 12, idItem: 34, sType: Current, sSubmissionDate: 2018-03-22 08:44:55}
+					- {ID: 6, idUser: 12, idItem: 35, sType: Submission, sSubmissionDate: 2018-03-22 08:44:55}`)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -142,8 +142,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				users_answers: [{ID: 200, idUser: 11, idItem: 50, idAttempt: 100}]
-				groups_attempts: [{ID: 100, idGroup: 111, idItem: 50}]`,
+				users_answers: [{ID: 200, idUser: 11, idItem: 50, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 100, idGroup: 111, idItem: 50, iOrder: 0}]`,
 			userAnswerID:  200,
 			userID:        11,
 			expectedFound: true,
@@ -151,8 +151,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (partial access)",
 			fixture: `
-				users_answers: [{ID: 200, idUser: 10, idItem: 50, idAttempt: 100}]
-				groups_attempts: [{ID: 100, idGroup: 101, idItem: 50}]`,
+				users_answers: [{ID: 200, idUser: 10, idItem: 50, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 100, idGroup: 101, idItem: 50, iOrder: 0}]`,
 			userAnswerID:  200,
 			userID:        10,
 			expectedFound: true,
@@ -163,9 +163,9 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userAnswerID: 200,
 			fixture: `
 				users_answers:
-					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100}
+					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}
 				groups_attempts:
-					- {ID: 100, idGroup: 102, idItem: 60}`,
+					- {ID: 100, idGroup: 102, idItem: 60, iOrder: 0}`,
 			expectedFound: true,
 		},
 		{
@@ -174,9 +174,9 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userAnswerID: 200,
 			fixture: `
 				users_answers:
-					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100}
+					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}
 				groups_attempts:
-					- {ID: 100, idGroup: 140, idItem: 60}`,
+					- {ID: 100, idGroup: 140, idItem: 60, iOrder: 0}`,
 			expectedFound: true,
 		},
 		{
@@ -185,16 +185,16 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userAnswerID: 200,
 			fixture: `
 				users_answers:
-					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100}
+					- {ID: 200, idUser: 10, idItem: 60, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}
 				groups_attempts:
-					- {ID: 100, idGroup: 110, idItem: 60}`,
+					- {ID: 100, idGroup: 110, idItem: 60, iOrder: 0}`,
 			expectedFound: true,
 		},
 		{
 			name: "user not found",
 			fixture: `
-				groups_attempts: [{ID: 100, idGroup: 121, idItem: 50}]
-				users_answers: [{ID: 200, idUser: 10, idItem: 60, idAttempt: 100}]`,
+				groups_attempts: [{ID: 100, idGroup: 121, idItem: 50, iOrder: 0}]
+				users_answers: [{ID: 200, idUser: 10, idItem: 60, idAttempt: 100, sSubmissionDate: 2018-03-22 08:44:55}]`,
 			userID:        404,
 			userAnswerID:  100,
 			expectedFound: false,
@@ -204,15 +204,15 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       12,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 12, idItem: 50, idAttempt: 200}]
-				groups_attempts: [{ID: 200, idGroup: 121, idItem: 50}]`,
+				users_answers: [{ID: 100, idUser: 12, idItem: 50, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 121, idItem: 50, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
 			name:          "no groups_attempts",
 			userID:        10,
 			userAnswerID:  100,
-			fixture:       `users_answers: [{ID: 100, idUser: 10, idItem: 50}]`,
+			fixture:       `users_answers: [{ID: 100, idUser: 10, idItem: 50, sSubmissionDate: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -220,8 +220,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 50, idAttempt: 200}]
-				groups_attempts: [{ID: 200, idGroup: 101, idItem: 51}]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 50, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 101, idItem: 51, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -229,7 +229,7 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				groups_attempts: [{ID: 100, idGroup: 101, idItem: 50}]`,
+				groups_attempts: [{ID: 100, idGroup: 101, idItem: 50, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -237,8 +237,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 103, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 103, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -246,8 +246,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 104, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 104, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -255,8 +255,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 105, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 105, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -264,8 +264,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 106, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 106, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -273,8 +273,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 107, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 107, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -282,26 +282,26 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 108, idItem: 60]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 108, idItem: 60, iOrder: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:         "user is not a member of the team (direct)",
+			name:         "user is a member of the team (direct)",
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 109, idItem: 60]`,
-			expectedFound: false,
+				users_answers: [{ID: 100, idUser: 10, idItem: 60, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 109, idItem: 60, iOrder: 0}]`,
+			expectedFound: true,
 		},
 		{
 			name:         "groups_attempts.idGroup is not user's self group",
 			userID:       10,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{ID: 100, idUser: 10, idItem: 50, idAttempt: 200}]
-				groups_attempts: [ID: 200, idGroup: 102, idItem: 50]`,
+				users_answers: [{ID: 100, idUser: 10, idItem: 50, idAttempt: 200, sSubmissionDate: 2018-03-22 08:44:55}]
+				groups_attempts: [{ID: 200, idGroup: 102, idItem: 50, iOrder: 0}]`,
 			expectedFound: false,
 		},
 	}
@@ -341,10 +341,10 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 					- {ID: 50, bHasAttempts: 0}
 					- {ID: 60, bHasAttempts: 1}
 				groups_items:
-					- {idGroup: 101, idItem: 50, sCachedPartialAccessDate: "2017-05-29T06:38:38Z"}
-					- {idGroup: 101, idItem: 60, sCachedPartialAccessDate: "2017-05-29T06:38:38Z"}
-					- {idGroup: 111, idItem: 50, sCachedFullAccessDate: "2017-05-29T06:38:38Z"}
-					- {idGroup: 121, idItem: 50, sCachedGrayedAccessDate: "2017-05-29T06:38:38Z"}`,
+					- {idGroup: 101, idItem: 50, sCachedPartialAccessDate: "2017-05-29 06:38:38", idUserCreated: 1}
+					- {idGroup: 101, idItem: 60, sCachedPartialAccessDate: "2017-05-29 06:38:38", idUserCreated: 1}
+					- {idGroup: 111, idItem: 50, sCachedFullAccessDate: "2017-05-29 06:38:38", idUserCreated: 1}
+					- {idGroup: 121, idItem: 50, sCachedGrayedAccessDate: "2017-05-29 06:38:38", idUserCreated: 1}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)

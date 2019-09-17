@@ -86,8 +86,8 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.Items().Select(`
 			items.ID AS idItem,
 			items.bHasAttempts AS bTeamOnlyContest,
-			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleTranslation,
-			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idTitleLanguage`).
+			COALESCE(MAX(user_strings.sTitle), MAX(default_strings.sTitle)) AS sTitleTranslation,
+			COALESCE(MAX(user_strings.idLanguage), MAX(default_strings.idLanguage)) AS idTitleLanguage`).
 		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
 		Joins("JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup").
 		JoinsUserAndDefaultItemStrings(user).
@@ -97,8 +97,12 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		Group("items.ID")
 
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"title": {ColumnName: "IFNULL(COALESCE(user_strings.sTitle, default_strings.sTitle), '')", FieldType: "string"},
-		"id":    {ColumnName: "items.ID", FieldType: "int64"},
+		"title": {
+			ColumnName:            "IFNULL(COALESCE(user_strings.sTitle, default_strings.sTitle), '')",
+			ColumnNameForOrdering: "IFNULL(COALESCE(MAX(user_strings.sTitle), MAX(default_strings.sTitle)), '')",
+			FieldType:             "string",
+		},
+		"id": {ColumnName: "items.ID", FieldType: "int64"},
 	}, "title,id")
 	if apiError != service.NoError {
 		return apiError
@@ -132,11 +136,11 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 						parent_groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Group("items_items.idItemParent, items_items.idItemChild").
-			Order("COALESCE(user_strings.sTitle, default_strings.sTitle)").
+			Order("COALESCE(MAX(user_strings.sTitle), MAX(default_strings.sTitle))").
 			Select(`
 				items_items.idItemChild as idChild,
-				COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitleParent,
-				COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguageParent`).
+				COALESCE(MAX(user_strings.sTitle), MAX(default_strings.sTitle)) AS sTitleParent,
+				COALESCE(MAX(user_strings.idLanguage), MAX(default_strings.idLanguage)) AS idLanguageParent`).
 			Scan(&parents).Error())
 
 		parentTitlesMap := make(map[int64][]parentTitle, len(rows))

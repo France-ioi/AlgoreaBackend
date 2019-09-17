@@ -16,9 +16,9 @@ Feature: User rejects an invitation to join a group
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType             | sStatusDate          |
-      | 1  | 11            | 21           | invitationSent    | 2017-04-29T06:38:38Z |
-      | 7  | 14            | 21           | invitationRefused | 2017-02-21T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType             | sStatusDate         |
+      | 1  | 11            | 21           | invitationSent    | 2017-04-29 06:38:38 |
+      | 7  | 14            | 21           | invitationRefused | 2017-02-21 06:38:38 |
 
   Scenario: Successfully reject an invitation
     Given I am the user with ID "1"

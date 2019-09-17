@@ -5,15 +5,15 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 1  | john   | 21          | 22           |
       | 2  | nobody | null        | null         |
     And the database has the following table 'groups':
-      | ID | sType     | sCode      | sCodeEnd             | sCodeTimer | bFreeAccess | idTeamItem |
-      | 11 | Team      | 3456789abc | 2017-04-29T06:38:38Z | null       | true        | null       |
-      | 12 | Team      | abc3456789 | null                 | null       | true        | null       |
-      | 14 | Team      | cba9876543 | null                 | null       | true        | 1234       |
-      | 15 | Team      | 75987654ab | null                 | null       | false       | null       |
-      | 16 | Class     | dcef123492 | null                 | null       | false       | null       |
-      | 17 | Team      | 5987654abc | null                 | null       | true        | 1234       |
-      | 21 | UserSelf  | null       | null                 | null       | false       | null       |
-      | 22 | UserAdmin | null       | null                 | null       | false       | null       |
+      | ID | sType     | sCode      | sCodeEnd            | sCodeTimer | bFreeAccess | idTeamItem |
+      | 11 | Team      | 3456789abc | 2017-04-29 06:38:38 | null       | true        | null       |
+      | 12 | Team      | abc3456789 | null                | null       | true        | null       |
+      | 14 | Team      | cba9876543 | null                | null       | true        | 1234       |
+      | 15 | Team      | 75987654ab | null                | null       | false       | null       |
+      | 16 | Class     | dcef123492 | null                | null       | false       | null       |
+      | 17 | Team      | 5987654abc | null                | null       | true        | 1234       |
+      | 21 | UserSelf  | null       | null                | null       | false       | null       |
+      | 22 | UserAdmin | null       | null                | null       | false       | null       |
     And the database has the following table 'groups_ancestors':
       | idGroupAncestor | idGroupChild | bIsSelf |
       | 11              | 11           | 1       |
@@ -26,9 +26,9 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 21              | 21           | 1       |
       | 22              | 22           | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 1  | 11            | 21           | invitationSent     | 2017-04-29T06:38:38Z |
-      | 7  | 14            | 21           | invitationAccepted | 2017-02-21T06:38:38Z |
+      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
+      | 1  | 11            | 21           | invitationSent     | 2017-04-29 06:38:38 |
+      | 7  | 14            | 21           | invitationAccepted | 2017-02-21 06:38:38 |
 
   Scenario: No code
     Given I am the user with ID "1"

@@ -33,23 +33,23 @@ Feature: Update active attempt for an item
       | idItemAncestor | idItemChild |
       | 10             | 60          |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 60          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 60          | 0           |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | sCachedFullAccessDate |
-      | 101     | 50     | 2017-05-29T06:38:38Z     | null                  |
-      | 101     | 60     | 2017-05-29T06:38:38Z     | null                  |
-      | 111     | 50     | null                     | 2017-05-29T06:38:38Z  |
-      | 121     | 50     | null                     | 2017-05-29T06:38:38Z  |
+      | idGroup | idItem | sCachedPartialAccessDate | sCachedFullAccessDate | idUserCreated |
+      | 101     | 50     | 2017-05-29 06:38:38      | null                  | 10            |
+      | 101     | 60     | 2017-05-29 06:38:38      | null                  | 10            |
+      | 111     | 50     | null                     | 2017-05-29 06:38:38   | 10            |
+      | 121     | 50     | null                     | 2017-05-29 06:38:38   | 10            |
 
   Scenario: User is able to update an active attempt (full access)
     Given I am the user with ID "11"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 11     | 50     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 11     | 50     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 100 | 111     | 50     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 100 | 111     | 50     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -69,11 +69,11 @@ Feature: Update active attempt for an item
   Scenario: User is able to fetch an active attempt (partial access)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 10     | 50     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 10     | 50     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 100 | 101     | 50     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 100 | 101     | 50     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -93,11 +93,11 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt (full access, groups_groups.sType=joinedByCode)
     Given I am the user with ID "11"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 11     | 50     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 11     | 50     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 100 | 111     | 50     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 100 | 111     | 50     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -117,12 +117,12 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt (bHasAttempts=1, groups_groups.sType=invitationAccepted)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 10     | 10     | null            | 2018-05-29T06:38:38Z |
-      | 10     | 60     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 10     | 10     | null            | 2018-05-29 06:38:38 |
+      | 10     | 60     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 200 | 102     | 60     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 200 | 102     | 60     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -143,12 +143,12 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt (bHasAttempts=1, groups_groups.sType=requestAccepted)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 10     | 10     | null            | 2018-05-29T06:38:38Z |
-      | 10     | 60     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 10     | 10     | null            | 2018-05-29 06:38:38 |
+      | 10     | 60     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 200 | 103     | 60     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 200 | 103     | 60     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -169,12 +169,12 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt (bHasAttempts=1, groups_groups.sType=direct)
     Given I am the user with ID "10"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 10     | 10     | null            | 2018-05-29T06:38:38Z |
-      | 10     | 60     | null            | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 10     | 10     | null            | 2018-05-29 06:38:38 |
+      | 10     | 60     | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 200 | 104     | 60     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 200 | 104     | 60     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -195,11 +195,11 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt when this attempt is already active
     Given I am the user with ID "11"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 11     | 50     | 100             | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 11     | 50     | 100             | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 100 | 111     | 50     | 2017-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 100 | 111     | 50     | 2017-05-29 06:38:38 | 0      |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -220,12 +220,12 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt when another attempt is active
     Given I am the user with ID "11"
     And the database has the following table 'users_items':
-      | idUser | idItem | idAttemptActive | sLastActivityDate    |
-      | 11     | 50     | 101             | 2017-05-29T06:38:38Z |
+      | idUser | idItem | idAttemptActive | sLastActivityDate   |
+      | 11     | 50     | 101             | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sLastActivityDate    |
-      | 100 | 111     | 50     | 2017-05-29T06:38:38Z |
-      | 101 | 111     | 50     | 2018-05-29T06:38:38Z |
+      | ID  | idGroup | idItem | sLastActivityDate   | iOrder |
+      | 100 | 111     | 50     | 2017-05-29 06:38:38 | 0      |
+      | 101 | 111     | 50     | 2018-05-29 06:38:38 | 1      |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:

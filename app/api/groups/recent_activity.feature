@@ -26,7 +26,7 @@ Feature: Get recent activity for group_id and item_id
 			| 200 | Category | false          | false    | 1234,2345      | true               | 0        |
 		And the database has the following table 'groups_items':
 			| ID | idGroup | idItem | sCachedGrayedAccessDate | idUserCreated | iVersion |
-			| 43 | 21      | 200    | 2019-03-22T06:38:38Z    | 0             | 0        |
+			| 43 | 21      | 200    | 2019-03-22 06:38:38     | 0             | 0        |
 		And the database has the following table 'items_ancestors':
 			| ID | idItemAncestor | idItemChild | iVersion |
 		  | 1  | 200            | 200         | 0        |

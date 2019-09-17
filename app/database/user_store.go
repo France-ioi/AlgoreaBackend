@@ -123,5 +123,5 @@ func deleteOneBatchOfUsers(db *DB, ids []int64, selfGroupsIDs, ownedGroupsIDs []
 
 func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) {
 	mustNotBeError(
-		s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", table)+condition, args...).Error()) //nolint:gosec
+		s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...).Error()) //nolint:gosec
 }

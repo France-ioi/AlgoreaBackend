@@ -63,7 +63,7 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 			groups_groups.sType,
 			groups.sName AS group__sName,
 			groups.sType AS group__sType`).
-		Joins("JOIN groups ON groups.ID = groups_groups.idGroupParent").
+		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
 		Where("groups_groups.sType != 'direct'").
 		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
 	if user.NotificationReadDate != nil {

@@ -9,16 +9,16 @@ Feature: Add item - robustness
       | 21 | false          | false    |
       | 22 | false          | false    |
     And the database has the following table 'items_items':
-      | ID | idItemParent | idItemChild |
-      | 1  | 4            | 21          |
+      | ID | idItemParent | idItemChild | iChildOrder |
+      | 1  | 4            | 21          | 0           |
     And the database has the following table 'items_ancestors':
       | ID | idItemAncestor | idItemChild |
       | 1  | 4              | 21          |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess |
-      | 41 | 11      | 21     | true                 | false        |
-      | 42 | 11      | 22     | false                | false        |
-      | 43 | 11      | 4      | true                 | false        |
+      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess | idUserCreated |
+      | 41 | 11      | 21     | true                 | false        | 1             |
+      | 42 | 11      | 22     | false                | false        | 1             |
+      | 43 | 11      | 4      | true                 | false        | 1             |
     And the database has the following table 'groups_ancestors':
       | ID | idGroupAncestor | idGroupChild | bIsSelf |
       | 71 | 11              | 11           | 1       |

@@ -108,7 +108,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			groups.ID as ID, groups.sName, groups.sType, groups.iGrade,
 			groups.bOpened, groups.bFreeAccess, groups.sCode,
 			(
-				SELECT COUNT(*) FROM groups AS user_groups
+				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
 				JOIN groups_ancestors
 				ON groups_ancestors.idGroupChild = user_groups.ID AND
 					groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild

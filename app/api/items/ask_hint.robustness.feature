@@ -20,22 +20,22 @@ Feature: Ask for a hint - robustness
       | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |
       | 10 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 0         |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild |
-      | 10           | 50          |
+      | idItemParent | idItemChild | iChildOrder |
+      | 10           | 50          | 0           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 10             | 50          |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate |
-      | 101     | 10     | 2017-05-29T06:38:38Z     |
-      | 101     | 50     | 2017-05-29T06:38:38Z     |
+      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
+      | 101     | 10     | 2017-05-29 06:38:38      | 10            |
+      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
     And the database has the following table 'users_items':
       | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
       | 10     | 10     | null                            | 0             | 0                     | null            |
       | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     | 100             |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] |
+      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
+      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
     And time is frozen
 
   Scenario: Wrong JSON in request

@@ -66,7 +66,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 15            | 57           | direct             |
       | 15            | 59           | requestAccepted    |
       | 15            | 61           | invitationAccepted |
-      | 15            | 63           | invitationRejected |
+      | 15            | 63           | invitationRefused  |
       | 15            | 65           | left               |
       | 15            | 67           | invitationSent     |
       | 15            | 69           | requestSent        |

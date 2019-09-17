@@ -33,10 +33,10 @@ Feature: Change item access rights for a group
       | 102 |
       | 103 |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild | bAlwaysVisible | bAccessRestricted |
-      | 100          | 101         | true           | true              |
-      | 101          | 102         | false          | false             |
-      | 102          | 103         | false          | false             |
+      | idItemParent | idItemChild | bAlwaysVisible | bAccessRestricted | iChildOrder |
+      | 100          | 101         | true           | true              | 0           |
+      | 101          | 102         | false          | false             | 0           |
+      | 102          | 103         | false          | false             | 0           |
     And the database has the following table 'items_ancestors':
       | idItemAncestor | idItemChild |
       | 100            | 101         |
@@ -46,20 +46,20 @@ Feature: Change item access rights for a group
       | 101            | 103         |
       | 102            | 103         |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | sAccessReason                                  |
-      | 25      | 100    | null            | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0              | 0                    | the parent item is visible to the user's class |
-      | 25      | 101    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0              | 0                    | null                                           |
-      | 25      | 102    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0              | 0                    | null                                           |
-      | 25      | 103    | null            | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0              | 0                    | null                                           |
+      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | sAccessReason                                  | idUserCreated |
+      | 25      | 100    | null            | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0              | 0                    | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null            | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0              | 0                    | null                                           | 2             |
+      | 25      | 102    | null            | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0              | 0                    | null                                           | 2             |
+      | 25      | 103    | null            | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0              | 0                    | null                                           | 2             |
 
   Scenario: Create a new groups_items row (manager access)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bManagerAccess | bCachedManagerAccess | sAccessReason                            |
-      | 21      | 100    | 1              | 1                    | the admin can manage the item's ancestor |
-      | 21      | 101    | 0              | 1                    | null                                     |
-      | 21      | 102    | 0              | 1                    | null                                     |
-      | 21      | 103    | 0              | 1                    | null                                     |
+      | idGroup | idItem | bManagerAccess | bCachedManagerAccess | sAccessReason                            | idUserCreated |
+      | 21      | 100    | 1              | 1                    | the admin can manage the item's ancestor | 2             |
+      | 21      | 101    | 0              | 1                    | null                                     | 2             |
+      | 21      | 102    | 0              | 1                    | null                                     | 2             |
+      | 21      | 103    | 0              | 1                    | null                                     | 2             |
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -71,26 +71,26 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | the admin can manage the item's ancestor       |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 23      | 102    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | the user really needs this access              |
-      | 23      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | 2019-03-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | the admin can manage the item's ancestor       | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 23      | 102    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | the user really needs this access              | 1             |
+      | 23      | 103    | null                | 2019-04-06 09:26:40   | null                | 2019-03-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0                    | null                                           | 1             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | null                                           | 2             |
 
   Scenario: Create a new groups_items row (owner access on the item's ancestor)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sAccessReason                                |
-      | 21      | 100    | 1            | the admin is an owner of the item's ancestor |
-      | 21      | 101    | 0            | null                                         |
-      | 21      | 102    | 0            | null                                         |
-      | 21      | 103    | 0            | null                                         |
+      | idGroup | idItem | bOwnerAccess | sAccessReason                                | idUserCreated |
+      | 21      | 100    | 1            | the admin is an owner of the item's ancestor | 2             |
+      | 21      | 101    | 0            | null                                         | 2             |
+      | 21      | 102    | 0            | null                                         | 2             |
+      | 21      | 103    | 0            | null                                         | 2             |
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -102,24 +102,24 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 1            | the admin is an owner of the item's ancestor   |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           |
-      | 23      | 102    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0              | 0                    | 0            | the user really needs this access              |
-      | 23      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | 2019-03-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0              | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0              | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0              | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 1            | the admin is an owner of the item's ancestor   | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
+      | 23      | 102    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0              | 0                    | 0            | the user really needs this access              | 1             |
+      | 23      | 103    | null                | 2019-04-06 09:26:40   | null                | 2019-03-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0              | 0                    | 0            | null                                           | 1             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0              | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0              | 0                    | 0            | null                                           | 2             |
 
   Scenario: Create a new groups_items row (owner access on the item)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sAccessReason                     |
-      | 21      | 102    | 1            | the admin is an owner of the item |
-      | 21      | 103    | 0            | null                              |
+      | idGroup | idItem | bOwnerAccess | sAccessReason                     | idUserCreated |
+      | 21      | 102    | 1            | the admin is an owner of the item | 2             |
+      | 21      | 103    | 0            | null                              | 2             |
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -131,25 +131,25 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 23      | 102    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access              |
-      | 23      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | 2019-03-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 23      | 102    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access              | 1             |
+      | 23      | 103    | null                | 2019-04-06 09:26:40   | null                | 2019-03-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 1             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
 
   Scenario: Update an existing groups_items row
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | sAccessReason                                  |
-      | 21      | 100    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 1              | 1                    | the admin can manage the item's ancestor       |
-      | 21      | 101    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 1                    | null                                           |
-      | 21      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 1                    | null                                           |
-      | 23      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | null                                           |
-      | 23      | 103    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | null                                           |
+      | idGroup | idItem | sFullAccessDate | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bManagerAccess | bCachedManagerAccess | sAccessReason                            | idUserCreated |
+      | 21      | 100    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 1              | 1                    | the admin can manage the item's ancestor | 2             |
+      | 21      | 101    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 1                    | null                                     | 2             |
+      | 21      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 1                    | null                                     | 2             |
+      | 23      | 102    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | null                                     | 2             |
+      | 23      | 103    | null            | null                  | null                 | null                     | null                    | null                 | null                       | 0              | 0                    | null                                     | 2             |
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -161,27 +161,27 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | the admin can manage the item's ancestor       |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 1                    | null                                           |
-      | 23      | 102    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | the user really needs this access              |
-      | 23      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | 2019-03-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | the admin can manage the item's ancestor       | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 1                    | null                                           | 2             |
+      | 23      | 102    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | the user really needs this access              | 2             |
+      | 23      | 103    | null                | 2019-04-06 09:26:40   | null                | 2019-03-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0                    | null                                           | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | null                                           | 2             |
 
   Scenario: Create a new groups_items row (the group has only partial access on the item's parent)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sPartialAccessDate   | sCachedPartialAccessDate | sAccessReason                                     |
-      | 21      | 102    | 1            | null                 | null                     | the admin is an owner of the item                 |
-      | 21      | 103    | 0            | null                 | null                     | null                                              |
-      | 31      | 101    | 0            | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | the group has partial access to the item's parent |
-      | 31      | 102    | 0            | null                 | null                     | null                                              |
-      | 31      | 103    | 0            | null                 | null                     | null                                              |
+      | idGroup | idItem | bOwnerAccess | sPartialAccessDate  | sCachedPartialAccessDate | sAccessReason                                     | idUserCreated |
+      | 21      | 102    | 1            | null                | null                     | the admin is an owner of the item                 | 2             |
+      | 21      | 103    | 0            | null                | null                     | null                                              | 2             |
+      | 31      | 101    | 0            | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | the group has partial access to the item's parent | 2             |
+      | 31      | 102    | 0            | null                | null                     | null                                              | 2             |
+      | 31      | 103    | 0            | null                | null                     | null                                              | 2             |
     When I send a PUT request to "/groups/31/items/102" with the following body:
     """
     {
@@ -193,26 +193,26 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                     |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item                 |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class    |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                              |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              |
-      | 31      | 101    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the group has partial access to the item's parent |
-      | 31      | 102    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access                 |
-      | 31      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | 2019-01-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                              |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                     | idUserCreated |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item                 | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class    | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                              | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                              | 2             |
+      | 31      | 101    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the group has partial access to the item's parent | 2             |
+      | 31      | 102    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-01-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access                 | 2             |
+      | 31      | 103    | null                | 2019-04-06 09:26:40   | null                | 2019-01-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                              | 2             |
 
   Scenario: Create a new groups_items row (the group has only full access on the item's parent)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sFullAccessDate      | sCachedFullAccessDate | sAccessReason                                  |
-      | 21      | 102    | 1            | null                 | null                  | the admin is an owner of the item              |
-      | 21      | 103    | 0            | null                 | null                  | null                                           |
-      | 31      | 101    | 0            | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z  | the group has full access to the item's parent |
-      | 31      | 102    | 0            | null                 | 2019-01-06T09:26:40Z  | null                                           |
-      | 31      | 103    | 0            | null                 | 2019-01-06T09:26:40Z  | null                                           |
+      | idGroup | idItem | bOwnerAccess | sFullAccessDate     | sCachedFullAccessDate | sAccessReason                                  | idUserCreated |
+      | 21      | 102    | 1            | null                | null                  | the admin is an owner of the item              | 2             |
+      | 21      | 103    | 0            | null                | null                  | null                                           | 2             |
+      | 31      | 101    | 0            | 2019-01-06 09:26:40 | 2019-01-06 09:26:40   | the group has full access to the item's parent | 2             |
+      | 31      | 102    | 0            | null                | 2019-01-06 09:26:40   | null                                           | 2             |
+      | 31      | 103    | 0            | null                | 2019-01-06 09:26:40   | null                                           | 2             |
     When I send a PUT request to "/groups/31/items/102" with the following body:
     """
     {
@@ -224,30 +224,30 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 31      | 101    | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | the group has full access to the item's parent |
-      | 31      | 102    | 2019-04-06T09:26:40Z | 2019-01-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access              |
-      | 31      | 103    | null                 | 2019-01-06T09:26:40Z  | null                 | 2019-03-06T09:26:40Z     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 31      | 101    | 2019-01-06 09:26:40 | 2019-01-06 09:26:40   | null                | null                     | null                    | null                 | null                       | 0                    | 0            | the group has full access to the item's parent | 2             |
+      | 31      | 102    | 2019-04-06 09:26:40 | 2019-01-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access              | 2             |
+      | 31      | 103    | null                | 2019-01-06 09:26:40   | null                | 2019-03-06 09:26:40      | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
 
 
   Scenario: Create a new groups_items row (the group has no access to the item's parents, but has full access to the item itself)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sFullAccessDate      | sCachedFullAccessDate | sAccessReason                                  |
-      | 21      | 100    | 1            | null                 | null                  | the admin is an owner of the item              |
-      | 21      | 101    | 0            | null                 | null                  | null                                           |
-      | 21      | 102    | 0            | null                 | null                  | null                                           |
-      | 21      | 103    | 0            | null                 | null                  | null                                           |
-      | 31      | 100    | 0            | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z  | the group has full access to the item's parent |
-      | 31      | 101    | 0            | null                 | 2019-01-06T09:26:40Z  | null                                           |
-      | 31      | 102    | 0            | null                 | 2019-01-06T09:26:40Z  | null                                           |
-      | 31      | 103    | 0            | null                 | 2019-01-06T09:26:40Z  | null                                           |
+      | idGroup | idItem | bOwnerAccess | sFullAccessDate     | sCachedFullAccessDate | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | 1            | null                | null                  | the admin is an owner of the item              | 2             |
+      | 21      | 101    | 0            | null                | null                  | null                                           | 2             |
+      | 21      | 102    | 0            | null                | null                  | null                                           | 2             |
+      | 21      | 103    | 0            | null                | null                  | null                                           | 2             |
+      | 31      | 100    | 0            | 2019-01-06 09:26:40 | 2019-01-06 09:26:40   | the group has full access to the item's parent | 2             |
+      | 31      | 101    | 0            | null                | 2019-01-06 09:26:40   | null                                           | 2             |
+      | 31      | 102    | 0            | null                | 2019-01-06 09:26:40   | null                                           | 2             |
+      | 31      | 103    | 0            | null                | 2019-01-06 09:26:40   | null                                           | 2             |
     When I send a PUT request to "/groups/31/items/100" with the following body:
     """
     {
@@ -259,32 +259,32 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 31      | 100    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access              |
-      | 31      | 101    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | 2019-03-06T09:26:40Z    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 102    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 31      | 100    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access              | 2             |
+      | 31      | 101    | null                | 2019-04-06 09:26:40   | null                | null                     | 2019-03-06 09:26:40     | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 102    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 103    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
 
   Scenario: Create a new groups_items row (the group has no access to the item's parents, but has partial access to the item itself)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessReason                                     |
-      | 21      | 100    | 1            | null                 | null                     | null                    | the admin is an owner of the item                 |
-      | 21      | 101    | 0            | null                 | null                     | null                    | null                                              |
-      | 21      | 102    | 0            | null                 | null                     | null                    | null                                              |
-      | 21      | 103    | 0            | null                 | null                     | null                    | null                                              |
-      | 31      | 100    | 0            | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | the group has partial access to the item's parent |
-      | 31      | 101    | 0            | null                 | null                     | 2019-01-06T09:26:40Z    | null                                              |
-      | 31      | 102    | 0            | null                 | null                     | 2019-01-06T09:26:40Z    | null                                              |
-      | 31      | 103    | 0            | null                 | null                     | 2019-01-06T09:26:40Z    | null                                              |
+      | idGroup | idItem | bOwnerAccess | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessReason                                     | idUserCreated |
+      | 21      | 100    | 1            | null                | null                     | null                    | the admin is an owner of the item                 | 2             |
+      | 21      | 101    | 0            | null                | null                     | null                    | null                                              | 2             |
+      | 21      | 102    | 0            | null                | null                     | null                    | null                                              | 2             |
+      | 21      | 103    | 0            | null                | null                     | null                    | null                                              | 2             |
+      | 31      | 100    | 0            | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | the group has partial access to the item's parent | 2             |
+      | 31      | 101    | 0            | null                | null                     | 2019-01-06 09:26:40     | null                                              | 2             |
+      | 31      | 102    | 0            | null                | null                     | 2019-01-06 09:26:40     | null                                              | 2             |
+      | 31      | 103    | 0            | null                | null                     | 2019-01-06 09:26:40     | null                                              | 2             |
     When I send a PUT request to "/groups/31/items/100" with the following body:
     """
     {
@@ -296,32 +296,32 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 31      | 100    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access              |
-      | 31      | 101    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | 2019-03-06T09:26:40Z    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 102    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 31      | 100    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access              | 2             |
+      | 31      | 101    | null                | 2019-04-06 09:26:40   | null                | null                     | 2019-03-06 09:26:40     | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 102    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 103    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
 
   Scenario: Create a new groups_items row (the group has no access to the item's parents, but has grayed access to the item itself)
     Given I am the user with ID "1"
     And the database table 'groups_items' has also the following rows:
-      | idGroup | idItem | bOwnerAccess | sCachedGrayedAccessDate | sAccessReason                                    |
-      | 21      | 100    | 1            | null                    | the admin is an owner of the item                |
-      | 21      | 101    | 0            | null                    | null                                             |
-      | 21      | 102    | 0            | null                    | null                                             |
-      | 21      | 103    | 0            | null                    | null                                             |
-      | 31      | 100    | 0            | 2019-01-06T09:26:40Z    | the group has grayed access to the item's parent |
-      | 31      | 101    | 0            | 2019-01-06T09:26:40Z    | null                                             |
-      | 31      | 102    | 0            | 2019-01-06T09:26:40Z    | null                                             |
-      | 31      | 103    | 0            | 2019-01-06T09:26:40Z    | null                                             |
+      | idGroup | idItem | bOwnerAccess | sCachedGrayedAccessDate | sAccessReason                                    | idUserCreated |
+      | 21      | 100    | 1            | null                    | the admin is an owner of the item                | 2             |
+      | 21      | 101    | 0            | null                    | null                                             | 2             |
+      | 21      | 102    | 0            | null                    | null                                             | 2             |
+      | 21      | 103    | 0            | null                    | null                                             | 2             |
+      | 31      | 100    | 0            | 2019-01-06 09:26:40     | the group has grayed access to the item's parent | 2             |
+      | 31      | 101    | 0            | 2019-01-06 09:26:40     | null                                             | 2             |
+      | 31      | 102    | 0            | 2019-01-06 09:26:40     | null                                             | 2             |
+      | 31      | 103    | 0            | 2019-01-06 09:26:40     | null                                             | 2             |
     When I send a PUT request to "/groups/31/items/100" with the following body:
     """
     {
@@ -333,17 +333,16 @@ Feature: Change item access rights for a group
     """
     Then the response should be "updated"
     And the table "groups_items" should be:
-      | idGroup | idItem | sFullAccessDate      | sCachedFullAccessDate | sPartialAccessDate   | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  |
-      | 21      | 100    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              |
-      | 21      | 101    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 21      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 100    | null                 | null                  | 2019-01-06T09:26:40Z | 2019-01-06T09:26:40Z     | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class |
-      | 25      | 101    | null                 | null                  | null                 | null                     | 2019-01-06T09:26:40Z    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 102    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 25      | 103    | null                 | null                  | null                 | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           |
-      | 31      | 100    | 2019-04-06T09:26:40Z | 2019-04-06T09:26:40Z  | 2019-03-06T09:26:40Z | 2019-03-06T09:26:40Z     | null                    | 2019-05-06T09:26:40Z | 2019-05-06T09:26:40Z       | 0                    | 0            | the user really needs this access              |
-      | 31      | 101    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | 2019-03-06T09:26:40Z    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 102    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-      | 31      | 103    | null                 | 2019-04-06T09:26:40Z  | null                 | null                     | null                    | null                 | 2019-05-06T09:26:40Z       | 0                    | 0            | null                                           |
-
+      | idGroup | idItem | sFullAccessDate     | sCachedFullAccessDate | sPartialAccessDate  | sCachedPartialAccessDate | sCachedGrayedAccessDate | sAccessSolutionsDate | sCachedAccessSolutionsDate | bCachedManagerAccess | bOwnerAccess | sAccessReason                                  | idUserCreated |
+      | 21      | 100    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 1            | the admin is an owner of the item              | 2             |
+      | 21      | 101    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 21      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 100    | null                | null                  | 2019-01-06 09:26:40 | 2019-01-06 09:26:40      | null                    | null                 | null                       | 0                    | 0            | the parent item is visible to the user's class | 2             |
+      | 25      | 101    | null                | null                  | null                | null                     | 2019-01-06 09:26:40     | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 102    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 25      | 103    | null                | null                  | null                | null                     | null                    | null                 | null                       | 0                    | 0            | null                                           | 2             |
+      | 31      | 100    | 2019-04-06 09:26:40 | 2019-04-06 09:26:40   | 2019-03-06 09:26:40 | 2019-03-06 09:26:40      | null                    | 2019-05-06 09:26:40  | 2019-05-06 09:26:40        | 0                    | 0            | the user really needs this access              | 2             |
+      | 31      | 101    | null                | 2019-04-06 09:26:40   | null                | null                     | 2019-03-06 09:26:40     | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 102    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |
+      | 31      | 103    | null                | 2019-04-06 09:26:40   | null                | null                     | null                    | null                 | 2019-05-06 09:26:40        | 0                    | 0            | null                                           | 2             |

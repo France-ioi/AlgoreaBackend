@@ -38,9 +38,9 @@ Background:
 Scenario: Full access on all breadcrumb
   Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 42 | 13      | 22     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 43 | 13      | 23     | 2017-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+    | 41 | 13      | 21     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 42 | 13      | 22     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 43 | 13      | 23     | 2017-05-29 06:38:38   | 2037-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
   And the database has the following table 'items_items':
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
     | 51 | 21           | 22          | 1           | 0           | 0        |
@@ -60,9 +60,9 @@ Scenario: Full access on all breadcrumb
 Scenario: Partial access on all breadcrumb
   Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 42 | 13      | 22     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 43 | 13      | 23     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
+    | 41 | 13      | 21     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 42 | 13      | 22     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 43 | 13      | 23     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
   And the database has the following table 'items_items':
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
     | 51 | 21           | 22          | 1           | 0           | 0        |
@@ -82,9 +82,9 @@ Scenario: Partial access on all breadcrumb
 Scenario: Partial access to all items except for last which is greyed
   Given the database has the following table 'groups_items':
     | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated | iVersion |
-    | 41 | 13      | 21     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 42 | 13      | 22     | 2037-05-29T06:38:38Z  | 2017-05-29T06:38:38Z     | 2037-05-29T06:38:38Z    | 0             | 0        |
-    | 43 | 13      | 23     | 2037-05-29T06:38:38Z  | 2037-05-29T06:38:38Z     | 2017-05-29T06:38:38Z    | 0             | 0        |
+    | 41 | 13      | 21     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 42 | 13      | 22     | 2037-05-29 06:38:38   | 2017-05-29 06:38:38      | 2037-05-29 06:38:38     | 0             | 0        |
+    | 43 | 13      | 23     | 2037-05-29 06:38:38   | 2037-05-29 06:38:38      | 2017-05-29 06:38:38     | 0             | 0        |
   And the database has the following table 'items_items':
     | ID | idItemParent | idItemChild | iChildOrder | iDifficulty | iVersion |
     | 51 | 21           | 22          | 1           | 0           | 0        |
