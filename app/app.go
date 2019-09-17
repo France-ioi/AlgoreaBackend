@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -39,6 +40,9 @@ func New() (*Application, error) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	conf.Database.Connection.ParseTime = false // should be false!
+	if conf.Database.Connection.Net == "" {
+		return nil, errors.New("database.connection.net should be set")
+	}
 
 	var db *database.DB
 	dbConfig := conf.Database.Connection.FormatDSN()

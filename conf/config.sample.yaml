@@ -16,6 +16,7 @@ database:
     user: algorea
     passwd: a_db_password
     addr: localhost
+    net: tcp
     #dbname: algorea_db
     allownativepasswords: true
 logging:

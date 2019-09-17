@@ -3,6 +3,7 @@ package cmd
 import (
 	"database/sql"
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 
@@ -76,9 +77,15 @@ func init() { // nolint:gochecknoinits
 
 			// restore the schema
 			// note: current solution is not really great as it makes some assumptions of the config :-/
+			host, port, err := net.SplitHostPort(conf.Database.Connection.Addr)
+			if err != nil {
+				host = conf.Database.Connection.Addr
+				port = "3306"
+			}
 			command := exec.Command(
 				"mysql",
-				"-h"+conf.Database.Connection.Addr,
+				"-h"+host,
+				"-P"+port,
 				"-D"+conf.Database.Connection.DBName,
 				"-u"+conf.Database.Connection.User,
 				"-p"+conf.Database.Connection.Passwd,

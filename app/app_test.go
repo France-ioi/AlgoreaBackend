@@ -75,6 +75,22 @@ func TestNew_TokenErr(t *testing.T) {
 	assert.EqualError(err, "keys loading error")
 }
 
+func TestNew_NoDatabaseConnectionNet(t *testing.T) {
+	assert := assertlib.New(t)
+	var patch *monkey.PatchGuard
+	patch = monkey.Patch(config.Load, func() *config.Root {
+		patch.Unpatch()
+		result := config.Load()
+		patch.Restore()
+		result.Database.Connection.Net = ""
+		return result
+	})
+	defer patch.Unpatch()
+	app, err := New()
+	assert.Nil(app)
+	assert.EqualError(err, "database.connection.net should be set")
+}
+
 // The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves
 // but their interaction (impacted by the order of definition)
 
