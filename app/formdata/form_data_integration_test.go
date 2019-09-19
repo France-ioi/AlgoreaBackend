@@ -506,13 +506,13 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"simple",
 			&struct {
-				ID           int64   `json:"id"`
+				ID           int64   `json:"id2"`
 				Name         string  `json:"name"`
 				NullableName *string `json:"nullable_name"`
 			}{},
-			`{"id": 123, "name": "John", "nullable_name": "Paul"}`,
+			`{"id2": 123, "name": "John", "nullable_name": "Paul"}`,
 			map[string]interface{}{
-				"ID": int64(123), "Name": "John", "NullableName": func() *string { s := "Paul"; return &s }(),
+				"id": int64(123), "name": "John", "nullable_name": func() *string { s := "Paul"; return &s }(),
 			},
 		},
 		{
