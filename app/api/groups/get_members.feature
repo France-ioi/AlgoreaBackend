@@ -221,3 +221,19 @@ Feature: Get members of group_id
     ]
     """
 
+  Scenario: The member is not a user
+    Given I am the user with id "1"
+    When I send a GET request to "/groups/22/members?limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "15",
+        "user": null,
+        "status_date": "2016-10-29T06:38:38Z",
+        "type": "direct"
+      }
+    ]
+    """
+
