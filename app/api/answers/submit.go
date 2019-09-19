@@ -21,7 +21,7 @@ import (
 // ---
 // summary: Generate an answer token
 // description: Generate and return an answer token from user s answer and task token.
-//   It is used to bind an answer with task parameters so that the TaskGrader can checkt they have not been altered.
+//   It is used to bind an answer with task parameters so that the TaskGrader can check if they have not been altered.
 //
 //   * task_token.idUser should be the current user
 //

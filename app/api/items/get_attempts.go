@@ -5,8 +5,36 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model itemAttemptsViewResponseRow
+type itemAttemptsViewResponseRow struct {
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	Order int32 `json:"order"`
+	// required: true
+	Score float32 `json:"score"`
+	// required: true
+	Validated bool `json:"validated"`
+	// Nullable
+	// required: true
+	StartDate   *database.Time `json:"start_date"`
+	UserCreator *struct {
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+
+		ID *int64 `json:"-"`
+	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
+}
 
 // swagger:operation GET /items/{item_id}/attempts groups users attempts items itemAttemptsView
 // ---
@@ -53,37 +81,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         properties:
-//           id:
-//             type: string
-//             format: int64
-//           order:
-//             type: integer
-//             format: int32
-//           score:
-//             type: number
-//             format: float
-//           validated:
-//             type: boolean
-//           start_date:
-//             description: Nullable
-//             type: string
-//             format: date-time
-//           user_creator:
-//             description: Nullable
-//             type: object
-//             required: [login, first_name, last_name]
-//             properties:
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//         required: [id, order, score, validated, start_date, user_creator]
+//         "$ref": "#/definitions/itemAttemptsViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -111,10 +109,15 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	if apiError != service.NoError {
 		return apiError
 	}
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []itemAttemptsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	for index := range result {
+		if result[index].UserCreator.ID == nil {
+			result[index].UserCreator = nil
+		}
+	}
+
+	render.Respond(w, r, result)
 	return service.NoError
 }

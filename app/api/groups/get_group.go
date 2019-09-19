@@ -4,10 +4,58 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// GroupViewResponseCodePart in order to make groupViewResponse work
+// swagger:ignore
+type GroupViewResponseCodePart struct {
+	// Nullable
+	Code *string `json:"code"`
+	// Nullable
+	CodeTimer *string `json:"code_timer"`
+	// Nullable
+	CodeEnd *database.Time `json:"code_end"`
+}
+
+// swagger:model groupViewResponse
+type groupViewResponse struct {
+	// group's `id`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Name string `json:"name"`
+	// required:true
+	Grade int32 `json:"grade"`
+	// Nullable
+	// required:true
+	Description *string `json:"description"`
+	// Nullable
+	// required:true
+	DateCreated *database.Time `json:"date_created"`
+	// required:true
+	// enum: Class,Team,Club,Friends,Other,UserSelf
+	Type string `json:"type"`
+	// Nullable
+	// required:true
+	RedirectPath *string `json:"redirect_path"`
+	// required:true
+	Opened bool `json:"opened"`
+	// required:true
+	FreeAccess bool `json:"free_access"`
+	// required:true
+	OpenContest bool `json:"open_contest"`
+	// required:true
+	CurrentUserIsOwner bool `json:"current_user_is_owner"`
+	// `True` when there is an active group->user relation in `groups_groups`
+	// required:true
+	CurrentUserIsMember bool `json:"current_user_is_member"`
+
+	*GroupViewResponseCodePart
+}
 
 // swagger:operation GET /groups/{group_id} groups groupView
 // ---
@@ -31,51 +79,7 @@ import (
 //   "200":
 //     description: OK. The group info
 //     schema:
-//       type: object
-//       properties:
-//         id:
-//           description: group's `ID`
-//           type: string
-//           format: int64
-//         name:
-//           type: string
-//         grade:
-//           type: integer
-//         description:
-//           description: Nullable
-//           type: string
-//         date_created:
-//           description: Nullable
-//           type: string
-//         type:
-//           type: string
-//           enum: [Class,Team,Club,Friends,Other,UserSelf]
-//         redirect_path:
-//           description: Nullable
-//           type: string
-//         opened:
-//           type: boolean
-//         free_access:
-//           type: boolean
-//         code:
-//           description: Nullable
-//           type: string
-//         code_timer:
-//           description: Nullable
-//           type: string
-//         code_end:
-//           description: Nullable
-//           type: string
-//         open_contest:
-//           type: boolean
-//         current_user_is_owner:
-//           type: boolean
-//         current_user_is_member:
-//           description: >
-//                          `True` when there is an active group->user relation in `groups_groups`
-//           type: boolean
-//       required: [id, name, grade, description, date_created, type, redirect_path, opened, free_access,
-//                  open_contest, current_user_is_owner, current_user_is_member]
+//       "$ref": "#/definitions/groupViewResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -114,25 +118,18 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 			groups_ancestors.id IS NOT NULL AS current_user_is_owner,
 			groups_groups.id IS NOT NULL AS current_user_is_member`).Limit(1)
 
-	if len(result) == 0 {
+	var result groupViewResponse
+	err = query.Scan(&result).Error()
+	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
-	jsonResult := service.ConvertMapFromDBToJSON(result[0])
-	if !jsonResult["current_user_is_owner"].(bool) {
-		delete(jsonResult, "code")
-		delete(jsonResult, "code_timer")
-		delete(jsonResult, "code_end")
-	}
-	for _, key := range [...]string{"code_end", "date_created"} {
-		if value, ok := jsonResult[key]; ok && value != nil {
-			parsedTime := &database.Time{}
-			service.MustNotBeError(parsedTime.ScanString(value.(string)))
-			jsonResult[key] = parsedTime
-		}
+	if !result.CurrentUserIsOwner {
+		result.GroupViewResponseCodePart = nil
 	}
 
-	render.Respond(w, r, jsonResult)
+	render.Respond(w, r, result)
 
 	return service.NoError
 }

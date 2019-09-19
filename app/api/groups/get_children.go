@@ -9,6 +9,30 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupChildrenViewResponseRow
+type groupChildrenViewResponseRow struct {
+	// The sub-group's `groups.id`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Name string `json:"name"`
+	// required:true
+	// enum: Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base
+	Type string `json:"type"`
+	// required:true
+	Grade int32 `json:"grade"`
+	// required:true
+	Opened bool `json:"opened"`
+	// required:true
+	FreeAccess bool `json:"free_access"`
+	// Nullable
+	// required:true
+	Code *string `json:"code"`
+	// The number of descendant users
+	// required:true
+	UserCount int32 `json:"user_count"`
+}
+
 // swagger:operation GET /groups/{group_id}/children groups groupChildrenView
 // ---
 // summary: List group's children
@@ -73,7 +97,11 @@ import (
 //   default: 500
 // responses:
 //   "200":
-//     "$ref": "#/responses/groupChildrenViewResponse"
+//     description: OK. Success response with an array of group's children
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupChildrenViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -131,10 +159,9 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupChildrenViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

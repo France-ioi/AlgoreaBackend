@@ -7,8 +7,46 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model groupTeamProgressResponseRow
+type groupTeamProgressResponseRow struct {
+	// The team’s `group_id`
+	// required:true
+	GroupID int64 `json:"group_id,string"`
+	// required:true
+	ItemID int64 `json:"item_id,string"`
+	// Current score. If there are no attempts, the score is 0
+	// required:true
+	Score float32 `json:"score"`
+	// Whether the team has the item validated
+	// required:true
+	Validated bool `json:"validated"`
+	// Nullable
+	// required:true
+	LastActivityDate *database.Time `json:"last_activity_date"`
+	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
+	// If there are no attempts, the number of hints is 0.
+	// required:true
+	HintsRequested int32 `json:"hints_requested"`
+	// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
+	// If there are no attempts, the number of submissions is 0.
+	// required:true
+	SubmissionsAttempts int32 `json:"submissions_attempts"`
+	// Time spent by the team (in seconds):
+	//
+	//   1) if no attempts yet: 0
+	//
+	//   2) if one attempt validated: min(`validation_date`) - min(`start_date`)
+	//     (i.e., time between the first time it started one (any) attempt
+	//      and the time he first validated the task)
+	//
+	//   3) if no attempts validated: `now` - min(`start_date`)
+	// required:true
+	TimeSpent int32 `json:"time_spent"`
+}
 
 // swagger:operation GET /groups/{group_id}/team-progress groups attempts items groupTeamProgress
 // ---
@@ -44,7 +82,11 @@ import (
 //   default: 500
 // responses:
 //   "200":
-//     "$ref": "#/responses/groupsGetTeamProgressResponse"
+//     description: OK. Success response with teams progress on items
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupTeamProgressResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -101,7 +143,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Where("item_parent_id IN (?)", itemParentIDs).
 		Joins("JOIN ? AS visible ON visible.item_id = items_items.item_child_id", itemsVisibleToUserSubQuery)
 
-	var dbResult []map[string]interface{}
+	var result []groupTeamProgressResponseRow
 	service.MustNotBeError(srv.Store.Groups().
 		Select(`
 			items.id AS item_id,
@@ -135,8 +177,8 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
 			teamIDs...)).
 		Order("items.id").
-		ScanIntoSliceOfMaps(&dbResult).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
-	render.Respond(w, r, convertedResult)
+		Scan(&result).Error())
+
+	render.Respond(w, r, result)
 	return service.NoError
 }

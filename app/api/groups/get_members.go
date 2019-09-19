@@ -5,10 +5,43 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/members groups users groupsMemberView
+// swagger:model groupsMembersViewResponseRow
+type groupsMembersViewResponseRow struct {
+	// `groups_groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// Nullable
+	// required: true
+	StatusDate *database.Time `json:"status_date"`
+	// `groups_groups.type`
+	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
+	// required: true
+	Type string `json:"type"`
+	// Nullable
+	// required: true
+	User *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+		// Nullable
+		// required: true
+		Grade *int32 `json:"grade"`
+	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
+}
+
+// swagger:operation GET /groups/{group_id}/members groups users groupsMembersView
 // ---
 // summary: List group members
 // description: >
@@ -64,41 +97,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, status_date, type, user]
-//         properties:
-//           id:
-//             description: "`groups_groups.ID`"
-//             type: string
-//             format: int64
-//           status_date:
-//             type: string
-//             description: Nullable
-//             format: date-time
-//           type:
-//             type: string
-//             description: "`groups_groups.sType`"
-//             enum: [invitationAccepted, requestAccepted, joinedByCode, direct]
-//           user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name, grade]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//               grade:
-//                 description: Nullable
-//                 type: integer
+//         "$ref": "#/definitions/groupsMembersViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -146,10 +145,14 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupsMembersViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
+	for index := range result {
+		if result[index].User.ID == nil {
+			result[index].User = nil
+		}
+	}
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

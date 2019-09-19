@@ -5,8 +5,58 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model groupRequestsViewResponseRow
+type groupRequestsViewResponseRow struct {
+	// `groups_groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// Nullable
+	// required: true
+	StatusDate *database.Time `json:"status_date"`
+	// `groups_groups.type`
+	// enum: invitationSent,requestSent,invitationRefused,requestRefused
+	// required: true
+	Type string `json:"type"`
+
+	// Nullable
+	// required: true
+	JoiningUser *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+		// Nullable
+		// required: true
+		Grade *int32 `json:"grade"`
+	} `json:"joining_user" gorm:"embedded;embedded_prefix:joining_user__"`
+
+	// Nullable
+	// required: true
+	InvitingUser *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+}
 
 // swagger:operation GET /groups/{group_id}/requests groups users groupRequestsView
 // ---
@@ -80,58 +130,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, status_date, type, joining_user, inviting_user]
-//         properties:
-//           id:
-//             description: "`groups_groups.ID`"
-//             type: string
-//             format: int64
-//           status_date:
-//             type: string
-//             description: Nullable
-//             format: date-time
-//           type:
-//             type: string
-//             description: "`groups_groups.sType`"
-//             enum: [invitationSent, requestSent, invitationRefused, requestRefused]
-//           joining_user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name, grade]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//               grade:
-//                 description: Nullable
-//                 type: integer
-//           inviting_user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
+//         "$ref": "#/definitions/groupRequestsViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -194,10 +193,17 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupRequestsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
+	for index := range result {
+		if result[index].InvitingUser.ID == nil {
+			result[index].InvitingUser = nil
+		}
+		if result[index].JoiningUser.ID == nil {
+			result[index].JoiningUser = nil
+		}
+	}
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

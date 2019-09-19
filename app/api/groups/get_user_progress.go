@@ -11,6 +11,43 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupUserProgressResponseRow
+type groupUserProgressResponseRow struct {
+	// The user’s self `group_id`
+	// required:true
+	GroupID int64 `json:"group_id,string"`
+	// required:true
+	ItemID int64 `json:"item_id,string"`
+	// The best score across all user's or user teams' attempts. If there are no attempts, the score is 0.
+	// required:true
+	Score float32 `json:"score"`
+	// Whether the user or one of his teams has the item validated
+	// required:true
+	Validated bool `json:"validated"`
+	// Nullable
+	// required:true
+	LastActivityDate *database.Time `json:"last_activity_date"`
+	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
+	// If there are no attempts, the number of hints is 0.
+	// required:true
+	HintsRequested int32 `json:"hints_requested"`
+	// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
+	// If there are no attempts, the number of submissions is 0.
+	// required:true
+	SubmissionsAttempts int32 `json:"submissions_attempts"`
+	// Time spent by the user (or his teams) (in seconds):
+	//
+	//   1) if no attempts yet: 0
+	//
+	//   2) if one attempt validated: min(`validation_date`) - min(`start_date`)
+	//     (i.e., time between the first time the user (or one of his teams) started one (any) attempt
+	//      and the time he (or one of his teams) first validated the task)
+	//
+	//   3) if no attempts validated: `now` - min(`start_date`)
+	// required:true
+	TimeSpent int32 `json:"time_spent"`
+}
+
 // swagger:operation GET /groups/{group_id}/user-progress users groups attempts items groupUserProgress
 // ---
 // summary: Display the current progress of users on a subset of items
@@ -50,7 +87,11 @@ import (
 //   default: 500
 // responses:
 //   "200":
-//     "$ref": "#/responses/groupsGetUserProgressResponse"
+//     description: OK. Success response with users progress on items
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupUserProgressResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -117,7 +158,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS id", itemIDs[i]).QueryExpr())
 	}
 
-	var dbResult []map[string]interface{}
+	var result []groupUserProgressResponseRow
 	service.MustNotBeError(srv.Store.Groups().
 		Select(`
 			items.id AS item_id,
@@ -254,8 +295,8 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
 		Order("MAX(attempt_with_best_score.minus_score), MAX(attempt_with_best_score.best_answer_date)").
-		ScanIntoSliceOfMaps(&dbResult).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
-	render.Respond(w, r, convertedResult)
+		Scan(&result).Error())
+
+	render.Respond(w, r, result)
 	return service.NoError
 }

@@ -9,6 +9,46 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupRecentActivityResponseRow
+type groupRecentActivityResponseRow struct {
+	// `users_answers.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	SubmissionDate *database.Time `json:"submission_date"`
+	// Nullable
+	// required: true
+	Score *float32 `json:"score"`
+	// Nullable
+	// required: true
+	Validated *bool `json:"validated"`
+	// required: true
+	User struct {
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
+	// required: true
+	Item struct {
+		// required: true
+		ID int64 `json:"id,string"`
+		// required: true
+		// enum: Root,Category,Chapter,Task,Course
+		Type string `json:"type"`
+		// required: true
+		String struct {
+			// Nullable
+			// required: true
+			Title *string `json:"title"`
+		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
+	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
+}
+
 // swagger:operation GET /groups/{group_id}/recent_activity groups users groupRecentActivity
 // ---
 // summary: Get recent activity of a group
@@ -70,52 +110,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, submission_date, score, validated, user, item]
-//         properties:
-//           id:
-//             description: "`users_answers.ID`"
-//             type: string
-//             format: int64
-//           submission_date:
-//             type: string
-//             format: date-time
-//           score:
-//             description: Nullable
-//             type: number
-//             format: float
-//           validated:
-//             description: Nullable
-//             type: boolean
-//           user:
-//             type: object
-//             required: [login, first_name, last_name]
-//             properties:
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//           item:
-//             type: object
-//             required: [id, type, string]
-//             properties:
-//               id:
-//                 type: string
-//                 format: int64
-//               type:
-//                 type: string
-//                 enum: [Root, Category, Chapter, Task, Course]
-//               string:
-//                 type: object
-//                 required: [title]
-//                 properties:
-//                   title:
-//                     description: Nullable
-//                     type: string
+//         "$ref": "#/definitions/groupRecentActivityResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -166,11 +161,10 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupRecentActivityResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }
 

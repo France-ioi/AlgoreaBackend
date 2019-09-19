@@ -10,6 +10,47 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupGroupProgressResponseRow
+type groupGroupProgressResponseRow struct {
+	// The child’s `group_id`
+	// required:true
+	GroupID int64 `json:"group_id,string"`
+	// required:true
+	ItemID int64 `json:"item_id,string"`
+	// Average score of all "end-members".
+	// The score of an "end-member" is the max of his `groups_attempt.score` or 0 if no attempts.
+	// required:true
+	AverageScore float32 `json:"average_score"`
+	// % (float [0,1]) of "end-members" who have validated the task.
+	// An "end-member" has validated a task if one of his attempts has `groups_attempts.validated` = 1.
+	// No attempts for an "end-member" is considered as not validated.
+	// required:true
+	ValidationRate float32 `json:"validation_rate"`
+	// Average number of hints requested by each "end-member".
+	// The number of hints requested of an "end-member" is the `groups_attempts.hints_cached`
+	// of the attempt with the best score
+	// (if several with the same score, we use the first attempt chronologically on `best_answer_date`).
+	// required:true
+	AvgHintsRequested float32 `json:"avg_hints_requested"`
+	// Average number of submissions made by each "end-member".
+	// The number of submissions made by an "end-member" is the `groups_attempts.submissions_attempts`.
+	// of the attempt with the best score
+	// (if several with the same score, we use the first attempt chronologically on `best_answer_date`).
+	// required:true
+	AvgSubmissionsAttempts float32 `json:"avg_submissions_attempts"`
+	// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
+	//
+	//   1) if no attempts yet: 0
+	//
+	//   2) if one attempt validated: min(`validation_date`) - min(`start_date`)
+	//     (i.e., time between the first time it started one (any) attempt
+	//      and the time he first validated the task)
+	//
+	//   3) if no attempts validated: `now` - min(`start_date`)
+	// required:true
+	AvgTimeSpent float32 `json:"avg_time_spent"`
+}
+
 // swagger:operation GET /groups/{group_id}/group-progress groups users attempts items groupGroupProgress
 // ---
 // summary: Display the current progress of a group on a subset of items
@@ -44,7 +85,17 @@ import (
 //   default: 10
 // responses:
 //   "200":
-//     "$ref": "#/responses/groupsGetGroupProgressResponse"
+//     description: >
+//       OK. Success response with groups progress on items
+//       For all children of items in the parent_item_id list, display the result for each direct child
+//       of the given group_id whose type is not in (Team,UserSelf). Values are averages of all the group's
+//       "end-members" where “end-member” defined as descendants of the group which are either
+//       1) teams or
+//       2) users who descend from the input group not only through teams (one or more).
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupGroupProgressResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -167,7 +218,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				ORDER BY group_id, item_id, minus_score, best_answer_date LIMIT 1
 			)`)
 
-	var dbResult []map[string]interface{}
+	var result []groupGroupProgressResponseRow
 	// It still takes more than 2 minutes to complete on large data sets
 	service.MustNotBeError(
 		srv.Store.GroupAncestors().
@@ -188,9 +239,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			Order(gorm.Expr(
 				"FIELD(member_stats.item_id"+strings.Repeat(", ?", len(itemIDs))+")",
 				itemIDs...)).
-			ScanIntoSliceOfMaps(&dbResult).Error())
+			Scan(&result).Error())
 
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }
