@@ -2,17 +2,17 @@ package database
 
 // User represents data associated with the user (from the `users` table)
 type User struct {
-	ID                   int64  `sql:"column:ID"`
-	Login                string `sql:"column:sLogin"`
-	DefaultLanguage      string `sql:"column:sDefaultLanguage"`
-	DefaultLanguageID    int64  `sql:"column:idDefaultLanguage"`
-	IsAdmin              bool   `sql:"column:bIsAdmin"`
-	IsTempUser           bool   `sql:"column:tempUser"`
-	SelfGroupID          *int64 `sql:"column:idGroupSelf"`
-	OwnedGroupID         *int64 `sql:"column:idGroupOwned"`
-	AccessGroupID        *int64 `sql:"column:idGroupAccess"`
-	AllowSubgroups       bool   `sql:"column:allowSubgroups"`
-	NotificationReadDate *Time  `sql:"column:sNotificationReadDate"`
+	ID                   int64
+	Login                string
+	DefaultLanguage      string
+	DefaultLanguageID    int64
+	IsAdmin              bool
+	IsTempUser           bool   `sql:"column:temp_user"`
+	SelfGroupID          *int64 `sql:"column:group_self_id"`
+	OwnedGroupID         *int64 `sql:"column:group_owned_id"`
+	AccessGroupID        *int64 `sql:"column:group_access_id"`
+	AllowSubgroups       bool
+	NotificationReadDate *Time
 }
 
 // Clone returns a deep copy of the given User structure

@@ -400,7 +400,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 
 			for _, expectedGroupToCheck := range tt.expectedGroupsToCheck {
 				queryMock := mock.ExpectQuery("^" + regexp.QuoteMeta(
-					"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) LIMIT 1",
+					"SELECT 1 FROM `groups`  WHERE (groups.id = ?) LIMIT 1",
 				) + "$").WithArgs(expectedGroupToCheck.id)
 				if !expectedGroupToCheck.error {
 					rowsToReturn := mock.NewRows([]string{"1"})
@@ -420,7 +420,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 						rowsToReturn.AddRow(1)
 					}
 					queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-						"SELECT 1 FROM `groups_groups`  WHERE (sType = 'direct') AND (idGroupParent = ?) AND (idGroupChild = ?) LIMIT 1",
+						"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (group_parent_id = ?) AND (group_child_id = ?) LIMIT 1",
 					)+"$").
 						WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 					if !expectedRelationToCheck.error {
@@ -645,7 +645,7 @@ func setDBExpectationsForCreateMissingData(mock sqlmock.Sqlmock, tt *createMissi
 				rowsToReturn.AddRow(1)
 			}
 			queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-				"SELECT 1 FROM `groups_groups`  WHERE (sType = 'direct') AND (idGroupParent = ?) AND (idGroupChild = ?) LIMIT 1",
+				"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (group_parent_id = ?) AND (group_child_id = ?) LIMIT 1",
 			)+"$").
 				WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 			if !expectedRelationToCheck.error {
@@ -666,7 +666,7 @@ func setDBExpectationsForCreateMissingData(mock sqlmock.Sqlmock, tt *createMissi
 
 func setDBExpectationsForGroupInCreateMissingData(mock sqlmock.Sqlmock, expectedGroupToInsert groupSpec, expectedError error) error {
 	queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT 1 FROM `groups`  WHERE (groups.ID = ?) AND (sType = 'Base') AND (sName = ?) AND (sTextId = ?) LIMIT 1",
+		"SELECT 1 FROM `groups`  WHERE (groups.id = ?) AND (type = 'Base') AND (name = ?) AND (text_id = ?) LIMIT 1",
 	)+"$").
 		WithArgs(expectedGroupToInsert.id, expectedGroupToInsert.name, expectedGroupToInsert.name)
 	if !expectedGroupToInsert.error {
@@ -681,7 +681,7 @@ func setDBExpectationsForGroupInCreateMissingData(mock sqlmock.Sqlmock, expected
 	}
 	if !expectedGroupToInsert.exists && !expectedGroupToInsert.error {
 		insertMock := mock.ExpectExec("^"+regexp.QuoteMeta(
-			"INSERT INTO `groups` (ID, sName, sTextId, sType) VALUES (?, ?, ?, ?)",
+			"INSERT INTO `groups` (id, name, text_id, type) VALUES (?, ?, ?, ?)",
 		)+"$").WithArgs(expectedGroupToInsert.id, expectedGroupToInsert.name, expectedGroupToInsert.name, "Base")
 		if !expectedGroupToInsert.errorOnInsert {
 			insertMock.WillReturnResult(sqlmock.NewResult(expectedGroupToInsert.id, 1))

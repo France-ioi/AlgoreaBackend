@@ -22,15 +22,15 @@ func (s *ItemStore) Visible(user *User) *DB {
 
 // VisibleByID returns a view of the visible item identified by itemID, for the given user
 func (s *ItemStore) VisibleByID(user *User, itemID int64) *DB {
-	return s.Visible(user).Where("items.ID = ?", itemID)
+	return s.Visible(user).Where("items.id = ?", itemID)
 }
 
 // VisibleChildrenOfID returns a view of the visible children of item identified by itemID, for the given user
 func (s *ItemStore) VisibleChildrenOfID(user *User, itemID int64) *DB {
 	return s.
 		Visible(user).
-		Joins("JOIN ? ii ON items.ID=idItemChild", s.ItemItems().SubQuery()).
-		Where("ii.idItemParent = ?", itemID)
+		Joins("JOIN ? ii ON items.id=item_child_id", s.ItemItems().SubQuery()).
+		Where("ii.item_parent_id = ?", itemID)
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
@@ -39,22 +39,22 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 		// visible items are the leaves (potential grandChildren)
 		Visible(user).
 		// get their parents' IDs (ii1)
-		Joins("JOIN ? ii1 ON items.ID = ii1.idItemChild", s.ItemItems().SubQuery()).
+		Joins("JOIN ? ii1 ON items.id = ii1.item_child_id", s.ItemItems().SubQuery()).
 		// get their grand parents' IDs (ii2)
-		Joins("JOIN ? ii2 ON ii2.idItemChild = ii1.idItemParent", s.ItemItems().SubQuery()).
-		Where("ii2.idItemParent = ?", itemID)
+		Joins("JOIN ? ii2 ON ii2.item_child_id = ii1.item_parent_id", s.ItemItems().SubQuery()).
+		Where("ii2.item_parent_id = ?", itemID)
 }
 
 // AccessRights returns a composable query for getting
-// (idItem, fullAccess, partialAccess, grayedAccess, accessSolutions) for the given user
+// (item_id, full_access, partial_access, grayed_access, access_solutions) for the given user
 func (s *ItemStore) AccessRights(user *User) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
-			"idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, " +
-				"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, " +
-				"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, " +
-				"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions").
-		Group("idItem")
+			"item_id, MIN(cached_full_access_date) <= NOW() AS full_access, " +
+				"MIN(cached_partial_access_date) <= NOW() AS partial_access, " +
+				"MIN(cached_grayed_access_date) <= NOW() AS grayed_access, " +
+				"MIN(cached_access_solutions_date) <= NOW() AS access_solutions").
+		Group("item_id")
 }
 
 // HasManagerAccess returns whether the user has manager access to all the given item_id's
@@ -71,8 +71,8 @@ func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (hasAccess bo
 	}
 	err = s.GroupItems().MatchingUserAncestors(user).
 		WithWriteLock().
-		Where("idItem IN (?) AND (bCachedManagerAccess OR bOwnerAccess)", itemIDs).
-		Select("COUNT(DISTINCT idItem)").Count(&count).Error()
+		Where("item_id IN (?) AND (cached_manager_access OR owner_access)", itemIDs).
+		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
 	if err != nil {
 		return false, err
 	}
@@ -116,7 +116,7 @@ func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error
 func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
 	var accessDetails []ItemAccessDetailsWithID
 	db := s.AccessRights(user).
-		Where("groups_items.idItem IN (?)", itemIDs).
+		Where("groups_items.item_id IN (?)", itemIDs).
 		Scan(&accessDetails)
 	if err := db.Error(); err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 
 func (s *ItemStore) isRootItem(id int64) (bool, error) {
 	count := 0
-	if err := s.ByID(id).Where("sType='Root'").Count(&count).Error(); err != nil {
+	if err := s.ByID(id).Where("type='Root'").Count(&count).Error(); err != nil {
 		return false, err
 	}
 	if count == 0 {
@@ -185,16 +185,16 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 			continue
 		}
 
-		db = db.Or("idItemParent=? AND idItemChild=?", previousID, id)
+		db = db.Or("item_parent_id=? AND item_child_id=?", previousID, id)
 		previousID = id
 	}
 
 	count := 0
-	// For now, we don’t have a unique key for the pair ('idItemParent' and 'idItemChild') and
+	// For now, we don’t have a unique key for the pair ('item_parent_id' and 'item_child_id') and
 	// theoretically it’s still possible to have multiple rows with the same pair
-	// of 'idItemParent' and 'idItemChild'.
+	// of 'item_parent_id' and 'item_child_id'.
 	// The “Group(...)” here resolves the issue.
-	if err := db.Group("idItemParent, idItemChild").Count(&count).Error(); err != nil {
+	if err := db.Group("item_parent_id, item_child_id").Count(&count).Error(); err != nil {
 		return false, err
 	}
 
@@ -217,8 +217,8 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(user).Where("fullAccess > 0 OR partialAccess > 0").Where("ID = ?", itemID).
-		PluckFirst("bReadOnly", &readOnly).Error()
+	err = s.Visible(user).Where("full_access > 0 OR partial_access > 0").Where("id = ?", itemID).
+		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, errors.New("no access to the task item"), nil
 	}
@@ -245,16 +245,16 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	// tasks cannot be time-limited, only chapters can.
 	// So, actually here we select time-limited chapters that are ancestors of the task.
 	var contestItems []struct {
-		ItemID     int64 `gorm:"column:idItem"`
-		FullAccess bool  `gorm:"column:fullAccess"`
+		ItemID     int64
+		FullAccess bool
 	}
 
 	mustNotBeError(s.Visible(user).
-		Select("items.ID AS idItem, fullAccess").
-		Joins("JOIN items_ancestors ON items_ancestors.idItemAncestor = items.ID").
-		Where("items_ancestors.idItemChild = ?", itemID).
-		Where("items.sDuration IS NOT NULL").
-		Group("items.ID").Scan(&contestItems).Error())
+		Select("items.id AS item_id, full_access").
+		Joins("JOIN items_ancestors ON items_ancestors.item_ancestor_id = items.id").
+		Where("items_ancestors.item_child_id = ?", itemID).
+		Where("items.duration IS NOT NULL").
+		Group("items.id").Scan(&contestItems).Error())
 
 	// The item is not time-limited itself and it doesn't have time-limited ancestors the user has access to.
 	// Or maybe the user doesn't have access to the item at all... We ignore this possibility here
@@ -310,37 +310,37 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Note: the current API doesn't allow users to have more than one active contest
 	// Note: both users_items & groups_items rows should exist to make this function return the info
 	var results []struct {
-		Now                     Time    `gorm:"column:now"`
-		DurationInSeconds       int32   `gorm:"column:duration"`
-		ItemID                  int64   `gorm:"column:idItem"`
-		AdditionalTimeInSeconds int32   `gorm:"column:additionalTime"`
-		ContestStartDate        Time    `gorm:"column:sContestStartDate"`
-		TeamMode                *string `gorm:"column:sTeamMode"`
+		Now                     Time
+		DurationInSeconds       int32
+		ItemID                  int64
+		AdditionalTimeInSeconds int32
+		ContestStartDate        Time
+		TeamMode                *string
 	}
 	mustNotBeError(s.
 		Select(`
 			NOW() AS now,
-			TIME_TO_SEC(items.sDuration) AS duration,
-			items.ID AS idItem,
-			items.sTeamMode,
-			IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS additionalTime,
-			MIN(users_items.sContestStartDate) AS sContestStartDate`).
-		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
+			TIME_TO_SEC(items.duration) AS duration_in_seconds,
+			items.id AS item_id,
+			items.team_mode,
+			IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS additional_time_in_seconds,
+			MIN(users_items.contest_start_date) AS contest_start_date`).
+		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup AND
-				groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
+			JOIN groups_ancestors ON groups_ancestors.group_ancestor_id = groups_items.group_id AND
+				groups_ancestors.group_child_id = ?`, user.SelfGroupID).
 		Joins(`
-			JOIN users_items ON users_items.idItem = items.ID AND users_items.idUser = ? AND
-				users_items.sContestStartDate IS NOT NULL AND users_items.sFinishDate IS NULL`, user.ID).
-		Group("items.ID").
-		Order("MIN(users_items.sContestStartDate) DESC").Scan(&results).Error())
+			JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ? AND
+				users_items.contest_start_date IS NOT NULL AND users_items.finish_date IS NULL`, user.ID).
+		Group("items.id").
+		Order("MIN(users_items.contest_start_date) DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
 	}
 
 	if len(results) > 1 {
-		log.Warnf("User with ID = %d has %d (>1) active contests", user.ID, len(results))
+		log.Warnf("User with id = %d has %d (>1) active contests", user.ID, len(results))
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
@@ -359,8 +359,8 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 
 func (s *ItemStore) closeContest(itemID int64, user *User) {
 	mustNotBeError(s.UserItems().
-		Where("idItem = ? AND idUser = ?", itemID, user.ID).
-		UpdateColumn("sFinishDate", Now()).Error())
+		Where("item_id = ? AND user_id = ?", itemID, user.ID).
+		UpdateColumn("finish_date", Now()).Error())
 
 	groupItemStore := s.GroupItems()
 
@@ -371,11 +371,11 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 		DELETE groups_items
 		FROM groups_items
 		JOIN items_ancestors ON
-			items_ancestors.idItemChild = groups_items.idItem AND
-			items_ancestors.idItemAncestor = ?
-		WHERE groups_items.idGroup = ? AND
-			(sCachedFullAccessDate IS NULL OR sCachedFullAccessDate > NOW()) AND
-			bOwnerAccess = 0 AND bManagerAccess = 0`, itemID, *user.SelfGroupID).Error)
+			items_ancestors.item_child_id = groups_items.item_id AND
+			items_ancestors.item_ancestor_id = ?
+		WHERE groups_items.group_id = ? AND
+			(cached_full_access_date IS NULL OR cached_full_access_date > NOW()) AND
+			owner_access = 0 AND manager_access = 0`, itemID, *user.SelfGroupID).Error)
 		// we do not need to call GroupItemStore.After() because we do not grant new access here
 		groupItemStore.computeAllAccess()
 	}
@@ -383,27 +383,27 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	var teamGroupID int64
-	mustNotBeError(s.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamGroupID).Error())
+	mustNotBeError(s.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.id", &teamGroupID).Error())
 
 	// Set contest as finished
 	/*
 		// We would use this block if UPDATEs with JOINs were fixed in jinzhu/gorm
 		mustNotBeError(s.UserItems().
-			Joins("JOIN users ON users.ID = users_items.idUser").
+			Joins("JOIN users ON users.id = users_items.user_id").
 			Joins(`JOIN groups_groups
-				ON groups_groups.idGroupChild = users.idGroupSelf AND groups_groups.idGroupParent = ?`, teamGroupID).
-			Where("users_items.idItem = ?", itemID).
-			UpdateColumn("sFinishDate", Now()).Error())
+				ON groups_groups.group_child_id = users.group_self_id AND groups_groups.group_parent_id = ?`, teamGroupID).
+			Where("users_items.item_id = ?", itemID).
+			UpdateColumn("finish_date", Now()).Error())
 	*/ // nolint:gocritic
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
-		JOIN users ON users.ID = users_items.idUser
+		JOIN users ON users.id = users_items.user_id
 		JOIN groups_groups
-			ON groups_groups.idGroupChild = users.idGroupSelf AND
-				groups_groups.sType`+GroupRelationIsActiveCondition+` AND
-				groups_groups.idGroupParent = ?
-		SET sFinishDate = NOW()
-		WHERE users_items.idItem = ?`, teamGroupID, itemID).Error)
+			ON groups_groups.group_child_id = users.group_self_id AND
+				groups_groups.type`+GroupRelationIsActiveCondition+` AND
+				groups_groups.group_parent_id = ?
+		SET finish_date = NOW()
+		WHERE users_items.item_id = ?`, teamGroupID, itemID).Error)
 
 	groupItemStore := s.GroupItems()
 	// Remove access

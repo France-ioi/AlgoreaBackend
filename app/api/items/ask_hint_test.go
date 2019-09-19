@@ -162,20 +162,20 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			if tt.mockDB {
-				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT bUsesTokens, sPublicKey " +
-					"FROM `platforms` JOIN items ON items.idPlatform = platforms.ID WHERE (items.ID = ?)")).
+				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT uses_tokens, public_key " +
+					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?)")).
 					WithArgs(tt.itemID)
 
 				if tt.platform != nil {
-					var bUsesTokens int64
+					var usesTokens int64
 					if tt.platform.usesTokens {
-						bUsesTokens = 1
+						usesTokens = 1
 					}
 					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"bUsesTokens", "sPublicKey"}).AddRow(bUsesTokens, tt.platform.publicKey))
+						WillReturnRows(mock.NewRows([]string{"uses_tokens", "public_key"}).AddRow(usesTokens, tt.platform.publicKey))
 				} else {
 					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"bUsesTokens", "sPublicKey"}))
+						WillReturnRows(mock.NewRows([]string{"uses_tokens", "public_key"}))
 				}
 			}
 			r := &AskHintRequest{

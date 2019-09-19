@@ -11,8 +11,8 @@ import (
 // swagger:operation GET /items/{item_id}/attempts groups users attempts items itemAttemptsView
 // ---
 // summary: List attempts for a task
-// description: Returns attempts made by the current user (if `items.bHasAttempts` = 0) or his
-//              teams (if `items.bHasAttempts` = 1) while solving the task given in `item_id`.
+// description: Returns attempts made by the current user (if `items.has_attempts` = 0) or his
+//              teams (if `items.has_attempts` = 1) while solving the task given in `item_id`.
 //
 //
 //              The task item should be visible to the current user, otherwise an empty list is returned.
@@ -30,14 +30,14 @@ import (
 //     type: string
 //     enum: [order,-order,id,-id]
 // - name: from.order
-//   description: Start the page from the attempt next to the attempt with `groups_attempts.iOrder` = `from.order` and
-//                `groups_attempts.ID` = `from.id` (`from.id` is required when `from.order` is present)
+//   description: Start the page from the attempt next to the attempt with `groups_attempts.order` = `from.order` and
+//                `groups_attempts.id` = `from.id` (`from.id` is required when `from.order` is present)
 //   in: query
 //   type: integer
 //   format: int32
 // - name: from.id
-//   description: Start the page from the attempt next to the attempt with `groups_attempts.iOrder` = `from.order` and
-//                `groups_attempts.ID` = `from.id` (`from.order` is required when `from.id` is present)
+//   description: Start the page from the attempt next to the attempt with `groups_attempts.order` = `from.order` and
+//                `groups_attempts.id` = `from.id` (`from.order` is required when `from.id` is present)
 //   in: query
 //   type: integer
 //   format: int64
@@ -97,15 +97,16 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	}
 	user := srv.GetUser(r)
 	query := srv.Store.GroupAttempts().VisibleAndByItemID(user, itemID).
-		Joins("LEFT JOIN users AS creators ON creators.ID = groups_attempts.idUserCreator").
+		Joins("LEFT JOIN users AS creators ON creators.id = groups_attempts.user_creator_id").
 		Select(`
-			groups_attempts.ID, groups_attempts.iOrder, groups_attempts.iScore, groups_attempts.bValidated,
-			groups_attempts.sStartDate, creators.sLogin AS userCreator__sLogin,
-			creators.sFirstName AS userCreator__sFirstName, creators.sLastName AS userCreator__sLastName`)
+			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,
+			groups_attempts.start_date, creators.login AS user_creator__login,
+			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
+			creators.id AS user_creator__id`)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"order": {ColumnName: "groups_attempts.iOrder", FieldType: "int64"},
-		"id":    {ColumnName: "groups_attempts.ID", FieldType: "int64"},
+		"order": {ColumnName: "groups_attempts.order", FieldType: "int64"},
+		"id":    {ColumnName: "groups_attempts.id", FieldType: "int64"},
 	}, "order")
 	if apiError != service.NoError {
 		return apiError

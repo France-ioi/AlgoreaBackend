@@ -1,12 +1,12 @@
-users: [{ID: 5, idGroupSelf: 15, sLogin: 5}]
-users_items: [{idUser: 5, idItem: 115}]
-groups: [{ID: 15}, {ID: 24}]
-groups_items: [{idGroup: 24, idItem: 115, sPartialAccessDate: 2019-03-22 08:44:55,
-                sCachedPartialAccessDate: 2019-03-22 08:44:55, sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}]
-groups_groups: [{idGroupParent: 24, idGroupChild: 15, sType: requestAccepted}]
+users: [{id: 5, group_self_id: 15, login: 5}]
+users_items: [{user_id: 5, item_id: 115}]
+groups: [{id: 15}, {id: 24}]
+groups_items: [{group_id: 24, item_id: 115, partial_access_date: 2019-03-22 08:44:55,
+                cached_partial_access_date: 2019-03-22 08:44:55, additional_time: 0000-00-00 01:00:00, user_created_id: 1}]
+groups_groups: [{group_parent_id: 24, group_child_id: 15, type: requestAccepted}]
 groups_ancestors:
-  - {idGroupAncestor: 15, idGroupChild: 15}
-  - {idGroupAncestor: 24, idGroupChild: 15}
-  - {idGroupAncestor: 24, idGroupChild: 24}
+  - {group_ancestor_id: 15, group_child_id: 15}
+  - {group_ancestor_id: 24, group_child_id: 15}
+  - {group_ancestor_id: 24, group_child_id: 24}
 
 

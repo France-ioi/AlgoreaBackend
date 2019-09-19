@@ -8,33 +8,33 @@ import (
 // rawNavigationItem represents one row of a navigation subtree returned from the DB
 type rawNavigationItem struct {
 	// items
-	ID                int64  `sql:"column:ID"`
-	Type              string `sql:"column:sType"`
-	TransparentFolder bool   `sql:"column:bTransparentFolder"`
-	// whether items.idItemUnlocked is empty
-	HasUnlockedItems bool `sql:"column:hasUnlockedItems"`
-	AccessRestricted bool `sql:"column:bAccessRestricted"`
+	ID                int64
+	Type              string
+	TransparentFolder bool
+	// whether items.item_unlocked_id is empty
+	HasUnlockedItems bool
+	AccessRestricted bool
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title string `sql:"column:sTitle"`
+	Title string
 
 	// from users_items for current user
-	UserScore               float32        `sql:"column:iScore"`
-	UserValidated           bool           `sql:"column:bValidated"`
-	UserFinished            bool           `sql:"column:bFinished"`
-	UserKeyObtained         bool           `sql:"column:bKeyObtained"`
-	UserSubmissionsAttempts int32          `sql:"column:nbSubmissionsAttempts"`
-	UserStartDate           *database.Time `sql:"column:sStartDate"`
-	UserValidationDate      *database.Time `sql:"column:sValidationDate"`
-	UserFinishDate          *database.Time `sql:"column:sFinishDate"`
+	UserScore               float32        `sql:"column:score"`
+	UserValidated           bool           `sql:"column:validated"`
+	UserFinished            bool           `sql:"column:finished"`
+	UserKeyObtained         bool           `sql:"column:key_obtained"`
+	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
+	UserStartDate           *database.Time `sql:"column:start_date"`
+	UserValidationDate      *database.Time `sql:"column:validation_date"`
+	UserFinishDate          *database.Time `sql:"column:finish_date"`
 
 	// items_items
-	IDItemParent int64 `sql:"column:idItemParent"`
-	Order        int32 `sql:"column:iChildOrder"`
+	ItemParentID int64
+	Order        int32 `sql:"column:child_order"`
 
 	*database.ItemAccessDetails
 
-	IDItemGrandParent *int64 `sql:"column:idItemGrandParent"`
+	ItemGrandparentID *int64
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's
@@ -44,38 +44,38 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
-	commonAttributes := "items.ID, items.sType, items.bTransparentFolder, items.idItemUnlocked, items.idDefaultLanguage, " +
-		"fullAccess, partialAccess, grayedAccess"
+	commonAttributes := "items.id, items.type, items.transparent_folder, items.item_unlocked_id, items.default_language_id, " +
+		"full_access, partial_access, grayed_access"
 	itemQ := items.VisibleByID(user, rootID).Select(
-		commonAttributes + ", NULL AS idItemParent, NULL AS idItemGrandparent, NULL AS iChildOrder, NULL AS bAccessRestricted")
+		commonAttributes + ", NULL AS item_parent_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS access_restricted")
 	service.MustNotBeError(itemQ.Error())
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(
-		commonAttributes + ",	idItemParent, NULL AS idItemGrandparent, iChildOrder, bAccessRestricted")
+		commonAttributes + ",	item_parent_id, NULL AS item_grandparent_id, child_order, access_restricted")
 	service.MustNotBeError(childrenQ.Error())
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(
-		commonAttributes + ", ii1.idItemParent, ii2.idItemParent AS idItemGrandparent, ii1.iChildOrder, ii1.bAccessRestricted")
+		commonAttributes + ", ii1.item_parent_id, ii2.item_parent_id AS item_grandparent_id, ii1.child_order, ii1.access_restricted")
 	service.MustNotBeError(gChildrenQ.Error())
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
 	service.MustNotBeError(itemThreeGenQ.Error())
 
 	query := dataStore.Raw(`
-		SELECT items.ID, items.sType, items.bTransparentFolder,
-			COALESCE(items.idItemUnlocked, '')<>'' as hasUnlockedItems,
-			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitle,
-			users_items.iScore AS iScore, users_items.bValidated AS bValidated,
-			users_items.bFinished AS bFinished, users_items.bKeyObtained AS bKeyObtained,
-			users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts,
-			users_items.sStartDate AS sStartDate, users_items.sValidationDate AS sValidationDate,
-			users_items.sFinishDate AS sFinishDate,
-			items.iChildOrder AS iChildOrder,
-			items.bAccessRestricted,
-			items.idItemParent AS idItemParent,
-			items.idItemGrandParent AS idItemGrandParent,
-			items.fullAccess, items.partialAccess, items.grayedAccess
+		SELECT items.id, items.type, items.transparent_folder,
+			COALESCE(items.item_unlocked_id, '')<>'' as has_unlocked_items,
+			COALESCE(user_strings.title, default_strings.title) AS title,
+			users_items.score AS score, users_items.validated AS validated,
+			users_items.finished AS finished, users_items.key_obtained AS key_obtained,
+			users_items.submissions_attempts AS submissions_attempts,
+			users_items.start_date AS start_date, users_items.validation_date AS validation_date,
+			users_items.finish_date AS finish_date,
+			items.child_order AS child_order,
+			items.access_restricted,
+			items.item_parent_id AS item_parent_id,
+			items.item_grandparent_id AS item_grandparent_id,
+			items.full_access, items.partial_access, items.grayed_access
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.ID).
-		Order("idItemGrandparent, idItemParent, iChildOrder")
+		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.ID).
+		Order("item_grandparent_id, item_parent_id, child_order")
 
 	if err := query.Scan(&result).Error(); err != nil {
 		return nil, err

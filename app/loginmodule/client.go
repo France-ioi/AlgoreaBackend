@@ -111,25 +111,25 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
 	dest := make(map[string]interface{}, len(source)+2)
 	mapping := map[string]string{
-		"loginID":          "id", // unsigned int
-		"sLogin":           "login",
-		"sEmail":           "primary_email",
-		"sFirstName":       "first_name",
-		"sLastName":        "last_name",
-		"sStudentId":       "student_id",
-		"sCountryCode":     "country_code",
-		"sBirthDate":       "birthday",
-		"iGraduationYear":  "graduation_year",  // int
-		"iGrade":           "graduation_grade", // int
-		"sAddress":         "address",
-		"sZipcode":         "zipcode",
-		"sCity":            "city",
-		"sLandLineNumber":  "primary_phone",
-		"sCellPhoneNumber": "secondary_phone",
-		"sDefaultLanguage": "language",
-		"sFreeText":        "presentation",
-		"sWebSite":         "website",
-		"bEmailVerified":   "primary_email_verified",
+		"login_id":          "id", // unsigned int
+		"login":             "login",
+		"email":             "primary_email",
+		"first_name":        "first_name",
+		"last_name":         "last_name",
+		"student_id":        "student_id",
+		"country_code":      "country_code",
+		"birth_date":        "birthday",
+		"graduation_year":   "graduation_year",  // int
+		"grade":             "graduation_grade", // int
+		"address":           "address",
+		"zipcode":           "zipcode",
+		"city":              "city",
+		"land_line_number":  "primary_phone",
+		"cell_phone_number": "secondary_phone",
+		"default_language":  "language",
+		"free_text":         "presentation",
+		"web_site":          "website",
+		"email_verified":    "primary_email_verified",
 	}
 	for destKey, sourceKey := range mapping {
 		dest[destKey] = source[sourceKey]
@@ -137,30 +137,30 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 			dest[destKey], _ = number.Int64()
 		}
 	}
-	dest["sSex"] = nil
+	dest["sex"] = nil
 	switch source["gender"] {
 	case "m":
-		dest["sSex"] = "Male"
+		dest["sex"] = "Male"
 	case "f":
-		dest["sSex"] = "Female"
+		dest["sex"] = "Female"
 	}
-	dest["bEmailVerified"] = (dest["bEmailVerified"] == true) || (dest["bEmailVerified"] == int64(1))
-	if countryCode, ok := dest["sCountryCode"].(string); ok {
-		dest["sCountryCode"] = strings.ToLower(countryCode)
+	dest["email_verified"] = (dest["email_verified"] == true) || (dest["email_verified"] == int64(1))
+	if countryCode, ok := dest["country_code"].(string); ok {
+		dest["country_code"] = strings.ToLower(countryCode)
 	} else {
-		dest["sCountryCode"] = ""
+		dest["country_code"] = ""
 	}
 
-	if dest["loginID"] == nil {
+	if dest["login_id"] == nil {
 		return nil, errors.New("no id in user's profile")
 	}
 
-	if _, ok := dest["sLogin"].(string); !ok {
+	if _, ok := dest["login"].(string); !ok {
 		return nil, errors.New("no login in user's profile")
 	}
 
-	if dest["iGraduationYear"] == nil {
-		dest["iGraduationYear"] = int64(0)
+	if dest["graduation_year"] == nil {
+		dest["graduation_year"] = int64(0)
 	}
 
 	return dest, nil

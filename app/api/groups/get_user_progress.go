@@ -33,17 +33,17 @@ import (
 //   items:
 //     type: integer
 // - name: from.name
-//   description: Start the page from the user group next to the user group with `groups.sName` = `from.name` and `groups.ID` = `from.id`
+//   description: Start the page from the user group next to the user group with `groups.name` = `from.name` and `groups.id` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the user group next to the user group with `groups.sName`=`from.name` and `groups.ID`=`from.id`
+//   description: Start the page from the user group next to the user group with `groups.name`=`from.name` and `groups.id`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
-//   description: Display results for the first N users (sorted by `groups.sName`)
+//   description: Display results for the first N users (sorted by `groups.name`)
 //   in: query
 //   type: integer
 //   maximum: 1000
@@ -82,20 +82,20 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var userGroupIDs []interface{}
 	userGroupIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN `groups` ON groups.ID = groups_ancestors.idGroupChild AND groups.sType = 'UserSelf'").
-		Where("groups_ancestors.idGroupAncestor = ?", groupID).
-		Where("groups_ancestors.idGroupChild != groups_ancestors.idGroupAncestor")
+		Joins("JOIN `groups` ON groups.id = groups_ancestors.group_child_id AND groups.type = 'UserSelf'").
+		Where("groups_ancestors.group_ancestor_id = ?", groupID).
+		Where("groups_ancestors.group_child_id != groups_ancestors.group_ancestor_id")
 	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
-		"name": {ColumnName: "groups.sName", FieldType: "string"},
-		"id":   {ColumnName: "groups.ID", FieldType: "int64"},
+		"name": {ColumnName: "groups.name", FieldType: "string"},
+		"id":   {ColumnName: "groups.id", FieldType: "int64"},
 	}, "name,id")
 	if apiError != service.NoError {
 		return apiError
 	}
 	userGroupIDQuery = service.NewQueryLimiter().Apply(r, userGroupIDQuery)
 	service.MustNotBeError(userGroupIDQuery.
-		Pluck("groups.ID", &userGroupIDs).Error())
+		Pluck("groups.id", &userGroupIDs).Error())
 
 	if len(userGroupIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
@@ -104,156 +104,156 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	// Preselect item IDs (there should not be many of them)
 	var itemIDs []interface{}
-	service.MustNotBeError(srv.Store.ItemItems().Where("idItemParent IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemChild", itemsVisibleToUserSubQuery).
-		Order("items_items.idItemChild").
-		Pluck("items_items.idItemChild", &itemIDs).Error())
+	service.MustNotBeError(srv.Store.ItemItems().Where("item_parent_id IN (?)", itemParentIDs).
+		Joins("JOIN ? AS visible ON visible.item_id = items_items.item_child_id", itemsVisibleToUserSubQuery).
+		Order("items_items.item_child_id").
+		Pluck("items_items.item_child_id", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
 		return service.NoError
 	}
-	itemsUnion := srv.Store.Raw("SELECT ? AS ID", itemIDs[0])
+	itemsUnion := srv.Store.Raw("SELECT ? AS id", itemIDs[0])
 	for i := 1; i < len(itemIDs); i++ {
-		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS ID", itemIDs[i]).QueryExpr())
+		itemsUnion = itemsUnion.UnionAll(srv.Store.Raw("SELECT ? AS id", itemIDs[i]).QueryExpr())
 	}
 
 	var dbResult []map[string]interface{}
 	service.MustNotBeError(srv.Store.Groups().
 		Select(`
-			items.ID AS idItem,
-			groups.ID AS idGroup,
-			IFNULL(MAX(attempt_with_best_score.iScore), 0) AS iScore,
-			IFNULL(MAX(attempt_with_best_score.bValidated), 0) AS bValidated,
-			MAX(last_attempt.sLastActivityDate) AS sLastActivityDate,
-			IFNULL(MAX(attempt_with_best_score.nbHintsCached), 0) AS nbHintsRequested,
-			IFNULL(MAX(attempt_with_best_score.nbSubmissionsAttempts), 0) AS nbSubmissionAttempts,
-			IF(MAX(attempt_with_best_score.idGroup) IS NULL,
+			items.id AS item_id,
+			groups.id AS group_id,
+			IFNULL(MAX(attempt_with_best_score.score), 0) AS score,
+			IFNULL(MAX(attempt_with_best_score.validated), 0) AS validated,
+			MAX(last_attempt.last_activity_date) AS last_activity_date,
+			IFNULL(MAX(attempt_with_best_score.hints_cached), 0) AS hints_requested,
+			IFNULL(MAX(attempt_with_best_score.submissions_attempts), 0) AS submissions_attempts,
+			IF(MAX(attempt_with_best_score.group_id) IS NULL,
 				0,
-				IF(MAX(attempt_with_best_score.bValidated),
-					TIMESTAMPDIFF(SECOND, MIN(first_attempt.sStartDate), MIN(first_validated_attempt.sValidationDate)),
-					TIMESTAMPDIFF(SECOND, MIN(first_attempt.sStartDate), NOW())
+				IF(MAX(attempt_with_best_score.validated),
+					TIMESTAMPDIFF(SECOND, MIN(first_attempt.start_date), MIN(first_validated_attempt.validation_date)),
+					TIMESTAMPDIFF(SECOND, MIN(first_attempt.start_date), NOW())
 				)
-			) AS iTimeSpent`).
+			) AS time_spent`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
-			ON team_links.sType`+database.GroupRelationIsActiveCondition+` AND
-				team_links.idGroupChild = groups.ID`).
+			ON team_links.type`+database.GroupRelationIsActiveCondition+` AND
+				team_links.group_child_id = groups.id`).
 		Joins(`
 			JOIN `+"`groups`"+` AS teams
-			ON teams.sType = 'Team' AND
-				teams.ID = team_links.idGroupParent`).
+			ON teams.type = 'Team' AND
+				teams.id = team_links.group_parent_id`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score_for_user
-			ON attempt_with_best_score_for_user.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = groups.ID AND idItem = items.ID
-				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
+			ON attempt_with_best_score_for_user.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = groups.id AND item_id = items.id
+				ORDER BY group_id, item_id, minus_score, best_answer_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score_for_team
-			ON attempt_with_best_score_for_team.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = teams.ID AND idItem = items.ID
-				ORDER BY idGroup, idItem, iMinusScore, sBestAnswerDate LIMIT 1
+			ON attempt_with_best_score_for_team.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = teams.id AND item_id = items.id
+				ORDER BY group_id, item_id, minus_score, best_answer_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
-			ON attempt_with_best_score.ID = IF(attempt_with_best_score_for_team.iScore IS NOT NULL AND
-				attempt_with_best_score_for_user.iScore IS NOT NULL AND (
-				attempt_with_best_score_for_team.iScore > attempt_with_best_score_for_user.iScore OR 
+			ON attempt_with_best_score.id = IF(attempt_with_best_score_for_team.score IS NOT NULL AND
+				attempt_with_best_score_for_user.score IS NOT NULL AND (
+				attempt_with_best_score_for_team.score > attempt_with_best_score_for_user.score OR
 					(
-						attempt_with_best_score_for_team.iScore = attempt_with_best_score_for_user.iScore AND
-						attempt_with_best_score_for_team.sBestAnswerDate < attempt_with_best_score_for_user.sBestAnswerDate
+						attempt_with_best_score_for_team.score = attempt_with_best_score_for_user.score AND
+						attempt_with_best_score_for_team.best_answer_date < attempt_with_best_score_for_user.best_answer_date
 					)
-				) OR attempt_with_best_score_for_user.iScore IS NULL,
-				attempt_with_best_score_for_team.ID,
-				attempt_with_best_score_for_user.ID
+				) OR attempt_with_best_score_for_user.score IS NULL,
+				attempt_with_best_score_for_team.id,
+				attempt_with_best_score_for_user.id
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt_of_user
-			ON last_attempt_of_user.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = groups.ID AND idItem = items.ID AND sLastActivityDate IS NOT NULL
-				ORDER BY sLastActivityDate DESC LIMIT 1
+			ON last_attempt_of_user.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = groups.id AND item_id = items.id AND last_activity_date IS NOT NULL
+				ORDER BY last_activity_date DESC LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt_of_team
-			ON last_attempt_of_team.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = teams.ID AND idItem = items.ID AND sLastActivityDate IS NOT NULL
-				ORDER BY sLastActivityDate DESC LIMIT 1
+			ON last_attempt_of_team.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = teams.id AND item_id = items.id AND last_activity_date IS NOT NULL
+				ORDER BY last_activity_date DESC LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt
-			ON last_attempt.ID = IF(
+			ON last_attempt.id = IF(
 				(
-					last_attempt_of_team.ID IS NOT NULL AND
-					last_attempt_of_user.ID IS NOT NULL AND
-					last_attempt_of_team.sLastActivityDate > last_attempt_of_user.sLastActivityDate
-				) OR last_attempt_of_user.ID IS NULL,
-				last_attempt_of_team.ID,
-				last_attempt_of_user.ID
+					last_attempt_of_team.id IS NOT NULL AND
+					last_attempt_of_user.id IS NOT NULL AND
+					last_attempt_of_team.last_activity_date > last_attempt_of_user.last_activity_date
+				) OR last_attempt_of_user.id IS NULL,
+				last_attempt_of_team.id,
+				last_attempt_of_user.id
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_attempt_of_user
-			ON first_attempt_of_user.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = groups.ID AND idItem = items.ID AND sStartDate IS NOT NULL
-				ORDER BY sStartDate LIMIT 1
+			ON first_attempt_of_user.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = groups.id AND item_id = items.id AND start_date IS NOT NULL
+				ORDER BY start_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_attempt_of_team
-			ON first_attempt_of_team.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = teams.ID AND idItem = items.ID AND sStartDate IS NOT NULL
-				ORDER BY sStartDate LIMIT 1
+			ON first_attempt_of_team.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = teams.id AND item_id = items.id AND start_date IS NOT NULL
+				ORDER BY start_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_attempt
-			ON first_attempt.ID = IF(
+			ON first_attempt.id = IF(
 				(
-					first_attempt_of_team.ID IS NOT NULL AND
-					first_attempt_of_user.ID IS NOT NULL AND
-					first_attempt_of_team.sStartDate < first_attempt_of_user.sStartDate
-				) OR first_attempt_of_user.ID IS NULL,
-				first_attempt_of_team.ID,
-				first_attempt_of_user.ID
+					first_attempt_of_team.id IS NOT NULL AND
+					first_attempt_of_user.id IS NOT NULL AND
+					first_attempt_of_team.start_date < first_attempt_of_user.start_date
+				) OR first_attempt_of_user.id IS NULL,
+				first_attempt_of_team.id,
+				first_attempt_of_user.id
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_validated_attempt_of_user
-			ON first_validated_attempt_of_user.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = groups.ID AND idItem = items.ID AND sValidationDate IS NOT NULL
-				ORDER BY sValidationDate LIMIT 1
+			ON first_validated_attempt_of_user.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = groups.id AND item_id = items.id AND validation_date IS NOT NULL
+				ORDER BY validation_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_validated_attempt_of_team
-			ON first_validated_attempt_of_team.ID = (
-				SELECT ID FROM groups_attempts
-				WHERE idGroup = teams.ID AND idItem = items.ID AND sValidationDate IS NOT NULL
-				ORDER BY sValidationDate LIMIT 1
+			ON first_validated_attempt_of_team.id = (
+				SELECT id FROM groups_attempts
+				WHERE group_id = teams.id AND item_id = items.id AND validation_date IS NOT NULL
+				ORDER BY validation_date LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_validated_attempt
-			ON first_validated_attempt.ID = IF(
+			ON first_validated_attempt.id = IF(
 				(
-					first_validated_attempt_of_team.ID IS NOT NULL AND
-					first_validated_attempt_of_user.ID IS NOT NULL AND
-					first_validated_attempt_of_team.sValidationDate < first_validated_attempt_of_user.sValidationDate
-				) OR first_attempt_of_user.ID IS NULL,
-				first_validated_attempt_of_team.ID,
-				first_validated_attempt_of_user.ID
+					first_validated_attempt_of_team.id IS NOT NULL AND
+					first_validated_attempt_of_user.id IS NOT NULL AND
+					first_validated_attempt_of_team.validation_date < first_validated_attempt_of_user.validation_date
+				) OR first_attempt_of_user.id IS NULL,
+				first_validated_attempt_of_team.id,
+				first_validated_attempt_of_user.id
 			)`).
-		Where("groups.ID IN (?)", userGroupIDs).
-		Group("groups.ID, items.ID").
+		Where("groups.id IN (?)", userGroupIDs).
+		Group("groups.id, items.id").
 		Order(gorm.Expr(
-			"FIELD(groups.ID"+strings.Repeat(", ?", len(userGroupIDs))+")",
+			"FIELD(groups.id"+strings.Repeat(", ?", len(userGroupIDs))+")",
 			userGroupIDs...)).
 		Order(gorm.Expr(
-			"FIELD(items.ID"+strings.Repeat(", ?", len(itemIDs))+")",
+			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
-		Order("MAX(attempt_with_best_score.iMinusScore), MAX(attempt_with_best_score.sBestAnswerDate)").
+		Order("MAX(attempt_with_best_score.minus_score), MAX(attempt_with_best_score.best_answer_date)").
 		ScanIntoSliceOfMaps(&dbResult).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(dbResult)
 	render.Respond(w, r, convertedResult)

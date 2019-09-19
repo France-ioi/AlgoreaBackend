@@ -24,108 +24,108 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			name: "parent group is not a team",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Class", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-				groups_groups: [{idGroupParent: 2, idGroupChild: 10, sType: "joinedByCode"}]`,
+					- {id: 1, free_access: 1, type: "Class", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+				groups_groups: [{group_parent_id: 2, group_child_id: 10, type: "joinedByCode"}]`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team without idTeamItem",
+			name: "parent group is a team without team_item_id",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team"}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-				groups_groups: [{idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}]`,
+					- {id: 1, free_access: 1, type: "Team"}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+				groups_groups: [{group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}]`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with idTeamItem, but the user is not on teams",
+			name: "parent group is a team with team_item_id, but the user is not on teams",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 4, sType: "Class", "idTeamItem": 1234}
-					- {ID: 5, sType: "Friends", "idTeamItem": 1234}
-					- {ID: 6, sType: "Other", "idTeamItem": 1234}
-					- {ID: 7, sType: "Club", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-					- {ID: 11, sType: UserSelf}
-					- {ID: 12, sType: UserSelf}
-					- {ID: 13, sType: UserSelf}
-					- {ID: 14, sType: UserSelf}
-					- {ID: 15, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 4, type: "Class", "team_item_id": 1234}
+					- {id: 5, type: "Friends", "team_item_id": 1234}
+					- {id: 6, type: "Other", "team_item_id": 1234}
+					- {id: 7, type: "Club", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+					- {id: 11, type: UserSelf}
+					- {id: 12, type: UserSelf}
+					- {id: 13, type: UserSelf}
+					- {id: 14, type: UserSelf}
+					- {id: 15, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationSent"}
-					- {idGroupParent: 4, idGroupChild: 10, sType: "invitationAccepted"}
-					- {idGroupParent: 5, idGroupChild: 10, sType: "requestAccepted"}
-					- {idGroupParent: 6, idGroupChild: 10, sType: "joinedByCode"}
-					- {idGroupParent: 7, idGroupChild: 10, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationSent"}
+					- {group_parent_id: 4, group_child_id: 10, type: "invitationAccepted"}
+					- {group_parent_id: 5, group_child_id: 10, type: "requestAccepted"}
+					- {group_parent_id: 6, group_child_id: 10, type: "joinedByCode"}
+					- {group_parent_id: 7, group_child_id: 10, type: "direct"}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with idTeamItem, but the user is on teams with mismatching idTeamItems",
+			name: "parent group is a team with team_item_id, but the user is on teams with mismatching team_item_id",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 2345}
-					- {ID: 3, sType: Team}
-					- {ID: 4, sType: Team, idTeamItem: 2345}
-					- {ID: 5, sType: Team, idTeamItem: 2345}
-					- {ID: 10, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 2345}
+					- {id: 3, type: Team}
+					- {id: 4, type: Team, team_item_id: 2345}
+					- {id: 5, type: Team, team_item_id: 2345}
+					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}
-					- {idGroupParent: 3, idGroupChild: 10, sType: "requestAccepted"}
-					- {idGroupParent: 4, idGroupChild: 10, sType: "joinedByCode"}
-					- {idGroupParent: 5, idGroupChild: 10, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}
+					- {group_parent_id: 3, group_child_id: 10, type: "requestAccepted"}
+					- {group_parent_id: 4, group_child_id: 10, type: "joinedByCode"}
+					- {group_parent_id: 5, group_child_id: 10, type: "direct"}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with idTeamItem and the user is on a team with the same idTeamItem (invitationAccepted)",
+			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (invitationAccepted)",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 10, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}`,
 			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
 		},
 		{
-			name: "parent group is a team with idTeamItem and the user is on a team with the same idTeamItem (requestAccepted)",
+			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (requestAccepted)",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 10, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "requestAccepted"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "requestAccepted"}`,
 			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
 		},
 		{
-			name: "parent group is a team with idTeamItem and the user is on a team with the same idTeamItem (joinedByCode)",
+			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (joinedByCode)",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 10, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "joinedByCode"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "joinedByCode"}`,
 			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
 		},
 		{
-			name: "parent group is a team with idTeamItem and the user is on a team with the same idTeamItem (direct)",
+			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (direct)",
 			fixture: `
 				groups:
-					- {ID: 1, bFreeAccess: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 10, sType: UserSelf}
+					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "direct"}`,
 			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
 		},
 	}

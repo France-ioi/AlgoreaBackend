@@ -14,35 +14,35 @@ import (
 //
 //   #### The user doesn't own the group
 //
-//     On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
-//     `idGroupChild` = `group_id`, `groups_groups.sType` = `requestSent` and `sStatusDate` equal to current UTC time.
+//     On success the service creates a new row in `groups_groups` with `group_parent_id` = user's self group id,
+//     `group_child_id` = `group_id`, `groups_groups.type` = `requestSent` and `status_date` equal to current UTC time.
 //
-//     * `groups.bFreeAccess` should be 1, otherwise the 'forbidden' response is returned.
+//     * `groups.free_access` should be 1, otherwise the 'forbidden' response is returned.
 //
-//     * If the group is a team with `idTeamItem` set and the user is already on a team with the same `idTeamItem`,
+//     * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //       the unprocessable entity error is returned.
 //
 //     * If there is already a row in `groups_groups` with
-//       `sType` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'joinedByCode'/'direct',
+//       `type` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'joinedByCode'/'direct',
 //       the unprocessable entity error is returned.
 //
-//     * If `groups_groups.sType` is `requestSent` already, the "unchanged" (201) response is returned.
+//     * If `groups_groups.type` is `requestSent` already, the "unchanged" (201) response is returned.
 //
 //   #### The user owns the group
 //
-//     On success the service creates a new row in `groups_groups` with `idGroupParent` = user's self group ID,
-//     `idGroupChild` = `group_id`, `groups_groups.sType` = `requestAccepted` and `sStatusDate` equal to current UTC time.
+//     On success the service creates a new row in `groups_groups` with `group_parent_id` = user's self group id,
+//     `group_child_id` = `group_id`, `groups_groups.type` = `requestAccepted` and `status_date` equal to current UTC time.
 //
 //     * If there is already a row in `groups_groups` with
-//       `sType` = 'invitationAccepted'/'joinedByCode'/'direct',
+//       `type` = 'invitationAccepted'/'joinedByCode'/'direct',
 //       the unprocessable entity error is returned.
 //
-//     * If `groups_groups.sType` is `requestAccepted` already, the "unchanged" (201) response is returned.
+//     * If `groups_groups.type` is `requestAccepted` already, the "unchanged" (201) response is returned.
 //
 //     On success, the service propagates group ancestors in this case.
 //
 //
-//   _Warning:_ The service doesn't check if the user has access rights on `idTeamItem` when the group is a team.
+//   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.
 // parameters:
 // - name: group_id
 //   in: path

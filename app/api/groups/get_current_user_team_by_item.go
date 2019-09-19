@@ -17,15 +17,15 @@ import (
 // description: >
 //   The team identified by `item_id` i.e. a group which:
 //
-//     * has `idTeamItem` equal to the input `item_id`,
+//     * has `team_item_id` equal to the input `item_id`,
 //
-//     * is a direct parent (i.e. via `groups_groups` with `sType` = "invitationAccepted"/"requestAccepted"/"joinedByCode")
+//     * is a direct parent (i.e. via `groups_groups` with `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode")
 //       of the authenticated user’s `selfGroup`,
 //
 //     * is of type "Team".
 //
 //
-//   If there are several matching teams, returns the first one in the order of `groups.ID`.
+//   If there are several matching teams, returns the first one in the order of `groups.id`.
 // parameters:
 // - name: item_id
 //   type: integer
@@ -33,7 +33,7 @@ import (
 //   in: path
 // responses:
 //   "200":
-//     description: OK. Success response with the team's ID
+//     description: OK. Success response with the team's id
 //     schema:
 //       type: object
 //       properties:
@@ -54,7 +54,7 @@ func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Requ
 
 	var teamID int64
 	user := srv.GetUser(r)
-	err = srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.ID", &teamID).Error()
+	err = srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.id", &teamID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.ErrNotFound(errors.New("no team for this item"))
 	}

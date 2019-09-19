@@ -15,7 +15,7 @@ import (
 // ---
 // summary: Set additional time in the contest for the group
 // description: >
-//                For the input group and item, sets the `groups_items.sAdditionalTime` to the `time` value.
+//                For the input group and item, sets the `groups_items.additional_time` to the `time` value.
 //                If there is no `groups_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
 //                (with default values in other columns).
 //                If no `groups_items` and `seconds` == 0, succeed without doing any change.
@@ -25,12 +25,12 @@ import (
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have `solutions` or `full` access on the input item;
 //                  * the authenticated user should own the `group_id`;
-//                  * if the contest is team-only (`items.bHasAttempts` = 1), then the group should not be a user group.
+//                  * if the contest is team-only (`items.has_attempts` = 1), then the group should not be a user group.
 //
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
 // - name: item_id
-//   description: "`ID` of a timed contest"
+//   description: "`id` of a timed contest"
 //   in: path
 //   type: integer
 //   required: true
@@ -78,8 +78,8 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var groupType string
-	err = srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).
-		PluckFirst("groups.sType", &groupType).Error()
+	err = srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).
+		PluckFirst("groups.type", &groupType).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -100,16 +100,16 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds, creatorUserID int64) {
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		groupItemStore := store.GroupItems()
-		scope := groupItemStore.Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
+		scope := groupItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
 		found, err := scope.WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			service.MustNotBeError(scope.UpdateColumn("sAdditionalTime", gorm.Expr("SEC_TO_TIME(?)", seconds)).Error())
+			service.MustNotBeError(scope.UpdateColumn("additional_time", gorm.Expr("SEC_TO_TIME(?)", seconds)).Error())
 		} else if seconds != 0 {
 			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 				id := retryStore.NewID()
 				return retryStore.Exec(
-					"INSERT INTO groups_items (ID, idGroup, idItem, sAdditionalTime, idUserCreated) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
+					"INSERT INTO groups_items (id, group_id, item_id, additional_time, user_created_id) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
 					id, groupID, itemID, seconds, creatorUserID).Error()
 			}))
 		}

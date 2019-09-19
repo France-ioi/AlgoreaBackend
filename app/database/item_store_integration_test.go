@@ -28,10 +28,10 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 		column       string
 		expected     []int64
 	}{
-		{methodToCall: "Visible", column: "ID", expected: []int64{190, 191, 192, 1900, 1901, 1902, 19000, 19001, 19002}},
-		{methodToCall: "VisibleByID", args: []interface{}{int64(191)}, column: "ID", expected: []int64{191}},
-		{methodToCall: "VisibleChildrenOfID", args: []interface{}{int64(190)}, column: "items.ID", expected: []int64{1900, 1901, 1902}},
-		{methodToCall: "VisibleGrandChildrenOfID", args: []interface{}{int64(190)}, column: "items.ID", expected: []int64{19000, 19001, 19002}},
+		{methodToCall: "Visible", column: "id", expected: []int64{190, 191, 192, 1900, 1901, 1902, 19000, 19001, 19002}},
+		{methodToCall: "VisibleByID", args: []interface{}{int64(191)}, column: "id", expected: []int64{191}},
+		{methodToCall: "VisibleChildrenOfID", args: []interface{}{int64(190)}, column: "items.id", expected: []int64{1900, 1901, 1902}},
+		{methodToCall: "VisibleGrandChildrenOfID", args: []interface{}{int64(190)}, column: "items.id", expected: []int64{19000, 19001, 19002}},
 	}
 	for _, testCase := range tests {
 		testCase := testCase
@@ -65,15 +65,15 @@ func TestItemStore_AccessRights(t *testing.T) {
 	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
-			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, "+
-			"MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, "+
-			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions "+
+		"SELECT item_id, MIN(cached_full_access_date) <= NOW() AS full_access, "+
+			"MIN(cached_partial_access_date) <= NOW() AS partial_access, "+
+			"MIN(cached_grayed_access_date) <= NOW() AS grayed_access, "+
+			"MIN(cached_access_solutions_date) <= NOW() AS access_solutions "+
 			"FROM `groups_items` "+
-			"JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
-			"ON groups_items.idGroup = ancestors.idGroupAncestor GROUP BY idItem") + "$").
+			"JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.group_child_id = ?)) AS ancestors "+
+			"ON groups_items.group_id = ancestors.group_ancestor_id GROUP BY item_id") + "$").
 		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := database.NewDataStore(db).Items().AccessRights(mockUser).Scan(&result).Error()
@@ -140,25 +140,25 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).UserItems().
-					Where("idItem = ?", 500). // chapter
-					Where("idUser = ?", 4).
-					UpdateColumn("sContestStartDate", database.Now()).Error()
+					Where("item_id = ?", 500). // chapter
+					Where("user_id = ?", 4).
+					UpdateColumn("contest_start_date", database.Now()).Error()
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).UserItems().
-					Where("idItem = ?", 115). // chapter
-					Where("idUser = ?", 5).
-					UpdateColumn("sContestStartDate", database.Now()).Error()
+					Where("item_id = ?", 115). // chapter
+					Where("user_id = ?", 5).
+					UpdateColumn("contest_start_date", database.Now()).Error()
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).UserItems().
-					Where("idItem = ?", 114). // chapter
-					Where("idUser = ?", 7).
-					UpdateColumn("sContestStartDate", database.Now()).Error()
+					Where("item_id = ?", 114). // chapter
+					Where("user_id = ?", 7).
+					UpdateColumn("contest_start_date", database.Now()).Error()
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
 			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +
@@ -192,34 +192,34 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		users:
-			- {ID: 1, sLogin: 1, idGroupSelf: 101}
-			- {ID: 2, sLogin: 2, idGroupSelf: 102}
-			- {ID: 3, sLogin: 3, idGroupSelf: 103}
-			- {ID: 4, sLogin: 4, idGroupSelf: 104}
-			- {ID: 5, sLogin: 5, idGroupSelf: 105}
-			- {ID: 6, sLogin: 6, idGroupSelf: 106}
-		items: [{ID: 12}, {ID: 13}, {ID: 14, sDuration: 10:00:00}, {ID: 15, sTeamMode: "None"}]
+			- {id: 1, login: 1, group_self_id: 101}
+			- {id: 2, login: 2, group_self_id: 102}
+			- {id: 3, login: 3, group_self_id: 103}
+			- {id: 4, login: 4, group_self_id: 104}
+			- {id: 5, login: 5, group_self_id: 105}
+			- {id: 6, login: 6, group_self_id: 106}
+		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15, team_mode: "None"}]
 		groups_ancestors:
-			- {idGroupAncestor: 101, idGroupChild: 101}
-			- {idGroupAncestor: 102, idGroupChild: 102}
-			- {idGroupAncestor: 103, idGroupChild: 103}
-			- {idGroupAncestor: 104, idGroupChild: 104}
-			- {idGroupAncestor: 105, idGroupChild: 105}
-			- {idGroupAncestor: 106, idGroupChild: 106}
+			- {group_ancestor_id: 101, group_child_id: 101}
+			- {group_ancestor_id: 102, group_child_id: 102}
+			- {group_ancestor_id: 103, group_child_id: 103}
+			- {group_ancestor_id: 104, group_child_id: 104}
+			- {group_ancestor_id: 105, group_child_id: 105}
+			- {group_ancestor_id: 106, group_child_id: 106}
 		users_items:
-			- {idUser: 2, idItem: 12} # not started
-			- {idUser: 3, idItem: 13, sContestStartDate: 2019-03-22 08:44:55, sFinishDate: 2019-03-23 08:44:55} #finished
-			- {idUser: 4, idItem: 14, sContestStartDate: 2019-03-22 08:44:55} # ok
-			- {idUser: 5, idItem: 15, sContestStartDate: 2019-04-22 08:44:55} # ok with team mode
-			- {idUser: 6, idItem: 14, sContestStartDate: 2019-03-22 08:44:55} # multiple
-			- {idUser: 6, idItem: 15, sContestStartDate: 2019-03-22 08:43:55} # multiple
+			- {user_id: 2, item_id: 12} # not started
+			- {user_id: 3, item_id: 13, contest_start_date: 2019-03-22 08:44:55, finish_date: 2019-03-23 08:44:55} #finished
+			- {user_id: 4, item_id: 14, contest_start_date: 2019-03-22 08:44:55} # ok
+			- {user_id: 5, item_id: 15, contest_start_date: 2019-04-22 08:44:55} # ok with team mode
+			- {user_id: 6, item_id: 14, contest_start_date: 2019-03-22 08:44:55} # multiple
+			- {user_id: 6, item_id: 15, contest_start_date: 2019-03-22 08:43:55} # multiple
 		groups_items:
-			- {idGroup: 102, idItem: 12, idUserCreated: 1}
-			- {idGroup: 103, idItem: 13, idUserCreated: 1}
-			- {idGroup: 104, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}
-			- {idGroup: 105, idItem: 15, idUserCreated: 1}
-			- {idGroup: 106, idItem: 14, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}
-			- {idGroup: 106, idItem: 15, sAdditionalTime: 0000-00-00 00:01:00, idUserCreated: 1}`)
+			- {group_id: 102, item_id: 12, user_created_id: 1}
+			- {group_id: 103, item_id: 13, user_created_id: 1}
+			- {group_id: 104, item_id: 14, additional_time: 0000-00-00 00:01:00, user_created_id: 1}
+			- {group_id: 105, item_id: 15, user_created_id: 1}
+			- {group_id: 106, item_id: 14, additional_time: 0000-00-00 00:01:00, user_created_id: 1}
+			- {group_id: 106, item_id: 15, additional_time: 0000-00-00 00:01:00, user_created_id: 1}`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -254,7 +254,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
 				StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
 			},
-			wantLog: "User with ID = 6 has 2 (>1) active contests",
+			wantLog: "User with id = 6 has 2 (>1) active contests",
 		},
 	}
 	for _, test := range tests {
@@ -281,24 +281,24 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 
 func TestItemStore_CloseContest(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		users: [{ID: 1, sLogin: 1, idGroupSelf: 20}]
-		groups: [{ID: 20}]
-		items: [{ID: 11}, {ID: 12}, {ID: 13}, {ID: 14}, {ID: 15}, {ID: 16}]
+		users: [{id: 1, login: 1, group_self_id: 20}]
+		groups: [{id: 20}]
+		items: [{id: 11}, {id: 12}, {id: 13}, {id: 14}, {id: 15}, {id: 16}]
 		items_ancestors:
-			- {idItemAncestor: 11, idItemChild: 12}
-			- {idItemAncestor: 11, idItemChild: 13}
-			- {idItemAncestor: 11, idItemChild: 14}
-			- {idItemAncestor: 11, idItemChild: 15}
-			- {idItemAncestor: 11, idItemChild: 16}
-		users_items: [{idUser: 1, idItem: 11}, {idUser: 1, idItem: 12}, {idUser: 2, idItem: 11}]
+			- {item_ancestor_id: 11, item_child_id: 12}
+			- {item_ancestor_id: 11, item_child_id: 13}
+			- {item_ancestor_id: 11, item_child_id: 14}
+			- {item_ancestor_id: 11, item_child_id: 15}
+			- {item_ancestor_id: 11, item_child_id: 16}
+		users_items: [{user_id: 1, item_id: 11}, {user_id: 1, item_id: 12}, {user_id: 2, item_id: 11}]
 		groups_items:
-			- {idGroup: 20, idItem: 11, idUserCreated: 1}
-			- {idGroup: 20, idItem: 12, idUserCreated: 1}
-			- {idGroup: 20, idItem: 13, sCachedFullAccessDate: 2030-03-22 08:44:55, idUserCreated: 1} # no full access
-			- {idGroup: 20, idItem: 14, sCachedFullAccessDate: 2018-03-22 08:44:55, idUserCreated: 1} # full access
-			- {idGroup: 20, idItem: 15, bOwnerAccess: 1, idUserCreated: 1}
-			- {idGroup: 20, idItem: 16, bManagerAccess: 1, idUserCreated: 1}
-			- {idGroup: 21, idItem: 12, idUserCreated: 1}`)
+			- {group_id: 20, item_id: 11, user_created_id: 1}
+			- {group_id: 20, item_id: 12, user_created_id: 1}
+			- {group_id: 20, item_id: 13, cached_full_access_date: 2030-03-22 08:44:55, user_created_id: 1} # no full access
+			- {group_id: 20, item_id: 14, cached_full_access_date: 2018-03-22 08:44:55, user_created_id: 1} # full access
+			- {group_id: 20, item_id: 15, owner_access: 1, user_created_id: 1}
+			- {group_id: 20, item_id: 16, manager_access: 1, user_created_id: 1}
+			- {group_id: 21, item_id: 12, user_created_id: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{}
 		assert.NoError(t, user.LoadByID(store, 1))
@@ -307,15 +307,15 @@ func TestItemStore_CloseContest(t *testing.T) {
 	}))
 
 	type userItemInfo struct {
-		UserID        int64 `gorm:"column:idUser"`
-		ItemID        int64 `gorm:"column:idItem"`
-		FinishDateSet bool  `gorm:"column:finishDateSet"`
+		UserID        int64
+		ItemID        int64
+		FinishDateSet bool
 	}
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sFinishDate, NOW())) < 3) AS finishDateSet").
-		Order("idUser, idItem").
+		Select("user_id, item_id, (finish_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finish_date, NOW())) < 3) AS finish_date_set").
+		Order("user_id, item_id").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{
 		{UserID: 1, ItemID: 11, FinishDateSet: true},
@@ -324,12 +324,12 @@ func TestItemStore_CloseContest(t *testing.T) {
 	}, userItems)
 
 	type groupItemInfo struct {
-		GroupID int64 `gorm:"column:idGroup"`
-		ItemID  int64 `gorm:"column:idItem"`
+		GroupID int64
+		ItemID  int64
 	}
 	var groupItems []groupItemInfo
-	assert.NoError(t, store.GroupItems().Select("idGroup, idItem").
-		Order("idGroup, idItem").
+	assert.NoError(t, store.GroupItems().Select("group_id, item_id").
+		Order("group_id, item_id").
 		Scan(&groupItems).Error())
 	assert.Equal(t, []groupItemInfo{
 		{GroupID: 20, ItemID: 11},
@@ -343,46 +343,46 @@ func TestItemStore_CloseContest(t *testing.T) {
 func TestItemStore_CloseTeamContest(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		users:
-			- {ID: 1, sLogin: 1, idGroupSelf: 10}
-			- {ID: 2, sLogin: 2, idGroupSelf: 20}
-			- {ID: 3, sLogin: 3, idGroupSelf: 30}
-			- {ID: 4, sLogin: 4, idGroupSelf: 50}
-		groups: [{ID: 10}, {ID: 20}, {ID: 30}, {ID: 40, idTeamItem: 11, sType: Team}, {ID: 50}]
+			- {id: 1, login: 1, group_self_id: 10}
+			- {id: 2, login: 2, group_self_id: 20}
+			- {id: 3, login: 3, group_self_id: 30}
+			- {id: 4, login: 4, group_self_id: 50}
+		groups: [{id: 10}, {id: 20}, {id: 30}, {id: 40, team_item_id: 11, type: Team}, {id: 50}]
 		groups_groups:
-			- {idGroupParent: 40, idGroupChild: 10, sType: invitationAccepted}
-			- {idGroupParent: 40, idGroupChild: 20, sType: requestRefused}
-			- {idGroupParent: 40, idGroupChild: 30, sType: requestAccepted}
-			- {idGroupParent: 40, idGroupChild: 50, sType: joinedByCode}
+			- {group_parent_id: 40, group_child_id: 10, type: invitationAccepted}
+			- {group_parent_id: 40, group_child_id: 20, type: requestRefused}
+			- {group_parent_id: 40, group_child_id: 30, type: requestAccepted}
+			- {group_parent_id: 40, group_child_id: 50, type: joinedByCode}
 		groups_ancestors:
-			- {idGroupAncestor: 10, idGroupChild: 10}
-			- {idGroupAncestor: 20, idGroupChild: 20}
-			- {idGroupAncestor: 30, idGroupChild: 30}
-			- {idGroupAncestor: 40, idGroupChild: 10}
-			- {idGroupAncestor: 40, idGroupChild: 30}
-			- {idGroupAncestor: 40, idGroupChild: 50}
-		items: [{ID: 11}, {ID: 12}, {ID: 13}]
+			- {group_ancestor_id: 10, group_child_id: 10}
+			- {group_ancestor_id: 20, group_child_id: 20}
+			- {group_ancestor_id: 30, group_child_id: 30}
+			- {group_ancestor_id: 40, group_child_id: 10}
+			- {group_ancestor_id: 40, group_child_id: 30}
+			- {group_ancestor_id: 40, group_child_id: 50}
+		items: [{id: 11}, {id: 12}, {id: 13}]
 		items_ancestors:
-			- {idItemAncestor: 11, idItemChild: 12}
-			- {idItemAncestor: 11, idItemChild: 13}
+			- {item_ancestor_id: 11, item_child_id: 12}
+			- {item_ancestor_id: 11, item_child_id: 13}
 		users_items:
-			- {idUser: 1, idItem: 11}
-			- {idUser: 1, idItem: 12}
-			- {idUser: 2, idItem: 11}
-			- {idUser: 3, idItem: 11}
-			- {idUser: 4, idItem: 11}
+			- {user_id: 1, item_id: 11}
+			- {user_id: 1, item_id: 12}
+			- {user_id: 2, item_id: 11}
+			- {user_id: 3, item_id: 11}
+			- {user_id: 4, item_id: 11}
 		groups_items:
-			- {idGroup: 20, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 40, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 20, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 40, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 50, idItem: 11, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-				sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 50, idItem: 12, sCachedPartialAccessDate: 2018-03-22 08:44:55,
-			   sPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}`)
+			- {group_id: 20, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
+				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 40, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
+				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 20, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
+				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 40, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
+				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 50, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
+				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 50, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
+			   partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 		store.Items().CloseTeamContest(11, user)
@@ -390,15 +390,15 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	}))
 
 	type userItemInfo struct {
-		UserID        int64 `gorm:"column:idUser"`
-		ItemID        int64 `gorm:"column:idItem"`
-		FinishDateSet bool  `gorm:"column:finishDateSet"`
+		UserID        int64
+		ItemID        int64
+		FinishDateSet bool
 	}
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("idUser, idItem, (sFinishDate IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, sFinishDate, NOW())) < 3) as finishDateSet").
-		Order("idUser, idItem").
+		Select("user_id, item_id, (finish_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finish_date, NOW())) < 3) as finish_date_set").
+		Order("user_id, item_id").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{
 		{UserID: 1, ItemID: 11, FinishDateSet: true},
@@ -409,16 +409,16 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	}, userItems)
 
 	type groupItemInfo struct {
-		GroupID                 int64          `gorm:"column:idGroup"`
-		ItemID                  int64          `gorm:"column:idItem"`
-		PartialAccessDate       *database.Time `gorm:"column:sPartialAccessDate"`
-		CachedPartialAccessDate *database.Time `gorm:"column:sCachedPartialAccessDate"`
-		CachedPartialAccess     bool           `gorm:"column:bCachedPartialAccess"`
+		GroupID                 int64
+		ItemID                  int64
+		PartialAccessDate       *database.Time
+		CachedPartialAccessDate *database.Time
+		CachedPartialAccess     bool
 	}
 	var groupItems []groupItemInfo
 	assert.NoError(t, store.GroupItems().
-		Select("idGroup, idItem, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess").
-		Order("idGroup, idItem").
+		Select("group_id, item_id, partial_access_date, cached_partial_access_date, cached_partial_access").
+		Order("group_id, item_id").
 		Scan(&groupItems).Error())
 	expectedDate := (*database.Time)(ptrTime(time.Date(2018, 3, 22, 8, 44, 55, 0, time.UTC)))
 	assert.Equal(t, []groupItemInfo{
@@ -433,32 +433,32 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 
 func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{ID: 11}, {ID: 12}, {ID: 13}]
-		users: [{ID: 1, idGroupSelf: 10}]
-		groups: [{ID: 10}, {ID: 40}]
+		items: [{id: 11}, {id: 12}, {id: 13}]
+		users: [{id: 1, group_self_id: 10}]
+		groups: [{id: 10}, {id: 40}]
 		groups_groups:
-			- {idGroupParent: 40, idGroupChild: 10}
+			- {group_parent_id: 40, group_child_id: 10}
 		groups_ancestors:
-			- {idGroupAncestor: 10, idGroupChild: 10}
-			- {idGroupAncestor: 40, idGroupChild: 10}
-			- {idGroupAncestor: 40, idGroupChild: 40}
+			- {group_ancestor_id: 10, group_child_id: 10}
+			- {group_ancestor_id: 40, group_child_id: 10}
+			- {group_ancestor_id: 40, group_child_id: 40}
 		groups_items:
-			- {idGroup: 40, idItem: 11, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2018-03-22 08:44:55,
-		     idUserCreated: 1}
-			- {idGroup: 10, idItem: 11, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2019-03-22 08:44:55,
-			   idUserCreated: 1}
-			- {idGroup: 10, idItem: 12, sCachedFullAccessDate: 2018-03-22 08:44:55, sCachedAccessSolutionsDate: 2019-04-22 08:44:55,
-			   idUserCreated: 1}
-			- {idGroup: 10, idItem: 13, sCachedFullAccessDate: 2018-03-22 08:44:55, idUserCreated: 1}`)
+			- {group_id: 40, item_id: 11, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2018-03-22 08:44:55,
+		     user_created_id: 1}
+			- {group_id: 10, item_id: 11, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2019-03-22 08:44:55,
+			   user_created_id: 1}
+			- {group_id: 10, item_id: 12, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2019-04-22 08:44:55,
+			   user_created_id: 1}
+			- {group_id: 10, item_id: 13, cached_full_access_date: 2018-03-22 08:44:55, user_created_id: 1}`)
 	type resultType struct {
-		ID              int64 `gorm:"column:ID"`
-		AccessSolutions bool  `gorm:"column:accessSolutions"`
+		ID              int64
+		AccessSolutions bool
 	}
 	var result []resultType
 
 	assert.NoError(t, database.NewDataStore(db).Items().
 		Visible(&database.User{ID: 1, SelfGroupID: ptrInt64(10)}).
-		Select("ID, accessSolutions").Order("ID").Scan(&result).Error())
+		Select("id, access_solutions").Order("id").Scan(&result).Error())
 	assert.Equal(t, []resultType{
 		{ID: 11, AccessSolutions: true},
 		{ID: 12, AccessSolutions: true},
@@ -468,23 +468,23 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 
 func TestItemStore_HasManagerAccess(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{ID: 11}, {ID: 12}, {ID: 13}]
-		users: [{ID: 1, sLogin: 1, idGroupSelf: 100}, {ID: 2, sLogin: 2, idGroupSelf: 110}]
-		groups: [{ID: 10}, {ID: 11}, {ID: 40}]
+		items: [{id: 11}, {id: 12}, {id: 13}]
+		users: [{id: 1, login: 1, group_self_id: 100}, {id: 2, login: 2, group_self_id: 110}]
+		groups: [{id: 10}, {id: 11}, {id: 40}]
 		groups_groups:
-			- {idGroupParent: 400, idGroupChild: 100}
+			- {group_parent_id: 400, group_child_id: 100}
 		groups_ancestors:
-			- {idGroupAncestor: 100, idGroupChild: 100}
-			- {idGroupAncestor: 110, idGroupChild: 110}
-			- {idGroupAncestor: 400, idGroupChild: 100}
-			- {idGroupAncestor: 400, idGroupChild: 400}
+			- {group_ancestor_id: 100, group_child_id: 100}
+			- {group_ancestor_id: 110, group_child_id: 110}
+			- {group_ancestor_id: 400, group_child_id: 100}
+			- {group_ancestor_id: 400, group_child_id: 400}
 		groups_items:
-			- {idGroup: 400, idItem: 11, bCachedManagerAccess: 1, idUserCreated: 1}
-			- {idGroup: 100, idItem: 11, bOwnerAccess: 1, idUserCreated: 1}
-			- {idGroup: 100, idItem: 12, idUserCreated: 1}
-			- {idGroup: 100, idItem: 13, idUserCreated: 1}
-			- {idGroup: 110, idItem: 12, bOwnerAccess: 1, idUserCreated: 1}
-			- {idGroup: 110, idItem: 13, bCachedManagerAccess: 1, idUserCreated: 1}`)
+			- {group_id: 400, item_id: 11, cached_manager_access: 1, user_created_id: 1}
+			- {group_id: 100, item_id: 11, owner_access: 1, user_created_id: 1}
+			- {group_id: 100, item_id: 12, user_created_id: 1}
+			- {group_id: 100, item_id: 13, user_created_id: 1}
+			- {group_id: 110, item_id: 12, owner_access: 1, user_created_id: 1}
+			- {group_id: 110, item_id: 13, cached_manager_access: 1, user_created_id: 1}`)
 
 	tests := []struct {
 		name       string

@@ -14,10 +14,10 @@ func TestGroupStore_OwnedBy(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` " +
-		"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID " +
-		"WHERE (groups_ancestors.idGroupAncestor=?)")).
+		"JOIN groups_ancestors ON groups_ancestors.group_child_id = groups.id " +
+		"WHERE (groups_ancestors.group_ancestor_id=?)")).
 		WithArgs(3).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStore(db).Groups().OwnedBy(mockUser).Scan(&result).Error()
@@ -32,12 +32,12 @@ func TestGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
-		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND "+
-		"groups_groups.sType"+GroupRelationIsActiveCondition+" AND "+
-		"groups_groups.idGroupChild = ? "+
-		"WHERE (groups.idTeamItem = ?) AND (groups.sType = 'Team') ORDER BY `groups`.`ID` LIMIT 1")).
+		"JOIN groups_groups ON groups_groups.group_parent_id = groups.id AND "+
+		"groups_groups.type"+GroupRelationIsActiveCondition+" AND "+
+		"groups_groups.group_child_id = ? "+
+		"WHERE (groups.team_item_id = ?) AND (groups.type = 'Team') ORDER BY `groups`.`id` LIMIT 1")).
 		WithArgs(2, 1234).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStore(db).Groups().TeamGroupForTeamItemAndUser(1234, mockUser).Scan(&result).Error()
@@ -52,14 +52,14 @@ func TestGroupStore_TeamGroupForItemAndUser(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
-		"JOIN groups_groups ON groups_groups.idGroupParent = groups.ID AND "+
-		"groups_groups.sType"+GroupRelationIsActiveCondition+" AND "+
-		"groups_groups.idGroupChild = ? "+
-		"LEFT JOIN items_ancestors ON items_ancestors.idItemAncestor = groups.idTeamItem "+
-		"WHERE (groups.sType = 'Team') AND (items_ancestors.idItemChild = ? OR groups.idTeamItem = ?) "+
-		"GROUP BY groups.ID ORDER BY `groups`.`ID` LIMIT 1")).
+		"JOIN groups_groups ON groups_groups.group_parent_id = groups.id AND "+
+		"groups_groups.type"+GroupRelationIsActiveCondition+" AND "+
+		"groups_groups.group_child_id = ? "+
+		"LEFT JOIN items_ancestors ON items_ancestors.item_ancestor_id = groups.team_item_id "+
+		"WHERE (groups.type = 'Team') AND (items_ancestors.item_child_id = ? OR groups.team_item_id = ?) "+
+		"GROUP BY groups.id ORDER BY `groups`.`id` LIMIT 1")).
 		WithArgs(2, 1234, 1234).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStore(db).Groups().TeamGroupForItemAndUser(1234, mockUser).Scan(&result).Error()
@@ -72,10 +72,10 @@ func TestGroupStore_TeamsMembersForItem(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` JOIN groups_groups "+
-		"ON groups_groups.idGroupParent = groups.ID AND groups_groups.sType "+GroupRelationIsActiveCondition+
-		" WHERE (groups.sType = 'Team') AND (groups_groups.idGroupChild IN (?,?,?)) AND (groups.idTeamItem = ?)")).
+		"ON groups_groups.group_parent_id = groups.id AND groups_groups.type "+GroupRelationIsActiveCondition+
+		" WHERE (groups.type = 'Team') AND (groups_groups.group_child_id IN (?,?,?)) AND (groups.team_item_id = ?)")).
 		WithArgs(1, 2, 3, 1234).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStore(db).Groups().TeamsMembersForItem([]int64{1, 2, 3}, 1234).Scan(&result).Error()

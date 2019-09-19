@@ -42,16 +42,16 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
 					mock.ExpectQuery("^" +
-						regexp.QuoteMeta("SELECT sRefreshToken FROM `refresh_tokens`  WHERE (idUser = ?) LIMIT 1") + "$").
-						WithArgs(int64(2)).WillReturnRows(mock.NewRows([]string{"sRefreshToken"}).AddRow("firstrefreshtoken"))
+						regexp.QuoteMeta("SELECT refresh_token FROM `refresh_tokens`  WHERE (user_id = ?) LIMIT 1") + "$").
+						WithArgs(int64(2)).WillReturnRows(mock.NewRows([]string{"refresh_token"}).AddRow("firstrefreshtoken"))
 					mock.ExpectBegin()
-					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (idUser = ? AND sAccessToken != ?)")+"$").
+					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_id = ? AND access_token != ?)")+"$").
 						WithArgs(int64(2), "accesstoken").WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
-						"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuedAtDate, sIssuer) VALUES (?, ?, ?, NOW(), ?)")+
-						"$").WithArgs(int64(2), "newaccesstoken", sqlmock.AnyArg(), "login-module").
+						"INSERT INTO `sessions` (access_token, expiration_date, issued_at_date, issuer, user_id) VALUES (?, ?, NOW(), ?, ?)")+
+						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), "login-module", int64(2)).
 						WillReturnResult(sqlmock.NewResult(123, 1))
-					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `sRefreshToken` = ? WHERE (idUser = ?)")+
+					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_id = ?)")+
 						"$").WithArgs("newfirstrefreshtoken", int64(2)).WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectCommit()
 				}

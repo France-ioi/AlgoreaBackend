@@ -25,9 +25,9 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`') FROM `INFORMATION_SCHEMA`.`COLUMNS`  "+
 					"WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = ?) AND (COLUMN_NAME NOT IN (?))",
-			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.ID").AddRow("users.sName"))
+			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.id").AddRow("users.name"))
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
-				"SELECT users.ID, users.sName FROM `users`  WHERE (users.ID = ?)") + "$").
+				"SELECT users.id, users.name FROM `users`  WHERE (users.id = ?)") + "$").
 				WillReturnError(errors.New("some error"))
 		},
 		func(router *chi.Mux, baseService *service.Base) {

@@ -98,7 +98,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gh
 
 func (ctx *TestContext) TableShouldNotContainID(tableName string, ids string) error { // nolint
 	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false,
-		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "ID"}}}}})
+		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "id"}}}}})
 }
 
 func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
@@ -208,7 +208,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	dataCols := data.Rows[0].Cells
 	idColumnIndex := -1
 	for index, cell := range dataCols {
-		if cell.Value == "ID" {
+		if cell.Value == "id" {
 			idColumnIndex = index
 			break
 		}

@@ -16,8 +16,8 @@ import (
 
 type itemWithDefaultLanguageIDAndOptionalType struct {
 	Item              item   `json:"item,squash"`
-	DefaultLanguageID int64  `json:"default_language_id" sql:"column:idDefaultLanguage" validate:"default_language_id"`
-	Type              string `json:"type" validate:"oneof=Root Category Chapter Task Course" sql:"column:sType"`
+	DefaultLanguageID int64  `json:"default_language_id" validate:"default_language_id"`
+	Type              string `json:"type" validate:"oneof=Root Category Chapter Task Course"`
 }
 
 // UpdateItemRequest is the expected input for item updating
@@ -40,8 +40,8 @@ func (in *UpdateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
-		Where("idItemChild = ?", itemID).
-		Where("idItemAncestor IN (?)", ids).Count(&count).Error())
+		Where("item_child_id = ?", itemID).
+		Where("item_ancestor_id IN (?)", ids).Count(&count).Error())
 	return count == 0
 }
 
@@ -77,10 +77,10 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			return apiError.Error // rollback
 		}
 
-		service.MustNotBeError(store.Items().Where("ID = ?", itemID).UpdateColumn(formData.ConstructPartialMapForDB("Item")).Error())
+		service.MustNotBeError(store.Items().Where("id = ?", itemID).UpdateColumn(formData.ConstructPartialMapForDB("Item")).Error())
 		if formData.IsSet("children") {
 			err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-				service.MustNotBeError(lockedStore.ItemItems().Delete("idItemParent = ?", itemID).Error())
+				service.MustNotBeError(lockedStore.ItemItems().Delete("item_parent_id = ?", itemID).Error())
 
 				if !input.checkItemsRelationsCycles(lockedStore, itemID) {
 					apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
@@ -126,7 +126,7 @@ func constructDefaultLanguageIDValidator(formData *formdata.FormData, store *dat
 			return true
 		}
 		found, err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().
-			Joins("JOIN items_strings ON items_strings.idLanguage = languages.ID AND items_strings.idItem = ?", itemID).
+			Joins("JOIN items_strings ON items_strings.language_id = languages.id AND items_strings.item_id = ?", itemID).
 			HasRows()
 		service.MustNotBeError(err)
 		return found

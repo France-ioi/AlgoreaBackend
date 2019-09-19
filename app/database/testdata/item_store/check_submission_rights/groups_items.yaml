@@ -1,4 +1,4 @@
-- {idGroup: 20, idItem: 12, sCachedPartialAccessDate: 2019-02-22 08:44:55, idUserCreated: 1}
-- {idGroup: 20, idItem: 13, sCachedPartialAccessDate: 2019-02-22 08:44:55, idUserCreated: 1}
-- {idGroup: 20, idItem: 14, sCachedPartialAccessDate: 2019-02-22 08:44:55, idUserCreated: 1}
-- {idGroup: 20, idItem: 114, sCachedFullAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
+- {group_id: 20, item_id: 12, cached_partial_access_date: 2019-02-22 08:44:55, user_created_id: 1}
+- {group_id: 20, item_id: 13, cached_partial_access_date: 2019-02-22 08:44:55, user_created_id: 1}
+- {group_id: 20, item_id: 14, cached_partial_access_date: 2019-02-22 08:44:55, user_created_id: 1}
+- {group_id: 20, item_id: 114, cached_full_access_date: 2019-03-22 08:44:55, user_created_id: 1}

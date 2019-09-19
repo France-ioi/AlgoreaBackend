@@ -57,13 +57,13 @@ func TestUserItemStore_CreateIfMissing(t *testing.T) {
 	assert.NoError(t, err)
 
 	type userItem struct {
-		UserID                    int64  `gorm:"column:idUser"`
-		ItemID                    int64  `gorm:"column:idItem"`
-		AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+		UserID                    int64
+		ItemID                    int64
+		AncestorsComputationState string
 	}
 	var insertedUserItem userItem
 	assert.NoError(t,
-		userItemStore.Select("idUser, idItem, sAncestorsComputationState").
+		userItemStore.Select("user_id, item_id, ancestors_computation_state").
 			Scan(&insertedUserItem).Error())
 	assert.Equal(t, userItem{
 		UserID:                    12,
@@ -75,21 +75,21 @@ func TestUserItemStore_CreateIfMissing(t *testing.T) {
 func TestUserItemStore_PropagateAttempts(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		users_items:
-			- {ID: 111, idItem: 1, idUser: 500, sAncestorsComputationState: done}
-			- {ID: 112, idItem: 2, idUser: 500, sAncestorsComputationState: done}
-			- {ID: 113, idItem: 1, idUser: 501, sAncestorsComputationState: done}
+			- {id: 111, item_id: 1, user_id: 500, ancestors_computation_state: done}
+			- {id: 112, item_id: 2, user_id: 500, ancestors_computation_state: done}
+			- {id: 113, item_id: 1, user_id: 501, ancestors_computation_state: done}
 		groups_attempts:
-			- {ID: 222, idItem: 1, idGroup: 100, iScore: 10.0, bValidated: 1, sAncestorsComputationState: todo, iOrder: 0}
-			- {ID: 223, idItem: 1, idGroup: 101, iScore: 20.0, bValidated: 0, sAncestorsComputationState: todo, iOrder: 0}
-			- {ID: 224, idItem: 1, idGroup: 102, iScore: 30.0, bValidated: 0, sAncestorsComputationState: done, iOrder: 0}
-			- {ID: 225, idItem: 1, idGroup: 103, iScore: 40.0, bValidated: 0, sAncestorsComputationState: done, iOrder: 0}
+			- {id: 222, item_id: 1, group_id: 100, score: 10.0, validated: 1, ancestors_computation_state: todo, order: 0}
+			- {id: 223, item_id: 1, group_id: 101, score: 20.0, validated: 0, ancestors_computation_state: todo, order: 0}
+			- {id: 224, item_id: 1, group_id: 102, score: 30.0, validated: 0, ancestors_computation_state: done, order: 0}
+			- {id: 225, item_id: 1, group_id: 103, score: 40.0, validated: 0, ancestors_computation_state: done, order: 0}
 		groups_groups:
-			- {ID: 333, idGroupParent: 100, idGroupChild: 200, sType: direct}
-			- {ID: 334, idGroupParent: 101, idGroupChild: 200, sType: invitationAccepted}
-			- {ID: 335, idGroupParent: 102, idGroupChild: 200, sType: requestAccepted}
-			- {ID: 336, idGroupParent: 103, idGroupChild: 200, sType: joinedByCode}
+			- {id: 333, group_parent_id: 100, group_child_id: 200, type: direct}
+			- {id: 334, group_parent_id: 101, group_child_id: 200, type: invitationAccepted}
+			- {id: 335, group_parent_id: 102, group_child_id: 200, type: requestAccepted}
+			- {id: 336, group_parent_id: 103, group_child_id: 200, type: joinedByCode}
 		users:
-			- {ID: 500, idGroupSelf: 200}`)
+			- {id: 500, group_self_id: 200}`)
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -99,17 +99,17 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 	}))
 
 	type userItem struct {
-		UserID                    int64   `gorm:"column:idUser"`
-		ItemID                    int64   `gorm:"column:idItem"`
-		Score                     float32 `gorm:"column:iScore"`
-		Validated                 bool    `gorm:"column:bValidated"`
-		AncestorsComputationState string  `gorm:"column:sAncestorsComputationState"`
+		UserID                    int64
+		ItemID                    int64
+		Score                     float32
+		Validated                 bool
+		AncestorsComputationState string
 	}
 	var userItems []userItem
 	assert.NoError(t,
 		database.NewDataStore(db).UserItems().
-			Select("idUser, idItem, iScore, bValidated, sAncestorsComputationState").
-			Order("idUser, idItem").Scan(&userItems).Error())
+			Select("user_id, item_id, score, validated, ancestors_computation_state").
+			Order("user_id, item_id").Scan(&userItems).Error())
 	assert.Equal(t, []userItem{
 		{
 			UserID:                    500,
@@ -131,15 +131,15 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 	}, userItems)
 
 	type groupAttempt struct {
-		ItemID                    int64  `gorm:"column:idItem"`
-		GroupID                   int64  `gorm:"column:idGroup"`
-		AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+		ItemID                    int64
+		GroupID                   int64
+		AncestorsComputationState string
 	}
 	var groupAttempts []groupAttempt
 	assert.NoError(t,
 		database.NewDataStore(db).GroupAttempts().
-			Select("idItem, idGroup, sAncestorsComputationState").
-			Order("idItem, idGroup").Scan(&groupAttempts).Error())
+			Select("item_id, group_id, ancestors_computation_state").
+			Order("item_id, group_id").Scan(&groupAttempts).Error())
 	assert.Equal(t, []groupAttempt{
 		{ItemID: 1, GroupID: 100, AncestorsComputationState: "done"},
 		{ItemID: 1, GroupID: 101, AncestorsComputationState: "done"},

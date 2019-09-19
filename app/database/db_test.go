@@ -31,7 +31,7 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 	mock.ExpectCommit()
 
 	type resultStruct struct {
-		ID int64 `sql:"column:id"`
+		ID int64
 	}
 	var result []resultStruct
 	err := db.inTransaction(func(db *DB) error {
@@ -355,20 +355,20 @@ func TestDB_QueryConstructors(t *testing.T) {
 		},
 		{
 			name:              "Or",
-			funcToPrepare:     func(db *DB) *DB { return db.Where("ID = ?", 1) },
+			funcToPrepare:     func(db *DB) *DB { return db.Where("id = ?", 1) },
 			funcToCall:        func(db *DB) (*DB, []*DB) { return db.Or("otherID = ?", 2), nil },
-			expectedQuery:     "SELECT * FROM `myTable` WHERE (ID = ?) OR (otherID = ?)",
+			expectedQuery:     "SELECT * FROM `myTable` WHERE (id = ?) OR (otherID = ?)",
 			expectedQueryArgs: []driver.Value{1, 2},
 		},
 		{
 			name:          "Order",
-			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Order("ID"), nil },
-			expectedQuery: "SELECT * FROM `myTable` ORDER BY `ID`",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Order("id"), nil },
+			expectedQuery: "SELECT * FROM `myTable` ORDER BY `id`",
 		},
 		{
 			name:          "Having",
-			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Having("ID > 0"), nil },
-			expectedQuery: "SELECT * FROM `myTable` HAVING (ID > 0)",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Having("id > 0"), nil },
+			expectedQuery: "SELECT * FROM `myTable` HAVING (id > 0)",
 		},
 		{
 			name:          "Raw",
@@ -463,14 +463,14 @@ func TestDB_Take(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
 	db = db.Table("myTable")
 
 	type resultType struct{ ID int }
 	var result resultType
-	takeDB := db.Take(&result, "ID = 1")
+	takeDB := db.Take(&result, "id = 1")
 
 	assert.NotEqual(t, takeDB, db)
 	assert.NoError(t, takeDB.Error())
@@ -483,12 +483,12 @@ func TestDB_HasRows(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
 	db = db.Table("myTable")
 
-	found, err := db.Where("ID = 1").HasRows()
+	found, err := db.Where("id = 1").HasRows()
 
 	assert.NoError(t, err)
 	assert.True(t, found)
@@ -500,12 +500,12 @@ func TestDB_HasRows_NoRows(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"1"}))
 
 	db = db.Table("myTable")
 
-	found, err := db.Where("ID = 1").HasRows()
+	found, err := db.Where("id = 1").HasRows()
 
 	assert.NoError(t, err)
 	assert.False(t, found)
@@ -518,12 +518,12 @@ func TestDB_HasRows_Error(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (ID = 1) LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT 1 FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnError(expectedError)
 
 	db = db.Table("myTable")
 
-	found, err := db.Where("ID = 1").HasRows()
+	found, err := db.Where("id = 1").HasRows()
 
 	assert.Equal(t, expectedError, err)
 	assert.False(t, found)
@@ -535,13 +535,13 @@ func TestDB_Pluck(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable`")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
 	db = db.Table("myTable")
 
 	var result []int64
-	pluckDB := db.Pluck("ID", &result)
+	pluckDB := db.Pluck("id", &result)
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
@@ -558,7 +558,7 @@ func TestDB_Pluck_DoesNothingIfErrorIsSet(t *testing.T) {
 	expectedError := errors.New("some error")
 	db.db.Error = expectedError
 	var result []int64
-	pluckDB := db.Pluck("ID", &result)
+	pluckDB := db.Pluck("id", &result)
 	assert.Equal(t, expectedError, pluckDB.Error())
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -567,13 +567,13 @@ func TestDB_Pluck_WipesOldData(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable`")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
 	db = db.Table("myTable")
 
 	result := []int64{1, 2, 3}
-	db.Pluck("ID", &result)
+	db.Pluck("id", &result)
 
 	assert.Equal(t, []int64{1}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -587,7 +587,7 @@ func TestDB_Pluck_NonSlicePointer(t *testing.T) {
 
 	result := 1
 	assert.PanicsWithValue(t, "values should be a pointer to a slice, not a pointer to int", func() {
-		db.Pluck("ID", &result)
+		db.Pluck("id", &result)
 	})
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -601,7 +601,7 @@ func TestDB_Pluck_NonPointer(t *testing.T) {
 
 	result := 1
 	assert.PanicsWithValue(t, "values should be a pointer to a slice, not int", func() {
-		db.Pluck("ID", result)
+		db.Pluck("id", result)
 	})
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -611,13 +611,13 @@ func TestDB_PluckFirst(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
 	db = db.Table("myTable")
 
 	var result int64
-	pluckFirstDB := db.PluckFirst("ID", &result)
+	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.NoError(t, pluckFirstDB.Error())
@@ -630,13 +630,13 @@ func TestDB_PluckFirst_NotFound(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	db = db.Table("myTable")
 
 	var result int64
-	pluckFirstDB := db.PluckFirst("ID", &result)
+	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.Equal(t, gorm.ErrRecordNotFound, pluckFirstDB.Error())
@@ -649,13 +649,13 @@ func TestDB_PluckFirst_Error(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID FROM `myTable` LIMIT 1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnError(expectedError)
 
 	db = db.Table("myTable")
 
 	var result int64
-	pluckFirstDB := db.PluckFirst("ID", &result)
+	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.Equal(t, expectedError, pluckFirstDB.Error())
@@ -668,13 +668,13 @@ func TestDB_Scan(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
-		WillReturnRows(mock.NewRows([]string{"ID", "value"}).AddRow(int64(1), "value"))
+		WillReturnRows(mock.NewRows([]string{"id", "value"}).AddRow(int64(1), "value"))
 
 	db = db.Table("myTable")
 
 	type resultType struct {
-		ID    int64  `gorm:"column:ID"`
-		Value string `gorm:"column:value"`
+		ID    int64
+		Value string
 	}
 	var result []resultType
 	scanDB := db.Scan(&result)
@@ -691,13 +691,13 @@ func TestDB_Scan_WipesOldData(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
-		WillReturnRows(mock.NewRows([]string{"ID", "value"}).AddRow(int64(1), "value"))
+		WillReturnRows(mock.NewRows([]string{"id", "value"}).AddRow(int64(1), "value"))
 
 	db = db.Table("myTable")
 
 	type resultType struct {
-		ID    int64  `gorm:"column:ID"`
-		Value string `gorm:"column:value"`
+		ID    int64
+		Value string
 	}
 	result := []resultType{{ID: 2, Value: "another value"}, {ID: 3, Value: "third value"}}
 	scanDB := db.Scan(&result)
@@ -728,8 +728,8 @@ func TestDB_Scan_NonPointer(t *testing.T) {
 	db = db.Table("myTable")
 
 	type resultType struct {
-		ID    int64  `gorm:"column:ID"`
-		Value string `gorm:"column:value"`
+		ID    int64
+		Value string
 	}
 	var result []resultType
 	assert.Panics(t, func() {
@@ -758,12 +758,12 @@ func TestDB_Delete(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
-		regexp.QuoteMeta("WHERE (ID = 1)")).
+		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
 	db = db.Table("myTable")
 
-	deleteDB := db.Delete("ID = 1")
+	deleteDB := db.Delete("id = 1")
 
 	assert.NotEqual(t, deleteDB, db)
 	assert.NoError(t, deleteDB.Error())
@@ -775,7 +775,7 @@ func TestDB_Exec(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	query := "UPDATE users set ID = ? WHERE ID = ?"
+	query := "UPDATE users set id = ? WHERE id = ?"
 	mock.ExpectExec("^"+regexp.QuoteMeta(query)+"$").
 		WithArgs(1, 2).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
@@ -792,10 +792,10 @@ func TestDB_insertMap(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"ID": int64(1), "sField": "some value", "sNullField": nil}
+	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (id, sField, sNullField) VALUES (?, ?, NULL)")).
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 
@@ -807,12 +807,12 @@ func TestDB_ScanIntoSlices(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT ID, Field FROM `myTable`")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, Field FROM `myTable`")).
 		WillReturnRows(
-			mock.NewRows([]string{"ID", "Field"}).
+			mock.NewRows([]string{"id", "Field"}).
 				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
-	db = db.Table("myTable").Select("ID, Field")
+	db = db.Table("myTable").Select("id, Field")
 
 	ids := make([]int64, 0, 3)
 	fields := make([]*string, 0, 3)
@@ -847,7 +847,7 @@ func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(
-			mock.NewRows([]string{"ID", "Field"}).
+			mock.NewRows([]string{"id", "Field"}).
 				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
 	db = db.Table("myTable")
@@ -885,7 +885,7 @@ func TestDB_ScanIntoSlices_ErrorOnScan(t *testing.T) {
 
 	expectedError := errors.New("some error")
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Scan", func(*sql.Rows, ...interface{}) error { return expectedError })
 	defer monkey.UnpatchAll()
 	db = db.Table("myTable")
@@ -905,7 +905,7 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(
-			mock.NewRows([]string{"ID", "Field"}).
+			mock.NewRows([]string{"id", "Field"}).
 				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
 	db = db.Table("myTable")
@@ -916,9 +916,9 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	assert.NoError(t, dbScan.Error())
 
 	assert.Equal(t, []map[string]interface{}{
-		{"ID": int64(1), "Field": "value"},
-		{"ID": int64(2), "Field": "another value"},
-		{"ID": "3", "Field": nil},
+		{"id": int64(1), "Field": "value"},
+		{"id": int64(2), "Field": "another value"},
+		{"id": "3", "Field": nil},
 	}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -944,7 +944,7 @@ func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(
-			mock.NewRows([]string{"ID", "Field"}).
+			mock.NewRows([]string{"id", "Field"}).
 				AddRow(1, "value").AddRow(2, "another value").AddRow([]byte("3"), nil))
 
 	db = db.Table("myTable")
@@ -954,9 +954,9 @@ func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
 	}
 	db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, []map[string]interface{}{
-		{"ID": int64(1), "Field": "value"},
-		{"ID": int64(2), "Field": "another value"},
-		{"ID": "3", "Field": nil},
+		{"id": int64(1), "Field": "value"},
+		{"id": int64(2), "Field": "another value"},
+		{"id": "3", "Field": nil},
 	}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -985,7 +985,7 @@ func TestDB_ScanIntoSliceOfMaps_ErrorOnGettingColumns(t *testing.T) {
 
 	expectedError := errors.New("some error")
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Columns", func(*sql.Rows) ([]string, error) { return nil, expectedError })
 	defer monkey.UnpatchAll()
 	db = db.Table("myTable")
@@ -1005,7 +1005,7 @@ func TestDB_ScanIntoSliceOfMaps_ErrorOnScan(t *testing.T) {
 
 	expectedError := errors.New("some error")
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).AddRow(1))
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 	monkey.PatchInstanceMethod(reflect.TypeOf(&sql.Rows{}), "Scan", func(*sql.Rows, ...interface{}) error { return expectedError })
 	defer monkey.UnpatchAll()
 	db = db.Table("myTable")
@@ -1025,7 +1025,7 @@ func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
 
 	expectedError := errors.New("some error")
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"ID"}).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).WillReturnRows(mock.NewRows([]string{"id"}).
 		AddRow(1).AddRow(2))
 	db = db.Table("myTable")
 
@@ -1355,7 +1355,7 @@ func TestDB_WithWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (ID) VALUES (?)") + "$"
+var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
 
 func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	db, mock := NewDBMock()
@@ -1371,7 +1371,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	retryCount := 0
 	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1389,9 +1389,9 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T
 	retryCount := 0
 	err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
-	assert.Equal(t, errors.New("cannot generate a new ID"), err)
+	assert.Equal(t, errors.New("cannot generate a new id"), err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -1419,7 +1419,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 				WillReturnError(testCase.expectedError)
 
 			err := db.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-				return db.Exec("INSERT INTO users (ID) VALUES (?)", 1).Error()
+				return db.Exec("INSERT INTO users (id) VALUES (?)", 1).Error()
 			})
 			assert.Equal(t, testCase.expectedError, err)
 			assert.NoError(t, mock.ExpectationsWereMet())

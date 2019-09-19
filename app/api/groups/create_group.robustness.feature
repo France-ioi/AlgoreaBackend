@@ -2,42 +2,42 @@ Feature: Create a group (groupCreate) - robustness
 
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
-      | 1  | owner  | 0        | 21          | 22           |
-      | 2  | tmp12  | 1        | 31          | 32           |
-      | 3  | noself | 0        | null        | 42           |
-      | 4  | john   | 0        | 51          | 52           |
-      | 5  | weird  | 0        | 61          | null         |
+      | id | login  | temp_user | group_self_id | group_owned_id |
+      | 1  | owner  | 0         | 21            | 22             |
+      | 2  | tmp12  | 1         | 31            | 32             |
+      | 3  | noself | 0         | null          | 42             |
+      | 4  | john   | 0         | 51            | 52             |
+      | 5  | weird  | 0         | 61            | null           |
     And the database has the following table 'groups':
-      | ID | sName        | sType     | idTeamItem |
-      | 21 | owner        | UserSelf  | null       |
-      | 22 | owner-admin  | UserAdmin | null       |
-      | 31 | tmp12        | UserSelf  | null       |
-      | 32 | tmp12-admin  | UserAdmin | null       |
-      | 42 | noself-admin | UserAdmin | null       |
-      | 51 | john         | UserSelf  | null       |
-      | 52 | john-admin   | UserAdmin | null       |
-      | 61 | weird        | UserSelf  | null       |
+      | id | name         | type      | team_item_id |
+      | 21 | owner        | UserSelf  | null         |
+      | 22 | owner-admin  | UserAdmin | null         |
+      | 31 | tmp12        | UserSelf  | null         |
+      | 32 | tmp12-admin  | UserAdmin | null         |
+      | 42 | noself-admin | UserAdmin | null         |
+      | 51 | john         | UserSelf  | null         |
+      | 52 | john-admin   | UserAdmin | null         |
+      | 61 | weird        | UserSelf  | null         |
     And the database has the following table 'groups_groups':
-      | idGroupParent | idGroupChild | sType              |
+      | group_parent_id | group_child_id | type |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 21              | 21           | 1       |
-      | 22              | 22           | 1       |
-      | 31              | 31           | 1       |
-      | 32              | 32           | 1       |
-      | 42              | 42           | 1       |
-      | 51              | 51           | 1       |
-      | 52              | 52           | 1       |
-      | 61              | 61           | 1       |
+      | group_ancestor_id | group_child_id | is_self |
+      | 21                | 21             | 1       |
+      | 22                | 22             | 1       |
+      | 31                | 31             | 1       |
+      | 32                | 32             | 1       |
+      | 42                | 42             | 1       |
+      | 51                | 51             | 1       |
+      | 52                | 52             | 1       |
+      | 61                | 61             | 1       |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated |
-      | 21      | 10     | 2019-07-16 21:28:47   | null                     | null                    | 1             |
-      | 21      | 11     | null                  | 2019-07-16 21:28:47      | null                    | 1             |
-      | 21      | 12     | null                  | null                     | 2019-07-16 21:28:47     | 1             |
+      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id |
+      | 21       | 10      | 2019-07-16 21:28:47     | null                       | null                      | 1               |
+      | 21       | 11      | null                    | 2019-07-16 21:28:47        | null                      | 1               |
+      | 21       | 12      | null                    | null                       | 2019-07-16 21:28:47       | 1               |
 
   Scenario: No name
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"type": "Class"}
@@ -57,7 +57,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Empty name
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "", "type": "Class"}
@@ -77,7 +77,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: No type
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name"}
@@ -97,7 +97,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario Outline: Empty or wrong type
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "<type>"}
@@ -127,7 +127,7 @@ Feature: Create a group (groupCreate) - robustness
     | RootTemp  |
 
   Scenario: Zero item_id
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": "0"}
@@ -147,7 +147,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: item_id set for non-team group
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class", "item_id": "1"}
@@ -159,7 +159,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Temporary user
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -171,7 +171,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User with empty self group
-    Given I am the user with ID "3"
+    Given I am the user with id "3"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -183,7 +183,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User with empty owned group
-    Given I am the user with ID "5"
+    Given I am the user with id "5"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -195,7 +195,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: The item is not visible
-    Given I am the user with ID "4"
+    Given I am the user with id "4"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": 10}
@@ -205,4 +205,3 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-

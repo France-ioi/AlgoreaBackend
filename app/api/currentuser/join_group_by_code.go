@@ -17,21 +17,21 @@ import (
 // description:
 //   Lets a user to join a team group by a code.
 //   On success the service inserts a row into `groups_groups` (or updates an existing one)
-//   with `sType`=`requestAccepted` and `sStatusDate` = current UTC time.
+//   with `type`=`requestAccepted` and `status_date` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `bFreeAccess` = 1, `sCodeEnd` > NOW() (or NULL), and `sCode` = `code`,
+//   * If there is no team with `free_access` = 1, `code_end` > NOW() (or NULL), and `code` = `code`,
 //     the forbidden error is returned.
 //
-//   * If the team has `idTeamItem` set and the user is already on a team with the same `idTeamItem`,
+//   * If the team has `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //     the unprocessable entity error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
-//     and the authenticated user’s selfGroup’s ID as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`,
+//     and the authenticated user’s selfGroup’s id as a child with `type`=`invitationAccepted`/`requestAccepted`/`direct`,
 //     the unprocessable entity error is returned.
 //
 //
-//   _Warning:_ The service doesn't check if the user has access rights on `idTeamItem` of the team.
+//   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` of the team.
 // parameters:
 // - name: code
 //   in: query
@@ -67,19 +67,19 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
-			ID              int64  `gorm:"column:ID"`
-			TeamItemID      *int64 `gorm:"column:idTeamItem"`
-			CodeEndIsNull   bool   `gorm:"column:bCodeEndIsNull"`
-			CodeTimerIsNull bool   `gorm:"column:bCodeTimerIsNull"`
+			ID              int64
+			TeamItemID      *int64
+			CodeEndIsNull   bool
+			CodeTimerIsNull bool
 		}
 		errInTransaction := store.Groups().WithWriteLock().
-			Where("sType = 'Team'").Where("bFreeAccess").
-			Where("sCode LIKE ?", code).
-			Where("sCodeEnd IS NULL OR NOW() < sCodeEnd").
-			Select("ID, idTeamItem, sCodeEnd IS NULL AS bCodeEndIsNull, sCodeTimer IS NULL AS bCodeTimerIsNull").
+			Where("type = 'Team'").Where("free_access").
+			Where("code LIKE ?", code).
+			Where("code_end IS NULL OR NOW() < code_end").
+			Select("id, team_item_id, code_end IS NULL AS code_end_is_null, code_timer IS NULL AS code_timer_is_null").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
-			logging.GetLogEntry(r).Warnf("A user with ID = %d tried to join a group using a wrong/expired code", user.ID)
+			logging.GetLogEntry(r).Warnf("A user with id = %d tried to join a group using a wrong/expired code", user.ID)
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
 		}
@@ -89,7 +89,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			var found bool
 			found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *groupInfo.TeamItemID).
 				WithWriteLock().
-				Where("groups.ID != ?", groupInfo.ID).HasRows()
+				Where("groups.id != ?", groupInfo.ID).HasRows()
 			service.MustNotBeError(err)
 			if found {
 				apiError = service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))
@@ -99,7 +99,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 
 		if groupInfo.CodeEndIsNull && !groupInfo.CodeTimerIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
-				UpdateColumn("sCodeEnd", gorm.Expr("ADDTIME(NOW(), sCodeTimer)")).Error())
+				UpdateColumn("code_end", gorm.Expr("ADDTIME(NOW(), code_timer)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
 			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)

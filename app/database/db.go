@@ -382,7 +382,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 
 // Pluck is used to query a single column into a slice of values
 //     var ids []int64
-//     db.Table("users").Pluck("ID", &ids)
+//     db.Table("users").Pluck("id", &ids)
 // The 'values' parameter should be a pointer to a slice
 func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if conn.db.Error != nil {
@@ -403,7 +403,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 
 // PluckFirst is used to query a single column and take the first value
 //     var id int64
-//     db.Table("users").PluckFirst("ID", &id)
+//     db.Table("users").PluckFirst("id", &id)
 // The 'values' parameter should be a pointer to a value
 func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesReflValue := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(value).Elem()), 0, 1)
@@ -510,7 +510,7 @@ func (conn *DB) WithWriteLock() *DB {
 const keyTriesCount = 10
 
 func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
-	return conn.retryOnDuplicateKeyError("PRIMARY", "ID", f)
+	return conn.retryOnDuplicateKeyError("PRIMARY", "id", f)
 }
 
 func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db *DB) error) error {
@@ -519,7 +519,7 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 		err := f(conn)
 		if err != nil {
 			if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1062 && strings.Contains(e.Message, fmt.Sprintf("for key '%s'", keyName)) {
-				continue // retry with a new ID
+				continue // retry with a new id
 			}
 			return err
 		}

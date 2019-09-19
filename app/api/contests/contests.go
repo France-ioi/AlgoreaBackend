@@ -34,26 +34,26 @@ func (srv *Service) SetRoutes(router chi.Router) {
 // swagger:model contestInfo
 type contestInfo struct {
 	// required: true
-	GroupID int64 `gorm:"column:idGroup" json:"group_id,string"`
+	GroupID int64 `json:"group_id,string"`
 	// required: true
-	Name string `gorm:"column:sName" json:"name"`
+	Name string `json:"name"`
 	// required: true
-	Type string `gorm:"column:sType" json:"type"`
+	Type string `json:"type"`
 	// required: true
-	AdditionalTime int32 `gorm:"column:iAdditionalTime" json:"additional_time"`
+	AdditionalTime int32 `json:"additional_time"`
 	// required: true
-	TotalAdditionalTime int32 `gorm:"column:iTotalAdditionalTime" json:"total_additional_time"`
+	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
 func (srv *Service) getTeamModeForTimedContestManagedByUser(itemID int64, user *database.User) (bool, error) {
 	var isTeamOnly bool
-	err := srv.Store.Items().ByID(itemID).Where("items.sDuration IS NOT NULL").
-		Joins("JOIN groups_items ON groups_items.idItem = items.ID").
+	err := srv.Store.Items().ByID(itemID).Where("items.duration IS NOT NULL").
+		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.idGroupAncestor = groups_items.idGroup AND
-				groups_ancestors.idGroupChild = ?`, user.SelfGroupID).
-		Group("items.ID").
-		Having("MIN(groups_items.sCachedFullAccessDate) <= NOW() OR MIN(groups_items.sCachedAccessSolutionsDate) <= NOW()").
-		PluckFirst("items.bHasAttempts", &isTeamOnly).Error()
+			JOIN groups_ancestors ON groups_ancestors.group_ancestor_id = groups_items.group_id AND
+				groups_ancestors.group_child_id = ?`, user.SelfGroupID).
+		Group("items.id").
+		Having("MIN(groups_items.cached_full_access_date) <= NOW() OR MIN(groups_items.cached_access_solutions_date) <= NOW()").
+		PluckFirst("items.has_attempts", &isTeamOnly).Error()
 	return isTeamOnly, err
 }

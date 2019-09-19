@@ -11,13 +11,13 @@ import (
 // summary: Reject a group invitation
 // description:
 //   Let a user reject an invitation to join a group.
-//   On success the service sets `groups_groups.sType` to `invitationRefused` and `sStatusDate` to current UTC time.
+//   On success the service sets `groups_groups.type` to `invitationRefused` and `status_date` to current UTC time.
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
-//   and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationSent`/`invitationRefused`.
+//   and the authenticated user’s selfGroup’s `id` as a child with `type`=`invitationSent`/`invitationRefused`.
 //   Otherwise the unprocessable entity error is returned.
 //
-//   * If `groups_groups.sType` is `invitationRefused` already, the "unchanged" (200) response is returned.
+//   * If `groups_groups.type` is `invitationRefused` already, the "unchanged" (200) response is returned.
 // parameters:
 // - name: group_id
 //   in: path

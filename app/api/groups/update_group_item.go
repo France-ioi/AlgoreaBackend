@@ -15,14 +15,14 @@ import (
 // swagger:model
 type updateGroupItemInput struct {
 	// Nullable
-	PartialAccessDate *time.Time `json:"partial_access_date" sql:"column:sPartialAccessDate"`
+	PartialAccessDate *time.Time `json:"partial_access_date"`
 	// Nullable
-	FullAccessDate *time.Time `json:"full_access_date" sql:"column:sFullAccessDate"`
+	FullAccessDate *time.Time `json:"full_access_date"`
 	// Nullable
-	AccessSolutionsDate *time.Time `json:"access_solutions_date" sql:"column:sAccessSolutionsDate"`
+	AccessSolutionsDate *time.Time `json:"access_solutions_date"`
 	// Nullable
 	// maxLength: 200
-	AccessReason *string `json:"access_reason" sql:"column:sAccessReason" validate:"max=200"`
+	AccessReason *string `json:"access_reason" validate:"max=200"`
 }
 
 // swagger:operation PUT /groups/{group_id}/items/{item_id} groups items groupItemEdit
@@ -33,8 +33,8 @@ type updateGroupItemInput struct {
 //
 //   * The user giving the access must be an owner of one of the ancestors of the group.
 //
-//   * The user giving the access must be an owner of any of the item’s ancestors or the item itself (`bOwnerAccess`)
-//   or be a manager of the item (`groups_items.bCachedManagerAccess`).
+//   * The user giving the access must be an owner of any of the item’s ancestors or the item itself (`owner_access`)
+//   or be a manager of the item (`groups_items.cached_manager_access`).
 //
 //   * The group must already have access to one of the parents of the item or the item itself.
 // parameters:
@@ -88,9 +88,9 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		// the item or one of its ancestors should be owned/managed by the authorized user
 		found, err = s.GroupItems().
 			MatchingUserAncestors(user).
-			Select("groups_items.idItem").
-			Where("groups_items.bCachedManagerAccess OR groups_items.bOwnerAccess").
-			Where("groups_items.idItem = ? OR groups_items.idItem IN (SELECT idItemAncestor FROM items_ancestors WHERE idItemChild = ?)",
+			Select("groups_items.item_id").
+			Where("groups_items.cached_manager_access OR groups_items.owner_access").
+			Where("groups_items.item_id = ? OR groups_items.item_id IN (SELECT item_ancestor_id FROM items_ancestors WHERE item_child_id = ?)",
 				itemID, itemID).HasRows()
 
 		service.MustNotBeError(err)
@@ -100,7 +100,7 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		}
 
 		// the authorized user should own the group
-		found, err = s.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
+		found, err = s.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiErr = service.InsufficientAccessRightsError
@@ -111,13 +111,13 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		itemsVisibleToGroupSubQuery := s.GroupItems().AccessRightsForItemsVisibleToGroup(&groupID).SubQuery()
 
 		found, err = s.ItemItems().
-			Joins("JOIN ? AS visible ON visible.idItem = items_items.idItemParent", itemsVisibleToGroupSubQuery).
-			Where("items_items.idItemChild = ?", itemID).
+			Joins("JOIN ? AS visible ON visible.item_id = items_items.item_parent_id", itemsVisibleToGroupSubQuery).
+			Where("items_items.item_child_id = ?", itemID).
 			HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			found, err = s.Items().ByID(itemID).
-				Joins("JOIN ? AS visible ON visible.idItem = items.ID", itemsVisibleToGroupSubQuery).HasRows()
+				Joins("JOIN ? AS visible ON visible.item_id = items.id", itemsVisibleToGroupSubQuery).HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiErr = service.InsufficientAccessRightsError
@@ -144,18 +144,18 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 func saveGroupItemDataIntoDB(groupID, itemID, creatorUserID int64, data *formdata.FormData, s *database.DataStore) {
 	dbMap := data.ConstructMapForDB()
 	groupItemScope := s.GroupItems().
-		Where("idGroup = ?", groupID).
-		Where("idItem = ?", itemID)
+		Where("group_id = ?", groupID).
+		Where("item_id = ?", itemID)
 	found, err := groupItemScope.WithWriteLock().HasRows()
 	service.MustNotBeError(err)
 	if found {
 		service.MustNotBeError(groupItemScope.UpdateColumn(dbMap).Error())
 	} else {
-		dbMap["idGroup"] = groupID
-		dbMap["idItem"] = itemID
+		dbMap["group_id"] = groupID
+		dbMap["item_id"] = itemID
 		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-			dbMap["ID"] = retryStore.NewID()
-			dbMap["idUserCreated"] = creatorUserID
+			dbMap["id"] = retryStore.NewID()
+			dbMap["user_created_id"] = creatorUserID
 			return s.GroupItems().InsertMap(dbMap)
 		}))
 	}

@@ -13,7 +13,7 @@ import (
 // ---
 // summary: Get recent activity of a group
 // description: >
-//   Returns rows from `users_answers` with `sType` = "Submission" and additional info on users and items.
+//   Returns rows from `users_answers` with `type` = "Submission" and additional info on users and items.
 //
 //
 //   If possible, items titles are shown in the authenticated user's default language.
@@ -24,7 +24,7 @@ import (
 //   descendants of `item_id` and visible to the authenticated user (at least grayed access).
 //
 //
-//   If the `validated` parameter is true, only validated `users_answers` (with `bValidated`=1) are returned.
+//   If the `validated` parameter is true, only validated `users_answers` (with `validated`=1) are returned.
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -49,12 +49,12 @@ import (
 //     type: string
 //     enum: [submission_date,-submission_date,id,-id]
 // - name: from.submission_date
-//   description: Start the page from the row next to the row with `users_answers.sSubmissionDate` = `from.submission_date`
+//   description: Start the page from the row next to the row with `users_answers.submission_date` = `from.submission_date`
 //                (`from.id` is required when `from.submission_date` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the row next to the row with `users_answers.ID`=`from.id`
+//   description: Start the page from the row next to the row with `users_answers.id`=`from.id`
 //                (`from.submission_date` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -141,16 +141,16 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild")
+	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("item_child_id")
 	query := srv.Store.UserAnswers().WithUsers().WithItems().
 		Select(
-			`users_answers.ID as ID, users_answers.sSubmissionDate, users_answers.bValidated, users_answers.iScore,
-       items.ID AS Item__ID, items.sType AS Item__sType,
-		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
-			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
+			`users_answers.id as id, users_answers.submission_date, users_answers.validated, users_answers.score,
+       items.id AS item__id, items.type AS item__type,
+		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
+			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
 		JoinsUserAndDefaultItemStrings(user).
-		Where("users_answers.idItem IN ?", itemDescendants.SubQuery()).
-		Where("users_answers.sType='Submission'").
+		Where("users_answers.item_id IN ?", itemDescendants.SubQuery()).
+		Where("users_answers.type='Submission'").
 		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)
 
@@ -159,8 +159,8 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
-			"id":              {ColumnName: "users_answers.ID", FieldType: "int64"}},
+			"submission_date": {ColumnName: "users_answers.submission_date", FieldType: "time"},
+			"id":              {ColumnName: "users_answers.id", FieldType: "int64"}},
 		"-submission_date")
 	if apiError != service.NoError {
 		return apiError
@@ -177,7 +177,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		query = query.Where("users_answers.bValidated = ?", validated)
+		query = query.Where("users_answers.validated = ?", validated)
 	}
 	return query
 }

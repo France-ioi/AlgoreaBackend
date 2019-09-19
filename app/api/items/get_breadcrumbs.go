@@ -21,7 +21,7 @@ import (
 //
 //
 //   Restrictions:
-//     * the list of item IDs should be a valid path from a root item (`sType`=’Root’), otherwise the 'bad request'
+//     * the list of item IDs should be a valid path from a root item (`type`=’Root’), otherwise the 'bad request'
 //       error is returned)
 //     * the user should have partial or full access for each listed item except the last one through that path,
 //       and at least gray access for the last item, otherwise the 'forbidden' error is returned.
@@ -84,12 +84,12 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	}
 	var result []map[string]interface{}
 	service.MustNotBeError(srv.Store.Items().Select(`
-			items.ID AS idItem,
-			COALESCE(user_strings.sTitle, default_strings.sTitle) AS sTitle,
-			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguage`).
+			items.id AS item_id,
+			COALESCE(user_strings.title, default_strings.title) AS title,
+			COALESCE(user_strings.language_id, default_strings.language_id) AS language_id`).
 		JoinsUserAndDefaultItemStrings(user).
-		Where("items.ID IN (?)", ids).
-		Order(gorm.Expr("FIELD(items.ID"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
+		Where("items.id IN (?)", ids).
+		Order(gorm.Expr("FIELD(items.id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		ScanIntoSliceOfMaps(&result).Error())
 
 	render.Respond(w, r, service.ConvertSliceOfMapsFromDBToJSON(result))

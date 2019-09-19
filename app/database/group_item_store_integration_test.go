@@ -14,33 +14,33 @@ import (
 func TestGroupItemStore_RemovePartialAccess(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups_items:
-			- {idGroup: 10, idItem: 1234, bManagerAccess: 0, sPartialAccessDate: 2019-03-22 08:44:55,
-				sCachedPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}
-			- {idGroup: 11, idItem: 1235, bManagerAccess: 1, sPartialAccessDate: 2019-03-22 08:44:55,
-				sCachedPartialAccessDate: 2018-03-22 08:44:55, bCachedPartialAccess: 1, idUserCreated: 1}`)
+			- {group_id: 10, item_id: 1234, manager_access: 0, partial_access_date: 2019-03-22 08:44:55,
+				cached_partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}
+			- {group_id: 11, item_id: 1235, manager_access: 1, partial_access_date: 2019-03-22 08:44:55,
+				cached_partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, user_created_id: 1}`)
 	defer func() { _ = db.Close() }()
 
 	groupItemStore := database.NewDataStore(db).GroupItems()
 	groupItemStore.RemovePartialAccess(10, 1234)
 
 	expected := []map[string]interface{}{
-		{"idGroup": "10", "idItem": "1234", "bManagerAccess": "0",
-			"sPartialAccessDate": nil, "sCachedPartialAccessDate": nil, "bCachedPartialAccess": "0"},
-		{"idGroup": "11", "idItem": "1235", "bManagerAccess": "1",
-			"sPartialAccessDate":       "2019-03-22 08:44:55",
-			"sCachedPartialAccessDate": "2018-03-22 08:44:55",
-			"bCachedPartialAccess":     "1"},
+		{"group_id": "10", "item_id": "1234", "manager_access": "0",
+			"partial_access_date": nil, "cached_partial_access_date": nil, "cached_partial_access": "0"},
+		{"group_id": "11", "item_id": "1235", "manager_access": "1",
+			"partial_access_date":        "2019-03-22 08:44:55",
+			"cached_partial_access_date": "2018-03-22 08:44:55",
+			"cached_partial_access":      "1"},
 	}
 
 	var got []map[string]interface{}
 	assert.NoError(t, groupItemStore.
-		Select("idGroup, idItem, bManagerAccess, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess").
-		Order("idGroup, idItem").ScanIntoSliceOfMaps(&got).Error())
+		Select("group_id, item_id, manager_access, partial_access_date, cached_partial_access_date, cached_partial_access").
+		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
 	assert.Equal(t, expected, got)
 
 	groupItemStore.RemovePartialAccess(11, 1235)
 	assert.NoError(t, groupItemStore.
-		Select("idGroup, idItem, bManagerAccess, sPartialAccessDate, sCachedPartialAccessDate, bCachedPartialAccess").
-		Order("idGroup, idItem").ScanIntoSliceOfMaps(&got).Error())
+		Select("group_id, item_id, manager_access, partial_access_date, cached_partial_access_date, cached_partial_access").
+		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
 	assert.Equal(t, expected, got)
 }

@@ -2,35 +2,35 @@ Feature: Update item strings - robustness
 
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
-      | 1  | jdoe   | 0        | 11          | 12           |
+      | id | login | temp_user | group_self_id | group_owned_id |
+      | 1  | jdoe  | 0         | 11            | 12             |
     And the database has the following table 'groups':
-      | ID | sName      | sType     |
+      | id | name       | type      |
       | 11 | jdoe       | UserSelf  |
       | 12 | jdoe-admin | UserAdmin |
     And the database has the following table 'items':
-      | ID | idDefaultLanguage |
-      | 50 | 2                 |
-      | 60 | 3                 |
+      | id | default_language_id |
+      | 50 | 2                   |
+      | 60 | 3                   |
     And the database has the following table 'items_strings':
-      | idItem | idLanguage | sTitle | sImageUrl                  | sSubtitle       | sDescription       |
-      | 50     | 2          | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
-      | 50     | 3          | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
+      | item_id | language_id | title  | image_url                  | subtitle        | description        |
+      | 50      | 2           | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
+      | 50      | 3           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bOwnerAccess | idUserCreated |
-      | 40 | 11      | 50     | false          | true         | 1             |
-      | 41 | 11      | 21     | true           | false        | 1             |
+      | id | group_id | item_id | manager_access | owner_access | user_created_id |
+      | 40 | 11       | 50      | false          | true         | 1               |
+      | 41 | 11       | 21      | true           | false        | 1               |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 71 | 11              | 11           | 1       |
-      | 72 | 12              | 12           | 1       |
+      | id | group_ancestor_id | group_child_id | is_self |
+      | 71 | 11                | 11             | 1       |
+      | 72 | 12                | 12             | 1       |
     And the database has the following table 'languages':
-      | ID |
+      | id |
       | 2  |
       | 3  |
 
   Scenario: User not found
-    Given I am the user with ID "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -42,7 +42,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Invalid item_id
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/abc/strings/default" with the following body:
       """
       {
@@ -54,7 +54,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The title is too long
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -76,7 +76,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Image URL is too long
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -98,7 +98,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The subtitle is too long
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -120,7 +120,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Wrong language
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50/strings/404" with the following body:
       """
       {
@@ -131,7 +131,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Invalid language_id
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50/strings/abc" with the following body:
       """
       {
@@ -142,7 +142,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The user doesn't have rights to manage the item
-    And I am the user with ID "1"
+    And I am the user with id "1"
     When I send a PUT request to "/items/60/strings/default" with the following body:
       """
       {

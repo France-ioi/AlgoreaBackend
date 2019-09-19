@@ -7,7 +7,7 @@ Feature: Export the short version of the current user's data - robustness
     And the response header "Content-Disposition" should be ""
 
   Scenario: No such user
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/dump"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"

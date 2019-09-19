@@ -9,7 +9,7 @@ type GroupItemStore struct {
 func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
 	db := s.GroupAncestors().UserAncestors(user)
 	userAncestors := db.SubQuery()
-	return s.Joins("JOIN ? AS ancestors ON groups_items.idGroup = ancestors.idGroupAncestor", userAncestors)
+	return s.Joins("JOIN ? AS ancestors ON groups_items.group_id = ancestors.group_ancestor_id", userAncestors)
 }
 
 // After is a "listener" that calls GroupItemStore::computeAllAccess() & GroupItemStore::grantCachedAccessWhereNeeded()
@@ -23,35 +23,35 @@ func (s *GroupItemStore) After() (err error) {
 }
 
 func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {
-	mustNotBeError(s.Where("idItem = ? AND idGroup = ? AND bManagerAccess = 0", itemID, groupID).
+	mustNotBeError(s.Where("item_id = ? AND group_id = ? AND manager_access = 0", itemID, groupID).
 		UpdateColumn(map[string]interface{}{
-			"sPartialAccessDate":       nil,
-			"sCachedPartialAccessDate": nil,
-			"bCachedPartialAccess":     0,
+			"partial_access_date":        nil,
+			"cached_partial_access_date": nil,
+			"cached_partial_access":      0,
 		}).Error())
 }
 
 // AccessRightsForItemsVisibleToGroup returns a composable query for getting access rights
-// (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
+// (as full_access, partial_access, grayed_access, access_solutions) and item ids (as item_id)
 // for all the items that are visible to the given group.
 // Note that the `groupID` can be nil.
 func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB {
 	return s.
 		Select(`
-			idItem,
-			MIN(sCachedFullAccessDate) <= NOW() AS fullAccess,
-			MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess,
-			MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess,
-			MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions`).
+			item_id,
+			MIN(cached_full_access_date) <= NOW() AS full_access,
+			MIN(cached_partial_access_date) <= NOW() AS partial_access,
+			MIN(cached_grayed_access_date) <= NOW() AS grayed_access,
+			MIN(cached_access_solutions_date) <= NOW() AS access_solutions`).
 		Joins(`
-			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors
-			ON ancestors.idGroupAncestor = groups_items.idGroup`, groupID).
-		Group("groups_items.idItem").
-		Having("fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0")
+			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.group_child_id = ?)) AS ancestors
+			ON ancestors.group_ancestor_id = groups_items.group_id`, groupID).
+		Group("groups_items.item_id").
+		Having("full_access > 0 OR partial_access > 0 OR grayed_access > 0")
 }
 
 // AccessRightsForItemsVisibleToUser returns a composable query for getting access rights
-// (as fullAccess, partialAccess, grayedAccess, accessSolutions) and item IDs (as idItem)
+// (as full_access, partial_access, grayed_access, access_solutions) and item ids (as item_id)
 // for all the items that are visible to the given user.
 func (s *GroupItemStore) AccessRightsForItemsVisibleToUser(user *User) *DB {
 	return s.AccessRightsForItemsVisibleToGroup(user.SelfGroupID)

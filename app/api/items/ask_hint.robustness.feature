@@ -1,45 +1,45 @@
 Feature: Ask for a hint - robustness
   Background:
     Given the database has the following table 'users':
-      | ID  | sLogin | idGroupSelf |
-      | 10  | john   | 101         |
+      | id | login | group_self_id |
+      | 10 | john  | 101           |
     And the database has the following table 'groups':
-      | ID  |
+      | id  |
       | 101 |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 101             | 101          | 1       |
+      | group_ancestor_id | group_child_id | is_self |
+      | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate |
-      | 15 | 22            | 13           | direct             | null        |
+      | id | group_parent_id | group_child_id | type   | status_date |
+      | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
-      | ID | bUsesTokens | sRegexp                                           | sPublicKey                |
+      | id | uses_tokens | `regexp`                                          | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
     And the database has the following table 'items':
-      | ID | idPlatform | sUrl                                                                    | bReadOnly |
-      | 50 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |
-      | 10 | 10         | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 0         |
+      | id | platform_id | url                                                                     | read_only |
+      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |
+      | 10 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 0         |
     And the database has the following table 'items_items':
-      | idItemParent | idItemChild | iChildOrder |
-      | 10           | 50          | 0           |
+      | item_parent_id | item_child_id | child_order |
+      | 10             | 50            | 0           |
     And the database has the following table 'items_ancestors':
-      | idItemAncestor | idItemChild |
-      | 10             | 50          |
+      | item_ancestor_id | item_child_id |
+      | 10               | 50            |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
-      | 101     | 10     | 2017-05-29 06:38:38      | 10            |
-      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | group_id | item_id | cached_partial_access_date | user_created_id |
+      | 101      | 10      | 2017-05-29 06:38:38        | 10              |
+      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
     And the database has the following table 'users_items':
-      | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | idAttemptActive |
-      | 10     | 10     | null                            | 0             | 0                     | null            |
-      | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     | 100             |
+      | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts | attempt_active_id |
+      | 10      | 10      | null                            | 0            | 0                    | null              |
+      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 100               |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested        | iOrder |
-      | 100 | 101     | 50     | [0,  1, "hint" , null] | 0      |
+      | id  | group_id | item_id | hints_requested        | `order` |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     When I send a POST request to "/items/ask-hint" with the following body:
       """
       []
@@ -50,7 +50,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with ID "404"
+    Given I am the user with id "404"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -83,8 +83,8 @@ Feature: Ask for a hint - robustness
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
-  Scenario: idUser in task_token doesn't match the user's ID
-    Given I am the user with ID "10"
+  Scenario: idUser in task_token doesn't match the user's id
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -118,7 +118,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: itemUrls of task_token and hint_requested don't match
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -151,8 +151,8 @@ Feature: Ask for a hint - robustness
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
-  Scenario: idUser in hint_requested doesn't match the user's ID
-    Given I am the user with ID "10"
+  Scenario: idUser in hint_requested doesn't match the user's id
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -186,7 +186,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt in hint_requested & task_token don't match
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -220,7 +220,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idItemLocal in hint_requested & task_token don't match
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -254,7 +254,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -288,7 +288,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt not found
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -322,7 +322,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: missing askedHint
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

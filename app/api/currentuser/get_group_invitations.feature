@@ -1,11 +1,11 @@
 Feature: Get group invitations for the current user
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
-      | 1  | owner  | 0        | 21          | 22           | Jean-Michel | Blanquer  | 3      |
-      | 2  | user   | 0        | 11          | 12           | John        | Doe       | 1      |
+      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 3     |
+      | 2  | user  | 0         | 11            | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups':
-      | ID | sType     | sName              | sDescription           |
+      | id | type      | name               | description            |
       | 1  | Class     | Our Class          | Our class group        |
       | 2  | Team      | Our Team           | Our team group         |
       | 3  | Club      | Our Club           | Our club group         |
@@ -21,21 +21,21 @@ Feature: Get group invitations for the current user
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate               | idUserInviting |
-      | 2  | 1             | 21           | invitationSent     | {{relativeTime("-169h")}} | null           |
-      | 3  | 2             | 21           | invitationRefused  | {{relativeTime("-168h")}} | 1              |
-      | 4  | 3             | 21           | requestSent        | {{relativeTime("-167h")}} | 1              |
-      | 5  | 4             | 21           | requestRefused     | {{relativeTime("-166h")}} | 2              |
-      | 6  | 5             | 21           | invitationAccepted | {{relativeTime("-165h")}} | 2              |
-      | 7  | 6             | 21           | requestAccepted    | {{relativeTime("-164h")}} | 2              |
-      | 8  | 7             | 21           | removed            | {{relativeTime("-163h")}} | 1              |
-      | 9  | 8             | 21           | left               | {{relativeTime("-162h")}} | 1              |
-      | 10 | 9             | 21           | direct             | {{relativeTime("-161h")}} | 2              |
-      | 11 | 1             | 22           | invitationSent     | {{relativeTime("-170h")}} | 2              |
-      | 12 | 10            | 21           | joinedByCode       | {{relativeTime("-180h")}} | null           |
+      | id | group_parent_id | group_child_id | type               | status_date               | user_inviting_id |
+      | 2  | 1               | 21             | invitationSent     | {{relativeTime("-169h")}} | null             |
+      | 3  | 2               | 21             | invitationRefused  | {{relativeTime("-168h")}} | 1                |
+      | 4  | 3               | 21             | requestSent        | {{relativeTime("-167h")}} | 1                |
+      | 5  | 4               | 21             | requestRefused     | {{relativeTime("-166h")}} | 2                |
+      | 6  | 5               | 21             | invitationAccepted | {{relativeTime("-165h")}} | 2                |
+      | 7  | 6               | 21             | requestAccepted    | {{relativeTime("-164h")}} | 2                |
+      | 8  | 7               | 21             | removed            | {{relativeTime("-163h")}} | 1                |
+      | 9  | 8               | 21             | left               | {{relativeTime("-162h")}} | 1                |
+      | 10 | 9               | 21             | direct             | {{relativeTime("-161h")}} | 2                |
+      | 11 | 1               | 22             | invitationSent     | {{relativeTime("-170h")}} | 2                |
+      | 12 | 10              | 21             | joinedByCode       | {{relativeTime("-180h")}} | null             |
 
   Scenario: Show all invitations
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/group-invitations"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -55,7 +55,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[4][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
         "type": "requestRefused"
       },
       {
@@ -72,7 +72,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
         "type": "requestSent"
       },
       {
@@ -84,14 +84,14 @@ Feature: Get group invitations for the current user
           "description": "Our class group",
           "type": "Class"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[1][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[1][status_date]"))}}",
         "type": "invitationSent"
       }
     ]
     """
 
   Scenario: Request the first row
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/group-invitations?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -111,14 +111,14 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[4][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
         "type": "requestRefused"
       }
     ]
     """
 
   Scenario: Filter out old invitations
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/group-invitations?within_weeks=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -138,7 +138,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[4][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
         "type": "requestRefused"
       },
       {
@@ -155,7 +155,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][sStatusDate]"))}}",
+        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
         "type": "requestSent"
       }
     ]

@@ -1,13 +1,13 @@
-users: [{ID: 7, idGroupSelf: 17, sLogin: 7}]
-groups: [{ID: 17}, {ID: 26}]
-groups_groups: [{idGroupParent: 26, idGroupChild: 17, sType: requestAccepted}]
+users: [{id: 7, group_self_id: 17, login: 7}]
+groups: [{id: 17}, {id: 26}]
+groups_groups: [{group_parent_id: 26, group_child_id: 17, type: requestAccepted}]
 groups_ancestors:
-  - {idGroupAncestor: 17, idGroupChild: 17}
-  - {idGroupAncestor: 26, idGroupChild: 17}
-  - {idGroupAncestor: 26, idGroupChild: 26}
+  - {group_ancestor_id: 17, group_child_id: 17}
+  - {group_ancestor_id: 26, group_child_id: 17}
+  - {group_ancestor_id: 26, group_child_id: 26}
 groups_items:
-  - {idGroup: 26, idItem: 114, sPartialAccessDate: 2019-03-22 08:44:55, sCachedPartialAccessDate: 2019-03-22 08:44:55,
-     sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}
-  - {idGroup: 26, idItem: 115, sPartialAccessDate: 2019-03-22 08:44:55, sCachedPartialAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
-users_items: [{idUser: 7, idItem: 114}]
+  - {group_id: 26, item_id: 114, partial_access_date: 2019-03-22 08:44:55, cached_partial_access_date: 2019-03-22 08:44:55,
+     additional_time: 0000-00-00 01:00:00, user_created_id: 1}
+  - {group_id: 26, item_id: 115, partial_access_date: 2019-03-22 08:44:55, cached_partial_access_date: 2019-03-22 08:44:55, user_created_id: 1}
+users_items: [{user_id: 7, item_id: 114}]
 

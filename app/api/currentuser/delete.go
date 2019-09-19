@@ -22,23 +22,23 @@ import (
 //
 //                1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
 //                    `filters`, `history_filters`, `sessions`, `refresh_tokens`]
-//                   having `idUser` = `users.ID`;
+//                   having `user_id` = `users.id`;
 //                2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
 //                    `groups_login_prefixes`, `history_groups_login_prefixes`]
-//                   having `idGroup` = `users.idGroupSelf` or `idGroup` = `users.idGroupOwned`;
-//                3. `groups_items_propagate` having the same `ID`s as the rows removed from `groups_items`;
+//                   having `group_id` = `users.group_self_id` or `group_id` = `users.group_owned_id`;
+//                3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
 //
-//                4. [`groups_groups`, `history_groups_groups`] having `idGroupParent` or `idGroupChild` equal
-//                   to one of `users.idGroupSelf`/`users.idGroupOwned`;
-//                5. [`groups_ancestors`, `history_groups_ancestors`] having `idGroupAncestor` or `idGroupChild` equal
-//                   to one of `users.idGroupSelf`/`users.idGroupOwned`;
-//                6. [`groups_propagate`, `groups`, `history_groups`] having `ID` equal to one of
-//                   `users.idGroupSelf`/`users.idGroupOwned`;
-//                7. `users`, `history_users` having `ID` = `users.ID`.
+//                4. [`groups_groups`, `history_groups_groups`] having `group_parent_id` or `group_child_id` equal
+//                   to one of `users.group_self_id`/`users.group_owned_id`;
+//                5. [`groups_ancestors`, `history_groups_ancestors`] having `group_ancestor_id` or `group_child_id` equal
+//                   to one of `users.group_self_id`/`users.group_owned_id`;
+//                6. [`groups_propagate`, `groups`, `history_groups`] having `id` equal to one of
+//                   `users.group_self_id`/`users.group_owned_id`;
+//                7. `users`, `history_users` having `id` = `users.id`.
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with
-//                `now() < lockUserDeletionDate`.
+//                `now() < lock_user_deletion_date`.
 // responses:
 //   "200":
 //     "$ref": "#/responses/deletedResponse"
@@ -52,20 +52,20 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	user := srv.GetUser(r)
 
 	doNotDelete, err := srv.Store.GroupGroups().WhereUserIsMember(user).
-		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
-		Where("NOW() < `groups`.lockUserDeletionDate").HasRows()
+		Joins("JOIN `groups` ON `groups`.id = groups_groups.group_parent_id").
+		Where("NOW() < `groups`.lock_user_deletion_date").HasRows()
 	service.MustNotBeError(err)
 
 	if doNotDelete {
 		logging.GetLogEntry(r).
-			Infof("A user with ID = %d tried to delete himself, but he is a member of a group with lockUserDeletionDate >= NOW()",
+			Infof("A user with id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_date >= NOW()",
 				user.ID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
 	}
 
 	var loginID int64
 	if !user.IsTempUser {
-		service.MustNotBeError(srv.Store.Users().ByID(user.ID).PluckFirst("loginID", &loginID).Error())
+		service.MustNotBeError(srv.Store.Users().ByID(user.ID).PluckFirst("login_id", &loginID).Error())
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
 	if !user.IsTempUser {

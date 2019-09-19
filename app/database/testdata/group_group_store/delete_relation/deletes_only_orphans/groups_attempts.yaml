@@ -1,6 +1,6 @@
-- {idGroup: 1, idItem: 1, iOrder: 0}
-- {idGroup: 2, idItem: 1, iOrder: 0}
-- {idGroup: 3, idItem: 1, iOrder: 0}
-- {idGroup: 4, idItem: 1, iOrder: 0}
-- {idGroup: 5, idItem: 1, iOrder: 0}
-- {idGroup: 10, idItem: 1, iOrder: 0}
+- {group_id: 1, item_id: 1, order: 0}
+- {group_id: 2, item_id: 1, order: 0}
+- {group_id: 3, item_id: 1, order: 0}
+- {group_id: 4, item_id: 1, order: 0}
+- {group_id: 5, item_id: 1, order: 0}
+- {group_id: 10, item_id: 1, order: 0}

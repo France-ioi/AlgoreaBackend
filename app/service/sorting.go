@@ -11,9 +11,9 @@ import (
 
 // FieldSortingParams represents sorting parameters for one field
 type FieldSortingParams struct {
-	// ColumnName is a DB column name (may contain a table name as a prefix, e.g. "groups.ID")
+	// ColumnName is a DB column name (may contain a table name as a prefix, e.g. "groups.id")
 	ColumnName string
-	// ColumnNameForOrdering is a DB column name (may contain a table name as a prefix, e.g. "groups.ID")
+	// ColumnNameForOrdering is a DB column name (may contain a table name as a prefix, e.g. "groups.id")
 	// used (if set) in ORDER BY clause instead of 'ColumnName'
 	ColumnNameForOrdering string
 	// FieldType is one of "int64", "bool", "string", "time"
@@ -68,7 +68,7 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 // prepareSortingRulesAndAcceptedFields builds sorting rules and a map of accepted fields.
 // It adds the 'id' field into a copy of the given map of accepted fields if this field is not listed.
 // If urlQuery["sort"] is not present, the default sorting rules are used.
-// If sorting rules are empty, the "id" (ORDER BY ID ASC) rule is used.
+// If sorting rules are empty, the "id" (ORDER BY id ASC) rule is used.
 func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string) (sortingRules string, newAcceptedFields map[string]*FieldSortingParams) {
 	newAcceptedFields = make(map[string]*FieldSortingParams, len(acceptedFields)+1)
@@ -76,7 +76,7 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[st
 		newAcceptedFields[field] = params
 	}
 	if _, ok := newAcceptedFields[idFieldName]; !ok {
-		newAcceptedFields[idFieldName] = &FieldSortingParams{ColumnName: "ID", FieldType: "int64"}
+		newAcceptedFields[idFieldName] = &FieldSortingParams{ColumnName: "id", FieldType: "int64"}
 	}
 	urlQuery := r.URL.Query()
 	if len(urlQuery["sort"]) > 0 {

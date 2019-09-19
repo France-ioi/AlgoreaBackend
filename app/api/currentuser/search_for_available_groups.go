@@ -19,13 +19,13 @@ const minSearchStringLength = 3
 // summary: Search for available groups
 // description: >
 //   Searches for groups that can be joined freely, based on a substring of their name.
-//   Returns groups with `bFreeAccess`=1, whose `sName` has `search` as a substring, and for that the current user
+//   Returns groups with `free_access`=1, whose `name` has `search` as a substring, and for that the current user
 //   is not already a member and don’t have pending requests/invitations.
 //
 //
 //   Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//   at the beginning. This causes MySQL to explore every row having `bFreeAccess`=1. Moreover, actually
-//   it has to examine every row of the `groups` table since there is no index for the `bFreeAccess` column.
+//   at the beginning. This causes MySQL to explore every row having `free_access`=1. Moreover, actually
+//   it has to examine every row of the `groups` table since there is no index for the `free_access` column.
 //   But since there are not too many groups and the result rows count is limited, the search works almost well.
 // parameters:
 // - name: search
@@ -41,7 +41,7 @@ const minSearchStringLength = 3
 //     type: string
 //     enum: [id,-id]
 // - name: from.id
-//   description: Start the page from the group next to one with `groups.ID`=`from.id`
+//   description: Start the page from the group next to one with `groups.id`=`from.id`
 //   in: query
 //   type: integer
 // - name: limit
@@ -96,26 +96,26 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 
 	skipGroups := srv.Store.GroupGroups().
-		Select("groups_groups.idGroupParent").
-		Where("groups_groups.idGroupChild = ?", user.SelfGroupID).
-		Where("groups_groups.sType IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct', 'joinedByCode')").
+		Select("groups_groups.group_parent_id").
+		Where("groups_groups.group_child_id = ?", user.SelfGroupID).
+		Where("groups_groups.type IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct', 'joinedByCode')").
 		SubQuery()
 
 	escapedSearchString := escapeLikeString(searchString, '|')
 	query := srv.Store.Groups().
 		Select(`
-			groups.ID,
-			groups.sName,
-			groups.sType,
-			groups.sDescription`).
-		Where("groups.bFreeAccess").
-		Where("groups.ID NOT IN ?", skipGroups).
-		Where("groups.sName LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+			groups.id,
+			groups.name,
+			groups.type,
+			groups.description`).
+		Where("groups.free_access").
+		Where("groups.id NOT IN ?", skipGroups).
+		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"id": {ColumnName: "groups.ID", FieldType: "int64"}},
+			"id": {ColumnName: "groups.id", FieldType: "int64"}},
 		"id")
 	if apiError != service.NoError {
 		return apiError

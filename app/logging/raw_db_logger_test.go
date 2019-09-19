@@ -69,23 +69,23 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 		{
 			name: "simple",
 			keyvals: []interface{}{
-				"query", "SELECT * FROM users WHERE users.ID=? and users.sName=?",
+				"query", "SELECT * FROM users WHERE users.id=? and users.name=?",
 				"args", "{[int64 1], [string \"Joe\"]}",
 			},
 			want: map[string]interface{}{
-				"query": `SELECT * FROM users WHERE users.ID=1 and users.sName="Joe"`,
+				"query": `SELECT * FROM users WHERE users.id=1 and users.name="Joe"`,
 			},
 		},
 		{
 			name: "with time",
 			keyvals: []interface{}{
-				"query", "UPDATE `users_items` SET `nbChildrenValidated` = ?, `nbTasksSolved` = ?, `nbTasksTried` = ?, " +
-					"`nbTasksWithHelp` = ?, `sLastActivityDate` = ? WHERE (ID=13)",
+				"query", "UPDATE `users_items` SET `children_validated` = ?, `tasks_solved` = ?, `tasks_tried` = ?, " +
+					"`tasks_with_help` = ?, `last_activity_date` = ? WHERE (id=13)",
 				"args", "{[int64 8], [int64 7], [int64 5], [int64 6], [time.Time 2019-03-18 16:24:01 +0000 UTC]}",
 			},
 			want: map[string]interface{}{
-				"query": "UPDATE `users_items` SET `nbChildrenValidated` = 8, `nbTasksSolved` = 7, `nbTasksTried` = 5, " +
-					"`nbTasksWithHelp` = 6, `sLastActivityDate` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (ID=13)",
+				"query": "UPDATE `users_items` SET `children_validated` = 8, `tasks_solved` = 7, `tasks_tried` = 5, " +
+					"`tasks_with_help` = 6, `last_activity_date` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (id=13)",
 			},
 		},
 		{

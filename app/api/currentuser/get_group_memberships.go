@@ -13,7 +13,7 @@ import (
 // summary: List groups that the current user has joined
 // description:
 //   Returns the list of groups memberships of the current user
-//   (`groups_groups.sType` is “requestAccepted”, “invitationAccepted” or “direct”).
+//   (`groups_groups.type` is “requestAccepted”, “invitationAccepted” or “direct”).
 // parameters:
 // - name: sort
 //   in: query
@@ -23,14 +23,14 @@ import (
 //     type: string
 //     enum: [status_date,-status_date,id,-id]
 // - name: from.status_date
-//   description: Start the page from the membership next to one with `sStatusDate` = `from.status_date`
-//                and `groups_groups.ID` = `from.id`
+//   description: Start the page from the membership next to one with `status_date` = `from.status_date`
+//                and `groups_groups.id` = `from.id`
 //                (`from.id` is required when `from.status_date` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the membership next to one with `sStatusDate`=`from.status_date`
-//                and `groups_groups.ID`=`from.id`
+//   description: Start the page from the membership next to one with `status_date`=`from.status_date`
+//                and `groups_groups.id`=`from.id`
 //                (`from.status_date` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -58,22 +58,22 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 
 	query := srv.Store.GroupGroups().
 		Select(`
-			groups_groups.ID,
-			groups_groups.sStatusDate,
-			groups_groups.sType,
-			groups.ID AS group__ID,
-			groups.sName AS group__sName,
-			groups.sDescription AS group__sDescription,
-			groups.sType AS group__sType`).
-		Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent").
-		Where("groups_groups.sType IN ('invitationAccepted', 'requestAccepted', 'direct')").
-		Where("groups_groups.idGroupChild = ?", user.SelfGroupID)
+			groups_groups.id,
+			groups_groups.status_date,
+			groups_groups.type,
+			groups.id AS group__id,
+			groups.name AS group__name,
+			groups.description AS group__description,
+			groups.type AS group__type`).
+		Joins("JOIN `groups` ON `groups`.id = groups_groups.group_parent_id").
+		Where("groups_groups.type IN ('invitationAccepted', 'requestAccepted', 'direct')").
+		Where("groups_groups.group_child_id = ?", user.SelfGroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"status_date": {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},
-			"id":          {ColumnName: "groups_groups.ID", FieldType: "int64"}},
+			"status_date": {ColumnName: "groups_groups.status_date", FieldType: "time"},
+			"id":          {ColumnName: "groups_groups.id", FieldType: "int64"}},
 		"-status_date")
 	if apiError != service.NoError {
 		return apiError

@@ -13,13 +13,13 @@ import (
 )
 
 type aggregatesResultRow struct {
-	ID                        int64          `gorm:"column:ID"`
-	LastActivityDate          *database.Time `gorm:"column:sLastActivityDate"`
-	TasksTried                int64          `gorm:"column:nbTasksTried"`
-	TasksWithHelp             int64          `gorm:"column:nbTasksWithHelp"`
-	TasksSolved               int64          `gorm:"column:nbTasksSolved"`
-	ChildrenValidated         int64          `gorm:"column:nbChildrenValidated"`
-	AncestorsComputationState string         `gorm:"column:sAncestorsComputationState"`
+	ID                        int64
+	LastActivityDate          *database.Time
+	TasksTried                int64
+	TasksWithHelp             int64
+	TasksSolved               int64
+	ChildrenValidated         int64
+	AncestorsComputationState string
 }
 
 func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
@@ -31,28 +31,28 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	currentDate := time.Now().Round(time.Second).UTC()
 	oldDate := currentDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("ID=11").Updates(map[string]interface{}{
-		"sLastActivityDate":   oldDate,
-		"nbTasksTried":        1,
-		"nbTasksWithHelp":     2,
-		"nbTasksSolved":       3,
-		"nbChildrenValidated": 4,
-		"bValidated":          1,
+	assert.NoError(t, userItemStore.Where("id=11").Updates(map[string]interface{}{
+		"last_activity_date": oldDate,
+		"tasks_tried":        1,
+		"tasks_with_help":    2,
+		"tasks_solved":       3,
+		"children_validated": 4,
+		"validated":          1,
 	}).Error())
-	assert.NoError(t, userItemStore.Where("ID=13").Updates(map[string]interface{}{
-		"sLastActivityDate":   currentDate,
-		"nbTasksTried":        5,
-		"nbTasksWithHelp":     6,
-		"nbTasksSolved":       7,
-		"nbChildrenValidated": 8,
+	assert.NoError(t, userItemStore.Where("id=13").Updates(map[string]interface{}{
+		"last_activity_date": currentDate,
+		"tasks_tried":        5,
+		"tasks_with_help":    6,
+		"tasks_solved":       7,
+		"children_validated": 8,
 	}).Error())
-	assert.NoError(t, userItemStore.Where("ID=14").Updates(map[string]interface{}{
-		"sLastActivityDate":   nil,
-		"nbTasksTried":        9,
-		"nbTasksWithHelp":     10,
-		"nbTasksSolved":       11,
-		"nbChildrenValidated": 12,
-		"bValidated":          1,
+	assert.NoError(t, userItemStore.Where("id=14").Updates(map[string]interface{}{
+		"last_activity_date": nil,
+		"tasks_tried":        9,
+		"tasks_with_help":    10,
+		"tasks_solved":       11,
+		"children_validated": 12,
+		"validated":          1,
 	}).Error())
 
 	err := userItemStore.InTransaction(func(s *database.DataStore) error {
@@ -88,7 +88,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 
 	var result []aggregatesResultRow
 	assert.NoError(t, userItemStore.
-		Select("ID, sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, sAncestorsComputationState").
+		Select("id, last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 
 	expected := []aggregatesResultRow{
@@ -102,7 +102,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 func assertAggregatesEqual(t *testing.T, userItemStore *database.UserItemStore, expected []aggregatesResultRow) {
 	var result []aggregatesResultRow
 	assert.NoError(t, userItemStore.
-		Select("ID, sLastActivityDate, nbTasksTried, nbTasksWithHelp, nbTasksSolved, nbChildrenValidated, sAncestorsComputationState").
+		Select("id, last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 	assert.Equal(t, expected, result)
 }

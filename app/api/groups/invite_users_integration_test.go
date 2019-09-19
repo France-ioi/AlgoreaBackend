@@ -25,92 +25,92 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			name: "parent group is not a team",
 			fixture: `
 				groups:
-					- {ID: 1, sType: "Class", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-				groups_groups: [{idGroupParent: 2, idGroupChild: 10, sType: "joinedByCode"}]`,
+					- {id: 1, type: "Class", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+				groups_groups: [{group_parent_id: 2, group_child_id: 10, type: "joinedByCode"}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
 		},
 		{
-			name: "parent group is a team without idTeamItem",
+			name: "parent group is a team without team_item_id",
 			fixture: `
 				groups:
-					- {ID: 1, sType: "Team"}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-				groups_groups: [{idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}]`,
+					- {id: 1, type: "Team"}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+				groups_groups: [{group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
 		},
 		{
-			name: "parent group is a team with idTeamItem, but children are not in teams",
+			name: "parent group is a team with team_item_id, but children are not in teams",
 			fixture: `
 				groups:
-					- {ID: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", "idTeamItem": 1234}
-					- {ID: 4, sType: "Class", "idTeamItem": 1234}
-					- {ID: 5, sType: "Friends", "idTeamItem": 1234}
-					- {ID: 6, sType: "Other", "idTeamItem": 1234}
-					- {ID: 7, sType: "Club", "idTeamItem": 1234}
-					- {ID: 10, sType: UserSelf}
-					- {ID: 11, sType: UserSelf}
-					- {ID: 12, sType: UserSelf}
-					- {ID: 13, sType: UserSelf}
-					- {ID: 14, sType: UserSelf}
-					- {ID: 15, sType: UserSelf}
+					- {id: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", "team_item_id": 1234}
+					- {id: 4, type: "Class", "team_item_id": 1234}
+					- {id: 5, type: "Friends", "team_item_id": 1234}
+					- {id: 6, type: "Other", "team_item_id": 1234}
+					- {id: 7, type: "Club", "team_item_id": 1234}
+					- {id: 10, type: UserSelf}
+					- {id: 11, type: UserSelf}
+					- {id: 12, type: UserSelf}
+					- {id: 13, type: UserSelf}
+					- {id: 14, type: UserSelf}
+					- {id: 15, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationSent"}
-					- {idGroupParent: 3, idGroupChild: 11, sType: "requestSent"}
-					- {idGroupParent: 2, idGroupChild: 12, sType: "invitationRefused"}
-					- {idGroupParent: 3, idGroupChild: 13, sType: "requestRefused"}
-					- {idGroupParent: 2, idGroupChild: 14, sType: "removed"}
-					- {idGroupParent: 3, idGroupChild: 15, sType: "left"}
-					- {idGroupParent: 4, idGroupChild: 10, sType: "invitationAccepted"}
-					- {idGroupParent: 5, idGroupChild: 11, sType: "requestAccepted"}
-					- {idGroupParent: 6, idGroupChild: 12, sType: "joinedByCode"}
-					- {idGroupParent: 7, idGroupChild: 13, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationSent"}
+					- {group_parent_id: 3, group_child_id: 11, type: "requestSent"}
+					- {group_parent_id: 2, group_child_id: 12, type: "invitationRefused"}
+					- {group_parent_id: 3, group_child_id: 13, type: "requestRefused"}
+					- {group_parent_id: 2, group_child_id: 14, type: "removed"}
+					- {group_parent_id: 3, group_child_id: 15, type: "left"}
+					- {group_parent_id: 4, group_child_id: 10, type: "invitationAccepted"}
+					- {group_parent_id: 5, group_child_id: 11, type: "requestAccepted"}
+					- {group_parent_id: 6, group_child_id: 12, type: "joinedByCode"}
+					- {group_parent_id: 7, group_child_id: 13, type: "direct"}`,
 			groupsToInvite: []int64{10, 11, 12, 13, 14, 15},
 			want:           []int64{10, 11, 12, 13, 14, 15},
 		},
 		{
-			name: "parent group is a team with idTeamItem, but children groups are in teams with mismatching idTeamItems",
+			name: "parent group is a team with team_item_id, but children groups are in teams with mismatching team_item_id",
 			fixture: `
 				groups:
-					- {ID: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 2345}
-					- {ID: 3, sType: "Team"}
-					- {ID: 10, sType: UserSelf}
-					- {ID: 11, sType: UserSelf}
-					- {ID: 12, sType: UserSelf}
-					- {ID: 13, sType: UserSelf}
+					- {id: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 2345}
+					- {id: 3, type: "Team"}
+					- {id: 10, type: UserSelf}
+					- {id: 11, type: UserSelf}
+					- {id: 12, type: UserSelf}
+					- {id: 13, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}
-					- {idGroupParent: 3, idGroupChild: 11, sType: "requestAccepted"}
-					- {idGroupParent: 2, idGroupChild: 12, sType: "joinedByCode"}
-					- {idGroupParent: 3, idGroupChild: 13, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}
+					- {group_parent_id: 3, group_child_id: 11, type: "requestAccepted"}
+					- {group_parent_id: 2, group_child_id: 12, type: "joinedByCode"}
+					- {group_parent_id: 3, group_child_id: 13, type: "direct"}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{10, 11, 12, 13},
 		},
 		{
-			name: "parent group is a team with idTeamItem and children groups are in teams with the same idTeamItem",
+			name: "parent group is a team with team_item_id and children groups are in teams with the same team_item_id",
 			fixture: `
 				groups:
-					- {ID: 1, sType: "Team", idTeamItem: 1234}
-					- {ID: 2, sType: Team, idTeamItem: 1234}
-					- {ID: 3, sType: "Team", idTeamItem: 1234}
-					- {ID: 10, sType: UserSelf}
-					- {ID: 11, sType: UserSelf}
-					- {ID: 12, sType: UserSelf}
-					- {ID: 13, sType: UserSelf}
+					- {id: 1, type: "Team", team_item_id: 1234}
+					- {id: 2, type: Team, team_item_id: 1234}
+					- {id: 3, type: "Team", team_item_id: 1234}
+					- {id: 10, type: UserSelf}
+					- {id: 11, type: UserSelf}
+					- {id: 12, type: UserSelf}
+					- {id: 13, type: UserSelf}
 				groups_groups:
-					- {idGroupParent: 2, idGroupChild: 10, sType: "invitationAccepted"}
-					- {idGroupParent: 3, idGroupChild: 11, sType: "requestAccepted"}
-					- {idGroupParent: 2, idGroupChild: 12, sType: "joinedByCode"}
-					- {idGroupParent: 3, idGroupChild: 13, sType: "direct"}`,
+					- {group_parent_id: 2, group_child_id: 10, type: "invitationAccepted"}
+					- {group_parent_id: 3, group_child_id: 11, type: "requestAccepted"}
+					- {group_parent_id: 2, group_child_id: 12, type: "joinedByCode"}
+					- {group_parent_id: 3, group_child_id: 13, type: "direct"}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{},
 			wantWrongIDs:   []int64{10, 11, 12, 13},

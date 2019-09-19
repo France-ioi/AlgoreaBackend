@@ -15,25 +15,25 @@ const deleteWithTrapsBatchSize = 1000
 // It also removes linked rows in the tables:
 // 1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
 //     `filters`, `history_filters`, `sessions`, `refresh_tokens`]
-//    having `idUser` = `users.ID`;
+//    having `user_id` = `users.id`;
 // 2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
 //		 `groups_login_prefixes, `history_groups_login_prefixes`]
-//    having `idGroup` = `users.idGroupSelf` or `idGroup` = `users.idGroupOwned`;
-// 3. `groups_items_propagate` having the same `ID`s as the rows removed from `groups_items`;
-// 4. [`groups_groups`, `history_groups_groups`] having `idGroupParent` or `idGroupChild` equal
-//    to one of `users.idGroupSelf`/`users.idGroupOwned`;
-// 5. [`groups_ancestors`, `history_groups_ancestors`] having `idGroupAncestor` or `idGroupChild` equal
-//    to one of `users.idGroupSelf`/`users.idGroupOwned`;
-// 6. [`groups_propagate`, `groups`, `history_groups`] having `ID` equal to one of
-//    `users.idGroupSelf`/`users.idGroupOwned`;
-// 7. `history_users` having `ID` = `users.ID`
+//    having `group_id` = `users.group_self_id` or `group_id` = `users.group_owned_id`;
+// 3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
+// 4. [`groups_groups`, `history_groups_groups`] having `group_parent_id` or `group_child_id` equal
+//    to one of `users.group_self_id`/`users.group_owned_id`;
+// 5. [`groups_ancestors`, `history_groups_ancestors`] having `group_ancestor_id` or `group_child_id` equal
+//    to one of `users.group_self_id`/`users.group_owned_id`;
+// 6. [`groups_propagate`, `groups`, `history_groups`] having `id` equal to one of
+//    `users.group_self_id`/`users.group_owned_id`;
+// 7. `history_users` having `id` = `users.id`
 func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 	defer recoverPanics(&err)
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		userScope := store.Users().
-			Joins("LEFT JOIN sessions ON sessions.idUser = users.ID AND NOW() < sessions.sExpirationDate").
-			Where("sessions.idUser IS NULL").Where("tempUser = 1")
+			Joins("LEFT JOIN sessions ON sessions.user_id = users.id AND NOW() < sessions.expiration_date").
+			Where("sessions.user_id IS NULL").Where("temp_user = 1")
 		return store.Users().deleteWithTraps(userScope)
 	})
 	return nil
@@ -71,7 +71,7 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	ownedGroupsIDs := make([]*int64, 0, deleteWithTrapsBatchSize) // can be NULL
 
 	mustNotBeError(
-		userScope.WithWriteLock().Select("ID, idGroupSelf, idGroupOwned").Limit(deleteWithTrapsBatchSize).
+		userScope.WithWriteLock().Select("id, group_self_id, group_owned_id").Limit(deleteWithTrapsBatchSize).
 			ScanIntoSlices(&ids, &selfGroupsIDs, &ownedGroupsIDs).Error())
 
 	if len(ids) == 0 {
@@ -95,29 +95,29 @@ func deleteOneBatchOfUsers(db *DB, ids []int64, selfGroupsIDs, ownedGroupsIDs []
 		"users_items", "history_users_items", "filters", "history_filters",
 		"sessions", "refresh_tokens",
 	} {
-		executeDeleteQuery(db, table, "WHERE idUser IN (?)", ids)
+		executeDeleteQuery(db, table, "WHERE user_id IN (?)", ids)
 	}
 	executeDeleteQuery(db, "groups_items_propagate",
-		"JOIN groups_items ON groups_items.ID = groups_items_propagate.ID WHERE groups_items.idGroup IN (?)", allGroups)
+		"JOIN groups_items ON groups_items.id = groups_items_propagate.id WHERE groups_items.group_id IN (?)", allGroups)
 	for _, table := range [...]string{
 		"groups_items", "history_groups_items", "groups_attempts", "history_groups_attempts",
 		"groups_login_prefixes", "history_groups_login_prefixes",
 	} {
-		executeDeleteQuery(db, table, "WHERE idGroup IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_id IN (?)", allGroups)
 	}
 	for _, table := range [...]string{"groups_groups", "history_groups_groups"} {
-		executeDeleteQuery(db, table, "WHERE idGroupParent IN (?)", allGroups)
-		executeDeleteQuery(db, table, "WHERE idGroupChild IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_parent_id IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_child_id IN (?)", allGroups)
 	}
 	for _, table := range [...]string{"groups_ancestors", "history_groups_ancestors"} {
-		executeDeleteQuery(db, table, "WHERE idGroupAncestor IN (?)", allGroups)
-		executeDeleteQuery(db, table, "WHERE idGroupChild IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_ancestor_id IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_child_id IN (?)", allGroups)
 	}
 	for _, table := range [...]string{"groups_propagate", "groups", "history_groups"} {
-		executeDeleteQuery(db, table, "WHERE ID IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE id IN (?)", allGroups)
 	}
 	for _, table := range [...]string{"users", "history_users"} {
-		executeDeleteQuery(db, table, "WHERE ID IN (?)", ids)
+		executeDeleteQuery(db, table, "WHERE id IN (?)", ids)
 	}
 }
 

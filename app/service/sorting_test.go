@@ -33,40 +33,40 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
-			wantSQL:      "SELECT ID FROM `users` ORDER BY sName DESC, ID ASC",
+			wantSQL:      "SELECT id FROM `users` ORDER BY name DESC, id ASC",
 			wantAPIError: NoError},
 		{name: "sorting (request rules)",
 			args: args{
 				urlParameters: "?sort=name,-id",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 			},
-			wantSQL:      "SELECT ID FROM `users` ORDER BY sName ASC, ID DESC",
+			wantSQL:      "SELECT id FROM `users` ORDER BY name ASC, id DESC",
 			wantAPIError: NoError},
 		{name: "sorting (custom column name for ordering)",
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string", ColumnNameForOrdering: "LOWER(sName)"},
-					"id":   {ColumnName: "ID", FieldType: "int64", ColumnNameForOrdering: "-ID"},
+					"name": {ColumnName: "name", FieldType: "string", ColumnNameForOrdering: "LOWER(name)"},
+					"id":   {ColumnName: "id", FieldType: "int64", ColumnNameForOrdering: "-id"},
 				},
 				defaultRules: "-name,id",
 			},
-			wantSQL:      "SELECT ID FROM `users` ORDER BY LOWER(sName) DESC, -ID ASC",
+			wantSQL:      "SELECT id FROM `users` ORDER BY LOWER(name) DESC, -id ASC",
 			wantAPIError: NoError},
 		{name: "repeated field",
 			args: args{
 				urlParameters: "?sort=name,name",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
@@ -75,8 +75,8 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?sort=class",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
@@ -85,44 +85,44 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
+					"name": {ColumnName: "name", FieldType: "string"},
 				},
 				defaultRules: "-name",
 			},
-			wantSQL:          "SELECT ID FROM `users` ORDER BY sName DESC, ID ASC",
+			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, id ASC",
 			wantSQLArguments: nil,
 			wantAPIError:     NoError},
 		{name: "no rules (adds id)",
 			args: args{
 				urlParameters: "",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 			},
-			wantSQL:      "SELECT ID FROM `users` ORDER BY ID ASC",
+			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC",
 			wantAPIError: NoError},
 		{name: "sorting + paging",
 			args: args{
 				urlParameters: "?from.id=1&from.name=Joe&from.flag=1",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 					"flag": {ColumnName: "bFlag", FieldType: "bool"},
 				},
 				defaultRules: "-name,id,flag",
 			},
-			wantSQL: "SELECT ID FROM `users` " +
-				"WHERE ((sName < ?) OR (sName = ? AND ID > ?) OR (sName = ? AND ID = ? AND bFlag > ?)) " +
-				"ORDER BY sName DESC, ID ASC, bFlag ASC",
+			wantSQL: "SELECT id FROM `users` " +
+				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
+				"ORDER BY name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
 			wantAPIError:     NoError},
 		{name: "wrong value in from.id field",
 			args: args{
 				urlParameters: "?from.id=abc&from.name=Joe",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
@@ -131,9 +131,9 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.id=2",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
-					"type": {ColumnName: "sType", FieldType: "string"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "string"},
+					"type": {ColumnName: "type", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
@@ -142,8 +142,8 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.name=Joe&from.id=2",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "interface{}"},
-					"id":   {ColumnName: "ID", FieldType: "int64"},
+					"name": {ColumnName: "name", FieldType: "interface{}"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
 				defaultRules: "-name,id",
 			},
@@ -152,7 +152,7 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.field=Joe&from.version=2&from.name=Jane",
 				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "sName", FieldType: "string"},
+					"name": {ColumnName: "name", FieldType: "string"},
 				},
 				defaultRules: "id",
 			},
@@ -161,12 +161,12 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.submission_date=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
 				acceptedFields: map[string]*FieldSortingParams{
-					"submission_date": {ColumnName: "sSubmissionDate", FieldType: "time"},
+					"submission_date": {ColumnName: "submission_date", FieldType: "time"},
 				},
 				defaultRules: "submission_date",
 			},
-			wantSQL: "SELECT ID FROM `users`  WHERE ((sSubmissionDate > ?) OR (sSubmissionDate = ? AND ID > ?)) " +
-				"ORDER BY sSubmissionDate ASC, ID ASC",
+			wantSQL: "SELECT id FROM `users`  WHERE ((submission_date > ?) OR (submission_date = ? AND id > ?)) " +
+				"ORDER BY submission_date ASC, id ASC",
 			wantSQLArguments: []driver.Value{
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
@@ -196,7 +196,7 @@ func TestApplySorting(t *testing.T) {
 			}
 
 			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, nil)
-			query := db.Table("users").Select("ID")
+			query := db.Table("users").Select("id")
 
 			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules)
 			assert.Equal(t, tt.wantAPIError, gotAPIError)

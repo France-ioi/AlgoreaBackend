@@ -106,8 +106,8 @@ func (s *DataStore) UserItems() *UserItemStore {
 	return &UserItemStore{NewDataStoreWithTable(s.DB, "users_items")}
 }
 
-// NewID generates a positive random int64 to be used as ID
-// !!! To be safe, the insertion should be be retried if the ID conflicts with an existing entry
+// NewID generates a positive random int64 to be used as id
+// !!! To be safe, the insertion should be be retried if the id conflicts with an existing entry
 func (s *DataStore) NewID() int64 {
 	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
 	return rand.Int63()
@@ -127,12 +127,12 @@ func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc
 	})
 }
 
-// ByID returns a composable query for filtering by _table_.ID
+// ByID returns a composable query for filtering by _table_.id
 func (s *DataStore) ByID(id int64) *DB {
 	if s.tableName == "" {
 		panic("method ByID() called for abstract DataStore")
 	}
-	return s.Where(s.tableName+".ID = ?", id)
+	return s.Where(s.tableName+".id = ?", id)
 }
 
 // RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors

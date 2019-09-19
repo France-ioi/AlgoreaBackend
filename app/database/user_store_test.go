@@ -12,8 +12,8 @@ func TestUserStore_deleteWithTraps_DoesNothingWhenScopeReturnsNothing(t *testing
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT ID, idGroupSelf, idGroupOwned FROM `users` LIMIT 1000 FOR UPDATE") + "$").
-		WillReturnRows(mock.NewRows([]string{"ID", "idGroupSelf", "idGroupOwned"}))
+	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT id, group_self_id, group_owned_id FROM `users` LIMIT 1000 FOR UPDATE") + "$").
+		WillReturnRows(mock.NewRows([]string{"id", "group_self_id", "group_owned_id"}))
 	mock.ExpectCommit()
 
 	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {

@@ -1,20 +1,20 @@
 package database
 
-// grantCachedAccessWhereNeeded sets bCached*Access* columns to true where needed according to corresponding sCached*Access*Date columns.
-// The formula is sCached*Access*Date <= NOW().
+// grantCachedAccessWhereNeeded sets cached_*access* columns to true where needed according to corresponding cached*_access_*date columns.
+// The formula is cached_*_access_*_date <= NOW().
 func (s *GroupItemStore) grantCachedAccessWhereNeeded() {
 	listFields := map[string]string{
-		"bCachedFullAccess":      "sCachedFullAccessDate",
-		"bCachedPartialAccess":   "sCachedPartialAccessDate",
-		"bCachedAccessSolutions": "sCachedAccessSolutionsDate",
-		"bCachedGrayedAccess":    "sCachedGrayedAccessDate",
+		"cached_full_access":      "cached_full_access_date",
+		"cached_partial_access":   "cached_partial_access_date",
+		"cached_access_solutions": "cached_access_solutions_date",
+		"cached_grayed_access":    "cached_grayed_access_date",
 	}
 
-	for bAccessField, sAccessDateField := range listFields {
+	for accessField, accessDateField := range listFields {
 		query := "UPDATE `groups_items` " +
-			"SET `" + bAccessField + "` = true " +
-			"WHERE `" + bAccessField + "` = false " +
-			"AND `" + sAccessDateField + "` <= NOW()"
+			"SET `" + accessField + "` = true " +
+			"WHERE `" + accessField + "` = false " +
+			"AND `" + accessDateField + "` <= NOW()"
 		mustNotBeError(s.db.Exec(query).Error)
 	}
 }

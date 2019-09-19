@@ -91,7 +91,7 @@ type deletedOrUnchangedResponse struct {
 	}
 }
 
-// Created. Success response with the created object's ID.
+// Created. Success response with the created object's id.
 // swagger:response createdWithIDResponse
 type createdWithIDResponse struct {
 	// in: body

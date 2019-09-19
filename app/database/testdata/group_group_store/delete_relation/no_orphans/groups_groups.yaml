@@ -1,2 +1,2 @@
-- {idGroupParent: 1, idGroupChild: 2}
-- {idGroupParent: 3, idGroupChild: 2}
+- {group_parent_id: 1, group_child_id: 2}
+- {group_parent_id: 3, group_child_id: 2}

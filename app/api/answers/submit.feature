@@ -1,32 +1,32 @@
 Feature: Submit a new answer
   Background:
     Given the database has the following table 'users':
-      | ID  | sLogin | idGroupSelf |
-      | 10  | john   | 101         |
+      | id  | login | group_self_id |
+      | 10  | john  | 101           |
     And the database has the following table 'groups':
-      | ID  |
+      | id  |
       | 101 |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 101             | 101          | 1       |
+      | group_ancestor_id | group_child_id | is_self |
+      | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate |
-      | 15 | 22            | 13           | direct             | null        |
+      | id | group_parent_id | group_child_id | type   | status_date |
+      | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'items':
-      | ID |
+      | id |
       | 50 |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
-      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | group_id | item_id | cached_partial_access_date | user_created_id |
+      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
     And the database has the following table 'users_items':
-      | idUser | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts |
-      | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     |
+      | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts |
+      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | iOrder |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 2                     | 0      |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | `order` |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0       |
 
   Scenario: User is able to submit a new answer
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And time is frozen
     And the following token "userTaskToken" signed by the app is distributed:
       """
@@ -69,17 +69,17 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
-      | 10     | 50     | 3                     | 1                                                        |
+      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
-      | 10     | 50     | 100       | Submission | print 1 | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
+      | 10      | 50      | 100        | Submission | print 1 | 1                                                      |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                                        |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And time is frozen
     And the following token "userTaskToken" signed by the app is distributed:
       """
@@ -126,11 +126,11 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | idUser | idItem | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
-      | 10     | 50     | 3                     | 1                                                        |
+      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
-      | idUser | idItem | idAttempt | sType      | sAnswer  | ABS(TIMESTAMPDIFF(SECOND, sSubmissionDate, NOW())) < 3 |
-      | 10     | 50     | 100       | Submission | print(2) | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
+      | 10      | 50      | 100        | Submission | print(2) | 1                                                      |
     And the table "groups_attempts" should be:
-      | ID  | idGroup | idItem | sHintsRequested                 | nbHintsCached | nbSubmissionsAttempts | ABS(TIMESTAMPDIFF(SECOND, sLastActivityDate, NOW())) < 3 |
-      | 100 | 101     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            | 3                     | 1                                                        |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |

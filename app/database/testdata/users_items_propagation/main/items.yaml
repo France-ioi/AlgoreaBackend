@@ -1,5 +1,5 @@
-- { ID: 1}
-- { ID: 2}
-- { ID: 3}
-- { ID: 4, idItemUnlocked: 55}
-- { ID: 5}
+- { id: 1}
+- { id: 2}
+- { id: 3}
+- { id: 4, item_unlocked_id: 55}
+- { id: 5}

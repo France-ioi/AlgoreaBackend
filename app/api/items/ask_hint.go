@@ -129,20 +129,20 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
 		columnsToUpdate := map[string]interface{}{
-			"nbTasksWithHelp":            1,
-			"sAncestorsComputationState": "todo",
-			"sLastActivityDate":          database.Now(),
-			"sLastHintDate":              database.Now(),
+			"tasks_with_help":             1,
+			"ancestors_computation_state": "todo",
+			"last_activity_date":          database.Now(),
+			"last_hint_date":              database.Now(),
 		}
 		// Update users_items with the hint request
-		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.ID).
-			Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID).
-			Where("idAttemptActive = ?", requestData.TaskToken.Converted.AttemptID).
+		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
+			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
+			Where("attempt_active_id = ?", requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
 
 		// Update groups_attempts with the hint request
-		columnsToUpdate["sHintsRequested"] = hintsRequestedNew
-		columnsToUpdate["nbHintsCached"] = len(hintsRequestedParsed)
+		columnsToUpdate["hints_requested"] = hintsRequestedNew
+		columnsToUpdate["hints_cached"] = len(hintsRequestedParsed)
 		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
 
@@ -168,18 +168,18 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	user *database.User, r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
-	err := store.GroupAttempts().ByID(taskToken.Converted.AttemptID).PluckFirst("sHintsRequested", &hintsRequested).Error()
+	err := store.GroupAttempts().ByID(taskToken.Converted.AttemptID).PluckFirst("hints_requested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-				"idUser":    user.ID,
-				"idItem":    taskToken.Converted.LocalItemID,
-				"idAttempt": taskToken.Converted.AttemptID,
+				"idUser":      user.ID,
+				"idItemLocal": taskToken.Converted.LocalItemID,
+				"idAttempt":   taskToken.Converted.AttemptID,
 			})
-			logging.GetLogEntry(r).Warnf("Unable to parse sHintsRequested (%s) having value %q: %s", fieldsForLoggingMarshaled,
+			logging.GetLogEntry(r).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
 				*hintsRequested, hintsErr.Error())
 		}
 	}

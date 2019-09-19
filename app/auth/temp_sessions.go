@@ -22,10 +22,10 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 			return err
 		}
 		return retryStore.Sessions().InsertMap(map[string]interface{}{
-			"sAccessToken":    accessToken,
-			"sExpirationDate": gorm.Expr("?  + INTERVAL ? SECOND", database.Now(), expiresIn),
-			"idUser":          userID,
-			"sIssuer":         "backend",
+			"access_token":    accessToken,
+			"expiration_date": gorm.Expr("?  + INTERVAL ? SECOND", database.Now(), expiresIn),
+			"user_id":         userID,
+			"issuer":          "backend",
 		})
 	})
 	if err != nil {

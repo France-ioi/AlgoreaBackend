@@ -17,7 +17,7 @@ import (
 //   Returns general information about the group from the `groups` table.
 //
 //
-//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `bFreeAccess`=1,
+//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `free_access`=1,
 //   otherwise the 'forbidden' error is returned.
 //
 //
@@ -95,27 +95,24 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	query := srv.Store.Groups().
 		Joins(`
 			LEFT JOIN groups_ancestors
-				ON groups_ancestors.idGroupChild = groups.ID AND groups_ancestors.idGroupAncestor = ?`, user.OwnedGroupID).
+				ON groups_ancestors.group_child_id = groups.id AND groups_ancestors.group_ancestor_id = ?`, user.OwnedGroupID).
 		Joins(`
 			LEFT JOIN groups_ancestors AS groups_descendants
-				ON groups_descendants.idGroupAncestor = groups.ID AND groups_descendants.idGroupChild = ?`, user.SelfGroupID).
+				ON groups_descendants.group_ancestor_id = groups.id AND groups_descendants.group_child_id = ?`, user.SelfGroupID).
 		Joins(`
 			LEFT JOIN groups_groups
-				ON groups_groups.sType `+database.GroupRelationIsActiveCondition+` AND
-					groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, user.SelfGroupID).
-		Where("groups_ancestors.ID IS NOT NULL OR groups_descendants.ID IS NOT NULL OR groups.bFreeAccess").
-		Where("groups.ID = ?", groupID).Select(
-		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated,
-			groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCode, NULL) AS sCode,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeTimer, NULL) AS sCodeTimer,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeEnd, NULL) AS sCodeEnd,
-			groups.bOpenContest,
-			groups_ancestors.ID IS NOT NULL AS bCurrentUserIsOwner,
-			groups_groups.ID IS NOT NULL AS bCurrentUserIsMember`).Limit(1)
-
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
+				ON groups_groups.type `+database.GroupRelationIsActiveCondition+` AND
+					groups_groups.group_parent_id = groups.id AND groups_groups.group_child_id = ?`, user.SelfGroupID).
+		Where("groups_ancestors.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
+		Where("groups.id = ?", groupID).Select(
+		`groups.id, groups.name, groups.grade, groups.description, groups.date_created,
+			groups.type, groups.redirect_path, groups.opened, groups.free_access,
+			IF(groups_ancestors.id IS NOT NULL, groups.code, NULL) AS code,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_timer, NULL) AS code_timer,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_end, NULL) AS code_end,
+			groups.open_contest,
+			groups_ancestors.id IS NOT NULL AS current_user_is_owner,
+			groups_groups.id IS NOT NULL AS current_user_is_member`).Limit(1)
 
 	if len(result) == 0 {
 		return service.InsufficientAccessRightsError

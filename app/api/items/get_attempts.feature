@@ -1,12 +1,12 @@
 Feature: Get groups attempts for current user and item_id
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName | sLastName |
-      | 1  | jdoe   | 11          | 12           | John       | Doe       |
-      | 2  | other  | 21          | 22           | George     | Bush      |
-      | 3  | jane   | 31          | 32           | Jane       | Doe       |
+      | id | login | group_self_id | group_owned_id | first_name | last_name |
+      | 1  | jdoe  | 11            | 12             | John       | Doe       |
+      | 2  | other | 21            | 22             | George     | Bush      |
+      | 3  | jane  | 31            | 32             | Jane       | Doe       |
     And the database has the following table 'groups':
-      | ID | sName       | sType     |
+      | id | name        | type      |
       | 11 | jdoe        | UserSelf  |
       | 12 | jdoe-admin  | UserAdmin |
       | 13 | Group B     | Class     |
@@ -16,41 +16,41 @@ Feature: Get groups attempts for current user and item_id
       | 31 | jane        | UserSelf  |
       | 32 | jane-admin  | UserAdmin |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              |
-      | 61 | 13            | 11           | invitationAccepted |
-      | 62 | 13            | 21           | requestAccepted    |
-      | 63 | 13            | 31           | joinedByCode       |
-      | 64 | 23            | 21           | direct             |
-      | 65 | 23            | 31           | direct             |
+      | id | group_parent_id | group_child_id | type               |
+      | 61 | 13              | 11             | invitationAccepted |
+      | 62 | 13              | 21             | requestAccepted    |
+      | 63 | 13              | 31             | joinedByCode       |
+      | 64 | 23              | 21             | direct             |
+      | 65 | 23              | 31             | direct             |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 71 | 11              | 11           | 1       |
-      | 72 | 12              | 12           | 1       |
-      | 73 | 13              | 13           | 1       |
-      | 74 | 13              | 11           | 0       |
-      | 75 | 13              | 21           | 0       |
-      | 76 | 13              | 31           | 0       |
-      | 77 | 23              | 21           | 0       |
-      | 78 | 23              | 23           | 1       |
-      | 79 | 23              | 31           | 0       |
-      | 80 | 31              | 31           | 1       |
-      | 81 | 32              | 32           | 1       |
+      | id | group_ancestor_id | group_child_id | is_self |
+      | 71 | 11                | 11             | 1       |
+      | 72 | 12                | 12             | 1       |
+      | 73 | 13                | 13             | 1       |
+      | 74 | 13                | 11             | 0       |
+      | 75 | 13                | 21             | 0       |
+      | 76 | 13                | 31             | 0       |
+      | 77 | 23                | 21             | 0       |
+      | 78 | 23                | 23             | 1       |
+      | 79 | 23                | 31             | 0       |
+      | 80 | 31                | 31             | 1       |
+      | 81 | 32                | 32             | 1       |
     And the database has the following table 'items':
-      | ID  | bHasAttempts |
+      | id  | has_attempts |
       | 200 | 0            |
       | 210 | 1            |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | idUserCreated |
-      | 43 | 13      | 200    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 1             |
-      | 46 | 23      | 210    | 2017-05-29 06:38:38   | 2017-05-29 06:38:38      | 1             |
+      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | user_created_id |
+      | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
+      | 46 | 23       | 210     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | iScore | iOrder | bValidated | sStartDate          | idUserCreator |
-      | 150 | 11      | 200    | 100    | 1      | true       | 2018-05-29 06:38:38 | 3             |
-      | 151 | 11      | 200    | 99     | 0      | false      | 2018-05-29 06:38:38 | null          |
-      | 250 | 13      | 210    | 99     | 0      | true       | 2019-05-29 06:38:38 | 1             |
+      | id  | group_id | item_id | score | `order` | validated | start_date          | user_creator_id |
+      | 150 | 11       | 200     | 100   | 1       | true      | 2018-05-29 06:38:38 | 3               |
+      | 151 | 11       | 200     | 99    | 0       | false     | 2018-05-29 06:38:38 | null            |
+      | 250 | 13       | 210     | 99    | 0       | true      | 2019-05-29 06:38:38 | 1               |
 
-  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (sType='invitationAccepted')
-    Given I am the user with ID "1"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's id (type='invitationAccepted')
+    Given I am the user with id "1"
     When I send a GET request to "/items/200/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -79,8 +79,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (with limit)
-    Given I am the user with ID "1"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's id (with limit)
+    Given I am the user with id "1"
     When I send a GET request to "/items/200/attempts?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -97,8 +97,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (reverse order)
-    Given I am the user with ID "1"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's id (reverse order)
+    Given I am the user with id "1"
     When I send a GET request to "/items/200/attempts?sort=-order"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -127,8 +127,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.idUser = authenticated user's ID (reverse order, start from the second row)
-    Given I am the user with ID "1"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's id (reverse order, start from the second row)
+    Given I am the user with id "1"
     When I send a GET request to "/items/200/attempts?sort=-order&from.order=1&from.id=150"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -145,8 +145,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1, sType='requestAccepted')
-    Given I am the user with ID "2"
+  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='requestAccepted')
+    Given I am the user with id "2"
     When I send a GET request to "/items/210/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -167,8 +167,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.idGroup (items.bHasAttempts=1, sType='joinedByCode')
-    Given I am the user with ID "3"
+  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='joinedByCode')
+    Given I am the user with id "3"
     When I send a GET request to "/items/210/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:

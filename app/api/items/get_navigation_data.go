@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// GetItemRequest wraps the ID parameter
+// GetItemRequest wraps the id parameter
 type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
@@ -41,7 +41,7 @@ type navigationItemCommonFields struct {
 	ID                int64  `json:"id,string"`
 	Type              string `json:"type"`
 	TransparentFolder bool   `json:"transparent_folder"`
-	// whether items.idItemUnlocked is empty
+	// whether items.item_unlocked_id is empty
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 
 	String       navigationItemString       `json:"string"`
@@ -108,13 +108,13 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 			continue
 		}
 
-		parentItem, hasParentItem := idMap[rawData[index].IDItemParent]
+		parentItem, hasParentItem := idMap[rawData[index].ItemParentID]
 		if !hasParentItem ||
 			(!parentItem.FullAccess && !parentItem.PartialAccess) {
 			continue // The parent item is grayed
 		}
 
-		if parentItemCommonFields, ok := idsToResponseData[rawData[index].IDItemParent]; ok {
+		if parentItemCommonFields, ok := idsToResponseData[rawData[index].ItemParentID]; ok {
 			child := navigationItemChild{
 				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
 				Order:                      rawData[index].Order,
@@ -149,7 +149,7 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 			GrayAccess:    rawData.GrayedAccess,
 		},
 	}
-	if rawData.IDItemGrandParent == nil {
+	if rawData.ItemGrandparentID == nil {
 		result.Children = make([]navigationItemChild, 0)
 	}
 	return result

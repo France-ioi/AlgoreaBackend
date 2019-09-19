@@ -66,7 +66,7 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 			sessionStore := store.Sessions()
 			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(sessionStore.Delete("idUser = ? AND sAccessToken != ?",
+			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 				user.ID, oldAccessToken).Error())
 			var err error
 			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.ID)
@@ -93,8 +93,8 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (newToken string, expiresIn int32) {
 	var refreshToken string
 	service.MustNotBeError(
-		srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
-			PluckFirst("sRefreshToken", &refreshToken).Error())
+		srv.Store.RefreshTokens().Where("user_id = ?", user.ID).
+			PluckFirst("refresh_token", &refreshToken).Error())
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
 	oldToken := &oauth2.Token{RefreshToken: refreshToken}
 	oauthConfig := getOAuthConfig(&srv.Config.Auth)
@@ -103,13 +103,13 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		sessionStore := store.Sessions()
 		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(sessionStore.Delete("idUser = ? AND sAccessToken != ?",
+		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 			user.ID, oldAccessToken).Error())
 		// insert the new access token
 		service.MustNotBeError(sessionStore.InsertNewOAuth(user.ID, token))
 		if refreshToken != token.RefreshToken {
-			service.MustNotBeError(store.RefreshTokens().Where("idUser = ?", user.ID).
-				UpdateColumn("sRefreshToken", token.RefreshToken).Error())
+			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.ID).
+				UpdateColumn("refresh_token", token.RefreshToken).Error())
 		}
 		newToken = token.AccessToken
 		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)

@@ -7,7 +7,7 @@ package doc
 //
 // Example:
 //   "400":
-//     description: Bad Request. The ID you have provided
+//     description: Bad Request. The id you have provided
 //     schema:
 //       "$ref": "#/definitions/badRequest"
 

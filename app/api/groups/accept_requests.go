@@ -11,7 +11,7 @@ import (
 // summary: Accept requests to join a group
 // description:
 //   Lets an admin approve requests to join a group.
-//   On success the service sets `groups_groups.sType` to "requestAccepted" and `sStatusDate` to current UTC time
+//   On success the service sets `groups_groups.type` to "requestAccepted" and `status_date` to current UTC time
 //   for each of `group_ids`.
 //   It also refreshes the access rights.
 //
@@ -19,13 +19,13 @@ import (
 //   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `parent_group_id` corresponds to a team with `idTeamItem` set, the service skips users
-//   who are members of other teams with the same `idTeamItem` (result = "in_another_team").
+//   If the `parent_group_id` corresponds to a team with `team_item_id` set, the service skips users
+//   who are members of other teams with the same `team_item_id` (result = "in_another_team").
 //
 //
 //   The input `group_id` should have the input `parent_group_id` as a parent group and the
-//   `groups_groups.sType` should be "requestSent", otherwise the `group_id` gets skipped with
-//   `unchanged` (if `sType` = "requestAccepted") or `invalid` as the result.
+//   `groups_groups.type` should be "requestSent", otherwise the `group_id` gets skipped with
+//   `unchanged` (if `type` = "requestAccepted") or `invalid` as the result.
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise
@@ -34,7 +34,7 @@ import (
 //
 //
 //   _Warning:_ The service doesn't check if the authenticated user or requesting users have access rights
-//   on `idTeamItem` when the `parent_group_id` represents a team.
+//   on `team_item_id` when the `parent_group_id` represents a team.
 // parameters:
 // - name: parent_group_id
 //   in: path

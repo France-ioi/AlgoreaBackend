@@ -29,9 +29,9 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), accessToken)
 	service.MustNotBeError(err)
 
-	userProfile["sLastActivityDate"] = database.Now()
-	if defaultLanguage, ok := userProfile["sDefaultLanguage"]; ok && defaultLanguage == nil {
-		userProfile["sDefaultLanguage"] = database.Default()
+	userProfile["last_activity_date"] = database.Now()
+	if defaultLanguage, ok := userProfile["default_language"]; ok && defaultLanguage == nil {
+		userProfile["default_language"] = database.Default()
 	}
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).UpdateColumn(userProfile).Error())
 

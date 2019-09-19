@@ -28,15 +28,15 @@ const maxAllowedLoginsToInvite = 100
 //   Lets an admin invite users, based on list of their logins, to join a group.
 //   On success the service creates new rows in `groups_groups` with
 //
-//     * `sType` = "invitationSent"
+//     * `type` = "invitationSent"
 //
-//     * `sStatusDate` = current UTC time
+//     * `status_date` = current UTC time
 //
-//     * `idUserInviting` = `users.ID` of the authorized user,
+//     * `user_inviting_id` = `users.id` of the authorized user,
 //
-//     * `sRole` = "member",
+//     * `role` = "member",
 //
-//     * correct `iChildOrder`, so that the row becomes the last child of the parent group.
+//     * correct `child_order`, so that the row becomes the last child of the parent group.
 //
 //
 //   It also refreshes the access rights.
@@ -44,14 +44,14 @@ const maxAllowedLoginsToInvite = 100
 //
 //   * Logins not corresponding to valid users are ignored (result = "not_found").
 //
-//   * If the `parent_group_id` corresponds to a team with `idTeamItem` set, the service skips users
-//     who are members of other teams with the same `idTeamItem` (result = "in_another_team").
+//   * If the `parent_group_id` corresponds to a team with `team_item_id` set, the service skips users
+//     who are members of other teams with the same `team_item_id` (result = "in_another_team").
 //
 //   * Pending group requests from users listed in `logins` become accepted (result = "success").
 //
 //   * Pending invitations stay unchanged (result = "unchanged).
 //
-//   * Group members (`groups_groups.sType` = "invitationAccepted"/"requestAccepted"/"direct")
+//   * Group members (`groups_groups.type` = "invitationAccepted"/"requestAccepted"/"direct")
 //     are skipped (result = "invalid").
 //
 //
@@ -66,7 +66,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //
 //   _Warning:_ The service doesn't check if the authenticated user or listed users have access rights
-//   on `idTeamItem` when the `parent_group_id` represents a team.
+//   on `team_item_id` when the `parent_group_id` represents a team.
 // consumes:
 // - application/json
 // parameters:
@@ -127,10 +127,10 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	var groupsToInviteRows []struct {
-		Login       string `gorm:"column:sLogin"`
-		SelfGroupID int64  `gorm:"column:idGroupSelf"`
+		Login       string
+		SelfGroupID int64 `gorm:"column:group_self_id"`
 	}
-	service.MustNotBeError(srv.Store.Users().Select("sLogin, idGroupSelf").Where("sLogin IN (?)", requestData.Logins).
+	service.MustNotBeError(srv.Store.Users().Select("login, group_self_id").Where("login IN (?)", requestData.Logins).
 		Scan(&groupsToInviteRows).Error())
 
 	groupsToInvite := make([]int64, 0, len(groupsToInviteRows))
@@ -184,18 +184,18 @@ func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupI
 
 func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groupsToCheck []int64) []int64 {
 	var parentGroupInfo struct {
-		Type       string `gorm:"column:sType"`
-		TeamItemID *int64 `gorm:"column:idTeamItem"`
+		Type       string
+		TeamItemID *int64
 	}
 	const teamType = "Team"
-	service.MustNotBeError(store.Groups().ByID(parentGroupID).WithWriteLock().Select("sType, idTeamItem").
+	service.MustNotBeError(store.Groups().ByID(parentGroupID).WithWriteLock().Select("type, team_item_id").
 		Take(&parentGroupInfo).Error())
 	if parentGroupInfo.Type != teamType || parentGroupInfo.TeamItemID == nil {
 		return nil
 	}
 	var otherTeamsMembers []int64
 	service.MustNotBeError(store.Groups().TeamsMembersForItem(groupsToCheck, *parentGroupInfo.TeamItemID).WithWriteLock().
-		Where("groups.ID != ?", parentGroupID).
-		Pluck("idGroupChild", &otherTeamsMembers).Error())
+		Where("groups.id != ?", parentGroupID).
+		Pluck("group_child_id", &otherTeamsMembers).Error())
 	return otherTeamsMembers
 }

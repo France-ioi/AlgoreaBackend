@@ -2,42 +2,42 @@ Feature: Update item
 
 Background:
   Given the database has the following table 'users':
-    | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
-    | 1  | jdoe   | 0        | 11          | 12           |
+    | id | login | temp_user | group_self_id | group_owned_id |
+    | 1  | jdoe  | 0         | 11            | 12             |
   And the database has the following table 'groups':
-    | ID | sName      | sType     |
+    | id | name       | type      |
     | 11 | jdoe       | UserSelf  |
     | 12 | jdoe-admin | UserAdmin |
   And the database has the following table 'items':
-    | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-    | 21 | Chapter | http://someurl1.com/ | 2                 | 1        | Task 1  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
-    | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
-    | 60 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 3  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
+    | id | type    | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | group_code_enter |
+    | 21 | Chapter | http://someurl1.com/ | 2                   | 1        | Task 1  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                | 99               | Half      | 1              | 2                | 10               | 1            | 2016-01-02 03:04:05 | 01:20:30 | 2017-01-02 03:04:05 | 1               | Closed        | 3     | 1                |
+    | 50 | Chapter | http://someurl2.com/ | 2                   | 1        | Task 2  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                | 99               | Half      | 1              | 2                | 10               | 1            | 2016-01-02 03:04:05 | 01:20:30 | 2017-01-02 03:04:05 | 1               | Closed        | 3     | 1                |
+    | 60 | Chapter | http://someurl2.com/ | 2                   | 1        | Task 3  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                | 99               | Half      | 1              | 2                | 10               | 1            | 2016-01-02 03:04:05 | 01:20:30 | 2017-01-02 03:04:05 | 1               | Closed        | 3     | 1                |
   And the database has the following table 'items_items':
-    | idItemParent | idItemChild | iChildOrder |
-    | 21           | 60          | 0           |
-    | 50           | 21          | 0           |
+    | item_parent_id | item_child_id | child_order |
+    | 21             | 60            | 0           |
+    | 50             | 21            | 0           |
   And the database has the following table 'items_ancestors':
-    | idItemAncestor | idItemChild |
-    | 21             | 60          |
-    | 50             | 21          |
-    | 50             | 60          |
+    | item_ancestor_id | item_child_id |
+    | 21               | 60            |
+    | 50               | 21            |
+    | 50               | 60            |
   And the database has the following table 'groups_items':
-    | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess | idUserCreated |
-    | 40 | 11      | 50     | false          | false                | true         | 1             |
-    | 41 | 11      | 21     | true           | true                 | false        | 1             |
-    | 42 | 11      | 60     | false          | true                 | true         | 1             |
+    | id | group_id | item_id | manager_access | cached_manager_access | owner_access | user_created_id |
+    | 40 | 11       | 50      | false          | false                 | true         | 1               |
+    | 41 | 11       | 21      | true           | true                  | false        | 1               |
+    | 42 | 11       | 60      | false          | true                  | true         | 1               |
   And the database has the following table 'groups_ancestors':
-    | ID | idGroupAncestor | idGroupChild | bIsSelf |
-    | 71 | 11              | 11           | 1       |
-    | 72 | 12              | 12           | 1       |
+    | id | group_ancestor_id | group_child_id | is_self |
+    | 71 | 11                | 11             | 1       |
+    | 72 | 12                | 12             | 1       |
   And the database has the following table 'languages':
-    | ID |
+    | id |
     | 2  |
     | 3  |
 
 Scenario: Valid
-  Given I am the user with ID "1"
+  Given I am the user with id "1"
   When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -45,37 +45,37 @@ Scenario: Valid
     }
     """
   Then the response should be "updated"
-  And the table "items" at ID "50" should be:
-    | ID | sType  | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-    | 50 | Course | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
+  And the table "items" at id "50" should be:
+    | id | type   | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | group_code_enter |
+    | 50 | Course | http://someurl2.com/ | 2                   | 1        | Task 2  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                | 99               | Half      | 1              | 2                | 10               | 1            | 2016-01-02 03:04:05 | 01:20:30 | 2017-01-02 03:04:05 | 1               | Closed        | 3     | 1                |
   And the table "items_strings" should stay unchanged
   And the table "items_items" should stay unchanged
   And the table "items_ancestors" should stay unchanged
   And the table "groups_items" should be:
-    | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess |
-    | 11      | 21     | true           | true                 | false        |
-    | 11      | 50     | false          | false                | true         |
-    | 11      | 60     | false          | true                 | true         |
+    | group_id | item_id | manager_access | cached_manager_access | owner_access |
+    | 11       | 21      | true           | true                  | false        |
+    | 11       | 50      | false          | false                 | true         |
+    | 11       | 60      | false          | true                  | true         |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     And the database has the following table 'groups':
-      | ID    |
+      | id    |
       | 12345 |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 73 | 12              | 12345        | 0       |
+      | id | group_ancestor_id | group_child_id | is_self |
+      | 73 | 12                | 12345          | 0       |
     And the database has the following table 'items':
-      | ID |
+      | id |
       | 12 |
       | 34 |
     And the database has the following table 'items_strings':
-      | idLanguage | idItem |
-      | 3          | 50     |
+      | language_id | item_id |
+      | 3           | 50      |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bManagerAccess | bCachedManagerAccess | bOwnerAccess | idUserCreated |
-      | 43 | 11      | 12     | true           | true                 | false        | 1             |
-      | 44 | 11      | 34     | false          | false                | true         | 1             |
+      | id | group_id | item_id | manager_access | cached_manager_access | owner_access | user_created_id |
+      | 43 | 11       | 12      | true           | true                  | false        | 1               |
+      | 44 | 11       | 34      | false          | false                 | true         | 1               |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -117,24 +117,24 @@ Scenario: Valid
       }
       """
     Then the response should be "updated"
-    And the table "items" at ID "50" should be:
-      | ID | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-      | 50 | Course | http://myurl.com/ | 3                 | 0              | 0        | Task number 1 | 1                | 0              | 0                       | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 12,34          | 34              | All       | 0              | 12345         | 2345            | 0            | 2018-01-02 03:04:05 | 01:02:03  | 2019-02-03 04:05:06 | 0              | Analysis      | 345    | 0              |
+    And the table "items" at id "50" should be:
+      | id | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | group_code_enter |
+      | 50 | Course | http://myurl.com/ | 3                   | 0              | 0        | Task number 1 | 1                 | 0              | 0                         | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 12,34            | 34               | All       | 0              | 12345            | 2345             | 0            | 2018-01-02 03:04:05 | 01:02:03 | 2019-02-03 04:05:06 | 0               | Analysis      | 345   | 0                |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
-      | idItemParent | idItemChild |
-      | 21           | 60          |
-      | 50           | 12          |
-      | 50           | 34          |
+      | item_parent_id | item_child_id |
+      | 21             | 60            |
+      | 50             | 12            |
+      | 50             | 34            |
     And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild |
-      | 21             | 60          |
-      | 50             | 12          |
-      | 50             | 34          |
+      | item_ancestor_id | item_child_id |
+      | 21               | 60            |
+      | 50               | 12            |
+      | 50               | 34            |
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty full_screen
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -142,16 +142,16 @@ Scenario: Valid
       }
       """
     Then the response should be "updated"
-    And the table "items" at ID "50" should be:
-      | ID | sType   | sUrl                 | idDefaultLanguage | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | groupCodeEnter |
-      | 50 | Chapter | http://someurl2.com/ | 2                 | 1        | Task 2  | 0                | 1              | 1                       | 0        | 1         |             | 1               | 1           | 1             | 1           | One             | 12             | 1              | 99              | Half      | 1              | 2             | 10              | 1            | 2016-01-02 03:04:05 | 01:20:30  | 2017-01-02 03:04:05 | 1              | Closed        | 3      | 1              |
+    And the table "items" at id "50" should be:
+      | id | type    | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | group_code_enter |
+      | 50 | Chapter | http://someurl2.com/ | 2                   | 1        | Task 2  | 0                 | 1              | 1                         | 0        | 1         |             | 1               | 1           | 1             | 1           | One             | 12             | 1                | 99               | Half      | 1              | 2                | 10               | 1            | 2016-01-02 03:04:05 | 01:20:30 | 2017-01-02 03:04:05 | 1               | Closed        | 3     | 1                |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid without any fields
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -165,7 +165,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty children array
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -176,9 +176,9 @@ Scenario: Valid
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
-      | idItemParent | idItemChild |
-      | 21           | 60          |
+      | item_parent_id | item_child_id |
+      | 21             | 60            |
     And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild |
-      | 21             | 60          |
+      | item_ancestor_id | item_child_id |
+      | 21               | 60            |
     And the table "groups_items" should stay unchanged

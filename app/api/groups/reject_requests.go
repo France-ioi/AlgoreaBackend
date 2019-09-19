@@ -11,7 +11,7 @@ import (
 // summary: Reject requests to join a group
 // description:
 //   Lets an admin reject requests to join a group.
-//   On success the service sets `groups_groups.sType` to "requestRefused" and `sStatusDate` to current UTC time
+//   On success the service sets `groups_groups.type` to "requestRefused" and `status_date` to current UTC time
 //   for each of `group_ids`.
 //
 //
@@ -19,8 +19,8 @@ import (
 //
 //
 //   The input `group_ids` should have the input `parent_group_id` as a parent group and the
-//   `groups_groups.sType` should be "requestSent", otherwise the `group_id` gets skipped with
-//   `unchanged` (if `sType` = "requestRefused") or `invalid` as the result.
+//   `groups_groups.type` should be "requestSent", otherwise the `group_id` gets skipped with
+//   `unchanged` (if `type` = "requestRefused") or `invalid` as the result.
 //   The response status code on success (200) doesn't depend on per-group results.
 // parameters:
 // - name: parent_group_id

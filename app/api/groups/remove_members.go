@@ -14,7 +14,7 @@ import (
 // summary: Remove members from a group
 // description:
 //   Lets an admin remove users from a group.
-//   On success the service sets `groups_groups.sType` to "removed" and `sStatusDate` to current UTC time
+//   On success the service sets `groups_groups.type` to "removed" and `status_date` to current UTC time
 //   for each self group of `user_ids`. It also refreshes the access rights.
 //
 //
@@ -22,8 +22,8 @@ import (
 //
 //
 //   Each of the input `user_ids` should have the input `group_id` as a parent of their self group and the
-//   `groups_groups.sType` should be one of "invitationAccepted"/"requestAccepted"/"joinedByCode",
-//   otherwise the `user_id` gets skipped with `unchanged` (if `sType` = "removed") or `invalid` as the result.
+//   `groups_groups.type` should be one of "invitationAccepted"/"requestAccepted"/"joinedByCode",
+//   otherwise the `user_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
 //   If a user is not found or doesn't have a self group, it gets skipped with `not_found` as the result.
 //
 //
@@ -90,11 +90,11 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	var groupsToRemoveRows []struct {
-		UserID      int64 `gorm:"column:idUser"`
-		SelfGroupID int64 `gorm:"column:idGroupSelf"`
+		UserID      int64
+		SelfGroupID int64 `gorm:"column:group_self_id"`
 	}
-	service.MustNotBeError(srv.Store.Users().Select("ID AS idUser, idGroupSelf").
-		Where("ID IN (?)", userIDs).Where("idGroupSelf IS NOT NULL").
+	service.MustNotBeError(srv.Store.Users().Select("id AS user_id, group_self_id").
+		Where("id IN (?)", userIDs).Where("group_self_id IS NOT NULL").
 		Scan(&groupsToRemoveRows).Error())
 
 	groupsToRemove := make([]int64, 0, len(groupsToRemoveRows))

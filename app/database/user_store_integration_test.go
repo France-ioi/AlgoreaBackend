@@ -25,37 +25,37 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	assert.NoError(t, store.Users().DeleteTemporaryWithTraps())
 
 	for _, table := range []string{"users", "history_users"} {
-		assertTableColumn(t, db, table, "ID", []int64{501, 502})
+		assertTableColumn(t, db, table, "id", []int64{501, 502})
 	}
 	for _, table := range []string{"groups", "history_groups"} {
-		assertTableColumn(t, db, table, "ID", []int64{1, 5001, 5002, 6001, 6002, 7000})
+		assertTableColumn(t, db, table, "id", []int64{1, 5001, 5002, 6001, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_propagate", "ID", []int64{1, 5001, 5002, 6001, 6002, 7000})
+	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 5002, 6001, 6002, 7000})
 	for _, table := range []string{"groups_ancestors", "history_groups_ancestors"} {
-		assertTableColumn(t, db, table, "idGroupAncestor", []int64{1, 5001, 5002, 6001, 6002, 7000})
-		assertTableColumn(t, db, table, "idGroupChild", []int64{1, 5001, 5002, 6001, 6002, 7000})
+		assertTableColumn(t, db, table, "group_ancestor_id", []int64{1, 5001, 5002, 6001, 6002, 7000})
+		assertTableColumn(t, db, table, "group_child_id", []int64{1, 5001, 5002, 6001, 6002, 7000})
 	}
 	for _, table := range []string{"groups_groups", "history_groups_groups"} {
-		assertTableColumn(t, db, table, "idGroupParent", []int64{1, 5001, 5002, 6001, 6002})
-		assertTableColumn(t, db, table, "idGroupChild", []int64{5001, 5002, 6001, 6002, 7000})
+		assertTableColumn(t, db, table, "group_parent_id", []int64{1, 5001, 5002, 6001, 6002})
+		assertTableColumn(t, db, table, "group_child_id", []int64{5001, 5002, 6001, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_items_propagate", "ID", []int64{2, 3, 5, 6})
+	assertTableColumn(t, db, "groups_items_propagate", "id", []int64{2, 3, 5, 6})
 	for _, table := range []string{
 		"groups_items", "history_groups_items", "groups_attempts", "history_groups_attempts",
 		"groups_login_prefixes", "history_groups_login_prefixes",
 	} {
-		assertTableColumn(t, db, table, "idGroup", []int64{5001, 5002, 6001, 6002})
+		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002, 6001, 6002})
 	}
-	assertTableColumn(t, db, "sessions", "idUser", []int64{501})
+	assertTableColumn(t, db, "sessions", "user_id", []int64{501})
 	for _, table := range []string{
 		"users_threads", "history_users_threads", "users_answers", "users_items", "history_users_items",
 		"filters", "history_filters", "refresh_tokens",
 	} {
-		assertTableColumn(t, db, table, "idUser", []int64{501, 502})
+		assertTableColumn(t, db, table, "user_id", []int64{501, 502})
 	}
 
-	assertTableColumn(t, db, "groups_propagate", "sAncestorsComputationState", []string{"done"})
-	found, err := store.GroupAncestors().Where("idGroupAncestor = 1 AND idGroupChild = 7000").HasRows()
+	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
+	found, err := store.GroupAncestors().Where("group_ancestor_id = 1 AND group_child_id = 7000").HasRows()
 	assert.NoError(t, err)
 	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
 }
@@ -73,160 +73,160 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 		&database.User{ID: 501, SelfGroupID: ptrInt64(5001), OwnedGroupID: ptrInt64(6001)}))
 
 	for _, table := range []string{"users", "history_users"} {
-		assertTableColumn(t, db, table, "ID", []int64{500, 502})
+		assertTableColumn(t, db, table, "id", []int64{500, 502})
 	}
 	for _, table := range []string{"groups", "history_groups"} {
-		assertTableColumn(t, db, table, "ID", []int64{1, 5000, 5002, 6000, 6002, 7000})
+		assertTableColumn(t, db, table, "id", []int64{1, 5000, 5002, 6000, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_propagate", "ID", []int64{1, 5000, 5002, 6000, 6002, 7000})
+	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5000, 5002, 6000, 6002, 7000})
 	for _, table := range []string{"groups_ancestors", "history_groups_ancestors"} {
-		assertTableColumn(t, db, table, "idGroupAncestor", []int64{1, 5000, 5002, 6000, 6002, 7000})
-		assertTableColumn(t, db, table, "idGroupChild", []int64{1, 5000, 5002, 6000, 6002, 7000})
+		assertTableColumn(t, db, table, "group_ancestor_id", []int64{1, 5000, 5002, 6000, 6002, 7000})
+		assertTableColumn(t, db, table, "group_child_id", []int64{1, 5000, 5002, 6000, 6002, 7000})
 	}
 	for _, table := range []string{"groups_groups", "history_groups_groups"} {
-		assertTableColumn(t, db, table, "idGroupParent", []int64{1, 5000, 5002, 6000, 6002})
-		assertTableColumn(t, db, table, "idGroupChild", []int64{5000, 5002, 6000, 6002, 7000})
+		assertTableColumn(t, db, table, "group_parent_id", []int64{1, 5000, 5002, 6000, 6002})
+		assertTableColumn(t, db, table, "group_child_id", []int64{5000, 5002, 6000, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_items_propagate", "ID", []int64{1, 3, 4, 6})
+	assertTableColumn(t, db, "groups_items_propagate", "id", []int64{1, 3, 4, 6})
 	for _, table := range []string{
 		"groups_items", "history_groups_items", "groups_attempts", "history_groups_attempts",
 		"groups_login_prefixes", "history_groups_login_prefixes",
 	} {
-		assertTableColumn(t, db, table, "idGroup", []int64{5000, 5002, 6000, 6002})
+		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002, 6000, 6002})
 	}
-	assertTableColumn(t, db, "sessions", "idUser", []int64{500})
+	assertTableColumn(t, db, "sessions", "user_id", []int64{500})
 	for _, table := range []string{
 		"users_threads", "history_users_threads", "users_answers", "users_items", "history_users_items",
 		"filters", "history_filters", "refresh_tokens",
 	} {
-		assertTableColumn(t, db, table, "idUser", []int64{500, 502})
+		assertTableColumn(t, db, table, "user_id", []int64{500, 502})
 	}
 
-	assertTableColumn(t, db, "groups_propagate", "sAncestorsComputationState", []string{"done"})
-	found, err := store.GroupAncestors().Where("idGroupAncestor = 1 AND idGroupChild = 7000").HasRows()
+	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
+	found, err := store.GroupAncestors().Where("group_ancestor_id = 1 AND group_child_id = 7000").HasRows()
 	assert.NoError(t, err)
 	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
 }
 
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
 	db := testhelpers.SetupDBWithFixtureString(`
-			groups_propagate: [{ID: 5000}, {ID: 5001}, {ID: 5002}, {ID: 6000}, {ID: 6001}, {ID: 6002}]
-			history_users: [{ID: 500, iVersion: 1}, {ID: 501, iVersion: 1}, {ID: 502, iVersion: 1}]
+			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}, {id: 6000}, {id: 6001}, {id: 6002}]
+			history_users: [{id: 500, version: 1}, {id: 501, version: 1}, {id: 502, version: 1}]
 			`, `
 			users:
-				- {ID: 500, tempUser: 1, sLogin: 500, idGroupSelf: 5000, idGroupOwned: 6000} # should be deleted
-				- {ID: 501, sLogin: 501, tempUser: 1, idGroupSelf: 5001, idGroupOwned: 6001}
-				- {ID: 502, sLogin: 502, idGroupSelf: 5002, idGroupOwned: 6002}
+				- {id: 500, temp_user: 1, login: 500, group_self_id: 5000, group_owned_id: 6000} # should be deleted
+				- {id: 501, login: 501, temp_user: 1, group_self_id: 5001, group_owned_id: 6001}
+				- {id: 502, login: 502, group_self_id: 5002, group_owned_id: 6002}
 			sessions:
-				- {idUser: 500, sExpirationDate: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
-				- {idUser: 501, sExpirationDate: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
-				- {idUser: 501, sExpirationDate: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
-			users_threads: [{idUser: 500, idThread: 1}, {idUser: 501, idThread: 1}, {idUser: 502, idThread: 1}]
-			history_users_threads: [{idUser: 500, ID: 1, idThread: 1, iVersion: 1}, {idUser: 501, ID: 2, idThread: 2, iVersion: 1},
-			                        {idUser: 502, ID: 3, idThread: 3, iVersion: 1}]
+				- {user_id: 500, expiration_date: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 501, expiration_date: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 501, expiration_date: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
+			users_threads: [{user_id: 500, thread_id: 1}, {user_id: 501, thread_id: 1}, {user_id: 502, thread_id: 1}]
+			history_users_threads: [{user_id: 500, id: 1, thread_id: 1, version: 1}, {user_id: 501, id: 2, thread_id: 2, version: 1},
+			                        {user_id: 502, id: 3, thread_id: 3, version: 1}]
 			users_answers:
-				- {idUser: 500, idItem: 1, sSubmissionDate: 2019-05-30 11:00:00}
-				- {idUser: 501, idItem: 1, sSubmissionDate: 2019-05-30 11:00:00}
-				- {idUser: 502, idItem: 1, sSubmissionDate: 2019-05-30 11:00:00}
-			users_items: [{idUser: 500, idItem: 1}, {idUser: 501, idItem: 1}, {idUser: 502, idItem: 1}]
+				- {user_id: 500, item_id: 1, submission_date: 2019-05-30 11:00:00}
+				- {user_id: 501, item_id: 1, submission_date: 2019-05-30 11:00:00}
+				- {user_id: 502, item_id: 1, submission_date: 2019-05-30 11:00:00}
+			users_items: [{user_id: 500, item_id: 1}, {user_id: 501, item_id: 1}, {user_id: 502, item_id: 1}]
 			history_users_items:
-				- {idUser: 500, idItem: 1, ID: 1, nbSubmissionsAttempts: 0, nbTasksTried: 0, nbChildrenValidated: 0,
-				   bValidated: 0, bFinished: 0, nbTasksWithHelp: 0, nbHintsCached: 0, nbCorrectionsRead: 0, iPrecision: 0,
-				   iAutonomy: 0, bRanked: 0, iVersion: 1}
-				- {idUser: 501, idItem: 1, ID: 2, nbSubmissionsAttempts: 0, nbTasksTried: 0, nbChildrenValidated: 0,
-				   bValidated: 0, bFinished: 0, nbTasksWithHelp: 0, nbHintsCached: 0, nbCorrectionsRead: 0,
-				   iPrecision: 0, iAutonomy: 0, bRanked: 0, iVersion: 1}
-				- {idUser: 502, idItem: 1, ID: 3, nbSubmissionsAttempts: 0, nbTasksTried: 0, nbChildrenValidated: 0,
-				   bValidated: 0, bFinished: 0, nbTasksWithHelp: 0, nbHintsCached: 0, nbCorrectionsRead: 0, iPrecision: 0,
-				   iAutonomy: 0, bRanked: 0, iVersion: 1}
-			filters: [{idUser: 500}, {idUser: 501}, {idUser: 502}]
-			history_filters: [{idUser: 500, ID: 1, iVersion: 1}, {idUser: 501, ID: 2, iVersion: 1}, {idUser: 502, ID: 3, iVersion: 1}]
-			refresh_tokens: [{idUser: 500, sRefreshToken: token}, {idUser: 501, sRefreshToken: token2},
-			                 {idUser: 502, sRefreshToken: token3}]
-			groups_items_propagate: [{ID: 1}, {ID: 2}, {ID: 3}, {ID: 4}, {ID: 5}, {ID: 6}]
+				- {user_id: 500, item_id: 1, id: 1, submissions_attempts: 0, tasks_tried: 0, children_validated: 0,
+				   validated: 0, finished: 0, tasks_with_help: 0, hints_cached: 0, corrections_read: 0, precision: 0,
+				   autonomy: 0, ranked: 0, version: 1}
+				- {user_id: 501, item_id: 1, id: 2, submissions_attempts: 0, tasks_tried: 0, children_validated: 0,
+				   validated: 0, finished: 0, tasks_with_help: 0, hints_cached: 0, corrections_read: 0,
+				   precision: 0, autonomy: 0, ranked: 0, version: 1}
+				- {user_id: 502, item_id: 1, id: 3, submissions_attempts: 0, tasks_tried: 0, children_validated: 0,
+				   validated: 0, finished: 0, tasks_with_help: 0, hints_cached: 0, corrections_read: 0, precision: 0,
+				   autonomy: 0, ranked: 0, version: 1}
+			filters: [{user_id: 500}, {user_id: 501}, {user_id: 502}]
+			history_filters: [{user_id: 500, id: 1, version: 1}, {user_id: 501, id: 2, version: 1}, {user_id: 502, id: 3, version: 1}]
+			refresh_tokens: [{user_id: 500, refresh_token: token}, {user_id: 501, refresh_token: token2},
+			                 {user_id: 502, refresh_token: token3}]
+			groups_items_propagate: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}]
 			groups_items:
-				- {ID: 1, idGroup: 5000, idItem: 1, idUserCreated: 1}
-				- {ID: 2, idGroup: 5001, idItem: 1, idUserCreated: 1}
-				- {ID: 3, idGroup: 5002, idItem: 1, idUserCreated: 1}
-				- {ID: 4, idGroup: 6000, idItem: 1, idUserCreated: 1}
-				- {ID: 5, idGroup: 6001, idItem: 1, idUserCreated: 1}
-				- {ID: 6, idGroup: 6002, idItem: 1, idUserCreated: 1}
+				- {id: 1, group_id: 5000, item_id: 1, user_created_id: 1}
+				- {id: 2, group_id: 5001, item_id: 1, user_created_id: 1}
+				- {id: 3, group_id: 5002, item_id: 1, user_created_id: 1}
+				- {id: 4, group_id: 6000, item_id: 1, user_created_id: 1}
+				- {id: 5, group_id: 6001, item_id: 1, user_created_id: 1}
+				- {id: 6, group_id: 6002, item_id: 1, user_created_id: 1}
 			history_groups_items:
-				- {ID: 1, idGroup: 5000, idItem: 1, idUserCreated: 1, iVersion: 1}
-				- {ID: 2, idGroup: 5001, idItem: 1, idUserCreated: 1, iVersion: 1}
-				- {ID: 3, idGroup: 5002, idItem: 1, idUserCreated: 1, iVersion: 1}
-				- {ID: 4, idGroup: 6000, idItem: 1, idUserCreated: 1, iVersion: 1}
-				- {ID: 5, idGroup: 6001, idItem: 1, idUserCreated: 1, iVersion: 1}
-				- {ID: 6, idGroup: 6002, idItem: 1, idUserCreated: 1, iVersion: 1}
-			groups_attempts: [{idGroup: 5000, idItem: 1, iOrder: 0}, {idGroup: 5001, idItem: 1, iOrder: 0},
-			                  {idGroup: 5002, idItem: 1, iOrder: 0}, {idGroup: 6000, idItem: 1, iOrder: 0},
-			                  {idGroup: 6001, idItem: 1, iOrder: 0}, {idGroup: 6002, idItem: 1, iOrder: 0}]
+				- {id: 1, group_id: 5000, item_id: 1, user_created_id: 1, version: 1}
+				- {id: 2, group_id: 5001, item_id: 1, user_created_id: 1, version: 1}
+				- {id: 3, group_id: 5002, item_id: 1, user_created_id: 1, version: 1}
+				- {id: 4, group_id: 6000, item_id: 1, user_created_id: 1, version: 1}
+				- {id: 5, group_id: 6001, item_id: 1, user_created_id: 1, version: 1}
+				- {id: 6, group_id: 6002, item_id: 1, user_created_id: 1, version: 1}
+			groups_attempts: [{group_id: 5000, item_id: 1, order: 0}, {group_id: 5001, item_id: 1, order: 0},
+			                  {group_id: 5002, item_id: 1, order: 0}, {group_id: 6000, item_id: 1, order: 0},
+			                  {group_id: 6001, item_id: 1, order: 0}, {group_id: 6002, item_id: 1, order: 0}]
 			history_groups_attempts:
-				- {idGroup: 5000, idItem: 1, ID: 1, iOrder: 0, iVersion: 1}
-				- {idGroup: 5001, idItem: 1, ID: 2, iOrder: 0, iVersion: 1}
-				- {idGroup: 5002, idItem: 1, ID: 3, iOrder: 0, iVersion: 1}
-				- {idGroup: 6000, idItem: 1, ID: 4, iOrder: 0, iVersion: 1}
-				- {idGroup: 6001, idItem: 1, ID: 5, iOrder: 0, iVersion: 1}
-				- {idGroup: 6002, idItem: 1, ID: 6, iOrder: 0, iVersion: 1}
-			groups_login_prefixes: [{idGroup: 5000, prefix: 5000, ID: 1}, {idGroup: 5001, prefix: 5001, ID: 2},
-			                        {idGroup: 5002, prefix: 5002, ID: 3}, {idGroup: 6000, prefix: 6000, ID: 4},
-			                        {idGroup: 6001, prefix: 6001, ID: 5}, {idGroup: 6002, prefix: 6002, ID: 6}]
+				- {group_id: 5000, item_id: 1, id: 1, order: 0, version: 1}
+				- {group_id: 5001, item_id: 1, id: 2, order: 0, version: 1}
+				- {group_id: 5002, item_id: 1, id: 3, order: 0, version: 1}
+				- {group_id: 6000, item_id: 1, id: 4, order: 0, version: 1}
+				- {group_id: 6001, item_id: 1, id: 5, order: 0, version: 1}
+				- {group_id: 6002, item_id: 1, id: 6, order: 0, version: 1}
+			groups_login_prefixes: [{group_id: 5000, prefix: 5000, id: 1}, {group_id: 5001, prefix: 5001, id: 2},
+			                        {group_id: 5002, prefix: 5002, id: 3}, {group_id: 6000, prefix: 6000, id: 4},
+			                        {group_id: 6001, prefix: 6001, id: 5}, {group_id: 6002, prefix: 6002, id: 6}]
 			history_groups_login_prefixes:
-				- {idGroup: 5000, prefix: 5000, ID: 1, iVersion: 1}
-				- {idGroup: 5001, prefix: 5001, ID: 2, iVersion: 1}
-				- {idGroup: 5002, prefix: 5002, ID: 3, iVersion: 1}
-				- {idGroup: 6000, prefix: 5003, ID: 4, iVersion: 1}
-				- {idGroup: 6001, prefix: 5004, ID: 5, iVersion: 1}
-				- {idGroup: 6002, prefix: 5004, ID: 6, iVersion: 1}
-			groups_groups: [{idGroupParent: 5000, idGroupChild: 7000}, {idGroupParent: 5001, idGroupChild: 7000},
-			                {idGroupParent: 5002, idGroupChild: 7000}, {idGroupParent: 6000, idGroupChild: 7000},
-			                {idGroupParent: 6001, idGroupChild: 7000}, {idGroupParent: 6002, idGroupChild: 7000},
-			                {idGroupParent: 1, idGroupChild: 5000}, {idGroupParent: 1, idGroupChild: 5001},
-			                {idGroupParent: 1, idGroupChild: 5002}, {idGroupParent: 1, idGroupChild: 6000},
-			                {idGroupParent: 1, idGroupChild: 6001}, {idGroupParent: 1, idGroupChild: 6002}]
+				- {group_id: 5000, prefix: 5000, id: 1, version: 1}
+				- {group_id: 5001, prefix: 5001, id: 2, version: 1}
+				- {group_id: 5002, prefix: 5002, id: 3, version: 1}
+				- {group_id: 6000, prefix: 5003, id: 4, version: 1}
+				- {group_id: 6001, prefix: 5004, id: 5, version: 1}
+				- {group_id: 6002, prefix: 5004, id: 6, version: 1}
+			groups_groups: [{group_parent_id: 5000, group_child_id: 7000}, {group_parent_id: 5001, group_child_id: 7000},
+			                {group_parent_id: 5002, group_child_id: 7000}, {group_parent_id: 6000, group_child_id: 7000},
+			                {group_parent_id: 6001, group_child_id: 7000}, {group_parent_id: 6002, group_child_id: 7000},
+			                {group_parent_id: 1, group_child_id: 5000}, {group_parent_id: 1, group_child_id: 5001},
+			                {group_parent_id: 1, group_child_id: 5002}, {group_parent_id: 1, group_child_id: 6000},
+			                {group_parent_id: 1, group_child_id: 6001}, {group_parent_id: 1, group_child_id: 6002}]
 			history_groups_groups:
-				- {idGroupParent: 5000, idGroupChild: 7000, ID: 1, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 5001, idGroupChild: 7000, ID: 2, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 5002, idGroupChild: 7000, ID: 3, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 6000, idGroupChild: 7000, ID: 4, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 6001, idGroupChild: 7000, ID: 5, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 6002, idGroupChild: 7000, ID: 6, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 5000, ID: 7, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 5001, ID: 8, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 5002, ID: 9, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 6000, ID: 10, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 6001, ID: 11, iChildOrder: 0, iVersion: 1}
-				- {idGroupParent: 1, idGroupChild: 6002, ID: 12, iChildOrder: 0, iVersion: 1}
-			groups_ancestors: [{idGroupAncestor: 1, idGroupChild: 1},
-			                   {idGroupAncestor: 5000, idGroupChild: 7000}, {idGroupAncestor: 5001, idGroupChild: 7000},
-			                   {idGroupAncestor: 5002, idGroupChild: 7000}, {idGroupAncestor: 6000, idGroupChild: 7000},
-			                   {idGroupAncestor: 6001, idGroupChild: 7000}, {idGroupAncestor: 6002, idGroupChild: 7000},
-			                   {idGroupAncestor: 1, idGroupChild: 5000}, {idGroupAncestor: 1, idGroupChild: 5001},
-			                   {idGroupAncestor: 1, idGroupChild: 5002}, {idGroupAncestor: 1, idGroupChild: 6000},
-			                   {idGroupAncestor: 1, idGroupChild: 6001}, {idGroupAncestor: 1, idGroupChild: 6002},
-			                   {idGroupAncestor: 1, idGroupChild: 7000}]
+				- {group_parent_id: 5000, group_child_id: 7000, id: 1, child_order: 0, version: 1}
+				- {group_parent_id: 5001, group_child_id: 7000, id: 2, child_order: 0, version: 1}
+				- {group_parent_id: 5002, group_child_id: 7000, id: 3, child_order: 0, version: 1}
+				- {group_parent_id: 6000, group_child_id: 7000, id: 4, child_order: 0, version: 1}
+				- {group_parent_id: 6001, group_child_id: 7000, id: 5, child_order: 0, version: 1}
+				- {group_parent_id: 6002, group_child_id: 7000, id: 6, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 5000, id: 7, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 5001, id: 8, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 5002, id: 9, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 6000, id: 10, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 6001, id: 11, child_order: 0, version: 1}
+				- {group_parent_id: 1, group_child_id: 6002, id: 12, child_order: 0, version: 1}
+			groups_ancestors: [{group_ancestor_id: 1, group_child_id: 1},
+			                   {group_ancestor_id: 5000, group_child_id: 7000}, {group_ancestor_id: 5001, group_child_id: 7000},
+			                   {group_ancestor_id: 5002, group_child_id: 7000}, {group_ancestor_id: 6000, group_child_id: 7000},
+			                   {group_ancestor_id: 6001, group_child_id: 7000}, {group_ancestor_id: 6002, group_child_id: 7000},
+			                   {group_ancestor_id: 1, group_child_id: 5000}, {group_ancestor_id: 1, group_child_id: 5001},
+			                   {group_ancestor_id: 1, group_child_id: 5002}, {group_ancestor_id: 1, group_child_id: 6000},
+			                   {group_ancestor_id: 1, group_child_id: 6001}, {group_ancestor_id: 1, group_child_id: 6002},
+			                   {group_ancestor_id: 1, group_child_id: 7000}]
 			history_groups_ancestors:
-				- {idGroupAncestor: 5000, idGroupChild: 7000, ID: 1, iVersion: 1}
-				- {idGroupAncestor: 5001, idGroupChild: 7000, ID: 2, iVersion: 1}
-				- {idGroupAncestor: 5002, idGroupChild: 7000, ID: 3, iVersion: 1}
-				- {idGroupAncestor: 6000, idGroupChild: 7000, ID: 4, iVersion: 1}
-				- {idGroupAncestor: 6001, idGroupChild: 7000, ID: 5, iVersion: 1}
-				- {idGroupAncestor: 6002, idGroupChild: 7000, ID: 6, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 5000, ID: 7, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 5001, ID: 8, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 5002, ID: 8, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 6000, ID: 9, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 6001, ID: 10, iVersion: 1}
-				- {idGroupAncestor: 1, idGroupChild: 6002, ID: 11, iVersion: 1}
-			groups: [{ID: 1}, {ID: 5000}, {ID: 5001}, {ID: 5002}, {ID: 6000}, {ID: 6001}, {ID: 6002}, {ID: 7000}]
+				- {group_ancestor_id: 5000, group_child_id: 7000, id: 1, version: 1}
+				- {group_ancestor_id: 5001, group_child_id: 7000, id: 2, version: 1}
+				- {group_ancestor_id: 5002, group_child_id: 7000, id: 3, version: 1}
+				- {group_ancestor_id: 6000, group_child_id: 7000, id: 4, version: 1}
+				- {group_ancestor_id: 6001, group_child_id: 7000, id: 5, version: 1}
+				- {group_ancestor_id: 6002, group_child_id: 7000, id: 6, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 5000, id: 7, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 5001, id: 8, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 5002, id: 8, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 6000, id: 9, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 6001, id: 10, version: 1}
+				- {group_ancestor_id: 1, group_child_id: 6002, id: 11, version: 1}
+			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 6000}, {id: 6001}, {id: 6002}, {id: 7000}]
 			history_groups:
-				- {ID: 5000, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 5001, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 5002, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 6000, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 6001, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 6002, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}
-				- {ID: 7000, bOpened: 0, bFreeAccess: 1, bSendEmails: 0, iVersion: 1}`)
+				- {id: 5000, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 5001, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 5002, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 6000, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 6001, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 6002, opened: 0, free_access: 1, send_emails: 0, version: 1}
+				- {id: 7000, opened: 0, free_access: 1, send_emails: 0, version: 1}`)
 	store := database.NewDataStore(db)
 	store.GroupGroups().CreateNewAncestors()
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {

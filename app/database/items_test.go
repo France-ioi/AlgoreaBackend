@@ -16,11 +16,11 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta(
-		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (idItem) " +
-			"ON default_strings.idItem = items.ID AND default_strings.idLanguage = items.idDefaultLanguage " +
-			"LEFT JOIN items_strings user_strings ON user_strings.idItem=items.ID AND user_strings.idLanguage = ?")).
+		"SELECT `items`.* FROM `items` LEFT JOIN items_strings default_strings FORCE INDEX (item_id) " +
+			"ON default_strings.item_id = items.id AND default_strings.language_id = items.default_language_id " +
+			"LEFT JOIN items_strings user_strings ON user_strings.item_id=items.id AND user_strings.language_id = ?")).
 		WithArgs(4).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := db.Table("items").JoinsUserAndDefaultItemStrings(mockUser).Scan(&result).Error()
@@ -35,15 +35,15 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT `items`.* FROM `items` JOIN (SELECT idItem, MIN(sCachedFullAccessDate) <= NOW() AS fullAccess, "+
-			"MIN(sCachedPartialAccessDate) <= NOW() AS partialAccess, MIN(sCachedGrayedAccessDate) <= NOW() AS grayedAccess, "+
-			"MIN(sCachedAccessSolutionsDate) <= NOW() AS accessSolutions "+
-			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.idGroupChild = ?)) AS ancestors "+
-			"ON ancestors.idGroupAncestor = groups_items.idGroup GROUP BY groups_items.idItem "+
-			"HAVING (fullAccess > 0 OR partialAccess > 0 OR grayedAccess > 0)) "+
-			"as visible ON visible.idItem = items.ID") + "$").
+		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MIN(cached_full_access_date) <= NOW() AS full_access, "+
+			"MIN(cached_partial_access_date) <= NOW() AS partial_access, MIN(cached_grayed_access_date) <= NOW() AS grayed_access, "+
+			"MIN(cached_access_solutions_date) <= NOW() AS access_solutions "+
+			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.group_child_id = ?)) AS ancestors "+
+			"ON ancestors.group_ancestor_id = groups_items.group_id GROUP BY groups_items.item_id "+
+			"HAVING (full_access > 0 OR partial_access > 0 OR grayed_access > 0)) "+
+			"as visible ON visible.item_id = items.id") + "$").
 		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := db.Table("items").WhereItemsAreVisible(mockUser).Scan(&result).Error()

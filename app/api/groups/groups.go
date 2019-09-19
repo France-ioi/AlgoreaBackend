@@ -53,7 +53,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	var count int64
 	if err := store.GroupAncestors().OwnedByUser(user).
-		Where("idGroupChild = ?", groupID).Count(&count).Error(); err != nil {
+		Where("group_child_id = ?", groupID).Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {
@@ -67,14 +67,14 @@ func checkThatUserHasRightsForDirectRelation(
 	groupStore := store.Groups()
 
 	var groupData []struct {
-		ID   int64  `gorm:"column:ID"`
-		Type string `gorm:"column:sType"`
+		ID   int64
+		Type string
 	}
 
 	err := groupStore.OwnedBy(user).
 		WithWriteLock().
-		Select("groups.ID, sType").
-		Where("groups.ID IN(?, ?)", parentGroupID, childGroupID).
+		Select("groups.id, type").
+		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
@@ -147,11 +147,11 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 
 type descendantParent struct {
 	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
+	ID int64 `json:"id,string"`
 	// required:true
-	Name string `sql:"column:sName" json:"name"`
+	Name string `json:"name"`
 
-	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
+	LinkedGroupID int64 `json:"-"`
 }
 
 func filterOtherTeamsMembersOut(

@@ -13,99 +13,99 @@ import (
 // swagger:model userData
 type getInfoData struct {
 	// required: true
-	ID int64 `gorm:"column:ID" json:"id,string"`
+	ID int64 `json:"id,string"`
 	// required: true
-	TempUser bool `gorm:"column:tempUser" json:"temp_user"`
+	TempUser bool `json:"temp_user"`
 	// required: true
-	Login string `gorm:"column:sLogin" json:"login"`
+	Login string `json:"login"`
 	// Nullable
 	// required: true
-	RegistrationDate *database.Time `gorm:"column:sRegistrationDate" json:"registration_date"`
+	RegistrationDate *database.Time `json:"registration_date"`
 	// Nullable
 	// required: true
-	Email *string `gorm:"column:sEmail" json:"email"`
+	Email *string `json:"email"`
 	// required: true
-	EmailVerified bool `gorm:"column:bEmailVerified" json:"email_verified"`
+	EmailVerified bool `json:"email_verified"`
 	// Nullable
 	// required: true
-	FirstName *string `gorm:"column:sFirstName" json:"first_name"`
+	FirstName *string `json:"first_name"`
 	// Nullable
 	// required: true
-	LastName *string `gorm:"column:sLastName" json:"last_name"`
+	LastName *string `json:"last_name"`
 	// Nullable
 	// required: true
-	StudentID *string `gorm:"column:sStudentId" json:"student_id"`
+	StudentID *string `json:"student_id"`
 	// required: true
-	CountryCode string `gorm:"column:sCountryCode" json:"country_code"`
+	CountryCode string `json:"country_code"`
 	// Nullable
 	// required: true
-	TimeZone *string `gorm:"column:sTimeZone" json:"time_zone"`
+	TimeZone *string `json:"time_zone"`
 	// Nullable
 	// required: true
-	BirthDate *string `gorm:"column:sBirthDate" json:"birth_date"`
+	BirthDate *string `json:"birth_date"`
 	// required: true
-	GraduationYear int32 `gorm:"column:iGraduationYear" json:"graduation_year"`
+	GraduationYear int32 `json:"graduation_year"`
 	// Nullable
 	// required: true
-	Grade *int32 `gorm:"column:iGrade" json:"grade"`
+	Grade *int32 `json:"grade"`
 	// Nullable
 	// required: true
 	// enum: Male,Female
-	Sex *string `gorm:"column:sSex" json:"sex"`
+	Sex *string `json:"sex"`
 	// Nullable
 	// required: true
-	Address *string `gorm:"column:sAddress" json:"address"`
+	Address *string `json:"address"`
 	// Nullable
 	// required: true
-	ZipCode *string `gorm:"column:sZipcode" json:"zip_code"`
+	ZipCode *string `gorm:"column:zipcode" json:"zip_code"`
 	// Nullable
 	// required: true
-	City *string `gorm:"column:sCity" json:"city"`
+	City *string `json:"city"`
 	// Nullable
 	// required: true
-	LandLineNumber *string `gorm:"column:sLandLineNumber" json:"land_line_number"`
+	LandLineNumber *string `json:"land_line_number"`
 	// Nullable
 	// required: true
-	CellPhoneNumber *string `gorm:"column:sCellPhoneNumber" json:"cell_phone_number"`
+	CellPhoneNumber *string `json:"cell_phone_number"`
 	// required: true
-	DefaultLanguage string `gorm:"column:sDefaultLanguage" json:"default_language"`
+	DefaultLanguage string `json:"default_language"`
 	// required: true
-	PublicFirstName bool `gorm:"column:bPublicFirstName" json:"public_first_name"`
+	PublicFirstName bool `json:"public_first_name"`
 	// required: true
-	PublicLastName bool `gorm:"column:bPublicLastName" json:"public_last_name"`
+	PublicLastName bool `json:"public_last_name"`
 
 	// required: true
-	NotifyNews bool `gorm:"column:bNotifyNews" json:"notify_news"`
+	NotifyNews bool `json:"notify_news"`
 	// required: true
 	// enum: Never,Answers,Concerned
-	Notify string `gorm:"column:sNotify" json:"notify"`
+	Notify string `json:"notify"`
 	// Nullable
 	// required: true
-	FreeText *string `gorm:"column:sFreeText" json:"free_text"`
+	FreeText *string `json:"free_text"`
 	// Nullable
 	// required: true
-	WebSite *string `gorm:"column:sWebSite" json:"web_site"`
+	WebSite *string `json:"web_site"`
 	// required: true
-	PhotoAutoload bool `gorm:"column:bPhotoAutoload" json:"photo_autoload"`
+	PhotoAutoload bool `json:"photo_autoload"`
 	// Nullable
 	// required: true
-	LangProg *string `gorm:"column:sLangProg" json:"lang_prog"`
+	LangProg *string `json:"lang_prog"`
 	// required: true
-	BasicEditorMode bool `gorm:"column:bBasicEditorMode" json:"basic_editor_mode"`
+	BasicEditorMode bool `json:"basic_editor_mode"`
 	// required: true
-	SpacesForTab int32 `gorm:"column:nbSpacesForTab" json:"spaces_for_tab"`
+	SpacesForTab int32 `json:"spaces_for_tab"`
 	// required: true
-	StepLevelInSite int32 `gorm:"column:iStepLevelInSite" json:"step_level_in_site"`
+	StepLevelInSite int32 `json:"step_level_in_site"`
 	// required: true
-	IsAdmin bool `gorm:"column:bIsAdmin" json:"is_admin"`
+	IsAdmin bool `json:"is_admin"`
 	// required: true
-	NoRanking bool `gorm:"column:bNoRanking" json:"no_ranking"`
+	NoRanking bool `json:"no_ranking"`
 	// Nullable
 	// required: true
-	LoginModulePrefix *string `gorm:"column:loginModulePrefix" json:"login_module_prefix"`
+	LoginModulePrefix *string `json:"login_module_prefix"`
 	// Nullable
 	// required: true
-	AllowSubgroups *bool `gorm:"column:allowSubgroups" json:"allow_subgroups"`
+	AllowSubgroups *bool `json:"allow_subgroups"`
 }
 
 // swagger:operation GET /current-user users userData
@@ -128,12 +128,12 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 
 	var userInfo getInfoData
 	err := srv.Store.Users().ByID(user.ID).
-		Select(`ID, tempUser, sLogin, sRegistrationDate, sEmail, bEmailVerified, sFirstName, sLastName,
-			sStudentId, sCountryCode, sTimeZone,
-			CONVERT(sBirthDate, char) AS sBirthDate, iGraduationYear, iGrade, sSex, sAddress, sZipcode,
-			sCity, sLandLineNumber, sCellPhoneNumber, sDefaultLanguage, bPublicFirstName, bPublicLastName,
-			bNotifyNews, sNotify, sFreeText, sWebSite, bPhotoAutoload, sLangProg, bBasicEditorMode, nbSpacesForTab,
-			iStepLevelInSite, bIsAdmin, bNoRanking, loginModulePrefix, allowSubgroups`).
+		Select(`id, temp_user, login, registration_date, email, email_verified, first_name, last_name,
+			student_id, country_code, time_zone,
+			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
+			city, land_line_number, cell_phone_number, default_language, public_first_name, public_last_name,
+			notify_news, notify, free_text, web_site, photo_autoload, lang_prog, basic_editor_mode, spaces_for_tab,
+			step_level_in_site, is_admin, no_ranking, login_module_prefix, allow_subgroups`).
 		Scan(&userInfo).Error()
 
 	// This is very unlikely since the user middleware has already checked that the user exists

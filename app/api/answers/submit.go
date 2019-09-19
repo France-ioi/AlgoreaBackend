@@ -64,8 +64,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 	var userAnswerID int64
 	var hintsInfo struct {
-		HintsRequested *string `gorm:"column:sHintsRequested"`
-		HintsCached    int32   `gorm:"column:nbHintsCached"`
+		HintsRequested *string
+		HintsCached    int32
 	}
 	apiError := service.NoError
 
@@ -90,13 +90,13 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)
 		service.MustNotBeError(
-			groupAttemptsScope.WithWriteLock().Select("sHintsRequested, nbHintsCached").Scan(&hintsInfo).Error())
+			groupAttemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
 		columnsToUpdate := map[string]interface{}{
-			"nbSubmissionsAttempts": gorm.Expr("nbSubmissionsAttempts + 1"),
-			"sLastActivityDate":     database.Now(),
+			"submissions_attempts": gorm.Expr("submissions_attempts + 1"),
+			"last_activity_date":   database.Now(),
 		}
 		service.MustNotBeError(userItemStore.
-			Where("idUser = ? AND idItem = ?", user.ID, requestData.TaskToken.LocalItemID).
+			Where("user_id = ? AND item_id = ?", user.ID, requestData.TaskToken.LocalItemID).
 			UpdateColumn(columnsToUpdate).Error())
 		service.MustNotBeError(groupAttemptsScope.UpdateColumn(columnsToUpdate).Error())
 		return nil // commit

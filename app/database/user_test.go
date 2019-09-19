@@ -29,10 +29,10 @@ func TestUser_Clone(t *testing.T) {
 func (u *User) LoadByID(dataStore *DataStore, id int64) error {
 	err := dataStore.Users().ByID(id).
 		Select(`
-						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,
-						users.tempUser, users.allowSubgroups, users.sNotificationReadDate,
-						users.sDefaultLanguage, l.ID as idDefaultLanguage`).
-		Joins("LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode").
+						users.id, users.login, users.is_admin, users.group_self_id, users.group_owned_id, users.group_access_id,
+						users.temp_user, users.allow_subgroups, users.notification_read_date,
+						users.default_language, l.id as default_language_id`).
+		Joins("LEFT JOIN languages l ON users.default_language = l.code").
 		Take(&u).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		u.ID = id

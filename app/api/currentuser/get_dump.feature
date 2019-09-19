@@ -2,15 +2,15 @@ Feature: Export the short version of the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'users':
-      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
-      | 2  | user   | 11          | 12           | John        | Doe       | 1      |
-      | 4  | jane   | 31          | 32           | Jane        | Doe       | 2      |
+      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | 2  | user  | 11            | 12             | John        | Doe       | 1     |
+      | 4  | jane  | 31            | 32             | Jane        | Doe       | 2     |
     And the database has the following table 'refresh_tokens':
-      | idUser | sRefreshToken    |
-      | 1      | refreshTokenFor1 |
-      | 2      | refreshTokenFor2 |
+      | user_id | refresh_token    |
+      | 1       | refreshTokenFor1 |
+      | 2       | refreshTokenFor2 |
     And the database has the following table 'groups':
-      | ID | sType     | sName              | sDescription           |
+      | id | type      | name               | description            |
       | 1  | Class     | Our Class          | Our class group        |
       | 2  | Team      | Our Team           | Our team group         |
       | 3  | Club      | Our Club           | Our club group         |
@@ -25,54 +25,54 @@ Feature: Export the short version of the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         | idUserInviting |
-      | 2  | 1             | 11           | invitationSent     | 2019-07-09 21:02:28 | null           |
-      | 3  | 2             | 11           | invitationAccepted | 2019-07-09 22:02:28 | 1              |
-      | 4  | 3             | 11           | requestSent        | 2019-07-09 23:02:28 | 1              |
-      | 5  | 4             | 11           | requestRefused     | 2019-07-10 00:02:28 | 2              |
-      | 6  | 5             | 11           | invitationAccepted | 2019-07-10 01:02:28 | 2              |
-      | 7  | 6             | 11           | requestAccepted    | 2019-07-10 02:02:28 | 2              |
-      | 8  | 7             | 11           | removed            | 2019-07-10 03:02:28 | 1              |
-      | 9  | 8             | 11           | left               | 2019-07-10 04:02:28 | 1              |
-      | 10 | 9             | 11           | direct             | 2019-07-10 05:02:28 | 2              |
-      | 11 | 1             | 12           | invitationSent     | 2019-07-09 20:02:28 | 2              |
-      | 12 | 12            | 1            | direct             | null                | null           |
-      | 13 | 12            | 2            | direct             | null                | null           |
+      | id | group_parent_id | group_child_id | type               | status_date         | user_inviting_id |
+      | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
+      | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 1                |
+      | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 1                |
+      | 5  | 4               | 11             | requestRefused     | 2019-07-10 00:02:28 | 2                |
+      | 6  | 5               | 11             | invitationAccepted | 2019-07-10 01:02:28 | 2                |
+      | 7  | 6               | 11             | requestAccepted    | 2019-07-10 02:02:28 | 2                |
+      | 8  | 7               | 11             | removed            | 2019-07-10 03:02:28 | 1                |
+      | 9  | 8               | 11             | left               | 2019-07-10 04:02:28 | 1                |
+      | 10 | 9               | 11             | direct             | 2019-07-10 05:02:28 | 2                |
+      | 11 | 1               | 12             | invitationSent     | 2019-07-09 20:02:28 | 2                |
+      | 12 | 12              | 1              | direct             | null                | null             |
+      | 13 | 12              | 2              | direct             | null                | null             |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 1               | 1            | true    |
-      | 2               | 2            | true    |
-      | 2               | 11           | false   |
-      | 3               | 3            | true    |
-      | 4               | 4            | true    |
-      | 5               | 5            | true    |
-      | 5               | 11           | false   |
-      | 6               | 6            | true    |
-      | 6               | 11           | false   |
-      | 7               | 7            | true    |
-      | 8               | 8            | true    |
-      | 9               | 9            | true    |
-      | 9               | 11           | false   |
-      | 11              | 11           | true    |
-      | 12              | 1            | false   |
-      | 12              | 2            | false   |
-      | 12              | 12           | true    |
+      | group_ancestor_id | group_child_id | is_self |
+      | 1                 | 1              | true    |
+      | 2                 | 2              | true    |
+      | 2                 | 11             | false   |
+      | 3                 | 3              | true    |
+      | 4                 | 4              | true    |
+      | 5                 | 5              | true    |
+      | 5                 | 11             | false   |
+      | 6                 | 6              | true    |
+      | 6                 | 11             | false   |
+      | 7                 | 7              | true    |
+      | 8                 | 8              | true    |
+      | 9                 | 9              | true    |
+      | 9                 | 11             | false   |
+      | 11                | 11             | true    |
+      | 12                | 1              | false   |
+      | 12                | 2              | false   |
+      | 12                | 12             | true    |
     And the database has the following table 'users_answers':
-      | ID | idUser | idItem | sSubmissionDate     |
-      | 1  | 2      | 404    | 2019-07-09 20:02:28 |
-      | 2  | 3      | 404    | 2019-07-09 20:02:28 |
+      | id | user_id | item_id | submission_date     |
+      | 1  | 2       | 404     | 2019-07-09 20:02:28 |
+      | 2  | 3       | 404     | 2019-07-09 20:02:28 |
     And the database has the following table 'users_items':
-      | ID | idUser | idItem |
-      | 11 | 2      | 404    |
-      | 12 | 3      | 404    |
+      | id | user_id | item_id |
+      | 11 | 2       | 404     |
+      | 12 | 3       | 404     |
     And the database has the following table 'groups_attempts':
-      | ID  | idGroup | idItem | iOrder |
-      | 111 | 11      | 404    | 0      |
-      | 112 | 2       | 404    | 0      |
-      | 113 | 1       | 404    | 0      |
+      | id  | group_id | item_id | `order` |
+      | 111 | 11       | 404     | 0       |
+      | 112 | 2        | 404     | 0       |
+      | 113 | 1        | 404     | 0       |
 
   Scenario: Full data
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a GET request to "/current-user/dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -81,71 +81,71 @@ Feature: Export the short version of the current user's data
     """
     {
       "current_user": {
-        "ID": "2", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0,
-        "bNoRanking": 0, "bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0,
-        "creatorID": null, "iGrade": 1, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0,
-        "idGroupAccess": null, "idGroupOwned": "12", "idGroupSelf": "11", "idUserGodfather": null, "loginID": null,
-        "loginModulePrefix": null, "nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null,
-        "sCellPhoneNumber": null, "sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null,
-        "sFirstName": "John", "sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python",
-        "sLastActivityDate": null, "sLastIP": null, "sLastLoginDate": null, "sLastName": "Doe", "sLogin": "user",
-        "sNotificationReadDate": null, "sNotify": "Answers", "sOpenIdIdentity": null, "sPasswordMd5": null,
-        "sRecover": null, "sRegistrationDate": null, "sSalt": null, "sSex": null, "sStudentId": null, "sTimeZone": null,
-        "sWebSite": null, "sZipcode": null, "tempUser": 0
+        "id": "2", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
+        "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
+        "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
+        "group_access_id": null, "group_owned_id": "12", "group_self_id": "11", "user_godfather_id": null, "login_id": null,
+        "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
+        "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
+        "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
+        "last_activity_date": null, "last_ip": null, "last_login_date": null, "last_name": "Doe", "login": "user",
+        "notification_read_date": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
+        "recover": null, "registration_date": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
+        "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_groups": [
         {
-          "ID": "2", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "1", "idUserInviting": null,
-          "sName": "Our Class", "sRole": "member", "sStatusDate": "2019-07-09T21:02:28Z", "sType": "invitationSent"
+          "id": "2", "child_order": 0, "group_child_id": "11", "group_parent_id": "1", "user_inviting_id": null,
+          "name": "Our Class", "role": "member", "status_date": "2019-07-09T21:02:28Z", "type": "invitationSent"
         },
         {
-          "ID": "3", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "2", "idUserInviting": "1",
-          "sName": "Our Team", "sRole": "member", "sStatusDate": "2019-07-09T22:02:28Z", "sType": "invitationAccepted"
+          "id": "3", "child_order": 0, "group_child_id": "11", "group_parent_id": "2", "user_inviting_id": "1",
+          "name": "Our Team", "role": "member", "status_date": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
         },
         {
-          "ID": "4", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "3", "idUserInviting": "1",
-          "sName": "Our Club", "sRole": "member", "sStatusDate": "2019-07-09T23:02:28Z", "sType": "requestSent"
+          "id": "4", "child_order": 0, "group_child_id": "11", "group_parent_id": "3", "user_inviting_id": "1",
+          "name": "Our Club", "role": "member", "status_date": "2019-07-09T23:02:28Z", "type": "requestSent"
         },
         {
-          "ID": "5", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "4", "idUserInviting": "2",
-          "sName": "Our Friends", "sRole": "member", "sStatusDate": "2019-07-10T00:02:28Z", "sType": "requestRefused"
+          "id": "5", "child_order": 0, "group_child_id": "11", "group_parent_id": "4", "user_inviting_id": "2",
+          "name": "Our Friends", "role": "member", "status_date": "2019-07-10T00:02:28Z", "type": "requestRefused"
         },
         {
-          "ID": "6", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "5", "idUserInviting": "2",
-          "sName": "Other people", "sRole": "member", "sStatusDate": "2019-07-10T01:02:28Z", "sType": "invitationAccepted"
+          "id": "6", "child_order": 0, "group_child_id": "11", "group_parent_id": "5", "user_inviting_id": "2",
+          "name": "Other people", "role": "member", "status_date": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
         },
         {
-          "ID": "7", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "6", "idUserInviting": "2",
-          "sName": "Another Class", "sRole": "member", "sStatusDate": "2019-07-10T02:02:28Z", "sType": "requestAccepted"
+          "id": "7", "child_order": 0, "group_child_id": "11", "group_parent_id": "6", "user_inviting_id": "2",
+          "name": "Another Class", "role": "member", "status_date": "2019-07-10T02:02:28Z", "type": "requestAccepted"
         },
         {
-          "ID": "8", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "7", "idUserInviting": "1",
-          "sName": "Another Team", "sRole": "member", "sStatusDate": "2019-07-10T03:02:28Z", "sType": "removed"
+          "id": "8", "child_order": 0, "group_child_id": "11", "group_parent_id": "7", "user_inviting_id": "1",
+          "name": "Another Team", "role": "member", "status_date": "2019-07-10T03:02:28Z", "type": "removed"
         },
         {
-          "ID": "9", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "8", "idUserInviting": "1",
-          "sName": "Another Club", "sRole": "member", "sStatusDate": "2019-07-10T04:02:28Z", "sType": "left"
+          "id": "9", "child_order": 0, "group_child_id": "11", "group_parent_id": "8", "user_inviting_id": "1",
+          "name": "Another Club", "role": "member", "status_date": "2019-07-10T04:02:28Z", "type": "left"
         },
         {
-          "ID": "10", "iChildOrder": 0, "idGroupChild": "11", "idGroupParent": "9", "idUserInviting": "2",
-          "sName": "Some other friends", "sRole": "member", "sStatusDate": "2019-07-10T05:02:28Z", "sType": "direct"
+          "id": "10", "child_order": 0, "group_child_id": "11", "group_parent_id": "9", "user_inviting_id": "2",
+          "name": "Some other friends", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "direct"
         }
       ],
       "joined_groups": [
-        {"ID": "2", "sName": "Our Team"},
-        {"ID": "5", "sName": "Other people"},
-        {"ID": "6", "sName": "Another Class"},
-        {"ID": "9", "sName": "Some other friends"}
+        {"id": "2", "name": "Our Team"},
+        {"id": "5", "name": "Other people"},
+        {"id": "6", "name": "Another Class"},
+        {"id": "9", "name": "Some other friends"}
       ],
       "owned_groups": [
-        {"ID": "1", "sName": "Our Class"},
-        {"ID": "2", "sName": "Our Team"}
+        {"id": "1", "name": "Our Class"},
+        {"id": "2", "name": "Our Team"}
       ]
     }
     """
 
   Scenario: All optional arrays and objects are empty
-    Given I am the user with ID "4"
+    Given I am the user with id "4"
     When I send a GET request to "/current-user/dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -154,16 +154,16 @@ Feature: Export the short version of the current user's data
     """
     {
       "current_user": {
-        "ID": "4", "allowSubgroups": null, "bBasicEditorMode": 1, "bEmailVerified": 0, "bIsAdmin": 0, "bNoRanking": 0,
-        "bNotifyNews": 0, "bPhotoAutoload": 0, "bPublicFirstName": 0, "bPublicLastName": 0, "creatorID": null,
-        "iGrade": 2, "iGraduationYear": 0, "iMemberState": 0, "iStepLevelInSite": 0, "idGroupAccess": null,
-        "idGroupOwned": "32", "idGroupSelf": "31", "idUserGodfather": null, "loginID": null, "loginModulePrefix": null,
-        "nbHelpGiven": 0, "nbSpacesForTab": 3, "sAddress": null, "sBirthDate": null, "sCellPhoneNumber": null,
-        "sCity": null, "sCountryCode": "", "sDefaultLanguage": "fr", "sEmail": null, "sFirstName": "Jane",
-        "sFreeText": null, "sLandLineNumber": null, "sLangProg": "Python", "sLastActivityDate": null, "sLastIP": null,
-        "sLastLoginDate": null, "sLastName": "Doe", "sLogin": "jane", "sNotificationReadDate": null, "sNotify": "Answers",
-        "sOpenIdIdentity": null, "sPasswordMd5": null, "sRecover": null, "sRegistrationDate": null, "sSalt": null,
-        "sSex": null, "sStudentId": null, "sTimeZone": null, "sWebSite": null, "sZipcode": null, "tempUser": 0
+        "id": "4", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
+        "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
+        "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "group_access_id": null,
+        "group_owned_id": "32", "group_self_id": "31", "user_godfather_id": null, "login_id": null, "login_module_prefix": null,
+        "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
+        "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
+        "free_text": null, "land_line_number": null, "lang_prog": "Python", "last_activity_date": null, "last_ip": null,
+        "last_login_date": null, "last_name": "Doe", "login": "jane", "notification_read_date": null, "notify": "Answers",
+        "open_id_identity": null, "password_md5": null, "recover": null, "registration_date": null, "salt": null,
+        "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_groups": [],
       "joined_groups": [],

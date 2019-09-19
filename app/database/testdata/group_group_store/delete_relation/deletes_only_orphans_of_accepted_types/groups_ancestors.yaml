@@ -1,33 +1,33 @@
-- {idGroupAncestor: 1, idGroupChild: 1, bIsSelf: 1}
-- {idGroupAncestor: 1, idGroupChild: 2}
-- {idGroupAncestor: 1, idGroupChild: 3}
-- {idGroupAncestor: 1, idGroupChild: 4}
-- {idGroupAncestor: 1, idGroupChild: 5}
-- {idGroupAncestor: 1, idGroupChild: 6}
-- {idGroupAncestor: 1, idGroupChild: 7}
-- {idGroupAncestor: 1, idGroupChild: 8}
-- {idGroupAncestor: 1, idGroupChild: 9}
-- {idGroupAncestor: 1, idGroupChild: 10}
-- {idGroupAncestor: 1, idGroupChild: 11}
-- {idGroupAncestor: 1, idGroupChild: 12}
-- {idGroupAncestor: 2, idGroupChild: 2, bIsSelf: 1}
-- {idGroupAncestor: 2, idGroupChild: 3}
-- {idGroupAncestor: 2, idGroupChild: 4}
-- {idGroupAncestor: 2, idGroupChild: 5}
-- {idGroupAncestor: 2, idGroupChild: 6}
-- {idGroupAncestor: 2, idGroupChild: 7}
-- {idGroupAncestor: 2, idGroupChild: 8}
-- {idGroupAncestor: 2, idGroupChild: 9}
-- {idGroupAncestor: 2, idGroupChild: 10}
-- {idGroupAncestor: 2, idGroupChild: 11}
-- {idGroupAncestor: 2, idGroupChild: 12}
-- {idGroupAncestor: 3, idGroupChild: 3, bIsSelf: 1}
-- {idGroupAncestor: 4, idGroupChild: 4, bIsSelf: 1}
-- {idGroupAncestor: 5, idGroupChild: 5, bIsSelf: 1}
-- {idGroupAncestor: 6, idGroupChild: 6, bIsSelf: 1}
-- {idGroupAncestor: 7, idGroupChild: 7, bIsSelf: 1}
-- {idGroupAncestor: 8, idGroupChild: 8, bIsSelf: 1}
-- {idGroupAncestor: 9, idGroupChild: 9, bIsSelf: 1}
-- {idGroupAncestor: 10, idGroupChild: 10, bIsSelf: 1}
-- {idGroupAncestor: 11, idGroupChild: 11, bIsSelf: 1}
-- {idGroupAncestor: 12, idGroupChild: 12, bIsSelf: 1}
+- {group_ancestor_id: 1, group_child_id: 1, is_self: 1}
+- {group_ancestor_id: 1, group_child_id: 2}
+- {group_ancestor_id: 1, group_child_id: 3}
+- {group_ancestor_id: 1, group_child_id: 4}
+- {group_ancestor_id: 1, group_child_id: 5}
+- {group_ancestor_id: 1, group_child_id: 6}
+- {group_ancestor_id: 1, group_child_id: 7}
+- {group_ancestor_id: 1, group_child_id: 8}
+- {group_ancestor_id: 1, group_child_id: 9}
+- {group_ancestor_id: 1, group_child_id: 10}
+- {group_ancestor_id: 1, group_child_id: 11}
+- {group_ancestor_id: 1, group_child_id: 12}
+- {group_ancestor_id: 2, group_child_id: 2, is_self: 1}
+- {group_ancestor_id: 2, group_child_id: 3}
+- {group_ancestor_id: 2, group_child_id: 4}
+- {group_ancestor_id: 2, group_child_id: 5}
+- {group_ancestor_id: 2, group_child_id: 6}
+- {group_ancestor_id: 2, group_child_id: 7}
+- {group_ancestor_id: 2, group_child_id: 8}
+- {group_ancestor_id: 2, group_child_id: 9}
+- {group_ancestor_id: 2, group_child_id: 10}
+- {group_ancestor_id: 2, group_child_id: 11}
+- {group_ancestor_id: 2, group_child_id: 12}
+- {group_ancestor_id: 3, group_child_id: 3, is_self: 1}
+- {group_ancestor_id: 4, group_child_id: 4, is_self: 1}
+- {group_ancestor_id: 5, group_child_id: 5, is_self: 1}
+- {group_ancestor_id: 6, group_child_id: 6, is_self: 1}
+- {group_ancestor_id: 7, group_child_id: 7, is_self: 1}
+- {group_ancestor_id: 8, group_child_id: 8, is_self: 1}
+- {group_ancestor_id: 9, group_child_id: 9, is_self: 1}
+- {group_ancestor_id: 10, group_child_id: 10, is_self: 1}
+- {group_ancestor_id: 11, group_child_id: 11, is_self: 1}
+- {group_ancestor_id: 12, group_child_id: 12, is_self: 1}

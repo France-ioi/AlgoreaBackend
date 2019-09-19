@@ -1,7 +1,7 @@
-- {idGroupParent: 1, idGroupChild: 2}
-- {idGroupParent: 2, idGroupChild: 3}
-- {idGroupParent: 2, idGroupChild: 4}
-- {idGroupParent: 4, idGroupChild: 5}
+- {group_parent_id: 1, group_child_id: 2}
+- {group_parent_id: 2, group_child_id: 3}
+- {group_parent_id: 2, group_child_id: 4}
+- {group_parent_id: 4, group_child_id: 5}
 
-- {idGroupParent: 10, idGroupChild: 3}
-- {idGroupParent: 10, idGroupChild: 5}
+- {group_parent_id: 10, group_child_id: 3}
+- {group_parent_id: 10, group_child_id: 5}

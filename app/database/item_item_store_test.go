@@ -14,9 +14,9 @@ func TestItemItemStore_ChildrenOf(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	const parentItemID = 123
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `items_items` WHERE (items_items.idItemParent=?)")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `items_items` WHERE (items_items.item_parent_id=?)")).
 		WithArgs(parentItemID).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	store := NewDataStore(db).ItemItems()
 	newStore := store.ChildrenOf(parentItemID)

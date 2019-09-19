@@ -1,12 +1,12 @@
-- {ID: 11, idGroup: 1, idItem: 1, sPropagateAccess: self, idUserCreated: 1}
-- {ID: 12, idGroup: 1, idItem: 2, sPropagateAccess: done, idUserCreated: 1}
-- {ID: 13, idGroup: 1, idItem: 3, sPropagateAccess: done, idUserCreated: 1}
-- {ID: 14, idGroup: 1, idItem: 4, sPropagateAccess: self, sFullAccessDate: 2017-01-01 12:13:14,
-   sCachedFullAccessDate: 2017-01-01 12:13:14, bCachedFullAccess: 1,
-   sPartialAccessDate: 2017-01-01 12:13:14, sCachedPartialAccessDate: 2017-01-01 12:13:14,
-   bCachedPartialAccess: 1, bManagerAccess: 1, bCachedManagerAccess: 1,
-   sAccessSolutionsDate: 2017-01-01 12:13:14, sCachedAccessSolutionsDate: 2017-01-01 12:13:14,
-   bCachedAccessSolutions: 1, sCachedGrayedAccessDate: 2017-01-01 12:13:14,
-   bCachedGrayedAccess: 1, sAccessReason: some reason, sCachedAccessReason: some cached reason, idUserCreated: 1}
-- {ID: 21, idGroup: 2, idItem: 1, sPropagateAccess: self, idUserCreated: 1}
-- {ID: 22, idGroup: 2, idItem: 11, sPropagateAccess: self, idUserCreated: 1}
+- {id: 11, group_id: 1, item_id: 1, propagate_access: self, user_created_id: 1}
+- {id: 12, group_id: 1, item_id: 2, propagate_access: done, user_created_id: 1}
+- {id: 13, group_id: 1, item_id: 3, propagate_access: done, user_created_id: 1}
+- {id: 14, group_id: 1, item_id: 4, propagate_access: self, full_access_date: 2017-01-01 12:13:14,
+   cached_full_access_date: 2017-01-01 12:13:14, cached_full_access: 1,
+   partial_access_date: 2017-01-01 12:13:14, cached_partial_access_date: 2017-01-01 12:13:14,
+   cached_partial_access: 1, manager_access: 1, cached_manager_access: 1,
+   access_solutions_date: 2017-01-01 12:13:14, cached_access_solutions_date: 2017-01-01 12:13:14,
+   cached_access_solutions: 1, cached_grayed_access_date: 2017-01-01 12:13:14,
+   cached_grayed_access: 1, access_reason: some reason, cached_access_reason: some cached reason, user_created_id: 1}
+- {id: 21, group_id: 2, item_id: 1, propagate_access: self, user_created_id: 1}
+- {id: 22, group_id: 2, item_id: 11, propagate_access: self, user_created_id: 1}

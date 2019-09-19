@@ -1,9 +1,9 @@
-users: [{ID: 1, idGroupSelf: 11, sLogin: 1}]
-groups: [{ID: 11}, {ID: 20}]
-groups_groups: [{idGroupParent: 20, idGroupChild: 12, sType: requestAccepted}]
+users: [{id: 1, group_self_id: 11, login: 1}]
+groups: [{id: 11}, {id: 20}]
+groups_groups: [{group_parent_id: 20, group_child_id: 12, type: requestAccepted}]
 groups_ancestors:
-  - {idGroupAncestor: 11, idGroupChild: 11}
-  - {idGroupAncestor: 20, idGroupChild: 11}
-groups_items: [{idGroup: 20, idItem: 114, sFullAccessDate: 2019-03-22 08:44:55, sCachedFullAccessDate: 2019-03-22 08:44:55,
-                idUserCreated: 1}]
+  - {group_ancestor_id: 11, group_child_id: 11}
+  - {group_ancestor_id: 20, group_child_id: 11}
+groups_items: [{group_id: 20, item_id: 114, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55,
+                user_created_id: 1}]
 

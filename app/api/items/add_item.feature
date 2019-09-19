@@ -2,28 +2,28 @@ Feature: Add item
 
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned |
-      | 1  | jdoe   | 0        | 11          | 12           |
+      | id | login | temp_user | group_self_id | group_owned_id |
+      | 1  | jdoe  | 0         | 11            | 12             |
     And the database has the following table 'groups':
-      | ID | sName      | sType     |
+      | id | name       | type      |
       | 11 | jdoe       | UserSelf  |
       | 12 | jdoe-admin | UserAdmin |
     And the database has the following table 'items':
-      | ID | bTeamsEditable | bNoScore |
+      | id | teams_editable | no_score |
       | 21 | false          | false    |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bCachedManagerAccess | idUserCreated |
-      | 41 | 11      | 21     | true                 | 1             |
+      | id | group_id | item_id | cached_manager_access | user_created_id |
+      | 41 | 11       | 21      | true                  | 1               |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 71 | 11              | 11           | 1       |
-      | 72 | 12              | 12           | 1       |
+      | id | group_ancestor_id | group_child_id | is_self |
+      | 71 | 11                | 11             | 1       |
+      | 72 | 12                | 12             | 1       |
     And the database has the following table 'languages':
-      | ID |
+      | id |
       | 3  |
 
   Scenario: Valid
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -46,38 +46,38 @@ Feature: Add item
         "data": { "id": "5577006791947779410" }
       }
       """
-    And the table "items" at ID "5577006791947779410" should be:
-      | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 5577006791947779410 | Course | null | 3                 | 0              | 0        | null    | 1                | 0              | 0                       | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date | duration | end_contest_date | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null             | 100              | null      | 0              | null             | 0                | 0            | null             | null     | null             | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
-      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
-      | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
+      | 6129484611666145821 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | ID                  | idItemParent | idItemChild         | iChildOrder |
-      | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
+      | id                  | item_parent_id | item_child_id       | child_order |
+      | 4037200794235010051 | 21             | 5577006791947779410 | 100         |
     And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild         |
-      | 21             | 5577006791947779410 |
-    And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |
+      | item_ancestor_id | item_child_id       |
+      | 21               | 5577006791947779410 |
+    And the table "groups_items" at id "8674665223082153551" should be:
+      | id                  | group_id | item_id             | user_created_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     And the database has the following table 'groups':
-      | ID    |
+      | id    |
       | 12345 |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 73 | 12              | 12345        | 0       |
+      | id | group_ancestor_id | group_child_id | is_self |
+      | 73 | 12                | 12345          | 0       |
     And the database has the following table 'items':
-      | ID |
+      | id |
       | 12 |
       | 34 |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess | idUserCreated |
-      | 42 | 11      | 12     | true                 | false        | 1             |
-      | 43 | 11      | 34     | false                | true         | 1             |
+      | id | group_id | item_id | cached_manager_access | owner_access | user_created_id |
+      | 42 | 11       | 12      | true                  | false        | 1               |
+      | 43 | 11       | 34      | false                 | true         | 1               |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -133,30 +133,30 @@ Feature: Add item
         "data": { "id": "5577006791947779410" }
       }
       """
-    And the table "items" at ID "5577006791947779410" should be:
-      | ID                  | sType  | sUrl              | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID       | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate     | sDuration | sEndContestDate     | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 5577006791947779410 | Course | http://myurl.com/ | 3                 | 1              | 1        | Task number 1 | 1                | 1              | 1                       | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34          | 34              | All       | 1              | 12345         | 2345            | 1            | 2018-01-02 03:04:05 | 01:02:03  | 2019-02-03 04:05:06 | 1              | Analysis      | 345    | 1        | 1              |
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1              | 1                         | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34            | 34               | All       | 1              | 12345            | 2345             | 1            | 2018-01-02 03:04:05 | 01:02:03 | 2019-02-03 04:05:06 | 1               | Analysis      | 345   | 1        | 1                |
     And the table "items_strings" should be:
-      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl          | sSubtitle | sDescription                 |
-      | 6129484611666145821 | 5577006791947779410 | 3          | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
+      | 6129484611666145821 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | ID                  | idItemParent        | idItemChild         | iChildOrder |
+      | id                  | item_parent_id      | item_child_id       | child_order |
       | 3916589616287113937 | 5577006791947779410 | 12                  | 0           |
       | 4037200794235010051 | 21                  | 5577006791947779410 | 100         |
       | 6334824724549167320 | 5577006791947779410 | 34                  | 1           |
     And the table "items_ancestors" should be:
-      | idItemAncestor      | idItemChild         |
+      | item_ancestor_id    | item_child_id       |
       | 21                  | 12                  |
       | 21                  | 34                  |
       | 21                  | 5577006791947779410 |
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
-    And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |
+    And the table "groups_items" at id "8674665223082153551" should be:
+      | id                  | group_id | item_id             | user_created_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |
 
   Scenario: Valid with empty full_screen
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
     """
     {
@@ -177,18 +177,18 @@ Feature: Add item
       "data": { "id": "5577006791947779410" }
     }
     """
-    And the table "items" at ID "5577006791947779410" should be:
-      | ID                  | sType  | sUrl | idDefaultLanguage | bTeamsEditable | bNoScore | sTextID | bTitleBarVisible | bCustomChapter | bDisplayDetailsInParent | bUsesAPI | bReadOnly | sFullScreen | bShowDifficulty | bShowSource | bHintsAllowed | bFixedRanks | sValidationType | iValidationMin | idItemUnlocked | iScoreMinUnlock | sTeamMode | bTeamsEditable | idTeamInGroup | iTeamMaxMembers | bHasAttempts | sAccessOpenDate      | sDuration | sEndContestDate      | bShowUserInfos | sContestPhase | iLevel | bNoScore | groupCodeEnter |
-      | 5577006791947779410 | Course | null |                 3 |              0 |        0 | null    | 1                | 0              | 0                       | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null           | 100             | null      | 0              | null          | 0               | 0            | null                 | null      | null                 | 0              | Running       | null   | 0        | 0              |
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | item_unlocked_id | score_min_unlock | team_mode | teams_editable | team_in_group_id | team_max_members | has_attempts | access_open_date | duration | end_contest_date | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null             | 100              | null      | 0              | null             | 0                | 0            | null             | null     | null             | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
-      | ID                  | idItem              | idLanguage | sTitle   | sImageUrl | sSubtitle | sDescription |
-      | 6129484611666145821 | 5577006791947779410 | 3          | my title | null      | null      | null         |
+      | id                  | item_id             | language_id | title    | image_url | subtitle | description |
+      | 6129484611666145821 | 5577006791947779410 | 3           | my title | null      | null     | null        |
     And the table "items_items" should be:
-      | ID                  | idItemParent | idItemChild         | iChildOrder |
-      | 4037200794235010051 | 21           | 5577006791947779410 | 100         |
+      | id                  | item_parent_id | item_child_id       | child_order |
+      | 4037200794235010051 | 21             | 5577006791947779410 | 100         |
     And the table "items_ancestors" should be:
-      | idItemAncestor | idItemChild         |
-      | 21             | 5577006791947779410 |
-    And the table "groups_items" at ID "8674665223082153551" should be:
-      | ID                  | idGroup | idItem              | idUserCreated | ABS(TIMESTAMPDIFF(SECOND, sFullAccessDate, NOW())) < 3 | bOwnerAccess | bCachedManagerAccess | ABS(TIMESTAMPDIFF(SECOND, sCachedFullAccessDate, NOW())) < 3 | bCachedFullAccess |
-      | 8674665223082153551 | 11      | 5577006791947779410 | 1             | 1                                                      | 1            | 1                    | 1                                                            | 1                 |
+      | item_ancestor_id | item_child_id       |
+      | 21               | 5577006791947779410 |
+    And the table "groups_items" at id "8674665223082153551" should be:
+      | id                  | group_id | item_id             | user_created_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |

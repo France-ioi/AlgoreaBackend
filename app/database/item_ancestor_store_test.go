@@ -12,9 +12,9 @@ func TestItemAncestorStore_DescendantsOf(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	const ancestorItemID = 123
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `items_ancestors` WHERE (items_ancestors.idItemAncestor = ?)")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `items_ancestors` WHERE (items_ancestors.item_ancestor_id = ?)")).
 		WithArgs(ancestorItemID).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	store := NewDataStore(db).ItemAncestors()

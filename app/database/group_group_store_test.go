@@ -17,9 +17,9 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
-		"WHERE (groups_groups.idGroupChild = ?) AND (groups_groups.sType" + GroupRelationIsActiveCondition + ")")).
+		"WHERE (groups_groups.group_child_id = ?) AND (groups_groups.type" + GroupRelationIsActiveCondition + ")")).
 		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStore(db).GroupGroups().WhereUserIsMember(mockUser).Scan(&result).Error()
@@ -43,29 +43,29 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	mock.ExpectExec("^"+
 		regexp.QuoteMeta("DELETE FROM `groups_groups`  "+
-			"WHERE (idGroupChild = ? AND idGroupParent = ?)")+"$").
+			"WHERE (group_child_id = ? AND group_parent_id = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
-		regexp.QuoteMeta("SELECT ID FROM `groups_ancestors`  "+
-			"WHERE (idGroupChild = ? AND idGroupAncestor = ?) LIMIT 1 FOR UPDATE")+"$").
+		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+
+			"WHERE (group_child_id = ? AND group_ancestor_id = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"ID"}))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}))
 	mock.ExpectExec("^" +
-		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` "+
-			"WHERE `idGroupParent` = ? FOR UPDATE), 0)") + "$").
+		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
+			"WHERE `group_parent_id` = ? FOR UPDATE), 0)") + "$").
 		WithArgs(parentGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
-		WithArgs(sqlmock.AnyArg(), childGroupID, parentGroupID).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id) "+
+			"VALUES (@maxIChildOrder+1, ?, ?, ?)")+"$").
+		WithArgs(childGroupID, parentGroupID, sqlmock.AnyArg()).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'PRIMARY'"})
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
-		WithArgs(sqlmock.AnyArg(), childGroupID, parentGroupID).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id) "+
+			"VALUES (@maxIChildOrder+1, ?, ?, ?)")+"$").
+		WithArgs(childGroupID, parentGroupID, sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	setMockExpectationsForCreateNewAncestors(mock)
@@ -107,14 +107,14 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	mock.ExpectExec("^"+
 		regexp.QuoteMeta("DELETE FROM `groups_groups`  "+
-			"WHERE (idGroupChild = ? AND idGroupParent = ?)")+"$").
+			"WHERE (group_child_id = ? AND group_parent_id = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
-		regexp.QuoteMeta("SELECT ID FROM `groups_ancestors`  "+
-			"WHERE (idGroupChild = ? AND idGroupAncestor = ?) LIMIT 1 FOR UPDATE")+"$").
+		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+
+			"WHERE (group_child_id = ? AND group_ancestor_id = ?) LIMIT 1 FOR UPDATE")+"$").
 		WithArgs(parentGroupID, childGroupID).
-		WillReturnRows(sqlmock.NewRows([]string{"ID"}).AddRow(int64(1)))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
 	mock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
 		WithArgs("groups_groups").
 		WillReturnResult(sqlmock.NewResult(-1, 0))
@@ -142,20 +142,20 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 
 	for i, relation := range relations {
 		mock.ExpectExec("^" +
-			regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` "+
-				"WHERE `idGroupParent` = ? FOR UPDATE), 0)") + "$").
+			regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
+				"WHERE `group_parent_id` = ? FOR UPDATE), 0)") + "$").
 			WithArgs(relation.ParentID).
 			WillReturnResult(sqlmock.NewResult(-1, 0))
 
 		mock.ExpectExec("^"+
-			regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent) "+
-				"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
-			WithArgs(sqlmock.AnyArg(), relation.ChildID, relation.ParentID).
+			regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id) "+
+				"VALUES (@maxIChildOrder+1, ?, ?, ?)")+"$").
+			WithArgs(relation.ChildID, relation.ParentID, sqlmock.AnyArg()).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'PRIMARY'"})
 		mock.ExpectExec("^"+
-			regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent) "+
-				"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
-			WithArgs(sqlmock.AnyArg(), relation.ChildID, relation.ParentID).
+			regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id) "+
+				"VALUES (@maxIChildOrder+1, ?, ?, ?)")+"$").
+			WithArgs(relation.ChildID, relation.ParentID, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(int64(i+1), 1))
 	}
 
@@ -242,20 +242,20 @@ func TestGroupGroupStore_createRelation(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectExec("^" +
-		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(iChildOrder) FROM `groups_groups` "+
-			"WHERE `idGroupParent` = ? FOR UPDATE), 0)") + "$").
+		regexp.QuoteMeta("SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` "+
+			"WHERE `group_parent_id` = ? FOR UPDATE), 0)") + "$").
 		WithArgs(parentGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent, sRole) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?, ?)")+"$").
-		WithArgs(sqlmock.AnyArg(), childGroupID, parentGroupID, role).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id, role) "+
+			"VALUES (@maxIChildOrder+1, ?, ?, ?, ?)")+"$").
+		WithArgs(childGroupID, parentGroupID, sqlmock.AnyArg(), role).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'PRIMARY'"})
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (ID, iChildOrder, idGroupChild, idGroupParent, sRole) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?, ?)")+"$").
-		WithArgs(sqlmock.AnyArg(), childGroupID, parentGroupID, role).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (child_order, group_child_id, group_parent_id, id, role) "+
+			"VALUES (@maxIChildOrder+1, ?, ?, ?, ?)")+"$").
+		WithArgs(childGroupID, parentGroupID, sqlmock.AnyArg(), role).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
