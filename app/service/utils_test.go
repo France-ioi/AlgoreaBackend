@@ -532,49 +532,19 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 			}},
 			[]map[string]interface{}{
 				{
-					"user": map[string]interface{}{"id": "1"},
-					"item": map[string]interface{}{"string": map[string]interface{}{"title": "Chapter 1", "id": "2"}},
+					"User": map[string]interface{}{"ID": "1"},
+					"Item": map[string]interface{}{"String": map[string]interface{}{"Title": "Chapter 1", "ID": "2"}},
 				},
 			},
 		},
 		{
-			"converts to snake case",
-			[]map[string]interface{}{{
-				"TheGreatestUser": "root", "MyID": int64(1), "ID": "2",
-			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
-				"the_greatest_user": "root", "my_id": "1", "id": "2",
-			}},
-		},
-		{
-			"handles prefixes",
-			[]map[string]interface{}{{
-				"ID":          int64(123),
-				"idUser":      int64(1),
-				"bTrueFlag":   int64(1),
-				"bFalseFlag":  1,
-				"bFalseFlag2": int64(2),
-				"bFalseFlag3": int64(0),
-				"sString":     "value",
-			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
-				"id":           "123",
-				"user_id":      "1",
-				"true_flag":    true,
-				"false_flag":   false,
-				"false_flag_2": false,
-				"false_flag_3": false,
-				"string":       "value",
-			}},
-		},
-		{
 			"keeps nil fields",
 			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
-			[]map[string]interface{}{{"the_greatest_user": nil, "other_field": 1}},
+			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
 		},
 		{
 			"replaces empty sub-maps with nils",
-			[]map[string]interface{}{{"TheGreatestUser": nil, "EmptySubMap__Field1": nil, "EmptySubMap__Field2": nil}},
+			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map__field1": nil, "empty_sub_map__field2": nil}},
 			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map": nil}},
 		},
 		{
@@ -586,45 +556,17 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 				"iGrade":            int64(-1),
 			}}, // gorm returns numbers as int64
 			[]map[string]interface{}{{
-				"int_64":           "123",
-				"int_32":           int32(1234),
-				"corrections_read": int32(12345),
-				"grade":            int32(-1),
-			}},
-		},
-		{
-			"converts int64 into string",
-			[]map[string]interface{}{{
-				"int64":             int64(123),
+				"int64":             "123",
 				"int32":             int32(1234),
-				"nbCorrectionsRead": int64(12345),
-				"iGrade":            int64(-1),
-			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
-				"int_64":           "123",
-				"int_32":           int32(1234),
-				"corrections_read": int32(12345),
-				"grade":            int32(-1),
-			}},
-		},
-		{
-			"converts strings into float32 or int32 for i-prefixed fields",
-			[]map[string]interface{}{{
-				"iNumber":   "123",
-				"iAvgScore": "1.500",
-				"iPi":       "3.1415926535897932384626433",
-			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
-				"number":    int32(123),
-				"avg_score": float32(1.5),
-				"pi":        float32(3.1415927),
+				"nbCorrectionsRead": "12345",
+				"iGrade":            "-1",
 			}},
 		},
 		{
 			"handles datetime",
 			[]map[string]interface{}{{
-				"myDate":   "2019-05-30 11:00:00",
-				"nullDate": nil,
+				"my_date":   "2019-05-30 11:00:00",
+				"null_date": nil,
 			}},
 			[]map[string]interface{}{{
 				"my_date":   "2019-05-30T11:00:00Z",

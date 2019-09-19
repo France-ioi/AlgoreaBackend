@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/go-chi/chi"
 )
@@ -202,7 +201,6 @@ func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{}
 			if subKeyIndex == len(subKeys)-1 {
 				setConvertedValueToJSONMap(subKey, value, currentMap)
 			} else {
-				subKey = toSnakeCase(subKey)
 				shouldCreateSubMap := true
 				if subMap, hasSubMap := currentMap[subKey]; hasSubMap {
 					if subMap, ok := subMap.(map[string]interface{}); ok {
@@ -239,33 +237,12 @@ func replaceEmptySubMapsWithNils(mapToProcess map[string]interface{}) bool {
 }
 
 func setConvertedValueToJSONMap(valueName string, value interface{}, result map[string]interface{}) {
-	snakeCaseName := toSnakeCase(valueName)
-	underscoreIndex := strings.IndexByte(snakeCaseName, '_')
-	prefix := ""
-	if underscoreIndex > 0 {
-		prefix = snakeCaseName[:underscoreIndex]
-	}
-
-	switch prefix {
-	case "id":
-		snakeCaseName = snakeCaseName[3:] + "_id"
-	case "nb":
-		value = int32(value.(int64))
-	case "b":
-		value = value == int64(1)
-	case "i":
-		value = parseINumber(value)
-	}
-	if map[string]bool{"nb": true, "b": true, "i": true, "s": true}[prefix] {
-		snakeCaseName = snakeCaseName[underscoreIndex+1:]
-	}
-
 	if valueInt64, ok := value.(int64); ok {
 		value = strconv.FormatInt(valueInt64, 10)
 	}
 
-	value = convertDateToRFC3339IfDate(value, snakeCaseName)
-	result[snakeCaseName] = value
+	value = convertDateToRFC3339IfDate(value, valueName)
+	result[valueName] = value
 }
 
 func convertDateToRFC3339IfDate(value interface{}, snakeCaseName string) interface{} {
@@ -277,35 +254,4 @@ func convertDateToRFC3339IfDate(value interface{}, snakeCaseName string) interfa
 		value = parsedTime.Format(time.RFC3339)
 	}
 	return value
-}
-
-func parseINumber(value interface{}) interface{} {
-	switch typedValue := value.(type) {
-	case int64:
-		value = int32(typedValue)
-	case string:
-		if parsed, err := strconv.ParseInt(typedValue, 10, 32); err == nil {
-			value = int32(parsed)
-		} else if parsed, err := strconv.ParseFloat(typedValue, 64); err == nil {
-			value = float32(parsed)
-		}
-	}
-	return value
-}
-
-// toSnakeCase convert the given string to snake case following the Golang format:
-// acronyms are converted to lower-case and preceded by an underscore.
-func toSnakeCase(in string) string {
-	runes := []rune(in)
-
-	var out []rune
-	for i := 0; i < len(runes); i++ {
-		if i > 0 && (unicode.IsUpper(runes[i]) || unicode.IsNumber(runes[i])) &&
-			((i+1 < len(runes) && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
-			out = append(out, '_')
-		}
-		out = append(out, unicode.ToLower(runes[i]))
-	}
-
-	return string(out)
 }
