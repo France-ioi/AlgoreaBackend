@@ -58,8 +58,8 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order            int32 `json:"order"`
-	AccessRestricted bool  `json:"access_restricted"`
+	Order                    int32  `json:"order"`
+	PartialAccessPropagation string `json:"partial_access_propagation"`
 }
 
 // Bind binds req.ID to URLParam("item_id")
@@ -118,7 +118,7 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 			child := navigationItemChild{
 				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
 				Order:                      rawData[index].Order,
-				AccessRestricted:           rawData[index].AccessRestricted,
+				PartialAccessPropagation:   rawData[index].PartialAccessPropagation,
 			}
 			idsToResponseData[child.ID] = child.navigationItemCommonFields
 			parentItemCommonFields.Children = append(parentItemCommonFields.Children, child)

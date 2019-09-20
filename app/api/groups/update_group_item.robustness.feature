@@ -33,10 +33,10 @@ Feature: Change item access rights for a group - robustness
       | 102 |
       | 103 |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | always_visible | access_restricted | child_order |
-      | 100            | 101           | true           | true              | 0           |
-      | 101            | 102           | false          | false             | 0           |
-      | 102            | 103           | false          | false             | 0           |
+      | item_parent_id | item_child_id | partial_access_propagation | child_order |
+      | 100            | 101           | AsGrayed                   | 0           |
+      | 101            | 102           | AsPartial                  | 0           |
+      | 102            | 103           | AsPartial                  | 0           |
     And the database has the following table 'items_ancestors':
       | item_ancestor_id | item_child_id |
       | 100              | 101           |

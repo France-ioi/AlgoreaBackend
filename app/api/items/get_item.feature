@@ -39,9 +39,9 @@ Feature: Get item view information
       | 76 | 13                | 17             | 0       | 0       |
       | 77 | 26                | 22             | 0       | 0       |
     And the database has the following table 'items_items':
-      | id | item_parent_id | item_child_id | child_order | category  | always_visible | access_restricted | version |
-      | 54 | 200            | 210           | 2           | Discovery | true           | true              | 0       |
-      | 55 | 200            | 220           | 1           | Discovery | true           | true              | 0       |
+      | id | item_parent_id | item_child_id | child_order | category  | partial_access_propagation | version |
+      | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   | 0       |
+      | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   | 0       |
     And the database has the following table 'users_items':
       | id | user_id | item_id | attempt_active_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | start_date          | finish_date         | validation_date     | contest_start_date  | state      | answer      | version |
       | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 2019-02-01 06:26:41 | Some state | Some answer | 0       |
@@ -132,8 +132,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -177,8 +176,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -401,8 +399,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -446,8 +443,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -555,8 +551,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -587,8 +582,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "always_visible": true,
-          "access_restricted": true,
+          "partial_access_propagation": "AsGrayed",
 
           "type": "Chapter",
           "display_details_in_parent": true,

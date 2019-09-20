@@ -12,8 +12,8 @@ type rawNavigationItem struct {
 	Type              string
 	TransparentFolder bool
 	// whether items.item_unlocked_id is empty
-	HasUnlockedItems bool
-	AccessRestricted bool
+	HasUnlockedItems         bool
+	PartialAccessPropagation string
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title string
@@ -47,13 +47,13 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	commonAttributes := "items.id, items.type, items.transparent_folder, items.item_unlocked_id, items.default_language_id, " +
 		"full_access, partial_access, grayed_access"
 	itemQ := items.VisibleByID(user, rootID).Select(
-		commonAttributes + ", NULL AS item_parent_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS access_restricted")
+		commonAttributes + ", NULL AS item_parent_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS partial_access_propagation")
 	service.MustNotBeError(itemQ.Error())
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(
-		commonAttributes + ",	item_parent_id, NULL AS item_grandparent_id, child_order, access_restricted")
+		commonAttributes + ",	item_parent_id, NULL AS item_grandparent_id, child_order, partial_access_propagation")
 	service.MustNotBeError(childrenQ.Error())
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(
-		commonAttributes + ", ii1.item_parent_id, ii2.item_parent_id AS item_grandparent_id, ii1.child_order, ii1.access_restricted")
+		commonAttributes + ", ii1.item_parent_id, ii2.item_parent_id AS item_grandparent_id, ii1.child_order, ii1.partial_access_propagation")
 	service.MustNotBeError(gChildrenQ.Error())
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
 	service.MustNotBeError(itemThreeGenQ.Error())
@@ -68,7 +68,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			users_items.start_date AS start_date, users_items.validation_date AS validation_date,
 			users_items.finish_date AS finish_date,
 			items.child_order AS child_order,
-			items.access_restricted,
+			items.partial_access_propagation,
 			items.item_parent_id AS item_parent_id,
 			items.item_grandparent_id AS item_grandparent_id,
 			items.full_access, items.partial_access, items.grayed_access
