@@ -26,7 +26,7 @@ const computeAllUserItemsLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validation_date.
 //  This step is repeated until no records are updated.
-// 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.item_unlocked_id.
+// 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -41,11 +41,11 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 		mustNotBeError(userItemStore.db.Exec(
 			`UPDATE users_items AS ancestors
 			JOIN items_ancestors ON (
-				ancestors.item_id = items_ancestors.item_ancestor_id AND
-				items_ancestors.item_ancestor_id != items_ancestors.item_child_id
+				ancestors.item_id = items_ancestors.ancestor_item_id AND
+				items_ancestors.ancestor_item_id != items_ancestors.child_item_id
 			)
 			JOIN users_items AS descendants ON (
-				descendants.item_id = items_ancestors.item_child_id AND
+				descendants.item_id = items_ancestors.child_item_id AND
 				descendants.user_id = ancestors.user_id
 			)
 			SET ancestors.ancestors_computation_state = 'todo'
@@ -69,11 +69,11 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							FROM users_items AS inner_parent
 							WHERE ancestors_computation_state = 'todo'
 								AND NOT EXISTS (
-									SELECT items_items.item_child_id
+									SELECT items_items.child_item_id
 									FROM items_items
 									JOIN users_items AS children
-										ON children.item_id = items_items.item_child_id
-									WHERE items_items.item_parent_id = inner_parent.item_id AND
+										ON children.item_id = items_items.child_item_id
+									WHERE items_items.parent_item_id = inner_parent.item_id AND
 										children.ancestors_computation_state <> 'done' AND
 										children.user_id = inner_parent.user_id
 								)
@@ -107,10 +107,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							SUM(children.tasks_solved) AS tasks_solved,
 							SUM(validated) AS children_validated,
 							children.user_id AS user_id,
-							items_items.item_parent_id AS item_id
+							items_items.parent_item_id AS item_id
 						FROM users_items AS children 
-						JOIN items_items ON items_items.item_child_id = children.item_id
-						GROUP BY children.user_id, items_items.item_parent_id
+						JOIN items_items ON items_items.child_item_id = children.item_id
+						GROUP BY children.user_id, items_items.parent_item_id
 					) AS children_data
 						USING(user_id, item_id)
 					LEFT JOIN task_children_data_view AS task_children_data
@@ -118,7 +118,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					JOIN items
 						ON users_items.item_id = items.id
 					LEFT JOIN items_items
-						ON items_items.item_parent_id = users_items.item_id
+						ON items_items.parent_item_id = users_items.item_id
 					SET
 						users_items.last_activity_date = IF(task_children_data.user_item_id IS NOT NULL AND
 							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
@@ -182,13 +182,13 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 	const selectUnlocksQuery = `
 		SELECT
 			items.id AS item_id,
-			users.group_self_id AS group_id,
-			items.item_unlocked_id as items_ids
+			users.self_group_id AS group_id,
+			items.unlocked_item_ids as items_ids
 		FROM users_items
 		JOIN items ON users_items.item_id = items.id
 		JOIN users ON users_items.user_id = users.id
 		WHERE users_items.ancestors_computation_state = 'processing' AND
-			users_items.key_obtained AND items.item_unlocked_id IS NOT NULL`
+			users_items.key_obtained AND items.unlocked_item_ids IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
 		ItemID   int64
@@ -202,10 +202,10 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 			var itemIDInt64 int64
 			if itemIDInt64, err = strconv.ParseInt(itemID, 10, 64); err != nil {
 				logging.SharedLogger.WithFields(map[string]interface{}{
-					"items.id":               unlock.ItemID,
-					"items.item_unlocked_id": unlock.ItemsIDs,
-					"error":                  err,
-				}).Warn("cannot parse items.item_unlocked_id")
+					"items.id":                unlock.ItemID,
+					"items.unlocked_item_ids": unlock.ItemsIDs,
+					"error":                   err,
+				}).Warn("cannot parse items.unlocked_item_ids")
 			} else {
 				groupItemsToUnlock[groupItemPair{groupID: unlock.GroupID, itemID: itemIDInt64}] = true
 			}
@@ -219,8 +219,8 @@ func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bo
 	}
 	query := `
 		INSERT INTO groups_items
-			(group_id, item_id, partial_access_date, cached_partial_access_date, cached_partial_access, user_created_id)
-		VALUES (?, ?, NOW(), NOW(), 1, -1)` // Note: user_created_id is incorrect here, but it is required
+			(group_id, item_id, partial_access_date, cached_partial_access_date, cached_partial_access, creator_user_id)
+		VALUES (?, ?, NOW(), NOW(), 1, -1)` // Note: creator_user_id is incorrect here, but it is required
 	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
 	valuesTemplate := ", (?, ?, NOW(), NOW(), 1, -1)"
 	for item := range groupItemsToUnlock {

@@ -136,7 +136,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("item_child_id")
+	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.UserAnswers().WithUsers().WithItems().
 		Select(
 			`users_answers.id as id, users_answers.submission_date, users_answers.validated, users_answers.score,

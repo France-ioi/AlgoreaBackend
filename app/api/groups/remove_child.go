@@ -91,8 +91,8 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 		// Check that the relation exists and it is a direct relation
 		var result []struct{}
 		service.MustNotBeError(s.GroupGroups().WithWriteLock().
-			Where("group_parent_id = ?", parentGroupID).
-			Where("group_child_id = ?", childGroupID).
+			Where("parent_group_id = ?", parentGroupID).
+			Where("child_group_id = ?", childGroupID).
 			Where("type = 'direct'").Take(&result).Error())
 		if len(result) == 0 {
 			apiErr = service.InsufficientAccessRightsError

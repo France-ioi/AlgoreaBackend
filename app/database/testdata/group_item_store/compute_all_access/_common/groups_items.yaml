@@ -1,12 +1,12 @@
-- {id: 11, group_id: 1, item_id: 1, propagate_access: self, user_created_id: 1}
-- {id: 12, group_id: 1, item_id: 2, propagate_access: done, user_created_id: 1}
-- {id: 13, group_id: 1, item_id: 3, propagate_access: done, user_created_id: 1}
+- {id: 11, group_id: 1, item_id: 1, propagate_access: self, creator_user_id: 1}
+- {id: 12, group_id: 1, item_id: 2, propagate_access: done, creator_user_id: 1}
+- {id: 13, group_id: 1, item_id: 3, propagate_access: done, creator_user_id: 1}
 - {id: 14, group_id: 1, item_id: 4, propagate_access: self, full_access_date: 2017-01-01 12:13:14,
    cached_full_access_date: 2017-01-01 12:13:14, cached_full_access: 1,
    partial_access_date: 2017-01-01 12:13:14, cached_partial_access_date: 2017-01-01 12:13:14,
    cached_partial_access: 1, manager_access: 1, cached_manager_access: 1,
    access_solutions_date: 2017-01-01 12:13:14, cached_access_solutions_date: 2017-01-01 12:13:14,
    cached_access_solutions: 1, cached_grayed_access_date: 2017-01-01 12:13:14,
-   cached_grayed_access: 1, access_reason: some reason, cached_access_reason: some cached reason, user_created_id: 1}
-- {id: 21, group_id: 2, item_id: 1, propagate_access: self, user_created_id: 1}
-- {id: 22, group_id: 2, item_id: 11, propagate_access: self, user_created_id: 1}
+   cached_grayed_access: 1, access_reason: some reason, cached_access_reason: some cached reason, creator_user_id: 1}
+- {id: 21, group_id: 2, item_id: 1, propagate_access: self, creator_user_id: 1}
+- {id: 22, group_id: 2, item_id: 11, propagate_access: self, creator_user_id: 1}

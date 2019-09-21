@@ -122,8 +122,8 @@ func (app *Application) CheckConfig() error {
 			{parentName: "RootSelf", childName: "RootTemp", parentID: domainConfig.RootSelfGroup, childID: domainConfig.RootTempGroup},
 		} {
 			hasRows, err := groupGroupStore.Where("type = 'direct'").
-				Where("group_parent_id = ?", spec.parentID).
-				Where("group_child_id = ?", spec.childID).Select("1").Limit(1).HasRows()
+				Where("parent_group_id = ?", spec.parentID).
+				Where("child_group_id = ?", spec.childID).Select("1").Limit(1).HasRows()
 			if err != nil {
 				return err
 			}
@@ -159,7 +159,7 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
 		} {
 			found, err := groupGroupStore.Where("type = 'direct'").
-				Where("group_parent_id = ?", spec.ParentID).Where("group_child_id = ?", spec.ChildID).
+				Where("parent_group_id = ?", spec.ParentID).Where("child_group_id = ?", spec.ChildID).
 				Limit(1).HasRows()
 			if err != nil {
 				return err

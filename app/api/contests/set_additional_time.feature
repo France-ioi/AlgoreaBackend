@@ -1,7 +1,7 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 2  | john  | 31            | 32             |
     And the database has the following table 'groups':
@@ -15,7 +15,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31 | john        | UserSelf  |
       | 32 | john-admin  | UserAdmin |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |
       | 10                | 11             | 0       |
       | 10                | 13             | 0       |
@@ -37,7 +37,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10 | 00:00:02 |
       | 70 | 00:00:03 |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 1  | 10       | 50      | null                       | null                      | null                    | null                         | 01:00:00        | 3               |
       | 2  | 11       | 50      | null                       | null                      | null                    | null                         | 00:01:00        | 3               |
       | 3  | 13       | 50      | 2017-05-29 06:38:38        | null                      | null                    | null                         | 00:00:01        | 3               |
@@ -55,7 +55,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "3"
     And the table "groups_items" at id "3" should be:
-      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 3  | 13       | 50      | 2017-05-29 06:38:38        | null                      | null                    | null                         | 838:59:59       | 3               |
 
   Scenario: Creates a new row
@@ -65,7 +65,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups_items" at id "5577006791947779410" should be:
-      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 5577006791947779410 | 13       | 70      | null                       | null                      | null                    | null                         | -838:59:59      | 1               |
 
   Scenario: Doesn't create a new row when seconds=0
@@ -82,5 +82,5 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups_items" at id "5577006791947779410" should be:
-      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 5577006791947779410 | 31       | 70      | null                       | null                      | null                    | null                         | -838:59:59      | 1               |

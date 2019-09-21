@@ -1,7 +1,7 @@
 Feature: Accept group requests
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups':
       | id  | type      | team_item_id |
@@ -21,7 +21,7 @@ Feature: Accept group requests
       | 161 | UserSelf  | null         |
       | 444 | Team      | 1234         |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 13                | 111            | 0       |
@@ -40,7 +40,7 @@ Feature: Accept group requests
       | 151               | 151            | 1       |
       | 161               | 161            | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | status_date               |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |
@@ -80,11 +80,11 @@ Feature: Accept group requests
     """
     And the table "groups_groups" should stay unchanged but the row with id "3,14"
     And the table "groups_groups" at id "3,14" should be:
-      | id | group_parent_id | group_child_id | type            | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | id | parent_group_id | child_group_id | type            | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 3  | 13              | 31             | requestAccepted | 1                                                                                  |
       | 14 | 13              | 141            | requestAccepted | 1                                                                                  |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 13                | 31             | 0       |
@@ -117,12 +117,12 @@ Feature: Accept group requests
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
     Given I am the user with id "1"
     And the database table 'groups_groups' has also the following rows:
-      | id | group_parent_id | group_child_id | type               | status_date |
+      | id | parent_group_id | child_group_id | type               | status_date |
       | 18 | 444             | 31             | joinedByCode       | null        |
       | 19 | 444             | 141            | invitationAccepted | null        |
       | 20 | 444             | 161            | requestAccepted    | null        |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 444               | 31             | 0       |
       | 444               | 141            | 0       |
       | 444               | 161            | 0       |

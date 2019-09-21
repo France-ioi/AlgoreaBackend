@@ -2,7 +2,7 @@ Feature: Update item strings - robustness
 
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id |
+      | id | login | temp_user | self_group_id | owned_group_id |
       | 1  | jdoe  | 0         | 11            | 12             |
     And the database has the following table 'groups':
       | id | name       | type      |
@@ -17,11 +17,11 @@ Feature: Update item strings - robustness
       | 50      | 2           | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
       | 50      | 3           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | manager_access | owner_access | user_created_id |
+      | id | group_id | item_id | manager_access | owner_access | creator_user_id |
       | 40 | 11       | 50      | false          | true         | 1               |
       | 41 | 11       | 21      | true           | false        | 1               |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self |
+      | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
       | 72 | 12                | 12             | 1       |
     And the database has the following table 'languages':

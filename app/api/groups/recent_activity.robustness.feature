@@ -1,12 +1,12 @@
 Feature: Get recent activity for group_id and item_id - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login   | temp_user | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login   | temp_user | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | someone | 0         | 21            | 22             | Bill        | Clinton   |
       | 2  | user    | 0         | 11            | 12             | John        | Doe       |
       | 3  | owner   | 0         | 23            | 24             | Jean-Michel | Blanquer  |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self | version |
+      | id | ancestor_group_id | child_group_id | is_self | version |
       | 75 | 24                | 13             | 0       | 0       |
       | 76 | 13                | 11             | 0       | 0       |
       | 77 | 22                | 11             | 0       | 0       |
@@ -17,14 +17,14 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 1  | 2       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
       | 2  | 2       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score | item_unlocked_id | transparent_folder | version |
-      | 200 | Category | false          | false    | 1234,2345        | true               | 0       |
+      | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
+      | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
       | 43 | 21       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
       | 44 | 23       | 200     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     And the database has the following table 'items_ancestors':
-      | id | item_ancestor_id | item_child_id | version |
+      | id | ancestor_item_id | child_item_id | version |
       | 1  | 200              | 200           | 0       |
 
   Scenario: Wrong group

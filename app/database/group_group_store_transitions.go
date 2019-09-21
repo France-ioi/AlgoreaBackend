@@ -254,13 +254,13 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(dataStore *DataStore) error {
 		type idWithType struct {
-			ChildGroupID int64 `gorm:"column:group_child_id"`
+			ChildGroupID int64
 			Type         GroupGroupType
 		}
 		var oldTypes []idWithType
 		mustNotBeError(s.WithWriteLock().
-			Select("group_child_id, type").
-			Where("group_parent_id = ? AND group_child_id IN (?)", parentGroupID, childGroupIDs).
+			Select("child_group_id, type").
+			Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).
 			Scan(&oldTypes).Error())
 
 		oldTypesMap := make(map[int64]GroupGroupType, len(childGroupIDs))
@@ -280,7 +280,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			for id := range idsToDelete {
 				idsToDeleteSlice = append(idsToDeleteSlice, id)
 			}
-			mustNotBeError(s.Delete("group_parent_id = ? AND group_child_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+			mustNotBeError(s.Delete("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
 			shouldCreateNewAncestors = true
 		}
 
@@ -291,13 +291,13 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			var maxChildOrder struct{ MaxChildOrder int64 }
 			mustNotBeError(s.WithWriteLock().
 				Select("IFNULL(MAX(child_order), 0)").
-				Where("group_parent_id = ?", parentGroupID).Scan(&maxChildOrder).Error())
+				Where("parent_group_id = ?", parentGroupID).Scan(&maxChildOrder).Error())
 
-			insertQuery := "INSERT INTO groups_groups (id, group_parent_id, group_child_id, type, child_order, status_date"
+			insertQuery := "INSERT INTO groups_groups (id, parent_group_id, child_group_id, type, child_order, status_date"
 			valuesTemplate := "(?, ?, ?, ?, ?, NOW()"
 			paramsCount := 5
 			if setIDUserInviting {
-				insertQuery += ", user_inviting_id"
+				insertQuery += ", inviting_user_id"
 				valuesTemplate += ", ?"
 				paramsCount++
 			}
@@ -338,8 +338,8 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 		var cycleIDs []map[string]interface{}
 		mustNotBeError(s.GroupAncestors().
 			WithWriteLock().
-			Select("group_ancestor_id AS group_id").
-			Where("group_child_id = ? AND group_ancestor_id IN (?)", parentGroupID, idsToCheckCycleSlice).
+			Select("ancestor_group_id AS group_id").
+			Where("child_group_id = ? AND ancestor_group_id IN (?)", parentGroupID, idsToCheckCycleSlice).
 			ScanIntoSliceOfMaps(&cycleIDs).Error())
 
 		for _, cycleID := range cycleIDs {
@@ -366,9 +366,9 @@ func performTransitionUpdate(
 			UPDATE groups_groups
 			SET type = ?, status_date = NOW()`
 		if setIDUserInviting {
-			updateQuery += ", user_inviting_id = ?"
+			updateQuery += ", inviting_user_id = ?"
 		}
-		updateQuery += "\nWHERE group_parent_id = ? AND group_child_id IN (?)"
+		updateQuery += "\nWHERE parent_group_id = ? AND child_group_id IN (?)"
 		for toType, ids := range updateData {
 			parameters := make([]interface{}, 0, 5)
 			parameters = append(parameters, toType)

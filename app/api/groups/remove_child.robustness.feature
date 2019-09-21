@@ -2,7 +2,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
 
   Background:
     Given the database has the following table 'users':
-      | id | login   | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login   | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | owner   | 21            | 22             | Jean-Michel | Blanquer  |
       | 2  | teacher | 23            | 24             | John        | Smith     |
     And the database has the following table 'groups':
@@ -19,7 +19,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 54 | RootAdmin | Base      |
       | 55 | UserSelf  | UserSelf  |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 13              | 11             | direct             |
       | 13              | 14             | requestSent        |
       | 13              | 55             | invitationAccepted |
@@ -35,7 +35,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 24              | 11             | direct             |
       | 55              | 14             | direct             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |

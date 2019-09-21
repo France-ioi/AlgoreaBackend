@@ -1,7 +1,7 @@
 Feature: Invite users
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
       | 10 | john  | 101           | 111            | John        | Doe       |
       | 11 | jane  | 102           | 112            | Jane        | Doe       |
@@ -19,7 +19,7 @@ Feature: Invite users
       | 113 | UserAdmin | null         |
       | 444 | Team      | 1234         |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
       | 22                | 13             | 0       |
@@ -31,13 +31,13 @@ Feature: Invite users
       | 112               | 112            | 1       |
       | 113               | 113            | 1       |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type   | status_date |
+      | parent_group_id | child_group_id | type   | status_date |
       | 22              | 13             | direct | null        |
 
   Scenario: Successfully invite users
     Given I am the user with id "1"
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 444               | 444            | 1       |
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
@@ -60,7 +60,7 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type           | role   | user_inviting_id | child_order = 0 | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | parent_group_id | child_group_id | type           | role   | inviting_user_id | child_order = 0 | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 13              | 21             | invitationSent | member | 1                | 0               | 1                                                                                  |
       | 13              | 101            | invitationSent | member | 1                | 0               | 1                                                                                  |
       | 13              | 102            | invitationSent | member | 1                | 0               | 1                                                                                  |
@@ -76,12 +76,12 @@ Feature: Invite users
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
     Given I am the user with id "1"
     And the database table 'groups_groups' has also the following rows:
-      | group_parent_id | group_child_id | type               | status_date |
+      | parent_group_id | child_group_id | type               | status_date |
       | 444             | 21             | joinedByCode       | null        |
       | 444             | 101            | invitationAccepted | null        |
       | 444             | 102            | requestAccepted    | null        |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 444               | 21             | 0       |
       | 444               | 101            | 0       |
       | 444               | 102            | 0       |

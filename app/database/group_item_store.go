@@ -9,7 +9,7 @@ type GroupItemStore struct {
 func (s *GroupItemStore) MatchingUserAncestors(user *User) *DB {
 	db := s.GroupAncestors().UserAncestors(user)
 	userAncestors := db.SubQuery()
-	return s.Joins("JOIN ? AS ancestors ON groups_items.group_id = ancestors.group_ancestor_id", userAncestors)
+	return s.Joins("JOIN ? AS ancestors ON groups_items.group_id = ancestors.ancestor_group_id", userAncestors)
 }
 
 // After is a "listener" that calls GroupItemStore::computeAllAccess() & GroupItemStore::grantCachedAccessWhereNeeded()
@@ -44,8 +44,8 @@ func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB 
 			MIN(cached_grayed_access_date) <= NOW() AS grayed_access,
 			MIN(cached_access_solutions_date) <= NOW() AS access_solutions`).
 		Joins(`
-			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.group_child_id = ?)) AS ancestors
-			ON ancestors.group_ancestor_id = groups_items.group_id`, groupID).
+			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.child_group_id = ?)) AS ancestors
+			ON ancestors.ancestor_group_id = groups_items.group_id`, groupID).
 		Group("groups_items.item_id").
 		Having("full_access > 0 OR partial_access > 0 OR grayed_access > 0")
 }

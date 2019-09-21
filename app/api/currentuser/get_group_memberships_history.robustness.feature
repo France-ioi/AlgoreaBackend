@@ -1,7 +1,7 @@
 Feature: Get group memberships history for the current user - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 3     |
 
   Scenario: User doesn't exist

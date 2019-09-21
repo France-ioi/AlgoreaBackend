@@ -137,7 +137,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		// Update users_items with the hint request
 		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
 			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
-			Where("attempt_active_id = ?", requestData.TaskToken.Converted.AttemptID).
+			Where("active_attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
 
 		// Update groups_attempts with the hint request

@@ -4,18 +4,18 @@ ALTER TABLE `groups`
 	MODIFY `iTeamParticipating` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Did the team start the item it is associated to (from team_item_id)?',
 	MODIFY `bOpenContest` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'If true and the group is associated through redirect_path with an item that is a contest, the contest should be started for this user as soon as he joins the group.';
 ALTER TABLE `groups_ancestors`
-	MODIFY `bIsSelf` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether group_ancestor_id = group_child_id.';
+	MODIFY `bIsSelf` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether ancestor_group_id = child_group_id.';
 ALTER TABLE `groups_attempts`
-	MODIFY `bKeyObtained` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether the user obtained the key on this item (changed to 1 if the user gets a score >= items.score_min_unlock, will grant access to new items from items.item_unlocked_id). This information is propagated to users_items.';
+	MODIFY `bKeyObtained` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether the user obtained the key on this item (changed to 1 if the user gets a score >= items.score_min_unlock, will grant access to new items from items.unlocked_item_ids). This information is propagated to users_items.';
 ALTER TABLE `items`
 	MODIFY `bFixedRanks` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'If true, prevents users from changing the order of the children by drag&drop and auto-calculation of the order of children. Allows for manual setting of the order, for instance in cases where we want to have multiple items with the same order (check items_items.child_order).',
-	MODIFY `iScoreMinUnlock` int(11) NOT NULL DEFAULT '100' COMMENT 'Minimum score to obtain so that the item, indicated by "item_unlocked_id", is actually unlocked',
-	MODIFY `sTeamMode` enum('All','Half','One','None') DEFAULT NULL COMMENT 'If team_in_group_id is not NULL, this field specifies how many team members need to belong to that group in order for the whole team to be qualified and able to start the item.',
+	MODIFY `iScoreMinUnlock` int(11) NOT NULL DEFAULT '100' COMMENT 'Minimum score to obtain so that the item, indicated by "unlocked_item_ids", is actually unlocked',
+	MODIFY `sTeamMode` enum('All','Half','One','None') DEFAULT NULL COMMENT 'If qualified_group_id is not NULL, this field specifies how many team members need to belong to that group in order for the whole team to be qualified and able to start the item.',
 	MODIFY `idTeamInGroup` bigint(20) DEFAULT NULL COMMENT 'group id in which "qualified" users will belong. team_mode dictates how many of a team''s members must be "qualified" in order to start the item.';
 ALTER TABLE `items_items`
 	MODIFY `iChildOrder` int(11) NOT NULL COMMENT 'Position, relative to its siblings, when displaying all the children of the parent. If multiple items have the same child_order, they will be sorted in a random way, specific to each user (a user will always see the items in the same order).';
 ALTER TABLE `users_items`
-	MODIFY `bKeyObtained` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether the user obtained the key on this item. Changed to 1 if the user gets a score >= items.score_min_unlock, will grant access to new item from items.item_unlocked_id. This information is propagated to users_items.';
+	MODIFY `bKeyObtained` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether the user obtained the key on this item. Changed to 1 if the user gets a score >= items.score_min_unlock, will grant access to new item from items.unlocked_item_ids. This information is propagated to users_items.';
 
 
 ALTER TABLE `badges`
@@ -69,16 +69,16 @@ ALTER TABLE `groups`
 	RENAME INDEX `TypeName` TO `type_name`;
 ALTER TABLE `groups_ancestors`
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idGroupAncestor` TO `group_ancestor_id`,
-	RENAME COLUMN `idGroupChild` TO `group_child_id`,
+	RENAME COLUMN `idGroupAncestor` TO `ancestor_group_id`,
+	RENAME COLUMN `idGroupChild` TO `child_group_id`,
 	RENAME COLUMN `bIsSelf` TO `is_self`,
 	RENAME COLUMN `iVersion` TO `version`,
-	RENAME INDEX `idGroupAncestor` TO `group_ancestor_id`;
+	RENAME INDEX `idGroupAncestor` TO `ancestor_group_id`;
 ALTER TABLE `groups_attempts`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idGroup` TO `group_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idUserCreator` TO `user_creator_id`,
+	RENAME COLUMN `idUserCreator` TO `creator_user_id`,
 	RENAME COLUMN `iOrder` TO `order`,
 	RENAME COLUMN `iScore` TO `score`,
 	RENAME COLUMN `iScoreComputed` TO `score_computed`,
@@ -119,23 +119,23 @@ ALTER TABLE `groups_attempts`
 	RENAME INDEX `GroupItemMinusScoreBestAnswerDateID` TO `group_item_minus_score_best_answer_date_id`;
 ALTER TABLE `groups_groups`
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idGroupParent` TO `group_parent_id`,
-	RENAME COLUMN `idGroupChild` TO `group_child_id`,
+	RENAME COLUMN `idGroupParent` TO `parent_group_id`,
+	RENAME COLUMN `idGroupChild` TO `child_group_id`,
 	RENAME COLUMN `iChildOrder` TO `child_order`,
 	RENAME COLUMN `sType` TO `type`,
 	RENAME COLUMN `sRole` TO `role`,
-	RENAME COLUMN `idUserInviting` TO `user_inviting_id`,
+	RENAME COLUMN `idUserInviting` TO `inviting_user_id`,
 	RENAME COLUMN `sStatusDate` TO `status_date`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME INDEX `iVersion` TO `version`,
-	RENAME INDEX `idGroupChild` TO `group_child_id`,
-	RENAME INDEX `idGroupParent` TO `group_parent_id`,
+	RENAME INDEX `idGroupChild` TO `child_group_id`,
+	RENAME INDEX `idGroupParent` TO `parent_group_id`,
 	RENAME INDEX `ParentOrder` TO `parent_order`;
 ALTER TABLE `groups_items`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idGroup` TO `group_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idUserCreated` TO `user_created_id`,
+	RENAME COLUMN `idUserCreated` TO `creator_user_id`,
 	RENAME COLUMN `sPartialAccessDate` TO `partial_access_date`,
 	RENAME COLUMN `sAccessReason` TO `access_reason`,
 	RENAME COLUMN `sFullAccessDate` TO `full_access_date`,
@@ -233,8 +233,8 @@ ALTER TABLE `history_groups`
 ALTER TABLE `history_groups_ancestors`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idGroupAncestor` TO `group_ancestor_id`,
-	RENAME COLUMN `idGroupChild` TO `group_child_id`,
+	RENAME COLUMN `idGroupAncestor` TO `ancestor_group_id`,
+	RENAME COLUMN `idGroupChild` TO `child_group_id`,
 	RENAME COLUMN `bIsSelf` TO `is_self`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME COLUMN `iNextVersion` TO `next_version`,
@@ -242,14 +242,14 @@ ALTER TABLE `history_groups_ancestors`
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `iNextVersion` TO `next_version`,
 	RENAME INDEX `bDeleted` TO `deleted`,
-	RENAME INDEX `idGroupAncestor` TO `group_ancestor_id`,
+	RENAME INDEX `idGroupAncestor` TO `ancestor_group_id`,
 	RENAME INDEX `ID` TO `id`;
 ALTER TABLE `history_groups_attempts`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idGroup` TO `group_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idUserCreator` TO `user_creator_id`,
+	RENAME COLUMN `idUserCreator` TO `creator_user_id`,
 	RENAME COLUMN `iOrder` TO `order`,
 	RENAME COLUMN `iScore` TO `score`,
 	RENAME COLUMN `iScoreComputed` TO `score_computed`,
@@ -294,12 +294,12 @@ ALTER TABLE `history_groups_attempts`
 ALTER TABLE `history_groups_groups`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idGroupParent` TO `group_parent_id`,
-	RENAME COLUMN `idGroupChild` TO `group_child_id`,
+	RENAME COLUMN `idGroupParent` TO `parent_group_id`,
+	RENAME COLUMN `idGroupChild` TO `child_group_id`,
 	RENAME COLUMN `iChildOrder` TO `child_order`,
 	RENAME COLUMN `sType` TO `type`,
 	RENAME COLUMN `sRole` TO `role`,
-	RENAME COLUMN `idUserInviting` TO `user_inviting_id`,
+	RENAME COLUMN `idUserInviting` TO `inviting_user_id`,
 	RENAME COLUMN `sStatusDate` TO `status_date`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME COLUMN `iNextVersion` TO `next_version`,
@@ -308,14 +308,14 @@ ALTER TABLE `history_groups_groups`
 	RENAME INDEX `ID` TO `id`,
 	RENAME INDEX `iNextVersion` TO `next_version`,
 	RENAME INDEX `bDeleted` TO `deleted`,
-	RENAME INDEX `idGroupParent` TO `group_parent_id`,
-	RENAME INDEX `idGroupChild` TO `group_child_id`;
+	RENAME INDEX `idGroupParent` TO `parent_group_id`,
+	RENAME INDEX `idGroupChild` TO `child_group_id`;
 ALTER TABLE `history_groups_items`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idGroup` TO `group_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idUserCreated` TO `user_created_id`,
+	RENAME COLUMN `idUserCreated` TO `creator_user_id`,
 	RENAME COLUMN `sPartialAccessDate` TO `partial_access_date`,
 	RENAME COLUMN `sAccessReason` TO `access_reason`,
 	RENAME COLUMN `sFullAccessDate` TO `full_access_date`,
@@ -374,13 +374,13 @@ ALTER TABLE `history_items`
 	RENAME COLUMN `sValidationType` TO `validation_type`,
 	RENAME COLUMN `iValidationMin` TO `validation_min`,
 	RENAME COLUMN `sPreparationState` TO `preparation_state`,
-	RENAME COLUMN `idItemUnlocked` TO `item_unlocked_id`,
+	RENAME COLUMN `idItemUnlocked` TO `unlocked_item_ids`,
 	RENAME COLUMN `iScoreMinUnlock` TO `score_min_unlock`,
 	RENAME COLUMN `sSupportedLangProg` TO `supported_lang_prog`,
 	RENAME COLUMN `idDefaultLanguage` TO `default_language_id`,
 	RENAME COLUMN `sTeamMode` TO `team_mode`,
 	RENAME COLUMN `bTeamsEditable` TO `teams_editable`,
-	RENAME COLUMN `idTeamInGroup` TO `team_in_group_id`,
+	RENAME COLUMN `idTeamInGroup` TO `qualified_group_id`,
 	RENAME COLUMN `iTeamMaxMembers` TO `team_max_members`,
 	RENAME COLUMN `bHasAttempts` TO `has_attempts`,
 	RENAME COLUMN `sAccessOpenDate` TO `access_open_date`,
@@ -403,23 +403,23 @@ ALTER TABLE `history_items`
 ALTER TABLE `history_items_ancestors`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idItemAncestor` TO `item_ancestor_id`,
-	RENAME COLUMN `idItemChild` TO `item_child_id`,
+	RENAME COLUMN `idItemAncestor` TO `ancestor_item_id`,
+	RENAME COLUMN `idItemChild` TO `child_item_id`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME COLUMN `iNextVersion` TO `next_version`,
 	RENAME COLUMN `bDeleted` TO `deleted`,
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `iNextVersion` TO `next_version`,
 	RENAME INDEX `bDeleted` TO `deleted`,
-	RENAME INDEX `idItemAncestor` TO `item_ancestor_id`,
-	RENAME INDEX `idItemAncestortor` TO `item_ancestortor_id`,
-	RENAME INDEX `idItemChild` TO `item_child_id`,
+	RENAME INDEX `idItemAncestor` TO `ancestor_item_id_child_item_id`,
+	RENAME INDEX `idItemAncestortor` TO `ancestor_item_id`,
+	RENAME INDEX `idItemChild` TO `child_item_id`,
 	RENAME INDEX `ID` TO `id`;
 ALTER TABLE `history_items_items`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idItemParent` TO `item_parent_id`,
-	RENAME COLUMN `idItemChild` TO `item_child_id`,
+	RENAME COLUMN `idItemParent` TO `parent_item_id`,
+	RENAME COLUMN `idItemChild` TO `child_item_id`,
 	RENAME COLUMN `iChildOrder` TO `child_order`,
 	RENAME COLUMN `sCategory` TO `category`,
 	RENAME COLUMN `bAlwaysVisible` TO `always_visible`,
@@ -430,8 +430,8 @@ ALTER TABLE `history_items_items`
 	RENAME COLUMN `bDeleted` TO `deleted`,
 	RENAME INDEX `ID` TO `id`,
 	RENAME INDEX `iVersion` TO `version`,
-	RENAME INDEX `idItemParent` TO `item_parent_id`,
-	RENAME INDEX `idItemChild` TO `item_child_id`,
+	RENAME INDEX `idItemParent` TO `parent_item_id`,
+	RENAME INDEX `idItemChild` TO `child_item_id`,
 	RENAME INDEX `iNextVersion` TO `next_version`,
 	RENAME INDEX `bDeleted` TO `deleted`,
 	RENAME INDEX `parentChild` TO `parent_child`;
@@ -489,7 +489,7 @@ ALTER TABLE `history_threads`
 	RENAME COLUMN `history_ID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sType` TO `type`,
-	RENAME COLUMN `idUserCreated` TO `user_created_id`,
+	RENAME COLUMN `idUserCreated` TO `creator_user_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
 	RENAME COLUMN `sLastActivityDate` TO `last_activity_date`,
 	RENAME COLUMN `sTitle` TO `title`,
@@ -542,14 +542,14 @@ ALTER TABLE `history_users`
 	RENAME COLUMN `bBasicEditorMode` TO `basic_editor_mode`,
 	RENAME COLUMN `nbSpacesForTab` TO `spaces_for_tab`,
 	RENAME COLUMN `iMemberState` TO `member_state`,
-	RENAME COLUMN `idUserGodfather` TO `user_godfather_id`,
+	RENAME COLUMN `idUserGodfather` TO `godfather_user_id`,
 	RENAME COLUMN `iStepLevelInSite` TO `step_level_in_site`,
 	RENAME COLUMN `bIsAdmin` TO `is_admin`,
 	RENAME COLUMN `bNoRanking` TO `no_ranking`,
 	RENAME COLUMN `nbHelpGiven` TO `help_given`,
-	RENAME COLUMN `idGroupSelf` TO `group_self_id`,
-	RENAME COLUMN `idGroupOwned` TO `group_owned_id`,
-	RENAME COLUMN `idGroupAccess` TO `group_access_id`,
+	RENAME COLUMN `idGroupSelf` TO `self_group_id`,
+	RENAME COLUMN `idGroupOwned` TO `owned_group_id`,
+	RENAME COLUMN `idGroupAccess` TO `access_group_id`,
 	RENAME COLUMN `sNotificationReadDate` TO `notification_read_date`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME COLUMN `iNextVersion` TO `next_version`,
@@ -560,18 +560,18 @@ ALTER TABLE `history_users`
 	RENAME INDEX `ID` TO `id`,
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `sCountryCode` TO `country_code`,
-	RENAME INDEX `idUserGodfather` TO `user_godfather_id`,
+	RENAME INDEX `idUserGodfather` TO `godfather_user_id`,
 	RENAME INDEX `sLangProg` TO `lang_prog`,
 	RENAME INDEX `iNextVersion` TO `next_version`,
 	RENAME INDEX `bDeleted` TO `deleted`,
-	RENAME INDEX `idGroupSelf` TO `group_self_id`,
-	RENAME INDEX `idGroupOwned` TO `group_owned_id`;
+	RENAME INDEX `idGroupSelf` TO `self_group_id`,
+	RENAME INDEX `idGroupOwned` TO `owned_group_id`;
 ALTER TABLE `history_users_items`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idUser` TO `user_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idAttemptActive` TO `attempt_active_id`,
+	RENAME COLUMN `idAttemptActive` TO `active_attempt_id`,
 	RENAME COLUMN `iScore` TO `score`,
 	RENAME COLUMN `iScoreComputed` TO `score_computed`,
 	RENAME COLUMN `iScoreReeval` TO `score_reeval`,
@@ -654,13 +654,13 @@ ALTER TABLE `items`
 	RENAME COLUMN `sValidationType` TO `validation_type`,
 	RENAME COLUMN `iValidationMin` TO `validation_min`,
 	RENAME COLUMN `sPreparationState` TO `preparation_state`,
-	RENAME COLUMN `idItemUnlocked` TO `item_unlocked_id`,
+	RENAME COLUMN `idItemUnlocked` TO `unlocked_item_ids`,
 	RENAME COLUMN `iScoreMinUnlock` TO `score_min_unlock`,
 	RENAME COLUMN `sSupportedLangProg` TO `supported_lang_prog`,
 	RENAME COLUMN `idDefaultLanguage` TO `default_language_id`,
 	RENAME COLUMN `sTeamMode` TO `team_mode`,
 	RENAME COLUMN `bTeamsEditable` TO `teams_editable`,
-	RENAME COLUMN `idTeamInGroup` TO `team_in_group_id`,
+	RENAME COLUMN `idTeamInGroup` TO `qualified_group_id`,
 	RENAME COLUMN `iTeamMaxMembers` TO `team_max_members`,
 	RENAME COLUMN `bHasAttempts` TO `has_attempts`,
 	RENAME COLUMN `sAccessOpenDate` TO `access_open_date`,
@@ -675,24 +675,24 @@ ALTER TABLE `items`
 	RENAME INDEX `iVersion` TO `version`;
 ALTER TABLE `items_ancestors`
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idItemAncestor` TO `item_ancestor_id`,
-	RENAME COLUMN `idItemChild` TO `item_child_id`,
+	RENAME COLUMN `idItemAncestor` TO `ancestor_item_id`,
+	RENAME COLUMN `idItemChild` TO `child_item_id`,
 	RENAME COLUMN `iVersion` TO `version`,
-	RENAME INDEX `idItemAncestor` TO `item_ancestor_id`,
-	RENAME INDEX `idItemAncestortor` TO `item_ancestortor_id`,
-	RENAME INDEX `idItemChild` TO `item_child_id`;
+	RENAME INDEX `idItemAncestor` TO `ancestor_item_id_child_item_id`,
+	RENAME INDEX `idItemAncestortor` TO `ancestor_item_id`,
+	RENAME INDEX `idItemChild` TO `child_item_id`;
 ALTER TABLE `items_items`
 	RENAME COLUMN `ID` TO `id`,
-	RENAME COLUMN `idItemParent` TO `item_parent_id`,
-	RENAME COLUMN `idItemChild` TO `item_child_id`,
+	RENAME COLUMN `idItemParent` TO `parent_item_id`,
+	RENAME COLUMN `idItemChild` TO `child_item_id`,
 	RENAME COLUMN `iChildOrder` TO `child_order`,
 	RENAME COLUMN `sCategory` TO `category`,
 	RENAME COLUMN `bAlwaysVisible` TO `always_visible`,
 	RENAME COLUMN `bAccessRestricted` TO `access_restricted`,
 	RENAME COLUMN `iDifficulty` TO `difficulty`,
 	RENAME COLUMN `iVersion` TO `version`,
-	RENAME INDEX `idItemParent` TO `item_parent_id`,
-	RENAME INDEX `idItemChild` TO `item_child_id`,
+	RENAME INDEX `idItemParent` TO `parent_item_id`,
+	RENAME INDEX `idItemChild` TO `child_item_id`,
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `parentChild` TO `parent_child`,
 	RENAME INDEX `parentVersion` TO `parent_version`;
@@ -712,9 +712,9 @@ ALTER TABLE `items_strings`
 	RENAME COLUMN `sEduComment` TO `edu_comment`,
 	RENAME COLUMN `sRankingComment` TO `ranking_comment`,
 	RENAME COLUMN `iVersion` TO `version`,
-	RENAME INDEX `idItem` TO `item_id`,
+	RENAME INDEX `idItem` TO `item_id_language_id`,
 	RENAME INDEX `iVersion` TO `version`,
-	RENAME INDEX `idItemAlone` TO `item_alone_id`;
+	RENAME INDEX `idItemAlone` TO `item_id`;
 ALTER TABLE `languages`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sName` TO `name`,
@@ -772,7 +772,7 @@ ALTER TABLE `threads`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sType` TO `type`,
 	RENAME COLUMN `sLastActivityDate` TO `last_activity_date`,
-	RENAME COLUMN `idUserCreated` TO `user_created_id`,
+	RENAME COLUMN `idUserCreated` TO `creator_user_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
 	RENAME COLUMN `sTitle` TO `title`,
 	RENAME COLUMN `bAdminHelpAsked` TO `admin_help_asked`,
@@ -820,25 +820,25 @@ ALTER TABLE `users`
 	RENAME COLUMN `bBasicEditorMode` TO `basic_editor_mode`,
 	RENAME COLUMN `nbSpacesForTab` TO `spaces_for_tab`,
 	RENAME COLUMN `iMemberState` TO `member_state`,
-	RENAME COLUMN `idUserGodfather` TO `user_godfather_id`,
+	RENAME COLUMN `idUserGodfather` TO `godfather_user_id`,
 	RENAME COLUMN `iStepLevelInSite` TO `step_level_in_site`,
 	RENAME COLUMN `bIsAdmin` TO `is_admin`,
 	RENAME COLUMN `bNoRanking` TO `no_ranking`,
 	RENAME COLUMN `nbHelpGiven` TO `help_given`,
-	RENAME COLUMN `idGroupSelf` TO `group_self_id`,
-	RENAME COLUMN `idGroupOwned` TO `group_owned_id`,
-	RENAME COLUMN `idGroupAccess` TO `group_access_id`,
+	RENAME COLUMN `idGroupSelf` TO `self_group_id`,
+	RENAME COLUMN `idGroupOwned` TO `owned_group_id`,
+	RENAME COLUMN `idGroupAccess` TO `access_group_id`,
 	RENAME COLUMN `sNotificationReadDate` TO `notification_read_date`,
 	RENAME COLUMN `iVersion` TO `version`,
 	RENAME COLUMN `loginModulePrefix` TO `login_module_prefix`,
 	RENAME COLUMN `creatorID` TO `creator_id`,
 	RENAME COLUMN `allowSubgroups` TO `allow_subgroups`,
 	RENAME INDEX `sLogin` TO `login`,
-	RENAME INDEX `idGroupSelf` TO `group_self_id`,
-	RENAME INDEX `idGroupOwned` TO `group_owned_id`,
+	RENAME INDEX `idGroupSelf` TO `self_group_id`,
+	RENAME INDEX `idGroupOwned` TO `owned_group_id`,
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `sCountryCode` TO `country_code`,
-	RENAME INDEX `idUserGodfather` TO `user_godfather_id`,
+	RENAME INDEX `idUserGodfather` TO `godfather_user_id`,
 	RENAME INDEX `sLangProg` TO `lang_prog`,
 	RENAME INDEX `loginID` TO `login_id`,
 	RENAME INDEX `tempUser` TO `temp_user`;
@@ -856,14 +856,14 @@ ALTER TABLE `users_answers`
 	RENAME COLUMN `iScore` TO `score`,
 	RENAME COLUMN `bValidated` TO `validated`,
 	RENAME COLUMN `sGradingDate` TO `grading_date`,
-	RENAME COLUMN `idUserGrader` TO `user_grader_id`,
+	RENAME COLUMN `idUserGrader` TO `grader_user_id`,
 	RENAME INDEX `idUser` TO `user_id`,
 	RENAME INDEX `idItem` TO `item_id`;
 ALTER TABLE `users_items`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idUser` TO `user_id`,
 	RENAME COLUMN `idItem` TO `item_id`,
-	RENAME COLUMN `idAttemptActive` TO `attempt_active_id`,
+	RENAME COLUMN `idAttemptActive` TO `active_attempt_id`,
 	RENAME COLUMN `iScore` TO `score`,
 	RENAME COLUMN `iScoreComputed` TO `score_computed`,
 	RENAME COLUMN `iScoreReeval` TO `score_reeval`,
@@ -958,15 +958,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_groups_ancestors` BEFORE INS
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_ancestors` AFTER INSERT ON `groups_ancestors` FOR EACH ROW BEGIN INSERT INTO `history_groups_ancestors` (`id`,`version`,`group_ancestor_id`,`group_child_id`,`is_self`) VALUES (NEW.`id`,@curVersion,NEW.`group_ancestor_id`,NEW.`group_child_id`,NEW.`is_self`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_ancestors` AFTER INSERT ON `groups_ancestors` FOR EACH ROW BEGIN INSERT INTO `history_groups_ancestors` (`id`,`version`,`ancestor_group_id`,`child_group_id`,`is_self`) VALUES (NEW.`id`,@curVersion,NEW.`ancestor_group_id`,NEW.`child_group_id`,NEW.`is_self`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_ancestors` BEFORE UPDATE ON `groups_ancestors` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_ancestor_id` <=> NEW.`group_ancestor_id` AND OLD.`group_child_id` <=> NEW.`group_child_id` AND OLD.`is_self` <=> NEW.`is_self`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_ancestors` (`id`,`version`,`group_ancestor_id`,`group_child_id`,`is_self`)       VALUES (NEW.`id`,@curVersion,NEW.`group_ancestor_id`,NEW.`group_child_id`,NEW.`is_self`) ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_ancestors` BEFORE UPDATE ON `groups_ancestors` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`ancestor_group_id` <=> NEW.`ancestor_group_id` AND OLD.`child_group_id` <=> NEW.`child_group_id` AND OLD.`is_self` <=> NEW.`is_self`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_ancestors` (`id`,`version`,`ancestor_group_id`,`child_group_id`,`is_self`)       VALUES (NEW.`id`,@curVersion,NEW.`ancestor_group_id`,NEW.`child_group_id`,NEW.`is_self`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_groups_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_ancestors` BEFORE DELETE ON `groups_ancestors` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_ancestors` (`id`,`version`,`group_ancestor_id`,`group_child_id`,`is_self`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_ancestor_id`,OLD.`group_child_id`,OLD.`is_self`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_ancestors` BEFORE DELETE ON `groups_ancestors` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_ancestors` (`id`,`version`,`ancestor_group_id`,`child_group_id`,`is_self`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`ancestor_group_id`,OLD.`child_group_id`,OLD.`is_self`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_groups_attempts`;
 -- +migrate StatementBegin
@@ -974,23 +974,23 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_groups_attempts` BEFORE INSE
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_attempts`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_attempts` AFTER INSERT ON `groups_attempts` FOR EACH ROW BEGIN INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`user_creator_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`user_creator_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_attempts` AFTER INSERT ON `groups_attempts` FOR EACH ROW BEGIN INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_attempts`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_attempts` BEFORE UPDATE ON `groups_attempts` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`user_creator_id` <=> NEW.`user_creator_id` AND OLD.`order` <=> NEW.`order` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`submissions_attempts` <=> NEW.`submissions_attempts` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`start_date` <=> NEW.`start_date` AND OLD.`validation_date` <=> NEW.`validation_date` AND OLD.`best_answer_date` <=> NEW.`best_answer_date` AND OLD.`last_answer_date` <=> NEW.`last_answer_date` AND OLD.`thread_start_date` <=> NEW.`thread_start_date` AND OLD.`last_hint_date` <=> NEW.`last_hint_date` AND OLD.`finish_date` <=> NEW.`finish_date` AND OLD.`contest_start_date` <=> NEW.`contest_start_date` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`user_creator_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`user_creator_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`) ; SET NEW.minus_score = -NEW.score; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_attempts` BEFORE UPDATE ON `groups_attempts` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`order` <=> NEW.`order` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`submissions_attempts` <=> NEW.`submissions_attempts` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`start_date` <=> NEW.`start_date` AND OLD.`validation_date` <=> NEW.`validation_date` AND OLD.`best_answer_date` <=> NEW.`best_answer_date` AND OLD.`last_answer_date` <=> NEW.`last_answer_date` AND OLD.`thread_start_date` <=> NEW.`thread_start_date` AND OLD.`last_hint_date` <=> NEW.`last_hint_date` AND OLD.`finish_date` <=> NEW.`finish_date` AND OLD.`contest_start_date` <=> NEW.`contest_start_date` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`) ; SET NEW.minus_score = -NEW.score; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_groups_attempts`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_attempts` BEFORE DELETE ON `groups_attempts` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`user_creator_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`user_creator_id`,OLD.`order`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`start_date`,OLD.`validation_date`,OLD.`best_answer_date`,OLD.`last_answer_date`,OLD.`thread_start_date`,OLD.`last_hint_date`,OLD.`finish_date`,OLD.`last_activity_date`,OLD.`contest_start_date`,OLD.`ranked`,OLD.`all_lang_prog`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_attempts` BEFORE DELETE ON `groups_attempts` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`creator_user_id`,OLD.`order`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`start_date`,OLD.`validation_date`,OLD.`best_answer_date`,OLD.`last_answer_date`,OLD.`thread_start_date`,OLD.`last_hint_date`,OLD.`finish_date`,OLD.`last_activity_date`,OLD.`contest_start_date`,OLD.`ranked`,OLD.`all_lang_prog`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_groups_groups`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_groups_groups` BEFORE INSERT ON `groups_groups` FOR EACH ROW BEGIN IF (NEW.id IS NULL OR NEW.id = 0) THEN SET NEW.id = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000; END IF ; SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;SET NEW.version = @curVersion; INSERT IGNORE INTO `groups_propagate` (id, ancestors_computation_state) VALUES (NEW.group_child_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo' ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_groups_groups` BEFORE INSERT ON `groups_groups` FOR EACH ROW BEGIN IF (NEW.id IS NULL OR NEW.id = 0) THEN SET NEW.id = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000; END IF ; SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;SET NEW.version = @curVersion; INSERT IGNORE INTO `groups_propagate` (id, ancestors_computation_state) VALUES (NEW.child_group_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo' ; END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_groups`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_groups` AFTER INSERT ON `groups_groups` FOR EACH ROW BEGIN INSERT INTO `history_groups_groups` (`id`,`version`,`group_parent_id`,`group_child_id`,`child_order`,`type`,`role`,`status_date`,`user_inviting_id`) VALUES (NEW.`id`,@curVersion,NEW.`group_parent_id`,NEW.`group_child_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,NEW.`status_date`,NEW.`user_inviting_id`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_groups` AFTER INSERT ON `groups_groups` FOR EACH ROW BEGIN INSERT INTO `history_groups_groups` (`id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_date`,`inviting_user_id`) VALUES (NEW.`id`,@curVersion,NEW.`parent_group_id`,NEW.`child_group_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,NEW.`status_date`,NEW.`inviting_user_id`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_groups`;
 -- +migrate StatementBegin
@@ -1000,50 +1000,50 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_groups` BEFORE UPDATE
   ELSE
     SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
   END IF;
-  IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_parent_id` <=> NEW.`group_parent_id` AND
-          OLD.`group_child_id` <=> NEW.`group_child_id` AND OLD.`child_order` <=> NEW.`child_order`AND
+  IF NOT (OLD.`id` = NEW.`id` AND OLD.`parent_group_id` <=> NEW.`parent_group_id` AND
+          OLD.`child_group_id` <=> NEW.`child_group_id` AND OLD.`child_order` <=> NEW.`child_order`AND
           OLD.`type` <=> NEW.`type` AND OLD.`role` <=> NEW.`role` AND OLD.`status_date` <=> NEW.`status_date` AND
-          OLD.`user_inviting_id` <=> NEW.`user_inviting_id`) THEN
+          OLD.`inviting_user_id` <=> NEW.`inviting_user_id`) THEN
     SET NEW.version = @curVersion;
     UPDATE `history_groups_groups` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
     INSERT INTO `history_groups_groups` (
-      `id`,`version`,`group_parent_id`,`group_child_id`,`child_order`,`type`,`role`,`status_date`,`user_inviting_id`
+      `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_date`,`inviting_user_id`
     ) VALUES (
-      NEW.`id`,@curVersion,NEW.`group_parent_id`,NEW.`group_child_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,
-      NEW.`status_date`,NEW.`user_inviting_id`
+      NEW.`id`,@curVersion,NEW.`parent_group_id`,NEW.`child_group_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,
+      NEW.`status_date`,NEW.`inviting_user_id`
     );
   END IF;
-  IF (OLD.group_child_id != NEW.group_child_id OR OLD.group_parent_id != NEW.group_parent_id OR OLD.type != NEW.type) THEN
-    INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.group_child_id, 'todo')
+  IF (OLD.child_group_id != NEW.child_group_id OR OLD.parent_group_id != NEW.parent_group_id OR OLD.type != NEW.type) THEN
+    INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.child_group_id, 'todo')
       ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
     INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) (
-      SELECT `groups_ancestors`.`group_child_id`, 'todo'
+      SELECT `groups_ancestors`.`child_group_id`, 'todo'
         FROM `groups_ancestors`
-        WHERE `groups_ancestors`.`group_ancestor_id` = OLD.`group_child_id`
+        WHERE `groups_ancestors`.`ancestor_group_id` = OLD.`child_group_id`
     ) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
     DELETE `groups_ancestors` FROM `groups_ancestors`
-      WHERE `groups_ancestors`.`group_child_id` = OLD.`group_child_id` AND
-            `groups_ancestors`.`group_ancestor_id` = OLD.`group_parent_id`;
+      WHERE `groups_ancestors`.`child_group_id` = OLD.`child_group_id` AND
+            `groups_ancestors`.`ancestor_group_id` = OLD.`parent_group_id`;
     DELETE `bridges` FROM `groups_ancestors` `child_descendants`
       JOIN `groups_ancestors` `parent_ancestors`
       JOIN `groups_ancestors` `bridges`
-        ON (`bridges`.`group_ancestor_id` = `parent_ancestors`.`group_ancestor_id` AND
-            `bridges`.`group_child_id` = `child_descendants`.`group_child_id`)
-      WHERE `parent_ancestors`.`group_child_id` = OLD.`group_parent_id` AND
-            `child_descendants`.`group_ancestor_id` = OLD.`group_child_id`;
+        ON (`bridges`.`ancestor_group_id` = `parent_ancestors`.`ancestor_group_id` AND
+            `bridges`.`child_group_id` = `child_descendants`.`child_group_id`)
+      WHERE `parent_ancestors`.`child_group_id` = OLD.`parent_group_id` AND
+            `child_descendants`.`ancestor_group_id` = OLD.`child_group_id`;
     DELETE `child_ancestors` FROM `groups_ancestors` `child_ancestors`
       JOIN `groups_ancestors` `parent_ancestors`
-        ON (`child_ancestors`.`group_child_id` = OLD.`group_child_id` AND
-            `child_ancestors`.`group_ancestor_id` = `parent_ancestors`.`group_ancestor_id`)
-      WHERE `parent_ancestors`.`group_child_id` = OLD.`group_parent_id`;
+        ON (`child_ancestors`.`child_group_id` = OLD.`child_group_id` AND
+            `child_ancestors`.`ancestor_group_id` = `parent_ancestors`.`ancestor_group_id`)
+      WHERE `parent_ancestors`.`child_group_id` = OLD.`parent_group_id`;
     DELETE `parent_ancestors` FROM `groups_ancestors` `parent_ancestors`
       JOIN  `groups_ancestors` `child_ancestors`
-        ON (`parent_ancestors`.`group_ancestor_id` = OLD.`group_parent_id` AND
-            `child_ancestors`.`group_child_id` = `parent_ancestors`.`group_child_id`)
-      WHERE `child_ancestors`.`group_ancestor_id` = OLD.`group_child_id`;
+        ON (`parent_ancestors`.`ancestor_group_id` = OLD.`parent_group_id` AND
+            `child_ancestors`.`child_group_id` = `parent_ancestors`.`child_group_id`)
+      WHERE `child_ancestors`.`ancestor_group_id` = OLD.`child_group_id`;
   END IF;
-  IF (OLD.group_child_id != NEW.group_child_id OR OLD.group_parent_id != NEW.group_parent_id OR OLD.type != NEW.type) THEN
-    INSERT IGNORE INTO `groups_propagate` (id, ancestors_computation_state) VALUES (NEW.group_child_id, 'todo')
+  IF (OLD.child_group_id != NEW.child_group_id OR OLD.parent_group_id != NEW.parent_group_id OR OLD.type != NEW.type) THEN
+    INSERT IGNORE INTO `groups_propagate` (id, ancestors_computation_state) VALUES (NEW.child_group_id, 'todo')
       ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
   END IF;
 END
@@ -1054,41 +1054,41 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_groups` BEFORE DELETE
   SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
   UPDATE `history_groups_groups` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
   INSERT INTO `history_groups_groups` (
-    `id`,`version`,`group_parent_id`,`group_child_id`,`child_order`,`type`,`role`,`status_date`,`user_inviting_id`,`deleted`
+    `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_date`,`inviting_user_id`,`deleted`
   ) VALUES (
-    OLD.`id`,@curVersion,OLD.`group_parent_id`,OLD.`group_child_id`,OLD.`child_order`,OLD.`type`,OLD.`role`,
-    OLD.`status_date`,OLD.`user_inviting_id`, 1
+    OLD.`id`,@curVersion,OLD.`parent_group_id`,OLD.`child_group_id`,OLD.`child_order`,OLD.`type`,OLD.`role`,
+    OLD.`status_date`,OLD.`inviting_user_id`, 1
   );
-  INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.group_child_id, 'todo')
+  INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.child_group_id, 'todo')
     ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
   INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) (
-    SELECT `groups_ancestors`.`group_child_id`, 'todo'
+    SELECT `groups_ancestors`.`child_group_id`, 'todo'
       FROM `groups_ancestors`
-      WHERE `groups_ancestors`.`group_ancestor_id` = OLD.`group_child_id`
+      WHERE `groups_ancestors`.`ancestor_group_id` = OLD.`child_group_id`
   ) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
   DELETE `groups_ancestors` FROM `groups_ancestors`
-    WHERE `groups_ancestors`.`group_child_id` = OLD.`group_child_id` AND
-          `groups_ancestors`.`group_ancestor_id` = OLD.`group_parent_id`;
+    WHERE `groups_ancestors`.`child_group_id` = OLD.`child_group_id` AND
+          `groups_ancestors`.`ancestor_group_id` = OLD.`parent_group_id`;
   DELETE `bridges`
     FROM `groups_ancestors` `child_descendants`
     JOIN `groups_ancestors` `parent_ancestors`
     JOIN `groups_ancestors` `bridges`
-      ON (`bridges`.`group_ancestor_id` = `parent_ancestors`.`group_ancestor_id` AND
-          `bridges`.`group_child_id` = `child_descendants`.`group_child_id`)
-    WHERE `parent_ancestors`.`group_child_id` = OLD.`group_parent_id` AND
-          `child_descendants`.`group_ancestor_id` = OLD.`group_child_id`;
+      ON (`bridges`.`ancestor_group_id` = `parent_ancestors`.`ancestor_group_id` AND
+          `bridges`.`child_group_id` = `child_descendants`.`child_group_id`)
+    WHERE `parent_ancestors`.`child_group_id` = OLD.`parent_group_id` AND
+          `child_descendants`.`ancestor_group_id` = OLD.`child_group_id`;
   DELETE `child_ancestors`
     FROM `groups_ancestors` `child_ancestors`
     JOIN  `groups_ancestors` `parent_ancestors`
-      ON (`child_ancestors`.`group_child_id` = OLD.`group_child_id` AND
-          `child_ancestors`.`group_ancestor_id` = `parent_ancestors`.`group_ancestor_id`)
-    WHERE `parent_ancestors`.`group_child_id` = OLD.`group_parent_id`;
+      ON (`child_ancestors`.`child_group_id` = OLD.`child_group_id` AND
+          `child_ancestors`.`ancestor_group_id` = `parent_ancestors`.`ancestor_group_id`)
+    WHERE `parent_ancestors`.`child_group_id` = OLD.`parent_group_id`;
   DELETE `parent_ancestors`
     FROM `groups_ancestors` `parent_ancestors`
     JOIN  `groups_ancestors` `child_ancestors`
-      ON (`parent_ancestors`.`group_ancestor_id` = OLD.`group_parent_id` AND
-          `child_ancestors`.`group_child_id` = `parent_ancestors`.`group_child_id`)
-    WHERE `child_ancestors`.`group_ancestor_id` = OLD.`group_child_id`;
+      ON (`parent_ancestors`.`ancestor_group_id` = OLD.`parent_group_id` AND
+          `child_ancestors`.`child_group_id` = `parent_ancestors`.`child_group_id`)
+    WHERE `child_ancestors`.`ancestor_group_id` = OLD.`child_group_id`;
 END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_groups_items`;
@@ -1097,15 +1097,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_groups_items` BEFORE INSERT 
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_items` AFTER INSERT ON `groups_items` FOR EACH ROW BEGIN INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`user_created_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`user_created_id`,NEW.`partial_access_date`,NEW.`full_access_date`,NEW.`access_reason`,NEW.`access_solutions_date`,NEW.`owner_access`,NEW.`manager_access`,NEW.`cached_partial_access_date`,NEW.`cached_full_access_date`,NEW.`cached_access_solutions_date`,NEW.`cached_grayed_access_date`,NEW.`cached_full_access`,NEW.`cached_partial_access`,NEW.`cached_access_solutions`,NEW.`cached_grayed_access`,NEW.`cached_manager_access`,NEW.`propagate_access`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_groups_items` AFTER INSERT ON `groups_items` FOR EACH ROW BEGIN INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`partial_access_date`,NEW.`full_access_date`,NEW.`access_reason`,NEW.`access_solutions_date`,NEW.`owner_access`,NEW.`manager_access`,NEW.`cached_partial_access_date`,NEW.`cached_full_access_date`,NEW.`cached_access_solutions_date`,NEW.`cached_grayed_access_date`,NEW.`cached_full_access`,NEW.`cached_partial_access`,NEW.`cached_access_solutions`,NEW.`cached_grayed_access`,NEW.`cached_manager_access`,NEW.`propagate_access`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_items` BEFORE UPDATE ON `groups_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`user_created_id` <=> NEW.`user_created_id` AND OLD.`partial_access_date` <=> NEW.`partial_access_date` AND OLD.`full_access_date` <=> NEW.`full_access_date` AND OLD.`access_reason` <=> NEW.`access_reason` AND OLD.`access_solutions_date` <=> NEW.`access_solutions_date` AND OLD.`owner_access` <=> NEW.`owner_access` AND OLD.`manager_access` <=> NEW.`manager_access` AND OLD.`cached_partial_access_date` <=> NEW.`cached_partial_access_date` AND OLD.`cached_full_access_date` <=> NEW.`cached_full_access_date` AND OLD.`cached_access_solutions_date` <=> NEW.`cached_access_solutions_date` AND OLD.`cached_grayed_access_date` <=> NEW.`cached_grayed_access_date` AND OLD.`cached_full_access` <=> NEW.`cached_full_access` AND OLD.`cached_partial_access` <=> NEW.`cached_partial_access` AND OLD.`cached_access_solutions` <=> NEW.`cached_access_solutions` AND OLD.`cached_grayed_access` <=> NEW.`cached_grayed_access` AND OLD.`cached_manager_access` <=> NEW.`cached_manager_access`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`user_created_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`user_created_id`,NEW.`partial_access_date`,NEW.`full_access_date`,NEW.`access_reason`,NEW.`access_solutions_date`,NEW.`owner_access`,NEW.`manager_access`,NEW.`cached_partial_access_date`,NEW.`cached_full_access_date`,NEW.`cached_access_solutions_date`,NEW.`cached_grayed_access_date`,NEW.`cached_full_access`,NEW.`cached_partial_access`,NEW.`cached_access_solutions`,NEW.`cached_grayed_access`,NEW.`cached_manager_access`,NEW.`propagate_access`) ; END IF; IF NOT (NEW.`full_access_date` <=> OLD.`full_access_date`AND NEW.`partial_access_date` <=> OLD.`partial_access_date`AND NEW.`access_solutions_date` <=> OLD.`access_solutions_date`AND NEW.`manager_access` <=> OLD.`manager_access`AND NEW.`access_reason` <=> OLD.`access_reason`)THEN SET NEW.`propagate_access` = 'self'; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_groups_items` BEFORE UPDATE ON `groups_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`partial_access_date` <=> NEW.`partial_access_date` AND OLD.`full_access_date` <=> NEW.`full_access_date` AND OLD.`access_reason` <=> NEW.`access_reason` AND OLD.`access_solutions_date` <=> NEW.`access_solutions_date` AND OLD.`owner_access` <=> NEW.`owner_access` AND OLD.`manager_access` <=> NEW.`manager_access` AND OLD.`cached_partial_access_date` <=> NEW.`cached_partial_access_date` AND OLD.`cached_full_access_date` <=> NEW.`cached_full_access_date` AND OLD.`cached_access_solutions_date` <=> NEW.`cached_access_solutions_date` AND OLD.`cached_grayed_access_date` <=> NEW.`cached_grayed_access_date` AND OLD.`cached_full_access` <=> NEW.`cached_full_access` AND OLD.`cached_partial_access` <=> NEW.`cached_partial_access` AND OLD.`cached_access_solutions` <=> NEW.`cached_access_solutions` AND OLD.`cached_grayed_access` <=> NEW.`cached_grayed_access` AND OLD.`cached_manager_access` <=> NEW.`cached_manager_access`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`partial_access_date`,NEW.`full_access_date`,NEW.`access_reason`,NEW.`access_solutions_date`,NEW.`owner_access`,NEW.`manager_access`,NEW.`cached_partial_access_date`,NEW.`cached_full_access_date`,NEW.`cached_access_solutions_date`,NEW.`cached_grayed_access_date`,NEW.`cached_full_access`,NEW.`cached_partial_access`,NEW.`cached_access_solutions`,NEW.`cached_grayed_access`,NEW.`cached_manager_access`,NEW.`propagate_access`) ; END IF; IF NOT (NEW.`full_access_date` <=> OLD.`full_access_date`AND NEW.`partial_access_date` <=> OLD.`partial_access_date`AND NEW.`access_solutions_date` <=> OLD.`access_solutions_date`AND NEW.`manager_access` <=> OLD.`manager_access`AND NEW.`access_reason` <=> OLD.`access_reason`)THEN SET NEW.`propagate_access` = 'self'; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_groups_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_items` BEFORE DELETE ON `groups_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`user_created_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`user_created_id`,OLD.`partial_access_date`,OLD.`full_access_date`,OLD.`access_reason`,OLD.`access_solutions_date`,OLD.`owner_access`,OLD.`manager_access`,OLD.`cached_partial_access_date`,OLD.`cached_full_access_date`,OLD.`cached_access_solutions_date`,OLD.`cached_grayed_access_date`,OLD.`cached_full_access`,OLD.`cached_partial_access`,OLD.`cached_access_solutions`,OLD.`cached_grayed_access`,OLD.`cached_manager_access`,OLD.`propagate_access`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_groups_items` BEFORE DELETE ON `groups_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_groups_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_items` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`partial_access_date`,`full_access_date`,`access_reason`,`access_solutions_date`,`owner_access`,`manager_access`,`cached_partial_access_date`,`cached_full_access_date`,`cached_access_solutions_date`,`cached_grayed_access_date`,`cached_full_access`,`cached_partial_access`,`cached_access_solutions`,`cached_grayed_access`,`cached_manager_access`,`propagate_access`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`creator_user_id`,OLD.`partial_access_date`,OLD.`full_access_date`,OLD.`access_reason`,OLD.`access_solutions_date`,OLD.`owner_access`,OLD.`manager_access`,OLD.`cached_partial_access_date`,OLD.`cached_full_access_date`,OLD.`cached_access_solutions_date`,OLD.`cached_grayed_access_date`,OLD.`cached_full_access`,OLD.`cached_partial_access`,OLD.`cached_access_solutions`,OLD.`cached_grayed_access`,OLD.`cached_manager_access`,OLD.`propagate_access`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_delete_groups_items`;
 -- +migrate StatementBegin
@@ -1133,15 +1133,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_items` BEFORE INSERT ON `ite
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items` AFTER INSERT ON `items` FOR EACH ROW BEGIN INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`item_unlocked_id`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`team_in_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`) VALUES (NEW.`id`,@curVersion,NEW.`url`,NEW.`platform_id`,NEW.`text_id`,NEW.`repository_path`,NEW.`type`,NEW.`uses_api`,NEW.`read_only`,NEW.`full_screen`,NEW.`show_difficulty`,NEW.`show_source`,NEW.`hints_allowed`,NEW.`fixed_ranks`,NEW.`validation_type`,NEW.`validation_min`,NEW.`preparation_state`,NEW.`item_unlocked_id`,NEW.`score_min_unlock`,NEW.`supported_lang_prog`,NEW.`default_language_id`,NEW.`team_mode`,NEW.`teams_editable`,NEW.`team_in_group_id`,NEW.`team_max_members`,NEW.`has_attempts`,NEW.`access_open_date`,NEW.`duration`,NEW.`end_contest_date`,NEW.`show_user_infos`,NEW.`contest_phase`,NEW.`level`,NEW.`no_score`,NEW.`title_bar_visible`,NEW.`transparent_folder`,NEW.`display_details_in_parent`,NEW.`display_children_as_tabs`,NEW.`custom_chapter`,NEW.`group_code_enter`); INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (NEW.`id`, 'todo') ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items` AFTER INSERT ON `items` FOR EACH ROW BEGIN INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`unlocked_item_ids`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`qualified_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`) VALUES (NEW.`id`,@curVersion,NEW.`url`,NEW.`platform_id`,NEW.`text_id`,NEW.`repository_path`,NEW.`type`,NEW.`uses_api`,NEW.`read_only`,NEW.`full_screen`,NEW.`show_difficulty`,NEW.`show_source`,NEW.`hints_allowed`,NEW.`fixed_ranks`,NEW.`validation_type`,NEW.`validation_min`,NEW.`preparation_state`,NEW.`unlocked_item_ids`,NEW.`score_min_unlock`,NEW.`supported_lang_prog`,NEW.`default_language_id`,NEW.`team_mode`,NEW.`teams_editable`,NEW.`qualified_group_id`,NEW.`team_max_members`,NEW.`has_attempts`,NEW.`access_open_date`,NEW.`duration`,NEW.`end_contest_date`,NEW.`show_user_infos`,NEW.`contest_phase`,NEW.`level`,NEW.`no_score`,NEW.`title_bar_visible`,NEW.`transparent_folder`,NEW.`display_details_in_parent`,NEW.`display_children_as_tabs`,NEW.`custom_chapter`,NEW.`group_code_enter`); INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (NEW.`id`, 'todo') ; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items` BEFORE UPDATE ON `items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`url` <=> NEW.`url` AND OLD.`platform_id` <=> NEW.`platform_id` AND OLD.`text_id` <=> NEW.`text_id` AND OLD.`repository_path` <=> NEW.`repository_path` AND OLD.`type` <=> NEW.`type` AND OLD.`uses_api` <=> NEW.`uses_api` AND OLD.`read_only` <=> NEW.`read_only` AND OLD.`full_screen` <=> NEW.`full_screen` AND OLD.`show_difficulty` <=> NEW.`show_difficulty` AND OLD.`show_source` <=> NEW.`show_source` AND OLD.`hints_allowed` <=> NEW.`hints_allowed` AND OLD.`fixed_ranks` <=> NEW.`fixed_ranks` AND OLD.`validation_type` <=> NEW.`validation_type` AND OLD.`validation_min` <=> NEW.`validation_min` AND OLD.`preparation_state` <=> NEW.`preparation_state` AND OLD.`item_unlocked_id` <=> NEW.`item_unlocked_id` AND OLD.`score_min_unlock` <=> NEW.`score_min_unlock` AND OLD.`supported_lang_prog` <=> NEW.`supported_lang_prog` AND OLD.`default_language_id` <=> NEW.`default_language_id` AND OLD.`team_mode` <=> NEW.`team_mode` AND OLD.`teams_editable` <=> NEW.`teams_editable` AND OLD.`team_in_group_id` <=> NEW.`team_in_group_id` AND OLD.`team_max_members` <=> NEW.`team_max_members` AND OLD.`has_attempts` <=> NEW.`has_attempts` AND OLD.`access_open_date` <=> NEW.`access_open_date` AND OLD.`duration` <=> NEW.`duration` AND OLD.`end_contest_date` <=> NEW.`end_contest_date` AND OLD.`show_user_infos` <=> NEW.`show_user_infos` AND OLD.`contest_phase` <=> NEW.`contest_phase` AND OLD.`level` <=> NEW.`level` AND OLD.`no_score` <=> NEW.`no_score` AND OLD.`title_bar_visible` <=> NEW.`title_bar_visible` AND OLD.`transparent_folder` <=> NEW.`transparent_folder` AND OLD.`display_details_in_parent` <=> NEW.`display_details_in_parent` AND OLD.`display_children_as_tabs` <=> NEW.`display_children_as_tabs` AND OLD.`custom_chapter` <=> NEW.`custom_chapter` AND OLD.`group_code_enter` <=> NEW.`group_code_enter`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`item_unlocked_id`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`team_in_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`)       VALUES (NEW.`id`,@curVersion,NEW.`url`,NEW.`platform_id`,NEW.`text_id`,NEW.`repository_path`,NEW.`type`,NEW.`uses_api`,NEW.`read_only`,NEW.`full_screen`,NEW.`show_difficulty`,NEW.`show_source`,NEW.`hints_allowed`,NEW.`fixed_ranks`,NEW.`validation_type`,NEW.`validation_min`,NEW.`preparation_state`,NEW.`item_unlocked_id`,NEW.`score_min_unlock`,NEW.`supported_lang_prog`,NEW.`default_language_id`,NEW.`team_mode`,NEW.`teams_editable`,NEW.`team_in_group_id`,NEW.`team_max_members`,NEW.`has_attempts`,NEW.`access_open_date`,NEW.`duration`,NEW.`end_contest_date`,NEW.`show_user_infos`,NEW.`contest_phase`,NEW.`level`,NEW.`no_score`,NEW.`title_bar_visible`,NEW.`transparent_folder`,NEW.`display_details_in_parent`,NEW.`display_children_as_tabs`,NEW.`custom_chapter`,NEW.`group_code_enter`) ; END IF; SELECT platforms.id INTO @platformID FROM platforms WHERE NEW.url REGEXP platforms.regexp ORDER BY platforms.priority DESC LIMIT 1 ; SET NEW.platform_id=@platformID ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items` BEFORE UPDATE ON `items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`url` <=> NEW.`url` AND OLD.`platform_id` <=> NEW.`platform_id` AND OLD.`text_id` <=> NEW.`text_id` AND OLD.`repository_path` <=> NEW.`repository_path` AND OLD.`type` <=> NEW.`type` AND OLD.`uses_api` <=> NEW.`uses_api` AND OLD.`read_only` <=> NEW.`read_only` AND OLD.`full_screen` <=> NEW.`full_screen` AND OLD.`show_difficulty` <=> NEW.`show_difficulty` AND OLD.`show_source` <=> NEW.`show_source` AND OLD.`hints_allowed` <=> NEW.`hints_allowed` AND OLD.`fixed_ranks` <=> NEW.`fixed_ranks` AND OLD.`validation_type` <=> NEW.`validation_type` AND OLD.`validation_min` <=> NEW.`validation_min` AND OLD.`preparation_state` <=> NEW.`preparation_state` AND OLD.`unlocked_item_ids` <=> NEW.`unlocked_item_ids` AND OLD.`score_min_unlock` <=> NEW.`score_min_unlock` AND OLD.`supported_lang_prog` <=> NEW.`supported_lang_prog` AND OLD.`default_language_id` <=> NEW.`default_language_id` AND OLD.`team_mode` <=> NEW.`team_mode` AND OLD.`teams_editable` <=> NEW.`teams_editable` AND OLD.`qualified_group_id` <=> NEW.`qualified_group_id` AND OLD.`team_max_members` <=> NEW.`team_max_members` AND OLD.`has_attempts` <=> NEW.`has_attempts` AND OLD.`access_open_date` <=> NEW.`access_open_date` AND OLD.`duration` <=> NEW.`duration` AND OLD.`end_contest_date` <=> NEW.`end_contest_date` AND OLD.`show_user_infos` <=> NEW.`show_user_infos` AND OLD.`contest_phase` <=> NEW.`contest_phase` AND OLD.`level` <=> NEW.`level` AND OLD.`no_score` <=> NEW.`no_score` AND OLD.`title_bar_visible` <=> NEW.`title_bar_visible` AND OLD.`transparent_folder` <=> NEW.`transparent_folder` AND OLD.`display_details_in_parent` <=> NEW.`display_details_in_parent` AND OLD.`display_children_as_tabs` <=> NEW.`display_children_as_tabs` AND OLD.`custom_chapter` <=> NEW.`custom_chapter` AND OLD.`group_code_enter` <=> NEW.`group_code_enter`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`unlocked_item_ids`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`qualified_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`)       VALUES (NEW.`id`,@curVersion,NEW.`url`,NEW.`platform_id`,NEW.`text_id`,NEW.`repository_path`,NEW.`type`,NEW.`uses_api`,NEW.`read_only`,NEW.`full_screen`,NEW.`show_difficulty`,NEW.`show_source`,NEW.`hints_allowed`,NEW.`fixed_ranks`,NEW.`validation_type`,NEW.`validation_min`,NEW.`preparation_state`,NEW.`unlocked_item_ids`,NEW.`score_min_unlock`,NEW.`supported_lang_prog`,NEW.`default_language_id`,NEW.`team_mode`,NEW.`teams_editable`,NEW.`qualified_group_id`,NEW.`team_max_members`,NEW.`has_attempts`,NEW.`access_open_date`,NEW.`duration`,NEW.`end_contest_date`,NEW.`show_user_infos`,NEW.`contest_phase`,NEW.`level`,NEW.`no_score`,NEW.`title_bar_visible`,NEW.`transparent_folder`,NEW.`display_details_in_parent`,NEW.`display_children_as_tabs`,NEW.`custom_chapter`,NEW.`group_code_enter`) ; END IF; SELECT platforms.id INTO @platformID FROM platforms WHERE NEW.url REGEXP platforms.regexp ORDER BY platforms.priority DESC LIMIT 1 ; SET NEW.platform_id=@platformID ; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items` BEFORE DELETE ON `items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`item_unlocked_id`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`team_in_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`url`,OLD.`platform_id`,OLD.`text_id`,OLD.`repository_path`,OLD.`type`,OLD.`uses_api`,OLD.`read_only`,OLD.`full_screen`,OLD.`show_difficulty`,OLD.`show_source`,OLD.`hints_allowed`,OLD.`fixed_ranks`,OLD.`validation_type`,OLD.`validation_min`,OLD.`preparation_state`,OLD.`item_unlocked_id`,OLD.`score_min_unlock`,OLD.`supported_lang_prog`,OLD.`default_language_id`,OLD.`team_mode`,OLD.`teams_editable`,OLD.`team_in_group_id`,OLD.`team_max_members`,OLD.`has_attempts`,OLD.`access_open_date`,OLD.`duration`,OLD.`end_contest_date`,OLD.`show_user_infos`,OLD.`contest_phase`,OLD.`level`,OLD.`no_score`,OLD.`title_bar_visible`,OLD.`transparent_folder`,OLD.`display_details_in_parent`,OLD.`display_children_as_tabs`,OLD.`custom_chapter`,OLD.`group_code_enter`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items` BEFORE DELETE ON `items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`unlocked_item_ids`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`qualified_group_id`,`team_max_members`,`has_attempts`,`access_open_date`,`duration`,`end_contest_date`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`url`,OLD.`platform_id`,OLD.`text_id`,OLD.`repository_path`,OLD.`type`,OLD.`uses_api`,OLD.`read_only`,OLD.`full_screen`,OLD.`show_difficulty`,OLD.`show_source`,OLD.`hints_allowed`,OLD.`fixed_ranks`,OLD.`validation_type`,OLD.`validation_min`,OLD.`preparation_state`,OLD.`unlocked_item_ids`,OLD.`score_min_unlock`,OLD.`supported_lang_prog`,OLD.`default_language_id`,OLD.`team_mode`,OLD.`teams_editable`,OLD.`qualified_group_id`,OLD.`team_max_members`,OLD.`has_attempts`,OLD.`access_open_date`,OLD.`duration`,OLD.`end_contest_date`,OLD.`show_user_infos`,OLD.`contest_phase`,OLD.`level`,OLD.`no_score`,OLD.`title_bar_visible`,OLD.`transparent_folder`,OLD.`display_details_in_parent`,OLD.`display_children_as_tabs`,OLD.`custom_chapter`,OLD.`group_code_enter`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_delete_items`;
 -- +migrate StatementBegin
@@ -1153,35 +1153,35 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_items_ancestors` BEFORE INSE
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_items_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_ancestors` AFTER INSERT ON `items_ancestors` FOR EACH ROW BEGIN INSERT INTO `history_items_ancestors` (`id`,`version`,`item_ancestor_id`,`item_child_id`) VALUES (NEW.`id`,@curVersion,NEW.`item_ancestor_id`,NEW.`item_child_id`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_ancestors` AFTER INSERT ON `items_ancestors` FOR EACH ROW BEGIN INSERT INTO `history_items_ancestors` (`id`,`version`,`ancestor_item_id`,`child_item_id`) VALUES (NEW.`id`,@curVersion,NEW.`ancestor_item_id`,NEW.`child_item_id`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_items_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_ancestors` BEFORE UPDATE ON `items_ancestors` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`item_ancestor_id` <=> NEW.`item_ancestor_id` AND OLD.`item_child_id` <=> NEW.`item_child_id`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items_ancestors` (`id`,`version`,`item_ancestor_id`,`item_child_id`)       VALUES (NEW.`id`,@curVersion,NEW.`item_ancestor_id`,NEW.`item_child_id`) ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_ancestors` BEFORE UPDATE ON `items_ancestors` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`ancestor_item_id` <=> NEW.`ancestor_item_id` AND OLD.`child_item_id` <=> NEW.`child_item_id`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items_ancestors` (`id`,`version`,`ancestor_item_id`,`child_item_id`)       VALUES (NEW.`id`,@curVersion,NEW.`ancestor_item_id`,NEW.`child_item_id`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_items_ancestors`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_ancestors` BEFORE DELETE ON `items_ancestors` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items_ancestors` (`id`,`version`,`item_ancestor_id`,`item_child_id`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`item_ancestor_id`,OLD.`item_child_id`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_ancestors` BEFORE DELETE ON `items_ancestors` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items_ancestors` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items_ancestors` (`id`,`version`,`ancestor_item_id`,`child_item_id`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`ancestor_item_id`,OLD.`child_item_id`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_items_items` BEFORE INSERT ON `items_items` FOR EACH ROW BEGIN IF (NEW.id IS NULL OR NEW.id = 0) THEN SET NEW.id = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000; END IF ; SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;SET NEW.version = @curVersion; INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state) VALUES (NEW.item_child_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo' ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_items_items` BEFORE INSERT ON `items_items` FOR EACH ROW BEGIN IF (NEW.id IS NULL OR NEW.id = 0) THEN SET NEW.id = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000; END IF ; SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;SET NEW.version = @curVersion; INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state) VALUES (NEW.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo' ; END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN INSERT INTO `history_items_items` (`id`,`version`,`item_parent_id`,`item_child_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`) VALUES (NEW.`id`,@curVersion,NEW.`item_parent_id`,NEW.`item_child_id`,NEW.`child_order`,NEW.`category`,NEW.`access_restricted`,NEW.`always_visible`,NEW.`difficulty`); INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = NEW.`item_parent_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`) VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,NEW.`access_restricted`,NEW.`always_visible`,NEW.`difficulty`); INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = NEW.`parent_item_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`item_parent_id` <=> NEW.`item_parent_id` AND OLD.`item_child_id` <=> NEW.`item_child_id` AND OLD.`child_order` <=> NEW.`child_order` AND OLD.`category` <=> NEW.`category` AND OLD.`access_restricted` <=> NEW.`access_restricted` AND OLD.`always_visible` <=> NEW.`always_visible` AND OLD.`difficulty` <=> NEW.`difficulty`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items_items` (`id`,`version`,`item_parent_id`,`item_child_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`)       VALUES (NEW.`id`,@curVersion,NEW.`item_parent_id`,NEW.`item_child_id`,NEW.`child_order`,NEW.`category`,NEW.`access_restricted`,NEW.`always_visible`,NEW.`difficulty`) ; END IF; IF (OLD.item_child_id != NEW.item_child_id OR OLD.item_parent_id != NEW.item_parent_id) THEN INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.item_child_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.item_parent_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) (SELECT `items_ancestors`.`item_child_id`, 'todo' FROM `items_ancestors` WHERE `items_ancestors`.`item_ancestor_id` = OLD.`item_child_id`) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; DELETE `items_ancestors` from `items_ancestors` WHERE `items_ancestors`.`item_child_id` = OLD.`item_child_id` and `items_ancestors`.`item_ancestor_id` = OLD.`item_parent_id`;DELETE `bridges` FROM `items_ancestors` `child_descendants` JOIN `items_ancestors` `parent_ancestors` JOIN `items_ancestors` `bridges` ON (`bridges`.`item_ancestor_id` = `parent_ancestors`.`item_ancestor_id` AND `bridges`.`item_child_id` = `child_descendants`.`item_child_id`) WHERE `parent_ancestors`.`item_child_id` = OLD.`item_parent_id` AND `child_descendants`.`item_ancestor_id` = OLD.`item_child_id`; DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors` JOIN  `items_ancestors` `parent_ancestors` ON (`child_ancestors`.`item_child_id` = OLD.`item_child_id` AND `child_ancestors`.`item_ancestor_id` = `parent_ancestors`.`item_ancestor_id`) WHERE `parent_ancestors`.`item_child_id` = OLD.`item_parent_id`; DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors` JOIN  `items_ancestors` `child_ancestors` ON (`parent_ancestors`.`item_ancestor_id` = OLD.`item_parent_id` AND `child_ancestors`.`item_child_id` = `parent_ancestors`.`item_child_id`) WHERE `child_ancestors`.`item_ancestor_id` = OLD.`item_child_id`  ; END IF; IF (OLD.item_child_id != NEW.item_child_id OR OLD.item_parent_id != NEW.item_parent_id) THEN INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state) VALUES (NEW.item_child_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'  ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`parent_item_id` <=> NEW.`parent_item_id` AND OLD.`child_item_id` <=> NEW.`child_item_id` AND OLD.`child_order` <=> NEW.`child_order` AND OLD.`category` <=> NEW.`category` AND OLD.`access_restricted` <=> NEW.`access_restricted` AND OLD.`always_visible` <=> NEW.`always_visible` AND OLD.`difficulty` <=> NEW.`difficulty`) THEN   SET NEW.version = @curVersion;   UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`)       VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,NEW.`access_restricted`,NEW.`always_visible`,NEW.`difficulty`) ; END IF; IF (OLD.child_item_id != NEW.child_item_id OR OLD.parent_item_id != NEW.parent_item_id) THEN INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.parent_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) (SELECT `items_ancestors`.`child_item_id`, 'todo' FROM `items_ancestors` WHERE `items_ancestors`.`ancestor_item_id` = OLD.`child_item_id`) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; DELETE `items_ancestors` from `items_ancestors` WHERE `items_ancestors`.`child_item_id` = OLD.`child_item_id` and `items_ancestors`.`ancestor_item_id` = OLD.`parent_item_id`;DELETE `bridges` FROM `items_ancestors` `child_descendants` JOIN `items_ancestors` `parent_ancestors` JOIN `items_ancestors` `bridges` ON (`bridges`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id` AND `bridges`.`child_item_id` = `child_descendants`.`child_item_id`) WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id` AND `child_descendants`.`ancestor_item_id` = OLD.`child_item_id`; DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors` JOIN  `items_ancestors` `parent_ancestors` ON (`child_ancestors`.`child_item_id` = OLD.`child_item_id` AND `child_ancestors`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id`) WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id`; DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors` JOIN  `items_ancestors` `child_ancestors` ON (`parent_ancestors`.`ancestor_item_id` = OLD.`parent_item_id` AND `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`) WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id`  ; END IF; IF (OLD.child_item_id != NEW.child_item_id OR OLD.parent_item_id != NEW.parent_item_id) THEN INSERT IGNORE INTO `items_propagate` (id, ancestors_computation_state) VALUES (NEW.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'  ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `after_update_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH ROW BEGIN INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = NEW.`item_parent_id` OR `groups_items`.`item_id` = OLD.`item_parent_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH ROW BEGIN INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = NEW.`parent_item_id` OR `groups_items`.`item_id` = OLD.`parent_item_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items_items` (`id`,`version`,`item_parent_id`,`item_child_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`item_parent_id`,OLD.`item_child_id`,OLD.`child_order`,OLD.`category`,OLD.`access_restricted`,OLD.`always_visible`,OLD.`difficulty`, 1); INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.item_child_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.item_parent_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) (SELECT `items_ancestors`.`item_child_id`, 'todo' FROM `items_ancestors` WHERE `items_ancestors`.`item_ancestor_id` = OLD.`item_child_id`) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; DELETE `items_ancestors` from `items_ancestors` WHERE `items_ancestors`.`item_child_id` = OLD.`item_child_id` and `items_ancestors`.`item_ancestor_id` = OLD.`item_parent_id`;DELETE `bridges` FROM `items_ancestors` `child_descendants` JOIN `items_ancestors` `parent_ancestors` JOIN `items_ancestors` `bridges` ON (`bridges`.`item_ancestor_id` = `parent_ancestors`.`item_ancestor_id` AND `bridges`.`item_child_id` = `child_descendants`.`item_child_id`) WHERE `parent_ancestors`.`item_child_id` = OLD.`item_parent_id` AND `child_descendants`.`item_ancestor_id` = OLD.`item_child_id`; DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors` JOIN  `items_ancestors` `parent_ancestors` ON (`child_ancestors`.`item_child_id` = OLD.`item_child_id` AND `child_ancestors`.`item_ancestor_id` = `parent_ancestors`.`item_ancestor_id`) WHERE `parent_ancestors`.`item_child_id` = OLD.`item_parent_id`; DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors` JOIN  `items_ancestors` `child_ancestors` ON (`parent_ancestors`.`item_ancestor_id` = OLD.`item_parent_id` AND `child_ancestors`.`item_child_id` = `parent_ancestors`.`item_child_id`) WHERE `child_ancestors`.`item_ancestor_id` = OLD.`item_child_id` ; INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = OLD.`item_parent_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,`access_restricted`,`always_visible`,`difficulty`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`parent_item_id`,OLD.`child_item_id`,OLD.`child_order`,OLD.`category`,OLD.`access_restricted`,OLD.`always_visible`,OLD.`difficulty`, 1); INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.parent_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`) (SELECT `items_ancestors`.`child_item_id`, 'todo' FROM `items_ancestors` WHERE `items_ancestors`.`ancestor_item_id` = OLD.`child_item_id`) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo'; DELETE `items_ancestors` from `items_ancestors` WHERE `items_ancestors`.`child_item_id` = OLD.`child_item_id` and `items_ancestors`.`ancestor_item_id` = OLD.`parent_item_id`;DELETE `bridges` FROM `items_ancestors` `child_descendants` JOIN `items_ancestors` `parent_ancestors` JOIN `items_ancestors` `bridges` ON (`bridges`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id` AND `bridges`.`child_item_id` = `child_descendants`.`child_item_id`) WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id` AND `child_descendants`.`ancestor_item_id` = OLD.`child_item_id`; DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors` JOIN  `items_ancestors` `parent_ancestors` ON (`child_ancestors`.`child_item_id` = OLD.`child_item_id` AND `child_ancestors`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id`) WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id`; DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors` JOIN  `items_ancestors` `child_ancestors` ON (`parent_ancestors`.`ancestor_item_id` = OLD.`parent_item_id` AND `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`) WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id` ; INSERT IGNORE INTO `groups_items_propagate` SELECT `id`, 'children' as `propagate_access` FROM `groups_items` WHERE `groups_items`.`item_id` = OLD.`parent_item_id` ON DUPLICATE KEY UPDATE propagate_access='children' ; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_items_strings`;
 -- +migrate StatementBegin
@@ -1237,15 +1237,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_threads` BEFORE INSERT ON `t
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_threads`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_threads` AFTER INSERT ON `threads` FOR EACH ROW BEGIN INSERT INTO `history_threads` (`id`,`version`,`type`,`user_created_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`) VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`user_created_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_date`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_threads` AFTER INSERT ON `threads` FOR EACH ROW BEGIN INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`) VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_date`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_threads`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_threads` BEFORE UPDATE ON `threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`type` <=> NEW.`type` AND OLD.`user_created_id` <=> NEW.`user_created_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`title` <=> NEW.`title` AND OLD.`admin_help_asked` <=> NEW.`admin_help_asked` AND OLD.`hidden` <=> NEW.`hidden` AND OLD.`last_activity_date` <=> NEW.`last_activity_date`) THEN   SET NEW.version = @curVersion;   UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_threads` (`id`,`version`,`type`,`user_created_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`)       VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`user_created_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_date`) ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_threads` BEFORE UPDATE ON `threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`type` <=> NEW.`type` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`title` <=> NEW.`title` AND OLD.`admin_help_asked` <=> NEW.`admin_help_asked` AND OLD.`hidden` <=> NEW.`hidden` AND OLD.`last_activity_date` <=> NEW.`last_activity_date`) THEN   SET NEW.version = @curVersion;   UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`)       VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_date`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_threads`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_threads` BEFORE DELETE ON `threads` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_threads` (`id`,`version`,`type`,`user_created_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`type`,OLD.`user_created_id`,OLD.`item_id`,OLD.`title`,OLD.`admin_help_asked`,OLD.`hidden`,OLD.`last_activity_date`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_threads` BEFORE DELETE ON `threads` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_date`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`type`,OLD.`creator_user_id`,OLD.`item_id`,OLD.`title`,OLD.`admin_help_asked`,OLD.`hidden`,OLD.`last_activity_date`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_users`;
 -- +migrate StatementBegin
@@ -1253,15 +1253,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_users` BEFORE INSERT ON `use
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_users`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_users` AFTER INSERT ON `users` FOR EACH ROW BEGIN INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`user_godfather_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`group_self_id`,`group_owned_id`,`group_access_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`) VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registration_date`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_date`,NEW.`last_activity_date`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`user_godfather_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`group_self_id`,NEW.`group_owned_id`,NEW.`group_access_id`,NEW.`notification_read_date`,NEW.`login_module_prefix`,NEW.`allow_subgroups`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_users` AFTER INSERT ON `users` FOR EACH ROW BEGIN INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`) VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registration_date`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_date`,NEW.`last_activity_date`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notification_read_date`,NEW.`login_module_prefix`,NEW.`allow_subgroups`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_users`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_users` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`login` <=> NEW.`login` AND OLD.`open_id_identity` <=> NEW.`open_id_identity` AND OLD.`password_md5` <=> NEW.`password_md5` AND OLD.`salt` <=> NEW.`salt` AND OLD.`recover` <=> NEW.`recover` AND OLD.`registration_date` <=> NEW.`registration_date` AND OLD.`email` <=> NEW.`email` AND OLD.`email_verified` <=> NEW.`email_verified` AND OLD.`first_name` <=> NEW.`first_name` AND OLD.`last_name` <=> NEW.`last_name` AND OLD.`country_code` <=> NEW.`country_code` AND OLD.`time_zone` <=> NEW.`time_zone` AND OLD.`birth_date` <=> NEW.`birth_date` AND OLD.`graduation_year` <=> NEW.`graduation_year` AND OLD.`grade` <=> NEW.`grade` AND OLD.`sex` <=> NEW.`sex` AND OLD.`student_id` <=> NEW.`student_id` AND OLD.`address` <=> NEW.`address` AND OLD.`zipcode` <=> NEW.`zipcode` AND OLD.`city` <=> NEW.`city` AND OLD.`land_line_number` <=> NEW.`land_line_number` AND OLD.`cell_phone_number` <=> NEW.`cell_phone_number` AND OLD.`default_language` <=> NEW.`default_language` AND OLD.`notify_news` <=> NEW.`notify_news` AND OLD.`notify` <=> NEW.`notify` AND OLD.`public_first_name` <=> NEW.`public_first_name` AND OLD.`public_last_name` <=> NEW.`public_last_name` AND OLD.`free_text` <=> NEW.`free_text` AND OLD.`web_site` <=> NEW.`web_site` AND OLD.`photo_autoload` <=> NEW.`photo_autoload` AND OLD.`lang_prog` <=> NEW.`lang_prog` AND OLD.`last_login_date` <=> NEW.`last_login_date` AND OLD.`last_ip` <=> NEW.`last_ip` AND OLD.`basic_editor_mode` <=> NEW.`basic_editor_mode` AND OLD.`spaces_for_tab` <=> NEW.`spaces_for_tab` AND OLD.`member_state` <=> NEW.`member_state` AND OLD.`user_godfather_id` <=> NEW.`user_godfather_id` AND OLD.`step_level_in_site` <=> NEW.`step_level_in_site` AND OLD.`is_admin` <=> NEW.`is_admin` AND OLD.`no_ranking` <=> NEW.`no_ranking` AND OLD.`help_given` <=> NEW.`help_given` AND OLD.`group_self_id` <=> NEW.`group_self_id` AND OLD.`group_owned_id` <=> NEW.`group_owned_id` AND OLD.`group_access_id` <=> NEW.`group_access_id` AND OLD.`notification_read_date` <=> NEW.`notification_read_date` AND OLD.`login_module_prefix` <=> NEW.`login_module_prefix` AND OLD.`allow_subgroups` <=> NEW.`allow_subgroups`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`user_godfather_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`group_self_id`,`group_owned_id`,`group_access_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`)       VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registration_date`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_date`,NEW.`last_activity_date`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`user_godfather_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`group_self_id`,NEW.`group_owned_id`,NEW.`group_access_id`,NEW.`notification_read_date`,NEW.`login_module_prefix`,NEW.`allow_subgroups`) ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_users` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`login` <=> NEW.`login` AND OLD.`open_id_identity` <=> NEW.`open_id_identity` AND OLD.`password_md5` <=> NEW.`password_md5` AND OLD.`salt` <=> NEW.`salt` AND OLD.`recover` <=> NEW.`recover` AND OLD.`registration_date` <=> NEW.`registration_date` AND OLD.`email` <=> NEW.`email` AND OLD.`email_verified` <=> NEW.`email_verified` AND OLD.`first_name` <=> NEW.`first_name` AND OLD.`last_name` <=> NEW.`last_name` AND OLD.`country_code` <=> NEW.`country_code` AND OLD.`time_zone` <=> NEW.`time_zone` AND OLD.`birth_date` <=> NEW.`birth_date` AND OLD.`graduation_year` <=> NEW.`graduation_year` AND OLD.`grade` <=> NEW.`grade` AND OLD.`sex` <=> NEW.`sex` AND OLD.`student_id` <=> NEW.`student_id` AND OLD.`address` <=> NEW.`address` AND OLD.`zipcode` <=> NEW.`zipcode` AND OLD.`city` <=> NEW.`city` AND OLD.`land_line_number` <=> NEW.`land_line_number` AND OLD.`cell_phone_number` <=> NEW.`cell_phone_number` AND OLD.`default_language` <=> NEW.`default_language` AND OLD.`notify_news` <=> NEW.`notify_news` AND OLD.`notify` <=> NEW.`notify` AND OLD.`public_first_name` <=> NEW.`public_first_name` AND OLD.`public_last_name` <=> NEW.`public_last_name` AND OLD.`free_text` <=> NEW.`free_text` AND OLD.`web_site` <=> NEW.`web_site` AND OLD.`photo_autoload` <=> NEW.`photo_autoload` AND OLD.`lang_prog` <=> NEW.`lang_prog` AND OLD.`last_login_date` <=> NEW.`last_login_date` AND OLD.`last_ip` <=> NEW.`last_ip` AND OLD.`basic_editor_mode` <=> NEW.`basic_editor_mode` AND OLD.`spaces_for_tab` <=> NEW.`spaces_for_tab` AND OLD.`member_state` <=> NEW.`member_state` AND OLD.`godfather_user_id` <=> NEW.`godfather_user_id` AND OLD.`step_level_in_site` <=> NEW.`step_level_in_site` AND OLD.`is_admin` <=> NEW.`is_admin` AND OLD.`no_ranking` <=> NEW.`no_ranking` AND OLD.`help_given` <=> NEW.`help_given` AND OLD.`self_group_id` <=> NEW.`self_group_id` AND OLD.`owned_group_id` <=> NEW.`owned_group_id` AND OLD.`access_group_id` <=> NEW.`access_group_id` AND OLD.`notification_read_date` <=> NEW.`notification_read_date` AND OLD.`login_module_prefix` <=> NEW.`login_module_prefix` AND OLD.`allow_subgroups` <=> NEW.`allow_subgroups`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`)       VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registration_date`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_date`,NEW.`last_activity_date`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notification_read_date`,NEW.`login_module_prefix`,NEW.`allow_subgroups`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_users`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_users` BEFORE DELETE ON `users` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`user_godfather_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`group_self_id`,`group_owned_id`,`group_access_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`login`,OLD.`open_id_identity`,OLD.`password_md5`,OLD.`salt`,OLD.`recover`,OLD.`registration_date`,OLD.`email`,OLD.`email_verified`,OLD.`first_name`,OLD.`last_name`,OLD.`country_code`,OLD.`time_zone`,OLD.`birth_date`,OLD.`graduation_year`,OLD.`grade`,OLD.`sex`,OLD.`student_id`,OLD.`address`,OLD.`zipcode`,OLD.`city`,OLD.`land_line_number`,OLD.`cell_phone_number`,OLD.`default_language`,OLD.`notify_news`,OLD.`notify`,OLD.`public_first_name`,OLD.`public_last_name`,OLD.`free_text`,OLD.`web_site`,OLD.`photo_autoload`,OLD.`lang_prog`,OLD.`last_login_date`,OLD.`last_activity_date`,OLD.`last_ip`,OLD.`basic_editor_mode`,OLD.`spaces_for_tab`,OLD.`member_state`,OLD.`user_godfather_id`,OLD.`step_level_in_site`,OLD.`is_admin`,OLD.`no_ranking`,OLD.`help_given`,OLD.`group_self_id`,OLD.`group_owned_id`,OLD.`group_access_id`,OLD.`notification_read_date`,OLD.`login_module_prefix`,OLD.`allow_subgroups`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_users` BEFORE DELETE ON `users` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registration_date`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_date`,`last_activity_date`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notification_read_date`,`login_module_prefix`,`allow_subgroups`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`login`,OLD.`open_id_identity`,OLD.`password_md5`,OLD.`salt`,OLD.`recover`,OLD.`registration_date`,OLD.`email`,OLD.`email_verified`,OLD.`first_name`,OLD.`last_name`,OLD.`country_code`,OLD.`time_zone`,OLD.`birth_date`,OLD.`graduation_year`,OLD.`grade`,OLD.`sex`,OLD.`student_id`,OLD.`address`,OLD.`zipcode`,OLD.`city`,OLD.`land_line_number`,OLD.`cell_phone_number`,OLD.`default_language`,OLD.`notify_news`,OLD.`notify`,OLD.`public_first_name`,OLD.`public_last_name`,OLD.`free_text`,OLD.`web_site`,OLD.`photo_autoload`,OLD.`lang_prog`,OLD.`last_login_date`,OLD.`last_activity_date`,OLD.`last_ip`,OLD.`basic_editor_mode`,OLD.`spaces_for_tab`,OLD.`member_state`,OLD.`godfather_user_id`,OLD.`step_level_in_site`,OLD.`is_admin`,OLD.`no_ranking`,OLD.`help_given`,OLD.`self_group_id`,OLD.`owned_group_id`,OLD.`access_group_id`,OLD.`notification_read_date`,OLD.`login_module_prefix`,OLD.`allow_subgroups`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_users_items`;
 -- +migrate StatementBegin
@@ -1269,15 +1269,15 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_insert_users_items` BEFORE INSERT O
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_users_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_users_items` AFTER INSERT ON `users_items` FOR EACH ROW BEGIN INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`attempt_active_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`attempt_active_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_users_items` AFTER INSERT ON `users_items` FOR EACH ROW BEGIN INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_users_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_users_items` BEFORE UPDATE ON `users_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`attempt_active_id` <=> NEW.`attempt_active_id` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`start_date` <=> NEW.`start_date` AND OLD.`validation_date` <=> NEW.`validation_date` AND OLD.`best_answer_date` <=> NEW.`best_answer_date` AND OLD.`last_answer_date` <=> NEW.`last_answer_date` AND OLD.`thread_start_date` <=> NEW.`thread_start_date` AND OLD.`last_hint_date` <=> NEW.`last_hint_date` AND OLD.`finish_date` <=> NEW.`finish_date` AND OLD.`contest_start_date` <=> NEW.`contest_start_date` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog` AND OLD.`state` <=> NEW.`state` AND OLD.`answer` <=> NEW.`answer`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`attempt_active_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`attempt_active_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`) ; END IF; END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_users_items` BEFORE UPDATE ON `users_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`active_attempt_id` <=> NEW.`active_attempt_id` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`start_date` <=> NEW.`start_date` AND OLD.`validation_date` <=> NEW.`validation_date` AND OLD.`best_answer_date` <=> NEW.`best_answer_date` AND OLD.`last_answer_date` <=> NEW.`last_answer_date` AND OLD.`thread_start_date` <=> NEW.`thread_start_date` AND OLD.`last_hint_date` <=> NEW.`last_hint_date` AND OLD.`finish_date` <=> NEW.`finish_date` AND OLD.`contest_start_date` <=> NEW.`contest_start_date` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog` AND OLD.`state` <=> NEW.`state` AND OLD.`answer` <=> NEW.`answer`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`start_date`,NEW.`validation_date`,NEW.`best_answer_date`,NEW.`last_answer_date`,NEW.`thread_start_date`,NEW.`last_hint_date`,NEW.`finish_date`,NEW.`last_activity_date`,NEW.`contest_start_date`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_users_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_users_items` BEFORE DELETE ON `users_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`attempt_active_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`item_id`,OLD.`attempt_active_id`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`start_date`,OLD.`validation_date`,OLD.`best_answer_date`,OLD.`last_answer_date`,OLD.`thread_start_date`,OLD.`last_hint_date`,OLD.`finish_date`,OLD.`last_activity_date`,OLD.`contest_start_date`,OLD.`ranked`,OLD.`all_lang_prog`,OLD.`state`,OLD.`answer`, 1); END
+CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_users_items` BEFORE DELETE ON `users_items` FOR EACH ROW BEGIN SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion; UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`start_date`,`validation_date`,`best_answer_date`,`last_answer_date`,`thread_start_date`,`last_hint_date`,`finish_date`,`last_activity_date`,`contest_start_date`,`ranked`,`all_lang_prog`,`state`,`answer`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`item_id`,OLD.`active_attempt_id`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`start_date`,OLD.`validation_date`,OLD.`best_answer_date`,OLD.`last_answer_date`,OLD.`thread_start_date`,OLD.`last_hint_date`,OLD.`finish_date`,OLD.`last_activity_date`,OLD.`contest_start_date`,OLD.`ranked`,OLD.`all_lang_prog`,OLD.`state`,OLD.`answer`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_insert_users_threads`;
 -- +migrate StatementBegin
@@ -1309,14 +1309,14 @@ SELECT
     MAX(IF(`items_items`.`category` = 'Validation', `task_children`.`validation_date`, NULL)) AS `max_validation_date_categories`
 FROM `users_items` AS `parent_users_items`
          JOIN `items_items` ON(
-        `parent_users_items`.`item_id` = `items_items`.`item_parent_id`
+        `parent_users_items`.`item_id` = `items_items`.`parent_item_id`
     )
          LEFT JOIN `users_items` AS `task_children` ON(
-            `items_items`.`item_child_id` = `task_children`.`item_id` AND
+            `items_items`.`child_item_id` = `task_children`.`item_id` AND
             `task_children`.`user_id` = `parent_users_items`.`user_id`
     )
          JOIN `items` ON(
-        `items`.`ID` = `items_items`.`item_child_id`
+        `items`.`ID` = `items_items`.`child_item_id`
     )
 WHERE `items`.`type` <> 'Course' AND `items`.`no_score` = 0
 GROUP BY `user_item_id`;
@@ -1373,16 +1373,16 @@ ALTER TABLE `groups`
 	RENAME INDEX `type_name` TO `TypeName`;
 ALTER TABLE `groups_ancestors`
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `group_ancestor_id` TO `idGroupAncestor`,
-	RENAME COLUMN `group_child_id` TO `idGroupChild`,
+	RENAME COLUMN `ancestor_group_id` TO `idGroupAncestor`,
+	RENAME COLUMN `child_group_id` TO `idGroupChild`,
 	RENAME COLUMN `is_self` TO `bIsSelf`,
 	RENAME COLUMN `version` TO `iVersion`,
-	RENAME INDEX `group_ancestor_id` TO `idGroupAncestor`;
+	RENAME INDEX `ancestor_group_id` TO `idGroupAncestor`;
 ALTER TABLE `groups_attempts`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `group_id` TO `idGroup`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `user_creator_id` TO `idUserCreator`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreator`,
 	RENAME COLUMN `order` TO `iOrder`,
 	RENAME COLUMN `score` TO `iScore`,
 	RENAME COLUMN `score_computed` TO `iScoreComputed`,
@@ -1423,23 +1423,23 @@ ALTER TABLE `groups_attempts`
 	RENAME INDEX `group_item_minus_score_best_answer_date_id` TO `GroupItemMinusScoreBestAnswerDateID`;
 ALTER TABLE `groups_groups`
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `group_parent_id` TO `idGroupParent`,
-	RENAME COLUMN `group_child_id` TO `idGroupChild`,
+	RENAME COLUMN `parent_group_id` TO `idGroupParent`,
+	RENAME COLUMN `child_group_id` TO `idGroupChild`,
 	RENAME COLUMN `child_order` TO `iChildOrder`,
 	RENAME COLUMN `type` TO `sType`,
 	RENAME COLUMN `role` TO `sRole`,
-	RENAME COLUMN `user_inviting_id` TO `idUserInviting`,
+	RENAME COLUMN `inviting_user_id` TO `idUserInviting`,
 	RENAME COLUMN `status_date` TO `sStatusDate`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME INDEX `version` TO `iVersion`,
-	RENAME INDEX `group_child_id` TO `idGroupChild`,
-	RENAME INDEX `group_parent_id` TO `idGroupParent`,
+	RENAME INDEX `child_group_id` TO `idGroupChild`,
+	RENAME INDEX `parent_group_id` TO `idGroupParent`,
 	RENAME INDEX `parent_order` TO `ParentOrder`;
 ALTER TABLE `groups_items`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `group_id` TO `idGroup`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `user_created_id` TO `idUserCreated`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreated`,
 	RENAME COLUMN `partial_access_date` TO `sPartialAccessDate`,
 	RENAME COLUMN `access_reason` TO `sAccessReason`,
 	RENAME COLUMN `full_access_date` TO `sFullAccessDate`,
@@ -1537,8 +1537,8 @@ ALTER TABLE `history_groups`
 ALTER TABLE `history_groups_ancestors`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `group_ancestor_id` TO `idGroupAncestor`,
-	RENAME COLUMN `group_child_id` TO `idGroupChild`,
+	RENAME COLUMN `ancestor_group_id` TO `idGroupAncestor`,
+	RENAME COLUMN `child_group_id` TO `idGroupChild`,
 	RENAME COLUMN `is_self` TO `bIsSelf`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME COLUMN `next_version` TO `iNextVersion`,
@@ -1546,14 +1546,14 @@ ALTER TABLE `history_groups_ancestors`
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `next_version` TO `iNextVersion`,
 	RENAME INDEX `deleted` TO `bDeleted`,
-	RENAME INDEX `group_ancestor_id` TO `idGroupAncestor`,
+	RENAME INDEX `ancestor_group_id` TO `idGroupAncestor`,
 	RENAME INDEX `id` TO `ID`;
 ALTER TABLE `history_groups_attempts`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `group_id` TO `idGroup`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `user_creator_id` TO `idUserCreator`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreator`,
 	RENAME COLUMN `order` TO `iOrder`,
 	RENAME COLUMN `score` TO `iScore`,
 	RENAME COLUMN `score_computed` TO `iScoreComputed`,
@@ -1598,12 +1598,12 @@ ALTER TABLE `history_groups_attempts`
 ALTER TABLE `history_groups_groups`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `group_parent_id` TO `idGroupParent`,
-	RENAME COLUMN `group_child_id` TO `idGroupChild`,
+	RENAME COLUMN `parent_group_id` TO `idGroupParent`,
+	RENAME COLUMN `child_group_id` TO `idGroupChild`,
 	RENAME COLUMN `child_order` TO `iChildOrder`,
 	RENAME COLUMN `type` TO `sType`,
 	RENAME COLUMN `role` TO `sRole`,
-	RENAME COLUMN `user_inviting_id` TO `idUserInviting`,
+	RENAME COLUMN `inviting_user_id` TO `idUserInviting`,
 	RENAME COLUMN `status_date` TO `sStatusDate`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME COLUMN `next_version` TO `iNextVersion`,
@@ -1612,14 +1612,14 @@ ALTER TABLE `history_groups_groups`
 	RENAME INDEX `id` TO `ID`,
 	RENAME INDEX `next_version` TO `iNextVersion`,
 	RENAME INDEX `deleted` TO `bDeleted`,
-	RENAME INDEX `group_parent_id` TO `idGroupParent`,
-	RENAME INDEX `group_child_id` TO `idGroupChild`;
+	RENAME INDEX `parent_group_id` TO `idGroupParent`,
+	RENAME INDEX `child_group_id` TO `idGroupChild`;
 ALTER TABLE `history_groups_items`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `group_id` TO `idGroup`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `user_created_id` TO `idUserCreated`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreated`,
 	RENAME COLUMN `partial_access_date` TO `sPartialAccessDate`,
 	RENAME COLUMN `access_reason` TO `sAccessReason`,
 	RENAME COLUMN `full_access_date` TO `sFullAccessDate`,
@@ -1678,13 +1678,13 @@ ALTER TABLE `history_items`
 	RENAME COLUMN `validation_type` TO `sValidationType`,
 	RENAME COLUMN `validation_min` TO `iValidationMin`,
 	RENAME COLUMN `preparation_state` TO `sPreparationState`,
-	RENAME COLUMN `item_unlocked_id` TO `idItemUnlocked`,
+	RENAME COLUMN `unlocked_item_ids` TO `idItemUnlocked`,
 	RENAME COLUMN `score_min_unlock` TO `iScoreMinUnlock`,
 	RENAME COLUMN `supported_lang_prog` TO `sSupportedLangProg`,
 	RENAME COLUMN `default_language_id` TO `idDefaultLanguage`,
 	RENAME COLUMN `team_mode` TO `sTeamMode`,
 	RENAME COLUMN `teams_editable` TO `bTeamsEditable`,
-	RENAME COLUMN `team_in_group_id` TO `idTeamInGroup`,
+	RENAME COLUMN `qualified_group_id` TO `idTeamInGroup`,
 	RENAME COLUMN `team_max_members` TO `iTeamMaxMembers`,
 	RENAME COLUMN `has_attempts` TO `bHasAttempts`,
 	RENAME COLUMN `access_open_date` TO `sAccessOpenDate`,
@@ -1707,23 +1707,23 @@ ALTER TABLE `history_items`
 ALTER TABLE `history_items_ancestors`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `item_ancestor_id` TO `idItemAncestor`,
-	RENAME COLUMN `item_child_id` TO `idItemChild`,
+	RENAME COLUMN `ancestor_item_id` TO `idItemAncestor`,
+	RENAME COLUMN `child_item_id` TO `idItemChild`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME COLUMN `next_version` TO `iNextVersion`,
 	RENAME COLUMN `deleted` TO `bDeleted`,
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `next_version` TO `iNextVersion`,
 	RENAME INDEX `deleted` TO `bDeleted`,
-	RENAME INDEX `item_ancestor_id` TO `idItemAncestor`,
-	RENAME INDEX `item_ancestortor_id` TO `idItemAncestortor`,
-	RENAME INDEX `item_child_id` TO `idItemChild`,
+	RENAME INDEX `ancestor_item_id_child_item_id` TO `idItemAncestor`,
+	RENAME INDEX `ancestor_item_id` TO `idItemAncestortor`,
+	RENAME INDEX `child_item_id` TO `idItemChild`,
 	RENAME INDEX `id` TO `ID`;
 ALTER TABLE `history_items_items`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `item_parent_id` TO `idItemParent`,
-	RENAME COLUMN `item_child_id` TO `idItemChild`,
+	RENAME COLUMN `parent_item_id` TO `idItemParent`,
+	RENAME COLUMN `child_item_id` TO `idItemChild`,
 	RENAME COLUMN `child_order` TO `iChildOrder`,
 	RENAME COLUMN `category` TO `sCategory`,
 	RENAME COLUMN `always_visible` TO `bAlwaysVisible`,
@@ -1734,8 +1734,8 @@ ALTER TABLE `history_items_items`
 	RENAME COLUMN `deleted` TO `bDeleted`,
 	RENAME INDEX `id` TO `ID`,
 	RENAME INDEX `version` TO `iVersion`,
-	RENAME INDEX `item_parent_id` TO `idItemParent`,
-	RENAME INDEX `item_child_id` TO `idItemChild`,
+	RENAME INDEX `parent_item_id` TO `idItemParent`,
+	RENAME INDEX `child_item_id` TO `idItemChild`,
 	RENAME INDEX `next_version` TO `iNextVersion`,
 	RENAME INDEX `deleted` TO `bDeleted`,
 	RENAME INDEX `parent_child` TO `parentChild`;
@@ -1793,7 +1793,7 @@ ALTER TABLE `history_threads`
 	RENAME COLUMN `history_id` TO `history_ID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `type` TO `sType`,
-	RENAME COLUMN `user_created_id` TO `idUserCreated`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreated`,
 	RENAME COLUMN `item_id` TO `idItem`,
 	RENAME COLUMN `last_activity_date` TO `sLastActivityDate`,
 	RENAME COLUMN `title` TO `sTitle`,
@@ -1846,14 +1846,14 @@ ALTER TABLE `history_users`
 	RENAME COLUMN `basic_editor_mode` TO `bBasicEditorMode`,
 	RENAME COLUMN `spaces_for_tab` TO `nbSpacesForTab`,
 	RENAME COLUMN `member_state` TO `iMemberState`,
-	RENAME COLUMN `user_godfather_id` TO `idUserGodfather`,
+	RENAME COLUMN `godfather_user_id` TO `idUserGodfather`,
 	RENAME COLUMN `step_level_in_site` TO `iStepLevelInSite`,
 	RENAME COLUMN `is_admin` TO `bIsAdmin`,
 	RENAME COLUMN `no_ranking` TO `bNoRanking`,
 	RENAME COLUMN `help_given` TO `nbHelpGiven`,
-	RENAME COLUMN `group_self_id` TO `idGroupSelf`,
-	RENAME COLUMN `group_owned_id` TO `idGroupOwned`,
-	RENAME COLUMN `group_access_id` TO `idGroupAccess`,
+	RENAME COLUMN `self_group_id` TO `idGroupSelf`,
+	RENAME COLUMN `owned_group_id` TO `idGroupOwned`,
+	RENAME COLUMN `access_group_id` TO `idGroupAccess`,
 	RENAME COLUMN `notification_read_date` TO `sNotificationReadDate`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME COLUMN `next_version` TO `iNextVersion`,
@@ -1864,18 +1864,18 @@ ALTER TABLE `history_users`
 	RENAME INDEX `id` TO `ID`,
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `country_code` TO `sCountryCode`,
-	RENAME INDEX `user_godfather_id` TO `idUserGodfather`,
+	RENAME INDEX `godfather_user_id` TO `idUserGodfather`,
 	RENAME INDEX `lang_prog` TO `sLangProg`,
 	RENAME INDEX `next_version` TO `iNextVersion`,
 	RENAME INDEX `deleted` TO `bDeleted`,
-	RENAME INDEX `group_self_id` TO `idGroupSelf`,
-	RENAME INDEX `group_owned_id` TO `idGroupOwned`;
+	RENAME INDEX `self_group_id` TO `idGroupSelf`,
+	RENAME INDEX `owned_group_id` TO `idGroupOwned`;
 ALTER TABLE `history_users_items`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `user_id` TO `idUser`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `attempt_active_id` TO `idAttemptActive`,
+	RENAME COLUMN `active_attempt_id` TO `idAttemptActive`,
 	RENAME COLUMN `score` TO `iScore`,
 	RENAME COLUMN `score_computed` TO `iScoreComputed`,
 	RENAME COLUMN `score_reeval` TO `iScoreReeval`,
@@ -1958,13 +1958,13 @@ ALTER TABLE `items`
 	RENAME COLUMN `validation_type` TO `sValidationType`,
 	RENAME COLUMN `validation_min` TO `iValidationMin`,
 	RENAME COLUMN `preparation_state` TO `sPreparationState`,
-	RENAME COLUMN `item_unlocked_id` TO `idItemUnlocked`,
+	RENAME COLUMN `unlocked_item_ids` TO `idItemUnlocked`,
 	RENAME COLUMN `score_min_unlock` TO `iScoreMinUnlock`,
 	RENAME COLUMN `supported_lang_prog` TO `sSupportedLangProg`,
 	RENAME COLUMN `default_language_id` TO `idDefaultLanguage`,
 	RENAME COLUMN `team_mode` TO `sTeamMode`,
 	RENAME COLUMN `teams_editable` TO `bTeamsEditable`,
-	RENAME COLUMN `team_in_group_id` TO `idTeamInGroup`,
+	RENAME COLUMN `qualified_group_id` TO `idTeamInGroup`,
 	RENAME COLUMN `team_max_members` TO `iTeamMaxMembers`,
 	RENAME COLUMN `has_attempts` TO `bHasAttempts`,
 	RENAME COLUMN `access_open_date` TO `sAccessOpenDate`,
@@ -1979,24 +1979,24 @@ ALTER TABLE `items`
 	RENAME INDEX `version` TO `iVersion`;
 ALTER TABLE `items_ancestors`
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `item_ancestor_id` TO `idItemAncestor`,
-	RENAME COLUMN `item_child_id` TO `idItemChild`,
+	RENAME COLUMN `ancestor_item_id` TO `idItemAncestor`,
+	RENAME COLUMN `child_item_id` TO `idItemChild`,
 	RENAME COLUMN `version` TO `iVersion`,
-	RENAME INDEX `item_ancestor_id` TO `idItemAncestor`,
-	RENAME INDEX `item_ancestortor_id` TO `idItemAncestortor`,
-	RENAME INDEX `item_child_id` TO `idItemChild`;
+	RENAME INDEX `ancestor_item_id_child_item_id` TO `idItemAncestor`,
+	RENAME INDEX `ancestor_item_id` TO `idItemAncestortor`,
+	RENAME INDEX `child_item_id` TO `idItemChild`;
 ALTER TABLE `items_items`
 	RENAME COLUMN `id` TO `ID`,
-	RENAME COLUMN `item_parent_id` TO `idItemParent`,
-	RENAME COLUMN `item_child_id` TO `idItemChild`,
+	RENAME COLUMN `parent_item_id` TO `idItemParent`,
+	RENAME COLUMN `child_item_id` TO `idItemChild`,
 	RENAME COLUMN `child_order` TO `iChildOrder`,
 	RENAME COLUMN `category` TO `sCategory`,
 	RENAME COLUMN `always_visible` TO `bAlwaysVisible`,
 	RENAME COLUMN `access_restricted` TO `bAccessRestricted`,
 	RENAME COLUMN `difficulty` TO `iDifficulty`,
 	RENAME COLUMN `version` TO `iVersion`,
-	RENAME INDEX `item_parent_id` TO `idItemParent`,
-	RENAME INDEX `item_child_id` TO `idItemChild`,
+	RENAME INDEX `parent_item_id` TO `idItemParent`,
+	RENAME INDEX `child_item_id` TO `idItemChild`,
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `parent_child` TO `parentChild`,
 	RENAME INDEX `parent_version` TO `parentVersion`;
@@ -2016,9 +2016,9 @@ ALTER TABLE `items_strings`
 	RENAME COLUMN `edu_comment` TO `sEduComment`,
 	RENAME COLUMN `ranking_comment` TO `sRankingComment`,
 	RENAME COLUMN `version` TO `iVersion`,
-	RENAME INDEX `item_id` TO `idItem`,
+	RENAME INDEX `item_id_language_id` TO `idItem`,
 	RENAME INDEX `version` TO `iVersion`,
-	RENAME INDEX `item_alone_id` TO `idItemAlone`;
+	RENAME INDEX `item_id` TO `idItemAlone`;
 ALTER TABLE `languages`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `name` TO `sName`,
@@ -2076,7 +2076,7 @@ ALTER TABLE `threads`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `type` TO `sType`,
 	RENAME COLUMN `last_activity_date` TO `sLastActivityDate`,
-	RENAME COLUMN `user_created_id` TO `idUserCreated`,
+	RENAME COLUMN `creator_user_id` TO `idUserCreated`,
 	RENAME COLUMN `item_id` TO `idItem`,
 	RENAME COLUMN `title` TO `sTitle`,
 	RENAME COLUMN `admin_help_asked` TO `bAdminHelpAsked`,
@@ -2124,25 +2124,25 @@ ALTER TABLE `users`
 	RENAME COLUMN `basic_editor_mode` TO `bBasicEditorMode`,
 	RENAME COLUMN `spaces_for_tab` TO `nbSpacesForTab`,
 	RENAME COLUMN `member_state` TO `iMemberState`,
-	RENAME COLUMN `user_godfather_id` TO `idUserGodfather`,
+	RENAME COLUMN `godfather_user_id` TO `idUserGodfather`,
 	RENAME COLUMN `step_level_in_site` TO `iStepLevelInSite`,
 	RENAME COLUMN `is_admin` TO `bIsAdmin`,
 	RENAME COLUMN `no_ranking` TO `bNoRanking`,
 	RENAME COLUMN `help_given` TO `nbHelpGiven`,
-	RENAME COLUMN `group_self_id` TO `idGroupSelf`,
-	RENAME COLUMN `group_owned_id` TO `idGroupOwned`,
-	RENAME COLUMN `group_access_id` TO `idGroupAccess`,
+	RENAME COLUMN `self_group_id` TO `idGroupSelf`,
+	RENAME COLUMN `owned_group_id` TO `idGroupOwned`,
+	RENAME COLUMN `access_group_id` TO `idGroupAccess`,
 	RENAME COLUMN `notification_read_date` TO `sNotificationReadDate`,
 	RENAME COLUMN `version` TO `iVersion`,
 	RENAME COLUMN `login_module_prefix` TO `loginModulePrefix`,
 	RENAME COLUMN `creator_id` TO `creatorID`,
 	RENAME COLUMN `allow_subgroups` TO `allowSubgroups`,
 	RENAME INDEX `login` TO `sLogin`,
-	RENAME INDEX `group_self_id` TO `idGroupSelf`,
-	RENAME INDEX `group_owned_id` TO `idGroupOwned`,
+	RENAME INDEX `self_group_id` TO `idGroupSelf`,
+	RENAME INDEX `owned_group_id` TO `idGroupOwned`,
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `country_code` TO `sCountryCode`,
-	RENAME INDEX `user_godfather_id` TO `idUserGodfather`,
+	RENAME INDEX `godfather_user_id` TO `idUserGodfather`,
 	RENAME INDEX `lang_prog` TO `sLangProg`,
 	RENAME INDEX `login_id` TO `loginID`,
 	RENAME INDEX `temp_user` TO `tempUser`;
@@ -2160,14 +2160,14 @@ ALTER TABLE `users_answers`
 	RENAME COLUMN `score` TO `iScore`,
 	RENAME COLUMN `validated` TO `bValidated`,
 	RENAME COLUMN `grading_date` TO `sGradingDate`,
-	RENAME COLUMN `user_grader_id` TO `idUserGrader`,
+	RENAME COLUMN `grader_user_id` TO `idUserGrader`,
 	RENAME INDEX `user_id` TO `idUser`,
 	RENAME INDEX `item_id` TO `idItem`;
 ALTER TABLE `users_items`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `user_id` TO `idUser`,
 	RENAME COLUMN `item_id` TO `idItem`,
-	RENAME COLUMN `attempt_active_id` TO `idAttemptActive`,
+	RENAME COLUMN `active_attempt_id` TO `idAttemptActive`,
 	RENAME COLUMN `score` TO `iScore`,
 	RENAME COLUMN `score_computed` TO `iScoreComputed`,
 	RENAME COLUMN `score_reeval` TO `iScoreReeval`,

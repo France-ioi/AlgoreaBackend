@@ -1,7 +1,7 @@
 Feature: List user descendants of the group (groupUserDescendantView)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 10    |
     And the database has the following table 'groups':
       | id | type      | name           | grade |
@@ -19,7 +19,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 21 | UserSelf  | owner          | -2    |
       | 22 | UserAdmin | owner-admin    | -2    |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type   |
+      | parent_group_id | child_group_id | type   |
       | 1               | 11             | direct |
       | 3               | 13             | direct |
       | 3               | 15             | direct |
@@ -30,7 +30,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 13              | 14             | direct |
       | 13              | 15             | direct |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
       | 1                 | 11             | 0       |
       | 1                 | 12             | 0       |
@@ -69,7 +69,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: One group with 4 grand children (different parents; one connected as "direct", one as "invitationAccepted", one as "requestAccepted", one as "joinedByCode")
     Given the database table 'users' has also the following rows:
-      | id | login | group_self_id | group_owned_id | first_name | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name | last_name | grade |
       | 11 | johna | 51            | 52             | null       | Adams     | 1     |
       | 12 | johnb | 53            | 54             | John       | Baker     | null  |
       | 13 | johnc | 55            | 56             | John       | null      | 3     |
@@ -85,13 +85,13 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 57 | UserSelf  | johnd       | -2    |
       | 58 | UserAdmin | johnd-admin | -2    |
     And the database table 'groups_groups' has also the following rows:
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 11              | 51             | invitationAccepted |
       | 17              | 53             | requestAccepted    |
       | 16              | 55             | direct             |
       | 18              | 57             | joinedByCode       |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 51             | 0       |
       | 1                 | 53             | 0       |
       | 1                 | 55             | 0       |
@@ -186,18 +186,18 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
     Given the database table 'users' has also the following rows:
-      | id | login | group_self_id | group_owned_id | first_name | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name | last_name | grade |
       | 11 | johna | 51            | 52             | null       | Adams     | 1     |
     And the database table 'groups' has also the following rows:
       | id | type      | name        | grade |
       | 51 | UserSelf  | johna       | -2    |
       | 52 | UserAdmin | johna-admin | -2    |
     And the database table 'groups_groups' has also the following rows:
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 11              | 51             | invitationAccepted |
       | 13              | 51             | invitationAccepted |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 51             | 0       |
       | 3                 | 51             | 0       |
       | 11                | 51             | 0       |
@@ -222,7 +222,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Only actual memberships count
     Given the database table 'users' has also the following rows:
-      | id | login | group_self_id | group_owned_id | first_name | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name | last_name | grade |
       | 11 | johna | 51            | 52             | John       | Adams     | 1     |
       | 12 | johnb | 53            | 54             | John       | Baker     | 2     |
       | 13 | johnc | 55            | 56             | John       | null      | 3     |
@@ -245,7 +245,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 61 | UserSelf  | janea       | -2    |
       | 62 | UserAdmin | janea-admin | -2    |
     And the database table 'groups_groups' has also the following rows:
-      | group_parent_id | group_child_id | type              |
+      | parent_group_id | child_group_id | type              |
       | 11              | 51             | invitationSent    |
       | 11              | 53             | requestSent       |
       | 11              | 55             | invitationRefused |
@@ -253,7 +253,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 11              | 59             | removed           |
       | 11              | 61             | left              |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 22                | 51             | 0       |
       | 22                | 53             | 0       |
       | 22                | 55             | 0       |
@@ -283,18 +283,18 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: No duplication (one group with 1 grand children connected through 2 different parents)
     Given the database table 'users' has also the following rows:
-      | id | login | group_self_id | group_owned_id | first_name | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name | last_name | grade |
       | 11 | johna | 51            | 52             | null       | Adams     | 1     |
     And the database table 'groups' has also the following rows:
       | id | type      | name        | grade |
       | 51 | UserSelf  | johna       | -2    |
       | 52 | UserAdmin | johna-admin | -2    |
     And the database table 'groups_groups' has also the following rows:
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 11              | 51             | invitationAccepted |
       | 14              | 51             | requestAccepted    |
     And the database table 'groups_ancestors' has also the following rows:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 51             | 0       |
       | 11                | 51             | 0       |
       | 14                | 51             | 0       |

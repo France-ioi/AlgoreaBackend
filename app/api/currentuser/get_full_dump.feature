@@ -2,7 +2,7 @@ Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 2  | user  | 11            | 12             | John        | Doe       | 1     |
       | 4  | jane  | 31            | 32             | Jane        | Doe       | 2     |
     And the database has the following table 'refresh_tokens':
@@ -26,7 +26,7 @@ Feature: Export the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         | user_inviting_id |
+      | id | parent_group_id | child_group_id | type               | status_date         | inviting_user_id |
       | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
       | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 1                |
       | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 1                |
@@ -41,7 +41,7 @@ Feature: Export the current user's data
       | 13 | 12              | 2              | direct             | null                | null             |
       | 14 | 10              | 11             | joinedByCode       | 2019-07-10 05:02:28 | null             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 2                 | 2              | true    |
       | 2                 | 11             | false   |
@@ -69,10 +69,10 @@ Feature: Export the current user's data
       | 11 | 2       | 404     |
       | 12 | 3       | 405     |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 111 | 11       | 404     | 0       |
-      | 112 | 2        | 404     | 0       |
-      | 113 | 1        | 405     | 0       |
+      | id  | group_id | item_id | order |
+      | 111 | 11       | 404     | 0     |
+      | 112 | 2        | 404     | 0     |
+      | 113 | 1        | 405     | 0     |
 
   Scenario: Full data
     Given I am the user with id "2"
@@ -87,7 +87,7 @@ Feature: Export the current user's data
         "id": "2", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
         "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
         "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "group_access_id": null, "group_owned_id": "12", "group_self_id": "11", "user_godfather_id": null, "login_id": null,
+        "access_group_id": null, "owned_group_id": "12", "self_group_id": "11", "godfather_user_id": null, "login_id": null,
         "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
@@ -100,7 +100,7 @@ Feature: Export the current user's data
         {
           "id": "111", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0, "minus_score": -0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "group_id": "11", "item_id": "404", "user_creator_id": null, "children_validated": 0,
+          "group_id": "11", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
           "best_answer_date": null, "contest_start_date": null, "finish_date": null, "hints_requested": null,
@@ -110,7 +110,7 @@ Feature: Export the current user's data
         {
           "id": "112", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0, "minus_score": -0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "group_id": "2", "item_id": "404", "user_creator_id": null, "children_validated": 0,
+          "group_id": "2", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
           "best_answer_date": null, "contest_start_date": null, "finish_date": null, "hints_requested": null,
@@ -120,43 +120,43 @@ Feature: Export the current user's data
       ],
       "groups_groups": [
         {
-          "id": "2", "child_order": 0, "group_child_id": "11", "group_parent_id": "1", "user_inviting_id": null,
+          "id": "2", "child_order": 0, "child_group_id": "11", "parent_group_id": "1", "inviting_user_id": null,
           "name": "Our Class", "role": "member", "status_date": "2019-07-09T21:02:28Z", "type": "invitationSent"
         },
         {
-          "id": "3", "child_order": 0, "group_child_id": "11", "group_parent_id": "2", "user_inviting_id": "1",
+          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "1",
           "name": "Our Team", "role": "member", "status_date": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
         },
         {
-          "id": "4", "child_order": 0, "group_child_id": "11", "group_parent_id": "3", "user_inviting_id": "1",
+          "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "1",
           "name": "Our Club", "role": "member", "status_date": "2019-07-09T23:02:28Z", "type": "requestSent"
         },
         {
-          "id": "5", "child_order": 0, "group_child_id": "11", "group_parent_id": "4", "user_inviting_id": "2",
+          "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "2",
           "name": "Our Friends", "role": "member", "status_date": "2019-07-10T00:02:28Z", "type": "requestRefused"
         },
         {
-          "id": "6", "child_order": 0, "group_child_id": "11", "group_parent_id": "5", "user_inviting_id": "2",
+          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "2",
           "name": "Other people", "role": "member", "status_date": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
         },
         {
-          "id": "7", "child_order": 0, "group_child_id": "11", "group_parent_id": "6", "user_inviting_id": "2",
+          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "2",
           "name": "Another Class", "role": "member", "status_date": "2019-07-10T02:02:28Z", "type": "requestAccepted"
         },
         {
-          "id": "8", "child_order": 0, "group_child_id": "11", "group_parent_id": "7", "user_inviting_id": "1",
+          "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "1",
           "name": "Another Team", "role": "member", "status_date": "2019-07-10T03:02:28Z", "type": "removed"
         },
         {
-          "id": "9", "child_order": 0, "group_child_id": "11", "group_parent_id": "8", "user_inviting_id": "1",
+          "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "1",
           "name": "Another Club", "role": "member", "status_date": "2019-07-10T04:02:28Z", "type": "left"
         },
         {
-          "id": "10", "child_order": 0, "group_child_id": "11", "group_parent_id": "9", "user_inviting_id": "2",
+          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "2",
           "name": "Some other friends", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "direct"
         },
         {
-          "id": "14", "child_order": 0, "group_child_id": "11", "group_parent_id": "10", "user_inviting_id": null,
+          "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10", "inviting_user_id": null,
           "name": "Secret group", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "joinedByCode"
         }
       ],
@@ -181,7 +181,7 @@ Feature: Export the current user's data
       "users_answers": [
         {
           "id": "1", "validated": null, "score": null, "attempt_id": null, "item_id": "404",
-          "user_id": "2", "user_grader_id": null, "answer": null, "grading_date": null, "lang_prog": null,
+          "user_id": "2", "grader_user_id": null, "answer": null, "grading_date": null, "lang_prog": null,
           "name": null, "state": null, "submission_date": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],
@@ -189,7 +189,7 @@ Feature: Export the current user's data
         {
           "id": "11", "finished": 0, "key_obtained": 0, "platform_data_removed": 0, "ranked": 0, "validated": 0,
           "autonomy": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "attempt_active_id": null, "item_id": "404", "user_id": "2", "children_validated": 0,
+          "active_attempt_id": null, "item_id": "404", "user_id": "2", "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "todo",
           "answer": null, "best_answer_date": null, "contest_start_date": null, "finish_date": null,
@@ -212,8 +212,8 @@ Feature: Export the current user's data
       "current_user": {
         "id": "4", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
         "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
-        "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "group_access_id": null,
-        "group_owned_id": "32", "group_self_id": "31", "user_godfather_id": null, "login_id": null, "login_module_prefix": null,
+        "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
+        "owned_group_id": "32", "self_group_id": "31", "godfather_user_id": null, "login_id": null, "login_module_prefix": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
         "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
         "free_text": null, "land_line_number": null, "lang_prog": "Python", "last_activity_date": null, "last_ip": null,

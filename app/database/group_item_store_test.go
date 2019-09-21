@@ -82,8 +82,8 @@ func TestGroupItemStore_AccessRightsForItemsVisibleToUser(t *testing.T) {
 		"SELECT item_id, MIN(cached_full_access_date) <= NOW() AS full_access, "+
 			"MIN(cached_partial_access_date) <= NOW() AS partial_access, MIN(cached_grayed_access_date) <= NOW() AS grayed_access, "+
 			"MIN(cached_access_solutions_date) <= NOW() AS access_solutions "+
-			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.group_child_id = ?)) AS ancestors "+
-			"ON ancestors.group_ancestor_id = groups_items.group_id GROUP BY groups_items.item_id "+
+			"FROM `groups_items` JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.child_group_id = ?)) AS ancestors "+
+			"ON ancestors.ancestor_group_id = groups_items.group_id GROUP BY groups_items.item_id "+
 			"HAVING (full_access > 0 OR partial_access > 0 OR grayed_access > 0)") + "$").
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))

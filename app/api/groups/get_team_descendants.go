@@ -73,9 +73,9 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	query := srv.Store.Groups().
 		Select("groups.id, groups.name, groups.grade").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.group_child_id = groups.id AND
-				groups_ancestors.group_ancestor_id != groups_ancestors.group_child_id AND
-				groups_ancestors.group_ancestor_id = ?`, groupID).
+			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
+				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+				groups_ancestors.ancestor_group_id = ?`, groupID).
 		Where("groups.type = 'Team'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -100,13 +100,13 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 
 	var parentsResult []descendantParent
 	service.MustNotBeError(srv.Store.Groups().
-		Select("parent_links.group_child_id AS linked_group_id, groups.id, groups.name").
+		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
-			JOIN groups_groups AS parent_links ON parent_links.group_parent_id = groups.id AND
-				parent_links.type = 'direct' AND parent_links.group_child_id IN (?)`, groupIDs).
+			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
+				parent_links.type = 'direct' AND parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
-			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.group_child_id = groups.id AND
-				parent_ancestors.group_ancestor_id = ?`, groupID).
+			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+				parent_ancestors.ancestor_group_id = ?`, groupID).
 		Order("groups.id").
 		Scan(&parentsResult).Error())
 
@@ -117,14 +117,14 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	var membersResult []teamDescendantMember
 	service.MustNotBeError(srv.Store.Users().
 		Select(`
-			member_links.group_parent_id AS linked_group_id,
-			users.group_self_id, users.id, users.first_name, users.last_name, users.login, users.grade`).
+			member_links.parent_group_id AS linked_group_id,
+			users.self_group_id, users.id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
 			JOIN groups_groups AS member_links ON
 				member_links.type`+database.GroupRelationIsActiveCondition+` AND
-				member_links.group_child_id = users.group_self_id AND
-				member_links.group_parent_id IN (?)`, groupIDs).
-		Order("member_links.group_parent_id, member_links.group_child_id").
+				member_links.child_group_id = users.self_group_id AND
+				member_links.parent_group_id IN (?)`, groupIDs).
+		Order("member_links.parent_group_id, member_links.child_group_id").
 		Scan(&membersResult).Error())
 
 	for _, membersRow := range membersResult {
@@ -140,7 +140,7 @@ type teamDescendantMember struct {
 	// required:true
 	ID int64 `json:"id,string"`
 	// required:true
-	SelfGroupID int64 `sql:"column:group_self_id" json:"self_group_id"`
+	SelfGroupID int64 `json:"self_group_id"`
 	// Nullable
 	// required:true
 	FirstName *string `json:"first_name"`

@@ -138,14 +138,14 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			(
 				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
 				JOIN groups_ancestors
-				ON groups_ancestors.group_child_id = user_groups.id AND
-					groups_ancestors.group_ancestor_id != groups_ancestors.group_child_id
-				WHERE user_groups.type = 'UserSelf' AND groups_ancestors.group_ancestor_id = groups.id
+				ON groups_ancestors.child_group_id = user_groups.id AND
+					groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id
+				WHERE user_groups.type = 'UserSelf' AND groups_ancestors.ancestor_group_id = groups.id
 			) AS user_count`).
 		Joins(`
-			JOIN groups_groups ON groups.id = groups_groups.group_child_id AND
+			JOIN groups_groups ON groups.id = groups_groups.child_group_id AND
 				groups_groups.type`+database.GroupRelationIsActiveCondition+` AND
-				groups_groups.group_parent_id = ?`, groupID).
+				groups_groups.parent_group_id = ?`, groupID).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

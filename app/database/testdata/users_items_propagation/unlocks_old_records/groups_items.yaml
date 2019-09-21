@@ -1,6 +1,6 @@
-- {id: 1, group_id: 101, item_id: 1001, cached_partial_access: 0, user_created_id: 1}
-- {id: 2, group_id: 101, item_id: 1002, cached_partial_access: 0, user_created_id: 1}
-- {id: 3, group_id: 101, item_id: 2001, cached_partial_access: 0, user_created_id: 1}
-- {id: 4, group_id: 101, item_id: 2002, cached_partial_access: 0, user_created_id: 1}
-- {id: 5, group_id: 101, item_id: 4001, cached_partial_access: 0, user_created_id: 1}
-- {id: 6, group_id: 101, item_id: 4002, cached_partial_access: 0, user_created_id: 1}
+- {id: 1, group_id: 101, item_id: 1001, cached_partial_access: 0, creator_user_id: 1}
+- {id: 2, group_id: 101, item_id: 1002, cached_partial_access: 0, creator_user_id: 1}
+- {id: 3, group_id: 101, item_id: 2001, cached_partial_access: 0, creator_user_id: 1}
+- {id: 4, group_id: 101, item_id: 2002, cached_partial_access: 0, creator_user_id: 1}
+- {id: 5, group_id: 101, item_id: 4001, cached_partial_access: 0, creator_user_id: 1}
+- {id: 6, group_id: 101, item_id: 4002, cached_partial_access: 0, creator_user_id: 1}

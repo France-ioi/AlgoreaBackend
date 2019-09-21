@@ -1,11 +1,11 @@
 Feature: List team descendants of the group (groupTeamDescendantView) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 2  | user  | 11            | 12             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |

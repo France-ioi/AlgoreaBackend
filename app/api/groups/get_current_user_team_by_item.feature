@@ -1,7 +1,7 @@
 Feature: Get current user's team for item (teamGetByItemID)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id |
+      | id | login | self_group_id |
       | 2  | user  | 12            |
       | 3  | jane  | 13            |
       | 4  | john  | 14            |
@@ -13,7 +13,7 @@ Feature: Get current user's team for item (teamGetByItemID)
       | 20 | Team     | 100          |
       | 21 | Team     | 100          |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 20              | 12             | invitationAccepted |
       | 20              | 13             | requestAccepted    |
       | 20              | 14             | joinedByCode       |

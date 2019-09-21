@@ -88,7 +88,7 @@ func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, itemID int64, attempt
 //   (a) if items.has_attempts = 1, then the user should be a member of the groups_attempts.group_id team
 //   (b) if items.has_attempts = 0, then groups_attempts.group_id should be equal to the user's self group
 func (s *UserAnswerStore) Visible(user *User) *DB {
-	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("group_parent_id")
+	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least partial access to the item
 	itemsQuery := s.Items().Visible(user).Where("partial_access > 0 OR full_access > 0")
 

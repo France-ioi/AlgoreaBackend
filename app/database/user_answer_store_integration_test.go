@@ -312,41 +312,41 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
 				users:
-					- {id: 10, login: "john", group_self_id: 101}
-					- {id: 11, login: "jane", group_self_id: 111}
-					- {id: 12, login: "guest", group_self_id: 121}
+					- {id: 10, login: "john", self_group_id: 101}
+					- {id: 11, login: "jane", self_group_id: 111}
+					- {id: 12, login: "guest", self_group_id: 121}
 				groups_groups:
-					- {group_parent_id: 102, group_child_id: 101, type: requestAccepted}
-					- {group_parent_id: 103, group_child_id: 101, type: invitationSent}
-					- {group_parent_id: 104, group_child_id: 101, type: requestSent}
-					- {group_parent_id: 105, group_child_id: 101, type: invitationRefused}
-					- {group_parent_id: 106, group_child_id: 101, type: requestRefused}
-					- {group_parent_id: 107, group_child_id: 101, type: removed}
-					- {group_parent_id: 108, group_child_id: 101, type: left}
-					- {group_parent_id: 109, group_child_id: 101, type: direct}
-					- {group_parent_id: 110, group_child_id: 101, type: invitationAccepted}
-					- {group_parent_id: 140, group_child_id: 101, type: joinedByCode}
+					- {parent_group_id: 102, child_group_id: 101, type: requestAccepted}
+					- {parent_group_id: 103, child_group_id: 101, type: invitationSent}
+					- {parent_group_id: 104, child_group_id: 101, type: requestSent}
+					- {parent_group_id: 105, child_group_id: 101, type: invitationRefused}
+					- {parent_group_id: 106, child_group_id: 101, type: requestRefused}
+					- {parent_group_id: 107, child_group_id: 101, type: removed}
+					- {parent_group_id: 108, child_group_id: 101, type: left}
+					- {parent_group_id: 109, child_group_id: 101, type: direct}
+					- {parent_group_id: 110, child_group_id: 101, type: invitationAccepted}
+					- {parent_group_id: 140, child_group_id: 101, type: joinedByCode}
 				groups_ancestors:
-					- {group_ancestor_id: 101, group_child_id: 101, is_self: 1}
-					- {group_ancestor_id: 102, group_child_id: 101, is_self: 0}
-					- {group_ancestor_id: 102, group_child_id: 102, is_self: 1}
-					- {group_ancestor_id: 111, group_child_id: 111, is_self: 1}
-					- {group_ancestor_id: 121, group_child_id: 121, is_self: 1}
-					- {group_ancestor_id: 109, group_child_id: 101, is_self: 0}
-					- {group_ancestor_id: 109, group_child_id: 109, is_self: 1}
-					- {group_ancestor_id: 110, group_child_id: 101, is_self: 0}
-					- {group_ancestor_id: 110, group_child_id: 110, is_self: 1}
-					- {group_ancestor_id: 140, group_child_id: 101, is_self: 0}
-					- {group_ancestor_id: 140, group_child_id: 140, is_self: 1}
+					- {ancestor_group_id: 101, child_group_id: 101, is_self: 1}
+					- {ancestor_group_id: 102, child_group_id: 101, is_self: 0}
+					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
+					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
+					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
+					- {ancestor_group_id: 109, child_group_id: 101, is_self: 0}
+					- {ancestor_group_id: 109, child_group_id: 109, is_self: 1}
+					- {ancestor_group_id: 110, child_group_id: 101, is_self: 0}
+					- {ancestor_group_id: 110, child_group_id: 110, is_self: 1}
+					- {ancestor_group_id: 140, child_group_id: 101, is_self: 0}
+					- {ancestor_group_id: 140, child_group_id: 140, is_self: 1}
 				items:
 					- {id: 10, has_attempts: 0}
 					- {id: 50, has_attempts: 0}
 					- {id: 60, has_attempts: 1}
 				groups_items:
-					- {group_id: 101, item_id: 50, cached_partial_access_date: "2017-05-29 06:38:38", user_created_id: 1}
-					- {group_id: 101, item_id: 60, cached_partial_access_date: "2017-05-29 06:38:38", user_created_id: 1}
-					- {group_id: 111, item_id: 50, cached_full_access_date: "2017-05-29 06:38:38", user_created_id: 1}
-					- {group_id: 121, item_id: 50, cached_grayed_access_date: "2017-05-29 06:38:38", user_created_id: 1}`,
+					- {group_id: 101, item_id: 50, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 101, item_id: 60, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 111, item_id: 50, cached_full_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 121, item_id: 50, cached_grayed_access_date: "2017-05-29 06:38:38", creator_user_id: 1}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)

@@ -106,7 +106,7 @@ type itemCommonFields struct {
 	// required: true
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
-	// whether `items.item_unlocked_id` is empty
+	// whether `items.unlocked_item_ids` is empty
 	// required: true
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 	// required: true
@@ -275,7 +275,7 @@ type rawItem struct {
 	Type                   string
 	DisplayDetailsInParent bool
 	ValidationType         string
-	HasUnlockedItems       bool // whether items.item_unlocked_id is empty
+	HasUnlockedItems       bool // whether items.unlocked_item_ids is empty
 	ScoreMinUnlock         int32
 	TeamMode               *string
 	TeamsEditable          bool
@@ -308,7 +308,7 @@ type rawItem struct {
 	StringEduComment  *string `sql:"column:edu_comment"`
 
 	// from users_items for current user
-	UserActiveAttemptID     *int64         `sql:"column:attempt_active_id"`
+	UserActiveAttemptID     *int64         `sql:"column:active_attempt_id"`
 	UserScore               float32        `sql:"column:score"`
 	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
 	UserValidated           bool           `sql:"column:validated"`
@@ -341,7 +341,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.type,
 		items.display_details_in_parent,
 		items.validation_type,
-		items.item_unlocked_id,
+		items.unlocked_item_ids,
 		items.score_min_unlock,
 		items.team_mode,
 		items.teams_editable,
@@ -379,7 +379,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS uses_api,
 		NULL AS hints_allowed,
 		child_order, category, partial_access_propagation`).
-		Joins("JOIN items_items ON items.id=item_child_id AND item_parent_id=?", rootID)
+		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
@@ -389,9 +389,9 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
       items.type,
 		  items.display_details_in_parent,
       items.validation_type,`+
-		// item_unlocked_id is a comma-separated list of item IDs which will be unlocked if this item is validated
+		// unlocked_item_ids is a comma-separated list of item IDs which will be unlocked if this item is validated
 		// Here we consider both NULL and an empty string as FALSE
-		` COALESCE(items.item_unlocked_id, '')<>'' as has_unlocked_items,
+		` COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
 			items.score_min_unlock,
 			items.team_mode,
 			items.teams_editable,
@@ -410,7 +410,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
-			users_items.attempt_active_id AS attempt_active_id,
+			users_items.active_attempt_id AS active_attempt_id,
 			users_items.score AS score,
 			users_items.submissions_attempts AS submissions_attempts,
 			users_items.validated AS validated,

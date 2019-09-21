@@ -29,8 +29,8 @@ func (s *ItemStore) VisibleByID(user *User, itemID int64) *DB {
 func (s *ItemStore) VisibleChildrenOfID(user *User, itemID int64) *DB {
 	return s.
 		Visible(user).
-		Joins("JOIN ? ii ON items.id=item_child_id", s.ItemItems().SubQuery()).
-		Where("ii.item_parent_id = ?", itemID)
+		Joins("JOIN ? ii ON items.id=child_item_id", s.ItemItems().SubQuery()).
+		Where("ii.parent_item_id = ?", itemID)
 }
 
 // VisibleGrandChildrenOfID returns a view of the visible grand-children of item identified by itemID, for the given user
@@ -39,10 +39,10 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 		// visible items are the leaves (potential grandChildren)
 		Visible(user).
 		// get their parents' IDs (ii1)
-		Joins("JOIN ? ii1 ON items.id = ii1.item_child_id", s.ItemItems().SubQuery()).
+		Joins("JOIN ? ii1 ON items.id = ii1.child_item_id", s.ItemItems().SubQuery()).
 		// get their grand parents' IDs (ii2)
-		Joins("JOIN ? ii2 ON ii2.item_child_id = ii1.item_parent_id", s.ItemItems().SubQuery()).
-		Where("ii2.item_parent_id = ?", itemID)
+		Joins("JOIN ? ii2 ON ii2.child_item_id = ii1.parent_item_id", s.ItemItems().SubQuery()).
+		Where("ii2.parent_item_id = ?", itemID)
 }
 
 // AccessRights returns a composable query for getting
@@ -185,16 +185,16 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 			continue
 		}
 
-		db = db.Or("item_parent_id=? AND item_child_id=?", previousID, id)
+		db = db.Or("parent_item_id=? AND child_item_id=?", previousID, id)
 		previousID = id
 	}
 
 	count := 0
-	// For now, we don’t have a unique key for the pair ('item_parent_id' and 'item_child_id') and
+	// For now, we don’t have a unique key for the pair ('parent_item_id' and 'child_item_id') and
 	// theoretically it’s still possible to have multiple rows with the same pair
-	// of 'item_parent_id' and 'item_child_id'.
+	// of 'parent_item_id' and 'child_item_id'.
 	// The “Group(...)” here resolves the issue.
-	if err := db.Group("item_parent_id, item_child_id").Count(&count).Error(); err != nil {
+	if err := db.Group("parent_item_id, child_item_id").Count(&count).Error(); err != nil {
 		return false, err
 	}
 
@@ -251,8 +251,8 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 
 	mustNotBeError(s.Visible(user).
 		Select("items.id AS item_id, full_access").
-		Joins("JOIN items_ancestors ON items_ancestors.item_ancestor_id = items.id").
-		Where("items_ancestors.item_child_id = ?", itemID).
+		Joins("JOIN items_ancestors ON items_ancestors.ancestor_item_id = items.id").
+		Where("items_ancestors.child_item_id = ?", itemID).
 		Where("items.duration IS NOT NULL").
 		Group("items.id").Scan(&contestItems).Error())
 
@@ -327,8 +327,8 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			MIN(users_items.contest_start_date) AS contest_start_date`).
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.group_ancestor_id = groups_items.group_id AND
-				groups_ancestors.group_child_id = ?`, user.SelfGroupID).
+			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
+				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 		Joins(`
 			JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ? AND
 				users_items.contest_start_date IS NOT NULL AND users_items.finish_date IS NULL`, user.ID).
@@ -371,8 +371,8 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 		DELETE groups_items
 		FROM groups_items
 		JOIN items_ancestors ON
-			items_ancestors.item_child_id = groups_items.item_id AND
-			items_ancestors.item_ancestor_id = ?
+			items_ancestors.child_item_id = groups_items.item_id AND
+			items_ancestors.ancestor_item_id = ?
 		WHERE groups_items.group_id = ? AND
 			(cached_full_access_date IS NULL OR cached_full_access_date > NOW()) AND
 			owner_access = 0 AND manager_access = 0`, itemID, *user.SelfGroupID).Error)
@@ -391,7 +391,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		mustNotBeError(s.UserItems().
 			Joins("JOIN users ON users.id = users_items.user_id").
 			Joins(`JOIN groups_groups
-				ON groups_groups.group_child_id = users.group_self_id AND groups_groups.group_parent_id = ?`, teamGroupID).
+				ON groups_groups.child_group_id = users.self_group_id AND groups_groups.parent_group_id = ?`, teamGroupID).
 			Where("users_items.item_id = ?", itemID).
 			UpdateColumn("finish_date", Now()).Error())
 	*/ // nolint:gocritic
@@ -399,9 +399,9 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		UPDATE users_items
 		JOIN users ON users.id = users_items.user_id
 		JOIN groups_groups
-			ON groups_groups.group_child_id = users.group_self_id AND
+			ON groups_groups.child_group_id = users.self_group_id AND
 				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				groups_groups.group_parent_id = ?
+				groups_groups.parent_group_id = ?
 		SET finish_date = NOW()
 		WHERE users_items.item_id = ?`, teamGroupID, itemID).Error)
 

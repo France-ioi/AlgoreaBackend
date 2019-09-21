@@ -1,35 +1,35 @@
 # false becomes true
-- {id: 11, group_id: 1, item_id: 1, cached_full_access: false, cached_full_access_date: 2019-03-22 08:44:55, user_created_id: 1}
-- {id: 12, group_id: 1, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2019-03-22 08:44:55, user_created_id: 1}
-- {id: 13, group_id: 1, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2019-03-22 08:44:55, user_created_id: 1}
-- {id: 14, group_id: 1, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2019-03-22 08:44:55, user_created_id: 1}
+- {id: 11, group_id: 1, item_id: 1, cached_full_access: false, cached_full_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 12, group_id: 1, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 13, group_id: 1, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 14, group_id: 1, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
 
 # true becomes false
-- {id: 21, group_id: 2, item_id: 1, cached_full_access: true, cached_full_access_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 22, group_id: 2, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 23, group_id: 2, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 24, group_id: 2, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2037-01-01 21:30:55, user_created_id: 1}
+- {id: 21, group_id: 2, item_id: 1, cached_full_access: true, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 22, group_id: 2, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 23, group_id: 2, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 24, group_id: 2, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 
 # true becomes false because of nil dates
-- {id: 31, group_id: 3, item_id: 1, cached_full_access: true, user_created_id: 1}
-- {id: 32, group_id: 3, item_id: 2, cached_partial_access: true, user_created_id: 1}
-- {id: 33, group_id: 3, item_id: 3, cached_access_solutions: true, user_created_id: 1}
-- {id: 34, group_id: 3, item_id: 4, cached_grayed_access: true, user_created_id: 1}
+- {id: 31, group_id: 3, item_id: 1, cached_full_access: true, creator_user_id: 1}
+- {id: 32, group_id: 3, item_id: 2, cached_partial_access: true, creator_user_id: 1}
+- {id: 33, group_id: 3, item_id: 3, cached_access_solutions: true, creator_user_id: 1}
+- {id: 34, group_id: 3, item_id: 4, cached_grayed_access: true, creator_user_id: 1}
 
 # false stays false
-- {id: 41, group_id: 4, item_id: 1, cached_full_access: false, cached_full_access_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 42, group_id: 4, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 43, group_id: 4, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2037-01-01 21:30:55, user_created_id: 1}
-- {id: 44, group_id: 4, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2037-01-01 21:30:55, user_created_id: 1}
+- {id: 41, group_id: 4, item_id: 1, cached_full_access: false, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 42, group_id: 4, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 43, group_id: 4, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 44, group_id: 4, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 
 # false stays false because of nil dates
-- {id: 51, group_id: 5, item_id: 1, cached_full_access: false, user_created_id: 1}
-- {id: 52, group_id: 5, item_id: 2, cached_partial_access: false, user_created_id: 1}
-- {id: 53, group_id: 5, item_id: 3, cached_access_solutions: false, user_created_id: 1}
-- {id: 54, group_id: 5, item_id: 4, cached_grayed_access: false, user_created_id: 1}
+- {id: 51, group_id: 5, item_id: 1, cached_full_access: false, creator_user_id: 1}
+- {id: 52, group_id: 5, item_id: 2, cached_partial_access: false, creator_user_id: 1}
+- {id: 53, group_id: 5, item_id: 3, cached_access_solutions: false, creator_user_id: 1}
+- {id: 54, group_id: 5, item_id: 4, cached_grayed_access: false, creator_user_id: 1}
 
 # true stays true
-- {id: 61, group_id: 6, item_id: 1, cached_full_access: true, cached_full_access_date: 2018-03-22 10:44:55, user_created_id: 1}
-- {id: 62, group_id: 6, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2018-03-22 10:44:55, user_created_id: 1}
-- {id: 63, group_id: 6, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2018-03-22 10:44:55, user_created_id: 1}
-- {id: 64, group_id: 6, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2018-03-22 10:44:55, user_created_id: 1}
+- {id: 61, group_id: 6, item_id: 1, cached_full_access: true, cached_full_access_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 62, group_id: 6, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 63, group_id: 6, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 64, group_id: 6, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2018-03-22 10:44:55, creator_user_id: 1}

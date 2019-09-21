@@ -80,7 +80,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 
 		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
 			Where("item_id = ?", itemID).
-			Where("attempt_active_id = ?", requestData.AttemptID).
+			Where("active_attempt_id = ?", requestData.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
 
 		return nil

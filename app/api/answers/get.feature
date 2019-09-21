@@ -1,7 +1,7 @@
 Feature: Get user's answer by user_answer_id
 Background:
   Given the database has the following table 'users':
-    | id | login | temp_user | group_self_id | group_owned_id | first_name | last_name |
+    | id | login | temp_user | self_group_id | owned_group_id | first_name | last_name |
     | 1  | jdoe  | 0         | 11            | 12             | John       | Doe       |
     | 2  | other | 0         | 21            | 22             | George     | Bush      |
   And the database has the following table 'groups':
@@ -13,12 +13,12 @@ Background:
     | 22 | other-admin | UserAdmin |
     | 23 | Group C     | Class     |
   And the database has the following table 'groups_groups':
-    | id | group_parent_id | group_child_id | type               |
+    | id | parent_group_id | child_group_id | type               |
     | 61 | 13              | 11             | invitationAccepted |
     | 62 | 13              | 21             | requestAccepted    |
     | 63 | 23              | 21             | direct             |
   And the database has the following table 'groups_ancestors':
-    | id | group_ancestor_id | group_child_id | is_self |
+    | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
     | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
@@ -31,17 +31,17 @@ Background:
     | 200 | 0            |
     | 210 | 1            |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | user_created_id |
+    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | creator_user_id |
     | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
     | 46 | 23       | 210     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
   And the database has the following table 'users_answers':
-    | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submission_date     | score | validated | grading_date        | user_grader_id |
+    | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submission_date     | score | validated | grading_date        | grader_user_id |
     | 101 | 1       | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 | 123            |
     | 102 | 1       | 210     | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 | 456            |
   And the database has the following table 'groups_attempts':
-    | id  | group_id | item_id | `order` |
-    | 150 | 11       | 200     | 0       |
-    | 250 | 13       | 210     | 0       |
+    | id  | group_id | item_id | order |
+    | 150 | 11       | 200     | 0     |
+    | 250 | 13       | 210     | 0     |
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's id
     Given I am the user with id "1"
@@ -59,7 +59,7 @@ Background:
       "type": "Submission",
       "item_id": "200",
       "user_id": "1",
-      "user_grader_id": "123",
+      "grader_user_id": "123",
       "grading_date": "2018-05-29T06:38:38Z",
       "validated": true
     }
@@ -81,7 +81,7 @@ Background:
       "type": "Submission",
       "item_id": "210",
       "user_id": "1",
-      "user_grader_id": "456",
+      "grader_user_id": "456",
       "grading_date": "2019-05-29T06:38:38Z",
       "validated": true
     }

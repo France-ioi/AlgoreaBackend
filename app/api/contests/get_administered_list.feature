@@ -1,7 +1,7 @@
 Feature: Get the contests that the user has administration rights on (contestAdminList)
   Background:
     Given the database has the following table 'users':
-      | id | login          | group_self_id | group_owned_id | default_language |
+      | id | login          | self_group_id | owned_group_id | default_language |
       | 1  | possesseur     | 21            | 22             | fr               |
       | 2  | owner          | 31            | 32             | en               |
       | 3  | administrateur | 41            | 42             | fr               |
@@ -14,7 +14,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 2  | fr   |
       | 3  | uk   |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 13             | 0       |
       | 22                | 14             | 0       |
@@ -38,7 +38,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 80 | 00:00:03 | 3                   | 0            |
       | 90 | 00:00:03 | 3                   | 0            |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | child_order |
+      | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 0           |
       | 10             | 70            | 1           |
       | 60             | 70            | 0           |
@@ -51,7 +51,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70      | 1           | Contest 2  |
       | 70      | 2           | Concours 2 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | user_created_id |
+      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | creator_user_id |
       | 21       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 4               |
       | 21       | 60      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
       | 21       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |

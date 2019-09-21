@@ -208,6 +208,6 @@ type itemAnswerGetResponse struct {
 		// Nullable
 		// format:integer
 		// required:true
-		UserGraderID *string `json:"user_grader_id"`
+		GraderUserID *string `json:"grader_user_id"`
 	}
 }

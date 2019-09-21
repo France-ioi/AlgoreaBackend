@@ -21,12 +21,12 @@ import (
 //
 //     * `current_user` (from `users`): all attributes except `version`
 //     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”
-//     * `owned_groups`: `id` and `name` for every descendant of user’s `group_owned_id`;
-//     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_self_id`;
+//     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
+//     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
 //     * `users_answers`: all attributes;
 //     * `users_items`: all attributes except `version`;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes except `version`;
-//     * `groups_groups`: where the user’s `group_self_id` is the `group_child_id`, all attributes except `version` + `groups.name`.
+//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes except `version` + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -88,8 +88,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeComma(w)
 	writeJSONObjectArrayElement("owned_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("group_child_id != group_ancestor_id").
-			Joins("JOIN `groups` ON `groups`.id = group_child_id").
+			Where("child_group_id != ancestor_group_id").
+			Joins("JOIN `groups` ON `groups`.id = child_group_id").
 			Order("`groups`.`id`").
 			Select("`groups`.id, `groups`.name").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
@@ -97,8 +97,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().UserAncestors(user).
-			Where("group_child_id != group_ancestor_id").
-			Joins("JOIN `groups` ON `groups`.id = group_ancestor_id").
+			Where("child_group_id != ancestor_group_id").
+			Joins("JOIN `groups` ON `groups`.id = ancestor_group_id").
 			Select("`groups`.id, `groups`.name").Order("`groups`.id").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
@@ -128,7 +128,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 						Where("group_id IN (?)",
 							srv.Store.GroupGroups().WhereUserIsMember(user).
 								Select("`groups`.id").
-								Joins("JOIN `groups` ON `groups`.id = groups_groups.group_parent_id AND `groups`.type = 'Team'").
+								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
 								QueryExpr()).
 						QueryExpr()).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
@@ -139,8 +139,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"version"})
 		service.MustNotBeError(srv.Store.GroupGroups().
-			Where("group_child_id = ?", user.SelfGroupID).
-			Joins("JOIN `groups` ON `groups`.id = group_parent_id").
+			Where("child_group_id = ?", user.SelfGroupID).
+			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
 			Select(columns + ", `groups`.name").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})

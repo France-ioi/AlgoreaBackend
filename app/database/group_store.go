@@ -8,8 +8,8 @@ type GroupStore struct {
 // OwnedBy returns a composable query for getting all the groups
 // that are descendants of the user's owned group using a User object
 func (s *GroupStore) OwnedBy(user *User) *DB {
-	return s.Joins("JOIN groups_ancestors ON groups_ancestors.group_child_id = groups.id").
-		Where("groups_ancestors.group_ancestor_id=?", user.OwnedGroupID)
+	return s.Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id").
+		Where("groups_ancestors.ancestor_group_id=?", user.OwnedGroupID)
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that
@@ -19,9 +19,9 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
-			ON groups_groups.group_parent_id = groups.id AND
+			ON groups_groups.parent_group_id = groups.id AND
 				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				groups_groups.group_child_id = ?`, user.SelfGroupID).
+				groups_groups.child_group_id = ?`, user.SelfGroupID).
 		Where("groups.team_item_id = ?", itemID).
 		Where("groups.type = 'Team'").
 		Order("groups.id").
@@ -35,27 +35,27 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups
-			ON groups_groups.group_parent_id = groups.id AND
+			ON groups_groups.parent_group_id = groups.id AND
 				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				groups_groups.group_child_id = ?`, user.SelfGroupID).
+				groups_groups.child_group_id = ?`, user.SelfGroupID).
 		Joins(`LEFT JOIN items_ancestors
-			ON items_ancestors.item_ancestor_id = groups.team_item_id`).
+			ON items_ancestors.ancestor_item_id = groups.team_item_id`).
 		Where("groups.type = 'Team'").
-		Where("items_ancestors.item_child_id = ? OR groups.team_item_id = ?", itemID, itemID).
+		Where("items_ancestors.child_item_id = ? OR groups.team_item_id = ?", itemID, itemID).
 		Group("groups.id").
 		Order("groups.id").
 		Limit(1)
 }
 
 // TeamsMembersForItem returns a composable query for getting all the actual team members for given teamItemID.
-// IDs of members' self groups can be fetched as `groups_groups.group_child_id` while the teams go as `groups`.
+// IDs of members' self groups can be fetched as `groups_groups.child_group_id` while the teams go as `groups`.
 func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64) *DB {
 	return s.
 		Joins(`
 			JOIN groups_groups
-				ON groups_groups.group_parent_id = groups.id AND
+				ON groups_groups.parent_group_id = groups.id AND
 					groups_groups.type`+GroupRelationIsActiveCondition).
 		Where("groups.type = 'Team'").
-		Where("groups_groups.group_child_id IN (?)", groupsToCheck).
+		Where("groups_groups.child_group_id IN (?)", groupsToCheck).
 		Where("groups.team_item_id = ?", teamItemID)
 }

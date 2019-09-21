@@ -90,7 +90,7 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 			MatchingUserAncestors(user).
 			Select("groups_items.item_id").
 			Where("groups_items.cached_manager_access OR groups_items.owner_access").
-			Where("groups_items.item_id = ? OR groups_items.item_id IN (SELECT item_ancestor_id FROM items_ancestors WHERE item_child_id = ?)",
+			Where("groups_items.item_id = ? OR groups_items.item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?)",
 				itemID, itemID).HasRows()
 
 		service.MustNotBeError(err)
@@ -111,8 +111,8 @@ func (srv *Service) updateGroupItem(w http.ResponseWriter, r *http.Request) serv
 		itemsVisibleToGroupSubQuery := s.GroupItems().AccessRightsForItemsVisibleToGroup(&groupID).SubQuery()
 
 		found, err = s.ItemItems().
-			Joins("JOIN ? AS visible ON visible.item_id = items_items.item_parent_id", itemsVisibleToGroupSubQuery).
-			Where("items_items.item_child_id = ?", itemID).
+			Joins("JOIN ? AS visible ON visible.item_id = items_items.parent_item_id", itemsVisibleToGroupSubQuery).
+			Where("items_items.child_item_id = ?", itemID).
 			HasRows()
 		service.MustNotBeError(err)
 		if !found {
@@ -155,7 +155,7 @@ func saveGroupItemDataIntoDB(groupID, itemID, creatorUserID int64, data *formdat
 		dbMap["item_id"] = itemID
 		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 			dbMap["id"] = retryStore.NewID()
-			dbMap["user_created_id"] = creatorUserID
+			dbMap["creator_user_id"] = creatorUserID
 			return s.GroupItems().InsertMap(dbMap)
 		}))
 	}

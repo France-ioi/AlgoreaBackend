@@ -2,7 +2,7 @@ Feature: Create a group (groupCreate) - robustness
 
   Background:
     Given the database has the following table 'users':
-      | id | login  | temp_user | group_self_id | group_owned_id |
+      | id | login  | temp_user | self_group_id | owned_group_id |
       | 1  | owner  | 0         | 21            | 22             |
       | 2  | tmp12  | 1         | 31            | 32             |
       | 3  | noself | 0         | null          | 42             |
@@ -19,9 +19,9 @@ Feature: Create a group (groupCreate) - robustness
       | 52 | john-admin   | UserAdmin | null         |
       | 61 | weird        | UserSelf  | null         |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type |
+      | parent_group_id | child_group_id | type |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
       | 31                | 31             | 1       |
@@ -31,7 +31,7 @@ Feature: Create a group (groupCreate) - robustness
       | 52                | 52             | 1       |
       | 61                | 61             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id |
+      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
       | 21       | 10      | 2019-07-16 21:28:47     | null                       | null                      | 1               |
       | 21       | 11      | null                    | 2019-07-16 21:28:47        | null                      | 1               |
       | 21       | 12      | null                    | null                       | 2019-07-16 21:28:47       | 1               |

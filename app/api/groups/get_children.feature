@@ -1,12 +1,12 @@
 Feature: Get group children (groupChildrenView)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
       | 2  | john  | 51            | 52             | John        | Doe       |
       | 3  | jane  | 53            | 54             | Jane        | Doe       |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
@@ -97,7 +97,7 @@ Feature: Get group children (groupChildrenView)
       | 54 | jane-admin    | 0     | UserAdmin | false  | false       | null       |
       | 90 | Sub-Class     | 0     | Team      | false  | false       | null       |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 13              | 21             | invitationAccepted |
       | 13              | 23             | direct             |
       | 13              | 24             | direct             |

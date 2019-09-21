@@ -1,7 +1,7 @@
 Feature: Get groups attempts for current user and item_id - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name | last_name |
+      | id | login | self_group_id | owned_group_id | first_name | last_name |
       | 1  | jdoe  | 11            | 12             | John       | Doe       |
 
   Scenario: User doesn't exist

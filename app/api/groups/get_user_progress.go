@@ -123,9 +123,9 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var userGroupIDs []interface{}
 	userGroupIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors.group_child_id AND groups.type = 'UserSelf'").
-		Where("groups_ancestors.group_ancestor_id = ?", groupID).
-		Where("groups_ancestors.group_child_id != groups_ancestors.group_ancestor_id")
+		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'UserSelf'").
+		Where("groups_ancestors.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
 	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
@@ -145,10 +145,10 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	// Preselect item IDs (there should not be many of them)
 	var itemIDs []interface{}
-	service.MustNotBeError(srv.Store.ItemItems().Where("item_parent_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.item_child_id", itemsVisibleToUserSubQuery).
-		Order("items_items.item_child_id").
-		Pluck("items_items.item_child_id", &itemIDs).Error())
+	service.MustNotBeError(srv.Store.ItemItems().Where("parent_item_id IN (?)", itemParentIDs).
+		Joins("JOIN ? AS visible ON visible.item_id = items_items.child_item_id", itemsVisibleToUserSubQuery).
+		Order("items_items.child_item_id").
+		Pluck("items_items.child_item_id", &itemIDs).Error())
 	if len(itemIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
 		return service.NoError
@@ -179,11 +179,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
 			ON team_links.type`+database.GroupRelationIsActiveCondition+` AND
-				team_links.group_child_id = groups.id`).
+				team_links.child_group_id = groups.id`).
 		Joins(`
 			JOIN `+"`groups`"+` AS teams
 			ON teams.type = 'Team' AND
-				teams.id = team_links.group_parent_id`).
+				teams.id = team_links.parent_group_id`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score_for_user
 			ON attempt_with_best_score_for_user.id = (

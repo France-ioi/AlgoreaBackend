@@ -1,9 +1,9 @@
-users: [{id: 1, group_self_id: 11, login: 1}]
+users: [{id: 1, self_group_id: 11, login: 1}]
 groups: [{id: 11}, {id: 20}]
-groups_groups: [{group_parent_id: 20, group_child_id: 12, type: requestAccepted}]
+groups_groups: [{parent_group_id: 20, child_group_id: 12, type: requestAccepted}]
 groups_ancestors:
-  - {group_ancestor_id: 11, group_child_id: 11}
-  - {group_ancestor_id: 20, group_child_id: 11}
+  - {ancestor_group_id: 11, child_group_id: 11}
+  - {ancestor_group_id: 20, child_group_id: 11}
 groups_items: [{group_id: 20, item_id: 114, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55,
-                user_created_id: 1}]
+                creator_user_id: 1}]
 

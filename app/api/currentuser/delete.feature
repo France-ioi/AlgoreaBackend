@@ -10,7 +10,7 @@ Feature: Delete the current user
       | 22 | UserAdmin | user-admin |
       | 31 | UserSelf  | tmp-1234   |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id |
+      | parent_group_id | child_group_id |
       | 1               | 2              |
       | 1               | 3              |
       | 2               | 4              |
@@ -18,7 +18,7 @@ Feature: Delete the current user
       | 3               | 22             |
       | 4               | 31             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
       | 1                 | 3              | false   |
@@ -38,7 +38,7 @@ Feature: Delete the current user
       | 22                | 22             | true    |
       | 31                | 31             | true    |
     And the database has the following table 'users':
-      | id | temp_user | login    | group_self_id | group_owned_id | login_id |
+      | id | temp_user | login    | self_group_id | owned_group_id | login_id |
       | 11 | 0         | user     | 21            | 22             | 1234567  |
       | 12 | 1         | tmp-1234 | 31            | null           | null     |
     And the application config is:
@@ -66,7 +66,7 @@ Feature: Delete the current user
       }
       """
     And the table "users" should be:
-      | id | temp_user | login    | group_self_id | group_owned_id |
+      | id | temp_user | login    | self_group_id | owned_group_id |
       | 12 | 1         | tmp-1234 | 31            | null           |
     And the table "groups" should be:
       | id | type     | name      |
@@ -76,13 +76,13 @@ Feature: Delete the current user
       | 4  | Base     | RootTemp  |
       | 31 | UserSelf | tmp-1234  |
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id |
+      | parent_group_id | child_group_id |
       | 1               | 2              |
       | 1               | 3              |
       | 2               | 4              |
       | 4               | 31             |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
       | 1                 | 3              | false   |
@@ -108,7 +108,7 @@ Feature: Delete the current user
       }
       """
     And the table "users" should be:
-      | id | temp_user | login   | group_self_id | group_owned_id |
+      | id | temp_user | login   | self_group_id | owned_group_id |
       | 11 | 0         | user    | 21            | 22             |
     And the table "groups" should be:
       | id | type      | name       |
@@ -119,14 +119,14 @@ Feature: Delete the current user
       | 21 | UserSelf  | user       |
       | 22 | UserAdmin | user-admin |
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id |
+      | parent_group_id | child_group_id |
       | 1               | 2              |
       | 1               | 3              |
       | 2               | 4              |
       | 2               | 21             |
       | 3               | 22             |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
       | 1                 | 3              | false   |

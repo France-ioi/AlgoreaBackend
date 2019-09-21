@@ -44,11 +44,11 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err e
 // GetAttemptItemIDIfUserHasAccess returns groups_attempts.item_id if:
 //  1) the user has at least partial access to this item
 //  2) the user is a member of groups_attempts.group_id  (if items.has_attempts = 1)
-//  3) the user's group_self_id = groups_attempts.group_id (if items.has_attempts = 0)
+//  3) the user's self_group_id = groups_attempts.group_id (if items.has_attempts = 0)
 func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
-	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("group_parent_id")
+	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	err = s.Items().Visible(user).
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
 		Joins("JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ?", user.ID).
@@ -70,7 +70,7 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 //   (a) if items.has_attempts = 1, then the user should be a member of the groups_attempts.group_id team
 //   (b) if items.has_attempts = 0, then groups_attempts.group_id should be equal to the user's self group
 func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
-	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("group_parent_id")
+	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least partial access to the item
 	itemsQuery := s.Items().Visible(user).Where("items.id = ?", itemID).
 		Where("partial_access > 0 OR full_access > 0")

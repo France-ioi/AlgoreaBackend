@@ -52,8 +52,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 					"login":             login,
 					"temp_user":         true,
 					"registration_date": database.Now(),
-					"group_self_id":     nil,
-					"group_owned_id":    nil,
+					"self_group_id":     nil,
+					"owned_group_id":    nil,
 					"last_ip":           strings.SplitN(r.RemoteAddr, ":", 2)[0],
 				})
 			})
@@ -71,7 +71,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 				"send_emails":  false,
 			})
 		}))
-		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn("group_self_id", selfGroupID).Error())
+		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn("self_group_id", selfGroupID).Error())
 
 		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(

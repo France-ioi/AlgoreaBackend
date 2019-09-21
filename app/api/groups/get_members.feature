@@ -1,7 +1,7 @@
 Feature: Get members of group_id
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name  | grade |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name  | grade |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer   | 3     |
       | 2  | user  | 11            | 12             | John        | Doe        | 1     |
       | 3  | jane  | 31            | 32             | Jane        | Doe        | 2     |
@@ -12,7 +12,7 @@ Feature: Get members of group_id
       | 8  | larry | 81            | 82             | Larry       | Ellison    | 8     |
       | 9  | lp    | 91            | 92             | Larry       | Page       | 6     |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
@@ -45,7 +45,7 @@ Feature: Get members of group_id
       | 92                | 92             | 1       |
       | 22                | 11             | 0       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         | user_inviting_id |
+      | id | parent_group_id | child_group_id | type               | status_date         | inviting_user_id |
       | 2  | 13              | 11             | invitationRefused  | 2017-11-29 06:38:38 | 3                |
       | 1  | 13              | 21             | invitationSent     | 2017-10-29 06:38:38 | 2                |
       | 3  | 13              | 31             | requestSent        | 2017-09-29 06:38:38 | 1                |

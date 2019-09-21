@@ -1,7 +1,7 @@
 Feature: Get item for tree navigation
   Background:
     Given the database has the following table 'users':
-      | id | login     | temp_user | group_self_id | group_owned_id | default_language | version |
+      | id | login     | temp_user | self_group_id | owned_group_id | default_language | version |
       | 1  | jdoe      | 0         | 11            | 12             |                  | 0       |
       | 2  | gray_root | 0         | 14            | 15             |                  | 0       |
       | 3  | gray_mid  | 0         | 16            | 17             |                  | 0       |
@@ -21,10 +21,10 @@ Feature: Get item for tree navigation
       | 18 | french          |         | -2    | UserAdmin | 0       |
       | 19 | french-admin    |         | -2    | UserAdmin | 0       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | version |
+      | id | parent_group_id | child_group_id | version |
       | 61 | 13              | 11             | 0       |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self | version |
+      | id | ancestor_group_id | child_group_id | is_self | version |
       | 71 | 11                | 11             | 1       | 0       |
       | 72 | 12                | 12             | 1       | 0       |
       | 73 | 13                | 13             | 1       | 0       |
@@ -33,17 +33,17 @@ Feature: Get item for tree navigation
       | 76 | 16                | 16             | 1       | 0       |
       | 77 | 18                | 18             | 1       | 0       |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score | item_unlocked_id | transparent_folder | version |
-      | 200 | Category | false          | false    | 1234,2345        | true               | 0       |
-      | 210 | Chapter  | false          | false    | 1234,2345        | true               | 0       |
-      | 220 | Chapter  | false          | false    | 1234,2345        | true               | 0       |
-      | 230 | Chapter  | false          | false    | 1234,2345        | true               | 0       |
-      | 211 | Task     | false          | false    | 1234,2345        | true               | 0       |
-      | 231 | Task     | false          | false    | 1234,2345        | true               | 0       |
-      | 232 | Task     | false          | false    | 1234,2345        | true               | 0       |
-      | 250 | Task     | false          | false    | 1234,2345        | true               | 0       |
+      | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
+      | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
+      | 210 | Chapter  | false          | false    | 1234,2345         | true               | 0       |
+      | 220 | Chapter  | false          | false    | 1234,2345         | true               | 0       |
+      | 230 | Chapter  | false          | false    | 1234,2345         | true               | 0       |
+      | 211 | Task     | false          | false    | 1234,2345         | true               | 0       |
+      | 231 | Task     | false          | false    | 1234,2345         | true               | 0       |
+      | 232 | Task     | false          | false    | 1234,2345         | true               | 0       |
+      | 250 | Task     | false          | false    | 1234,2345         | true               | 0       |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
       | 43 | 13       | 200     | 2019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
       | 44 | 13       | 210     | 2019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
       | 45 | 13       | 220     | 2019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
@@ -74,7 +74,7 @@ Feature: Get item for tree navigation
       | 75 | 18       | 231     | 3019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
       | 76 | 18       | 232     | 3019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
     And the database has the following table 'items_items':
-      | id | item_parent_id | item_child_id | child_order | partial_access_propagation | difficulty | version |
+      | id | parent_item_id | child_item_id | child_order | partial_access_propagation | difficulty | version |
       | 54 | 200            | 210           | 3           | None                       | 0          | 0       |
       | 55 | 200            | 220           | 2           | AsGrayed                   | 0          | 0       |
       | 56 | 200            | 230           | 1           | AsPartial                  | 0          | 0       |

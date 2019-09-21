@@ -118,9 +118,9 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
 	teamIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors.group_child_id AND groups.type = 'Team'").
-		Where("groups_ancestors.group_ancestor_id = ?", groupID).
-		Where("groups_ancestors.group_child_id != groups_ancestors.group_ancestor_id")
+		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'Team'").
+		Where("groups_ancestors.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
 	teamIDQuery, apiError := service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
@@ -139,9 +139,9 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	itemsQuery := srv.Store.ItemItems().
-		Select("items_items.item_child_id").
-		Where("item_parent_id IN (?)", itemParentIDs).
-		Joins("JOIN ? AS visible ON visible.item_id = items_items.item_child_id", itemsVisibleToUserSubQuery)
+		Select("items_items.child_item_id").
+		Where("parent_item_id IN (?)", itemParentIDs).
+		Joins("JOIN ? AS visible ON visible.item_id = items_items.child_item_id", itemsVisibleToUserSubQuery)
 
 	var result []groupTeamProgressResponseRow
 	service.MustNotBeError(srv.Store.Groups().

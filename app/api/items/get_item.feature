@@ -2,7 +2,7 @@ Feature: Get item view information
 
   Background:
     Given the database has the following table 'users':
-      | id | login      | temp_user | group_self_id | group_owned_id | default_language | version |
+      | id | login      | temp_user | self_group_id | owned_group_id | default_language | version |
       | 1  | jdoe       | 0         | 11            | 12             |                  | 0       |
       | 2  | nosolution | 0         | 14            | 16             |                  | 0       |
       | 3  | fr         | 0         | 17            | 21             | fr               | 0       |
@@ -17,10 +17,10 @@ Feature: Get item view information
       | 22 | grayed     |         | -2    | Class     | 0       |
       | 26 | Group D    |         | -2    | Class     | 0       |
     And the database has the following table 'items':
-      | id  | type     | no_score | item_unlocked_id | access_open_date    | display_details_in_parent | validation_type | score_min_unlock | team_mode | teams_editable | team_max_members | has_attempts | duration | end_contest_date    | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
-      | 200 | Category | true     | 1234,2345        | 2019-02-06 09:26:40 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
-      | 210 | Chapter  | true     | 1234,2345        | 2019-02-06 09:26:41 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
-      | 220 | Chapter  | true     | 1234,2345        | 2019-02-06 09:26:42 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | id  | type     | no_score | unlocked_item_ids | access_open_date    | display_details_in_parent | validation_type | score_min_unlock | team_mode | teams_editable | team_max_members | has_attempts | duration | end_contest_date    | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
+      | 200 | Category | true     | 1234,2345         | 2019-02-06 09:26:40 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
+      | 210 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:41 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | 220 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:42 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    | version |
       | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   | 0       |
@@ -30,7 +30,7 @@ Feature: Get item view information
       | 64 | 210     | 2           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire | 0       |
       | 66 | 220     | 2           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire | 0       |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self | version |
+      | id | ancestor_group_id | child_group_id | is_self | version |
       | 71 | 11                | 11             | 1       | 0       |
       | 72 | 12                | 12             | 1       | 0       |
       | 73 | 13                | 13             | 1       | 0       |
@@ -39,11 +39,11 @@ Feature: Get item view information
       | 76 | 13                | 17             | 0       | 0       |
       | 77 | 26                | 22             | 0       | 0       |
     And the database has the following table 'items_items':
-      | id | item_parent_id | item_child_id | child_order | category  | partial_access_propagation | version |
+      | id | parent_item_id | child_item_id | child_order | category  | partial_access_propagation | version |
       | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   | 0       |
       | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   | 0       |
     And the database has the following table 'users_items':
-      | id | user_id | item_id | attempt_active_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | start_date          | finish_date         | validation_date     | contest_start_date  | state      | answer      | version |
+      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | start_date          | finish_date         | validation_date     | contest_start_date  | state      | answer      | version |
       | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 2019-02-01 06:26:41 | Some state | Some answer | 0       |
       | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
       | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 2019-02-01 06:26:44 | Some state | Some answer | 0       |
@@ -55,7 +55,7 @@ Feature: Get item view information
       | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
       | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 2019-02-01 06:26:44 | Some state | null        | 0       |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | cached_access_solutions_date | user_created_id | version |
+      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | cached_access_solutions_date | creator_user_id | version |
       | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 2017-05-29 06:38:38          | 0               | 0       |
       | 44 | 13       | 210     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 2017-05-29 06:38:38          | 0               | 0       |
       | 45 | 13       | 220     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 2017-05-29 06:38:38          | 0               | 0       |

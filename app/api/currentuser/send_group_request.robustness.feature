@@ -1,7 +1,7 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'users':
-      | id | group_self_id | group_owned_id | login |
+      | id | self_group_id | owned_group_id | login |
       | 1  | 21            | 22             | john  |
       | 2  | null          | null           | guest |
     And the database has the following table 'groups':
@@ -15,7 +15,7 @@ Feature: User sends a request to join a group - robustness
       | 21 | 0           | UserSelf  | null         |
       | 22 | 0           | UserAdmin | null         |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
@@ -28,7 +28,7 @@ Feature: User sends a request to join a group - robustness
       | 22                | 17             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_date         |
       | 1  | 11              | 21             | invitationSent     | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | requestSent        | 2017-02-21 06:38:38 |
       | 8  | 16              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
@@ -109,7 +109,7 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Fails when the user's group_self_id is NULL
+  Scenario: Fails when the user's self_group_id is NULL
     Given I am the user with id "2"
     When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 403

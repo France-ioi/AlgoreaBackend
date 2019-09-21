@@ -1,8 +1,8 @@
-- {item_parent_id: 1, item_child_id: 2, child_order: 0}
-- {item_parent_id: 1, item_child_id: 3, child_order: 1}
-- {item_parent_id: 1, item_child_id: 4, child_order: 2}
+- {parent_item_id: 1, child_item_id: 2, child_order: 0}
+- {parent_item_id: 1, child_item_id: 3, child_order: 1}
+- {parent_item_id: 1, child_item_id: 4, child_order: 2}
 
-- {item_parent_id: 2, item_child_id: 3, child_order: 0}
-- {item_parent_id: 2, item_child_id: 4, child_order: 1}
+- {parent_item_id: 2, child_item_id: 3, child_order: 0}
+- {parent_item_id: 2, child_item_id: 4, child_order: 1}
 
-- {item_parent_id: 3, item_child_id: 4, child_order: 0}
+- {parent_item_id: 3, child_item_id: 4, child_order: 0}

@@ -89,10 +89,10 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
 			COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS title_language_id`).
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
-		Joins("JOIN groups_ancestors ON groups_ancestors.group_ancestor_id = groups_items.group_id").
+		Joins("JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id").
 		JoinsUserAndDefaultItemStrings(user).
 		Where("groups_items.cached_full_access_date <= NOW() OR groups_items.cached_access_solutions_date <= NOW()").
-		Where("groups_ancestors.group_child_id = ?", user.SelfGroupID).
+		Where("groups_ancestors.child_group_id = ?", user.SelfGroupID).
 		Where("items.duration IS NOT NULL").
 		Group("items.id")
 
@@ -122,7 +122,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			ParentLanguageID *int64
 		}
 		service.MustNotBeError(srv.Store.Items().
-			Joins("JOIN items_items ON items_items.item_parent_id = items.id AND items_items.item_child_id IN (?)", itemIDs).
+			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
 			Joins(`
 				JOIN groups_items AS parent_groups_items
 					ON parent_groups_items.item_id = items.id AND (
@@ -132,13 +132,13 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 				)`).
 			Joins(`
 				JOIN groups_ancestors AS parent_groups_ancestors
-					ON parent_groups_ancestors.group_ancestor_id = parent_groups_items.group_id AND
-						parent_groups_ancestors.group_child_id = ?`, user.SelfGroupID).
+					ON parent_groups_ancestors.ancestor_group_id = parent_groups_items.group_id AND
+						parent_groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 			JoinsUserAndDefaultItemStrings(user).
-			Group("items_items.item_parent_id, items_items.item_child_id").
+			Group("items_items.parent_item_id, items_items.child_item_id").
 			Order("COALESCE(MAX(user_strings.title), MAX(default_strings.title))").
 			Select(`
-				items_items.item_child_id as child_id,
+				items_items.child_item_id as child_id,
 				COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS parent_title,
 				COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS parent_language_id`).
 			Scan(&parents).Error())

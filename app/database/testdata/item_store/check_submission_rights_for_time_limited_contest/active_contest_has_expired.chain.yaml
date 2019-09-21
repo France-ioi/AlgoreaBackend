@@ -1,9 +1,9 @@
-users: [{id: 3, group_self_id: 13, login: 3}]
+users: [{id: 3, self_group_id: 13, login: 3}]
 users_items: [{user_id: 3, item_id: 115, contest_start_date: 2019-03-22 08:44:55}]
 groups: [{id: 13}, {id: 22}]
-groups_groups: [{group_parent_id: 22, group_child_id: 13, type: invitationAccepted}]
+groups_groups: [{parent_group_id: 22, child_group_id: 13, type: invitationAccepted}]
 groups_ancestors:
-  - {group_ancestor_id: 13, group_child_id: 13}
-  - {group_ancestor_id: 22, group_child_id: 13}
+  - {ancestor_group_id: 13, child_group_id: 13}
+  - {ancestor_group_id: 22, child_group_id: 13}
 groups_items: [{group_id: 22, item_id: 115, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55,
-                user_created_id: 1}]
+                creator_user_id: 1}]

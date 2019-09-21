@@ -46,7 +46,7 @@ type createGroupRequest struct {
 //   After everything, it propagates group ancestors.
 //
 //
-//   The user should have both `group_self_id` and `group_owned_id` set and should not be temporary,
+//   The user should have both `self_group_id` and `owned_group_id` set and should not be temporary,
 //   otherwise the "forbidden" response is returned.
 // parameters:
 // - in: body

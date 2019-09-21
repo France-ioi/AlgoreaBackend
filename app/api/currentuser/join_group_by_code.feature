@@ -1,7 +1,7 @@
 Feature: Join a group using a code (groupsJoinByCode)
   Background:
     Given the database has the following table 'users':
-      | id | group_self_id | group_owned_id |
+      | id | self_group_id | owned_group_id |
       | 1  | 21            | 22             |
     And the database has the following table 'groups':
       | id | type      | code       | code_end            | code_timer | free_access |
@@ -11,14 +11,14 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 21 | UserSelf  | null       | null                | null       | false       |
       | 22 | UserAdmin | null       | null                | null       | false       |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type           | status_date         |
+      | id | parent_group_id | child_group_id | type           | status_date         |
       | 1  | 11              | 21             | invitationSent | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | requestSent    | 2017-02-21 06:38:38 |
 
@@ -36,11 +36,11 @@ Feature: Join a group using a code (groupsJoinByCode)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type         | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | parent_group_id | child_group_id | type         | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 11              | 21             | joinedByCode | 1                                                                                  |
       | 14              | 21             | requestSent  | 0                                                                                  |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 11                | 21             | 0       |
       | 12                | 12             | 1       |
@@ -65,12 +65,12 @@ Feature: Join a group using a code (groupsJoinByCode)
       | id | type | code       | code_timer | free_access | TIMESTAMPDIFF(SECOND, code_end, ADDTIME(NOW(), "12:34:56")) < 3 |
       | 12 | Team | abc3456789 | 12:34:56   | true        | 1                                                               |
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type           | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | parent_group_id | child_group_id | type           | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 11              | 21             | invitationSent | 0                                                                                  |
       | 12              | 21             | joinedByCode   | 1                                                                                  |
       | 14              | 21             | requestSent    | 0                                                                                  |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 12                | 21             | 0       |
@@ -92,11 +92,11 @@ Feature: Join a group using a code (groupsJoinByCode)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type           | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | parent_group_id | child_group_id | type           | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 11              | 21             | invitationSent | 0                                                                                  |
       | 14              | 21             | joinedByCode   | 1                                                                                  |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 14                | 14             | 1       |

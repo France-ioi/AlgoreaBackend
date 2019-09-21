@@ -1,10 +1,10 @@
 Feature: Get group children (groupChildrenView) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | default_language |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | default_language |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self | version |
+      | id | ancestor_group_id | child_group_id | is_self | version |
       | 75 | 22                | 13             | 0       | 0       |
     And the database has the following table 'groups':
       | id | name    | grade | type  | opened | free_access | code       |

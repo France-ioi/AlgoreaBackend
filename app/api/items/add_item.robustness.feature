@@ -1,7 +1,7 @@
 Feature: Add item - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id |
+      | id | login | temp_user | self_group_id |
       | 1  | jdoe  | 0         | 11            |
     And the database has the following table 'items':
       | id | teams_editable | no_score |
@@ -9,18 +9,18 @@ Feature: Add item - robustness
       | 21 | false          | false    |
       | 22 | false          | false    |
     And the database has the following table 'items_items':
-      | id | item_parent_id | item_child_id | child_order |
+      | id | parent_item_id | child_item_id | child_order |
       | 1  | 4              | 21            | 0           |
     And the database has the following table 'items_ancestors':
-      | id | item_ancestor_id | item_child_id |
+      | id | ancestor_item_id | child_item_id |
       | 1  | 4                | 21            |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_manager_access | owner_access | user_created_id |
+      | id | group_id | item_id | cached_manager_access | owner_access | creator_user_id |
       | 41 | 11       | 21      | true                  | false        | 1               |
       | 42 | 11       | 22      | false                 | false        | 1               |
       | 43 | 11       | 4       | true                  | false        | 1               |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self |
+      | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
     And the database has the following table 'languages':
       | id |
@@ -563,13 +563,13 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Non-existent group id in team_in_group_id
+  Scenario: Non-existent group id in qualified_group_id
     Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
-        "team_in_group_id": "404",
+        "qualified_group_id": "404",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
@@ -584,7 +584,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_in_group_id": ["should exist and be owned by the user"]
+          "qualified_group_id": ["should exist and be owned by the user"]
         }
       }
       """
@@ -594,13 +594,13 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: team_in_group_id is not owned by the user
+  Scenario: qualified_group_id is not owned by the user
     Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
-        "team_in_group_id": "11",
+        "qualified_group_id": "11",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
@@ -615,7 +615,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_in_group_id": ["should exist and be owned by the user"]
+          "qualified_group_id": ["should exist and be owned by the user"]
         }
       }
       """

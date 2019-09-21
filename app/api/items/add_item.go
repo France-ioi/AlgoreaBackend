@@ -20,7 +20,7 @@ import (
 
 type itemChild struct {
 	// required: true
-	ItemID int64 `json:"item_id,string" sql:"column:item_child_id" validate:"set,child_item_id"`
+	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set,child_item_id"`
 	// default: 0
 	Order int32 `json:"order" sql:"column:child_order"`
 }
@@ -54,7 +54,7 @@ type item struct {
 	// Nullable
 	//
 	// An optional comma-separated list of items' IDs to unlock (each must be owned/managed by the current user)
-	UnlockedItemIDs *string `json:"unlocked_item_ids" sql:"column:item_unlocked_id" validate:"unlocked_item_ids"`
+	UnlockedItemIDs *string `json:"unlocked_item_ids" validate:"unlocked_item_ids"`
 	// Nullable
 	ScoreMinUnlock *int32 `json:"score_min_unlock"`
 	// Nullable
@@ -63,10 +63,10 @@ type item struct {
 	// Nullable
 	//
 	// Should be owned by the current user
-	TeamInGroupID   *int64 `json:"team_in_group_id" validate:"team_in_group_id"`
-	TeamMaxMembers  int32  `json:"team_max_members"`
-	TitleBarVisible bool   `json:"title_bar_visible"`
-	HasAttempts     bool   `json:"has_attempts"`
+	QualifiedGroupID *int64 `json:"qualified_group_id" validate:"qualified_group_id"`
+	TeamMaxMembers   int32  `json:"team_max_members"`
+	TitleBarVisible  bool   `json:"title_bar_visible"`
+	HasAttempts      bool   `json:"has_attempts"`
 	// Nullable
 	AccessOpenDate *time.Time `json:"access_open_date"`
 	// Nullable
@@ -131,7 +131,7 @@ func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int
 		"id":               groupItemID,
 		"item_id":          itemID,
 		"group_id":         groupID,
-		"user_created_id":  userID,
+		"creator_user_id":  userID,
 		"full_access_date": database.Now(),
 		"owner_access":     true,
 		"manager_access":   true,
@@ -154,8 +154,8 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
-		Where("item_child_id = ?", in.ParentItemID).
-		Where("item_ancestor_id IN (?)", ids).Count(&count).Error())
+		Where("child_item_id = ?", in.ParentItemID).
+		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
 }
 
@@ -170,7 +170,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
 //     * gives full access to the item for the current user (creates a new `groups_items` row with: `item_id` = `items.id`,
-//       `group_id` = `group_self_id` of the current user, `user_created_id` = `users.id` of the current user,
+//       `group_id` = `self_group_id` of the current user, `creator_user_id` = `users.id` of the current user,
 //       `full_access_date` = now(), `cached_full_access_date` = now(), `cached_full_access` = 1, `owner_access` = 1,
 //       `manager_access` = 1).
 //
@@ -182,7 +182,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * `children` items (if any),
 //     * `unlocked_item_ids` items (if any),
 //
-//   and be an owner of `team_in_group_id` (if given),
+//   and be an owner of `qualified_group_id` (if given),
 //   otherwise the "bad request" response is returned.
 // parameters:
 // - in: body
@@ -266,9 +266,9 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	})
 }
 
-// constructTeamInGroupIDValidator constructs a validator for the TeamInGroupID field.
-// The validator checks that the group in the TeamInGroupID field is owned by the user.
-func constructTeamInGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
+// constructQualifiedGroupIDValidator constructs a validator for the QualifiedGroupID field.
+// The validator checks that the group in the QualifiedGroupID field is owned by the user.
+func constructQualifiedGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		field := fl.Field()
 		if field.Kind() == reflect.Ptr { // nil
@@ -344,8 +344,8 @@ func registerLanguageIDValidator(formData *formdata.FormData, store *database.Da
 }
 
 func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
-	formData.RegisterValidation("team_in_group_id", constructTeamInGroupIDValidator(store, user))
-	formData.RegisterTranslation("team_in_group_id", "should exist and be owned by the user")
+	formData.RegisterValidation("qualified_group_id", constructQualifiedGroupIDValidator(store, user))
+	formData.RegisterTranslation("qualified_group_id", "should exist and be owned by the user")
 
 	formData.RegisterValidation("unlocked_item_ids", constructUnlockedItemIDsValidator(store, user))
 	formData.RegisterTranslation("unlocked_item_ids",
@@ -410,7 +410,7 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 
 	valuesMarks := strings.Repeat("(?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?)"
 	// nolint:gosec
-	query := fmt.Sprintf("INSERT INTO `items_items` (`id`, `item_parent_id`, `item_child_id`, `child_order`) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO `items_items` (`id`, `parent_item_id`, `child_item_id`, `child_order`) VALUES %s",
 		valuesMarks)
 	service.MustNotBeError(store.Exec(query, values...).Error())
 }

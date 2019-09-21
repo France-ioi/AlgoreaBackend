@@ -84,12 +84,12 @@ func TestUserItemStore_PropagateAttempts(t *testing.T) {
 			- {id: 224, item_id: 1, group_id: 102, score: 30.0, validated: 0, ancestors_computation_state: done, order: 0}
 			- {id: 225, item_id: 1, group_id: 103, score: 40.0, validated: 0, ancestors_computation_state: done, order: 0}
 		groups_groups:
-			- {id: 333, group_parent_id: 100, group_child_id: 200, type: direct}
-			- {id: 334, group_parent_id: 101, group_child_id: 200, type: invitationAccepted}
-			- {id: 335, group_parent_id: 102, group_child_id: 200, type: requestAccepted}
-			- {id: 336, group_parent_id: 103, group_child_id: 200, type: joinedByCode}
+			- {id: 333, parent_group_id: 100, child_group_id: 200, type: direct}
+			- {id: 334, parent_group_id: 101, child_group_id: 200, type: invitationAccepted}
+			- {id: 335, parent_group_id: 102, child_group_id: 200, type: requestAccepted}
+			- {id: 336, parent_group_id: 103, child_group_id: 200, type: joinedByCode}
 		users:
-			- {id: 500, group_self_id: 200}`)
+			- {id: 500, self_group_id: 200}`)
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
