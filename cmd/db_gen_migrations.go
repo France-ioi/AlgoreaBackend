@@ -27,6 +27,9 @@ func init() { // nolint:gochecknoinits,gocyclo
 	var dbGenMigrationsCmd = &cobra.Command{
 		Use:   "db-gen-migrations  [environment]",
 		Short: "generate migrations",
+		Long: `This script was used to generate the huge migration renaming most of the DB columns.
+Although it cannot be used again, it's very likely that we will reuse parts of the script to create other scripts
+in the future.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// if arg given, replace the env
 			if len(args) > 0 {
