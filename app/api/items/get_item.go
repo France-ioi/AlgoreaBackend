@@ -163,8 +163,9 @@ type itemChildNode struct {
 	Order int32 `json:"order"`
 	// `items_items.category`
 	// required: true
+	// enum: Undefined,Discovery,Application,Validation,Challenge
 	Category string `json:"category"`
-	// `items_items.partial_access_propagation`
+	// Partial access propagation rule between the parent item and this child
 	// enum: None,AsGrayed,AsPartial
 	// required: true
 	PartialAccessPropagation string `json:"partial_access_propagation"`
