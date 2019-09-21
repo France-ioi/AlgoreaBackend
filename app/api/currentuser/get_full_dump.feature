@@ -69,10 +69,10 @@ Feature: Export the current user's data
       | 11 | 2       | 404     |
       | 12 | 3       | 405     |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 111 | 11       | 404     | 0       |
-      | 112 | 2        | 404     | 0       |
-      | 113 | 1        | 405     | 0       |
+      | id  | group_id | item_id | order |
+      | 111 | 11       | 404     | 0     |
+      | 112 | 2        | 404     | 0     |
+      | 113 | 1        | 405     | 0     |
 
   Scenario: Full data
     Given I am the user with id "2"

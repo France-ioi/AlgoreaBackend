@@ -29,10 +29,10 @@ Background:
     | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
     | 44 | 13       | 210     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
   And the database has the following table 'groups_attempts':
-    | id  | group_id | item_id | `order` |
-    | 100 | 13       | 190     | 1       |
-    | 110 | 13       | 210     | 2       |
-    | 120 | 13       | 200     | 0       |
+    | id  | group_id | item_id | order |
+    | 100 | 13       | 190     | 1     |
+    | 110 | 13       | 210     | 2     |
+    | 120 | 13       | 200     | 0     |
 
   Scenario: Should fail when the user has only grayed access to the item
     Given I am the user with id "1"

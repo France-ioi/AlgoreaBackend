@@ -2,6 +2,7 @@ package testhelpers
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -18,7 +19,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 		fields := make([]string, 0, len(head))
 		marks := make([]string, 0, len(head))
 		for _, cell := range head {
-			fields = append(fields, cell.Value)
+			fields = append(fields, database.QuoteName(cell.Value))
 			marks = append(marks, "?")
 		}
 
@@ -166,6 +167,8 @@ func parseMultipleIDString(idsString string) []int64 {
 	return ids
 }
 
+var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
+
 func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
@@ -176,7 +179,11 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
-		selects = append(selects, cell.Value)
+		columnName := cell.Value
+		if columnNameRegexp.MatchString(columnName) {
+			columnName = database.QuoteName(columnName)
+		}
+		selects = append(selects, columnName)
 	}
 
 	idsMap := make(map[string]bool, len(ids))

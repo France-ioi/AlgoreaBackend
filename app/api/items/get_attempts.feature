@@ -44,10 +44,10 @@ Feature: Get groups attempts for current user and item_id
       | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
       | 46 | 23       | 210     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | score | `order` | validated | start_date          | creator_user_id |
-      | 150 | 11       | 200     | 100   | 1       | true      | 2018-05-29 06:38:38 | 3               |
-      | 151 | 11       | 200     | 99    | 0       | false     | 2018-05-29 06:38:38 | null            |
-      | 250 | 13       | 210     | 99    | 0       | true      | 2019-05-29 06:38:38 | 1               |
+      | id  | group_id | item_id | score | order | validated | start_date          | creator_user_id |
+      | 150 | 11       | 200     | 100   | 1     | true      | 2018-05-29 06:38:38 | 3               |
+      | 151 | 11       | 200     | 99    | 0     | false     | 2018-05-29 06:38:38 | null            |
+      | 250 | 13       | 210     | 99    | 0     | true      | 2019-05-29 06:38:38 | 1               |
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's id (type='invitationAccepted')
     Given I am the user with id "1"

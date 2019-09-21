@@ -22,8 +22,8 @@ Feature: Submit a new answer
       | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts |
       | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | `order` |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0       |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | order |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "10"

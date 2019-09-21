@@ -22,8 +22,8 @@ Feature: Update the 'current' answer
       | id  | user_id | item_id | attempt_id | submission_date     |
       | 100 | 10      | 50      | 200        | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 200 | 101      | 50      | 0       |
+      | id  | group_id | item_id | order |
+      | 200 | 101      | 50      | 0     |
 
   Scenario: Missing attempt_id
     Given I am the user with id "10"

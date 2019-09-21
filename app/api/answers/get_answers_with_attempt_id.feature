@@ -37,10 +37,10 @@ Background:
     | 2  | 1       | 200     | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     | 3  | 1       | 210     | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
   And the database has the following table 'groups_attempts':
-    | id  | group_id | item_id | `order` |
-    | 100 | 13       | 200     | 0       |
-    | 101 | 11       | 200     | 0       |
-    | 102 | 11       | 210     | 1       |
+    | id  | group_id | item_id | order |
+    | 100 | 13       | 200     | 0     |
+    | 101 | 11       | 200     | 0     |
+    | 102 | 11       | 210     | 1     |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "1"

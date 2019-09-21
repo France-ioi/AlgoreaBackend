@@ -48,8 +48,8 @@ Feature: Update active attempt for an item
       | user_id | item_id | active_attempt_id | last_activity_date  |
       | 11      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -72,8 +72,8 @@ Feature: Update active attempt for an item
       | user_id | item_id | active_attempt_id | last_activity_date  |
       | 10      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 100 | 101      | 50      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 100 | 101      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -96,8 +96,8 @@ Feature: Update active attempt for an item
       | user_id | item_id | active_attempt_id | last_activity_date  |
       | 11      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -121,8 +121,8 @@ Feature: Update active attempt for an item
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 200 | 102      | 60      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 200 | 102      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -147,8 +147,8 @@ Feature: Update active attempt for an item
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 200 | 103      | 60      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 200 | 103      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -173,8 +173,8 @@ Feature: Update active attempt for an item
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 200 | 104      | 60      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 200 | 104      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -198,8 +198,8 @@ Feature: Update active attempt for an item
       | user_id | item_id | active_attempt_id | last_activity_date  |
       | 11      | 50      | 100               | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -223,9 +223,9 @@ Feature: Update active attempt for an item
       | user_id | item_id | active_attempt_id | last_activity_date  |
       | 11      | 50      | 101               | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_date  | `order` |
-      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0       |
-      | 101 | 111      | 50      | 2018-05-29 06:38:38 | 1       |
+      | id  | group_id | item_id | last_activity_date  | order |
+      | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
+      | 101 | 111      | 50      | 2018-05-29 06:38:38 | 1     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:

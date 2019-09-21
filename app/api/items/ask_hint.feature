@@ -13,7 +13,7 @@ Feature: Ask for a hint
       | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
-      | id | uses_tokens | `regexp`                                          | public_key                |
+      | id | uses_tokens | regexp                                            | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
     And the database has the following table 'items':
       | id | platform_id | url                                                                     |
@@ -37,8 +37,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for a hint
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | hints_cached | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0       |
+      | id  | group_id | item_id | hints_requested        | hints_cached | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -98,8 +98,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
+      | id  | group_id | item_id | hints_requested        | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -159,8 +159,8 @@ Feature: Ask for a hint
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
+      | id  | group_id | item_id | hints_requested        | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -220,8 +220,8 @@ Feature: Ask for a hint
   Scenario: Can't parse hints_requested
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested | `order` |
-      | 100 | 101      | 50      | not an array    | 0       |
+      | id  | group_id | item_id | hints_requested | order |
+      | 100 | 101      | 50      | not an array    | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

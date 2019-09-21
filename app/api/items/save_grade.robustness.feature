@@ -13,7 +13,7 @@ Feature: Save grading result - robustness
       | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
-      | id | uses_tokens | `regexp`                                           | public_key                |
+      | id | uses_tokens | regexp                                             | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':

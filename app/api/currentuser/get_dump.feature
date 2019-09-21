@@ -66,10 +66,10 @@ Feature: Export the short version of the current user's data
       | 11 | 2       | 404     |
       | 12 | 3       | 404     |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 111 | 11       | 404     | 0       |
-      | 112 | 2        | 404     | 0       |
-      | 113 | 1        | 404     | 0       |
+      | id  | group_id | item_id | order |
+      | 111 | 11       | 404     | 0     |
+      | 112 | 2        | 404     | 0     |
+      | 113 | 1        | 404     | 0     |
 
   Scenario: Full data
     Given I am the user with id "2"

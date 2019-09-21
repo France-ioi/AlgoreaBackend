@@ -39,9 +39,9 @@ Background:
     | 101 | 1       | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 | 123            |
     | 102 | 1       | 210     | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 | 456            |
   And the database has the following table 'groups_attempts':
-    | id  | group_id | item_id | `order` |
-    | 150 | 11       | 200     | 0       |
-    | 250 | 13       | 210     | 0       |
+    | id  | group_id | item_id | order |
+    | 150 | 11       | 200     | 0     |
+    | 250 | 13       | 210     | 0     |
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's id
     Given I am the user with id "1"

@@ -13,7 +13,7 @@ Feature: Save grading result
       | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
-      | id | uses_tokens | `regexp`                                           | public_key                |
+      | id | uses_tokens | regexp                                             | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
@@ -50,8 +50,8 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a high score and attempt_id
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
+      | id  | group_id | item_id | hints_requested        | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -119,8 +119,8 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
+      | id  | group_id | item_id | hints_requested        | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -187,8 +187,8 @@ Feature: Save grading result
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | best_answer_date    | `order` |
-      | 100 | 101      | 60      | 2017-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | best_answer_date    | order |
+      | 100 | 101      | 60      | 2017-05-29 06:38:38 | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -256,8 +256,8 @@ Feature: Save grading result
   Scenario: Should keep previous score if it is greater
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | score | best_answer_date    | `order` |
-      | 100 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | score | best_answer_date    | order |
+      | 100 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -322,8 +322,8 @@ Feature: Save grading result
   Scenario: Should keep previous sValidationDate if it is earlier
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | validation_date     | `order` |
-      | 100 | 101      | 60      | 2018-05-29 06:38:38 | 0       |
+      | id  | group_id | item_id | validation_date     | order |
+      | 100 | 101      | 60      | 2018-05-29 06:38:38 | 0     |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

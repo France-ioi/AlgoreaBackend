@@ -69,8 +69,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 12      | 50      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 121      | 50      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 121      | 50      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -94,8 +94,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 101      | 51      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 101      | 51      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -109,8 +109,8 @@ Feature: Update active attempt for an item - robustness
       | 10      | 51      | null              |
       | 11      | 50      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 101      | 50      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 101      | 50      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -123,8 +123,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 103      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 103      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -137,8 +137,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 104      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 104      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -151,8 +151,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 105      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 105      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -165,8 +165,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 106      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 106      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -179,8 +179,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 107      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 107      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -193,8 +193,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 108      | 60      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 108      | 60      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -207,8 +207,8 @@ Feature: Update active attempt for an item - robustness
       | user_id | item_id | active_attempt_id |
       | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | `order` |
-      | 100 | 102      | 50      | 0       |
+      | id  | group_id | item_id | order |
+      | 100 | 102      | 50      | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

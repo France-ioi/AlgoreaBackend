@@ -13,7 +13,7 @@ Feature: Ask for a hint - robustness
       | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
-      | id | uses_tokens | `regexp`                                          | public_key                |
+      | id | uses_tokens | regexp                                            | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
     And the database has the following table 'items':
       | id | platform_id | url                                                                     | read_only |
@@ -34,8 +34,8 @@ Feature: Ask for a hint - robustness
       | 10      | 10      | null                            | 0            | 0                    | null              |
       | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 100               |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested        | `order` |
-      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0       |
+      | id  | group_id | item_id | hints_requested        | order |
+      | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And time is frozen
 
   Scenario: Wrong JSON in request
