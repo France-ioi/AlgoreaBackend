@@ -102,25 +102,25 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.GroupAncestors().Where("groups_ancestors.group_ancestor_id = ?", groupID)
+	query := srv.Store.GroupAncestors().Where("groups_ancestors.ancestor_group_id = ?", groupID)
 
 	if isTeamOnly {
 		query = query.
 			Joins(`
 				JOIN `+"`groups`"+` AS found_group
-					ON found_group.id = groups_ancestors.group_child_id AND found_group.type = 'Team' AND
-						(found_group.team_item_id IN (SELECT item_ancestor_id FROM items_ancestors WHERE item_child_id = ?) OR
+					ON found_group.id = groups_ancestors.child_group_id AND found_group.type = 'Team' AND
+						(found_group.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
 						 found_group.team_item_id = ?)`, itemID, itemID)
 	} else {
 		query = query.
 			Joins(`
 				JOIN ` + "`groups`" + ` AS found_group
-					ON found_group.id = groups_ancestors.group_child_id AND found_group.type = 'UserSelf'`)
+					ON found_group.id = groups_ancestors.child_group_id AND found_group.type = 'UserSelf'`)
 	}
 
 	query = query.
-		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.group_child_id = found_group.id").
-		Joins("LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.group_ancestor_id AND groups_items.item_id = ?", itemID).
+		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.child_group_id = found_group.id").
+		Joins("LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND groups_items.item_id = ?", itemID).
 		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.group_id = found_group.id AND main_group_item.item_id = ?", itemID).
 		Select(`
 				found_group.id AS group_id,

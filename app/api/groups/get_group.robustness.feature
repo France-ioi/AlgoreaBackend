@@ -1,7 +1,7 @@
 Feature: Get group by groupID (groupView) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | default_language |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | default_language |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups':
       | id | name    | grade | description     | date_created        | type      | redirect_path                          | opened | free_access | code       | code_timer | code_end            | open_contest |

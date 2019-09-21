@@ -132,7 +132,7 @@ func refuseSentGroupRequestsIfNeeded(
 		// refuse sent group requests
 		return store.GroupGroups().
 			Where("type = \"requestSent\"").
-			Where("group_parent_id = ?", groupID).
+			Where("parent_group_id = ?", groupID).
 			UpdateColumn("type", "requestRefused").Error()
 	}
 	return nil

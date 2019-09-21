@@ -64,7 +64,7 @@ type groupRequestsViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group requests and invitations
-//   (rows from the `groups_groups` table with `group_parent_id` = `group_id` and
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
 //   `type` = "invitationSent"/"requestSent"/"invitationRefused"/"requestRefused")
 //   with basic info on joining (invited/requesting) users and inviting users.
 //
@@ -165,10 +165,10 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			inviting_user.login AS inviting_user__login,
 			inviting_user.first_name AS inviting_user__first_name,
 			inviting_user.last_name AS inviting_user__last_name`).
-		Joins("LEFT JOIN users AS inviting_user ON inviting_user.id = groups_groups.user_inviting_id").
-		Joins("LEFT JOIN users AS joining_user ON joining_user.group_self_id = groups_groups.group_child_id").
+		Joins("LEFT JOIN users AS inviting_user ON inviting_user.id = groups_groups.inviting_user_id").
+		Joins("LEFT JOIN users AS joining_user ON joining_user.self_group_id = groups_groups.child_group_id").
 		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
-		Where("groups_groups.group_parent_id = ?", groupID)
+		Where("groups_groups.parent_group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
 		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")

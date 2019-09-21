@@ -1,7 +1,7 @@
 Feature: Get group by groupID (groupView)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 2  | john  | 31            | 32             |
       | 3  | jane  | 41            | 42             |
@@ -30,7 +30,7 @@ Feature: Get group by groupID (groupView)
       | 81 | chuck       | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
       | 82 | chuck-admin | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 11              | 31             | invitationAccepted |
       | 13              | 11             | direct             |
       | 13              | 31             | requestRefused     |
@@ -39,7 +39,7 @@ Feature: Get group by groupID (groupView)
       | 13              | 71             | direct             |
       | 13              | 81             | joinedByCode       |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 11                | 31             | 0       |
       | 13                | 11             | 0       |

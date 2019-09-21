@@ -1,10 +1,10 @@
 Feature: Update a group (groupEdit)
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | default_language |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | default_language |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self |
+      | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 22                | 13             | 0       |
       | 76 | 13                | 11             | 0       |
       | 77 | 22                | 14             | 0       |
@@ -14,7 +14,7 @@ Feature: Update a group (groupEdit)
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00   | 2017-10-14 05:39:48 | true         |
       | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null       | null                | false        |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               |
+      | id | parent_group_id | child_group_id | type               |
       | 75 | 13              | 21             | invitationSent     |
       | 76 | 13              | 22             | requestSent        |
       | 77 | 13              | 23             | invitationAccepted |
@@ -43,7 +43,7 @@ Feature: Update a group (groupEdit)
       | id | name   | grade | description    | date_created        | type  | redirect_path | opened | free_access | code       | code_timer | code_end            | open_contest |
       | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 1234/5678     | false  | false       | ybabbxnlyo | 99:59:59   | 2019-12-31 23:59:59 | false        |
     And the table "groups_groups" should be:
-      | id | group_parent_id | group_child_id | type               |
+      | id | parent_group_id | child_group_id | type               |
       | 75 | 13              | 21             | invitationSent     |
       | 76 | 13              | 22             | requestRefused     |
       | 77 | 13              | 23             | invitationAccepted |

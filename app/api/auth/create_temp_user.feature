@@ -18,7 +18,7 @@ Feature: Create a temporary user
       | 3  | RootAdmin  | Base      | RootAdmin |
       | 4  | RootTemp   | UserSelf  | RootTemp  |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | child_order |
+      | id | parent_group_id | child_group_id | child_order |
       | 1  | 1               | 2              | 1           |
       | 2  | 1               | 3              | 2           |
       | 3  | 2               | 4              | 1           |
@@ -40,7 +40,7 @@ Feature: Create a temporary user
       Generated a session token expiring in 7200 seconds for a temporary user 5577006791947779410
       """
     And the table "users" at id "5577006791947779410" should be:
-      | id                  | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registration_date, NOW())) < 3 | group_self_id       | group_owned_id | last_ip   |
+      | id                  | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registration_date, NOW())) < 3 | self_group_id       | owned_group_id | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                     | 6129484611666145821 | null           | 127.0.0.1 |
     And the table "groups" should stay unchanged but the row with id "6129484611666145821"
     And the table "groups" at id "6129484611666145821" should be:
@@ -48,10 +48,10 @@ Feature: Create a temporary user
       | 6129484611666145821 | tmp-49727887 | UserSelf | tmp-49727887 | true                                                | false  | false       |
     And the table "groups_groups" should stay unchanged but the row with id "4037200794235010051"
     And the table "groups_groups" at id "4037200794235010051" should be:
-      | id                  | group_parent_id | group_child_id      | child_order |
+      | id                  | parent_group_id | child_group_id      | child_order |
       | 4037200794235010051 | 4               | 6129484611666145821 | 1           |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id   | group_child_id      | is_self |
+      | ancestor_group_id   | child_group_id      | is_self |
       | 1                   | 1                   | true    |
       | 1                   | 2                   | false   |
       | 1                   | 3                   | false   |

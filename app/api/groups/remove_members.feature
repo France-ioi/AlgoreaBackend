@@ -1,7 +1,7 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
     Given the database has the following table 'users':
-      | id | login  | group_self_id | group_owned_id |
+      | id | login  | self_group_id | owned_group_id |
       | 1  | owner  | 21            | 22             |
       | 2  | john   | 31            | 32             |
       | 3  | jane   | 41            | 42             |
@@ -42,7 +42,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 122 |
       | 132 |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
       | 13                | 51             | 0       |
       | 13                | 61             | 0       |
@@ -79,7 +79,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 122               | 122            | 1       |
       | 132               | 132            | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | status_date               |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 31             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 41             | requestSent        | {{relativeTime("-168h")}} |
@@ -119,7 +119,7 @@ Feature: Remove members from a group (groupRemoveMembers)
     }
     """
     And the table "groups_groups" should be:
-      | id | group_parent_id | group_child_id | type               | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
+      | id | parent_group_id | child_group_id | type               | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
       | 1  | 13              | 21             | invitationSent     | 0                                                                                  |
       | 2  | 13              | 31             | invitationRefused  | 0                                                                                  |
       | 3  | 13              | 41             | requestSent        | 0                                                                                  |
@@ -134,7 +134,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 15 | 13              | 111            | removed            | 1                                                                                  |
       | 16 | 22              | 13             | direct             | 0                                                                                  |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
       | 13                | 91             | 0       |
       | 14                | 14             | 1       |

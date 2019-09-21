@@ -91,10 +91,10 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 
 	var groupsToRemoveRows []struct {
 		UserID      int64
-		SelfGroupID int64 `gorm:"column:group_self_id"`
+		SelfGroupID int64
 	}
-	service.MustNotBeError(srv.Store.Users().Select("id AS user_id, group_self_id").
-		Where("id IN (?)", userIDs).Where("group_self_id IS NOT NULL").
+	service.MustNotBeError(srv.Store.Users().Select("id AS user_id, self_group_id").
+		Where("id IN (?)", userIDs).Where("self_group_id IS NOT NULL").
 		Scan(&groupsToRemoveRows).Error())
 
 	groupsToRemove := make([]int64, 0, len(groupsToRemoveRows))

@@ -1,7 +1,7 @@
 Feature: Get a task token with a refreshed active attempt for an item
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id |
+      | id | login | self_group_id |
       | 10 | john  | 101           |
       | 11 | jane  | 111           |
     And the database has the following table 'groups':
@@ -10,10 +10,10 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 102 | 10           | Team     |
       | 111 | null         | UserSelf |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 102             | 101            | invitationAccepted |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
       | 102               | 101            | 0       |
       | 102               | 102            | 1       |
@@ -24,10 +24,10 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            | 1             | task1   | null                |
       | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            | 0             | null    | c,python            |
     And the database has the following table 'items_ancestors':
-      | item_ancestor_id | item_child_id |
+      | ancestor_item_id | child_item_id |
       | 10               | 60            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_full_access_date | cached_access_solutions_date | user_created_id |
+      | group_id | item_id | cached_partial_access_date | cached_full_access_date | cached_access_solutions_date | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38        | null                    | null                         | 10              |
       | 101      | 60      | 2017-05-29 06:38:38        | null                    | 2017-05-29 06:38:38          | 10              |
       | 111      | 50      | null                       | 2017-05-29 06:38:38     | null                         | 10              |
@@ -36,7 +36,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch an active attempt (no active attempt set)
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date | hints_requested | hints_cached |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date | hints_requested | hints_cached |
       | 11      | 50      | null              | 0     | null             | null            | null       | 1,2,3           | 3            |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
@@ -71,7 +71,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt set, only full access)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date |
       | 10      | 50      | null              | 0     | null             | null            | null       |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
@@ -106,7 +106,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date |
       | 10      | 60      | null              | 0     | null             | null            | null       |
     When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
@@ -141,7 +141,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date |
       | 10      | 50      | 100               | 0     | null             | null            | null       |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
@@ -174,7 +174,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date |
       | 10      | 50      | null              | 0     | null             | null            | null       |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | `order` | last_activity_date  | start_date | score | best_answer_date | validation_date | hints_requested | hints_cached |
@@ -217,7 +217,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date |
       | 10      | 60      | null              | 0     | null             | null            | null       |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | `order` | last_activity_date  | start_date | score | best_answer_date | validation_date | hints_requested | hints_cached |
@@ -260,7 +260,7 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: Keeps previous start_date values
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date | start_date          |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date | start_date          |
       | 10      | 50      | null              | 0     | null             | null            | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | `order` | last_activity_date  | start_date          | score | best_answer_date | validation_date |

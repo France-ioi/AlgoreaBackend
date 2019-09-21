@@ -1,7 +1,7 @@
 Feature: Get group memberships history for the current user
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade | notification_read_date |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade | notification_read_date |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38    |
       | 2  | user  | 11            | 12             | John        | Doe       | 1     | null                   |
       | 3  | jane  | 13            | 14             | Jane        | Doe       | 2     | 2019-06-29 06:38:38    |
@@ -21,7 +21,7 @@ Feature: Get group memberships history for the current user
       | 21 | UserSelf  | owner self         |
       | 22 | UserAdmin | owner admin        |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_date         |
       | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
       | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
       | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |

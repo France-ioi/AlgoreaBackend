@@ -188,12 +188,12 @@ func shouldUnlockItems(store *database.DataStore, itemID int64, score float64, g
 		return true
 	}
 	var unlockedInfo struct {
-		UnlockedItemID string `gorm:"column:item_unlocked_id"`
-		ScoreMinUnlock float64
+		UnlockedItemIDs string
+		ScoreMinUnlock  float64
 	}
-	service.MustNotBeError(store.Items().ByID(itemID).Select("item_unlocked_id, score_min_unlock").
+	service.MustNotBeError(store.Items().ByID(itemID).Select("unlocked_item_ids, score_min_unlock").
 		Take(&unlockedInfo).Error())
-	return unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock <= score
+	return unlockedInfo.UnlockedItemIDs != "" && unlockedInfo.ScoreMinUnlock <= score
 }
 
 type saveGradeRequestParsed struct {

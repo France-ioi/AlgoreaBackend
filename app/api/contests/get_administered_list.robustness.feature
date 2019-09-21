@@ -1,10 +1,10 @@
 Feature: Get the contests that the user has administration rights on (contestAdminList) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login         | group_self_id | group_owned_id | default_language |
+      | id | login         | self_group_id | owned_group_id | default_language |
       | 1  | possesseur    | 21            | 22             | fr               |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
 

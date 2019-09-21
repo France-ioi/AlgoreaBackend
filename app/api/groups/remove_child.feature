@@ -2,7 +2,7 @@ Feature: Remove a direct parent-child relation between two groups
 
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | allow_subgroups |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups':
       | id | name    | type      |
@@ -13,13 +13,13 @@ Feature: Remove a direct parent-child relation between two groups
       | 22 | Owned   | UserAdmin |
 
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type   |
+      | parent_group_id | child_group_id | type   |
       | 13              | 11             | direct |
       | 22              | 11             | direct |
       | 22              | 13             | direct |
       | 22              | 14             | direct |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
@@ -42,12 +42,12 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type   | role   |
+      | parent_group_id | child_group_id | type   | role   |
       | 22              | 11             | direct | member |
       | 22              | 13             | direct | member |
       | 22              | 14             | direct | member |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
@@ -70,11 +70,11 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type   | role   |
+      | parent_group_id | child_group_id | type   | role   |
       | 22              | 11             | direct | member |
       | 22              | 14             | direct | member |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |

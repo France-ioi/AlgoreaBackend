@@ -32,7 +32,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //     * `status_date` = current UTC time
 //
-//     * `user_inviting_id` = `users.id` of the authorized user,
+//     * `inviting_user_id` = `users.id` of the authorized user,
 //
 //     * `role` = "member",
 //
@@ -128,9 +128,9 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 
 	var groupsToInviteRows []struct {
 		Login       string
-		SelfGroupID int64 `gorm:"column:group_self_id"`
+		SelfGroupID int64
 	}
-	service.MustNotBeError(srv.Store.Users().Select("login, group_self_id").Where("login IN (?)", requestData.Logins).
+	service.MustNotBeError(srv.Store.Users().Select("login, self_group_id").Where("login IN (?)", requestData.Logins).
 		Scan(&groupsToInviteRows).Error())
 
 	groupsToInvite := make([]int64, 0, len(groupsToInviteRows))
@@ -196,6 +196,6 @@ func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groups
 	var otherTeamsMembers []int64
 	service.MustNotBeError(store.Groups().TeamsMembersForItem(groupsToCheck, *parentGroupInfo.TeamItemID).WithWriteLock().
 		Where("groups.id != ?", parentGroupID).
-		Pluck("group_child_id", &otherTeamsMembers).Error())
+		Pluck("child_group_id", &otherTeamsMembers).Error())
 	return otherTeamsMembers
 }

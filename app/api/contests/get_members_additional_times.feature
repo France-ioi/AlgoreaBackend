@@ -1,10 +1,10 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
-      | 1  | owner | 21            | 22           |
-      | 2  | john  | 31            | 32           |
-      | 3  | jane  | 41            | 42           |
+      | id | login | self_group_id | owned_group_id |
+      | 1  | owner | 21            | 22             |
+      | 2  | john  | 31            | 32             |
+      | 3  | jane  | 41            | 42             |
     And the database has the following table 'groups':
       | id | name        | type      | team_item_id |
       | 10 | Parent      | Club      | null         |
@@ -21,7 +21,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 41 | jane        | UserSelf  | null         |
       | 42 | jane-admin  | UserAdmin | null         |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 10              | 11             | direct             |
       | 10              | 13             | direct             |
       | 11              | 13             | direct             |
@@ -39,7 +39,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 22              | 17             | direct             |
       | 22              | 31             | direct             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |
       | 10                | 11             | 0       |
       | 10                | 13             | 0       |
@@ -84,12 +84,12 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 10 | 00:00:02 | 0            |
       | 70 | 00:00:03 | 1            |
     And the database has the following table 'items_ancestors':
-      | item_ancestor_id | item_child_id |
+      | ancestor_item_id | child_item_id |
       | 10               | 60            |
       | 10               | 70            |
       | 60               | 70            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 10       | 50      | null                       | null                      | null                    | null                         | 01:00:00        | 1               |
       | 11       | 50      | null                       | null                      | null                    | null                         | 00:01:00        | 1               |
       | 11       | 70      | null                       | null                      | 2017-05-29 06:38:38     | null                         | null            | 1               |

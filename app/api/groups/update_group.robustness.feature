@@ -1,11 +1,11 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  |
       | 2  | user  | 0         | 31            | 32             | John        | Doe       |
     And the database has the following table 'groups_ancestors':
-      | id | group_ancestor_id | group_child_id | is_self | version |
+      | id | ancestor_group_id | child_group_id | is_self | version |
       | 75 | 22                | 13             | 0       | 0       |
       | 76 | 13                | 11             | 0       | 0       |
       | 77 | 32                | 15             | 0       | 0       |

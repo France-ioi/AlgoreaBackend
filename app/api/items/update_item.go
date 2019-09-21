@@ -40,8 +40,8 @@ func (in *UpdateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
-		Where("item_child_id = ?", itemID).
-		Where("item_ancestor_id IN (?)", ids).Count(&count).Error())
+		Where("child_item_id = ?", itemID).
+		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
 }
 
@@ -80,7 +80,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		service.MustNotBeError(store.Items().Where("id = ?", itemID).UpdateColumn(formData.ConstructPartialMapForDB("Item")).Error())
 		if formData.IsSet("children") {
 			err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-				service.MustNotBeError(lockedStore.ItemItems().Delete("item_parent_id = ?", itemID).Error())
+				service.MustNotBeError(lockedStore.ItemItems().Delete("parent_item_id = ?", itemID).Error())
 
 				if !input.checkItemsRelationsCycles(lockedStore, itemID) {
 					apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))

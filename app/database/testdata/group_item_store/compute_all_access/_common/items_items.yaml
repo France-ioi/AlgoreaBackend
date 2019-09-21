@@ -1,13 +1,13 @@
-- {id: 1, item_parent_id: 1, item_child_id: 11, access_restricted: 0, child_order: 0}
-- {id: 2, item_parent_id: 2, item_child_id: 11, access_restricted: 0, child_order: 0}
-- {id: 3, item_parent_id: 3, item_child_id: 11, access_restricted: 0, child_order: 0}
+- {id: 1, parent_item_id: 1, child_item_id: 11, access_restricted: 0, child_order: 0}
+- {id: 2, parent_item_id: 2, child_item_id: 11, access_restricted: 0, child_order: 0}
+- {id: 3, parent_item_id: 3, child_item_id: 11, access_restricted: 0, child_order: 0}
 
-- {id: 4, item_parent_id: 1, item_child_id: 12, access_restricted: 1, child_order: 1}
-- {id: 5, item_parent_id: 2, item_child_id: 12, access_restricted: 0, child_order: 1}
-- {id: 6, item_parent_id: 11, item_child_id: 12, access_restricted: 1, child_order: 0}
+- {id: 4, parent_item_id: 1, child_item_id: 12, access_restricted: 1, child_order: 1}
+- {id: 5, parent_item_id: 2, child_item_id: 12, access_restricted: 0, child_order: 1}
+- {id: 6, parent_item_id: 11, child_item_id: 12, access_restricted: 1, child_order: 0}
 
-- {id: 41, item_parent_id: 4, item_child_id: 1, access_restricted: 0, child_order: 0}
-- {id: 42, item_parent_id: 4, item_child_id: 2, access_restricted: 0, child_order: 1}
-- {id: 43, item_parent_id: 4, item_child_id: 3, access_restricted: 0, child_order: 2}
-- {id: 44, item_parent_id: 4, item_child_id: 11, access_restricted: 0, child_order: 3}
-- {id: 45, item_parent_id: 4, item_child_id: 12, access_restricted: 0, child_order: 4}
+- {id: 41, parent_item_id: 4, child_item_id: 1, access_restricted: 0, child_order: 0}
+- {id: 42, parent_item_id: 4, child_item_id: 2, access_restricted: 0, child_order: 1}
+- {id: 43, parent_item_id: 4, child_item_id: 3, access_restricted: 0, child_order: 2}
+- {id: 44, parent_item_id: 4, child_item_id: 11, access_restricted: 0, child_order: 3}
+- {id: 45, parent_item_id: 4, child_item_id: 12, access_restricted: 0, child_order: 4}

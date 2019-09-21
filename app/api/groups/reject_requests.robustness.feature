@@ -1,7 +1,7 @@
 Feature: Reject group requests - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     |
       | 2  | user  | 11            | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups':
@@ -19,7 +19,7 @@ Feature: Reject group requests - robustness
       | 131 |
       | 141 |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 13                | 111            | 0       |
@@ -35,7 +35,7 @@ Feature: Reject group requests - robustness
       | 122               | 122            | 1       |
       | 123               | 123            | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | status_date               |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |

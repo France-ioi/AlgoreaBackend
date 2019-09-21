@@ -1,40 +1,40 @@
 Feature: Save grading result - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id |
+      | id | login | self_group_id |
       | 10 | john  | 101           |
     And the database has the following table 'groups':
       | id  |
       | 101 |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type   | status_date |
+      | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
       | id | uses_tokens | `regexp`                                           | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
-      | id | platform_id | url                                                                     | read_only | item_unlocked_id | score_min_unlock | validation_type |
-      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |                  | 100              | All             |
-      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         |                  | 100              | All             |
-      | 80 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         |                  | 100              | All             |
-      | 10 | null        | null                                                                    | 0         |                  | 100              | AllButOne       |
+      | id | platform_id | url                                                                     | read_only | unlocked_item_ids | score_min_unlock | validation_type |
+      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         |                   | 100              | All             |
+      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         |                   | 100              | All             |
+      | 80 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         |                   | 100              | All             |
+      | 10 | null        | null                                                                    | 0         |                   | 100              | AllButOne       |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | child_order |
+      | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |
     And the database has the following table 'items_ancestors':
-      | item_ancestor_id | item_child_id |
+      | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | user_created_id |
+      | group_id | item_id | cached_partial_access_date | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38        | 10              |
       | 101      | 70      | 2017-05-29 06:38:38        | 10              |
       | 101      | 80      | 2017-05-29 06:38:38        | 10              |
     And the database has the following table 'users_items':
-      | user_id | item_id | attempt_active_id | score | best_answer_date | validation_date |
+      | user_id | item_id | active_attempt_id | score | best_answer_date | validation_date |
       | 10      | 10      | null              | 0     | null             | null            |
       | 10      | 50      | 100               | 0     | null             | null            |
     And the database has the following table 'users_answers':

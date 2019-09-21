@@ -73,7 +73,7 @@ Feature: Login callback
       """
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
     And the table "users" should be:
-      | id                  | group_self_id       | group_owned_id      | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
+      | id                  | self_group_id       | owned_group_id      | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
       | 3916589616287113937 | 5577006791947779410 | 8674665223082153551 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
       | id                  | name           | type      | description    | date_created        | opened | send_emails |
@@ -82,11 +82,11 @@ Feature: Login callback
       | 5577006791947779410 | mohammed       | UserSelf  | mohammed       | 2019-07-16 22:02:28 | false  | false       |
       | 8674665223082153551 | mohammed-admin | UserAdmin | mohammed-admin | 2019-07-16 22:02:28 | false  | false       |
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id      | type   | child_order |
+      | parent_group_id | child_group_id      | type   | child_order |
       | 2               | 5577006791947779410 | direct | 1           |
       | 3               | 8674665223082153551 | direct | 1           |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id   | group_child_id      | is_self |
+      | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
       | 2                   | 5577006791947779410 | false   |
       | 3                   | 3                   | true    |
@@ -148,7 +148,7 @@ Feature: Login callback
       }
       """
     And the database has the following table 'users':
-      | id | group_self_id | group_owned_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 2  | 13            | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database table 'groups' has also the following rows:
@@ -158,13 +158,13 @@ Feature: Login callback
       | 13 | john           | UserSelf  | john           | 2018-05-10 10:42:11 | false  | false       |
       | 14 | john-admin     | UserAdmin | john-admin     | 2018-05-10 10:42:11 | false  | false       |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type   | child_order |
+      | parent_group_id | child_group_id | type   | child_order |
       | 2               | 11             | direct | 1           |
       | 2               | 13             | direct | 1           |
       | 3               | 12             | direct | 2           |
       | 3               | 14             | direct | 2           |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
       | 2                 | 11             | false   |
       | 2                 | 13             | false   |
@@ -217,7 +217,7 @@ Feature: Login callback
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
     And the table "users" should stay unchanged but the row with id "1"
     And the table "users" at id "1" should be:
-      | id | group_self_id | group_owned_id | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
+      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
       | 1  | 11            | 12             | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
@@ -254,10 +254,10 @@ Feature: Login callback
     And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
     And the template constant "code_from_oauth" is "somecode"
     And the database has the following table 'users':
-      | id | group_self_id | group_owned_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | true    |
       | 12                | 12             | true    |
     And the database has the following table 'login_states':
@@ -296,15 +296,15 @@ Feature: Login callback
     Then the response code should be 201
     And the table "users" should stay unchanged but the row with id "1"
     And the table "users" at id "1" should be:
-      | id | group_self_id | group_owned_id |
+      | id | self_group_id | owned_group_id |
       | 1  | 11            | 12             |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type   |
+      | parent_group_id | child_group_id | type   |
       | 2               | 11             | direct |
       | 3               | 12             | direct |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
       | 2                 | 11             | false   |
       | 3                 | 3              | true    |

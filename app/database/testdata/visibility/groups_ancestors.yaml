@@ -1,6 +1,6 @@
 # group 11 is the auth user owned group
 # group 12 is a group ancestor of its group
 # group 19 is a group unlinked with the user
-- { id: 71, group_ancestor_id: 11, group_child_id: 11 }
-- { id: 72, group_ancestor_id: 12, group_child_id: 11 }
-- { id: 73, group_ancestor_id: 19, group_child_id: 17 }
+- { id: 71, ancestor_group_id: 11, child_group_id: 11 }
+- { id: 72, ancestor_group_id: 12, child_group_id: 11 }
+- { id: 73, ancestor_group_id: 19, child_group_id: 17 }

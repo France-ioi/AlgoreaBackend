@@ -53,7 +53,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	var count int64
 	if err := store.GroupAncestors().OwnedByUser(user).
-		Where("group_child_id = ?", groupID).Count(&count).Error(); err != nil {
+		Where("child_group_id = ?", groupID).Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {

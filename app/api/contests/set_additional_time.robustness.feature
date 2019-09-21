@@ -1,7 +1,7 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 2  | john  | 31            | 32             |
     And the database has the following table 'groups':
@@ -13,7 +13,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31 | john        | UserSelf  |
       | 32 | john-admin  | UserAdmin |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
@@ -30,7 +30,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 70 | 00:00:03 | 0            |
       | 80 | 00:00:04 | 1            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | user_created_id |
+      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
       | 13       | 50      | 2017-05-29 06:38:38        | null                      | null                    | null                         | 01:00:00        | 1               |
       | 13       | 60      | null                       | 2017-05-29 06:38:38       | null                    | null                         | 01:01:00        | 1               |
       | 13       | 70      | null                       | null                      | 2017-05-29 06:38:38     | null                         | null            | 1               |

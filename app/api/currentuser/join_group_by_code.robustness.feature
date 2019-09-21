@@ -1,7 +1,7 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login  | group_self_id | group_owned_id |
+      | id | login  | self_group_id | owned_group_id |
       | 1  | john   | 21            | 22             |
       | 2  | nobody | null          | null           |
     And the database has the following table 'groups':
@@ -15,7 +15,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 21 | UserSelf  | null       | null                | null       | false       | null         |
       | 22 | UserAdmin | null       | null                | null       | false       | null         |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 14                | 14             | 1       |
@@ -26,7 +26,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_date         |
       | 1  | 11              | 21             | invitationSent     | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
 

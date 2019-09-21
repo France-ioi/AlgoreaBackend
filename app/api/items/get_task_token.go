@@ -20,7 +20,7 @@ import (
 //
 //   * If there is no row for the current user and the given item in `users_items`, the service creates one.
 //
-//   * If the active attempt (`attempt_active_id`) is not set in the `users_items` for the item and the user,
+//   * If the active attempt (`active_attempt_id`) is not set in the `users_items` for the item and the user,
 //   the service chooses the most recent one among all the user's attempts (or the team's attempts if
 //   `items.has_attempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
 //
@@ -114,7 +114,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		userItemStore := store.UserItems()
 		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
 		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
-			WithWriteLock().PluckFirst("attempt_active_id", &activeAttemptID).Error())
+			WithWriteLock().PluckFirst("active_attempt_id", &activeAttemptID).Error())
 
 		// No active attempt set in `users_items` so we should choose or create one
 		if activeAttemptID == nil {
@@ -152,10 +152,10 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			activeAttemptID = &attemptID
 		}
 
-		// update users_items.attempt_active_id, users_items.start_date (if it is NULL), and users_items.last_activity_date
+		// update users_items.active_attempt_id, users_items.start_date (if it is NULL), and users_items.last_activity_date
 		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"attempt_active_id":  *activeAttemptID,
+				"active_attempt_id":  *activeAttemptID,
 				"start_date":         gorm.Expr("IFNULL(start_date, ?)", database.Now()),
 				"last_activity_date": database.Now(),
 			}).Error())

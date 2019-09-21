@@ -1,7 +1,7 @@
 Feature: Change item access rights for a group - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id | first_name  | last_name |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name |
       | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
       | 2  | user  | 23            | 24             | John        | Doe       |
       | 3  | admin | 31            | 32             | Allie       | Grater    |
@@ -15,7 +15,7 @@ Feature: Change item access rights for a group - robustness
       | 31 | admin       | UserSelf  |
       | 32 | admin-admin | UserAdmin |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
       | 22                | 23             | 0       |
@@ -33,12 +33,12 @@ Feature: Change item access rights for a group - robustness
       | 102 |
       | 103 |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | always_visible | access_restricted | child_order |
+      | parent_item_id | child_item_id | always_visible | access_restricted | child_order |
       | 100            | 101           | true           | true              | 0           |
       | 101            | 102           | false          | false             | 0           |
       | 102            | 103           | false          | false             | 0           |
     And the database has the following table 'items_ancestors':
-      | item_ancestor_id | item_child_id |
+      | ancestor_item_id | child_item_id |
       | 100              | 101           |
       | 100              | 102           |
       | 100              | 103           |
@@ -46,7 +46,7 @@ Feature: Change item access rights for a group - robustness
       | 101              | 103           |
       | 102              | 103           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | full_access_date | cached_full_access_date | partial_access_date | cached_partial_access_date | cached_grayed_access_date | access_solutions_date | cached_access_solutions_date | owner_access | access_reason                                  | user_created_id |
+      | group_id | item_id | full_access_date | cached_full_access_date | partial_access_date | cached_partial_access_date | cached_grayed_access_date | access_solutions_date | cached_access_solutions_date | owner_access | access_reason                                  | creator_user_id |
       | 21       | 100     | null             | null                    | null                | null                       | null                      | null                  | null                         | 1            | owner owns the item                            | 2               |
       | 21       | 101     | null             | null                    | null                | null                       | null                      | null                  | null                         | 0            | null                                           | 2               |
       | 21       | 102     | null             | null                    | null                | null                       | null                      | null                  | null                         | 0            | null                                           | 2               |

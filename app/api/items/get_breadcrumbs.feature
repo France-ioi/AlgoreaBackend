@@ -2,7 +2,7 @@ Feature: Get item information for breadcrumb
 
 Background:
   Given the database has the following table 'users':
-    | id | login | group_self_id | group_owned_id | default_language |
+    | id | login | self_group_id | owned_group_id | default_language |
     | 1  | jdoe  | 11            | 12             | fr               |
   Given the database has the following table 'languages':
     | id | code |
@@ -26,10 +26,10 @@ Background:
     | 33 | 23      | 1           | Reduce Graph     | 0       |
     | 39 | 21      | 2           | Graphe: Methodes | 0       |
   And the database has the following table 'groups_groups':
-    | id | group_parent_id | group_child_id | version |
+    | id | parent_group_id | child_group_id | version |
     | 61 | 13              | 11             | 0       |
   And the database has the following table 'groups_ancestors':
-    | id | group_ancestor_id | group_child_id | is_self | version |
+    | id | ancestor_group_id | child_group_id | is_self | version |
     | 71 | 11                | 11             | 1       | 0       |
     | 72 | 12                | 12             | 1       | 0       |
     | 73 | 13                | 13             | 1       | 0       |
@@ -37,12 +37,12 @@ Background:
 
 Scenario: Full access on all breadcrumb
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
     | 41 | 13       | 21      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 42 | 13       | 22      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 43 | 13       | 23      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
   And the database has the following table 'items_items':
-    | id | item_parent_id | item_child_id | child_order | difficulty | version |
+    | id | parent_item_id | child_item_id | child_order | difficulty | version |
     | 51 | 21             | 22            | 1           | 0          | 0       |
     | 52 | 22             | 23            | 1           | 0          | 0       |
   And I am the user with id "1"
@@ -59,12 +59,12 @@ Scenario: Full access on all breadcrumb
 
 Scenario: Partial access on all breadcrumb
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
     | 41 | 13       | 21      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 42 | 13       | 22      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 43 | 13       | 23      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
   And the database has the following table 'items_items':
-    | id | item_parent_id | item_child_id | child_order | difficulty | version |
+    | id | parent_item_id | child_item_id | child_order | difficulty | version |
     | 51 | 21             | 22            | 1           | 0          | 0       |
     | 52 | 22             | 23            | 1           | 0          | 0       |
   And I am the user with id "1"
@@ -81,12 +81,12 @@ Scenario: Partial access on all breadcrumb
 
 Scenario: Partial access to all items except for last which is greyed
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
     | 41 | 13       | 21      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 42 | 13       | 22      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 43 | 13       | 23      | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
   And the database has the following table 'items_items':
-    | id | item_parent_id | item_child_id | child_order | difficulty | version |
+    | id | parent_item_id | child_item_id | child_order | difficulty | version |
     | 51 | 21             | 22            | 1           | 0          | 0       |
     | 52 | 22             | 23            | 1           | 0          | 0       |
   And I am the user with id "1"

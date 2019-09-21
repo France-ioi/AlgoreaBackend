@@ -1,7 +1,7 @@
 Feature: Display the current progress of teams on a subset of items (groupTeamProgress)
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 11 | johna | 51            | 52             |
       | 12 | johnb | 53            | 54             |
@@ -49,7 +49,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 68 | UserAdmin | janed-admin    |
       | 70 | UserAdmin | janee-admin    |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 1               | 11             | direct             |
       | 3               | 13             | direct             |
       | 11              | 14             | direct             |
@@ -79,7 +79,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 22              | 1              | direct             |
       | 22              | 3              | direct             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
       | 1                 | 11             | 0       |
       | 1                 | 12             | 0       |
@@ -200,7 +200,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 418 | Task     |
       | 419 | Task     |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | child_order |
+      | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |
       | 210            | 211           | 0           |
@@ -242,7 +242,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 410            | 418           | 8           |
       | 410            | 419           | 9           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id |
+      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
       | 21       | 211     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
       | 20       | 212     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
       | 21       | 213     | 2017-05-29 06:38:38     | null                       | null                      | 1               |

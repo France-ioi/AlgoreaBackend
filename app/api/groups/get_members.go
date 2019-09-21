@@ -47,7 +47,7 @@ type groupsMembersViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group members
-//   (rows from the `groups_groups` table with `group_parent_id` = `group_id` and
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
 //   `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
 //   Rows related to users contain basic user info.
 //
@@ -128,9 +128,9 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			users.first_name AS user__first_name,
 			users.last_name AS user__last_name,
 			users.grade AS user__grade`).
-		Joins("LEFT JOIN users ON users.group_self_id = groups_groups.group_child_id").
+		Joins("LEFT JOIN users ON users.self_group_id = groups_groups.child_group_id").
 		WhereGroupRelationIsActive().
-		Where("groups_groups.group_parent_id = ?", groupID)
+		Where("groups_groups.parent_group_id = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

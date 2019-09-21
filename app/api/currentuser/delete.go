@@ -25,15 +25,15 @@ import (
 //                   having `user_id` = `users.id`;
 //                2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
 //                    `groups_login_prefixes`, `history_groups_login_prefixes`]
-//                   having `group_id` = `users.group_self_id` or `group_id` = `users.group_owned_id`;
+//                   having `group_id` = `users.self_group_id` or `group_id` = `users.owned_group_id`;
 //                3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
 //
-//                4. [`groups_groups`, `history_groups_groups`] having `group_parent_id` or `group_child_id` equal
-//                   to one of `users.group_self_id`/`users.group_owned_id`;
-//                5. [`groups_ancestors`, `history_groups_ancestors`] having `group_ancestor_id` or `group_child_id` equal
-//                   to one of `users.group_self_id`/`users.group_owned_id`;
+//                4. [`groups_groups`, `history_groups_groups`] having `parent_group_id` or `child_group_id` equal
+//                   to one of `users.self_group_id`/`users.owned_group_id`;
+//                5. [`groups_ancestors`, `history_groups_ancestors`] having `ancestor_group_id` or `child_group_id` equal
+//                   to one of `users.self_group_id`/`users.owned_group_id`;
 //                6. [`groups_propagate`, `groups`, `history_groups`] having `id` equal to one of
-//                   `users.group_self_id`/`users.group_owned_id`;
+//                   `users.self_group_id`/`users.owned_group_id`;
 //                7. `users`, `history_users` having `id` = `users.id`.
 //
 //
@@ -52,7 +52,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	user := srv.GetUser(r)
 
 	doNotDelete, err := srv.Store.GroupGroups().WhereUserIsMember(user).
-		Joins("JOIN `groups` ON `groups`.id = groups_groups.group_parent_id").
+		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
 		Where("NOW() < `groups`.lock_user_deletion_date").HasRows()
 	service.MustNotBeError(err)
 

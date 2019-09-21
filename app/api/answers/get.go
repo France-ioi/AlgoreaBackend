@@ -47,7 +47,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 		Select(`users_answers.id, users_answers.user_id, users_answers.item_id, users_answers.attempt_id,
 			users_answers.type, users_answers.state, users_answers.answer,
 			users_answers.submission_date, users_answers.score, users_answers.validated,
-			users_answers.grading_date, users_answers.user_grader_id`).
+			users_answers.grading_date, users_answers.grader_user_id`).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {

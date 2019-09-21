@@ -1,14 +1,14 @@
 Feature: Get a task token with a refreshed active attempt for an item - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id |
+      | id | login | self_group_id |
       | 10 | john  | 101           |
     And the database has the following table 'groups':
       | id  | team_item_id | type     |
       | 101 | null         | UserSelf |
       | 102 | 60           | Team     |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
       | 102               | 102            | 1       |
     And the database has the following table 'items':
@@ -19,7 +19,7 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
       | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Category | 1            |
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter  | 1            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | user_created_id |
+      | group_id | item_id | cached_partial_access_date | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38        | 10              |
       | 101      | 60      | 2017-05-29 06:38:38        | 10              |
       | 101      | 70      | 2017-05-29 06:38:38        | 10              |

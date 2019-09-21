@@ -17,7 +17,7 @@ type GroupGroupStore struct {
 // WhereUserIsMember returns a composable query of direct ancestors (parents) of user's self group,
 // i.e. groups of which he is a direct member
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
-	return s.Where("groups_groups.group_child_id = ?", user.SelfGroupID).
+	return s.Where("groups_groups.child_group_id = ?", user.SelfGroupID).
 		WhereGroupRelationIsActive()
 }
 
@@ -45,13 +45,13 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
-		mustNotBeError(store.GroupGroups().Delete("group_child_id = ? AND group_parent_id = ?", childGroupID, parentGroupID).Error())
+		mustNotBeError(store.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
 
 		var rows []interface{}
 		mustNotBeError(store.GroupAncestors().
 			WithWriteLock().
 			Select("id").
-			Where("group_child_id = ? AND group_ancestor_id = ?", parentGroupID, childGroupID).
+			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
 			Limit(1).
 			Scan(&rows).Error())
 		if len(rows) > 0 {
@@ -69,7 +69,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64, role string) {
 	s.mustBeInTransaction()
 	mustNotBeError(s.db.Exec(
-		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `group_parent_id` = ? FOR UPDATE), 0)",
+		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
 		parentGroupID).Error)
 
 	mustNotBeError(s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
@@ -77,8 +77,8 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64, role
 		newID := store.NewID()
 		relationMap := map[string]interface{}{
 			"id":              newID,
-			"group_parent_id": parentGroupID,
-			"group_child_id":  childGroupID,
+			"parent_group_id": parentGroupID,
+			"child_group_id":  childGroupID,
 			"child_order":     gorm.Expr("@maxIChildOrder+1"),
 		}
 		if role != "" {
@@ -117,13 +117,13 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	defer recoverPanics(&err)
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) error {
-		// check if group_parent_id is the only parent of group_child_id
+		// check if parent_group_id is the only parent of child_group_id
 		shouldDeleteChildGroup := false
 		var result []interface{}
 		mustNotBeError(s.GroupGroups().WithWriteLock().
 			Select("1").
-			Where("group_child_id = ?", childGroupID).
-			Where("group_parent_id != ?", parentGroupID).
+			Where("child_group_id = ?", childGroupID).
+			Where("parent_group_id != ?", parentGroupID).
 			Limit(1).Scan(&result).Error())
 		if len(result) == 0 {
 			shouldDeleteChildGroup = true
@@ -138,9 +138,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			mustNotBeError(s.Groups().WithWriteLock().
 				Joins(`
 					JOIN groups_ancestors AS ancestors ON
-						ancestors.group_child_id = groups.id AND
+						ancestors.child_group_id = groups.id AND
 						ancestors.is_self = 0 AND
-						ancestors.group_ancestor_id = ?`, childGroupID).
+						ancestors.ancestor_group_id = ?`, childGroupID).
 				Where("groups.type NOT IN('Base', 'UserAdmin', 'UserSelf')").
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
@@ -153,9 +153,9 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 						 groups_items, groups_login_prefixes, filters
 			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
-				ON group_children.group_parent_id = groups.id
+				ON group_children.parent_group_id = groups.id
 			LEFT JOIN groups_groups AS group_parents
-				ON group_parents.group_child_id = groups.id
+				ON group_parents.child_group_id = groups.id
 			LEFT JOIN groups_attempts
 				ON groups_attempts.group_id = groups.id
 			LEFT JOIN groups_items
@@ -167,7 +167,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			WHERE groups.id IN(?)`
 
 		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
-		mustNotBeError(s.GroupGroups().Delete("group_parent_id = ? AND group_child_id = ?", parentGroupID, childGroupID).Error())
+		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
 
 		if shouldDeleteChildGroup {
 			// we delete the orphan here in order to recalculate new ancestors correctly
@@ -185,18 +185,18 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				mustNotBeError(s.Groups().WithWriteLock().
 					Joins(`
 						LEFT JOIN(
-							SELECT groups_ancestors.group_child_id
+							SELECT groups_ancestors.child_group_id
 							FROM groups_ancestors
 							WHERE
-								groups_ancestors.group_ancestor_id NOT IN(?) AND
-								groups_ancestors.group_child_id IN(?) AND
+								groups_ancestors.ancestor_group_id NOT IN(?) AND
+								groups_ancestors.child_group_id IN(?) AND
 								groups_ancestors.is_self = 0
-							GROUP BY groups_ancestors.group_child_id
+							GROUP BY groups_ancestors.child_group_id
 							FOR UPDATE
 						) AS ancestors
-						ON ancestors.group_child_id = groups.id`, candidatesForDeletion, candidatesForDeletion).
+						ON ancestors.child_group_id = groups.id`, candidatesForDeletion, candidatesForDeletion).
 					Where("groups.id IN (?)", candidatesForDeletion).
-					Where("ancestors.group_child_id IS NULL").
+					Where("ancestors.child_group_id IS NULL").
 					Pluck("groups.id", &idsToDelete).Error())
 
 				if len(idsToDelete) > 0 {
@@ -210,7 +210,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 
 			idsToDelete = append(idsToDelete, childGroupID)
 			// delete self relations of the removed groups
-			mustNotBeError(s.GroupAncestors().Delete("group_ancestor_id IN (?)", idsToDelete).Error())
+			mustNotBeError(s.GroupAncestors().Delete("ancestor_group_id IN (?)", idsToDelete).Error())
 			// delete removed groups from groups_propagate
 			mustNotBeError(s.Table("groups_propagate").Delete("id IN (?)", idsToDelete).Error())
 		}

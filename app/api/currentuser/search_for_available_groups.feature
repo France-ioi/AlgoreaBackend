@@ -1,7 +1,7 @@
 Feature: Search for groups available to the current user
   Background:
     Given the database has the following table 'users':
-      | id | login | temp_user | group_self_id | group_owned_id | first_name  | last_name | grade |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups':
       | id | type     | name                                      | description            | free_access |
@@ -17,7 +17,7 @@ Feature: Search for groups available to the current user
       | 10 | Class    | The third class                           | The third class        | 1           |
       | 21 | UserSelf | (the) user self                           |                        | 0           |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_date         |
       | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
       | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
       | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |

@@ -14,9 +14,9 @@ import (
 //   The content returned is just the dump of raw entries of tables related to the user
 //
 //     * `current_user` (from `users`): all attributes except `version`
-//     * `owned_groups`: `id` and `name` for every descendant of user’s `group_owned_id`;
-//     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_self_id`;
-//     * `groups_groups`: where the user’s `group_self_id` is the `group_child_id`, all attributes except `version` + `groups.name`.
+//     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
+//     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
+//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes except `version` + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```

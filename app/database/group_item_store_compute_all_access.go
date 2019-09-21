@@ -29,16 +29,16 @@ func (s *GroupItemStore) computeAllAccess() {
 	// inserting missing children of groups_items into groups_items
 	// for groups_items_propagate having propagate_access = 'children'
 	const queryInsertMissingChildren = `
-		INSERT IGNORE INTO groups_items (group_id, item_id, user_created_id, cached_access_reason, access_reason)
+		INSERT IGNORE INTO groups_items (group_id, item_id, creator_user_id, cached_access_reason, access_reason)
 		SELECT
 			parents.group_id AS group_id,
-			items_items.item_child_id AS item_id,
-			parents.user_created_id AS user_created_id,
+			items_items.child_item_id AS item_id,
+			parents.creator_user_id AS creator_user_id,
 			NULL AS cached_access_reason,
 			NULL AS access_reason
 		FROM items_items
 		JOIN groups_items AS parents
-			ON parents.item_id = items_items.item_parent_id
+			ON parents.item_id = items_items.parent_item_id
 		JOIN groups_items_propagate AS parents_propagate
 			ON parents.id = parents_propagate.id AND parents_propagate.propagate_access = 'children'`
 	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
@@ -92,9 +92,9 @@ func (s *GroupItemStore) computeAllAccess() {
 			'self' as propagate_access
 		FROM items_items
 		JOIN groups_items AS parents
-			ON parents.item_id = items_items.item_parent_id
+			ON parents.item_id = items_items.parent_item_id
 		JOIN groups_items AS children
-			ON children.item_id = items_items.item_child_id AND children.group_id = parents.group_id
+			ON children.item_id = items_items.child_item_id AND children.group_id = parents.group_id
 		JOIN groups_items_propagate AS parents_propagate
 			ON parents_propagate.id = parents.id AND parents_propagate.propagate_access = 'children'
 		ON DUPLICATE KEY UPDATE propagate_access='self'`
@@ -130,13 +130,13 @@ func (s *GroupItemStore) computeAllAccess() {
 				)) AS access_reason_ancestors
 			FROM groups_items AS child
 			JOIN items_items
-				ON items_items.item_child_id = child.item_id
+				ON items_items.child_item_id = child.item_id
 			LEFT JOIN groups_items_propagate
 				ON groups_items_propagate.id = child.id
 			JOIN groups_items AS parent
-				ON parent.item_id = items_items.item_parent_id AND parent.group_id = child.group_id
+				ON parent.item_id = items_items.parent_item_id AND parent.group_id = child.group_id
 			JOIN items AS parent_item
-				ON parent_item.id = items_items.item_parent_id
+				ON parent_item.id = items_items.parent_item_id
 			WHERE
 				(groups_items_propagate.propagate_access = 'self' OR groups_items_propagate.id IS NULL) AND
 				(

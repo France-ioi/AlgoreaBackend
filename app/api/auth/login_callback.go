@@ -106,11 +106,11 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
 	var userInfo struct {
 		ID           int64
-		SelfGroupID  int64 `gorm:"column:group_self_id"`
-		OwnedGroupID int64 `gorm:"column:group_owned_id"`
+		SelfGroupID  int64
+		OwnedGroupID int64
 	}
 	err := s.WithWriteLock().
-		Where("login_id = ?", userData["login_id"]).Select("id, group_self_id, group_owned_id").
+		Where("login_id = ?", userData["login_id"]).Select("id, self_group_id, owned_group_id").
 		Take(&userInfo).Error()
 
 	userData["last_login_date"] = database.Now()
@@ -124,8 +124,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registration_date"] = database.Now()
-		userData["group_self_id"] = selfGroupID
-		userData["group_owned_id"] = ownedGroupID
+		userData["self_group_id"] = selfGroupID
+		userData["owned_group_id"] = ownedGroupID
 
 		var userID int64
 		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
@@ -136,8 +136,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		return userID
 	}
 
-	found, err := s.GroupGroups().Where("group_parent_id = ?", domainConfig.RootSelfGroupID).
-		Where("group_child_id = ?", userInfo.SelfGroupID).HasRows()
+	found, err := s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
+		Where("child_group_id = ?", userInfo.SelfGroupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]database.ParentChild, 0, 2)
 	if !found {
@@ -145,8 +145,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: userInfo.SelfGroupID})
 	}
 
-	found, err = s.GroupGroups().Where("group_parent_id = ?", domainConfig.RootAdminGroupID).
-		Where("group_child_id = ?", userInfo.OwnedGroupID).HasRows()
+	found, err = s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootAdminGroupID).
+		Where("child_group_id = ?", userInfo.OwnedGroupID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		groupsToCreate = append(groupsToCreate,

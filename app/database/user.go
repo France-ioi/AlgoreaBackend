@@ -7,10 +7,10 @@ type User struct {
 	DefaultLanguage      string
 	DefaultLanguageID    int64
 	IsAdmin              bool
-	IsTempUser           bool   `sql:"column:temp_user"`
-	SelfGroupID          *int64 `sql:"column:group_self_id"`
-	OwnedGroupID         *int64 `sql:"column:group_owned_id"`
-	AccessGroupID        *int64 `sql:"column:group_access_id"`
+	IsTempUser           bool `sql:"column:temp_user"`
+	SelfGroupID          *int64
+	OwnedGroupID         *int64
+	AccessGroupID        *int64
 	AllowSubgroups       bool
 	NotificationReadDate *Time
 }

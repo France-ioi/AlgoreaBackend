@@ -14,8 +14,8 @@ import (
 //
 //   #### The user doesn't own the group
 //
-//     On success the service creates a new row in `groups_groups` with `group_parent_id` = user's self group id,
-//     `group_child_id` = `group_id`, `groups_groups.type` = `requestSent` and `status_date` equal to current UTC time.
+//     On success the service creates a new row in `groups_groups` with `parent_group_id` = user's self group id,
+//     `child_group_id` = `group_id`, `groups_groups.type` = `requestSent` and `status_date` equal to current UTC time.
 //
 //     * `groups.free_access` should be 1, otherwise the 'forbidden' response is returned.
 //
@@ -30,8 +30,8 @@ import (
 //
 //   #### The user owns the group
 //
-//     On success the service creates a new row in `groups_groups` with `group_parent_id` = user's self group id,
-//     `group_child_id` = `group_id`, `groups_groups.type` = `requestAccepted` and `status_date` equal to current UTC time.
+//     On success the service creates a new row in `groups_groups` with `parent_group_id` = user's self group id,
+//     `child_group_id` = `group_id`, `groups_groups.type` = `requestAccepted` and `status_date` equal to current UTC time.
 //
 //     * If there is already a row in `groups_groups` with
 //       `type` = 'invitationAccepted'/'joinedByCode'/'direct',

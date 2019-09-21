@@ -11,7 +11,7 @@ Feature: Delete the current user - robustness
       | 22 | UserAdmin | user-admin | null                    |
       | 50 | Class     | Our class  | 2019-08-10              |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | type               |
+      | parent_group_id | child_group_id | type               |
       | 1               | 2              | direct             |
       | 1               | 3              | direct             |
       | 1               | 50             | direct             |
@@ -20,7 +20,7 @@ Feature: Delete the current user - robustness
       | 3               | 22             | direct             |
       | 50              | 21             | invitationAccepted |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
       | 1                 | 3              | false   |
@@ -39,7 +39,7 @@ Feature: Delete the current user - robustness
       | 50                | 21             | false   |
       | 50                | 50             | true    |
     And the database has the following table 'users':
-      | id | temp_user | login | group_self_id | group_owned_id | login_id |
+      | id | temp_user | login | self_group_id | owned_group_id | login_id |
       | 11 | 0         | user  | 21            | 22             | 1234567  |
     And the application config is:
       """
@@ -83,13 +83,13 @@ Feature: Delete the current user - robustness
       | 4  | Base  | RootTemp  | null                    |
       | 50 | Class | Our class | 2019-08-10              |
     And the table "groups_groups" should be:
-      | group_parent_id | group_child_id | type   |
+      | parent_group_id | child_group_id | type   |
       | 1               | 2              | direct |
       | 1               | 3              | direct |
       | 1               | 50             | direct |
       | 2               | 4              | direct |
     And the table "groups_ancestors" should be:
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
       | 1                 | 3              | false   |

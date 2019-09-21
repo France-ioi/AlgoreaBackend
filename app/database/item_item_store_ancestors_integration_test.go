@@ -12,8 +12,8 @@ import (
 )
 
 type itemAncestorsResultRow struct {
-	ItemAncestorID int64
-	ItemChildID    int64
+	AncestorItemID int64
+	ChildItemID    int64
 }
 
 type itemPropagateResultRow struct {
@@ -34,15 +34,15 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, 30)
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("item_child_id, item_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 2, ItemAncestorID: 1},
-		{ItemChildID: 3, ItemAncestorID: 1},
-		{ItemChildID: 3, ItemAncestorID: 2},
-		{ItemChildID: 4, ItemAncestorID: 1},
-		{ItemChildID: 4, ItemAncestorID: 2},
-		{ItemChildID: 4, ItemAncestorID: 3},
+		{ChildItemID: 2, AncestorItemID: 1},
+		{ChildItemID: 3, AncestorItemID: 1},
+		{ChildItemID: 3, AncestorItemID: 2},
+		{ChildItemID: 4, AncestorItemID: 1},
+		{ChildItemID: 4, AncestorItemID: 2},
+		{ChildItemID: 4, AncestorItemID: 3},
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
@@ -65,10 +65,10 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}))
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("item_child_id, item_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 3, ItemAncestorID: 2}, // this one has already been there
+		{ChildItemID: 3, AncestorItemID: 2}, // this one has already been there
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
@@ -100,10 +100,10 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}))
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("item_child_id, item_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 3, ItemAncestorID: 2}, // this one has already been there
+		{ChildItemID: 3, AncestorItemID: 2}, // this one has already been there
 	}, result)
 
 	var propagateResult []itemPropagateResultRow

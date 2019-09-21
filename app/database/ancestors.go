@@ -17,9 +17,9 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		SELECT descendants.id, 'todo'
 		FROM ` + QuoteName(objectName) + ` AS descendants
 		JOIN ` + QuoteName(objectName+"_ancestors") + `
-			ON descendants.id = ` + QuoteName(objectName+"_ancestors") + "." + singleObjectName + `_child_id
+			ON descendants.id = ` + QuoteName(objectName+"_ancestors") + ".child_" + singleObjectName + `_id
 		JOIN ` + QuoteName(objectName+"_propagate") + ` AS ancestors
-			ON ancestors.id = ` + QuoteName(objectName+"_ancestors") + "." + singleObjectName + `_ancestor_id
+			ON ancestors.id = ` + QuoteName(objectName+"_ancestors") + ".ancestor_" + singleObjectName + `_id
 		WHERE ancestors.ancestors_computation_state = 'todo'
 		ON DUPLICATE KEY UPDATE ancestors_computation_state = 'todo'`
 
@@ -42,9 +42,9 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	query = `
 		UPDATE ` + objectName + `_propagate AS children
 		LEFT JOIN ` + relationsTable + `
-			ON ` + relationsTable + `.` + singleObjectName + `_child_id = children.id ` + groupsAcceptedCondition + `
+			ON ` + relationsTable + `.child_` + singleObjectName + `_id = children.id ` + groupsAcceptedCondition + `
 		LEFT JOIN ` + objectName + `_propagate AS parents
-			ON parents.id = ` + relationsTable + `.` + singleObjectName + `_parent_id AND parents.ancestors_computation_state <> 'done'
+			ON parents.id = ` + relationsTable + `.parent_` + singleObjectName + `_id AND parents.ancestors_computation_state <> 'done'
 		SET children.ancestors_computation_state='processing'
 		WHERE children.ancestors_computation_state = 'todo' AND parents.id IS NULL`
 	markAsProcessing, err := s.db.CommonDB().Prepare(query)
@@ -63,54 +63,54 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	insertQueries = append(insertQueries, `
 		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
-			`+singleObjectName+`_ancestor_id,
-			`+singleObjectName+`_child_id`+`
+			ancestor_`+singleObjectName+`_id,
+			child_`+singleObjectName+`_id`+`
 			`+isSelfColumn+`
 		)
 		SELECT
-			`+relationsTable+`.`+singleObjectName+`_parent_id,
-			`+relationsTable+`.`+singleObjectName+`_child_id
+			`+relationsTable+`.parent_`+singleObjectName+`_id,
+			`+relationsTable+`.child_`+singleObjectName+`_id
 			`+bIsSelfValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
-			`+relationsTable+`.`+singleObjectName+`_child_id = `+objectName+`_propagate.id
+			`+relationsTable+`.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
 		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`+groupsAcceptedCondition, `
 		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
-			`+singleObjectName+`_ancestor_id,
-			`+singleObjectName+`_child_id`+`
+			ancestor_`+singleObjectName+`_id,
+			child_`+singleObjectName+`_id`+`
 			`+isSelfColumn+`
 		)
 		SELECT
-			`+relationsTable+`.`+singleObjectName+`_parent_id,
-			`+relationsTable+`.`+singleObjectName+`_child_id
+			`+relationsTable+`.parent_`+singleObjectName+`_id,
+			`+relationsTable+`.child_`+singleObjectName+`_id
 			`+bIsSelfValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
-			`+relationsTable+`.`+singleObjectName+`_parent_id = `+objectName+`_propagate.id
+			`+relationsTable+`.parent_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
 		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`+groupsAcceptedCondition, `
 		INSERT IGNORE INTO `+objectName+`_ancestors
 		(
-			`+singleObjectName+`_ancestor_id,
-			`+singleObjectName+`_child_id`+`
+			ancestor_`+singleObjectName+`_id,
+			child_`+singleObjectName+`_id`+`
 			`+isSelfColumn+`
 		)
 		SELECT
-			`+objectName+`_ancestors.`+singleObjectName+`_ancestor_id,
-			`+relationsTable+`_join.`+singleObjectName+`_child_id
+			`+objectName+`_ancestors.ancestor_`+singleObjectName+`_id,
+			`+relationsTable+`_join.child_`+singleObjectName+`_id
 			`+bIsSelfValue+`
 		FROM `+objectName+`_ancestors
 		JOIN `+relationsTable+` AS `+relationsTable+`_join ON (
-			`+relationsTable+`_join.`+singleObjectName+`_parent_id = `+objectName+`_ancestors.`+singleObjectName+`_child_id
+			`+relationsTable+`_join.parent_`+singleObjectName+`_id = `+objectName+`_ancestors.child_`+singleObjectName+`_id
 		)
 		JOIN `+objectName+`_propagate ON (
-			`+relationsTable+`_join.`+singleObjectName+`_child_id = `+objectName+`_propagate.id
+			`+relationsTable+`_join.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
 		WHERE 
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
@@ -119,13 +119,13 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		insertQueries = append(insertQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(
-				`+singleObjectName+`_ancestor_id,
-				`+singleObjectName+`_child_id`+`
+				ancestor_`+singleObjectName+`_id,
+				child_`+singleObjectName+`_id`+`
 				`+isSelfColumn+`
 			)
 			SELECT
-				groups_propagate.id AS group_ancestor_id,
-				groups_propagate.id AS group_child_id,
+				groups_propagate.id AS ancestor_group_id,
+				groups_propagate.id AS child_group_id,
 				'1' AS is_self
 			FROM groups_propagate
 			WHERE groups_propagate.ancestors_computation_state = 'processing'`) // #nosec

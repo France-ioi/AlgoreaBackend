@@ -2,7 +2,7 @@ Feature: Add a parent-child relation between two groups - robustness
 
   Background:
     Given the database has the following table 'users':
-      | id | login   | group_self_id | group_owned_id | first_name  | last_name | allow_subgroups |
+      | id | login   | self_group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | 1  | owner   | 21            | 22             | Jean-Michel | Blanquer  | 0               |
       | 2  | teacher | 23            | 24             | John        | Smith     | 1               |
       | 3  | student | 25            | 26             | Jane        | Doe       | 1               |
@@ -26,7 +26,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | 27 | admin         | UserSelf  |
       | 28 | admin-admin   | UserAdmin |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
@@ -57,7 +57,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | 28                | 19             | 0       |
       | 28                | 28             | 1       |
     And the database has the following table 'groups_groups':
-      | group_parent_id | group_child_id | child_order |
+      | parent_group_id | child_group_id | child_order |
       | 13              | 11             | 1           |
 
   Scenario: Parent group id is wrong

@@ -29,7 +29,7 @@ func TestUser_Clone(t *testing.T) {
 func (u *User) LoadByID(dataStore *DataStore, id int64) error {
 	err := dataStore.Users().ByID(id).
 		Select(`
-						users.id, users.login, users.is_admin, users.group_self_id, users.group_owned_id, users.group_access_id,
+						users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notification_read_date,
 						users.default_language, l.id as default_language_id`).
 		Joins("LEFT JOIN languages l ON users.default_language = l.code").

@@ -1,16 +1,16 @@
 Feature: Ask for a hint
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id |
+      | id | login | self_group_id |
       | 10 | john  | 101           |
     And the database has the following table 'groups':
       | id  |
       | 101 |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type   | status_date |
+      | id | parent_group_id | child_group_id | type   | status_date |
       | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'platforms':
       | id | uses_tokens | `regexp`                                          | public_key                |
@@ -20,16 +20,16 @@ Feature: Ask for a hint
       | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 |
       | 10 | null        | null                                                                    |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | child_order |
+      | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |
     And the database has the following table 'items_ancestors':
-      | item_ancestor_id | item_child_id |
+      | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | user_created_id |
+      | group_id | item_id | cached_partial_access_date | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38        | 10              |
     And the database has the following table 'users_items':
-      | user_id | item_id | hints_requested    | hints_cached | submissions_attempts | attempt_active_id |
+      | user_id | item_id | hints_requested    | hints_cached | submissions_attempts | active_attempt_id |
       | 10      | 50      | [{"rotorIndex":0}] | 1            | 2                    | 100               |
       | 10      | 10      | null               | 0            | 0                    | null              |
     And time is frozen

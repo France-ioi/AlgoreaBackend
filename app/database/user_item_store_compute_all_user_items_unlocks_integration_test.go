@@ -55,7 +55,7 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
-		"item_unlocked_id", "1001,abc",
+		"unlocked_item_ids", "1001,abc",
 	).Error())
 
 	err := userItemStore.InTransaction(func(s *database.DataStore) error {
@@ -66,10 +66,10 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	logs := strings.Split((&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), "\n")
 	assert.Len(t, logs, 1)
 	assert.Contains(t, logs[0], `level=warning`)
-	assert.Contains(t, logs[0], `msg="cannot parse items.item_unlocked_id"`)
+	assert.Contains(t, logs[0], `msg="cannot parse items.unlocked_item_ids"`)
 	assert.Contains(t, logs[0], `error="strconv.ParseInt: parsing \"abc\": invalid syntax"`)
 	assert.Contains(t, logs[0], `items.id=1`)
-	assert.Contains(t, logs[0], `items.item_unlocked_id="1001,abc"`)
+	assert.Contains(t, logs[0], `items.unlocked_item_ids="1001,abc"`)
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
@@ -85,13 +85,13 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
-		"item_unlocked_id", "1001,1002",
+		"unlocked_item_ids", "1001,1002",
 	).Error())
 	assert.NoError(t, itemStore.Where("id=3").UpdateColumn(
-		"item_unlocked_id", "2001,2002",
+		"unlocked_item_ids", "2001,2002",
 	).Error())
 	assert.NoError(t, itemStore.Where("id=4").UpdateColumn(
-		"item_unlocked_id", "4001,4002",
+		"unlocked_item_ids", "4001,4002",
 	).Error())
 
 	err := userItemStore.InTransaction(func(s *database.DataStore) error {

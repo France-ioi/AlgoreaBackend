@@ -109,7 +109,7 @@ func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds,
 			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 				id := retryStore.NewID()
 				return retryStore.Exec(
-					"INSERT INTO groups_items (id, group_id, item_id, additional_time, user_created_id) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
+					"INSERT INTO groups_items (id, group_id, item_id, additional_time, creator_user_id) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
 					id, groupID, itemID, seconds, creatorUserID).Error()
 			}))
 		}

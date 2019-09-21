@@ -96,8 +96,8 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 
 	skipGroups := srv.Store.GroupGroups().
-		Select("groups_groups.group_parent_id").
-		Where("groups_groups.group_child_id = ?", user.SelfGroupID).
+		Select("groups_groups.parent_group_id").
+		Where("groups_groups.child_group_id = ?", user.SelfGroupID).
 		Where("groups_groups.type IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct', 'joinedByCode')").
 		SubQuery()
 

@@ -420,7 +420,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 						rowsToReturn.AddRow(1)
 					}
 					queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-						"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (group_parent_id = ?) AND (group_child_id = ?) LIMIT 1",
+						"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
 					)+"$").
 						WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 					if !expectedRelationToCheck.error {
@@ -645,7 +645,7 @@ func setDBExpectationsForCreateMissingData(mock sqlmock.Sqlmock, tt *createMissi
 				rowsToReturn.AddRow(1)
 			}
 			queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-				"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (group_parent_id = ?) AND (group_child_id = ?) LIMIT 1",
+				"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
 			)+"$").
 				WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 			if !expectedRelationToCheck.error {

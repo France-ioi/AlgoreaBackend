@@ -1,7 +1,7 @@
 Feature: User leaves a group - robustness
   Background:
     Given the database has the following table 'users':
-      | id | group_self_id | group_owned_id | login |
+      | id | self_group_id | owned_group_id | login |
       | 1  | 21            | 22             | john  |
       | 2  | null          | null           | guest |
       | 3  | 31            | 32             | jane  |
@@ -13,7 +13,7 @@ Feature: User leaves a group - robustness
       | 21 | null                    |
       | 22 | null                    |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 14                | 14             | 1       |
       | 14                | 21             | 0       |
@@ -24,7 +24,7 @@ Feature: User leaves a group - robustness
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
     And the database has the following table 'groups_groups':
-      | id | group_parent_id | group_child_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_date         |
       | 1  | 11              | 21             | requestSent        | 2017-04-29 06:38:38 |
       | 2  | 14              | 21             | direct             | 2017-03-29 06:38:38 |
       | 3  | 15              | 31             | invitationAccepted | 2017-03-29 06:38:38 |
@@ -52,7 +52,7 @@ Feature: User leaves a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the user's group_self_id is NULL
+  Scenario: Fails when the user's self_group_id is NULL
     Given I am the user with id "2"
     When I send a DELETE request to "/current-user/group-memberships/14"
     Then the response code should be 403

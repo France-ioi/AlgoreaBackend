@@ -206,10 +206,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 		Having("full_access>0 OR partial_access>0")
 	service.MustNotBeError(itemsUserCanAccess.Error())
 
-	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("group_child_id")
+	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("child_group_id")
 	service.MustNotBeError(groupsOwnedByUser.Error())
 
-	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("group_parent_id")
+	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	service.MustNotBeError(groupsWhereUserIsMember.Error())
 
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
@@ -228,10 +228,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
 	if userID != user.ID {
 		count := 0
-		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("group_self_id")
+		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("self_group_id")
 		service.MustNotBeError(givenUserSelfGroup.Error())
 		err := srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("group_child_id=?", givenUserSelfGroup.SubQuery()).
+			Where("child_group_id=?", givenUserSelfGroup.SubQuery()).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

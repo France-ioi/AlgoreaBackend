@@ -1,7 +1,7 @@
 Feature: Get answers with (item_id, user_id) pair
 Background:
   Given the database has the following table 'users':
-    | id | login | temp_user | group_self_id | group_owned_id | first_name | last_name |
+    | id | login | temp_user | self_group_id | owned_group_id | first_name | last_name |
     | 1  | jdoe  | 0         | 11            | 12             | John       | Doe       |
     | 2  | other | 0         | 21            | 22             | George     | Bush      |
   And the database has the following table 'groups':
@@ -11,11 +11,11 @@ Background:
     | 13 | Group B    |         | -2    | Class     | 0       |
     | 23 | Group C    |         | -2    | Class     | 0       |
   And the database has the following table 'groups_groups':
-    | id | group_parent_id | group_child_id | version |
+    | id | parent_group_id | child_group_id | version |
     | 61 | 13              | 11             | 0       |
     | 62 | 22              | 13             | 0       |
   And the database has the following table 'groups_ancestors':
-    | id | group_ancestor_id | group_child_id | is_self | version |
+    | id | ancestor_group_id | child_group_id | is_self | version |
     | 71 | 11                | 11             | 1       | 0       |
     | 72 | 12                | 12             | 1       | 0       |
     | 73 | 13                | 13             | 1       | 0       |
@@ -23,12 +23,12 @@ Background:
     | 75 | 22                | 11             | 0       | 0       |
     | 76 | 23                | 21             | 0       | 0       |
   And the database has the following table 'items':
-    | id  | type     | teams_editable | no_score | item_unlocked_id | transparent_folder | version |
-    | 190 | Category | false          | false    | 1234,2345        | true               | 0       |
-    | 200 | Category | false          | false    | 1234,2345        | true               | 0       |
-    | 210 | Category | false          | false    | 1234,2345        | true               | 0       |
+    | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
+    | 190 | Category | false          | false    | 1234,2345         | true               | 0       |
+    | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
+    | 210 | Category | false          | false    | 1234,2345         | true               | 0       |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id | version |
+    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
     | 42 | 13       | 190     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
     | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
     | 44 | 13       | 210     | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |

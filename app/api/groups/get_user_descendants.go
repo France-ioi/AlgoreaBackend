@@ -75,10 +75,10 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 			groups.id, groups.name,
 			users.id AS user_id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.group_child_id = groups.id AND
-				groups_ancestors.group_ancestor_id != groups_ancestors.group_child_id AND
-				groups_ancestors.group_ancestor_id = ?`, groupID).
-		Joins("JOIN users ON users.group_self_id = groups.id").
+			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
+				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+				groups_ancestors.ancestor_group_id = ?`, groupID).
+		Joins("JOIN users ON users.self_group_id = groups.id").
 		Where("groups.type = 'UserSelf'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -102,14 +102,14 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 
 	var parentsResult []descendantParent
 	service.MustNotBeError(srv.Store.Groups().
-		Select("parent_links.group_child_id AS linked_group_id, groups.id, groups.name").
+		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
-			JOIN groups_groups AS parent_links ON parent_links.group_parent_id = groups.id AND
+			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
 				parent_links.type`+database.GroupRelationIsActiveCondition+` AND
-				parent_links.group_child_id IN (?)`, groupIDs).
+				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
-			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.group_child_id = groups.id AND
-				parent_ancestors.group_ancestor_id = ?`, groupID).
+			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+				parent_ancestors.ancestor_group_id = ?`, groupID).
 		Order("groups.id").
 		Scan(&parentsResult).Error())
 

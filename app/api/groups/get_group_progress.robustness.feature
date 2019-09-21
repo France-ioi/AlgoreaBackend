@@ -1,11 +1,11 @@
 Feature: Display the current progress of a group on a subset of items (groupGroupProgress) - robustness
   Background:
     Given the database has the following table 'users':
-      | id | login | group_self_id | group_owned_id |
+      | id | login | self_group_id | owned_group_id |
       | 1  | owner | 21            | 22             |
       | 2  | user  | 11            | 12             |
     And the database has the following table 'groups_ancestors':
-      | group_ancestor_id | group_child_id | is_self |
+      | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
@@ -18,12 +18,12 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 210 | Chapter  |
       | 211 | Task     |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | user_created_id |
+      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
       | 21       | 211     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
       | 20       | 212     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
       | 21       | 213     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
     And the database has the following table 'items_items':
-      | item_parent_id | item_child_id | child_order |
+      | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |
       | 210            | 211           | 0           |

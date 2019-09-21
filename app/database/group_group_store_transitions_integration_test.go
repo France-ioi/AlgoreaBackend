@@ -15,17 +15,17 @@ import (
 )
 
 type groupGroup struct {
-	ParentGroupID  int64 `gorm:"column:group_parent_id"`
-	ChildGroupID   int64 `gorm:"column:group_child_id"`
+	ParentGroupID  int64
+	ChildGroupID   int64
 	Type           string
-	InvitingUserID *int64 `gorm:"column:user_inviting_id"`
+	InvitingUserID *int64
 	ChildOrder     int64
 	StatusDate     *database.Time
 }
 
 type groupAncestor struct {
-	AncestorGroupID int64 `gorm:"column:group_ancestor_id"`
-	ChildGroupID    int64 `gorm:"column:group_child_id"`
+	AncestorGroupID int64
+	ChildGroupID    int64
 	IsSelf          bool
 }
 
@@ -422,9 +422,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 
 			if tt.createCycleWithType != database.NoRelation {
 				assert.NoError(t, dataStore.Exec(
-					"INSERT INTO groups_groups (group_parent_id, group_child_id, type) VALUES (20, 30, ?)", tt.createCycleWithType).Error())
+					"INSERT INTO groups_groups (parent_group_id, child_group_id, type) VALUES (20, 30, ?)", tt.createCycleWithType).Error())
 				assert.NoError(t, dataStore.Exec(
-					"INSERT INTO groups_groups (group_parent_id, group_child_id, type) VALUES (20, 20, ?)", tt.createCycleWithType).Error())
+					"INSERT INTO groups_groups (parent_group_id, child_group_id, type) VALUES (20, 20, ?)", tt.createCycleWithType).Error())
 			}
 			var result database.GroupGroupTransitionResults
 			err := dataStore.InTransaction(func(store *database.DataStore) error {
@@ -441,8 +441,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			assertGroupGroupsEqual(t, dataStore.GroupGroups(), tt.wantGroupGroups)
 
 			var groupAncestors []groupAncestor
-			assert.NoError(t, dataStore.GroupAncestors().Select("group_ancestor_id, group_child_id, is_self").
-				Order("group_ancestor_id, group_child_id").Scan(&groupAncestors).Error())
+			assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self").
+				Order("ancestor_group_id, child_group_id").Scan(&groupAncestors).Error())
 
 			sort.Slice(tt.wantGroupAncestors, func(i, j int) bool {
 				return tt.wantGroupAncestors[i].AncestorGroupID < tt.wantGroupAncestors[j].AncestorGroupID ||
@@ -517,8 +517,8 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 
 func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupStore, expected []groupGroup) {
 	var groupsGroups []groupGroup
-	assert.NoError(t, groupGroupStore.Select("group_parent_id, group_child_id, user_inviting_id, child_order, type, status_date").
-		Order("group_parent_id, group_child_id").Scan(&groupsGroups).Error())
+	assert.NoError(t, groupGroupStore.Select("parent_group_id, child_group_id, inviting_user_id, child_order, type, status_date").
+		Order("parent_group_id, child_group_id").Scan(&groupsGroups).Error())
 
 	assert.Len(t, groupsGroups, len(expected))
 	if len(groupsGroups) != len(expected) {
@@ -533,7 +533,7 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 		assert.Equal(t, row.ParentGroupID, groupsGroups[index].ParentGroupID, "wrong parent group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.ChildGroupID, groupsGroups[index].ChildGroupID, "wrong child group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.Type, groupsGroups[index].Type, "wrong type for row %#v", groupsGroups[index])
-		assert.Equal(t, row.InvitingUserID, groupsGroups[index].InvitingUserID, "wrong user_inviting_id for row %#v", groupsGroups[index])
+		assert.Equal(t, row.InvitingUserID, groupsGroups[index].InvitingUserID, "wrong inviting_user_id for row %#v", groupsGroups[index])
 		if row.ChildOrder == 0 {
 			assert.Zero(t, groupsGroups[index].ChildOrder)
 		} else {

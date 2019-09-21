@@ -41,7 +41,7 @@ type navigationItemCommonFields struct {
 	ID                int64  `json:"id,string"`
 	Type              string `json:"type"`
 	TransparentFolder bool   `json:"transparent_folder"`
-	// whether items.item_unlocked_id is empty
+	// whether items.unlocked_item_ids is empty
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 
 	String       navigationItemString       `json:"string"`
@@ -108,13 +108,13 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 			continue
 		}
 
-		parentItem, hasParentItem := idMap[rawData[index].ItemParentID]
+		parentItem, hasParentItem := idMap[rawData[index].ParentItemID]
 		if !hasParentItem ||
 			(!parentItem.FullAccess && !parentItem.PartialAccess) {
 			continue // The parent item is grayed
 		}
 
-		if parentItemCommonFields, ok := idsToResponseData[rawData[index].ItemParentID]; ok {
+		if parentItemCommonFields, ok := idsToResponseData[rawData[index].ParentItemID]; ok {
 			child := navigationItemChild{
 				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
 				Order:                      rawData[index].Order,

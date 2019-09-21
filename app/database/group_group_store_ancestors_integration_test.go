@@ -12,8 +12,8 @@ import (
 )
 
 type groupAncestorsResultRow struct {
-	GroupAncestorID int64
-	GroupChildID    int64
+	AncestorGroupID int64
+	ChildGroupID    int64
 	IsSelf          bool
 }
 
@@ -35,20 +35,20 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, 30)
 
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("group_child_id, group_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
-		{GroupChildID: 1, GroupAncestorID: 1, IsSelf: true},
+		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true},
 
-		{GroupChildID: 2, GroupAncestorID: 1, IsSelf: false},
-		{GroupChildID: 2, GroupAncestorID: 2, IsSelf: true},
-		{GroupChildID: 3, GroupAncestorID: 1, IsSelf: false},
-		{GroupChildID: 3, GroupAncestorID: 2, IsSelf: true}, // has already been there
-		{GroupChildID: 3, GroupAncestorID: 3, IsSelf: true},
-		{GroupChildID: 4, GroupAncestorID: 1, IsSelf: false},
-		{GroupChildID: 4, GroupAncestorID: 2, IsSelf: false},
-		{GroupChildID: 4, GroupAncestorID: 3, IsSelf: false},
-		{GroupChildID: 4, GroupAncestorID: 4, IsSelf: true},
+		{ChildGroupID: 2, AncestorGroupID: 1, IsSelf: false},
+		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true},
+		{ChildGroupID: 3, AncestorGroupID: 1, IsSelf: false},
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true}, // has already been there
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true},
+		{ChildGroupID: 4, AncestorGroupID: 1, IsSelf: false},
+		{ChildGroupID: 4, AncestorGroupID: 2, IsSelf: false},
+		{ChildGroupID: 4, AncestorGroupID: 3, IsSelf: false},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -72,10 +72,10 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}))
 
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("group_child_id, group_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
-		{GroupChildID: 3, GroupAncestorID: 2, IsSelf: true}, // this one has already been there
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true}, // this one has already been there
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -107,10 +107,10 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	}))
 
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("group_child_id, group_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
-		{GroupChildID: 3, GroupAncestorID: 2, IsSelf: true}, // this one has already been there
+		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true}, // this one has already been there
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -129,12 +129,12 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	assert.NoError(t, groupGroupStore.Exec("TRUNCATE TABLE groups_ancestors").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=1 AND group_child_id=2").UpdateColumn("type", "invitationSent").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=1 AND group_child_id=3").UpdateColumn("type", "requestSent").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=1 AND group_child_id=4").UpdateColumn("type", "invitationRefused").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=2 AND group_child_id=3").UpdateColumn("type", "requestRefused").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=2 AND group_child_id=4").UpdateColumn("type", "removed").Error())
-	assert.NoError(t, groupGroupStore.Where("group_parent_id=3 AND group_child_id=4").UpdateColumn("type", "left").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=2").UpdateColumn("type", "invitationSent").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=3").UpdateColumn("type", "requestSent").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=4").UpdateColumn("type", "invitationRefused").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=3").UpdateColumn("type", "requestRefused").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=4").UpdateColumn("type", "removed").Error())
+	assert.NoError(t, groupGroupStore.Where("parent_group_id=3 AND child_group_id=4").UpdateColumn("type", "left").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
 		ds.GroupGroups().CreateNewAncestors()
@@ -142,13 +142,13 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	}))
 
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("group_child_id, group_ancestor_id").Scan(&result).Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
-		{GroupChildID: 1, GroupAncestorID: 1, IsSelf: true},
-		{GroupChildID: 2, GroupAncestorID: 2, IsSelf: true},
-		{GroupChildID: 3, GroupAncestorID: 3, IsSelf: true},
-		{GroupChildID: 4, GroupAncestorID: 4, IsSelf: true},
+		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true},
+		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true},
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
