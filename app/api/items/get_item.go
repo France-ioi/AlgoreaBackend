@@ -163,14 +163,12 @@ type itemChildNode struct {
 	Order int32 `json:"order"`
 	// `items_items.category`
 	// required: true
-	Category string `json:"category"`
-	// `items_items.always_visible`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
+	Category string `json:"category"`
+	// Partial access propagation rule between the parent item and this child
+	// enum: None,AsGrayed,AsPartial
 	// required: true
-	AlwaysVisible bool `json:"always_visible"`
-	// `items_items.access_restricted`
-	// required: true
-	AccessRestricted bool `json:"access_restricted"`
+	PartialAccessPropagation string `json:"partial_access_propagation"`
 
 	// from `users_items`
 	// required: true
@@ -326,10 +324,9 @@ type rawItem struct {
 	UserAnswer              *string        `sql:"column:answer"` // only if not a chapter
 
 	// items_items
-	Order            int32 `sql:"column:child_order"`
-	Category         string
-	AlwaysVisible    bool
-	AccessRestricted bool
+	Order                    int32 `sql:"column:child_order"`
+	Category                 string
+	PartialAccessPropagation string
 
 	*database.ItemAccessDetails
 }
@@ -369,7 +366,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		NULL AS child_order, NULL AS category, NULL AS always_visible, NULL AS access_restricted`)
+		NULL AS child_order, NULL AS category, NULL AS partial_access_propagation`)
 
 	childrenQuery := s.Select(
 		commonColumns+`NULL AS title_bar_visible,
@@ -382,7 +379,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
-		child_order, category, always_visible, access_restricted`).
+		child_order, category, partial_access_propagation`).
 		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
@@ -430,8 +427,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 
 			items.child_order AS child_order,
 			items.category AS category,
-			items.always_visible,
-			items.access_restricted, `+
+			items.partial_access_propagation, `+
 		// inputItem only
 		` items.title_bar_visible,
 			items.read_only,
@@ -564,8 +560,7 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 		child.User.itemUserNotGrayed = constructUserNotGrayed(&(*rawData)[index])
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
-		child.AlwaysVisible = (*rawData)[index].AlwaysVisible
-		child.AccessRestricted = (*rawData)[index].AccessRestricted
+		child.PartialAccessPropagation = (*rawData)[index].PartialAccessPropagation
 		response.Children = append(response.Children, *child)
 	}
 }

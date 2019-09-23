@@ -118,9 +118,9 @@ func (s *GroupItemStore) computeAllAccess() {
 			SELECT
 				child.id,
 				MIN(parent.cached_full_access_date) AS cached_full_access_date,
-				MIN(IF(items_items.access_restricted = 0, parent.cached_partial_access_date, NULL)) AS cached_partial_access_date,
+				MIN(IF(items_items.partial_access_propagation = 'AsPartial', parent.cached_partial_access_date, NULL)) AS cached_partial_access_date,
 				MAX(parent.cached_manager_access) AS cached_manager_access,
-				MIN(IF(items_items.access_restricted AND items_items.always_visible, parent.cached_partial_access_date, NULL))
+				MIN(IF(items_items.partial_access_propagation = 'AsGrayed', parent.cached_partial_access_date, NULL))
 					AS cached_grayed_access_date,
 				MIN(parent.cached_access_solutions_date) AS cached_access_solutions_date,
 				CONCAT('From ancestor group(s) ', GROUP_CONCAT(
@@ -141,7 +141,7 @@ func (s *GroupItemStore) computeAllAccess() {
 				(groups_items_propagate.propagate_access = 'self' OR groups_items_propagate.id IS NULL) AND
 				(
 					parent.cached_full_access_date IS NOT NULL OR
-					(parent.cached_partial_access_date IS NOT NULL AND (items_items.access_restricted = 0 OR items_items.always_visible)) OR
+					(parent.cached_partial_access_date IS NOT NULL AND items_items.partial_access_propagation != 'None') OR
 					parent.cached_access_solutions_date IS NOT NULL OR
 					parent.cached_manager_access
 				) AND

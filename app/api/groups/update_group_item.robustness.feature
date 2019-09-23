@@ -33,10 +33,10 @@ Feature: Change item access rights for a group - robustness
       | 102 |
       | 103 |
     And the database has the following table 'items_items':
-      | parent_item_id | child_item_id | always_visible | access_restricted | child_order |
-      | 100            | 101           | true           | true              | 0           |
-      | 101            | 102           | false          | false             | 0           |
-      | 102            | 103           | false          | false             | 0           |
+      | parent_item_id | child_item_id | partial_access_propagation | child_order |
+      | 100            | 101           | AsGrayed                   | 0           |
+      | 101            | 102           | AsPartial                  | 0           |
+      | 102            | 103           | AsPartial                  | 0           |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 100              | 101           |
@@ -198,4 +198,3 @@ Feature: Change item access rights for a group - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_items" should stay unchanged
-

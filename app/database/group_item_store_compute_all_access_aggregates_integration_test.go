@@ -215,7 +215,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		{
 			GroupID:                 1,
 			ItemID:                  12,
-			CachedPartialAccessDate: nil, // since access_restricted=1
+			CachedPartialAccessDate: nil, // since partial_access_propagation!='AsPartial'
 			PropagateAccess:         "done",
 		},
 		{
@@ -237,7 +237,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		{
 			GroupID:                 2,
 			ItemID:                  12,
-			CachedPartialAccessDate: nil, // since access_restricted=1
+			CachedPartialAccessDate: nil, // since partial_access_propagation!='AsPartial'
 			PropagateAccess:         "done",
 		},
 	}, result)
@@ -350,8 +350,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -12)).Error())
 	assert.NoError(t, groupItemStore.UpdateColumn("cached_grayed_access", 1).Error())
 	assert.NoError(t, groupItemStore.ItemItems().Updates(map[string]interface{}{
-		"always_visible":    true,
-		"access_restricted": true,
+		"partial_access_propagation": "AsGrayed",
 	}).Error())
 	assert.NoError(t, groupItemStore.InTransaction(func(ds *database.DataStore) error {
 		ds.GroupItems().ComputeAllAccess()
@@ -390,7 +389,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		{
 			GroupID:                 1,
 			ItemID:                  11,
-			CachedPartialAccessDate: nil, // since access_restricted = 1
+			CachedPartialAccessDate: nil, // since partial_access_propagation != "AsPartial"
 
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least cached_partial_access_date(1_1, 1_3)
 
@@ -400,7 +399,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		{
 			GroupID:                 1,
 			ItemID:                  12,
-			CachedPartialAccessDate: nil, // since access_restricted=1
+			CachedPartialAccessDate: nil, // since partial_access_propagation != "AsPartial"
 
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))), // from 1_1
 
@@ -428,7 +427,7 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			GroupID: 2,
 			ItemID:  12,
 
-			CachedPartialAccessDate: nil, // since access_restricted=1
+			CachedPartialAccessDate: nil, // since partial_access_propagation != "AsPartial"
 
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))), // from 2_11
 

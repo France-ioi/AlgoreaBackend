@@ -74,13 +74,13 @@ Feature: Get item for tree navigation
       | 75 | 18       | 231     | 3019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
       | 76 | 18       | 232     | 3019-03-22 08:00:00     | 2019-03-22 08:00:00        | 2019-03-22 08:00:00       | 0               | 0       |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | access_restricted | difficulty | version |
-      | 54 | 200            | 210           | 3           | true              | 0          | 0       |
-      | 55 | 200            | 220           | 2           | true              | 0          | 0       |
-      | 56 | 200            | 230           | 1           | true              | 0          | 0       |
-      | 57 | 210            | 211           | 1           | true              | 0          | 0       |
-      | 58 | 230            | 231           | 2           | true              | 0          | 0       |
-      | 59 | 230            | 232           | 1           | true              | 0          | 0       |
+      | id | parent_item_id | child_item_id | child_order | partial_access_propagation | difficulty | version |
+      | 54 | 200            | 210           | 3           | None                       | 0          | 0       |
+      | 55 | 200            | 220           | 2           | AsGrayed                   | 0          | 0       |
+      | 56 | 200            | 230           | 1           | AsPartial                  | 0          | 0       |
+      | 57 | 210            | 211           | 1           | None                       | 0          | 0       |
+      | 58 | 230            | 231           | 2           | None                       | 0          | 0       |
+      | 59 | 230            | 232           | 1           | None                       | 0          | 0       |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       | version |
       | 53 | 200     | 1           | Category 1  | 0       |
@@ -137,7 +137,7 @@ Feature: Get item for tree navigation
           {
             "id": "230",
             "order": 1,
-            "access_restricted": true,
+            "partial_access_propagation": "AsPartial",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -163,7 +163,7 @@ Feature: Get item for tree navigation
               {
                 "id": "232",
                 "order": 1,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -190,7 +190,7 @@ Feature: Get item for tree navigation
               {
                 "id": "231",
                 "order": 2,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -219,7 +219,7 @@ Feature: Get item for tree navigation
           {
             "id": "220",
             "order": 2,
-            "access_restricted": true,
+            "partial_access_propagation": "AsGrayed",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -246,7 +246,7 @@ Feature: Get item for tree navigation
           {
             "id": "210",
             "order": 3,
-            "access_restricted": true,
+            "partial_access_propagation": "None",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -272,7 +272,7 @@ Feature: Get item for tree navigation
               {
                 "id": "211",
                 "order": 1,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -368,7 +368,7 @@ Feature: Get item for tree navigation
           {
             "id": "232",
             "order": 1,
-            "access_restricted": true,
+            "partial_access_propagation": "None",
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -395,7 +395,7 @@ Feature: Get item for tree navigation
           {
             "id": "231",
             "order": 2,
-            "access_restricted": true,
+            "partial_access_propagation": "None",
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -489,7 +489,7 @@ Feature: Get item for tree navigation
           {
             "id": "230",
             "order": 1,
-            "access_restricted": true,
+            "partial_access_propagation": "AsPartial",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -516,7 +516,7 @@ Feature: Get item for tree navigation
           {
             "id": "220",
             "order": 2,
-            "access_restricted": true,
+            "partial_access_propagation": "AsGrayed",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -543,7 +543,7 @@ Feature: Get item for tree navigation
           {
             "id": "210",
             "order": 3,
-            "access_restricted": true,
+            "partial_access_propagation": "None",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -604,7 +604,7 @@ Feature: Get item for tree navigation
           {
             "id": "230",
             "order": 1,
-            "access_restricted": true,
+            "partial_access_propagation": "AsPartial",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -630,7 +630,7 @@ Feature: Get item for tree navigation
               {
                 "id": "232",
                 "order": 1,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -657,7 +657,7 @@ Feature: Get item for tree navigation
               {
                 "id": "231",
                 "order": 2,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -686,7 +686,7 @@ Feature: Get item for tree navigation
           {
             "id": "220",
             "order": 2,
-            "access_restricted": true,
+            "partial_access_propagation": "AsGrayed",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -713,7 +713,7 @@ Feature: Get item for tree navigation
           {
             "id": "210",
             "order": 3,
-            "access_restricted": true,
+            "partial_access_propagation": "None",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -739,7 +739,7 @@ Feature: Get item for tree navigation
               {
                 "id": "211",
                 "order": 1,
-                "access_restricted": true,
+                "partial_access_propagation": "None",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
