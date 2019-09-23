@@ -121,9 +121,9 @@ func (app *Application) CheckConfig() error {
 			{parentName: "Root", childName: "RootAdmin", parentID: domainConfig.RootGroup, childID: domainConfig.RootAdminGroup},
 			{parentName: "RootSelf", childName: "RootTemp", parentID: domainConfig.RootSelfGroup, childID: domainConfig.RootTempGroup},
 		} {
-			hasRows, err := groupGroupStore.Where("sType = 'direct'").
-				Where("idGroupParent = ?", spec.parentID).
-				Where("idGroupChild = ?", spec.childID).Select("1").Limit(1).HasRows()
+			hasRows, err := groupGroupStore.Where("type = 'direct'").
+				Where("parent_group_id = ?", spec.parentID).
+				Where("child_group_id = ?", spec.childID).Select("1").Limit(1).HasRows()
 			if err != nil {
 				return err
 			}
@@ -158,8 +158,8 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
 			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
 		} {
-			found, err := groupGroupStore.Where("sType = 'direct'").
-				Where("idGroupParent = ?", spec.ParentID).Where("idGroupChild = ?", spec.ChildID).
+			found, err := groupGroupStore.Where("type = 'direct'").
+				Where("parent_group_id = ?", spec.ParentID).Where("child_group_id = ?", spec.ChildID).
 				Limit(1).HasRows()
 			if err != nil {
 				return err
@@ -186,15 +186,15 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Doma
 		{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 		{name: "RootTemp", id: domainConfig.RootTempGroup},
 	} {
-		found, err := groupStore.ByID(spec.id).Where("sType = 'Base'").
-			Where("sName = ?", spec.name).
-			Where("sTextId = ?", spec.name).Limit(1).HasRows()
+		found, err := groupStore.ByID(spec.id).Where("type = 'Base'").
+			Where("name = ?", spec.name).
+			Where("text_id = ?", spec.name).Limit(1).HasRows()
 		if err != nil {
 			return false, err
 		}
 		if !found {
 			if err := groupStore.InsertMap(map[string]interface{}{
-				"ID": spec.id, "sType": "Base", "sName": spec.name, "sTextId": spec.name,
+				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
 			}); err != nil {
 				return false, err
 			}

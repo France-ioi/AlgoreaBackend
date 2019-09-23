@@ -28,8 +28,8 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 			Expiry:      time.Now(),
 		}
 		expectedExec := mock.ExpectExec("^" + regexp.QuoteMeta(
-			"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuedAtDate, sIssuer) VALUES "+
-				"(?, ?, ?, NOW(), ?)") + "$")
+			"INSERT INTO `sessions` (access_token, expiration_date, issued_at_date, issuer, user_id) VALUES "+
+				"(?, ?, NOW(), ?, ?)") + "$")
 
 		if test.dbError != nil {
 			expectedExec.WillReturnError(test.dbError)

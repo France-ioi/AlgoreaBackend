@@ -1,11 +1,11 @@
-users: [{ID: 2, idGroupSelf: 12, sLogin: 2}]
-users_items: [{idUser: 2, idItem: 114, sContestStartDate: 2019-03-22 08:44:55}]
-groups: [{ID: 12}, {ID: 21, idTeamItem: 114, sType: Team}]
-groups_groups: [{idGroupParent: 21, idGroupChild: 12, sType: invitationAccepted}]
+users: [{id: 2, self_group_id: 12, login: 2}]
+users_items: [{user_id: 2, item_id: 114, contest_start_date: 2019-03-22 08:44:55}]
+groups: [{id: 12}, {id: 21, team_item_id: 114, type: Team}]
+groups_groups: [{parent_group_id: 21, child_group_id: 12, type: invitationAccepted}]
 groups_ancestors:
-  - {idGroupAncestor: 12, idGroupChild: 12}
-  - {idGroupAncestor: 21, idGroupChild: 12}
-  - {idGroupAncestor: 21, idGroupChild: 21}
-groups_items: [{idGroup: 21, idItem: 114, sFullAccessDate: 2019-03-22 08:44:55,
-                sCachedFullAccessDate: 2019-03-22 08:44:55, sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}]
+  - {ancestor_group_id: 12, child_group_id: 12}
+  - {ancestor_group_id: 21, child_group_id: 12}
+  - {ancestor_group_id: 21, child_group_id: 21}
+groups_items: [{group_id: 21, item_id: 114, full_access_date: 2019-03-22 08:44:55,
+                cached_full_access_date: 2019-03-22 08:44:55, additional_time: 0000-00-00 01:00:00, creator_user_id: 1}]
 

@@ -1,2 +1,2 @@
-- { ID: 1, sLogin: first, idGroupSelf: 101}
-- { ID: 2, sLogin: second, idGroupSelf: 102}
+- { id: 1, login: first, self_group_id: 101}
+- { id: 2, login: second, self_group_id: 102}

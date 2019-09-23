@@ -4,10 +4,58 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// GroupViewResponseCodePart in order to make groupViewResponse work
+// swagger:ignore
+type GroupViewResponseCodePart struct {
+	// Nullable
+	Code *string `json:"code"`
+	// Nullable
+	CodeTimer *string `json:"code_timer"`
+	// Nullable
+	CodeEnd *database.Time `json:"code_end"`
+}
+
+// swagger:model groupViewResponse
+type groupViewResponse struct {
+	// group's `id`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Name string `json:"name"`
+	// required:true
+	Grade int32 `json:"grade"`
+	// Nullable
+	// required:true
+	Description *string `json:"description"`
+	// Nullable
+	// required:true
+	DateCreated *database.Time `json:"date_created"`
+	// required:true
+	// enum: Class,Team,Club,Friends,Other,UserSelf
+	Type string `json:"type"`
+	// Nullable
+	// required:true
+	RedirectPath *string `json:"redirect_path"`
+	// required:true
+	Opened bool `json:"opened"`
+	// required:true
+	FreeAccess bool `json:"free_access"`
+	// required:true
+	OpenContest bool `json:"open_contest"`
+	// required:true
+	CurrentUserIsOwner bool `json:"current_user_is_owner"`
+	// `True` when there is an active group->user relation in `groups_groups`
+	// required:true
+	CurrentUserIsMember bool `json:"current_user_is_member"`
+
+	*GroupViewResponseCodePart
+}
 
 // swagger:operation GET /groups/{group_id} groups groupView
 // ---
@@ -17,7 +65,7 @@ import (
 //   Returns general information about the group from the `groups` table.
 //
 //
-//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `bFreeAccess`=1,
+//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `free_access`=1,
 //   otherwise the 'forbidden' error is returned.
 //
 //
@@ -31,51 +79,7 @@ import (
 //   "200":
 //     description: OK. The group info
 //     schema:
-//       type: object
-//       properties:
-//         id:
-//           description: group's `ID`
-//           type: string
-//           format: int64
-//         name:
-//           type: string
-//         grade:
-//           type: integer
-//         description:
-//           description: Nullable
-//           type: string
-//         date_created:
-//           description: Nullable
-//           type: string
-//         type:
-//           type: string
-//           enum: [Class,Team,Club,Friends,Other,UserSelf]
-//         redirect_path:
-//           description: Nullable
-//           type: string
-//         opened:
-//           type: boolean
-//         free_access:
-//           type: boolean
-//         code:
-//           description: Nullable
-//           type: string
-//         code_timer:
-//           description: Nullable
-//           type: string
-//         code_end:
-//           description: Nullable
-//           type: string
-//         open_contest:
-//           type: boolean
-//         current_user_is_owner:
-//           type: boolean
-//         current_user_is_member:
-//           description: >
-//                          `True` when there is an active group->user relation in `groups_groups`
-//           type: boolean
-//       required: [id, name, grade, description, date_created, type, redirect_path, opened, free_access,
-//                  open_contest, current_user_is_owner, current_user_is_member]
+//       "$ref": "#/definitions/groupViewResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -95,47 +99,37 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	query := srv.Store.Groups().
 		Joins(`
 			LEFT JOIN groups_ancestors
-				ON groups_ancestors.idGroupChild = groups.ID AND groups_ancestors.idGroupAncestor = ?`, user.OwnedGroupID).
+				ON groups_ancestors.child_group_id = groups.id AND groups_ancestors.ancestor_group_id = ?`, user.OwnedGroupID).
 		Joins(`
 			LEFT JOIN groups_ancestors AS groups_descendants
-				ON groups_descendants.idGroupAncestor = groups.ID AND groups_descendants.idGroupChild = ?`, user.SelfGroupID).
+				ON groups_descendants.ancestor_group_id = groups.id AND groups_descendants.child_group_id = ?`, user.SelfGroupID).
 		Joins(`
 			LEFT JOIN groups_groups
-				ON groups_groups.sType `+database.GroupRelationIsActiveCondition+` AND
-					groups_groups.idGroupParent = groups.ID AND groups_groups.idGroupChild = ?`, user.SelfGroupID).
-		Where("groups_ancestors.ID IS NOT NULL OR groups_descendants.ID IS NOT NULL OR groups.bFreeAccess").
-		Where("groups.ID = ?", groupID).Select(
-		`groups.ID, groups.sName, groups.iGrade, groups.sDescription, groups.sDateCreated,
-			groups.sType, groups.sRedirectPath, groups.bOpened, groups.bFreeAccess,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCode, NULL) AS sCode,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeTimer, NULL) AS sCodeTimer,
-			IF(groups_ancestors.ID IS NOT NULL, groups.sCodeEnd, NULL) AS sCodeEnd,
-			groups.bOpenContest,
-			groups_ancestors.ID IS NOT NULL AS bCurrentUserIsOwner,
-			groups_groups.ID IS NOT NULL AS bCurrentUserIsMember`).Limit(1)
+				ON groups_groups.type `+database.GroupRelationIsActiveCondition+` AND
+					groups_groups.parent_group_id = groups.id AND groups_groups.child_group_id = ?`, user.SelfGroupID).
+		Where("groups_ancestors.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
+		Where("groups.id = ?", groupID).Select(
+		`groups.id, groups.name, groups.grade, groups.description, groups.date_created,
+			groups.type, groups.redirect_path, groups.opened, groups.free_access,
+			IF(groups_ancestors.id IS NOT NULL, groups.code, NULL) AS code,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_timer, NULL) AS code_timer,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_end, NULL) AS code_end,
+			groups.open_contest,
+			groups_ancestors.id IS NOT NULL AS current_user_is_owner,
+			groups_groups.id IS NOT NULL AS current_user_is_member`).Limit(1)
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-
-	if len(result) == 0 {
+	var result groupViewResponse
+	err = query.Scan(&result).Error()
+	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
+	service.MustNotBeError(err)
 
-	jsonResult := service.ConvertMapFromDBToJSON(result[0])
-	if !jsonResult["current_user_is_owner"].(bool) {
-		delete(jsonResult, "code")
-		delete(jsonResult, "code_timer")
-		delete(jsonResult, "code_end")
-	}
-	for _, key := range [...]string{"code_end", "date_created"} {
-		if value, ok := jsonResult[key]; ok && value != nil {
-			parsedTime := &database.Time{}
-			service.MustNotBeError(parsedTime.ScanString(value.(string)))
-			jsonResult[key] = parsedTime
-		}
+	if !result.CurrentUserIsOwner {
+		result.GroupViewResponseCodePart = nil
 	}
 
-	render.Respond(w, r, jsonResult)
+	render.Respond(w, r, result)
 
 	return service.NoError
 }

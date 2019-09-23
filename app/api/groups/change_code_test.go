@@ -41,11 +41,11 @@ func TestGenerateGroupCode_HandlesError(t *testing.T) {
 func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, _ := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
-			"WHERE (groups_ancestors.idGroupAncestor=?) AND (idGroupChild = ?)")).
+			"WHERE (groups_ancestors.ancestor_group_id=?) AND (child_group_id = ?)")).
 			WithArgs(ptrInt64(10), 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
-			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'sCode'"))
+			WillReturnError(errors.New("ERROR 1062 (23000): Duplicate entry 'aaaaaaaaaa' for key 'code'"))
 		mock.ExpectExec("UPDATE `groups` .+").WillReturnResult(sqlmock.NewResult(-1, 1))
 		mock.ExpectCommit()
 	})

@@ -142,17 +142,17 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	if expectedSessionID != "" {
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
-				"SELECT users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess, "+
-					"users.tempUser, users.allowSubgroups, users.sNotificationReadDate, users.sDefaultLanguage, l.ID as idDefaultLanguage "+
+				"SELECT users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id, "+
+					"users.temp_user, users.allow_subgroups, users.notification_read_date, users.default_language, l.id as default_language_id "+
 					"FROM `sessions` "+
-					"JOIN users ON users.ID = sessions.idUser "+
-					"LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode "+
-					"WHERE (sAccessToken = ?) AND (sExpirationDate > NOW()) LIMIT 1") +
+					"JOIN users ON users.id = sessions.user_id "+
+					"LEFT JOIN languages l ON users.default_language = l.code "+
+					"WHERE (access_token = ?) AND (expiration_date > NOW()) LIMIT 1") +
 			"$").WithArgs(expectedSessionID)
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"ID"})
+			neededRows := mock.NewRows([]string{"id"})
 			if userID != 0 {
 				neededRows = neededRows.AddRow(userID)
 			}

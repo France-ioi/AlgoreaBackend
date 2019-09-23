@@ -15,16 +15,16 @@ func TestUserAnswerStore_WithMethods(t *testing.T) {
 	}{
 		{
 			name:          "WithUsers",
-			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` JOIN users ON users.ID = users_answers.idUser",
+			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` JOIN users ON users.id = users_answers.user_id",
 		},
 		{
 			name: "WithGroupAttempts",
 			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` " +
-				"JOIN groups_attempts ON groups_attempts.ID = users_answers.idAttempt",
+				"JOIN groups_attempts ON groups_attempts.id = users_answers.attempt_id",
 		},
 		{
 			name:          "WithItems",
-			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` JOIN items ON items.ID = users_answers.idItem",
+			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` JOIN items ON items.id = users_answers.item_id",
 		},
 	}
 	for _, testCase := range tests {
@@ -34,7 +34,7 @@ func TestUserAnswerStore_WithMethods(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			mock.ExpectQuery("^" + regexp.QuoteMeta(testCase.expectedQuery) + "$").
-				WillReturnRows(mock.NewRows([]string{"ID"}))
+				WillReturnRows(mock.NewRows([]string{"id"}))
 
 			store := NewDataStore(db).UserAnswers()
 			resultValue := reflect.ValueOf(store).MethodByName(testCase.name).Call([]reflect.Value{})[0]

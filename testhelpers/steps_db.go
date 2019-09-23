@@ -2,10 +2,13 @@ package testhelpers
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
+
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) error { // nolint
@@ -16,7 +19,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 		fields := make([]string, 0, len(head))
 		marks := make([]string, 0, len(head))
 		for _, cell := range head {
-			fields = append(fields, cell.Value)
+			fields = append(fields, database.QuoteName(cell.Value))
 			marks = append(marks, "?")
 		}
 
@@ -25,8 +28,8 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 		if len(data.Rows) > 2 {
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
-		query := "INSERT INTO `" + strings.Replace(tableName, "`", "``", -1) + // nolint: gosec
-			"` (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
+		query := "INSERT INTO " + database.QuoteName(tableName) + // nolint: gosec
+			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
 			for _, cell := range data.Rows[i].Cells {
@@ -98,7 +101,7 @@ func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gh
 
 func (ctx *TestContext) TableShouldNotContainID(tableName string, ids string) error { // nolint
 	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false,
-		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "ID"}}}}})
+		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "id"}}}}})
 }
 
 func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
@@ -164,6 +167,8 @@ func parseMultipleIDString(idsString string) []int64 {
 	return ids
 }
 
+var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
+
 func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
@@ -174,7 +179,11 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
-		selects = append(selects, cell.Value)
+		columnName := cell.Value
+		if columnNameRegexp.MatchString(columnName) {
+			columnName = database.QuoteName(columnName)
+		}
+		selects = append(selects, columnName)
 	}
 
 	idsMap := make(map[string]bool, len(ids))
@@ -208,7 +217,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	dataCols := data.Rows[0].Cells
 	idColumnIndex := -1
 	for index, cell := range dataCols {
-		if cell.Value == "ID" {
+		if cell.Value == "id" {
 			idColumnIndex = index
 			break
 		}

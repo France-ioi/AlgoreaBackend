@@ -1,33 +1,33 @@
 Feature: Add item - robustness
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf |
-      | 1  | jdoe   | 0        | 11          |
+      | id | login | temp_user | self_group_id |
+      | 1  | jdoe  | 0         | 11            |
     And the database has the following table 'items':
-      | ID | bTeamsEditable | bNoScore |
+      | id | teams_editable | no_score |
       | 4  | false          | false    |
       | 21 | false          | false    |
       | 22 | false          | false    |
     And the database has the following table 'items_items':
-      | ID | idItemParent | idItemChild | iChildOrder |
-      | 1  | 4            | 21          | 0           |
+      | id | parent_item_id | child_item_id | child_order |
+      | 1  | 4              | 21            | 0           |
     And the database has the following table 'items_ancestors':
-      | ID | idItemAncestor | idItemChild |
-      | 1  | 4              | 21          |
+      | id | ancestor_item_id | child_item_id |
+      | 1  | 4                | 21            |
     And the database has the following table 'groups_items':
-      | ID | idGroup | idItem | bCachedManagerAccess | bOwnerAccess | idUserCreated |
-      | 41 | 11      | 21     | true                 | false        | 1             |
-      | 42 | 11      | 22     | false                | false        | 1             |
-      | 43 | 11      | 4      | true                 | false        | 1             |
+      | id | group_id | item_id | cached_manager_access | owner_access | creator_user_id |
+      | 41 | 11       | 21      | true                  | false        | 1               |
+      | 42 | 11       | 22      | false                 | false        | 1               |
+      | 43 | 11       | 4       | true                  | false        | 1               |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf |
-      | 71 | 11              | 11           | 1       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 71 | 11                | 11             | 1       |
     And the database has the following table 'languages':
-      | ID |
+      | id |
       | 3  |
 
   Scenario: Missing type
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -56,7 +56,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Missing language_id
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -85,7 +85,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Missing title
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -114,7 +114,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Missing parent_item_id
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -143,7 +143,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: language_id is not a number
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -173,7 +173,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: language_id doesn't exist
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -203,7 +203,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: parent_item_id is not a number
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -234,7 +234,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Non-existing parent
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -265,9 +265,9 @@ Feature: Add item - robustness
 
   Scenario: Not enough perm on parent
     Given the database has the following table 'groups':
-      | ID | sName      | sTextId | iGrade | sType     | iVersion |
-      | 11 | jdoe       |         | -2     | UserAdmin | 0        |
-    And I am the user with ID "1"
+      | id | name | text_id | grade | type      | version |
+      | 11 | jdoe |         | -2    | UserAdmin | 0       |
+    And I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -297,7 +297,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The user doesn't exist
-    And I am the user with ID "121"
+    And I am the user with id "121"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -317,7 +317,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong full_screen
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -348,7 +348,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong type
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -378,7 +378,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong validation_type
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -409,7 +409,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong validation_min
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -440,7 +440,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong unlocked_item_ids
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -470,8 +470,8 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Non-existent ID in unlocked_item_ids
-    Given I am the user with ID "1"
+  Scenario: Non-existent id in unlocked_item_ids
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -502,7 +502,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: unlocked_item_ids not owned/managed by the user
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -533,7 +533,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong team_mode
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -563,13 +563,13 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Non-existent group ID in team_in_group_id
-    Given I am the user with ID "1"
+  Scenario: Non-existent group id in qualified_group_id
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
-        "team_in_group_id": "404",
+        "qualified_group_id": "404",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
@@ -584,7 +584,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_in_group_id": ["should exist and be owned by the user"]
+          "qualified_group_id": ["should exist and be owned by the user"]
         }
       }
       """
@@ -594,13 +594,13 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: team_in_group_id is not owned by the user
-    Given I am the user with ID "1"
+  Scenario: qualified_group_id is not owned by the user
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
-        "team_in_group_id": "11",
+        "qualified_group_id": "11",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
@@ -615,7 +615,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_in_group_id": ["should exist and be owned by the user"]
+          "qualified_group_id": ["should exist and be owned by the user"]
         }
       }
       """
@@ -626,7 +626,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (wrong format)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -657,7 +657,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative hours)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -688,7 +688,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many hours)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -719,7 +719,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative minutes)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -750,7 +750,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many minutes)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -781,7 +781,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (negative seconds)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -812,7 +812,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong duration (too many seconds)
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -843,7 +843,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Wrong contest_phase
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -874,7 +874,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Non-unique children item IDs
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -908,7 +908,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: User doesn't have manager/owner access to children items
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -942,7 +942,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The parent is a child item
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -965,7 +965,7 @@ Feature: Add item - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The parent is a descendant of a child item
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {

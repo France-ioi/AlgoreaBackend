@@ -15,10 +15,10 @@ import (
 // UpdateItemStringRequest is the expected input for item's strings updating
 type UpdateItemStringRequest struct {
 	// Nullable fields are of pointer types
-	Title       string  `json:"title" sql:"column:sTitle" validate:"max=200"`        // max length = 200
-	ImageURL    *string `json:"image_url" sql:"column:sImageUrl" validate:"max=100"` // max length = 100
-	Subtitle    *string `json:"subtitle" sql:"column:sSubtitle" validate:"max=200"`  // max length = 200
-	Description *string `json:"description" sql:"column:sDescription"`
+	Title       string  `json:"title" validate:"max=200"`     // max length = 200
+	ImageURL    *string `json:"image_url" validate:"max=100"` // max length = 100
+	Subtitle    *string `json:"subtitle" validate:"max=200"`  // max length = 200
+	Description *string `json:"description"`
 }
 
 func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) service.APIError {
@@ -59,7 +59,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		if useDefaultLanguage {
-			service.MustNotBeError(store.Items().ByID(itemID).WithWriteLock().PluckFirst("idDefaultLanguage", &languageID).Error())
+			service.MustNotBeError(store.Items().ByID(itemID).WithWriteLock().PluckFirst("default_language_id", &languageID).Error())
 		} else {
 			found, err = store.Languages().ByID(languageID).WithWriteLock().HasRows()
 			service.MustNotBeError(err)
@@ -84,15 +84,15 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 
 func updateItemStringData(store *database.DataStore, itemID, languageID int64, dbMap map[string]interface{}) {
 	scope := store.ItemStrings().
-		Where("idLanguage = ?", languageID).
-		Where("idItem = ?", itemID)
+		Where("language_id = ?", languageID).
+		Where("item_id = ?", itemID)
 	found, err := scope.HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-			dbMap["ID"] = retryStore.NewID()
-			dbMap["idItem"] = itemID
-			dbMap["idLanguage"] = languageID
+			dbMap["id"] = retryStore.NewID()
+			dbMap["item_id"] = itemID
+			dbMap["language_id"] = languageID
 			return retryStore.ItemStrings().InsertMap(dbMap)
 		}))
 	} else {

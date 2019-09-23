@@ -72,7 +72,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	if action == leaveGroupAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).
-			Where("lockUserDeletionDate IS NULL OR lockUserDeletionDate <= NOW()").HasRows()
+			Where("lock_user_deletion_date IS NULL OR lock_user_deletion_date <= NOW()").HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
@@ -104,7 +104,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 
 	if action == createGroupRequestAction {
 		var found bool
-		found, err = store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
+		found, err = store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
 			action = createAcceptedGroupRequestAction
@@ -134,14 +134,14 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
 	groupID int64, requireFreeAccess bool) service.APIError {
 	var parentGroupInfo struct {
-		Type       string `gorm:"column:sType"`
-		TeamItemID *int64 `gorm:"column:idTeamItem"`
+		Type       string
+		TeamItemID *int64
 	}
 
-	// The group should exist (and optionally should have `bFreeAccess` = 1)
-	query := store.Groups().ByID(groupID).WithWriteLock().Select("sType, idTeamItem")
+	// The group should exist (and optionally should have `free_access` = 1)
+	query := store.Groups().ByID(groupID).WithWriteLock().Select("type, team_item_id")
 	if requireFreeAccess {
-		query = query.Where("bFreeAccess")
+		query = query.Where("free_access")
 	}
 	err := query.Take(&parentGroupInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -149,13 +149,13 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 	service.MustNotBeError(err)
 
-	// If the group is a team and its `idTeamItem` is set, ensure that the current user is not a member of
-	// another team with the same `idTeamItem'.
+	// If the group is a team and its `team_item_id` is set, ensure that the current user is not a member of
+	// another team with the same `team_item_id'.
 	if parentGroupInfo.Type == "Team" && parentGroupInfo.TeamItemID != nil {
 		var found bool
 		found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *parentGroupInfo.TeamItemID).
 			WithWriteLock().
-			Where("groups.ID != ?", groupID).HasRows()
+			Where("groups.id != ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))

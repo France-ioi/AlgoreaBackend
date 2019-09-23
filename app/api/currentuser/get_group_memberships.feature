@@ -1,11 +1,11 @@
 Feature: Get group memberships for the current user
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName  | sLastName | iGrade |
-      | 1  | owner  | 0        | 21          | 22           | Jean-Michel | Blanquer  | 3      |
-      | 2  | user   | 0        | 11          | 12           | John        | Doe       | 1      |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | grade |
+      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 3     |
+      | 2  | user  | 0         | 11            | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups':
-      | ID | sType     | sName              | sDescription           |
+      | id | type      | name               | description            |
       | 1  | Class     | Our Class          | Our class group        |
       | 2  | Team      | Our Team           | Our team group         |
       | 3  | Club      | Our Club           | Our club group         |
@@ -20,20 +20,20 @@ Feature: Get group memberships for the current user
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate         |
-      | 2  | 1             | 21           | invitationSent     | 2017-02-28 06:38:38 |
-      | 3  | 2             | 21           | invitationRefused  | 2017-03-29 06:38:38 |
-      | 4  | 3             | 21           | requestSent        | 2017-04-29 06:38:38 |
-      | 5  | 4             | 21           | requestRefused     | 2017-05-29 06:38:38 |
-      | 6  | 5             | 21           | invitationAccepted | 2017-06-29 06:38:38 |
-      | 7  | 6             | 21           | requestAccepted    | 2017-07-29 06:38:38 |
-      | 8  | 7             | 21           | removed            | 2017-08-29 06:38:38 |
-      | 9  | 8             | 21           | left               | 2017-09-29 06:38:38 |
-      | 10 | 9             | 21           | direct             | 2017-10-29 06:38:38 |
-      | 11 | 1             | 22           | direct             | 2017-11-29 06:38:38 |
+      | id | parent_group_id | child_group_id | type               | status_date         |
+      | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
+      | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
+      | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |
+      | 5  | 4               | 21             | requestRefused     | 2017-05-29 06:38:38 |
+      | 6  | 5               | 21             | invitationAccepted | 2017-06-29 06:38:38 |
+      | 7  | 6               | 21             | requestAccepted    | 2017-07-29 06:38:38 |
+      | 8  | 7               | 21             | removed            | 2017-08-29 06:38:38 |
+      | 9  | 8               | 21             | left               | 2017-09-29 06:38:38 |
+      | 10 | 9               | 21             | direct             | 2017-10-29 06:38:38 |
+      | 11 | 1               | 22             | direct             | 2017-11-29 06:38:38 |
 
   Scenario: Show all invitations
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/group-memberships"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -76,7 +76,7 @@ Feature: Get group memberships for the current user
     """
 
   Scenario: Request the first row
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a GET request to "/current-user/group-memberships?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:

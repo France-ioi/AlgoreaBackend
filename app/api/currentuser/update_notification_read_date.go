@@ -12,7 +12,7 @@ import (
 // swagger:operation PUT /current-user/notification-read-date users userNotificationReadDateUpdate
 // ---
 // summary: Update user's notification read date
-// description: Set users.sNotificationReadDate to NOW() for the current user
+// description: Set users.notification_read_date to NOW() for the current user
 // responses:
 //   "200":
 //     "$ref": "#/responses/updatedResponse"
@@ -24,7 +24,7 @@ func (srv *Service) updateNotificationReadDate(w http.ResponseWriter, r *http.Re
 	user := srv.GetUser(r)
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
 	service.MustNotBeError(srv.Store.Users().ByID(user.ID).
-		UpdateColumn("sNotificationReadDate", database.Now()).Error())
+		UpdateColumn("notification_read_date", database.Now()).Error())
 
 	response := service.Response{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)

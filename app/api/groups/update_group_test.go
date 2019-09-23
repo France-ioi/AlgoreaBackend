@@ -22,28 +22,28 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		json    string
 		wantErr bool
 	}{
-		{"sCodeTimer=99:59:59", `{"code_timer":"99:59:59"}`, false},
-		{"sCodeTimer=00:00:00", `{"code_timer":"00:00:00"}`, false},
+		{"code_timer=99:59:59", `{"code_timer":"99:59:59"}`, false},
+		{"code_timer=00:00:00", `{"code_timer":"00:00:00"}`, false},
 
-		{"sCodeTimer=99:60:59", `{"code_timer":"99:60:59"}`, true},
-		{"sCodeTimer=99:59:60", `{"code_timer":"99:59:60"}`, true},
-		{"sCodeTimer=59:59", `{"code_timer":"59:59"}`, true},
-		{"sCodeTimer=59", `{"code_timer":"59"}`, true},
-		{"sCodeTimer=59", `{"code_timer":"invalid"}`, true},
-		{"sCodeTimer=", `{"code_timer":""}`, true},
+		{"code_timer=99:60:59", `{"code_timer":"99:60:59"}`, true},
+		{"code_timer=99:59:60", `{"code_timer":"99:59:60"}`, true},
+		{"code_timer=59:59", `{"code_timer":"59:59"}`, true},
+		{"code_timer=59", `{"code_timer":"59"}`, true},
+		{"code_timer=59", `{"code_timer":"invalid"}`, true},
+		{"code_timer=", `{"code_timer":""}`, true},
 
-		{"sRedirectPath=9", `{"redirect_path":"9"}`, false},
-		{"sRedirectPath=1234567890", `{"redirect_path":"1234567890"}`, false},
-		{"sRedirectPath=1234567890/0", `{"redirect_path":"1234567890/0"}`, false},
-		{"sRedirectPath=0/1234567890", `{"redirect_path":"0/1234567890"}`, false},
-		{"sRedirectPath=1234567890/1234567890", `{"redirect_path":"1234567890/1234567890"}`, false},
+		{"redirect_path=9", `{"redirect_path":"9"}`, false},
+		{"redirect_path=1234567890", `{"redirect_path":"1234567890"}`, false},
+		{"redirect_path=1234567890/0", `{"redirect_path":"1234567890/0"}`, false},
+		{"redirect_path=0/1234567890", `{"redirect_path":"0/1234567890"}`, false},
+		{"redirect_path=1234567890/1234567890", `{"redirect_path":"1234567890/1234567890"}`, false},
 		// empty strings are allowed (there are some in the DB)
-		{"sRedirectPath=", `{"redirect_path":""}`, false},
+		{"redirect_path=", `{"redirect_path":""}`, false},
 
-		{"sRedirectPath=invalid", `{"redirect_path":"invalid"}`, true},
-		{"sRedirectPath=1A", `{"redirect_path":"1A"}`, true},
-		{"sRedirectPath=1A/2B", `{"redirect_path":"1A/2B"}`, true},
-		{"sRedirectPath=1234567890/1234567890/1", `{"redirect_path":"1234567890/1234567890/1"}`, false},
+		{"redirect_path=invalid", `{"redirect_path":"invalid"}`, true},
+		{"redirect_path=1A", `{"redirect_path":"1A"}`, true},
+		{"redirect_path=1A/2B", `{"redirect_path":"1A/2B"}`, true},
+		{"redirect_path=1234567890/1234567890/1", `{"redirect_path":"1234567890/1234567890/1"}`, false},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -60,9 +60,9 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
-			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(ptrInt64(11), 1).WillReturnError(errors.New("error"))
 		mock.ExpectRollback()
 	})
@@ -71,10 +71,10 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
-			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(true))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
 		mock.ExpectExec("UPDATE `groups_groups` .+").WithArgs("requestRefused", 1).
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -84,10 +84,10 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
 func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.bFreeAccess FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID "+
-			"WHERE (groups_ancestors.idGroupAncestor=?) AND (groups.ID = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"bFreeAccess"}).AddRow(false))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()

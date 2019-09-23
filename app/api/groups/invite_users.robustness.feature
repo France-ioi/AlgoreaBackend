@@ -1,30 +1,30 @@
 Feature: Invite users - robustness
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | idGroupSelf | idGroupOwned | sFirstName  | sLastName |
-      | 1  | owner  | 21          | 22           | Jean-Michel | Blanquer  |
-      | 2  | user   | 11          | 12           | John        | Doe       |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name |
+      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
+      | 2  | user  | 11            | 12             | John        | Doe       |
     And the database has the following table 'groups':
-      | ID  |
+      | id  |
       | 11  |
       | 12  |
       | 13  |
       | 21  |
       | 22  |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 11              | 11           | 1       |
-      | 12              | 12           | 1       |
-      | 13              | 13           | 1       |
-      | 21              | 21           | 1       |
-      | 22              | 13           | 0       |
-      | 22              | 22           | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 12                | 12             | 1       |
+      | 13                | 13             | 1       |
+      | 21                | 21             | 1       |
+      | 22                | 13             | 0       |
+      | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate          |
-      | 15 | 22            | 13           | direct             | null                 |
+      | id | parent_group_id | child_group_id | type   | status_date |
+      | 15 | 22              | 13             | direct | null        |
 
   Scenario: Fails when the user is not an owner of the parent group
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -37,7 +37,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
-    Given I am the user with ID "404"
+    Given I am the user with id "404"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -49,8 +49,8 @@ Feature: Invite users - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Fails when the parent group ID is wrong
-    Given I am the user with ID "1"
+  Scenario: Fails when the parent group id is wrong
+    Given I am the user with id "1"
     When I send a POST request to "/groups/abc/invitations" with the following body:
       """
       {
@@ -63,7 +63,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are wrong
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -76,7 +76,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are not present
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -88,7 +88,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are empty
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -101,7 +101,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when too many logins
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {

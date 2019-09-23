@@ -27,11 +27,11 @@ func TestCreationSuccess(t *testing.T) {
 	assert := assertlib.New(t)
 
 	data := struct {
-		ItemID int64 `json:"ID"`
+		ItemID int64 `json:"id"`
 	}{42}
 
 	recorder := httpResponseForResponse(CreationSuccess(data))
-	assert.Equal(`{"success":true,"message":"created","data":{"ID":42}}`+"\n", recorder.Body.String())
+	assert.Equal(`{"success":true,"message":"created","data":{"id":42}}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusCreated, recorder.Code)
 }
 

@@ -17,24 +17,24 @@ import (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	Name  string `json:"name" sql:"column:sName"`
-	Grade int32  `json:"grade" sql:"column:iGrade"`
+	Name  string `json:"name"`
+	Grade int32  `json:"grade"`
 	// Nullable
-	Description *string `json:"description" sql:"column:sDescription"`
-	Opened      bool    `json:"opened" sql:"column:bOpened"`
+	Description *string `json:"description"`
+	Opened      bool    `json:"opened"`
 	// If changed from true to false, automatically switch all requests to join this group from requestSent to requestRefused
-	FreeAccess bool `json:"free_access" sql:"column:bFreeAccess"`
+	FreeAccess bool `json:"free_access"`
 	// Duration after the first use of the code when it will expire
 	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	CodeTimer *string `json:"code_timer" sql:"column:sCodeTimer" validate:"omitempty,duration"`
+	CodeTimer *string `json:"code_timer" validate:"omitempty,duration"`
 	// Nullable
-	CodeEnd *time.Time `json:"code_end" sql:"column:sCodeEnd"`
+	CodeEnd *time.Time `json:"code_end"`
 	// Nullable
 	// pattern:  ^(\d+(/\d+))$
-	RedirectPath *string `json:"redirect_path" sql:"column:sRedirectPath" validate:"omitempty,redirect_path"`
-	OpenContest  bool    `json:"open_contest" sql:"column:bOpenContest"`
+	RedirectPath *string `json:"redirect_path" validate:"omitempty,redirect_path"`
+	OpenContest  bool    `json:"open_contest"`
 }
 
 // swagger:operation PUT /groups/{group_id} groups groupEdit
@@ -81,12 +81,12 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		groupStore := s.Groups()
 
 		var currentGroupData []struct {
-			FreeAccess bool `sql:"column:bFreeAccess"`
+			FreeAccess bool
 		}
 
 		if errInTransaction := groupStore.OwnedBy(user).
-			Select("groups.bFreeAccess").WithWriteLock().
-			Where("groups.ID = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
+			Select("groups.free_access").WithWriteLock().
+			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 		if len(currentGroupData) < 1 {
@@ -101,7 +101,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		}
 
 		// update the group
-		if errInTransaction := groupStore.Where("ID = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
+		if errInTransaction := groupStore.Where("id = ?", groupID).Updates(dbMap).Error(); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
@@ -127,13 +127,13 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 // if free_access is changed from true to false
 func refuseSentGroupRequestsIfNeeded(
 	store *database.GroupStore, groupID int64, dbMap map[string]interface{}, previousFreeAccessValue bool) error {
-	// if bFreeAccess is going to be changed from true to false
-	if newFreeAccess, ok := dbMap["bFreeAccess"]; ok && !newFreeAccess.(bool) && previousFreeAccessValue {
+	// if free_access is going to be changed from true to false
+	if newFreeAccess, ok := dbMap["free_access"]; ok && !newFreeAccess.(bool) && previousFreeAccessValue {
 		// refuse sent group requests
 		return store.GroupGroups().
-			Where("sType = \"requestSent\"").
-			Where("idGroupParent = ?", groupID).
-			UpdateColumn("sType", "requestRefused").Error()
+			Where("type = \"requestSent\"").
+			Where("parent_group_id = ?", groupID).
+			UpdateColumn("type", "requestRefused").Error()
 	}
 	return nil
 }

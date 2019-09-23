@@ -1,38 +1,38 @@
 # lev1 items
-- { ID: 41, idGroup: 11, idItem: 190, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 42, idGroup: 11, idItem: 191, sCachedPartialAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 43, idGroup: 11, idItem: 192, sCachedGrayedAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 44, idGroup: 11, idItem: 193, idUserCreated: 1 }
+- { id: 41, group_id: 11, item_id: 190, cached_full_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }
+- { id: 42, group_id: 11, item_id: 191, cached_partial_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }
+- { id: 43, group_id: 11, item_id: 192, cached_grayed_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }
+- { id: 44, group_id: 11, item_id: 193, creator_user_id: 1 }
 # group 12 does not get any access to items
-- { ID: 45, idGroup: 12, idItem: 190, idUserCreated: 1 }
-- { ID: 46, idGroup: 12, idItem: 191, idUserCreated: 1 }
-- { ID: 47, idGroup: 12, idItem: 192, idUserCreated: 1 }
-- { ID: 48, idGroup: 12, idItem: 193, idUserCreated: 1 }
+- { id: 45, group_id: 12, item_id: 190, creator_user_id: 1 }
+- { id: 46, group_id: 12, item_id: 191, creator_user_id: 1 }
+- { id: 47, group_id: 12, item_id: 192, creator_user_id: 1 }
+- { id: 48, group_id: 12, item_id: 193, creator_user_id: 1 }
 # group 19 should have no impact on our user
-- { ID: 49, idGroup: 19, idItem: 194, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
+- { id: 49, group_id: 19, item_id: 194, cached_full_access_date: 2019-03-22 08:00:00, cached_partial_access_date: 2018-03-22 08:00:00, cached_grayed_access_date: 2017-03-22 08:00:00, creator_user_id: 1 }
 
 # lev 2
-- { ID: 401, idGroup: 11, idItem: 1900, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 402, idGroup: 11, idItem: 1901, sCachedPartialAccessDate: 2018-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 403, idGroup: 11, idItem: 1902, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 404, idGroup: 11, idItem: 1903, idUserCreated: 1 }
+- { id: 401, group_id: 11, item_id: 1900, cached_full_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }
+- { id: 402, group_id: 11, item_id: 1901, cached_partial_access_date: 2018-03-22 08:00:00, creator_user_id: 1 }
+- { id: 403, group_id: 11, item_id: 1902, cached_grayed_access_date: 2017-03-22 08:00:00, creator_user_id: 1 }
+- { id: 404, group_id: 11, item_id: 1903, creator_user_id: 1 }
 # group 12 does not get any access to items
-- { ID: 405, idGroup: 12, idItem: 1900, idUserCreated: 1 }
-- { ID: 406, idGroup: 12, idItem: 1901, idUserCreated: 1 }
-- { ID: 407, idGroup: 12, idItem: 1902, idUserCreated: 1 }
-- { ID: 408, idGroup: 12, idItem: 1903, idUserCreated: 1 }
+- { id: 405, group_id: 12, item_id: 1900, creator_user_id: 1 }
+- { id: 406, group_id: 12, item_id: 1901, creator_user_id: 1 }
+- { id: 407, group_id: 12, item_id: 1902, creator_user_id: 1 }
+- { id: 408, group_id: 12, item_id: 1903, creator_user_id: 1 }
 # group 19 should have no impact on our user
-- { ID: 409, idGroup: 19, idItem: 1904, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
+- { id: 409, group_id: 19, item_id: 1904, cached_full_access_date: 2019-03-22 08:00:00, cached_partial_access_date: 2018-03-22 08:00:00, cached_grayed_access_date: 2017-03-22 08:00:00, creator_user_id: 1 }
 
 # lev 3
-- { ID: 4001, idGroup: 11, idItem: 19000, sCachedFullAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 4002, idGroup: 11, idItem: 19001, sCachedPartialAccessDate: 2018-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 4003, idGroup: 11, idItem: 19002, sCachedGrayedAccessDate: 2017-03-22 08:00:00, idUserCreated: 1 }
-- { ID: 4004, idGroup: 11, idItem: 19003, idUserCreated: 1 }
+- { id: 4001, group_id: 11, item_id: 19000, cached_full_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }
+- { id: 4002, group_id: 11, item_id: 19001, cached_partial_access_date: 2018-03-22 08:00:00, creator_user_id: 1 }
+- { id: 4003, group_id: 11, item_id: 19002, cached_grayed_access_date: 2017-03-22 08:00:00, creator_user_id: 1 }
+- { id: 4004, group_id: 11, item_id: 19003, creator_user_id: 1 }
 # group 12 does not get any access to items
-- { ID: 4005, idGroup: 12, idItem: 19000, idUserCreated: 1 }
-- { ID: 4006, idGroup: 12, idItem: 19001, idUserCreated: 1 }
-- { ID: 4007, idGroup: 12, idItem: 19002, idUserCreated: 1 }
-- { ID: 4008, idGroup: 12, idItem: 19003, idUserCreated: 1 }
+- { id: 4005, group_id: 12, item_id: 19000, creator_user_id: 1 }
+- { id: 4006, group_id: 12, item_id: 19001, creator_user_id: 1 }
+- { id: 4007, group_id: 12, item_id: 19002, creator_user_id: 1 }
+- { id: 4008, group_id: 12, item_id: 19003, creator_user_id: 1 }
 # group 19 should have no impact on our user
-- { ID: 4009, idGroup: 19, idItem: 19004, sCachedFullAccessDate: 2019-03-22 08:00:00, sCachedPartialAccessDate: 2018-03-22 08:00:00, sCachedGrayedAccessDate: 2019-03-22 08:00:00, idUserCreated: 1 }
+- { id: 4009, group_id: 19, item_id: 19004, cached_full_access_date: 2019-03-22 08:00:00, cached_partial_access_date: 2018-03-22 08:00:00, cached_grayed_access_date: 2019-03-22 08:00:00, creator_user_id: 1 }

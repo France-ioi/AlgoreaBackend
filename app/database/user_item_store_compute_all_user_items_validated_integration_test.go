@@ -13,9 +13,9 @@ import (
 )
 
 type validatedResultRow struct {
-	ID                        int64  `gorm:"column:ID"`
-	Validated                 bool   `gorm:"column:bValidated"`
-	AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+	ID                        int64
+	Validated                 bool
+	AncestorsComputationState string
 }
 
 func testUserItemStoreComputeAllUserItemsValidated(t *testing.T, fixtures []string,
@@ -26,8 +26,8 @@ func testUserItemStoreComputeAllUserItemsValidated(t *testing.T, fixtures []stri
 
 	userItemStore := database.NewDataStore(db).UserItems()
 	assert.NoError(t,
-		userItemStore.Items().Where("ID=2").
-			UpdateColumn("sValidationType", validationType).Error())
+		userItemStore.Items().Where("id=2").
+			UpdateColumn("validation_type", validationType).Error())
 	if prepareFunc != nil {
 		prepareFunc(t, userItemStore)
 	}
@@ -38,8 +38,8 @@ func testUserItemStoreComputeAllUserItemsValidated(t *testing.T, fixtures []stri
 	assert.NoError(t, err)
 
 	var result []validatedResultRow
-	assert.NoError(t, userItemStore.Select("ID, bValidated, sAncestorsComputationState").
-		Order("ID").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("id, validated, ancestors_computation_state").
+		Order("id").Scan(&result).Error())
 	assert.Equal(t, expectedResults, result)
 }
 
@@ -62,7 +62,7 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysValidated(t *testing.T
 				[]string{"users_items_propagation/_common"},
 				tt.name,
 				func(t *testing.T, userItemStore *database.UserItemStore) {
-					assert.NoError(t, userItemStore.Where("ID=12").UpdateColumn("bValidated", true).Error())
+					assert.NoError(t, userItemStore.Where("id=12").UpdateColumn("validated", true).Error())
 				},
 				buildExpectedValidatedResultRows(map[int64]bool{
 					11: false, 12: true,
@@ -88,7 +88,7 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysNonValidatedFor(t *tes
 				[]string{"users_items_propagation/_common"},
 				tt.name,
 				func(t *testing.T, userItemStore *database.UserItemStore) {
-					assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn("bValidated", true).Error())
+					assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated", true).Error())
 				},
 				buildExpectedValidatedResultRows(map[int64]bool{
 					11: true, 12: false,
@@ -99,10 +99,10 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedStaysNonValidatedFor(t *tes
 
 func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(t *testing.T) {
 	testUserItemStoreComputeAllUserItemsValidated(t,
-		[]string{"users_items_propagation/_common", "users_items_propagation/bValidated/one"},
+		[]string{"users_items_propagation/_common", "users_items_propagation/validated/one"},
 		"One",
 		func(t *testing.T, userItemStore *database.UserItemStore) {
-			assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn("bValidated", true).Error())
+			assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated", true).Error())
 		},
 		buildExpectedValidatedResultRows(map[int64]bool{
 			11: false, 12: true, 13: true,
@@ -112,7 +112,7 @@ func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneStaysN
 func TestUserItemStore_ComputeAllUserItems_bValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
 	t *testing.T) {
 	testUserItemStoreComputeAllUserItemsValidated(t,
-		[]string{"users_items_propagation/_common", "users_items_propagation/bValidated/one"},
+		[]string{"users_items_propagation/_common", "users_items_propagation/validated/one"},
 		"One",
 		nil,
 		buildExpectedValidatedResultRows(map[int64]bool{
@@ -130,10 +130,10 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 	}{
 		{
 			name:           "user_item with ValidationType=AllButOne stays non-validated when there are two non-validated children",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn("bValidated", true).Error())
+				assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated", true).Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: false, 12: false, 13: true, 14: false,
@@ -141,10 +141,10 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		},
 		{
 			name:           "user_item with ValidationType=AllButOne becomes validated when there are less than two non-validated children",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID IN (11, 13)").UpdateColumn("bValidated", true).Error())
+				assert.NoError(t, userItemStore.Where("id IN (11, 13)").UpdateColumn("validated", true).Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: false,
@@ -152,10 +152,10 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		},
 		{
 			name:           "user_item with ValidationType=All stays non-validated when there is at least one non-validated child",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
+				assert.NoError(t, userItemStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: false, 13: true, 14: false,
@@ -163,10 +163,10 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		},
 		{
 			name:           "user_item with ValidationType=All becomes validated when all its children are validated",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID IN (11,13,14)").UpdateColumn("bValidated", true).Error())
+				assert.NoError(t, userItemStore.Where("id IN (11,13,14)").UpdateColumn("validated", true).Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: true,
@@ -175,12 +175,12 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		{
 			name: "user_item with ValidationType=Categories stays non-validated when " +
 				"there is at least one non-validated child item with Category=Validation",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
-				assert.NoError(t, userItemStore.ItemItems().Where("ID IN (23,24)").
-					UpdateColumn("sCategory", "Validation").Error())
+				assert.NoError(t, userItemStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, userItemStore.ItemItems().Where("id IN (23,24)").
+					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: false, 13: true, 14: false,
@@ -189,13 +189,13 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		{
 			name: "user_item with ValidationType=Categories becomes validated when all its children " +
 				"having Category=Validation are validated (should ignore items with Type=Course)",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
 				itemStore := userItemStore.Items()
-				assert.NoError(t, itemStore.Where("ID=4").UpdateColumn("sType", "Course").Error())
-				assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
-				assert.NoError(t, userItemStore.ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
+				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("type", "Course").Error())
+				assert.NoError(t, userItemStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, userItemStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: false,
@@ -204,13 +204,13 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		{
 			name: "user_item with ValidationType=Categories becomes validated when all its children " +
 				"having Category=Validation are validated (should ignore items with NoScore=1",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
 				itemStore := userItemStore.Items()
-				assert.NoError(t, itemStore.Where("ID=4").UpdateColumn("bNoScore", true).Error())
-				assert.NoError(t, userItemStore.Where("ID IN (11,13)").UpdateColumn("bValidated", true).Error())
-				assert.NoError(t, userItemStore.ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
+				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
+				assert.NoError(t, userItemStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, userItemStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: false,
@@ -219,11 +219,11 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		{
 			name: "user_item with ValidationType=Categories becomes validated when all its children" +
 				"having Category=Validation are validated",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/bValidated/all_and_category"},
+			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, userItemStore *database.UserItemStore) {
-				assert.NoError(t, userItemStore.Where("ID IN (13,14)").UpdateColumn("bValidated", true).Error())
-				assert.NoError(t, userItemStore.ItemItems().Where("ID IN (23,24)").UpdateColumn("sCategory", "Validation").Error())
+				assert.NoError(t, userItemStore.Where("id IN (13,14)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, userItemStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: false, 12: true, 13: true, 14: true,

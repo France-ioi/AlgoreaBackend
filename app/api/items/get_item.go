@@ -106,7 +106,7 @@ type itemCommonFields struct {
 	// required: true
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
-	// whether `items.idItemUnlocked` is empty
+	// whether `items.unlocked_item_ids` is empty
 	// required: true
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 	// required: true
@@ -158,17 +158,17 @@ type itemChildNode struct {
 
 	// items_items (child nodes only)
 
-	// `items_items.iOrder`
+	// `items_items.order`
 	// required: true
 	Order int32 `json:"order"`
-	// `items_items.sCategory`
+	// `items_items.category`
 	// required: true
 	Category string `json:"category"`
-	// `items_items.bAlwaysVisible`
+	// `items_items.always_visible`
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	// required: true
 	AlwaysVisible bool `json:"always_visible"`
-	// `items_items.bAccessRestricted`
+	// `items_items.access_restricted`
 	// required: true
 	AccessRestricted bool `json:"access_restricted"`
 
@@ -274,62 +274,62 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 // rawItem represents one row of the getItem service data returned from the DB
 type rawItem struct {
 	// items
-	ID                     int64          `sql:"column:ID"`
-	Type                   string         `sql:"column:sType"`
-	DisplayDetailsInParent bool           `sql:"column:bDisplayDetailsInParent"`
-	ValidationType         string         `sql:"column:sValidationType"`
-	HasUnlockedItems       bool           `sql:"column:hasUnlockedItems"` // whether items.idItemUnlocked is empty
-	ScoreMinUnlock         int32          `sql:"column:iScoreMinUnlock"`
-	TeamMode               *string        `sql:"column:sTeamMode"`
-	TeamsEditable          bool           `sql:"column:bTeamsEditable"`
-	TeamMaxMembers         int32          `sql:"column:iTeamMaxMembers"`
-	HasAttempts            bool           `sql:"column:bHasAttempts"`
-	AccessOpenDate         *database.Time `sql:"column:sAccessOpenDate"`
-	Duration               *string        `sql:"column:sDuration"`
-	EndContestDate         *database.Time `sql:"column:sEndContestDate"`
-	NoScore                bool           `sql:"column:bNoScore"`
-	GroupCodeEnter         *bool          `sql:"column:groupCodeEnter"`
+	ID                     int64
+	Type                   string
+	DisplayDetailsInParent bool
+	ValidationType         string
+	HasUnlockedItems       bool // whether items.unlocked_item_ids is empty
+	ScoreMinUnlock         int32
+	TeamMode               *string
+	TeamsEditable          bool
+	TeamMaxMembers         int32
+	HasAttempts            bool
+	AccessOpenDate         *database.Time
+	Duration               *string
+	EndContestDate         *database.Time
+	NoScore                bool
+	GroupCodeEnter         *bool
 
 	// root node only
-	TitleBarVisible bool    `sql:"column:bTitleBarVisible"`
-	ReadOnly        bool    `sql:"column:bReadOnly"`
-	FullScreen      string  `sql:"column:sFullScreen"`
-	ShowSource      bool    `sql:"column:bShowSource"`
-	ValidationMin   *int32  `sql:"column:iValidationMin"`
-	ShowUserInfos   bool    `sql:"column:bShowUserInfos"`
-	ContestPhase    string  `sql:"column:sContestPhase"`
-	URL             *string `sql:"column:sUrl"`          // only if not a chapter
-	UsesAPI         bool    `sql:"column:bUsesAPI"`      // only if not a chapter
-	HintsAllowed    bool    `sql:"column:bHintsAllowed"` // only if not a chapter
+	TitleBarVisible bool
+	ReadOnly        bool
+	FullScreen      string
+	ShowSource      bool
+	ValidationMin   *int32
+	ShowUserInfos   bool
+	ContestPhase    string
+	URL             *string // only if not a chapter
+	UsesAPI         bool    // only if not a chapter
+	HintsAllowed    bool    // only if not a chapter
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
-	StringLanguageID  int64   `sql:"column:idLanguage"`
-	StringTitle       string  `sql:"column:sTitle"`
-	StringImageURL    *string `sql:"column:sImageUrl"`
-	StringSubtitle    *string `sql:"column:sSubtitle"`
-	StringDescription *string `sql:"column:sDescription"`
-	StringEduComment  *string `sql:"column:sEduComment"`
+	StringLanguageID  int64   `sql:"column:language_id"`
+	StringTitle       string  `sql:"column:title"`
+	StringImageURL    *string `sql:"column:image_url"`
+	StringSubtitle    *string `sql:"column:subtitle"`
+	StringDescription *string `sql:"column:description"`
+	StringEduComment  *string `sql:"column:edu_comment"`
 
 	// from users_items for current user
-	UserActiveAttemptID     *int64         `sql:"column:idAttemptActive"`
-	UserScore               float32        `sql:"column:iScore"`
-	UserSubmissionsAttempts int32          `sql:"column:nbSubmissionsAttempts"`
-	UserValidated           bool           `sql:"column:bValidated"`
-	UserFinished            bool           `sql:"column:bFinished"`
-	UserKeyObtained         bool           `sql:"column:bKeyObtained"`
-	UserHintsCached         int32          `sql:"column:nbHintsCached"`
-	UserStartDate           *database.Time `sql:"column:sStartDate"`
-	UserValidationDate      *database.Time `sql:"column:sValidationDate"`
-	UserFinishDate          *database.Time `sql:"column:sFinishDate"`
-	UserContestStartDate    *database.Time `sql:"column:sContestStartDate"`
-	UserState               *string        `sql:"column:sState"`  // only if not a chapter
-	UserAnswer              *string        `sql:"column:sAnswer"` // only if not a chapter
+	UserActiveAttemptID     *int64         `sql:"column:active_attempt_id"`
+	UserScore               float32        `sql:"column:score"`
+	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
+	UserValidated           bool           `sql:"column:validated"`
+	UserFinished            bool           `sql:"column:finished"`
+	UserKeyObtained         bool           `sql:"column:key_obtained"`
+	UserHintsCached         int32          `sql:"column:hints_cached"`
+	UserStartDate           *database.Time `sql:"column:start_date"`
+	UserValidationDate      *database.Time `sql:"column:validation_date"`
+	UserFinishDate          *database.Time `sql:"column:finish_date"`
+	UserContestStartDate    *database.Time `sql:"column:contest_start_date"`
+	UserState               *string        `sql:"column:state"`  // only if not a chapter
+	UserAnswer              *string        `sql:"column:answer"` // only if not a chapter
 
 	// items_items
-	Order            int32  `sql:"column:iChildOrder"`
-	Category         string `sql:"column:sCategory"`
-	AlwaysVisible    bool   `sql:"column:bAlwaysVisible"`
-	AccessRestricted bool   `sql:"column:bAccessRestricted"`
+	Order            int32 `sql:"column:child_order"`
+	Category         string
+	AlwaysVisible    bool
+	AccessRestricted bool
 
 	*database.ItemAccessDetails
 }
@@ -341,115 +341,115 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 	accessRights := s.AccessRights(user)
 	service.MustNotBeError(accessRights.Error())
 
-	commonColumns := `items.ID AS ID,
-		items.sType,
-		items.bDisplayDetailsInParent,
-		items.sValidationType,
-		items.idItemUnlocked,
-		items.iScoreMinUnlock,
-		items.sTeamMode,
-		items.bTeamsEditable,
-		items.iTeamMaxMembers,
-		items.bHasAttempts,
-		items.sAccessOpenDate,
-		items.sDuration,
-		items.sEndContestDate,
-		items.bNoScore,
-		items.idDefaultLanguage,
-		items.groupCodeEnter, `
+	commonColumns := `items.id AS id,
+		items.type,
+		items.display_details_in_parent,
+		items.validation_type,
+		items.unlocked_item_ids,
+		items.score_min_unlock,
+		items.team_mode,
+		items.teams_editable,
+		items.team_max_members,
+		items.has_attempts,
+		items.access_open_date,
+		items.duration,
+		items.end_contest_date,
+		items.no_score,
+		items.default_language_id,
+		items.group_code_enter, `
 
 	rootItemQuery := s.ByID(rootID).Select(
-		commonColumns + `items.bTitleBarVisible,
-		items.bReadOnly,
-		items.sFullScreen,
-		items.bShowSource,
-		items.iValidationMin,
-		items.bShowUserInfos,
-		items.sContestPhase,
-		items.sUrl,
-		IF(items.sType <> 'Chapter', items.bUsesAPI, NULL) AS bUsesAPI,
-		IF(items.sType <> 'Chapter', items.bHintsAllowed, NULL) AS bHintsAllowed,
-		NULL AS iChildOrder, NULL AS sCategory, NULL AS bAlwaysVisible, NULL AS bAccessRestricted`)
+		commonColumns + `items.title_bar_visible,
+		items.read_only,
+		items.full_screen,
+		items.show_source,
+		items.validation_min,
+		items.show_user_infos,
+		items.contest_phase,
+		items.url,
+		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
+		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
+		NULL AS child_order, NULL AS category, NULL AS always_visible, NULL AS access_restricted`)
 
 	childrenQuery := s.Select(
-		commonColumns+`NULL AS bTitleBarVisible,
-		NULL AS bReadOnly,
-		NULL AS sFullScreen,
-		NULL AS bShowSource,
-		NULL AS iValidationMin,
-		NULL AS bShowUserInfos,
-		NULL AS sContestPhase,
-		NULL AS sUrl,
-		NULL AS bUsesAPI,
-		NULL AS bHintsAllowed,
-		iChildOrder, sCategory, bAlwaysVisible, bAccessRestricted`).
-		Joins("JOIN items_items ON items.ID=idItemChild AND idItemParent=?", rootID)
+		commonColumns+`NULL AS title_bar_visible,
+		NULL AS read_only,
+		NULL AS full_screen,
+		NULL AS show_source,
+		NULL AS validation_min,
+		NULL AS show_user_infos,
+		NULL AS contest_phase,
+		NULL AS url,
+		NULL AS uses_api,
+		NULL AS hints_allowed,
+		child_order, category, always_visible, access_restricted`).
+		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	query := s.Raw(`
     SELECT
-		  items.ID,
-      items.sType,
-		  items.bDisplayDetailsInParent,
-      items.sValidationType,`+
-		// idItemUnlocked is a comma-separated list of item IDs which will be unlocked if this item is validated
+		  items.id,
+      items.type,
+		  items.display_details_in_parent,
+      items.validation_type,`+
+		// unlocked_item_ids is a comma-separated list of item IDs which will be unlocked if this item is validated
 		// Here we consider both NULL and an empty string as FALSE
-		` COALESCE(items.idItemUnlocked, '')<>'' as hasUnlockedItems,
-			items.iScoreMinUnlock,
-			items.sTeamMode,
-			items.bTeamsEditable,
-			items.iTeamMaxMembers,
-			items.bHasAttempts,
-			items.sAccessOpenDate,
-			items.sDuration,
-			items.sEndContestDate,
-			items.bNoScore,
-			items.groupCodeEnter,
+		` COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
+			items.score_min_unlock,
+			items.team_mode,
+			items.teams_editable,
+			items.team_max_members,
+			items.has_attempts,
+			items.access_open_date,
+			items.duration,
+			items.end_contest_date,
+			items.no_score,
+			items.group_code_enter,
 
-			COALESCE(user_strings.idLanguage, default_strings.idLanguage) AS idLanguage,
-			IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS sTitle,
-			IF(user_strings.idLanguage IS NULL, default_strings.sImageUrl, user_strings.sImageUrl) AS sImageUrl,
-			IF(user_strings.idLanguage IS NULL, default_strings.sSubtitle, user_strings.sSubtitle) AS sSubtitle,
-			IF(user_strings.idLanguage IS NULL, default_strings.sDescription, user_strings.sDescription) AS sDescription,
-			IF(user_strings.idLanguage IS NULL, default_strings.sEduComment, user_strings.sEduComment) AS sEduComment,
+			COALESCE(user_strings.language_id, default_strings.language_id) AS language_id,
+			IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS title,
+			IF(user_strings.language_id IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
+			IF(user_strings.language_id IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
+			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
+			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
-			users_items.idAttemptActive AS idAttemptActive,
-			users_items.iScore AS iScore,
-			users_items.nbSubmissionsAttempts AS nbSubmissionsAttempts,
-			users_items.bValidated AS bValidated,
-			users_items.bFinished AS bFinished,
-			users_items.bKeyObtained AS bKeyObtained,
-			users_items.nbHintsCached AS nbHintsCached,
-			users_items.sStartDate AS sStartDate,
-			users_items.sValidationDate AS sValidationDate,
-			users_items.sFinishDate AS sFinishDate,
-			users_items.sContestStartDate AS sContestStartDate,
-			IF(items.sType <> 'Chapter', users_items.sState, NULL) as sState,
-			users_items.sAnswer,
+			users_items.active_attempt_id AS active_attempt_id,
+			users_items.score AS score,
+			users_items.submissions_attempts AS submissions_attempts,
+			users_items.validated AS validated,
+			users_items.finished AS finished,
+			users_items.key_obtained AS key_obtained,
+			users_items.hints_cached AS hints_cached,
+			users_items.start_date AS start_date,
+			users_items.validation_date AS validation_date,
+			users_items.finish_date AS finish_date,
+			users_items.contest_start_date AS contest_start_date,
+			IF(items.type <> 'Chapter', users_items.state, NULL) as state,
+			users_items.answer,
 
-			items.iChildOrder AS iChildOrder,
-			items.sCategory AS sCategory,
-			items.bAlwaysVisible,
-			items.bAccessRestricted, `+
+			items.child_order AS child_order,
+			items.category AS category,
+			items.always_visible,
+			items.access_restricted, `+
 		// inputItem only
-		` items.bTitleBarVisible,
-			items.bReadOnly,
-			items.sFullScreen,
-			items.bShowSource,
-			items.iValidationMin,
-			items.bShowUserInfos,
-			items.sContestPhase,
-			items.sUrl,
-			items.bUsesAPI,
-			items.bHintsAllowed,
-			accessRights.fullAccess, accessRights.partialAccess, accessRights.grayedAccess, accessRights.accessSolutions
+		` items.title_bar_visible,
+			items.read_only,
+			items.full_screen,
+			items.show_source,
+			items.validation_min,
+			items.show_user_infos,
+			items.contest_phase,
+			items.url,
+			items.uses_api,
+			items.hints_allowed,
+			access_rights.full_access, access_rights.partial_access, access_rights.grayed_access, access_rights.access_solutions
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.idItem=items.ID AND users_items.idUser=?", user.ID).
-		Joins("JOIN ? accessRights on accessRights.idItem=items.ID AND (fullAccess>0 OR partialAccess>0 OR grayedAccess>0)",
+		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.ID).
+		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND (full_access>0 OR partial_access>0 OR grayed_access>0)",
 			accessRights.SubQuery()).
-		Order("iChildOrder")
+		Order("child_order")
 
 	service.MustNotBeError(query.Scan(&result).Error())
 	return result

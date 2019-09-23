@@ -8,12 +8,12 @@ type ItemItemStore struct {
 // ChildrenOf returns a composable query for selecting children of the given item
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 	return &ItemItemStore{
-		NewDataStoreWithTable(s.Where("items_items.idItemParent=?", parentID), s.tableName),
+		NewDataStoreWithTable(s.Where("items_items.parent_item_id=?", parentID), s.tableName),
 	}
 }
 
 func (s *ItemItemStore) createNewAncestors() {
-	s.DataStore.createNewAncestors("items", "Item")
+	s.DataStore.createNewAncestors("items", "item")
 }
 
 // After is a "listener" that calls UserItemStore::createNewAncestors() & GroupItemStore::computeAllAccess()

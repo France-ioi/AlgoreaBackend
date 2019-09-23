@@ -5,8 +5,58 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
+
+// swagger:model groupRequestsViewResponseRow
+type groupRequestsViewResponseRow struct {
+	// `groups_groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// Nullable
+	// required: true
+	StatusDate *database.Time `json:"status_date"`
+	// `groups_groups.type`
+	// enum: invitationSent,requestSent,invitationRefused,requestRefused
+	// required: true
+	Type string `json:"type"`
+
+	// Nullable
+	// required: true
+	JoiningUser *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+		// Nullable
+		// required: true
+		Grade *int32 `json:"grade"`
+	} `json:"joining_user" gorm:"embedded;embedded_prefix:joining_user__"`
+
+	// Nullable
+	// required: true
+	InvitingUser *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+}
 
 // swagger:operation GET /groups/{group_id}/requests groups users groupRequestsView
 // ---
@@ -14,19 +64,19 @@ import (
 // description: >
 //
 //   Returns a list of group requests and invitations
-//   (rows from the `groups_groups` table with `idGroupParent` = `group_id` and
-//   `sType` = "invitationSent"/"requestSent"/"invitationRefused"/"requestRefused")
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
+//   `type` = "invitationSent"/"requestSent"/"invitationRefused"/"requestRefused")
 //   with basic info on joining (invited/requesting) users and inviting users.
 //
 //
 //   When `old_rejections_weeks` is given, only those rejected invitations/requests
-//   (`groups_groups.sType` is "invitationRefused" or "requestRefused") are shown
-//   whose `sStatusDate` has changed in the last `old_rejections_weeks` weeks.
+//   (`groups_groups.type` is "invitationRefused" or "requestRefused") are shown
+//   whose `status_date` has changed in the last `old_rejections_weeks` weeks.
 //   Otherwise all rejected invitations/requests are shown.
 //
 //
-//   Invited user’s `sFirstName` and `sLastName` are nulls
-//   if `groups_groups.sType` = "invitationSent" or "invitationRefused".
+//   Invited user’s `first_name` and `last_name` are nulls
+//   if `groups_groups.type` = "invitationSent" or "invitationRefused".
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -47,7 +97,7 @@ import (
 //     enum: [status_date,-status_date,joining_user.login,-joining_user.login,type,-type,id,-id]
 // - name: from.status_date
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `groups_groups.sStatusDate` = `from.status_date`
+//                `groups_groups.status_date` = `from.status_date`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
@@ -59,12 +109,12 @@ import (
 //   type: string
 // - name: from.type
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `groups_groups.sType` = `from.type`, sorted numerically.
+//                `groups_groups.type` = `from.type`, sorted numerically.
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the request/invitation next to the request/invitation with `groups_groups.ID`=`from.id`
+//   description: Start the page from the request/invitation next to the request/invitation with `groups_groups.id`=`from.id`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: integer
@@ -80,58 +130,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, status_date, type, joining_user, inviting_user]
-//         properties:
-//           id:
-//             description: "`groups_groups.ID`"
-//             type: string
-//             format: int64
-//           status_date:
-//             type: string
-//             description: Nullable
-//             format: date-time
-//           type:
-//             type: string
-//             description: "`groups_groups.sType`"
-//             enum: [invitationSent, requestSent, invitationRefused, requestRefused]
-//           joining_user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name, grade]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//               grade:
-//                 description: Nullable
-//                 type: integer
-//           inviting_user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
+//         "$ref": "#/definitions/groupRequestsViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -154,22 +153,22 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 
 	query := srv.Store.GroupGroups().
 		Select(`
-			groups_groups.ID,
-			groups_groups.sStatusDate,
-			groups_groups.sType,
-			joining_user.ID AS joiningUser__ID,
-			joining_user.sLogin AS joiningUser__sLogin,
-			IF(groups_groups.sType IN ('invitationSent', 'invitationRefused'), NULL, joining_user.sFirstName) AS joiningUser__sFirstName,
-			IF(groups_groups.sType IN ('invitationSent', 'invitationRefused'), NULL, joining_user.sLastName) AS joiningUser__sLastName,
-			joining_user.iGrade AS joiningUser__iGrade,
-			inviting_user.ID AS invitingUser__ID,
-			inviting_user.sLogin AS invitingUser__sLogin,
-			inviting_user.sFirstName AS invitingUser__sFirstName,
-			inviting_user.sLastName AS invitingUser__sLastName`).
-		Joins("LEFT JOIN users AS inviting_user ON inviting_user.ID = groups_groups.idUserInviting").
-		Joins("LEFT JOIN users AS joining_user ON joining_user.idGroupSelf = groups_groups.idGroupChild").
-		Where("groups_groups.sType IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
-		Where("groups_groups.idGroupParent = ?", groupID)
+			groups_groups.id,
+			groups_groups.status_date,
+			groups_groups.type,
+			joining_user.id AS joining_user__id,
+			joining_user.login AS joining_user__login,
+			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.first_name) AS joining_user__first_name,
+			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.last_name) AS joining_user__last_name,
+			joining_user.grade AS joining_user__grade,
+			inviting_user.id AS inviting_user__id,
+			inviting_user.login AS inviting_user__login,
+			inviting_user.first_name AS inviting_user__first_name,
+			inviting_user.last_name AS inviting_user__last_name`).
+		Joins("LEFT JOIN users AS inviting_user ON inviting_user.id = groups_groups.inviting_user_id").
+		Joins("LEFT JOIN users AS joining_user ON joining_user.self_group_id = groups_groups.child_group_id").
+		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
+		Where("groups_groups.parent_group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
 		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
@@ -177,27 +176,34 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			return service.ErrInvalidRequest(err)
 		}
 		query = query.Where(`
-			groups_groups.sType IN ('invitationSent', 'requestSent') OR
-			NOW() - INTERVAL ? WEEK < groups_groups.sStatusDate`, oldRejectionsWeeks)
+			groups_groups.type IN ('invitationSent', 'requestSent') OR
+			NOW() - INTERVAL ? WEEK < groups_groups.status_date`, oldRejectionsWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"type":               {ColumnName: "groups_groups.sType"},
-			"joining_user.login": {ColumnName: "joining_user.sLogin"},
-			"status_date":        {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},
-			"id":                 {ColumnName: "groups_groups.ID", FieldType: "int64"}},
+			"type":               {ColumnName: "groups_groups.type"},
+			"joining_user.login": {ColumnName: "joining_user.login"},
+			"status_date":        {ColumnName: "groups_groups.status_date", FieldType: "time"},
+			"id":                 {ColumnName: "groups_groups.id", FieldType: "int64"}},
 		"-status_date")
 
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupRequestsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
+	for index := range result {
+		if result[index].InvitingUser.ID == nil {
+			result[index].InvitingUser = nil
+		}
+		if result[index].JoiningUser.ID == nil {
+			result[index].JoiningUser = nil
+		}
+	}
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

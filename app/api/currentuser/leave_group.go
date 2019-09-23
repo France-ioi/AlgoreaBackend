@@ -11,16 +11,16 @@ import (
 // summary: Leave a group
 // description:
 //   Lets a user to leave a group.
-//   On success the service sets `groups_groups.sType` to `left` and `sStatusDate` to current UTC time.
+//   On success the service sets `groups_groups.type` to `left` and `status_date` to current UTC time.
 //   It also refreshes the access rights.
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
-//     and the authenticated user’s selfGroup’s `ID` as a child with `sType`=`invitationAccepted`/`requestAccepted`/`direct`/`left`.
+//     and the authenticated user’s selfGroup’s `id` as a child with `type`=`invitationAccepted`/`requestAccepted`/`direct`/`left`.
 //     Otherwise the unprocessable entity error is returned.
 //
-//   * If `groups_groups.sType` is `left` already, the "unchanged" (200) response is returned.
+//   * If `groups_groups.type` is `left` already, the "unchanged" (200) response is returned.
 //
-//   * The user cannot leave the group if `NOW()` < `groups.lockUserDeletionDate`.
+//   * The user cannot leave the group if `NOW()` < `groups.lock_user_deletion_date`.
 // parameters:
 // - name: group_id
 //   in: path

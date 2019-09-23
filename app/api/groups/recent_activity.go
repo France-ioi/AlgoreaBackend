@@ -9,11 +9,51 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupRecentActivityResponseRow
+type groupRecentActivityResponseRow struct {
+	// `users_answers.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	SubmissionDate *database.Time `json:"submission_date"`
+	// Nullable
+	// required: true
+	Score *float32 `json:"score"`
+	// Nullable
+	// required: true
+	Validated *bool `json:"validated"`
+	// required: true
+	User struct {
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
+	// required: true
+	Item struct {
+		// required: true
+		ID int64 `json:"id,string"`
+		// required: true
+		// enum: Root,Category,Chapter,Task,Course
+		Type string `json:"type"`
+		// required: true
+		String struct {
+			// Nullable
+			// required: true
+			Title *string `json:"title"`
+		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
+	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
+}
+
 // swagger:operation GET /groups/{group_id}/recent_activity groups users groupRecentActivity
 // ---
 // summary: Get recent activity of a group
 // description: >
-//   Returns rows from `users_answers` with `sType` = "Submission" and additional info on users and items.
+//   Returns rows from `users_answers` with `type` = "Submission" and additional info on users and items.
 //
 //
 //   If possible, items titles are shown in the authenticated user's default language.
@@ -24,7 +64,7 @@ import (
 //   descendants of `item_id` and visible to the authenticated user (at least grayed access).
 //
 //
-//   If the `validated` parameter is true, only validated `users_answers` (with `bValidated`=1) are returned.
+//   If the `validated` parameter is true, only validated `users_answers` (with `validated`=1) are returned.
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -49,12 +89,12 @@ import (
 //     type: string
 //     enum: [submission_date,-submission_date,id,-id]
 // - name: from.submission_date
-//   description: Start the page from the row next to the row with `users_answers.sSubmissionDate` = `from.submission_date`
+//   description: Start the page from the row next to the row with `users_answers.submission_date` = `from.submission_date`
 //                (`from.id` is required when `from.submission_date` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the row next to the row with `users_answers.ID`=`from.id`
+//   description: Start the page from the row next to the row with `users_answers.id`=`from.id`
 //                (`from.submission_date` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -70,52 +110,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, submission_date, score, validated, user, item]
-//         properties:
-//           id:
-//             description: "`users_answers.ID`"
-//             type: string
-//             format: int64
-//           submission_date:
-//             type: string
-//             format: date-time
-//           score:
-//             description: Nullable
-//             type: number
-//             format: float
-//           validated:
-//             description: Nullable
-//             type: boolean
-//           user:
-//             type: object
-//             required: [login, first_name, last_name]
-//             properties:
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//           item:
-//             type: object
-//             required: [id, type, string]
-//             properties:
-//               id:
-//                 type: string
-//                 format: int64
-//               type:
-//                 type: string
-//                 enum: [Root, Category, Chapter, Task, Course]
-//               string:
-//                 type: object
-//                 required: [title]
-//                 properties:
-//                   title:
-//                     description: Nullable
-//                     type: string
+//         "$ref": "#/definitions/groupRecentActivityResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -141,16 +136,16 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return apiError
 	}
 
-	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("idItemChild")
+	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.UserAnswers().WithUsers().WithItems().
 		Select(
-			`users_answers.ID as ID, users_answers.sSubmissionDate, users_answers.bValidated, users_answers.iScore,
-       items.ID AS Item__ID, items.sType AS Item__sType,
-		   users.sLogin AS User__sLogin, users.sFirstName AS User__sFirstName, users.sLastName AS User__sLastName,
-			 IF(user_strings.idLanguage IS NULL, default_strings.sTitle, user_strings.sTitle) AS Item__String__sTitle`).
+			`users_answers.id as id, users_answers.submission_date, users_answers.validated, users_answers.score,
+       items.id AS item__id, items.type AS item__type,
+		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
+			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
 		JoinsUserAndDefaultItemStrings(user).
-		Where("users_answers.idItem IN ?", itemDescendants.SubQuery()).
-		Where("users_answers.sType='Submission'").
+		Where("users_answers.item_id IN ?", itemDescendants.SubQuery()).
+		Where("users_answers.type='Submission'").
 		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)
 
@@ -159,25 +154,24 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
-			"id":              {ColumnName: "users_answers.ID", FieldType: "int64"}},
+			"submission_date": {ColumnName: "users_answers.submission_date", FieldType: "time"},
+			"id":              {ColumnName: "users_answers.id", FieldType: "int64"}},
 		"-submission_date")
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupRecentActivityResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }
 
 func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		query = query.Where("users_answers.bValidated = ?", validated)
+		query = query.Where("users_answers.validated = ?", validated)
 	}
 	return query
 }

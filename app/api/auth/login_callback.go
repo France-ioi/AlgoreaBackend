@@ -74,7 +74,7 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 
 	userProfile, err := loginmodule.NewClient(srv.Config.Auth.LoginModuleURL).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
-	userProfile["sLastIP"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 
 	domainConfig := domain.ConfigFromContext(r.Context())
 
@@ -83,7 +83,7 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token))
 
 		service.MustNotBeError(store.Exec(
-			"INSERT INTO refresh_tokens (idUser, sRefreshToken) VALUES (?, ?) ON DUPLICATE KEY UPDATE sRefreshToken = ?",
+			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
 			userID, token.RefreshToken, token.RefreshToken).Error())
 
 		expiredCookie, err := loginState.Delete(store.LoginStates(), &srv.Config.Server)
@@ -105,39 +105,39 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
 	var userInfo struct {
-		ID           int64 `gorm:"column:ID"`
-		SelfGroupID  int64 `gorm:"column:idGroupSelf"`
-		OwnedGroupID int64 `gorm:"column:idGroupOwned"`
+		ID           int64
+		SelfGroupID  int64
+		OwnedGroupID int64
 	}
 	err := s.WithWriteLock().
-		Where("loginID = ?", userData["loginID"]).Select("ID, idGroupSelf, idGroupOwned").
+		Where("login_id = ?", userData["login_id"]).Select("id, self_group_id, owned_group_id").
 		Take(&userInfo).Error()
 
-	userData["sLastLoginDate"] = database.Now()
-	userData["sLastActivityDate"] = database.Now()
+	userData["last_login_date"] = database.Now()
+	userData["last_activity_date"] = database.Now()
 
-	if defaultLanguage, ok := userData["sDefaultLanguage"]; ok && defaultLanguage == nil {
-		userData["sDefaultLanguage"] = database.Default()
+	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
+		userData["default_language"] = database.Default()
 	}
 
 	if gorm.IsRecordNotFoundError(err) {
-		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["sLogin"].(string), domainConfig)
-		userData["tempUser"] = 0
-		userData["sRegistrationDate"] = database.Now()
-		userData["idGroupSelf"] = selfGroupID
-		userData["idGroupOwned"] = ownedGroupID
+		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		userData["temp_user"] = 0
+		userData["registration_date"] = database.Now()
+		userData["self_group_id"] = selfGroupID
+		userData["owned_group_id"] = ownedGroupID
 
 		var userID int64
 		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 			userID = s.NewID()
-			userData["ID"] = userID
+			userData["id"] = userID
 			return s.Users().InsertMap(userData)
 		}))
 		return userID
 	}
 
-	found, err := s.GroupGroups().Where("idGroupParent = ?", domainConfig.RootSelfGroupID).
-		Where("idGroupChild = ?", userInfo.SelfGroupID).HasRows()
+	found, err := s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
+		Where("child_group_id = ?", userInfo.SelfGroupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]database.ParentChild, 0, 2)
 	if !found {
@@ -145,8 +145,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: userInfo.SelfGroupID})
 	}
 
-	found, err = s.GroupGroups().Where("idGroupParent = ?", domainConfig.RootAdminGroupID).
-		Where("idGroupChild = ?", userInfo.OwnedGroupID).HasRows()
+	found, err = s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootAdminGroupID).
+		Where("child_group_id = ?", userInfo.OwnedGroupID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		groupsToCreate = append(groupsToCreate,
@@ -163,26 +163,26 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
-			"ID":           selfGroupID,
-			"sName":        login,
-			"sType":        "UserSelf",
-			"sDescription": login,
-			"sDateCreated": database.Now(),
-			"bOpened":      false,
-			"bSendEmails":  false,
+			"id":           selfGroupID,
+			"name":         login,
+			"type":         "UserSelf",
+			"description":  login,
+			"date_created": database.Now(),
+			"opened":       false,
+			"send_emails":  false,
 		})
 	}))
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		ownedGroupID = retryIDStore.NewID()
 		adminGroupName := login + "-admin"
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
-			"ID":           ownedGroupID,
-			"sName":        adminGroupName,
-			"sType":        "UserAdmin",
-			"sDescription": adminGroupName,
-			"sDateCreated": database.Now(),
-			"bOpened":      false,
-			"bSendEmails":  false,
+			"id":           ownedGroupID,
+			"name":         adminGroupName,
+			"type":         "UserAdmin",
+			"description":  adminGroupName,
+			"date_created": database.Now(),
+			"opened":       false,
+			"send_emails":  false,
 		})
 	}))
 

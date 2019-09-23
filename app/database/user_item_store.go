@@ -10,12 +10,12 @@ func (s *UserItemStore) CreateIfMissing(userID, itemID int64) error {
 	return s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		userItemID := NewDataStore(db).NewID()
 		return db.db.Exec(`
-			INSERT IGNORE INTO users_items (ID, idUser, idItem, sAncestorsComputationState)
+			INSERT IGNORE INTO users_items (id, user_id, item_id, ancestors_computation_state)
 			VALUES (?, ?, ?, 'todo')`, userItemID, userID, itemID).Error
 	})
 }
 
-// PropagateAttempts copies iScore & bValidated from groups_attempts and
+// PropagateAttempts copies score & validated from groups_attempts and
 // marks users_items as 'todo' if corresponding groups_attempts are marked as 'todo'.
 // Then it marks all the groups_attempts as 'done'.
 func (s *UserItemStore) PropagateAttempts() (err error) {
@@ -24,34 +24,34 @@ func (s *UserItemStore) PropagateAttempts() (err error) {
 
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
-		JOIN groups_attempts ON groups_attempts.idItem = users_items.idItem
-		JOIN groups_groups ON groups_groups.idGroupParent = groups_attempts.idGroup AND
-			groups_groups.sType` + GroupRelationIsActiveCondition + `
-		JOIN users ON users.ID = users_items.idUser AND users.idGroupSelf = groups_groups.idGroupChild
-		SET users_items.sAncestorsComputationState = 'todo'
-		WHERE groups_attempts.sAncestorsComputationState = 'todo'`).Error)
+		JOIN groups_attempts ON groups_attempts.item_id = users_items.item_id
+		JOIN groups_groups ON groups_groups.parent_group_id = groups_attempts.group_id AND
+			groups_groups.type` + GroupRelationIsActiveCondition + `
+		JOIN users ON users.id = users_items.user_id AND users.self_group_id = groups_groups.child_group_id
+		SET users_items.ancestors_computation_state = 'todo'
+		WHERE groups_attempts.ancestors_computation_state = 'todo'`).Error)
 
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
 		JOIN (
 			SELECT
-				attempt_user.ID AS idUser,
-				attempts.idItem AS idItem,
-				MAX(attempts.iScore) AS iScore,
-				MAX(attempts.bValidated) AS bValidated
+				attempt_user.id AS user_id,
+				attempts.item_id AS item_id,
+				MAX(attempts.score) AS score,
+				MAX(attempts.validated) AS validated
 			FROM users AS attempt_user
 			JOIN groups_attempts AS attempts
 			JOIN groups_groups AS attempt_group
-				ON attempts.idGroup = attempt_group.idGroupParent AND attempt_user.idGroupSelf = attempt_group.idGroupChild AND
-					attempt_group.sType` + GroupRelationIsActiveCondition + `
-			WHERE attempts.sAncestorsComputationState = 'todo'
-			GROUP BY attempt_user.ID, attempts.idItem
+				ON attempts.group_id = attempt_group.parent_group_id AND attempt_user.self_group_id = attempt_group.child_group_id AND
+					attempt_group.type` + GroupRelationIsActiveCondition + `
+			WHERE attempts.ancestors_computation_state = 'todo'
+			GROUP BY attempt_user.id, attempts.item_id
 		) AS attempts_data
-		ON attempts_data.idUser = users_items.idUser AND attempts_data.idItem = users_items.idItem
+		ON attempts_data.user_id = users_items.user_id AND attempts_data.item_id = users_items.item_id
 		SET
-			users_items.iScore = GREATEST(users_items.iScore, IFNULL(attempts_data.iScore, 0)),
-			users_items.bValidated = GREATEST(users_items.bValidated, IFNULL(attempts_data.bValidated, 0))`).Error)
+			users_items.score = GREATEST(users_items.score, IFNULL(attempts_data.score, 0)),
+			users_items.validated = GREATEST(users_items.validated, IFNULL(attempts_data.validated, 0))`).Error)
 
-	return s.GroupAttempts().Where("sAncestorsComputationState = 'todo'").
-		UpdateColumn("sAncestorsComputationState", "done").Error()
+	return s.GroupAttempts().Where("ancestors_computation_state = 'todo'").
+		UpdateColumn("ancestors_computation_state", "done").Error()
 }

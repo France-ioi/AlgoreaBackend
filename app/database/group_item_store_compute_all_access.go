@@ -4,19 +4,19 @@ import "database/sql"
 
 // computeAllAccess recomputes fields of groups_items.
 //
-// It starts from groups_items marked with sPropagateAccess = 'self'.
+// It starts from groups_items marked with propagate_access = 'self'.
 //
-// 1. sCachedFullAccessDate, sCachedPartialAccessDate, bCachedManagerAccess,
-// sCachedAccessSolutionsDate, sCachedGrayedAccessDate, and sCachedAccessReason are updated.
+// 1. cached_full_access_date, cached_partial_access_date, cached_manager_access,
+// cached_access_solutions_date, cached_grayed_access_date, and cached_access_reason are updated.
 //
-// 2. bCachedFullAccess, bCachedPartialAccess, bCachedAccessSolutions, bCachedGrayedAccess
+// 2. cached_full_access, cached_partial_access, cached_access_solutions, cached_grayed_access
 // are zeroed for rows where the calculation revealed access rights revocation.
 //
 // 3. Then the loop repeats from step 1 for all children (from items_items) of the processed group_items.
 //
 // Notes:
-//  - Items having bCustomChapter=1 are always skipped.
-//  - Processed groups_items are marked with sPropagateAccess = 'done'
+//  - Items having custom_chapter=1 are always skipped.
+//  - Processed groups_items are marked with propagate_access = 'done'
 //  - The function may loop endlessly if items_items is a cyclic graph
 //
 func (s *GroupItemStore) computeAllAccess() {
@@ -27,77 +27,77 @@ func (s *GroupItemStore) computeAllAccess() {
 	var err error
 
 	// inserting missing children of groups_items into groups_items
-	// for groups_items_propagate having sPropagateAccess = 'children'
+	// for groups_items_propagate having propagate_access = 'children'
 	const queryInsertMissingChildren = `
-		INSERT IGNORE INTO groups_items (idGroup, idItem, idUserCreated, sCachedAccessReason, sAccessReason)
+		INSERT IGNORE INTO groups_items (group_id, item_id, creator_user_id, cached_access_reason, access_reason)
 		SELECT
-			parents.idGroup AS idGroup,
-			items_items.idItemChild AS idItem,
-			parents.idUserCreated AS idUserCreated,
-			NULL AS sCachedAccessReason,
-			NULL AS sAccessReason
+			parents.group_id AS group_id,
+			items_items.child_item_id AS item_id,
+			parents.creator_user_id AS creator_user_id,
+			NULL AS cached_access_reason,
+			NULL AS access_reason
 		FROM items_items
 		JOIN groups_items AS parents
-			ON parents.idItem = items_items.idItemParent
+			ON parents.item_id = items_items.parent_item_id
 		JOIN groups_items_propagate AS parents_propagate
-			ON parents.ID = parents_propagate.ID AND parents_propagate.sPropagateAccess = 'children'`
+			ON parents.id = parents_propagate.id AND parents_propagate.propagate_access = 'children'`
 	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
 
-	// inserting missing (or set sPropagateAccess='self' to existing) groups_items_propagate
-	// for groups_items having sPropagateAccess='self'
+	// inserting missing (or set propagate_access='self' to existing) groups_items_propagate
+	// for groups_items having propagate_access='self'
 	const queryInsertMissingPropagate = `
-		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
+		INSERT INTO groups_items_propagate (id, propagate_access)
 		SELECT
-			groups_items.ID,
-			'self' as sPropagateAccess
+			groups_items.id,
+			'self' as propagate_access
 		FROM groups_items
-		WHERE sPropagateAccess='self'
-		ON DUPLICATE KEY UPDATE sPropagateAccess='self'`
+		WHERE propagate_access='self'
+		ON DUPLICATE KEY UPDATE propagate_access='self'`
 	stmtInsertMissingPropagate, err = s.db.CommonDB().Prepare(queryInsertMissingPropagate)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtInsertMissingPropagate.Close()) }()
 
 	// Set groups_items as set up for propagation
-	// (switch groups_items.sPropagateAccess from 'self' to 'done')
+	// (switch groups_items.propagate_access from 'self' to 'done')
 	const queryUpdatePropagateAccess = `
 		UPDATE groups_items
-		SET sPropagateAccess='done'
-		WHERE sPropagateAccess='self'`
+		SET propagate_access='done'
+		WHERE propagate_access='self'`
 	stmtUpdatePropagateAccess, err = s.db.CommonDB().Prepare(queryUpdatePropagateAccess)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdatePropagateAccess.Close()) }()
 
-	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.bCustomChapter=1)
+	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.custom_chapter=1)
 	const queryMarkDoNotPropagate = `
-		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
+		INSERT INTO groups_items_propagate (id, propagate_access)
 		SELECT
-			groups_items.ID AS ID,
-			'done' as sPropagateAccess
+			groups_items.id AS id,
+			'done' as propagate_access
 		FROM groups_items
 		JOIN items
-			ON groups_items.idItem = items.ID AND items.bCustomChapter
-		ON DUPLICATE KEY UPDATE sPropagateAccess='done'`
+			ON groups_items.item_id = items.id AND items.custom_chapter
+		ON DUPLICATE KEY UPDATE propagate_access='done'`
 	stmtMarkDoNotPropagate, err = s.db.CommonDB().Prepare(queryMarkDoNotPropagate)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkDoNotPropagate.Close()) }()
 
 	// marking 'self' groups_items sons of groups_items in groups_items_propagate
-	// whose parents are marked with groups_items_propagate.sPropagateAccess='children'
+	// whose parents are marked with groups_items_propagate.propagate_access='children'
 	const queryMarkExistingChildren = `
-		INSERT INTO groups_items_propagate (ID, sPropagateAccess)
+		INSERT INTO groups_items_propagate (id, propagate_access)
 		SELECT
-			children.ID AS ID,
-			'self' as sPropagateAccess
+			children.id AS id,
+			'self' as propagate_access
 		FROM items_items
 		JOIN groups_items AS parents
-			ON parents.idItem = items_items.idItemParent
+			ON parents.item_id = items_items.parent_item_id
 		JOIN groups_items AS children
-			ON children.idItem = items_items.idItemChild AND children.idGroup = parents.idGroup
+			ON children.item_id = items_items.child_item_id AND children.group_id = parents.group_id
 		JOIN groups_items_propagate AS parents_propagate
-			ON parents_propagate.ID = parents.ID AND parents_propagate.sPropagateAccess = 'children'
-		ON DUPLICATE KEY UPDATE sPropagateAccess='self'`
+			ON parents_propagate.id = parents.id AND parents_propagate.propagate_access = 'children'
+		ON DUPLICATE KEY UPDATE propagate_access='self'`
 	stmtMarkExistingChildren, err = s.db.CommonDB().Prepare(queryMarkExistingChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkExistingChildren.Close()) }()
@@ -105,8 +105,8 @@ func (s *GroupItemStore) computeAllAccess() {
 	// marking 'children' groups_items_propagate as 'done'
 	const queryMarkFinishedItems = `
 		UPDATE groups_items_propagate
-		SET sPropagateAccess = 'done'
-		WHERE sPropagateAccess = 'children'`
+		SET propagate_access = 'done'
+		WHERE propagate_access = 'children'`
 	stmtMarkFinishedItems, err = s.db.CommonDB().Prepare(queryMarkFinishedItems)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkFinishedItems.Close()) }()
@@ -116,59 +116,60 @@ func (s *GroupItemStore) computeAllAccess() {
 		UPDATE groups_items
 		LEFT JOIN (
 			SELECT
-				child.ID,
-				MIN(parent.sCachedFullAccessDate) AS sCachedFullAccessDate,
-				MIN(IF(items_items.bAccessRestricted = 0, parent.sCachedPartialAccessDate, NULL)) AS sCachedPartialAccessDate,
-				MAX(parent.bCachedManagerAccess) AS bCachedManagerAccess,
-				MIN(IF(items_items.bAccessRestricted AND items_items.bAlwaysVisible, parent.sCachedPartialAccessDate, NULL)) AS sCachedGrayedAccessDate,
-				MIN(parent.sCachedAccessSolutionsDate) AS sCachedAccessSolutionsDate,
+				child.id,
+				MIN(parent.cached_full_access_date) AS cached_full_access_date,
+				MIN(IF(items_items.access_restricted = 0, parent.cached_partial_access_date, NULL)) AS cached_partial_access_date,
+				MAX(parent.cached_manager_access) AS cached_manager_access,
+				MIN(IF(items_items.access_restricted AND items_items.always_visible, parent.cached_partial_access_date, NULL))
+					AS cached_grayed_access_date,
+				MIN(parent.cached_access_solutions_date) AS cached_access_solutions_date,
 				CONCAT('From ancestor group(s) ', GROUP_CONCAT(
-					DISTINCT IF(parent.sAccessReason = '', NULL, parent.sAccessReason)
-					ORDER BY parent_item.ID
+					DISTINCT IF(parent.access_reason = '', NULL, parent.access_reason)
+					ORDER BY parent_item.id
 					SEPARATOR ', '
-				)) AS sAccessReasonAncestors
+				)) AS access_reason_ancestors
 			FROM groups_items AS child
 			JOIN items_items
-				ON items_items.idItemChild = child.idItem
+				ON items_items.child_item_id = child.item_id
 			LEFT JOIN groups_items_propagate
-				ON groups_items_propagate.ID = child.ID
+				ON groups_items_propagate.id = child.id
 			JOIN groups_items AS parent
-				ON parent.idItem = items_items.idItemParent AND parent.idGroup = child.idGroup
+				ON parent.item_id = items_items.parent_item_id AND parent.group_id = child.group_id
 			JOIN items AS parent_item
-				ON parent_item.ID = items_items.idItemParent
+				ON parent_item.id = items_items.parent_item_id
 			WHERE
-				(groups_items_propagate.sPropagateAccess = 'self' OR groups_items_propagate.ID IS NULL) AND
+				(groups_items_propagate.propagate_access = 'self' OR groups_items_propagate.id IS NULL) AND
 				(
-					parent.sCachedFullAccessDate IS NOT NULL OR
-					(parent.sCachedPartialAccessDate IS NOT NULL AND (items_items.bAccessRestricted = 0 OR items_items.bAlwaysVisible)) OR
-					parent.sCachedAccessSolutionsDate IS NOT NULL OR
-					parent.bCachedManagerAccess
+					parent.cached_full_access_date IS NOT NULL OR
+					(parent.cached_partial_access_date IS NOT NULL AND (items_items.access_restricted = 0 OR items_items.always_visible)) OR
+					parent.cached_access_solutions_date IS NOT NULL OR
+					parent.cached_manager_access
 				) AND
-				parent_item.bCustomChapter = 0
-			GROUP BY child.ID
+				parent_item.custom_chapter = 0
+			GROUP BY child.id
 		) AS new_data
-			USING(ID)
-		JOIN groups_items_propagate USING(ID)
+			USING(id)
+		JOIN groups_items_propagate USING(id)
 		SET
-			groups_items.sCachedFullAccessDate = LEAST(
-				IFNULL(new_data.sCachedFullAccessDate, groups_items.sFullAccessDate),
-				IFNULL(groups_items.sFullAccessDate, new_data.sCachedFullAccessDate)
+			groups_items.cached_full_access_date = LEAST(
+				IFNULL(new_data.cached_full_access_date, groups_items.full_access_date),
+				IFNULL(groups_items.full_access_date, new_data.cached_full_access_date)
 			),
-			groups_items.sCachedPartialAccessDate = LEAST(
-				IFNULL(new_data.sCachedPartialAccessDate, groups_items.sPartialAccessDate),
-				IFNULL(groups_items.sPartialAccessDate, new_data.sCachedPartialAccessDate)
+			groups_items.cached_partial_access_date = LEAST(
+				IFNULL(new_data.cached_partial_access_date, groups_items.partial_access_date),
+				IFNULL(groups_items.partial_access_date, new_data.cached_partial_access_date)
 			),
-			groups_items.bCachedManagerAccess = GREATEST(
-				IFNULL(new_data.bCachedManagerAccess, 0),
-				groups_items.bManagerAccess
+			groups_items.cached_manager_access = GREATEST(
+				IFNULL(new_data.cached_manager_access, 0),
+				groups_items.manager_access
 			),
-			groups_items.sCachedAccessSolutionsDate = LEAST(
-				IFNULL(new_data.sCachedAccessSolutionsDate, groups_items.sAccessSolutionsDate),
-				IFNULL(groups_items.sAccessSolutionsDate, new_data.sCachedAccessSolutionsDate)
+			groups_items.cached_access_solutions_date = LEAST(
+				IFNULL(new_data.cached_access_solutions_date, groups_items.access_solutions_date),
+				IFNULL(groups_items.access_solutions_date, new_data.cached_access_solutions_date)
 			),
-			groups_items.sCachedGrayedAccessDate = new_data.sCachedGrayedAccessDate,
-			groups_items.sCachedAccessReason = new_data.sAccessReasonAncestors
-		WHERE groups_items_propagate.sPropagateAccess = 'self'`
+			groups_items.cached_grayed_access_date = new_data.cached_grayed_access_date,
+			groups_items.cached_access_reason = new_data.access_reason_ancestors
+		WHERE groups_items_propagate.propagate_access = 'self'`
 	stmtUpdateGroupItems, err = s.db.CommonDB().Prepare(queryUpdateGroupItems)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
@@ -183,8 +184,8 @@ func (s *GroupItemStore) computeAllAccess() {
 	// marking 'self' groups_items_propagate as 'children'
 	const queryMarkChildrenItems = `
 		UPDATE groups_items_propagate
-		SET sPropagateAccess = 'children'
-		WHERE sPropagateAccess = 'self'`
+		SET propagate_access = 'children'
+		WHERE propagate_access = 'self'`
 	stmtMarkChildrenItems, err = s.db.CommonDB().Prepare(queryMarkChildrenItems)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkChildrenItems.Close()) }()
@@ -223,21 +224,21 @@ func (s *GroupItemStore) computeAllAccess() {
 
 func (s *GroupItemStore) prepareStatementsForRevokingCachedAccessWhereNeeded() []*sql.Stmt {
 	listFields := map[string]string{
-		"bCachedFullAccess":      "sCachedFullAccessDate",
-		"bCachedPartialAccess":   "sCachedPartialAccessDate",
-		"bCachedAccessSolutions": "sCachedAccessSolutionsDate",
-		"bCachedGrayedAccess":    "sCachedGrayedAccessDate",
+		"cached_full_access":      "cached_full_access_date",
+		"cached_partial_access":   "cached_partial_access_date",
+		"cached_access_solutions": "cached_access_solutions_date",
+		"cached_grayed_access":    "cached_grayed_access_date",
 	}
 
 	statements := make([]*sql.Stmt, 0, len(listFields))
-	for bAccessField, sAccessDateField := range listFields {
+	for accessField, accessDateField := range listFields {
 		statement, err := s.db.CommonDB().Prepare(`
 			UPDATE groups_items
-			JOIN groups_items_propagate USING(ID)
-			SET ` + bAccessField + ` = false
-			WHERE ` + bAccessField + ` = true AND
-				groups_items_propagate.sPropagateAccess = 'self' AND
-				(` + sAccessDateField + ` IS NULL OR ` + sAccessDateField + ` > NOW())`) // #nosec
+			JOIN groups_items_propagate USING(id)
+			SET ` + accessField + ` = false
+			WHERE ` + accessField + ` = true AND
+				groups_items_propagate.propagate_access = 'self' AND
+				(` + accessDateField + ` IS NULL OR ` + accessDateField + ` > NOW())`) // #nosec
 		mustNotBeError(err)
 		statements = append(statements, statement)
 	}

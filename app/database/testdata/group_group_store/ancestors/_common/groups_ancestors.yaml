@@ -1,1 +1,1 @@
-- {idGroupAncestor: 2, idGroupChild: 3, bIsSelf: 1} # will not be updated
+- {ancestor_group_id: 2, child_group_id: 3, is_self: 1} # will not be updated

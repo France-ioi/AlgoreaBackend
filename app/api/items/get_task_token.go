@@ -20,17 +20,17 @@ import (
 //
 //   * If there is no row for the current user and the given item in `users_items`, the service creates one.
 //
-//   * If the active attempt (`idAttemptActive`) is not set in the `users_items` for the item and the user,
+//   * If the active attempt (`active_attempt_id`) is not set in the `users_items` for the item and the user,
 //   the service chooses the most recent one among all the user's attempts (or the team's attempts if
-//   `items.bHasAttempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
+//   `items.has_attempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
 //
-//   * Then `sStartDate` (if it is NULL) and `sLastActivity` of `groups_attempts` & `user_items` are set to the current time.
+//   * Then `start_date` (if it is NULL) and `last_activity_date` of `groups_attempts` & `user_items` are set to the current time.
 //
 //   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
 //
 //
-//   Depending on the `items.bHasAttempts` the active attempt is linked to the user's self group (if `items.bHasAttempts`=0)
-//   or to the user’s team (if `items.bHasAttempts`=1). The user’s team is a user's parent group with `groups.idTeamItem`
+//   Depending on the `items.has_attempts` the active attempt is linked to the user's self group (if `items.has_attempts`=0)
+//   or to the user’s team (if `items.has_attempts`=1). The user’s team is a user's parent group with `groups.team_item_id`
 //   pointing to one of the item's ancestors or the item itself.
 //
 //
@@ -38,7 +38,7 @@ import (
 //
 //     * the user should have at least partial access to the item,
 //     * the item should be either 'Task' or 'Course',
-//     * for items with `bHasAttempts`=1 the user's team should exist when a new attempt is being created,
+//     * for items with `has_attempts`=1 the user's team should exist when a new attempt is being created,
 //
 //   otherwise the 'forbidden' error is returned.
 // parameters:
@@ -86,17 +86,17 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	user := srv.GetUser(r)
 
 	var itemInfo struct {
-		HasAttempts       bool    `gorm:"column:bHasAttempts"`
-		AccessSolutions   bool    `gorm:"column:accessSolutions"`
-		HintsAllowed      bool    `gorm:"column:bHintsAllowed"`
-		TextID            *string `gorm:"column:sTextId"`
-		URL               string  `gorm:"column:sUrl"`
-		SupportedLangProg *string `gorm:"column:sSupportedLangProg"`
+		HasAttempts       bool
+		AccessSolutions   bool
+		HintsAllowed      bool
+		TextID            *string
+		URL               string
+		SupportedLangProg *string
 	}
-	err = srv.Store.Items().Visible(user).Where("ID = ?", itemID).
-		Where("partialAccess > 0 OR fullAccess > 0").
-		Where("items.sType IN('Task','Course')").
-		Select("accessSolutions, bHasAttempts, bHintsAllowed, sTextId, sUrl, sSupportedLangProg").
+	err = srv.Store.Items().Visible(user).Where("id = ?", itemID).
+		Where("partial_access > 0 OR full_access > 0").
+		Where("items.type IN('Task','Course')").
+		Select("access_solutions, has_attempts, hints_allowed, text_id, url, supported_lang_prog").
 		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
@@ -104,25 +104,25 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	service.MustNotBeError(err)
 
 	var groupsAttemptInfo struct {
-		ID               int64   `gorm:"column:ID"`
-		HintsRequested   *string `gorm:"column:sHintsRequested"`
-		HintsCachedCount int32   `gorm:"column:nbHintsCached"`
+		ID               int64
+		HintsRequested   *string
+		HintsCachedCount int32 `gorm:"column:hints_cached"`
 	}
 	var activeAttemptID *int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
 		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
-		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
-			WithWriteLock().PluckFirst("idAttemptActive", &activeAttemptID).Error())
+		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
+			WithWriteLock().PluckFirst("active_attempt_id", &activeAttemptID).Error())
 
 		// No active attempt set in `users_items` so we should choose or create one
 		if activeAttemptID == nil {
 			groupID := *user.SelfGroupID // not null since we have passed the access rights checking
 
-			// if items.bHasAttempts = 1, we use use a team group instead of the user's self group
+			// if items.has_attempts = 1, we use use a team group instead of the user's self group
 			if itemInfo.HasAttempts {
-				err = store.Groups().TeamGroupForItemAndUser(itemID, user).PluckFirst("groups.ID", &groupID).Error()
+				err = store.Groups().TeamGroupForItemAndUser(itemID, user).PluckFirst("groups.id", &groupID).Error()
 				if gorm.IsRecordNotFoundError(err) {
 					apiError = service.ErrForbidden(errors.New("no team found for the user"))
 					return err // rollback
@@ -133,31 +133,31 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			// find the freshest one among all the group's attempts for the item
 			var attemptID int64
 			groupAttemptScope := store.GroupAttempts().
-				Where("idGroup = ?", groupID).Where("idItem = ?", itemID)
-			err = groupAttemptScope.Order("sLastActivityDate DESC").
-				Select("ID, sHintsRequested, nbHintsCached").Limit(1).
+				Where("group_id = ?", groupID).Where("item_id = ?", itemID)
+			err = groupAttemptScope.Order("last_activity_date DESC").
+				Select("id, hints_requested, hints_cached").Limit(1).
 				Take(&groupsAttemptInfo).Error()
 
 			// if no attempt found, create a new one
 			if gorm.IsRecordNotFoundError(err) {
 				attemptID, err = store.GroupAttempts().CreateNew(groupID, itemID)
 				service.MustNotBeError(err)
-			} else { // otherwise, update groups_attempts.sStartDate (if it is NULL) & groups_attempts.sLastActivityDate
+			} else { // otherwise, update groups_attempts.start_date (if it is NULL) & groups_attempts.last_activity_date
 				attemptID = groupsAttemptInfo.ID
 				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
-					"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
-					"sLastActivityDate": database.Now(),
+					"start_date":         gorm.Expr("IFNULL(start_date, ?)", database.Now()),
+					"last_activity_date": database.Now(),
 				}).Error())
 			}
 			activeAttemptID = &attemptID
 		}
 
-		// update users_items.idAttemptActive, users_items.sStartDate (if it is NULL), and users_items.sLastActivityDate
-		service.MustNotBeError(userItemStore.Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
+		// update users_items.active_attempt_id, users_items.start_date (if it is NULL), and users_items.last_activity_date
+		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"idAttemptActive":   *activeAttemptID,
-				"sStartDate":        gorm.Expr("IFNULL(sStartDate, ?)", database.Now()),
-				"sLastActivityDate": database.Now(),
+				"active_attempt_id":  *activeAttemptID,
+				"start_date":         gorm.Expr("IFNULL(start_date, ?)", database.Now()),
+				"last_activity_date": database.Now(),
 			}).Error())
 
 		// propagate groups_attempts and compute users_items

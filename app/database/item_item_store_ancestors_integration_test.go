@@ -12,13 +12,13 @@ import (
 )
 
 type itemAncestorsResultRow struct {
-	ItemAncestorID int64 `gorm:"column:idItemAncestor"`
-	ItemChildID    int64 `gorm:"column:idItemChild"`
+	AncestorItemID int64
+	ChildItemID    int64
 }
 
 type itemPropagateResultRow struct {
-	ID                        int64  `gorm:"column:ID"`
-	AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+	ID                        int64
+	AncestorsComputationState string
 }
 
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
@@ -34,19 +34,19 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, 30)
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("idItemChild, idItemAncestor").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 2, ItemAncestorID: 1},
-		{ItemChildID: 3, ItemAncestorID: 1},
-		{ItemChildID: 3, ItemAncestorID: 2},
-		{ItemChildID: 4, ItemAncestorID: 1},
-		{ItemChildID: 4, ItemAncestorID: 2},
-		{ItemChildID: 4, ItemAncestorID: 3},
+		{ChildItemID: 2, AncestorItemID: 1},
+		{ChildItemID: 3, AncestorItemID: 1},
+		{ChildItemID: 3, AncestorItemID: 2},
+		{ChildItemID: 4, AncestorItemID: 1},
+		{ChildItemID: 4, AncestorItemID: 2},
+		{ChildItemID: 4, AncestorItemID: 3},
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("ID").Scan(&propagateResult).Error())
+	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
@@ -65,14 +65,14 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}))
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("idItemChild, idItemAncestor").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 3, ItemAncestorID: 2}, // this one has already been there
+		{ChildItemID: 3, AncestorItemID: 2}, // this one has already been there
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("ID").Scan(&propagateResult).Error())
+	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "todo"},
 		{ID: 2, AncestorsComputationState: "todo"},
@@ -89,8 +89,8 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 
 	for i := 1; i <= 4; i++ {
 		assert.NoError(t, itemItemStore.Exec(
-			"INSERT INTO items_propagate (ID, sAncestorsComputationState) VALUES (?, 'done') "+
-				"ON DUPLICATE KEY UPDATE sAncestorsComputationState='done'", i).
+			"INSERT INTO items_propagate (id, ancestors_computation_state) VALUES (?, 'done') "+
+				"ON DUPLICATE KEY UPDATE ancestors_computation_state='done'", i).
 			Error())
 	}
 
@@ -100,14 +100,14 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}))
 
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("idItemChild, idItemAncestor").Scan(&result).Error())
+	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
-		{ItemChildID: 3, ItemAncestorID: 2}, // this one has already been there
+		{ChildItemID: 3, AncestorItemID: 2}, // this one has already been there
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("ID").Scan(&propagateResult).Error())
+	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},

@@ -2,19 +2,19 @@ package database
 
 // ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
-	// MIN(groups_items.sCachedFullAccessDate) <= NOW()
-	FullAccess bool `sql:"column:fullAccess" json:"full_access"`
-	// MIN(groups_items.sCachedPartialAccessDate) <= NOW()
-	PartialAccess bool `sql:"column:partialAccess" json:"partial_access"`
-	// MIN(groups_items.sCachedGrayAccessDate) <= NOW()
-	GrayedAccess bool `sql:"column:grayedAccess" json:"grayed_access"`
-	// MIN(groups_items.sCachedAccessSolutionsDate) <= NOW()
-	AccessSolutions bool `sql:"column:accessSolutions" json:"access_solutions"`
+	// MIN(groups_items.cached_full_access_date) <= NOW()
+	FullAccess bool `json:"full_access"`
+	// MIN(groups_items.cached_partial_access_date) <= NOW()
+	PartialAccess bool `json:"partial_access"`
+	// MIN(groups_items.cached_grayed_access_date) <= NOW()
+	GrayedAccess bool `json:"grayed_access"`
+	// MIN(groups_items.cached_access_solutions_date) <= NOW()
+	AccessSolutions bool `json:"access_solutions"`
 }
 
 // ItemAccessDetailsWithID represents access rights for an item + ItemID
 type ItemAccessDetailsWithID struct {
-	ItemID int64 `sql:"column:idItem"`
+	ItemID int64
 	ItemAccessDetails
 }
 

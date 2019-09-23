@@ -1,12 +1,12 @@
 Feature: Get user info the current user
   Background:
     Given the database has the following table 'users':
-      | ID | tempUser | sLogin | sRegistrationDate   | sEmail         | sFirstName  | sLastName | sStudentId | sCountryCode | sTimeZone | sBirthDate | iGraduationYear | iGrade | sSex | sAddress         | sZipcode | sCity         | sLandLineNumber | sCellPhoneNumber | sDefaultLanguage | bPublicFirstName | bPublicLastName | bNotifyNews | sNotify | sFreeText | sWebSite   | bPhotoAutoload | sLangProg | bBasicEditorMode | nbSpacesForTab | iStepLevelInSite | bIsAdmin | bNoRanking | loginModulePrefix | allowSubgroups |
-      | 2  | 0        | user   | 2017-02-26 06:38:38 | user@gmail.com | John        | Doe       | Some ID    | us           | PT        | 1975-12-13 | 1997            | 10     | Male | 314 N Beverly Dr | 90210    | Beverly Hills | +1 310-435-9669 | +1 310-860-9581  | en               | true             | true            | true        | Answers | Some text | mysite.com | true           | Python    | true             | 3              | 11               | false    | false      | my_prefix         | false          |
-      | 3  | 1        | jane   | null                | null           | null        | null      | null       |              | null      | null       | 0               | null   | null | null             | null     | null          | null            | null             | fr               | false            | false           | false       | Never   | null      | null       | false          | null      | false            | 0              | 0                | true     | true       | null              | null           |
+      | id | temp_user | login | registration_date   | email          | first_name  | last_name | student_id | country_code | time_zone | birth_date | graduation_year | grade | sex  | address          | zipcode  | city          | land_line_number | cell_phone_number | default_language | public_first_name | public_last_name | notify_news | notify | free_text | web_site   | photo_autoload | lang_prog | basic_editor_mode | spaces_for_tab | step_level_in_site | is_admin | no_ranking | login_module_prefix | allow_subgroups |
+      | 2  | 0         | user  | 2017-02-26 06:38:38 | user@gmail.com | John        | Doe       | Some id    | us           | PT        | 1975-12-13 | 1997            | 10    | Male | 314 N Beverly Dr | 90210    | Beverly Hills | +1 310-435-9669  | +1 310-860-9581   | en               | true              | true            | true        | Answers | Some text | mysite.com | true           | Python    | true              | 3              | 11                 | false    | false      | my_prefix           | false           |
+      | 3  | 1         | jane  | null                | null           | null        | null      | null       |              | null      | null       | 0               | null  | null | null             | null     | null          | null             | null              | fr               | false             | false           | false       | Never   | null      | null       | false          | null      | false             | 0              | 0                  | true     | true       | null                | null            |
 
   Scenario: All field values are not nulls
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a GET request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -20,7 +20,7 @@ Feature: Get user info the current user
       "email_verified": false,
       "first_name": "John",
       "last_name": "Doe",
-      "student_id": "Some ID",
+      "student_id": "Some id",
       "country_code": "us",
       "time_zone": "PT",
       "birth_date": "1975-12-13",
@@ -52,7 +52,7 @@ Feature: Get user info the current user
     """
 
   Scenario: All nullable field values are nulls
-    Given I am the user with ID "3"
+    Given I am the user with id "3"
     When I send a GET request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:

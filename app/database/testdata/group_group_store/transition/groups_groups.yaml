@@ -1,12 +1,12 @@
-- {ID: 1, idGroupParent: 20, idGroupChild: 2, sType: invitationSent}
-- {ID: 2, idGroupParent: 20, idGroupChild: 3, sType: requestSent}
-- {ID: 3, idGroupParent: 20, idGroupChild: 4, sType: invitationAccepted}
-- {ID: 4, idGroupParent: 20, idGroupChild: 5, sType: requestAccepted}
-- {ID: 5, idGroupParent: 20, idGroupChild: 6, sType: invitationRefused}
-- {ID: 6, idGroupParent: 20, idGroupChild: 7, sType: requestRefused}
-- {ID: 7, idGroupParent: 20, idGroupChild: 8, sType: removed}
-- {ID: 8, idGroupParent: 20, idGroupChild: 9, sType: left}
-- {ID: 9, idGroupParent: 20, idGroupChild: 10, sType: direct}
-- {ID: 10, idGroupParent: 20, idGroupChild: 11, sType: joinedByCode}
+- {id: 1, parent_group_id: 20, child_group_id: 2, type: invitationSent}
+- {id: 2, parent_group_id: 20, child_group_id: 3, type: requestSent}
+- {id: 3, parent_group_id: 20, child_group_id: 4, type: invitationAccepted}
+- {id: 4, parent_group_id: 20, child_group_id: 5, type: requestAccepted}
+- {id: 5, parent_group_id: 20, child_group_id: 6, type: invitationRefused}
+- {id: 6, parent_group_id: 20, child_group_id: 7, type: requestRefused}
+- {id: 7, parent_group_id: 20, child_group_id: 8, type: removed}
+- {id: 8, parent_group_id: 20, child_group_id: 9, type: left}
+- {id: 9, parent_group_id: 20, child_group_id: 10, type: direct}
+- {id: 10, parent_group_id: 20, child_group_id: 11, type: joinedByCode}
 
-- {ID: 30, idGroupParent: 30, idGroupChild: 20, sType: direct}
+- {id: 30, parent_group_id: 30, child_group_id: 20, type: direct}

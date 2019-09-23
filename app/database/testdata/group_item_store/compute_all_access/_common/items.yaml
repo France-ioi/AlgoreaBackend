@@ -1,6 +1,6 @@
-- {ID: 1}
-- {ID: 2}
-- {ID: 3}
-- {ID: 4, bCustomChapter: 1} # should be skipped
-- {ID: 11}
-- {ID: 12}
+- {id: 1}
+- {id: 2}
+- {id: 3}
+- {id: 4, custom_chapter: 1} # should be skipped
+- {id: 11}
+- {id: 12}

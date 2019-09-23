@@ -12,7 +12,7 @@ import (
 // swagger:operation GET /groups/{group_id}/team-descendants groups groupTeamDescendantView
 // ---
 // summary: List team descendants of the group
-// description: Returns all teams (`sType` = "Team") among the descendants of the given group
+// description: Returns all teams (`type` = "Team") among the descendants of the given group
 //
 //   * The authenticated user should own the parent group.
 // parameters:
@@ -21,12 +21,12 @@ import (
 //   required: true
 //   type: integer
 // - name: from.name
-//   description: Start the page from the team next to the team with `sName` = `from.name` and `ID` = `from.id`
+//   description: Start the page from the team next to the team with `name` = `from.name` and `id` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the team next to the team with `sName`=`from.name` and `ID`=`from.id`
+//   description: Start the page from the team next to the team with `name`=`from.name` and `id`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -71,17 +71,17 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	}
 
 	query := srv.Store.Groups().
-		Select("groups.ID, groups.sName, groups.iGrade").
+		Select("groups.id, groups.name, groups.grade").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID AND
-				groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild AND
-				groups_ancestors.idGroupAncestor = ?`, groupID).
-		Where("groups.sType = 'Team'")
+			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
+				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+				groups_ancestors.ancestor_group_id = ?`, groupID).
+		Where("groups.type = 'Team'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"name": {ColumnName: "groups.sName", FieldType: "string"},
-			"id":   {ColumnName: "groups.ID", FieldType: "int64"}},
+			"name": {ColumnName: "groups.name", FieldType: "string"},
+			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
 		"name")
 	if apiError != service.NoError {
 		return apiError
@@ -100,14 +100,14 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 
 	var parentsResult []descendantParent
 	service.MustNotBeError(srv.Store.Groups().
-		Select("parent_links.idGroupChild AS idLinkedGroup, groups.ID, groups.sName").
+		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
-			JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
-				parent_links.sType = 'direct' AND parent_links.idGroupChild IN (?)`, groupIDs).
+			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
+				parent_links.type = 'direct' AND parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
-			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = groups.ID AND
-				parent_ancestors.idGroupAncestor = ?`, groupID).
-		Order("groups.ID").
+			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+				parent_ancestors.ancestor_group_id = ?`, groupID).
+		Order("groups.id").
 		Scan(&parentsResult).Error())
 
 	for _, parentsRow := range parentsResult {
@@ -117,14 +117,14 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	var membersResult []teamDescendantMember
 	service.MustNotBeError(srv.Store.Users().
 		Select(`
-			member_links.idGroupParent AS idLinkedGroup,
-			users.idGroupSelf, users.ID, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
+			member_links.parent_group_id AS linked_group_id,
+			users.self_group_id, users.id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
 			JOIN groups_groups AS member_links ON
-				member_links.sType`+database.GroupRelationIsActiveCondition+` AND
-				member_links.idGroupChild = users.idGroupSelf AND
-				member_links.idGroupParent IN (?)`, groupIDs).
-		Order("member_links.idGroupParent, member_links.idGroupChild").
+				member_links.type`+database.GroupRelationIsActiveCondition+` AND
+				member_links.child_group_id = users.self_group_id AND
+				member_links.parent_group_id IN (?)`, groupIDs).
+		Order("member_links.parent_group_id, member_links.child_group_id").
 		Scan(&membersResult).Error())
 
 	for _, membersRow := range membersResult {
@@ -136,35 +136,35 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 }
 
 type teamDescendantMember struct {
-	// User's `ID`
+	// User's `id`
 	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
+	ID int64 `json:"id,string"`
 	// required:true
-	SelfGroupID int64 `sql:"column:idGroupSelf" json:"self_group_id"`
+	SelfGroupID int64 `json:"self_group_id"`
 	// Nullable
 	// required:true
-	FirstName *string `sql:"column:sFirstName" json:"first_name"`
+	FirstName *string `json:"first_name"`
 	// Nullable
 	// required:true
-	LastName *string `sql:"column:sLastName" json:"last_name"`
+	LastName *string `json:"last_name"`
 	// required:true
-	Login string `sql:"column:sLogin" json:"login"`
+	Login string `json:"login"`
 	// Nullable
 	// required:true
-	Grade *int32 `sql:"column:iGrade" json:"grade"`
+	Grade *int32 `json:"grade"`
 
-	LinkedGroupID int64 `sql:"column:idLinkedGroup" json:"-"`
+	LinkedGroupID int64 `json:"-"`
 }
 
 // swagger:model
 type teamDescendant struct {
-	// The team's `groups.ID`
+	// The team's `groups.id`
 	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
+	ID int64 `json:"id,string"`
 	// required:true
-	Name string `sql:"column:sName" json:"name"`
+	Name string `json:"name"`
 	// required:true
-	Grade int32 `sql:"column:iGrade" json:"grade"`
+	Grade int32 `json:"grade"`
 
 	// Team's parent groups among the input group's descendants
 	// required:true

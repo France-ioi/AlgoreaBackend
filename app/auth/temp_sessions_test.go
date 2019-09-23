@@ -29,8 +29,8 @@ func TestCreateNewTempSession(t *testing.T) {
 
 	expectedUserID := int64(12345)
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuer) VALUES (?, ?, NOW() + INTERVAL ? SECOND, ?)",
-	)+"$").WithArgs(expectedUserID, expectedAccessToken, 2*60*60, "backend").
+		"INSERT INTO `sessions` (access_token, expiration_date, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
@@ -59,16 +59,16 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 
 	expectedUserID := int64(12345)
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuer) VALUES (?, ?, NOW() + INTERVAL ? SECOND, ?)",
-	)+"$").WithArgs(expectedUserID, expectedAccessTokens[0], 2*60*60, "backend").
+		"INSERT INTO `sessions` (access_token, expiration_date, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessTokens[0], 2*60*60, "backend", expectedUserID).
 		WillReturnError(
 			&mysql.MySQLError{
 				Number:  1062,
 				Message: fmt.Sprintf("ERROR 1062 (23000): Duplicate entry '%s' for key 'PRIMARY'", expectedAccessTokens[0]),
 			})
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuer) VALUES (?, ?, NOW() + INTERVAL ? SECOND, ?)",
-	)+"$").WithArgs(expectedUserID, expectedAccessTokens[1], 2*60*60, "backend").
+		"INSERT INTO `sessions` (access_token, expiration_date, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessTokens[1], 2*60*60, "backend", expectedUserID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
@@ -116,8 +116,8 @@ func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 	expectedUserID := int64(12345)
 	expectedError := errors.New("some error")
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (idUser, sAccessToken, sExpirationDate, sIssuer) VALUES (?, ?, NOW() + INTERVAL ? SECOND, ?)",
-	)+"$").WithArgs(expectedUserID, expectedAccessToken, 2*60*60, "backend").
+		"INSERT INTO `sessions` (access_token, expiration_date, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
 		WillReturnError(expectedError)
 
 	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)

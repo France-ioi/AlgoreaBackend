@@ -2,24 +2,24 @@ Feature: Create a group (groupCreate)
 
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName  | sLastName | allowSubgroups |
-      | 1  | owner  | 0        | 21          | 22           | Jean-Michel | Blanquer  | 1              |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | allow_subgroups |
+      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups':
-      | ID | sName       | sType     |
+      | id | name        | type      |
       | 21 | owner       | UserSelf  |
       | 22 | owner-admin | UserAdmin |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 21              | 21           | 1       |
-      | 22              | 22           | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 21                | 21             | 1       |
+      | 22                | 22             | 1       |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedFullAccessDate | sCachedPartialAccessDate | sCachedGrayedAccessDate | idUserCreated |
-      | 21      | 10     | 2019-07-16 21:28:47   | null                     | null                    | 1             |
-      | 21      | 11     | null                  | 2019-07-16 21:28:47      | null                    | 1             |
-      | 21      | 12     | null                  | null                     | 2019-07-16 21:28:47     | 1             |
+      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
+      | 21       | 10      | 2019-07-16 21:28:47     | null                       | null                      | 1               |
+      | 21       | 11      | null                    | 2019-07-16 21:28:47        | null                      | 1               |
+      | 21       | 12      | null                    | null                       | 2019-07-16 21:28:47       | 1               |
 
   Scenario Outline: Create a group
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a POST request to "/groups" with the following body:
     """
     {
@@ -37,15 +37,15 @@ Feature: Create a group (groupCreate)
       "data": {"id":"5577006791947779410"}
     }
     """
-    And the table "groups" should stay unchanged but the row with ID "5577006791947779410"
-    And the table "groups" at ID "5577006791947779410" should be:
-      | ID                  | sName     | sType        | idTeamItem     | TIMESTAMPDIFF(SECOND, NOW(), sDateCreated) < 3 |
+    And the table "groups" should stay unchanged but the row with id "5577006791947779410"
+    And the table "groups" at id "5577006791947779410" should be:
+      | id                  | name      | type         | team_item_id   | TIMESTAMPDIFF(SECOND, NOW(), date_created) < 3 |
       | 5577006791947779410 | some name | <group_type> | <want_item_id> | true                                           |
     And the table "groups_groups" should be:
-      | idGroupParent       | idGroupChild        | iChildOrder | sType  | sRole  |
-      | 22                  | 5577006791947779410 | 1           | direct | owner  |
+      | parent_group_id | child_group_id      | child_order | type   | role  |
+      | 22              | 5577006791947779410 | 1           | direct | owner |
     And the table "groups_ancestors" should be:
-      | idGroupAncestor     | idGroupChild        | bIsSelf |
+      | ancestor_group_id   | child_group_id      | is_self |
       | 21                  | 21                  | 1       |
       | 22                  | 22                  | 1       |
       | 22                  | 5577006791947779410 | 0       |

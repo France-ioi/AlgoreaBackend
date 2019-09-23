@@ -165,7 +165,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 		var valueMarks []string
 		var values []interface{}
 		for k, v := range row {
-			attributes = append(attributes, k)
+			attributes = append(attributes, database.QuoteName(k))
 			valueMarks = append(valueMarks, "?")
 			values = append(values, v)
 		}

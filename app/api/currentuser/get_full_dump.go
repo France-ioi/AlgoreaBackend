@@ -19,14 +19,14 @@ import (
 //   Returns a downloadable JSON file with all the current user's data.
 //   The content returned is just the dump of raw entries of each table related to the user
 //
-//     * `current_user` (from `users`): all attributes except `iVersion`
+//     * `current_user` (from `users`): all attributes except `version`
 //     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”
-//     * `owned_groups`: `ID` and `sName` for every descendant of user’s `idGroupOwned`;
-//     * `joined_groups`: `ID` and `sName` for every ancestor of user’s `idGroupSelf`;
+//     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
+//     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
 //     * `users_answers`: all attributes;
-//     * `users_items`: all attributes except `iVersion`;
-//     * `groups_attempts`: the user's or his teams' attempts, all attributes except `iVersion`;
-//     * `groups_groups`: where the user’s `idGroupSelf` is the `idGroupChild`, all attributes except `iVersion` + `groups.sName`.
+//     * `users_items`: all attributes except `version`;
+//     * `groups_attempts`: the user's or his teams' attempts, all attributes except `version`;
+//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes except `version` + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -57,7 +57,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	service.MustNotBeError(err)
 
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "users", []string{"iVersion"})
+		columns := getColumnsList(srv.Store, databaseName, "users", []string{"version"})
 		var userData []map[string]interface{}
 		service.MustNotBeError(srv.Store.Users().ByID(user.ID).Select(columns).ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
@@ -66,17 +66,17 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"sAccessToken"})
-			service.MustNotBeError(srv.Store.Sessions().Where("idUser = ?", user.ID).
-				Select(columns + ", '***' AS sAccessToken").ScanAndHandleMaps(streamerFunc(w)).Error())
+			columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"access_token"})
+			service.MustNotBeError(srv.Store.Sessions().Where("user_id = ?", user.ID).
+				Select(columns + ", '***' AS access_token").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"sRefreshToken"})
+			columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"refresh_token"})
 			var refreshTokens []map[string]interface{}
-			service.MustNotBeError(srv.Store.RefreshTokens().Where("idUser = ?", user.ID).
-				Select(columns + ", '***' AS sRefreshToken").ScanIntoSliceOfMaps(&refreshTokens).Error())
+			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_id = ?", user.ID).
+				Select(columns + ", '***' AS refresh_token").ScanIntoSliceOfMaps(&refreshTokens).Error())
 			if len(refreshTokens) > 0 {
 				writeValue(w, refreshTokens[0])
 			} else {
@@ -88,47 +88,47 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeComma(w)
 	writeJSONObjectArrayElement("owned_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("idGroupChild != idGroupAncestor").
-			Joins("JOIN `groups` ON `groups`.ID = idGroupChild").
+			Where("child_group_id != ancestor_group_id").
+			Joins("JOIN `groups` ON `groups`.id = child_group_id").
 			Order("`groups`.`id`").
-			Select("`groups`.ID, `groups`.sName").ScanAndHandleMaps(streamerFunc(w)).Error())
+			Select("`groups`.id, `groups`.name").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
 	writeComma(w)
 	writeJSONObjectArrayElement("joined_groups", w, func(writer io.Writer) {
 		service.MustNotBeError(srv.Store.GroupAncestors().UserAncestors(user).
-			Where("idGroupChild != idGroupAncestor").
-			Joins("JOIN `groups` ON `groups`.ID = idGroupAncestor").
-			Select("`groups`.ID, `groups`.sName").Order("`groups`.ID").ScanAndHandleMaps(streamerFunc(w)).Error())
+			Where("child_group_id != ancestor_group_id").
+			Joins("JOIN `groups` ON `groups`.id = ancestor_group_id").
+			Select("`groups`.id, `groups`.name").Order("`groups`.id").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.UserAnswers().Where("idUser = ?", user.ID).
+			service.MustNotBeError(srv.Store.UserAnswers().Where("user_id = ?", user.ID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "users_items", []string{"iVersion"})
-			service.MustNotBeError(srv.Store.UserItems().Where("idUser = ?", user.ID).
+			columns := getColumnsList(srv.Store, databaseName, "users_items", []string{"version"})
+			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.ID).
 				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("groups_attempts", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", []string{"iVersion"})
+			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", []string{"version"})
 			service.MustNotBeError(srv.Store.GroupAttempts().
 				Select(columns).
-				Where("idGroup = ?", user.SelfGroupID).
+				Where("group_id = ?", user.SelfGroupID).
 				UnionAll(
 					srv.Store.GroupAttempts().
 						Select(columns).
-						Where("idGroup IN (?)",
+						Where("group_id IN (?)",
 							srv.Store.GroupGroups().WhereUserIsMember(user).
-								Select("`groups`.ID").
-								Joins("JOIN `groups` ON `groups`.ID = groups_groups.idGroupParent AND `groups`.sType = 'Team'").
+								Select("`groups`.id").
+								Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
 								QueryExpr()).
 						QueryExpr()).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
@@ -137,11 +137,11 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"iVersion"})
+		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"version"})
 		service.MustNotBeError(srv.Store.GroupGroups().
-			Where("idGroupChild = ?", user.SelfGroupID).
-			Joins("JOIN `groups` ON `groups`.ID = idGroupParent").
-			Select(columns + ", `groups`.sName").
+			Where("child_group_id = ?", user.SelfGroupID).
+			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
+			Select(columns + ", `groups`.name").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
@@ -199,10 +199,10 @@ func writeComma(w io.Writer) {
 func writeValue(w io.Writer, value interface{}) {
 	if valueMap, ok := value.(map[string]interface{}); ok {
 		for key := range valueMap {
-			if int64Number, isInt64 := valueMap[key].(int64); isInt64 && len(key) >= 2 &&
-				(strings.EqualFold(key[0:2], "id") || key[len(key)-2:] == "ID") {
+			if int64Number, isInt64 := valueMap[key].(int64); isInt64 &&
+				((len(key) > 3 && key[len(key)-3:] == "_id") || key == "id") {
 				valueMap[key] = strconv.FormatInt(int64Number, 10)
-			} else if stringValue, isString := valueMap[key].(string); isString && len(key) > 4 && key[len(key)-4:] == "Date" {
+			} else if stringValue, isString := valueMap[key].(string); isString && len(key) > 5 && key[len(key)-5:] == "_date" {
 				parsedTime, _ := time.Parse("2006-01-02 15:04:05", stringValue)
 				valueMap[key] = parsedTime.Format(time.RFC3339)
 			}

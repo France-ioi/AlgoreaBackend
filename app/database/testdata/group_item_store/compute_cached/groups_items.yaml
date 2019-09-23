@@ -1,35 +1,35 @@
 # false becomes true
-- {ID: 11, idGroup: 1, idItem: 1, bCachedFullAccess: false, sCachedFullAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
-- {ID: 12, idGroup: 1, idItem: 2, bCachedPartialAccess: false, sCachedPartialAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
-- {ID: 13, idGroup: 1, idItem: 3, bCachedAccessSolutions: false, sCachedAccessSolutionsDate: 2019-03-22 08:44:55, idUserCreated: 1}
-- {ID: 14, idGroup: 1, idItem: 4, bCachedGrayedAccess: false, sCachedGrayedAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
+- {id: 11, group_id: 1, item_id: 1, cached_full_access: false, cached_full_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 12, group_id: 1, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 13, group_id: 1, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {id: 14, group_id: 1, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
 
 # true becomes false
-- {ID: 21, idGroup: 2, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 22, idGroup: 2, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 23, idGroup: 2, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 24, idGroup: 2, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
+- {id: 21, group_id: 2, item_id: 1, cached_full_access: true, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 22, group_id: 2, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 23, group_id: 2, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 24, group_id: 2, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 
 # true becomes false because of nil dates
-- {ID: 31, idGroup: 3, idItem: 1, bCachedFullAccess: true, idUserCreated: 1}
-- {ID: 32, idGroup: 3, idItem: 2, bCachedPartialAccess: true, idUserCreated: 1}
-- {ID: 33, idGroup: 3, idItem: 3, bCachedAccessSolutions: true, idUserCreated: 1}
-- {ID: 34, idGroup: 3, idItem: 4, bCachedGrayedAccess: true, idUserCreated: 1}
+- {id: 31, group_id: 3, item_id: 1, cached_full_access: true, creator_user_id: 1}
+- {id: 32, group_id: 3, item_id: 2, cached_partial_access: true, creator_user_id: 1}
+- {id: 33, group_id: 3, item_id: 3, cached_access_solutions: true, creator_user_id: 1}
+- {id: 34, group_id: 3, item_id: 4, cached_grayed_access: true, creator_user_id: 1}
 
 # false stays false
-- {ID: 41, idGroup: 4, idItem: 1, bCachedFullAccess: false, sCachedFullAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 42, idGroup: 4, idItem: 2, bCachedPartialAccess: false, sCachedPartialAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 43, idGroup: 4, idItem: 3, bCachedAccessSolutions: false, sCachedAccessSolutionsDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 44, idGroup: 4, idItem: 4, bCachedGrayedAccess: false, sCachedGrayedAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
+- {id: 41, group_id: 4, item_id: 1, cached_full_access: false, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 42, group_id: 4, item_id: 2, cached_partial_access: false, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 43, group_id: 4, item_id: 3, cached_access_solutions: false, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 44, group_id: 4, item_id: 4, cached_grayed_access: false, cached_grayed_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 
 # false stays false because of nil dates
-- {ID: 51, idGroup: 5, idItem: 1, bCachedFullAccess: false, idUserCreated: 1}
-- {ID: 52, idGroup: 5, idItem: 2, bCachedPartialAccess: false, idUserCreated: 1}
-- {ID: 53, idGroup: 5, idItem: 3, bCachedAccessSolutions: false, idUserCreated: 1}
-- {ID: 54, idGroup: 5, idItem: 4, bCachedGrayedAccess: false, idUserCreated: 1}
+- {id: 51, group_id: 5, item_id: 1, cached_full_access: false, creator_user_id: 1}
+- {id: 52, group_id: 5, item_id: 2, cached_partial_access: false, creator_user_id: 1}
+- {id: 53, group_id: 5, item_id: 3, cached_access_solutions: false, creator_user_id: 1}
+- {id: 54, group_id: 5, item_id: 4, cached_grayed_access: false, creator_user_id: 1}
 
 # true stays true
-- {ID: 61, idGroup: 6, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2018-03-22 10:44:55, idUserCreated: 1}
-- {ID: 62, idGroup: 6, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2018-03-22 10:44:55, idUserCreated: 1}
-- {ID: 63, idGroup: 6, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2018-03-22 10:44:55, idUserCreated: 1}
-- {ID: 64, idGroup: 6, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2018-03-22 10:44:55, idUserCreated: 1}
+- {id: 61, group_id: 6, item_id: 1, cached_full_access: true, cached_full_access_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 62, group_id: 6, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 63, group_id: 6, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2018-03-22 10:44:55, creator_user_id: 1}
+- {id: 64, group_id: 6, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2018-03-22 10:44:55, creator_user_id: 1}

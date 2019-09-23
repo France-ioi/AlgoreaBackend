@@ -46,13 +46,13 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			if len(accessToken) <= 2000 {
 				err := sessionStore.
 					Select(`
-						users.ID, users.sLogin, users.bIsAdmin, users.idGroupSelf, users.idGroupOwned, users.idGroupAccess,
-						users.tempUser, users.allowSubgroups, users.sNotificationReadDate,
-						users.sDefaultLanguage, l.ID as idDefaultLanguage`).
-					Joins("JOIN users ON users.ID = sessions.idUser").
-					Joins("LEFT JOIN languages l ON users.sDefaultLanguage = l.sCode").
-					Where("sAccessToken = ?", accessToken).
-					Where("sExpirationDate > NOW()").Take(&user).
+						users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id,
+						users.temp_user, users.allow_subgroups, users.notification_read_date,
+						users.default_language, l.id as default_language_id`).
+					Joins("JOIN users ON users.id = sessions.user_id").
+					Joins("LEFT JOIN languages l ON users.default_language = l.code").
+					Where("access_token = ?", accessToken).
+					Where("expiration_date > NOW()").Take(&user).
 					Error()
 				authorized = err == nil
 				if err != nil && !gorm.IsRecordNotFoundError(err) {

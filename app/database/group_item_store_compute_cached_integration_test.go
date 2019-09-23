@@ -19,11 +19,11 @@ func TestGroupItemStore_GrantCachedAccessWhereNeeded(t *testing.T) {
 	groupItemStore.GrantCachedAccessWhereNeeded()
 
 	type groupItemCachedResult struct {
-		ID                    int64 `gorm:"column:ID"`
-		CachedFullAccess      bool  `gorm:"column:bCachedFullAccess"`
-		CachedPartialAccess   bool  `gorm:"column:bCachedPartialAccess"`
-		CachedAccessSolutions bool  `gorm:"column:bCachedAccessSolutions"`
-		CachedGrayedAccess    bool  `gorm:"column:bCachedGrayedAccess"`
+		ID                    int64
+		CachedFullAccess      bool
+		CachedPartialAccess   bool
+		CachedAccessSolutions bool
+		CachedGrayedAccess    bool
 	}
 
 	expected := []groupItemCachedResult{
@@ -60,7 +60,7 @@ func TestGroupItemStore_GrantCachedAccessWhereNeeded(t *testing.T) {
 		{ID: 64, CachedGrayedAccess: true},
 	}
 	var result []groupItemCachedResult
-	assert.NoError(t, groupItemStore.Order("ID").Scan(&result).Error())
+	assert.NoError(t, groupItemStore.Order("id").Scan(&result).Error())
 	assert.Equal(t, expected, result)
 }
 
@@ -82,11 +82,11 @@ func TestGroupItemStore_RevokeCachedAccessWhereNeeded(t *testing.T) {
 	}
 
 	type groupItemCachedResult struct {
-		ID                    int64 `gorm:"column:ID"`
-		CachedFullAccess      bool  `gorm:"column:bCachedFullAccess"`
-		CachedPartialAccess   bool  `gorm:"column:bCachedPartialAccess"`
-		CachedAccessSolutions bool  `gorm:"column:bCachedAccessSolutions"`
-		CachedGrayedAccess    bool  `gorm:"column:bCachedGrayedAccess"`
+		ID                    int64
+		CachedFullAccess      bool
+		CachedPartialAccess   bool
+		CachedAccessSolutions bool
+		CachedGrayedAccess    bool
 	}
 
 	expected := []groupItemCachedResult{
@@ -131,6 +131,6 @@ func TestGroupItemStore_RevokeCachedAccessWhereNeeded(t *testing.T) {
 		{ID: 74, CachedGrayedAccess: true},
 	}
 	var result []groupItemCachedResult
-	assert.NoError(t, groupItemStore.Order("ID").Scan(&result).Error())
+	assert.NoError(t, groupItemStore.Order("id").Scan(&result).Error())
 	assert.Equal(t, expected, result)
 }

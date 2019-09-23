@@ -27,9 +27,9 @@ type updateCurrentRequest struct {
 // summary: Update current answer
 // description: Update user's current answer. Used for auto-saving while working on a task.
 //
-//   * The authenticated user should have at least partial access to the `groups_attempts[attempt_id].idItem`
+//   * The authenticated user should have at least partial access to the `groups_attempts[attempt_id].item_id`
 //
-//   * `groups_attempts.idGroup` should be the user's selfGroup (if `items.bHasAttempts=0`) or the user's team (otherwise)
+//   * `groups_attempts.group_id` should be the user's selfGroup (if `items.has_attempts=0`) or the user's team (otherwise)
 //   [this extra check just ensures the consistency of data]
 // parameters:
 // - name: current answer information
@@ -73,14 +73,14 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 		service.MustNotBeError(err)
 
 		columnsToUpdate := map[string]interface{}{
-			"sState":  requestData.State,
-			"sAnswer": requestData.Answer,
+			"state":  requestData.State,
+			"answer": requestData.Answer,
 		}
 		service.MustNotBeError(userAnswerStore.ByID(currentAnswerID).UpdateColumn(columnsToUpdate).Error())
 
-		service.MustNotBeError(store.UserItems().Where("idUser = ?", user.ID).
-			Where("idItem = ?", itemID).
-			Where("idAttemptActive = ?", requestData.AttemptID).
+		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
+			Where("item_id = ?", itemID).
+			Where("active_attempt_id = ?", requestData.AttemptID).
 			UpdateColumn(columnsToUpdate).Error())
 
 		return nil

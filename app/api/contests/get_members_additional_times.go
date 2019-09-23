@@ -15,7 +15,7 @@ import (
 // description: >
 //                For all
 //
-//                  * descendant teams linked to the item via `idTeamItem` if `items.bHasAttempts`
+//                  * descendant teams linked to the item via `team_item_id` if `items.has_attempts`
 //                  * end-users groups otherwise
 //
 //                having at least grayed access to the item, the service returns their
@@ -33,7 +33,7 @@ import (
 //                  * the authenticated user should own the `group_id`.
 // parameters:
 // - name: item_id
-//   description: "`ID` of a timed contest"
+//   description: "`id` of a timed contest"
 //   in: path
 //   type: integer
 //   required: true
@@ -42,12 +42,12 @@ import (
 //   type: integer
 //   required: true
 // - name: from.name
-//   description: Start the page from the group next to the group with `name` = `from.name` and `ID` = `from.id`
+//   description: Start the page from the group next to the group with `name` = `from.name` and `id` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the group next to the group with `name` = `from.name` and `ID`=`from.id`
+//   description: Start the page from the group next to the group with `name` = `from.name` and `id`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -96,48 +96,48 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 	service.MustNotBeError(err)
 
-	ok, err := srv.Store.Groups().OwnedBy(user).Where("groups.ID = ?", groupID).HasRows()
+	ok, err := srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	if !ok {
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.GroupAncestors().Where("groups_ancestors.idGroupAncestor = ?", groupID)
+	query := srv.Store.GroupAncestors().Where("groups_ancestors.ancestor_group_id = ?", groupID)
 
 	if isTeamOnly {
 		query = query.
 			Joins(`
 				JOIN `+"`groups`"+` AS found_group
-					ON found_group.ID = groups_ancestors.idGroupChild AND found_group.sType = 'Team' AND
-						(found_group.idTeamItem IN (SELECT idItemAncestor FROM items_ancestors WHERE idItemChild = ?) OR
-						 found_group.idTeamItem = ?)`, itemID, itemID)
+					ON found_group.id = groups_ancestors.child_group_id AND found_group.type = 'Team' AND
+						(found_group.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
+						 found_group.team_item_id = ?)`, itemID, itemID)
 	} else {
 		query = query.
 			Joins(`
 				JOIN ` + "`groups`" + ` AS found_group
-					ON found_group.ID = groups_ancestors.idGroupChild AND found_group.sType = 'UserSelf'`)
+					ON found_group.id = groups_ancestors.child_group_id AND found_group.type = 'UserSelf'`)
 	}
 
 	query = query.
-		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.idGroupChild = found_group.ID").
-		Joins("LEFT JOIN groups_items ON groups_items.idGroup = found_group_ancestors.idGroupAncestor AND groups_items.idItem = ?", itemID).
-		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.idGroup = found_group.ID AND main_group_item.idItem = ?", itemID).
+		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.child_group_id = found_group.id").
+		Joins("LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND groups_items.item_id = ?", itemID).
+		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.group_id = found_group.id AND main_group_item.item_id = ?", itemID).
 		Select(`
-				found_group.ID AS idGroup,
-				found_group.sName,
-				found_group.sType,
-				IFNULL(TIME_TO_SEC(MAX(main_group_item.sAdditionalTime)), 0) AS iAdditionalTime,
-				IFNULL(SUM(TIME_TO_SEC(groups_items.sAdditionalTime)), 0) AS iTotalAdditionalTime`).
-		Group("found_group.ID").
+				found_group.id AS group_id,
+				found_group.name,
+				found_group.type,
+				IFNULL(TIME_TO_SEC(MAX(main_group_item.additional_time)), 0) AS additional_time,
+				IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS total_additional_time`).
+		Group("found_group.id").
 		Having(`
-			MIN(groups_items.sCachedFullAccessDate) <= NOW() OR MIN(groups_items.sCachedPartialAccessDate) <= NOW() OR
-			MIN(groups_items.sCachedGrayedAccessDate) <= NOW()`)
+			MIN(groups_items.cached_full_access_date) <= NOW() OR MIN(groups_items.cached_partial_access_date) <= NOW() OR
+			MIN(groups_items.cached_grayed_access_date) <= NOW()`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"name": {ColumnName: "found_group.sName", FieldType: "string"},
-			"id":   {ColumnName: "found_group.ID", FieldType: "int64"}},
+			"name": {ColumnName: "found_group.name", FieldType: "string"},
+			"id":   {ColumnName: "found_group.id", FieldType: "int64"}},
 		"name,id")
 	if apiError != service.NoError {
 		return apiError

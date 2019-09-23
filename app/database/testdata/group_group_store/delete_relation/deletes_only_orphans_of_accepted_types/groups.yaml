@@ -1,13 +1,13 @@
-- {ID: 1}
-- {ID: 2, sType: "Class"}
-- {ID: 3, sType: "Team"}
-- {ID: 4, sType: "Club"}
-- {ID: 5, sType: "Friends"}
-- {ID: 6, sType: "Class"}
-- {ID: 7, sType: "Other"}
+- {id: 1}
+- {id: 2, type: "Class"}
+- {id: 3, type: "Team"}
+- {id: 4, type: "Club"}
+- {id: 5, type: "Friends"}
+- {id: 6, type: "Class"}
+- {id: 7, type: "Other"}
 
-- {ID: 8, sType: "Base", sName: "Root"}
-- {ID: 9, sType: "UserSelf"}
-- {ID: 10, sType: "UserAdmin"}
-- {ID: 11, sType: "Base", sName: "RootSelf"}
-- {ID: 12, sType: "Base", sName: "RootAdmin"}
+- {id: 8, type: "Base", name: "Root"}
+- {id: 9, type: "UserSelf"}
+- {id: 10, type: "UserAdmin"}
+- {id: 11, type: "Base", name: "RootSelf"}
+- {id: 12, type: "Base", name: "RootAdmin"}

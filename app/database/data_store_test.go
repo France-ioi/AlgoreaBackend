@@ -92,9 +92,9 @@ func TestDataStore_ByID(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	const id = 123
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `tableName` WHERE (tableName.ID = ?)")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `tableName` WHERE (tableName.id = ?)")).
 		WithArgs(id).
-		WillReturnRows(mock.NewRows([]string{"ID"}))
+		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
 	err := NewDataStoreWithTable(db, "tableName").ByID(id).Scan(&result).Error()
@@ -121,7 +121,7 @@ func TestDataStore_InTransaction_NoErrors(t *testing.T) {
 	mock.ExpectCommit()
 
 	type resultStruct struct {
-		ID int64 `sql:"column:id"`
+		ID int64
 	}
 
 	store := NewDataStoreWithTable(db, "myTable")
@@ -205,7 +205,7 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 	retryCount := 0
 	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError(func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (ID) VALUES (?)", retryCount).Error()
+		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)
@@ -216,18 +216,18 @@ func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	queryRegexp := "^" + regexp.QuoteMeta("INSERT INTO users (sLogin) VALUES (?)") + "$"
+	queryRegexp := "^" + regexp.QuoteMeta("INSERT INTO users (login) VALUES (?)") + "$"
 	for i := 1; i < keyTriesCount; i++ {
 		dbMock.ExpectExec(queryRegexp).WithArgs(i).
-			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'sLogin'"})
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'login'"})
 	}
 	dbMock.ExpectExec(queryRegexp).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
-	err := NewDataStore(db).RetryOnDuplicateKeyError("sLogin", "login", func(store *DataStore) error {
+	err := NewDataStore(db).RetryOnDuplicateKeyError("login", "login", func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (sLogin) VALUES (?)", retryCount).Error()
+		return db.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)
@@ -238,10 +238,10 @@ func TestDataStore_InsertMap(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"ID": int64(1), "sField": "some value", "sNullField": nil}
+	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (ID, sField, sNullField) VALUES (?, ?, NULL)")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (id, sField, sNullField) VALUES (?, ?, NULL)")).
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 

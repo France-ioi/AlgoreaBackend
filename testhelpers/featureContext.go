@@ -16,7 +16,7 @@ func FeatureContext(s *godog.Suite) {
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
 
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
-	s.Step(`^I am the user with ID "([^"]*)"$`, ctx.IAmUserWithID)
+	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
 	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
@@ -39,10 +39,10 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
-	s.Step(`^the table "([^"]*)" at IDs? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
-	s.Step(`^the table "([^"]*)" should not contain IDs? "([^"]*)"$`, ctx.TableShouldNotContainID)
+	s.Step(`^the table "([^"]*)" at ids? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
+	s.Step(`^the table "([^"]*)" should not contain ids? "([^"]*)"$`, ctx.TableShouldNotContainID)
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
-	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with IDs? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
+	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with ids? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
 
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)
@@ -53,7 +53,7 @@ func FeatureContext(s *godog.Suite) {
 		ctx.TheLoginModuleTokenEndpointForRefreshTokenReturns)
 	s.Step(`^the login module "account" endpoint for token "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleAccountEndpointForTokenReturns)
-	s.Step(`^the login module "unlink_client" endpoint for user ID "([^"]*)" returns (\d+) with encoded body:$`,
+	s.Step(`^the login module "unlink_client" endpoint for user id "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleUnlinkClientEndpointForUserIDReturns)
 
 	s.AfterScenario(ctx.ScenarioTeardown)

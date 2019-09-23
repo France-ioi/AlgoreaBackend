@@ -26,16 +26,16 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 		userItemStore := store.UserItems()
 		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
 		service.MustNotBeError(userItemStore.
-			Where("idUser = ?", user.ID).Where("idItem = ?", itemID).
+			Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"idAttemptActive":            groupsAttemptID,
-				"sLastActivityDate":          database.Now(),
-				"sAncestorsComputationState": "todo",
+				"active_attempt_id":           groupsAttemptID,
+				"last_activity_date":          database.Now(),
+				"ancestors_computation_state": "todo",
 			}).Error())
 		service.MustNotBeError(store.GroupAttempts().
 			ByID(groupsAttemptID).
 			UpdateColumn(map[string]interface{}{
-				"sLastActivityDate": database.Now(),
+				"last_activity_date": database.Now(),
 			}).Error())
 		service.MustNotBeError(userItemStore.ComputeAllUserItems())
 		return nil

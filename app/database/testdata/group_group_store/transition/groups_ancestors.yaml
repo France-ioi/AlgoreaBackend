@@ -1,22 +1,22 @@
-- {ID: 1, idGroupAncestor: 1, idGroupChild: 1, bIsSelf: 1}
-- {ID: 2, idGroupAncestor: 2, idGroupChild: 2, bIsSelf: 1}
-- {ID: 3, idGroupAncestor: 3, idGroupChild: 3, bIsSelf: 1}
-- {ID: 4, idGroupAncestor: 4, idGroupChild: 4, bIsSelf: 1}
-- {ID: 5, idGroupAncestor: 5, idGroupChild: 5, bIsSelf: 1}
-- {ID: 6, idGroupAncestor: 6, idGroupChild: 6, bIsSelf: 1}
-- {ID: 7, idGroupAncestor: 7, idGroupChild: 7, bIsSelf: 1}
-- {ID: 8, idGroupAncestor: 8, idGroupChild: 8, bIsSelf: 1}
-- {ID: 9, idGroupAncestor: 9, idGroupChild: 9, bIsSelf: 1}
-- {ID: 10, idGroupAncestor: 10, idGroupChild: 10, bIsSelf: 1}
-- {ID: 11, idGroupAncestor: 11, idGroupChild: 11, bIsSelf: 1}
-- {ID: 23, idGroupAncestor: 20, idGroupChild: 4}
-- {ID: 24, idGroupAncestor: 20, idGroupChild: 5}
-- {ID: 25, idGroupAncestor: 20, idGroupChild: 10}
-- {ID: 26, idGroupAncestor: 20, idGroupChild: 11}
-- {ID: 27, idGroupAncestor: 20, idGroupChild: 20, bIsSelf: 1}
-- {ID: 28, idGroupAncestor: 30, idGroupChild: 4}
-- {ID: 29, idGroupAncestor: 30, idGroupChild: 5}
-- {ID: 30, idGroupAncestor: 30, idGroupChild: 10}
-- {ID: 31, idGroupAncestor: 30, idGroupChild: 11}
-- {ID: 32, idGroupAncestor: 30, idGroupChild: 20}
-- {ID: 33, idGroupAncestor: 30, idGroupChild: 30, bIsSelf: 1}
+- {id: 1, ancestor_group_id: 1, child_group_id: 1, is_self: 1}
+- {id: 2, ancestor_group_id: 2, child_group_id: 2, is_self: 1}
+- {id: 3, ancestor_group_id: 3, child_group_id: 3, is_self: 1}
+- {id: 4, ancestor_group_id: 4, child_group_id: 4, is_self: 1}
+- {id: 5, ancestor_group_id: 5, child_group_id: 5, is_self: 1}
+- {id: 6, ancestor_group_id: 6, child_group_id: 6, is_self: 1}
+- {id: 7, ancestor_group_id: 7, child_group_id: 7, is_self: 1}
+- {id: 8, ancestor_group_id: 8, child_group_id: 8, is_self: 1}
+- {id: 9, ancestor_group_id: 9, child_group_id: 9, is_self: 1}
+- {id: 10, ancestor_group_id: 10, child_group_id: 10, is_self: 1}
+- {id: 11, ancestor_group_id: 11, child_group_id: 11, is_self: 1}
+- {id: 23, ancestor_group_id: 20, child_group_id: 4}
+- {id: 24, ancestor_group_id: 20, child_group_id: 5}
+- {id: 25, ancestor_group_id: 20, child_group_id: 10}
+- {id: 26, ancestor_group_id: 20, child_group_id: 11}
+- {id: 27, ancestor_group_id: 20, child_group_id: 20, is_self: 1}
+- {id: 28, ancestor_group_id: 30, child_group_id: 4}
+- {id: 29, ancestor_group_id: 30, child_group_id: 5}
+- {id: 30, ancestor_group_id: 30, child_group_id: 10}
+- {id: 31, ancestor_group_id: 30, child_group_id: 11}
+- {id: 32, ancestor_group_id: 30, child_group_id: 20}
+- {id: 33, ancestor_group_id: 30, child_group_id: 30, is_self: 1}

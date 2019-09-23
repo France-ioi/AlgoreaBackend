@@ -1,29 +1,29 @@
 Feature: Submit a new answer - robustness
   Background:
     Given the database has the following table 'users':
-      | ID  | sLogin | idGroupSelf |
-      | 10  | john   | 101         |
+      | id  | login | self_group_id |
+      | 10  | john  | 101           |
     And the database has the following table 'groups':
-      | ID  |
+      | id  |
       | 101 |
     And the database has the following table 'groups_ancestors':
-      | idGroupAncestor | idGroupChild | bIsSelf |
-      | 101             | 101          | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | ID | idGroupParent | idGroupChild | sType              | sStatusDate |
-      | 15 | 22            | 13           | direct             | null        |
+      | id | parent_group_id | child_group_id | type   | status_date |
+      | 15 | 22              | 13             | direct | null        |
     And the database has the following table 'items':
-      | ID | bReadOnly |
+      | id | read_only |
       | 50 | 1         |
     And the database has the following table 'groups_items':
-      | idGroup | idItem | sCachedPartialAccessDate | idUserCreated |
-      | 101     | 50     | 2017-05-29 06:38:38      | 10            |
+      | group_id | item_id | cached_partial_access_date | creator_user_id |
+      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
     And the database has the following table 'users_items':
-      | idUser | idItem | sHintsRequested                 | nbHintsCached |
-      | 10     | 50     | [{"rotorIndex":0,"cellRank":0}] | 12            |
+      | user_id | item_id | hints_requested                 | hints_cached |
+      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           |
 
   Scenario: Wrong JSON in request
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     When I send a POST request to "/answers" with the following body:
       """
       []
@@ -34,7 +34,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: No task_token
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     When I send a POST request to "/answers" with the following body:
       """
       {
@@ -47,7 +47,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong task_token
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     When I send a POST request to "/answers" with the following body:
       """
       {
@@ -61,7 +61,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing answer
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -83,7 +83,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idUser
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -106,7 +106,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idItemLocal
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -128,7 +128,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idAttempt
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -150,8 +150,8 @@ Feature: Submit a new answer - robustness
     And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
-  Scenario: idUser doesn't match the user's ID
-    Given I am the user with ID "10"
+  Scenario: idUser doesn't match the user's id
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -174,7 +174,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with ID "404"
+    Given I am the user with id "404"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -197,7 +197,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with ID "10"
+    Given I am the user with id "10"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {

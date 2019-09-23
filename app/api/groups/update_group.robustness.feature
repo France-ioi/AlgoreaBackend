@@ -1,22 +1,22 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'users':
-      | ID | sLogin | tempUser | idGroupSelf | idGroupOwned | sFirstName  | sLastName |
-      | 1  | owner  | 0        | 21          | 22           | Jean-Michel | Blanquer  |
-      | 2  | user   | 0        | 31          | 32           | John        | Doe       |
+      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name |
+      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  |
+      | 2  | user  | 0         | 31            | 32             | John        | Doe       |
     And the database has the following table 'groups_ancestors':
-      | ID | idGroupAncestor | idGroupChild | bIsSelf | iVersion |
-      | 75 | 22              | 13           | 0       | 0        |
-      | 76 | 13              | 11           | 0       | 0        |
-      | 77 | 32              | 15           | 0       | 0        |
+      | id | ancestor_group_id | child_group_id | is_self | version |
+      | 75 | 22                | 13             | 0       | 0       |
+      | 76 | 13                | 11             | 0       | 0       |
+      | 77 | 32                | 15             | 0       | 0       |
     And the database has the following table 'groups':
-      | ID | sName      | iGrade | sDescription    | sDateCreated        | sType     | sRedirectPath                          | bOpened | bFreeAccess | sCode      | sCodeTimer | sCodeEnd            | bOpenContest |
-      | 11 | Group A    | -3     | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true    | true        | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B    | -2     | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true    | true        | ybabbxnlyo | 01:00:00   | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C    | -4     | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true    | true        | null       | null       | null                | false        |
+      | id | name    | grade | description     | date_created        | type      | redirect_path                          | opened | free_access | code       | code_timer | code_end            | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00   | 2017-10-14 05:39:48 | true         |
+      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | true        | null       | null       | null                | false        |
 
   Scenario: Should fail if the user is not an owner of the group
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {}
@@ -27,7 +27,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is not found
-    Given I am the user with ID "3"
+    Given I am the user with id "3"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {}
@@ -38,7 +38,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
-    Given I am the user with ID "2"
+    Given I am the user with id "2"
     When I send a PUT request to "/groups/15" with the following body:
     """
     {"name":"Club"}
@@ -49,7 +49,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but required fields are not filled in correctly
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -88,7 +88,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but no fields provided
-    Given I am the user with ID "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -98,8 +98,8 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: The group ID is not a number
-    Given I am the user with ID "1"
+  Scenario: The group id is not a number
+    Given I am the user with id "1"
     When I send a PUT request to "/groups/1_3" with the following body:
     """
     {

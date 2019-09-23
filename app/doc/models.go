@@ -31,13 +31,13 @@ type userCreateTmpResponse struct {
 
 // swagger:model groupsMembershipHistoryResponseRow
 type groupsMembershipHistoryResponseRow struct {
-	// `groups_groups.ID`
+	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.sStatusDate`
+	// `groups_groups.status_date`
 	// required: true
 	StatusDate time.Time `json:"status_date"`
-	// `groups_groups.sType`
+	// `groups_groups.type`
 	// required: true
 	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,joinedByCode,requestRefused,removed,left
 	Type string `json:"type"`
@@ -54,13 +54,13 @@ type groupsMembershipHistoryResponseRow struct {
 
 // swagger:model invitationsViewResponseRow
 type invitationsViewResponseRow struct {
-	// `groups_groups.ID`
+	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.sStatusDate`
+	// `groups_groups.status_date`
 	// required: true
 	StatusDate time.Time `json:"status_date"`
-	// `groups_groups.sType`
+	// `groups_groups.type`
 	// required: true
 	// enum: invitationSent,requestSent,requestRefused
 	Type string `json:"type"`
@@ -68,7 +68,7 @@ type invitationsViewResponseRow struct {
 	// the user that invited (Nullable: only for invitations)
 	// required: true
 	InvitingUser *struct {
-		// `users.ID`
+		// `users.id`
 		// required: true
 		ID int64 `json:"id"`
 		// required: true
@@ -83,7 +83,7 @@ type invitationsViewResponseRow struct {
 
 	// required: true
 	Group struct {
-		// `groups.ID`
+		// `groups.id`
 		// required: true
 		ID int64 `json:"id"`
 		// required: true
@@ -99,20 +99,20 @@ type invitationsViewResponseRow struct {
 
 // swagger:model membershipsViewResponseRow
 type membershipsViewResponseRow struct {
-	// `groups_groups.ID`
+	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.sStatusDate`
+	// `groups_groups.status_date`
 	// required: true
 	StatusDate time.Time `json:"status_date"`
-	// `groups_groups.sType`
+	// `groups_groups.type`
 	// required: true
 	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
 	Type string `json:"type"`
 
 	// required: true
 	Group struct {
-		// `groups.ID`
+		// `groups.id`
 		// required: true
 		ID int64 `json:"id"`
 		// required: true

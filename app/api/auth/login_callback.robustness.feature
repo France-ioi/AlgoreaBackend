@@ -51,7 +51,7 @@ Feature: Login callback - robustness
   Scenario: OAuth error
     Given the "Cookie" request header is "login_csrf=somecookiesomecookiesomecookieso"
     And the database has the following table 'login_states':
-      | sCookie                          | sState                           | sExpirationDate     |
+      | cookie                           | state                            | expiration_date     |
       | somecookiesomecookiesomecookieso | somestatesomestatesomestatesomes | 2019-07-16 22:02:29 |
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "token" endpoint for code "somecode" returns 500 with body:
@@ -73,7 +73,7 @@ Feature: Login callback - robustness
   Scenario: User API error
     Given the "Cookie" request header is "login_csrf=somecookiesomecookiesomecookieso"
     And the database has the following table 'login_states':
-      | sCookie                          | sState                           | sExpirationDate     |
+      | cookie                           | state                            | expiration_date     |
       | somecookiesomecookiesomecookieso | somestatesomestatesomestatesomes | 2019-07-16 22:02:29 |
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "token" endpoint for code "somecode" returns 200 with body:
@@ -107,7 +107,7 @@ Feature: Login callback - robustness
   Scenario: User profile can't be parsed
     Given the "Cookie" request header is "login_csrf=somecookiesomecookiesomecookieso"
     And the database has the following table 'login_states':
-      | sCookie                          | sState                           | sExpirationDate     |
+      | cookie                           | state                            | expiration_date     |
       | somecookiesomecookiesomecookieso | somestatesomestatesomestatesomes | 2019-07-16 22:02:29 |
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "token" endpoint for code "somecode" returns 200 with body:
@@ -141,7 +141,7 @@ Feature: Login callback - robustness
   Scenario Outline: User profile is invalid
     Given the "Cookie" request header is "login_csrf=somecookiesomecookiesomecookieso"
     And the database has the following table 'login_states':
-      | sCookie                          | sState                           | sExpirationDate     |
+      | cookie                           | state                            | expiration_date     |
       | somecookiesomecookiesomecookieso | somestatesomestatesomestatesomes | 2019-07-16 22:02:29 |
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "token" endpoint for code "somecode" returns 200 with body:

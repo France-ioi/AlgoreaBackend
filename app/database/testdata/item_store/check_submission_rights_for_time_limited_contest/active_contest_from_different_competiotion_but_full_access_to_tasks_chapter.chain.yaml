@@ -1,13 +1,13 @@
-users: [{ID: 4, idGroupSelf: 14, sLogin: 4}]
-items: [{ID: 500}]
-users_items: [{idUser: 4, idItem: 500}]
-groups: [{ID: 14}, {ID: 23}]
-groups_groups: [{idGroupParent: 23, idGroupChild: 14, sType: invitationAccepted}]
+users: [{id: 4, self_group_id: 14, login: 4}]
+items: [{id: 500}]
+users_items: [{user_id: 4, item_id: 500}]
+groups: [{id: 14}, {id: 23}]
+groups_groups: [{parent_group_id: 23, child_group_id: 14, type: invitationAccepted}]
 groups_ancestors:
-  - {idGroupAncestor: 14, idGroupChild: 14}
-  - {idGroupAncestor: 23, idGroupChild: 14}
-  - {idGroupAncestor: 23, idGroupChild: 23}
+  - {ancestor_group_id: 14, child_group_id: 14}
+  - {ancestor_group_id: 23, child_group_id: 14}
+  - {ancestor_group_id: 23, child_group_id: 23}
 groups_items:
-  - {idGroup: 14, idItem: 115, sFullAccessDate: 2019-03-22 08:44:55, sCachedFullAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
-  - {idGroup: 23, idItem: 500, sAdditionalTime: 0000-00-00 01:00:00, idUserCreated: 1}
-  - {idGroup: 23, idItem: 115, sPartialAccessDate: 2019-03-22 08:44:55, sCachedPartialAccessDate: 2019-03-22 08:44:55, idUserCreated: 1}
+  - {group_id: 14, item_id: 115, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+  - {group_id: 23, item_id: 500, additional_time: 0000-00-00 01:00:00, creator_user_id: 1}
+  - {group_id: 23, item_id: 115, partial_access_date: 2019-03-22 08:44:55, cached_partial_access_date: 2019-03-22 08:44:55, creator_user_id: 1}

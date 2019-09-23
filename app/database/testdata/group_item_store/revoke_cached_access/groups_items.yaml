@@ -1,5 +1,5 @@
 # true stays true because there are no related rows in groups_items_propagate
-- {ID: 71, idGroup: 7, idItem: 1, bCachedFullAccess: true, sCachedFullAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 72, idGroup: 7, idItem: 2, bCachedPartialAccess: true, sCachedPartialAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 73, idGroup: 7, idItem: 3, bCachedAccessSolutions: true, sCachedAccessSolutionsDate: 2037-01-01 21:30:55, idUserCreated: 1}
-- {ID: 74, idGroup: 7, idItem: 4, bCachedGrayedAccess: true, sCachedGrayedAccessDate: 2037-01-01 21:30:55, idUserCreated: 1}
+- {id: 71, group_id: 7, item_id: 1, cached_full_access: true, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 72, group_id: 7, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 73, group_id: 7, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}
+- {id: 74, group_id: 7, item_id: 4, cached_grayed_access: true, cached_grayed_access_date: 2037-01-01 21:30:55, creator_user_id: 1}

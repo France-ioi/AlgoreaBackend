@@ -38,7 +38,7 @@ func getOAuthConfig(conf *config.Auth) *oauth2.Config {
 			TokenURL: conf.LoginModuleURL + "/oauth/token",
 
 			// AuthStyle optionally specifies how the endpoint wants the
-			// client ID & client secret sent. The zero value means to
+			// client id & client secret sent. The zero value means to
 			// auto-detect.
 			AuthStyle: oauth2.AuthStyleInParams,
 		},

@@ -15,11 +15,11 @@ import (
 )
 
 type unlocksResultRow struct {
-	GroupID                 int64          `gorm:"column:idGroup"`
-	ItemID                  int64          `gorm:"column:idItem"`
-	PartialAccessDate       *database.Time `gorm:"column:sPartialAccessDate"`
-	CachedPartialAccessDate *database.Time `gorm:"column:sCachedPartialAccessDate"`
-	CachedPartialAccess     bool           `gorm:"column:bCachedPartialAccess"`
+	GroupID                 int64
+	ItemID                  int64
+	PartialAccessDate       *database.Time
+	CachedPartialAccessDate *database.Time
+	CachedPartialAccess     bool
 }
 
 func TestUserItemStore_ComputeAllUserItems_Unlocks(t *testing.T) {
@@ -50,12 +50,12 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	defer restoreFunc()
 
 	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn(
-		"bKeyObtained", 1,
+	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, itemStore.Where("ID=1").UpdateColumn(
-		"idItemUnlocked", "1001,abc",
+	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
+		"unlocked_item_ids", "1001,abc",
 	).Error())
 
 	err := userItemStore.InTransaction(func(s *database.DataStore) error {
@@ -66,32 +66,32 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	logs := strings.Split((&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), "\n")
 	assert.Len(t, logs, 1)
 	assert.Contains(t, logs[0], `level=warning`)
-	assert.Contains(t, logs[0], `msg="cannot parse items.idItemUnlocked"`)
+	assert.Contains(t, logs[0], `msg="cannot parse items.unlocked_item_ids"`)
 	assert.Contains(t, logs[0], `error="strconv.ParseInt: parsing \"abc\": invalid syntax"`)
-	assert.Contains(t, logs[0], `items.ID=1`)
-	assert.Contains(t, logs[0], `items.idItemUnlocked="1001,abc"`)
+	assert.Contains(t, logs[0], `items.id=1`)
+	assert.Contains(t, logs[0], `items.unlocked_item_ids="1001,abc"`)
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
 	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("ID=11").UpdateColumn(
-		"bKeyObtained", 1,
+	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("ID=13").UpdateColumn(
-		"bKeyObtained", 1,
+	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn(
+		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("ID=14").UpdateColumn(
-		"bKeyObtained", 1,
+	assert.NoError(t, userItemStore.Where("id=14").UpdateColumn(
+		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, itemStore.Where("ID=1").UpdateColumn(
-		"idItemUnlocked", "1001,1002",
+	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
+		"unlocked_item_ids", "1001,1002",
 	).Error())
-	assert.NoError(t, itemStore.Where("ID=3").UpdateColumn(
-		"idItemUnlocked", "2001,2002",
+	assert.NoError(t, itemStore.Where("id=3").UpdateColumn(
+		"unlocked_item_ids", "2001,2002",
 	).Error())
-	assert.NoError(t, itemStore.Where("ID=4").UpdateColumn(
-		"idItemUnlocked", "4001,4002",
+	assert.NoError(t, itemStore.Where("id=4").UpdateColumn(
+		"unlocked_item_ids", "4001,4002",
 	).Error())
 
 	err := userItemStore.InTransaction(func(s *database.DataStore) error {
@@ -101,8 +101,8 @@ func testUnlocks(db *database.DB, t *testing.T) {
 
 	var result []unlocksResultRow
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Select("idGroup, idItem, bCachedPartialAccess").
-		Order("idGroup, idItem").
+		Select("group_id, item_id, cached_partial_access").
+		Order("group_id, item_id").
 		Scan(&result).Error())
 	assert.Equal(t, []unlocksResultRow{
 		{GroupID: 101, ItemID: 1001, CachedPartialAccess: true},
@@ -114,15 +114,15 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	}, result)
 	var count int64
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, sCachedPartialAccessDate, NOW()) > 1").Count(&count).Error())
+		Where("TIMESTAMPDIFF(SECOND, cached_partial_access_date, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, sPartialAccessDate, NOW()) > 1").Count(&count).Error())
+		Where("TIMESTAMPDIFF(SECOND, partial_access_date, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("sCachedPartialAccessDate IS NULL").Count(&count).Error())
+		Where("cached_partial_access_date IS NULL").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("sPartialAccessDate IS NULL").Count(&count).Error())
+		Where("partial_access_date IS NULL").Count(&count).Error())
 	assert.Zero(t, count)
 }

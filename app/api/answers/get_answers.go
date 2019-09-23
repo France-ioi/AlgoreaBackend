@@ -44,14 +44,14 @@ import (
 //     type: string
 //     enum: [submission_date,-submission_date,id,-id]
 // - name: from.submission_date
-//   description: Start the page from the answer next to the answer with `sSubmissionDate` = `from.submission_date`
-//                and `users_answers.ID` = `from.id`
+//   description: Start the page from the answer next to the answer with `submission_date` = `from.submission_date`
+//                and `users_answers.id` = `from.id`
 //                (`from.id` is required when `from.submission_date` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the answer next to the answer with `sSubmissionDate`=`from.submission_date`
-//                and `users_answers.ID`=`from.id`
+//   description: Start the page from the answer next to the answer with `submission_date`=`from.submission_date`
+//                and `users_answers.id`=`from.id`
 //                (`from.submission_date` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -82,9 +82,9 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	user := srv.GetUser(httpReq)
 
 	dataQuery := srv.Store.UserAnswers().WithUsers().
-		Select(`users_answers.ID, users_answers.sName, users_answers.sType, users_answers.sLangProg,
-            users_answers.sSubmissionDate, users_answers.iScore, users_answers.bValidated,
-            users.sLogin, users.sFirstName, users.sLastName`)
+		Select(`users_answers.id, users_answers.name, users_answers.type, users_answers.lang_prog,
+		        users_answers.submission_date, users_answers.score, users_answers.validated,
+		        users.login, users.first_name, users.last_name`)
 
 	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
@@ -99,19 +99,19 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 			return result
 		}
 
-		// we should create an index on `users_answers`.`idAttempt` for this query
-		dataQuery = dataQuery.Where("idAttempt = ?", attemptID)
+		// we should create an index on `users_answers`.`attempt_id` for this query
+		dataQuery = dataQuery.Where("attempt_id = ?", attemptID)
 	} else { // user_id + item_id
 		if result := srv.checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID, user); result != service.NoError {
 			return result
 		}
 
-		dataQuery = dataQuery.Where("idItem = ? AND idUser = ?", itemID, userID)
+		dataQuery = dataQuery.Where("item_id = ? AND user_id = ?", itemID, userID)
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"submission_date": {ColumnName: "users_answers.sSubmissionDate", FieldType: "time"},
-		"id":              {ColumnName: "users_answers.ID", FieldType: "int64"},
+		"submission_date": {ColumnName: "users_answers.submission_date", FieldType: "time"},
+		"id":              {ColumnName: "users_answers.id", FieldType: "int64"},
 	}, "-submission_date,id")
 	if apiError != service.NoError {
 		return apiError
@@ -129,16 +129,16 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 // swagger:ignore
 type rawAnswersData struct {
-	ID             int64         `sql:"column:ID"`
-	Name           *string       `sql:"column:sName"`
-	Type           string        `sql:"column:sType"`
-	LangProg       *string       `sql:"column:sLangProg"`
-	SubmissionDate database.Time `sql:"column:sSubmissionDate"`
-	Score          *float32      `sql:"column:iScore"`
-	Validated      *bool         `sql:"column:bValidated"`
-	UserLogin      string        `sql:"column:sLogin"`
-	UserFirstName  *string       `sql:"column:sFirstName"`
-	UserLastName   *string       `sql:"column:sLastName"`
+	ID             int64
+	Name           *string
+	Type           string
+	LangProg       *string
+	SubmissionDate database.Time
+	Score          *float32
+	Validated      *bool
+	UserLogin      string  `sql:"column:login"`
+	UserFirstName  *string `sql:"column:first_name"`
+	UserLastName   *string `sql:"column:last_name"`
 }
 
 type answersResponseAnswerUser struct {
@@ -154,7 +154,7 @@ type answersResponseAnswerUser struct {
 
 // swagger:model
 type answersResponseAnswer struct {
-	// `users_answers.ID`
+	// `users_answers.id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable
@@ -203,18 +203,18 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
 	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
-		Having("fullAccess>0 OR partialAccess>0")
+		Having("full_access>0 OR partial_access>0")
 	service.MustNotBeError(itemsUserCanAccess.Error())
 
-	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("idGroupChild")
+	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("child_group_id")
 	service.MustNotBeError(groupsOwnedByUser.Error())
 
-	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("idGroupParent")
+	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	service.MustNotBeError(groupsWhereUserIsMember.Error())
 
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
-		Joins("JOIN ? rights ON rights.idItem = groups_attempts.idItem", itemsUserCanAccess.SubQuery()).
-		Where("(groups_attempts.idGroup IN ?) OR (groups_attempts.idGroup IN ?) OR groups_attempts.idGroup = ?",
+		Joins("JOIN ? rights ON rights.item_id = groups_attempts.item_id", itemsUserCanAccess.SubQuery()).
+		Where("(groups_attempts.group_id IN ?) OR (groups_attempts.group_id IN ?) OR groups_attempts.group_id = ?",
 			groupsOwnedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
 			user.SelfGroupID).
@@ -228,10 +228,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
 	if userID != user.ID {
 		count := 0
-		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("idGroupSelf")
+		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("self_group_id")
 		service.MustNotBeError(givenUserSelfGroup.Error())
 		err := srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("idGroupChild=?", givenUserSelfGroup.SubQuery()).
+			Where("child_group_id=?", givenUserSelfGroup.SubQuery()).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

@@ -88,44 +88,44 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	// Build query to update users_items
-	// The iScore is set towards the end, so that the IF condition on
-	// sBestAnswerDate is computed before iScore is updated
+	// The score is set towards the end, so that the IF condition on
+	// best_answer_date is computed before score is updated
 	columnsToUpdate := []string{
-		"nbTasksTried",
-		"sLastActivityDate",
-		"sBestAnswerDate",
-		"sLastAnswerDate",
-		"iScore",
+		"tasks_tried",
+		"last_activity_date",
+		"best_answer_date",
+		"last_answer_date",
+		"score",
 	}
 	values := []interface{}{
 		1,
 		database.Now(),
-		gorm.Expr("IF(? > iScore, ?, sBestAnswerDate)", score, database.Now()),
+		gorm.Expr("IF(? > score, ?, best_answer_date)", score, database.Now()),
 		database.Now(),
-		gorm.Expr("GREATEST(?, iScore)", score),
+		gorm.Expr("GREATEST(?, score)", score),
 	}
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate,
-			"sAncestorsComputationState", "bValidated", "sValidationDate",
+			"ancestors_computation_state", "validated", "validation_date",
 		)
 		values = append(values,
-			todo, 1, gorm.Expr("IFNULL(sValidationDate, ?)", database.Now()))
+			todo, 1, gorm.Expr("IFNULL(validation_date, ?)", database.Now()))
 	}
 	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
 		keyObtained = true
 		if !validated {
 			// If validated, as the ancestor's recomputation will happen anyway
-			// Update sAncestorsComputationState only if we hadn't obtained the key before
-			columnsToUpdate = append(columnsToUpdate, "sAncestorsComputationState")
-			values = append(values, gorm.Expr("IF(bKeyObtained = 0, 'todo', sAncestorsComputationState)"))
+			// Update ancestors_computation_state only if we hadn't obtained the key before
+			columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
+			values = append(values, gorm.Expr("IF(key_obtained = 0, 'todo', ancestors_computation_state)"))
 		}
-		columnsToUpdate = append(columnsToUpdate, "bKeyObtained")
+		columnsToUpdate = append(columnsToUpdate, "key_obtained")
 		values = append(values, 1)
 	}
 	if score > 0 {
 		// Always propagate attempts if the score was non-zero
-		columnsToUpdate = append(columnsToUpdate, "sAncestorsComputationState")
+		columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
 		values = append(values, todo)
 	}
 
@@ -134,10 +134,10 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	userItemsValues = append(userItemsValues, values...)
 	userItemsValues = append(userItemsValues, user.ID, requestData.TaskToken.Converted.LocalItemID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE users_items "+updateExpr+" WHERE idUser = ? AND idItem = ?", userItemsValues...).Error()) // nolint:gosec
+		store.DB.Exec("UPDATE users_items "+updateExpr+" WHERE user_id = ? AND item_id = ?", userItemsValues...).Error()) // nolint:gosec
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE ID = ?", values...).Error()) // nolint:gosec
+		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE id = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().After())
 	return validated, keyObtained, true
 }
@@ -146,20 +146,20 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
 	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
 	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
-		Where("idUser = ?", user.ID).
-		Where("idItem = ?", requestData.TaskToken.Converted.LocalItemID)
+		Where("user_id = ?", user.ID).
+		Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID)
 
-	updateResult := userAnswerScope.Where("iScore = ? OR iScore IS NULL", score).
+	updateResult := userAnswerScope.Where("score = ? OR score IS NULL", score).
 		UpdateColumn(map[string]interface{}{
-			"sGradingDate": database.Now(),
-			"bValidated":   validated,
-			"iScore":       score,
+			"grading_date": database.Now(),
+			"validated":    validated,
+			"score":        score,
 		})
 	service.MustNotBeError(updateResult.Error())
 
 	if updateResult.RowsAffected() == 0 {
 		var oldScore *float64
-		err := userAnswerScope.PluckFirst("iScore", &oldScore).Error()
+		err := userAnswerScope.PluckFirst("score", &oldScore).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			return false
 		}
@@ -188,12 +188,12 @@ func shouldUnlockItems(store *database.DataStore, itemID int64, score float64, g
 		return true
 	}
 	var unlockedInfo struct {
-		UnlockedItemID string  `gorm:"column:idItemUnlocked"`
-		ScoreMinUnlock float64 `gorm:"column:iScoreMinUnlock"`
+		UnlockedItemIDs string
+		ScoreMinUnlock  float64
 	}
-	service.MustNotBeError(store.Items().ByID(itemID).Select("idItemUnlocked, iScoreMinUnlock").
+	service.MustNotBeError(store.Items().ByID(itemID).Select("unlocked_item_ids, score_min_unlock").
 		Take(&unlockedInfo).Error())
-	return unlockedInfo.UnlockedItemID != "" && unlockedInfo.ScoreMinUnlock <= score
+	return unlockedInfo.UnlockedItemIDs != "" && unlockedInfo.ScoreMinUnlock <= score
 }
 
 type saveGradeRequestParsed struct {

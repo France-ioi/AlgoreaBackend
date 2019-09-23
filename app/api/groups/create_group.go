@@ -31,7 +31,7 @@ type createGroupRequest struct {
 // summary: Create a group
 // description: >
 //
-//   Creates a group with the input `name`, `type`, `sDateCreated` = now(), and default values in other columns.
+//   Creates a group with the input `name`, `type`, `date_created` = now(), and default values in other columns.
 //   If `item_id` is given:
 //
 //     * If `type` != "Team", returns the "badRequest" response
@@ -40,13 +40,13 @@ type createGroupRequest struct {
 //
 //       * has grayed, partial or full access to the item (otherwise returns the "forbidden" response)
 //
-//       * sets this `item_id` as `idTeamItem` of the new group.
+//       * sets this `item_id` as `team_item_id` of the new group.
 //
-//   Also, the service sets the authenticated user as an owner of the group (with `sRole` = "owner").
+//   Also, the service sets the authenticated user as an owner of the group (with `role` = "owner").
 //   After everything, it propagates group ancestors.
 //
 //
-//   The user should have both `idGroupSelf` and `idGroupOwned` set and should not be temporary,
+//   The user should have both `self_group_id` and `owned_group_id` set and should not be temporary,
 //   otherwise the "forbidden" response is returned.
 // parameters:
 // - in: body
@@ -91,7 +91,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		if input.ItemID != nil {
 			hasRows, itemErr := store.Raw("SELECT 1 FROM ? AS access_rights",
-				store.GroupItems().AccessRightsForItemsVisibleToUser(user).Where("idItem = ?", *input.ItemID).
+				store.GroupItems().AccessRightsForItemsVisibleToUser(user).Where("item_id = ?", *input.ItemID).
 					WithWriteLock().SubQuery()).HasRows()
 			service.MustNotBeError(itemErr)
 			if !hasRows {
@@ -102,11 +102,11 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
 			groupID = retryStore.NewID()
 			return retryStore.Groups().InsertMap(map[string]interface{}{
-				"ID":           groupID,
-				"sName":        input.Name,
-				"sType":        input.Type,
-				"idTeamItem":   input.ItemID,
-				"sDateCreated": database.Now(),
+				"id":           groupID,
+				"name":         input.Name,
+				"type":         input.Type,
+				"team_item_id": input.ItemID,
+				"date_created": database.Now(),
 			})
 		}))
 		return store.GroupGroups().CreateRelationsWithoutChecking([]database.ParentChild{

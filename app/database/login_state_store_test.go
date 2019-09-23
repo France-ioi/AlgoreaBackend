@@ -11,7 +11,7 @@ import (
 func TestLoginStateStore_DeleteExpired(t *testing.T) {
 	db, mock := NewDBMock()
 	expectedError := errors.New("some error")
-	mock.ExpectExec("^" + regexp.QuoteMeta("DELETE FROM `login_states` WHERE (sExpirationDate <= NOW())")).
+	mock.ExpectExec("^" + regexp.QuoteMeta("DELETE FROM `login_states` WHERE (expiration_date <= NOW())")).
 		WillReturnError(expectedError)
 
 	err := NewDataStore(db).LoginStates().DeleteExpired()

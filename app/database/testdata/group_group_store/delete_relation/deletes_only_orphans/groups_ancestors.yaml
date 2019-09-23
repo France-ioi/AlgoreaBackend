@@ -1,17 +1,17 @@
-- {idGroupAncestor: 1, idGroupChild: 1, bIsSelf: 1}
-- {idGroupAncestor: 1, idGroupChild: 2}
-- {idGroupAncestor: 1, idGroupChild: 3}
-- {idGroupAncestor: 1, idGroupChild: 4}
-- {idGroupAncestor: 1, idGroupChild: 5}
-- {idGroupAncestor: 2, idGroupChild: 2, bIsSelf: 1}
-- {idGroupAncestor: 2, idGroupChild: 3}
-- {idGroupAncestor: 2, idGroupChild: 4}
-- {idGroupAncestor: 2, idGroupChild: 5}
-- {idGroupAncestor: 3, idGroupChild: 3, bIsSelf: 1}
-- {idGroupAncestor: 4, idGroupChild: 4, bIsSelf: 1}
-- {idGroupAncestor: 4, idGroupChild: 5}
-- {idGroupAncestor: 5, idGroupChild: 5, bIsSelf: 1}
+- {ancestor_group_id: 1, child_group_id: 1, is_self: 1}
+- {ancestor_group_id: 1, child_group_id: 2}
+- {ancestor_group_id: 1, child_group_id: 3}
+- {ancestor_group_id: 1, child_group_id: 4}
+- {ancestor_group_id: 1, child_group_id: 5}
+- {ancestor_group_id: 2, child_group_id: 2, is_self: 1}
+- {ancestor_group_id: 2, child_group_id: 3}
+- {ancestor_group_id: 2, child_group_id: 4}
+- {ancestor_group_id: 2, child_group_id: 5}
+- {ancestor_group_id: 3, child_group_id: 3, is_self: 1}
+- {ancestor_group_id: 4, child_group_id: 4, is_self: 1}
+- {ancestor_group_id: 4, child_group_id: 5}
+- {ancestor_group_id: 5, child_group_id: 5, is_self: 1}
 
-- {idGroupAncestor: 10, idGroupChild: 10, bIsSelf: 1}
-- {idGroupAncestor: 10, idGroupChild: 3}
-- {idGroupAncestor: 10, idGroupChild: 5}
+- {ancestor_group_id: 10, child_group_id: 10, is_self: 1}
+- {ancestor_group_id: 10, child_group_id: 3}
+- {ancestor_group_id: 10, child_group_id: 5}

@@ -44,17 +44,17 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		var login string
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 			userID = retryIDStore.NewID()
-			return retryIDStore.RetryOnDuplicateKeyError("sLogin", "login", func(retryLoginStore *database.DataStore) error {
+			return retryIDStore.RetryOnDuplicateKeyError("login", "login", func(retryLoginStore *database.DataStore) error {
 				login = fmt.Sprintf("tmp-%d", rand.Int31n(99999999-10000000+1)+10000000)
 				return retryLoginStore.Users().InsertMap(map[string]interface{}{
-					"ID":                userID,
-					"loginID":           0,
-					"sLogin":            login,
-					"tempUser":          true,
-					"sRegistrationDate": database.Now(),
-					"idGroupSelf":       nil,
-					"idGroupOwned":      nil,
-					"sLastIP":           strings.SplitN(r.RemoteAddr, ":", 2)[0],
+					"id":                userID,
+					"login_id":          0,
+					"login":             login,
+					"temp_user":         true,
+					"registration_date": database.Now(),
+					"self_group_id":     nil,
+					"owned_group_id":    nil,
+					"last_ip":           strings.SplitN(r.RemoteAddr, ":", 2)[0],
 				})
 			})
 		}))
@@ -62,16 +62,16 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 			selfGroupID = retryIDStore.NewID()
 			return retryIDStore.Groups().InsertMap(map[string]interface{}{
-				"ID":           selfGroupID,
-				"sName":        login,
-				"sType":        "UserSelf",
-				"sDescription": login,
-				"sDateCreated": database.Now(),
-				"bOpened":      false,
-				"bSendEmails":  false,
+				"id":           selfGroupID,
+				"name":         login,
+				"type":         "UserSelf",
+				"description":  login,
+				"date_created": database.Now(),
+				"opened":       false,
+				"send_emails":  false,
 			})
 		}))
-		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn("idGroupSelf", selfGroupID).Error())
+		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn("self_group_id", selfGroupID).Error())
 
 		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(

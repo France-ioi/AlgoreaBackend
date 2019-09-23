@@ -12,8 +12,8 @@ import (
 )
 
 type stateResultRow struct {
-	ID                        int64  `gorm:"column:ID"`
-	AncestorsComputationState string `gorm:"column:sAncestorsComputationState"`
+	ID                        int64
+	AncestorsComputationState string
 }
 
 func TestUserItemStore_ComputeAllUserItems_WithCyclicGraph(t *testing.T) {
@@ -28,7 +28,7 @@ func TestUserItemStore_ComputeAllUserItems_WithCyclicGraph(t *testing.T) {
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, userItemStore.Select("ID, sAncestorsComputationState").Order("ID").Scan(&result).Error())
+	assert.NoError(t, userItemStore.Select("id, ancestors_computation_state").Order("id").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
 		{ID: 11, AncestorsComputationState: "todo"},
 		{ID: 12, AncestorsComputationState: "todo"},

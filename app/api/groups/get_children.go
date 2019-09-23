@@ -9,6 +9,30 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
+// swagger:model groupChildrenViewResponseRow
+type groupChildrenViewResponseRow struct {
+	// The sub-group's `groups.id`
+	// required:true
+	ID int64 `json:"id,string"`
+	// required:true
+	Name string `json:"name"`
+	// required:true
+	// enum: Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base
+	Type string `json:"type"`
+	// required:true
+	Grade int32 `json:"grade"`
+	// required:true
+	Opened bool `json:"opened"`
+	// required:true
+	FreeAccess bool `json:"free_access"`
+	// Nullable
+	// required:true
+	Code *string `json:"code"`
+	// The number of descendant users
+	// required:true
+	UserCount int32 `json:"user_count"`
+}
+
 // swagger:operation GET /groups/{group_id}/children groups groupChildrenView
 // ---
 // summary: List group's children
@@ -36,25 +60,25 @@ import (
 //     type: string
 //     enum: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
 // - name: from.name
-//   description: Start the page from the sub-group next to the sub-group with `sName` = `from.name` and `ID` = `from.id`
+//   description: Start the page from the sub-group next to the sub-group with `name` = `from.name` and `id` = `from.id`
 //                (`from.id` is required when `from.name` is present,
 //                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.type
-//   description: Start the page from the sub-group next to the sub-group with `sType` = `from.type` and `ID` = `from.id`
+//   description: Start the page from the sub-group next to the sub-group with `type` = `from.type` and `id` = `from.id`
 //                (`from.id` is required when `from.type` is present,
 //                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.grade
-//   description: Start the page from the sub-group next to the sub-group with `iGrade` = `from.grade` and `ID` = `from.id`
+//   description: Start the page from the sub-group next to the sub-group with `grade` = `from.grade` and `id` = `from.id`
 //                (`from.id` is required when `from.grade` is present,
 //                some other 'from.*' parameters may be required too depending on the `sort`)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the sub-group next to the sub-group with `ID`=`from.id`
+//   description: Start the page from the sub-group next to the sub-group with `id`=`from.id`
 //                (if at least one of other 'from.*' parameters is present, `sort.id` is required)
 //   in: query
 //   type: integer
@@ -73,7 +97,11 @@ import (
 //   default: 500
 // responses:
 //   "200":
-//     "$ref": "#/responses/groupChildrenViewResponse"
+//     description: OK. Success response with an array of group's children
+//     schema:
+//       type: array
+//       items:
+//         "$ref": "#/definitions/groupChildrenViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -105,36 +133,35 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 
 	query := srv.Store.Groups().
 		Select(`
-			groups.ID as ID, groups.sName, groups.sType, groups.iGrade,
-			groups.bOpened, groups.bFreeAccess, groups.sCode,
+			groups.id as id, groups.name, groups.type, groups.grade,
+			groups.opened, groups.free_access, groups.code,
 			(
 				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
 				JOIN groups_ancestors
-				ON groups_ancestors.idGroupChild = user_groups.ID AND
-					groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild
-				WHERE user_groups.sType = 'UserSelf' AND groups_ancestors.idGroupAncestor = groups.ID
-			) AS iUserCount`).
+				ON groups_ancestors.child_group_id = user_groups.id AND
+					groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id
+				WHERE user_groups.type = 'UserSelf' AND groups_ancestors.ancestor_group_id = groups.id
+			) AS user_count`).
 		Joins(`
-			JOIN groups_groups ON groups.ID = groups_groups.idGroupChild AND
-				groups_groups.sType`+database.GroupRelationIsActiveCondition+` AND
-				groups_groups.idGroupParent = ?`, groupID).
-		Where("groups.sType IN (?)", typesList)
+			JOIN groups_groups ON groups.id = groups_groups.child_group_id AND
+				groups_groups.type`+database.GroupRelationIsActiveCondition+` AND
+				groups_groups.parent_group_id = ?`, groupID).
+		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"name":  {ColumnName: "groups.sName", FieldType: "string"},
-			"type":  {ColumnName: "groups.sType", FieldType: "string"},
-			"grade": {ColumnName: "groups.iGrade", FieldType: "int64"},
-			"id":    {ColumnName: "groups.ID", FieldType: "int64"}},
+			"name":  {ColumnName: "groups.name", FieldType: "string"},
+			"type":  {ColumnName: "groups.type", FieldType: "string"},
+			"grade": {ColumnName: "groups.grade", FieldType: "int64"},
+			"id":    {ColumnName: "groups.id", FieldType: "int64"}},
 		"name")
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupChildrenViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

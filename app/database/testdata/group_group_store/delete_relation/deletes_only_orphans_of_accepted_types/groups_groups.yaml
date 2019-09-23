@@ -1,12 +1,12 @@
-- {idGroupParent: 1, idGroupChild: 2}
+- {parent_group_id: 1, child_group_id: 2}
 
-- {idGroupParent: 2, idGroupChild: 3}
-- {idGroupParent: 2, idGroupChild: 4}
-- {idGroupParent: 2, idGroupChild: 5}
-- {idGroupParent: 2, idGroupChild: 6}
-- {idGroupParent: 2, idGroupChild: 7}
-- {idGroupParent: 2, idGroupChild: 8}
-- {idGroupParent: 2, idGroupChild: 9}
-- {idGroupParent: 2, idGroupChild: 10}
-- {idGroupParent: 2, idGroupChild: 11}
-- {idGroupParent: 2, idGroupChild: 12}
+- {parent_group_id: 2, child_group_id: 3}
+- {parent_group_id: 2, child_group_id: 4}
+- {parent_group_id: 2, child_group_id: 5}
+- {parent_group_id: 2, child_group_id: 6}
+- {parent_group_id: 2, child_group_id: 7}
+- {parent_group_id: 2, child_group_id: 8}
+- {parent_group_id: 2, child_group_id: 9}
+- {parent_group_id: 2, child_group_id: 10}
+- {parent_group_id: 2, child_group_id: 11}
+- {parent_group_id: 2, child_group_id: 12}

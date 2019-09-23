@@ -5,17 +5,50 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/members groups users groupsMemberView
+// swagger:model groupsMembersViewResponseRow
+type groupsMembersViewResponseRow struct {
+	// `groups_groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// Nullable
+	// required: true
+	StatusDate *database.Time `json:"status_date"`
+	// `groups_groups.type`
+	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
+	// required: true
+	Type string `json:"type"`
+	// Nullable
+	// required: true
+	User *struct {
+		// `users.id`
+		// required: true
+		ID *int64 `json:"id,string"`
+		// required: true
+		Login string `json:"login"`
+		// Nullable
+		// required: true
+		FirstName *string `json:"first_name"`
+		// Nullable
+		// required: true
+		LastName *string `json:"last_name"`
+		// Nullable
+		// required: true
+		Grade *int32 `json:"grade"`
+	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
+}
+
+// swagger:operation GET /groups/{group_id}/members groups users groupsMembersView
 // ---
 // summary: List group members
 // description: >
 //
 //   Returns a list of group members
-//   (rows from the `groups_groups` table with `idGroupParent` = `group_id` and
-//   `sType` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
+//   `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
 //   Rows related to users contain basic user info.
 //
 //
@@ -33,22 +66,22 @@ import (
 //     type: string
 //     enum: [status_date,-status_date,user.login,-user.login,user.grade,-user.grade,id,-id]
 // - name: from.status_date
-//   description: Start the page from the member next to the member with `groups_groups.sStatusDate` = `from.status_date`
+//   description: Start the page from the member next to the member with `groups_groups.status_date` = `from.status_date`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
 // - name: from.user.login
-//   description: Start the page from the member next to the member with `users.sLogin` = `from.user.login`
+//   description: Start the page from the member next to the member with `users.login` = `from.user.login`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
 // - name: from.user.grade
-//   description: Start the page from the member next to the member with `users.iGrade` = `from.user.grade`
+//   description: Start the page from the member next to the member with `users.grade` = `from.user.grade`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: integer
 // - name: from.id
-//   description: Start the page from the member next to the member with `groups_groups.ID`=`from.id`
+//   description: Start the page from the member next to the member with `groups_groups.id`=`from.id`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: integer
@@ -64,41 +97,7 @@ import (
 //     schema:
 //       type: array
 //       items:
-//         type: object
-//         required: [id, status_date, type, user]
-//         properties:
-//           id:
-//             description: "`groups_groups.ID`"
-//             type: string
-//             format: int64
-//           status_date:
-//             type: string
-//             description: Nullable
-//             format: date-time
-//           type:
-//             type: string
-//             description: "`groups_groups.sType`"
-//             enum: [invitationAccepted, requestAccepted, joinedByCode, direct]
-//           user:
-//             type: object
-//             description: Nullable
-//             required: [id, login, first_name, last_name, grade]
-//             properties:
-//               id:
-//                 description: "`users.ID`"
-//                 type: string
-//                 format: int64
-//               login:
-//                 type: string
-//               first_name:
-//                 description: Nullable
-//                 type: string
-//               last_name:
-//                 description: Nullable
-//                 type: string
-//               grade:
-//                 description: Nullable
-//                 type: integer
+//         "$ref": "#/definitions/groupsMembersViewResponseRow"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -121,35 +120,39 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 
 	query := srv.Store.GroupGroups().
 		Select(`
-			groups_groups.ID,
-			groups_groups.sStatusDate,
-			groups_groups.sType,
-			users.ID AS user__ID,
-			users.sLogin AS user__sLogin,
-			users.sFirstName AS user__sFirstName,
-			users.sLastName AS user__sLastName,
-			users.iGrade AS user__iGrade`).
-		Joins("LEFT JOIN users ON users.idGroupSelf = groups_groups.idGroupChild").
+			groups_groups.id,
+			groups_groups.status_date,
+			groups_groups.type,
+			users.id AS user__id,
+			users.login AS user__login,
+			users.first_name AS user__first_name,
+			users.last_name AS user__last_name,
+			users.grade AS user__grade`).
+		Joins("LEFT JOIN users ON users.self_group_id = groups_groups.child_group_id").
 		WhereGroupRelationIsActive().
-		Where("groups_groups.idGroupParent = ?", groupID)
+		Where("groups_groups.parent_group_id = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"user.login":  {ColumnName: "users.sLogin"},
-			"user.grade":  {ColumnName: "users.iGrade"},
-			"status_date": {ColumnName: "groups_groups.sStatusDate", FieldType: "time"},
-			"id":          {ColumnName: "groups_groups.ID", FieldType: "int64"}},
+			"user.login":  {ColumnName: "users.login"},
+			"user.grade":  {ColumnName: "users.grade"},
+			"status_date": {ColumnName: "groups_groups.status_date", FieldType: "time"},
+			"id":          {ColumnName: "groups_groups.id", FieldType: "int64"}},
 		"-status_date")
 
 	if apiError != service.NoError {
 		return apiError
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
+	var result []groupsMembersViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
+	for index := range result {
+		if result[index].User.ID == nil {
+			result[index].User = nil
+		}
+	}
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(w, r, result)
 	return service.NoError
 }

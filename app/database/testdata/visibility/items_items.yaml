@@ -1,12 +1,12 @@
 # 2nd gen
-- { ID: 11, idItemChild: 1900, idItemParent: 190, iChildOrder: 0 }
-- { ID: 12, idItemChild: 1901, idItemParent: 190, iChildOrder: 1 }
-- { ID: 13, idItemChild: 1902, idItemParent: 190, iChildOrder: 2 }
-- { ID: 14, idItemChild: 1903, idItemParent: 190, iChildOrder: 3 }
-- { ID: 15, idItemChild: 1904, idItemParent: 190, iChildOrder: 4 }
+- { id: 11, child_item_id: 1900, parent_item_id: 190, child_order: 0 }
+- { id: 12, child_item_id: 1901, parent_item_id: 190, child_order: 1 }
+- { id: 13, child_item_id: 1902, parent_item_id: 190, child_order: 2 }
+- { id: 14, child_item_id: 1903, parent_item_id: 190, child_order: 3 }
+- { id: 15, child_item_id: 1904, parent_item_id: 190, child_order: 4 }
 # 3rd gen
-- { ID: 21, idItemChild: 19000, idItemParent: 1900, iChildOrder: 0 }
-- { ID: 22, idItemChild: 19001, idItemParent: 1900, iChildOrder: 1 }
-- { ID: 23, idItemChild: 19002, idItemParent: 1900, iChildOrder: 2 }
-- { ID: 24, idItemChild: 19003, idItemParent: 1900, iChildOrder: 3 }
-- { ID: 25, idItemChild: 19004, idItemParent: 1900, iChildOrder: 4 }
+- { id: 21, child_item_id: 19000, parent_item_id: 1900, child_order: 0 }
+- { id: 22, child_item_id: 19001, parent_item_id: 1900, child_order: 1 }
+- { id: 23, child_item_id: 19002, parent_item_id: 1900, child_order: 2 }
+- { id: 24, child_item_id: 19003, parent_item_id: 1900, child_order: 3 }
+- { id: 25, child_item_id: 19004, parent_item_id: 1900, child_order: 4 }

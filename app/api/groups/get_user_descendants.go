@@ -12,7 +12,7 @@ import (
 // swagger:operation GET /groups/{group_id}/user-descendants groups users groupUserDescendantView
 // ---
 // summary: List user descendants of the group
-// description: Return all users (`sType` = "UserSelf") among the descendants of the given group
+// description: Return all users (`type` = "UserSelf") among the descendants of the given group
 //
 //   * The authenticated user should own the parent group.
 // parameters:
@@ -21,12 +21,12 @@ import (
 //   required: true
 //   type: integer
 // - name: from.name
-//   description: Start the page from the user next to the user with self group's `sName` = `from.name` and `ID` = `from.id`
+//   description: Start the page from the user next to the user with self group's `name` = `from.name` and `id` = `from.id`
 //                (`from.id` is required when `from.name` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the user next to the user with self group's `sName`=`from.name` and `ID`=`from.id`
+//   description: Start the page from the user next to the user with self group's `name`=`from.name` and `id`=`from.id`
 //                (`from.name` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -72,19 +72,19 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 
 	query := srv.Store.Groups().
 		Select(`
-			groups.ID, groups.sName,
-			users.ID AS idUser, users.sFirstName, users.sLastName, users.sLogin, users.iGrade`).
+			groups.id, groups.name,
+			users.id AS user_id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.idGroupChild = groups.ID AND
-				groups_ancestors.idGroupAncestor != groups_ancestors.idGroupChild AND
-				groups_ancestors.idGroupAncestor = ?`, groupID).
-		Joins("JOIN users ON users.idGroupSelf = groups.ID").
-		Where("groups.sType = 'UserSelf'")
+			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
+				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+				groups_ancestors.ancestor_group_id = ?`, groupID).
+		Joins("JOIN users ON users.self_group_id = groups.id").
+		Where("groups.type = 'UserSelf'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"name": {ColumnName: "groups.sName", FieldType: "string"},
-			"id":   {ColumnName: "groups.ID", FieldType: "int64"}},
+			"name": {ColumnName: "groups.name", FieldType: "string"},
+			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
 		"name")
 	if apiError != service.NoError {
 		return apiError
@@ -102,15 +102,15 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 
 	var parentsResult []descendantParent
 	service.MustNotBeError(srv.Store.Groups().
-		Select("parent_links.idGroupChild AS idLinkedGroup, groups.ID, groups.sName").
+		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
-			JOIN groups_groups AS parent_links ON parent_links.idGroupParent = groups.ID AND
-				parent_links.sType`+database.GroupRelationIsActiveCondition+` AND
-				parent_links.idGroupChild IN (?)`, groupIDs).
+			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
+				parent_links.type`+database.GroupRelationIsActiveCondition+` AND
+				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
-			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.idGroupChild = groups.ID AND
-				parent_ancestors.idGroupAncestor = ?`, groupID).
-		Order("groups.ID").
+			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+				parent_ancestors.ancestor_group_id = ?`, groupID).
+		Order("groups.id").
 		Scan(&parentsResult).Error())
 
 	for _, parentsRow := range parentsResult {
@@ -122,30 +122,30 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 }
 
 type userDescendantUser struct {
-	// The user's `users.ID`
+	// The user's `users.id`
 	// required:true
-	ID int64 `sql:"column:idUser" json:"id,string"`
+	ID int64 `sql:"column:user_id" json:"id,string"`
 	// Nullable
 	// required:true
-	FirstName *string `sql:"column:sFirstName" json:"first_name"`
+	FirstName *string `json:"first_name"`
 	// Nullable
 	// required:true
-	LastName *string `sql:"column:sLastName" json:"last_name"`
+	LastName *string `json:"last_name"`
 	// required:true
-	Login string `sql:"column:sLogin" json:"login"`
+	Login string `json:"login"`
 	// Nullable
 	// required:true
-	Grade *int32 `sql:"column:iGrade" json:"grade"`
+	Grade *int32 `json:"grade"`
 }
 
 // swagger:model
 type userDescendant struct {
-	// The user's self `groups.ID`
+	// The user's self `groups.id`
 	// required:true
-	ID int64 `sql:"column:ID" json:"id,string"`
-	// The user's self `groups.sName`
+	ID int64 `json:"id,string"`
+	// The user's self `groups.name`
 	// required:true
-	Name string `sql:"column:sName" json:"name"`
+	Name string `json:"name"`
 	// required:true
 	User userDescendantUser `json:"user" gorm:"embedded"`
 
