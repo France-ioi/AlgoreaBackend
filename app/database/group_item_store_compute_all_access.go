@@ -43,13 +43,11 @@ func (s *GroupItemStore) computeAllAccess() {
 	// inserting missing children of groups_items into groups_items
 	// for groups_items_propagate having propagate_access = 'children'
 	const queryInsertMissingChildren = `
-		INSERT IGNORE INTO groups_items (group_id, item_id, creator_user_id, cached_access_reason, access_reason)
+		INSERT IGNORE INTO groups_items (group_id, item_id, creator_user_id)
 		SELECT
 			parents.group_id AS group_id,
 			items_items.child_item_id AS item_id,
-			parents.creator_user_id AS creator_user_id,
-			NULL AS cached_access_reason,
-			NULL AS access_reason
+			parents.creator_user_id AS creator_user_id
 		FROM items_items
 		JOIN groups_items AS parents
 			ON parents.item_id = items_items.parent_item_id
