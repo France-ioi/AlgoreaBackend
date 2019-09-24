@@ -143,7 +143,6 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 			history_filters: [{user_id: 500, id: 1, version: 1}, {user_id: 501, id: 2, version: 1}, {user_id: 502, id: 3, version: 1}]
 			refresh_tokens: [{user_id: 500, refresh_token: token}, {user_id: 501, refresh_token: token2},
 			                 {user_id: 502, refresh_token: token3}]
-			groups_items_propagate: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}]
 			groups_items:
 				- {id: 1, group_id: 5000, item_id: 1, creator_user_id: 1}
 				- {id: 2, group_id: 5001, item_id: 1, creator_user_id: 1}

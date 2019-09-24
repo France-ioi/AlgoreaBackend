@@ -22,9 +22,23 @@ import "database/sql"
 func (s *GroupItemStore) computeAllAccess() {
 	s.mustBeInTransaction()
 
-	var stmtInsertMissingPropagate, stmtUpdatePropagateAccess, stmtInsertMissingChildren, stmtMarkDoNotPropagate,
+	var stmtCreateTemporaryTable, stmtDropTemporaryTable, stmtMarkDoNotPropagate,
 		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
 	var err error
+
+	// We cannot JOIN groups_items_propagate directly in the INSERT query
+	// because a trigger adds new rows into groups_items_propagate.
+	const queryDropTemporaryTable = "DROP TEMPORARY TABLE IF EXISTS parents_propagate"
+	stmtDropTemporaryTable, err = s.db.CommonDB().Prepare(queryDropTemporaryTable)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtDropTemporaryTable.Close()) }()
+
+	const queryCreateTemporaryTable = `
+		CREATE TEMPORARY TABLE parents_propagate
+			SELECT id FROM groups_items_propagate WHERE propagate_access = 'children'`
+	stmtCreateTemporaryTable, err = s.db.CommonDB().Prepare(queryCreateTemporaryTable)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtCreateTemporaryTable.Close()) }()
 
 	// inserting missing children of groups_items into groups_items
 	// for groups_items_propagate having propagate_access = 'children'
@@ -39,35 +53,7 @@ func (s *GroupItemStore) computeAllAccess() {
 		FROM items_items
 		JOIN groups_items AS parents
 			ON parents.item_id = items_items.parent_item_id
-		JOIN groups_items_propagate AS parents_propagate
-			ON parents.id = parents_propagate.id AND parents_propagate.propagate_access = 'children'`
-	stmtInsertMissingChildren, err = s.db.CommonDB().Prepare(queryInsertMissingChildren)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtInsertMissingChildren.Close()) }()
-
-	// inserting missing (or set propagate_access='self' to existing) groups_items_propagate
-	// for groups_items having propagate_access='self'
-	const queryInsertMissingPropagate = `
-		INSERT INTO groups_items_propagate (id, propagate_access)
-		SELECT
-			groups_items.id,
-			'self' as propagate_access
-		FROM groups_items
-		WHERE propagate_access='self'
-		ON DUPLICATE KEY UPDATE propagate_access='self'`
-	stmtInsertMissingPropagate, err = s.db.CommonDB().Prepare(queryInsertMissingPropagate)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtInsertMissingPropagate.Close()) }()
-
-	// Set groups_items as set up for propagation
-	// (switch groups_items.propagate_access from 'self' to 'done')
-	const queryUpdatePropagateAccess = `
-		UPDATE groups_items
-		SET propagate_access='done'
-		WHERE propagate_access='self'`
-	stmtUpdatePropagateAccess, err = s.db.CommonDB().Prepare(queryUpdatePropagateAccess)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtUpdatePropagateAccess.Close()) }()
+		JOIN parents_propagate ON parents_propagate.id = parents.id`
 
 	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.custom_chapter=1)
 	const queryMarkDoNotPropagate = `
@@ -192,11 +178,12 @@ func (s *GroupItemStore) computeAllAccess() {
 
 	hasChanges := true
 	for hasChanges {
-		_, err = stmtInsertMissingChildren.Exec()
+		_, err = stmtDropTemporaryTable.Exec()
 		mustNotBeError(err)
-		_, err = stmtInsertMissingPropagate.Exec()
+		_, err = stmtCreateTemporaryTable.Exec()
 		mustNotBeError(err)
-		_, err = stmtUpdatePropagateAccess.Exec()
+		mustNotBeError(s.Exec(queryInsertMissingChildren).Error())
+		_, err = stmtDropTemporaryTable.Exec()
 		mustNotBeError(err)
 		_, err = stmtMarkDoNotPropagate.Exec()
 		mustNotBeError(err)

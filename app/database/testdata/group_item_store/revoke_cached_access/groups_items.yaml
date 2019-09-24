@@ -1,4 +1,4 @@
-# true stays true because there are no related rows in groups_items_propagate
+# true becomes false
 - {id: 71, group_id: 7, item_id: 1, cached_full_access: true, cached_full_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 - {id: 72, group_id: 7, item_id: 2, cached_partial_access: true, cached_partial_access_date: 2037-01-01 21:30:55, creator_user_id: 1}
 - {id: 73, group_id: 7, item_id: 3, cached_access_solutions: true, cached_access_solutions_date: 2037-01-01 21:30:55, creator_user_id: 1}

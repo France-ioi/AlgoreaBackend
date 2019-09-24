@@ -124,11 +124,11 @@ func TestGroupItemStore_RevokeCachedAccessWhereNeeded(t *testing.T) {
 		{ID: 63, CachedAccessSolutions: true},
 		{ID: 64, CachedGrayedAccess: true},
 
-		// true stays true because there are no related rows in groups_items_propagate
-		{ID: 71, CachedFullAccess: true},
-		{ID: 72, CachedPartialAccess: true},
-		{ID: 73, CachedAccessSolutions: true},
-		{ID: 74, CachedGrayedAccess: true},
+		// true becomes false
+		{ID: 71, CachedFullAccess: false},
+		{ID: 72, CachedPartialAccess: false},
+		{ID: 73, CachedAccessSolutions: false},
+		{ID: 74, CachedGrayedAccess: false},
 	}
 	var result []groupItemCachedResult
 	assert.NoError(t, groupItemStore.Order("id").Scan(&result).Error())
