@@ -176,10 +176,11 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkChildrenItems.Close()) }()
 
+	_, err = stmtDropTemporaryTable.Exec()
+	mustNotBeError(err)
+
 	hasChanges := true
 	for hasChanges {
-		_, err = stmtDropTemporaryTable.Exec()
-		mustNotBeError(err)
 		_, err = stmtCreateTemporaryTable.Exec()
 		mustNotBeError(err)
 		mustNotBeError(s.Exec(queryInsertMissingChildren).Error())
