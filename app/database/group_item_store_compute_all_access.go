@@ -22,6 +22,9 @@ import "database/sql"
 func (s *GroupItemStore) computeAllAccess() {
 	s.mustBeInTransaction()
 
+	// ------------------------------------------------------------------------------------
+	// Here we declare and prepare DB statements that will be used by the function later on
+	// ------------------------------------------------------------------------------------
 	var stmtCreateTemporaryTable, stmtDropTemporaryTable, stmtMarkDoNotPropagate,
 		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
 	var err error
@@ -174,6 +177,9 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkChildrenItems.Close()) }()
 
+	// ------------------------------------------------------------------------------------
+	// Here we execute the statements
+	// ------------------------------------------------------------------------------------
 	_, err = stmtDropTemporaryTable.Exec()
 	mustNotBeError(err)
 
