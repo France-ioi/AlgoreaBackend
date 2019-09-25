@@ -16,7 +16,7 @@ type rawNavigationItem struct {
 	PartialAccessPropagation string
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title string
+	Title *string
 
 	// from users_items for current user
 	UserScore               float32        `sql:"column:score"`

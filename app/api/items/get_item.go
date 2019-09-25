@@ -13,8 +13,9 @@ import (
 type itemStringCommon struct {
 	// required: true
 	LanguageID int64 `json:"language_id,string"`
+	// Nullable
 	// required: true
-	Title string `json:"title"`
+	Title *string `json:"title"`
 	// Nullable
 	// required: true
 	ImageURL *string `json:"image_url"`
@@ -302,7 +303,7 @@ type rawItem struct {
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageID  int64   `sql:"column:language_id"`
-	StringTitle       string  `sql:"column:title"`
+	StringTitle       *string `sql:"column:title"`
 	StringImageURL    *string `sql:"column:image_url"`
 	StringSubtitle    *string `sql:"column:subtitle"`
 	StringDescription *string `sql:"column:description"`
