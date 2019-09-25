@@ -500,6 +500,7 @@ ALTER TABLE `history_threads`
 ALTER TABLE `history_users`
 	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
+	RENAME COLUMN `loginID` TO `login_id`,
 	RENAME COLUMN `sLogin` TO `login`,
 	RENAME COLUMN `sOpenIdIdentity` TO `open_id_identity`,
 	RENAME COLUMN `sPasswordMd5` TO `password_md5`,
@@ -1800,6 +1801,7 @@ ALTER TABLE `history_threads`
 ALTER TABLE `history_users`
 	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
+	RENAME COLUMN `login_id` TO `loginID`,
 	RENAME COLUMN `login` TO `sLogin`,
 	RENAME COLUMN `open_id_identity` TO `sOpenIdIdentity`,
 	RENAME COLUMN `password_md5` TO `sPasswordMd5`,

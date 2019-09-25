@@ -1490,6 +1490,7 @@ DROP TABLE IF EXISTS `history_users`;
 CREATE TABLE `history_users` (
   `historyID` bigint(20) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
+  `loginID` bigint(20) DEFAULT NULL,
   `sLogin` varchar(100) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '',
   `sOpenIdIdentity` varchar(255) DEFAULT NULL COMMENT 'User''s Open Id Identity',
   `sPasswordMd5` varchar(100) DEFAULT NULL,
