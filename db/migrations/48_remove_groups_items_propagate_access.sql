@@ -77,6 +77,7 @@ END
 DROP TRIGGER IF EXISTS `after_update_groups_items`;
 -- +migrate StatementBegin
 CREATE DEFINER=`algorea`@`%` TRIGGER `after_update_groups_items` AFTER UPDATE ON `groups_items` FOR EACH ROW BEGIN
+    # As a date change may result in access change for descendants of the item, mark the entry as to be recomputed
     IF NOT (NEW.`full_access_date` <=> OLD.`full_access_date`AND NEW.`partial_access_date` <=> OLD.`partial_access_date`AND
             NEW.`access_solutions_date` <=> OLD.`access_solutions_date`AND NEW.`manager_access` <=> OLD.`manager_access`AND
             NEW.`access_reason` <=> OLD.`access_reason`) THEN
@@ -112,7 +113,7 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON 
                                        `partial_access_propagation`,`difficulty`)
     VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,
             NEW.`partial_access_propagation`,NEW.`difficulty`);
-    INSERT IGNORE INTO `groups_items_propagate`
+    INSERT INTO `groups_items_propagate`
     SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
     WHERE `groups_items`.`item_id` = NEW.`parent_item_id`
     ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access = 'done', 'children', propagate_access);
@@ -122,7 +123,7 @@ END
 DROP TRIGGER `after_update_items_items`;
 -- +migrate StatementBegin
 CREATE DEFINER=`algorea`@`%` TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH ROW BEGIN
-    INSERT IGNORE INTO `groups_items_propagate`
+    INSERT INTO `groups_items_propagate`
         SELECT `id`, 'children' as `propagate_access`
         FROM `groups_items`
         WHERE `groups_items`.`item_id` = NEW.`parent_item_id` OR `groups_items`.`item_id` = OLD.`parent_item_id`
