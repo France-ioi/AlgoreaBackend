@@ -2647,7 +2647,8 @@ CREATE TABLE `users_answers` (
   `iVersion` bigint(20) NOT NULL,
   PRIMARY KEY (`ID`),
   KEY `idUser` (`idUser`),
-  KEY `idItem` (`idItem`)
+  KEY `idItem` (`idItem`),
+  KEY `idAttempt` (`idAttempt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2712,7 +2713,8 @@ CREATE TABLE `users_items` (
   KEY `iVersion` (`iVersion`),
   KEY `sAncestorsComputationState` (`sAncestorsComputationState`),
   KEY `idItem` (`idItem`),
-  KEY `idUser` (`idUser`)
+  KEY `idUser` (`idUser`),
+  KEY `idAttemptActive` (`idAttemptActive`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

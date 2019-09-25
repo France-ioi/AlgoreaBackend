@@ -857,7 +857,8 @@ ALTER TABLE `users_answers`
 	RENAME COLUMN `sGradingDate` TO `grading_date`,
 	RENAME COLUMN `idUserGrader` TO `grader_user_id`,
 	RENAME INDEX `idUser` TO `user_id`,
-	RENAME INDEX `idItem` TO `item_id`;
+	RENAME INDEX `idItem` TO `item_id`,
+	RENAME INDEX `idAttempt` TO `attempt_id`;
 ALTER TABLE `users_items`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idUser` TO `user_id`,
@@ -901,7 +902,8 @@ ALTER TABLE `users_items`
 	RENAME INDEX `iVersion` TO `version`,
 	RENAME INDEX `sAncestorsComputationState` TO `ancestors_computation_state`,
 	RENAME INDEX `idItem` TO `item_id`,
-	RENAME INDEX `idUser` TO `user_id`;
+	RENAME INDEX `idUser` TO `user_id`,
+	RENAME INDEX `idAttemptActive` TO `active_attempt_id`;
 ALTER TABLE `users_threads`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idUser` TO `user_id`,
@@ -2160,7 +2162,8 @@ ALTER TABLE `users_answers`
 	RENAME COLUMN `grading_date` TO `sGradingDate`,
 	RENAME COLUMN `grader_user_id` TO `idUserGrader`,
 	RENAME INDEX `user_id` TO `idUser`,
-	RENAME INDEX `item_id` TO `idItem`;
+	RENAME INDEX `item_id` TO `idItem`,
+	RENAME INDEX `attempt_id` TO `idAttempt`;
 ALTER TABLE `users_items`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `user_id` TO `idUser`,
@@ -2204,7 +2207,8 @@ ALTER TABLE `users_items`
 	RENAME INDEX `version` TO `iVersion`,
 	RENAME INDEX `ancestors_computation_state` TO `sAncestorsComputationState`,
 	RENAME INDEX `item_id` TO `idItem`,
-	RENAME INDEX `user_id` TO `idUser`;
+	RENAME INDEX `user_id` TO `idUser`,
+	RENAME INDEX `active_attempt_id` TO `idAttemptActive`;
 ALTER TABLE `users_threads`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `user_id` TO `idUser`,
