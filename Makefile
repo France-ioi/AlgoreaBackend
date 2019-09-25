@@ -77,7 +77,7 @@ dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBHOST)
 	$(call check_defined, DBUSER)
 	$(call check_defined, DBPASS)
-	java -jar $(SCHEMASPY) -t mysql -dp $(MYSQL_CONNECTOR_JAVA) -db $(DBNAME) -host $(DBHOST) -port 3306 -u $(DBUSER) -p $(DBPASS) -o db/doc -s $(DBNAME)
+	java -jar $(SCHEMASPY) -t mysql -dp $(MYSQL_CONNECTOR_JAVA) -db $(DBNAME) -host $(DBHOST) -port 3306 -u $(DBUSER) -p $(DBPASS) -o db/doc -s $(DBNAME) -noimplied -nopages
 clean:
 	$(GOCLEAN)
 	$(GOCLEAN) -testcache
