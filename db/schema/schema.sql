@@ -1421,7 +1421,6 @@ CREATE TABLE `history_messages` (
   `bTrainersOnly` tinyint(1) NOT NULL DEFAULT '0',
   `bArchived` tinyint(1) DEFAULT '0',
   `bPersistant` tinyint(1) DEFAULT NULL,
-  `bReadByCandidate` tinyint(1) DEFAULT NULL,
   `iVersion` bigint(20) NOT NULL,
   `iNextVersion` bigint(20) DEFAULT NULL,
   `bDeleted` tinyint(1) NOT NULL DEFAULT '0',
