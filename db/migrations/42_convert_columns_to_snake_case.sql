@@ -177,7 +177,7 @@ ALTER TABLE `groups_propagate`
 	RENAME COLUMN `sAncestorsComputationState` TO `ancestors_computation_state`,
 	RENAME INDEX `sAncestorsComputationState` TO `ancestors_computation_state`;
 ALTER TABLE `history_filters`
-	RENAME COLUMN `history_ID` TO `history_id`,
+	RENAME COLUMN `historyID` TO `history_id`,
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `idUser` TO `user_id`,
 	RENAME COLUMN `sName` TO `name`,
@@ -1482,7 +1482,7 @@ ALTER TABLE `groups_propagate`
 	RENAME COLUMN `ancestors_computation_state` TO `sAncestorsComputationState`,
 	RENAME INDEX `ancestors_computation_state` TO `sAncestorsComputationState`;
 ALTER TABLE `history_filters`
-	RENAME COLUMN `history_id` TO `history_ID`,
+	RENAME COLUMN `history_id` TO `historyID`,
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `user_id` TO `idUser`,
 	RENAME COLUMN `name` TO `sName`,

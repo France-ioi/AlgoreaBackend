@@ -884,7 +884,7 @@ DROP TABLE IF EXISTS `history_filters`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `history_filters` (
-  `history_ID` int(11) NOT NULL AUTO_INCREMENT,
+  `historyID` int(11) NOT NULL AUTO_INCREMENT,
   `ID` bigint(20) NOT NULL,
   `idUser` bigint(20) NOT NULL,
   `sName` varchar(45) NOT NULL DEFAULT '',
@@ -905,7 +905,7 @@ CREATE TABLE `history_filters` (
   `iVersion` bigint(20) NOT NULL,
   `iNextVersion` bigint(20) DEFAULT NULL,
   `bDeleted` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`history_ID`),
+  PRIMARY KEY (`historyID`),
   KEY `user_idx` (`idUser`),
   KEY `iVersion` (`iVersion`),
   KEY `iNextVersion` (`iNextVersion`),
