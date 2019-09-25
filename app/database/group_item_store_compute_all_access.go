@@ -56,16 +56,13 @@ func (s *GroupItemStore) computeAllAccess() {
 			ON parents.item_id = items_items.parent_item_id
 		JOIN parents_propagate ON parents_propagate.id = parents.id`
 
-	// mark as 'done' groups_items_propagate that shouldn't propagate (having items.custom_chapter=1)
+	// delete groups_items_propagate that shouldn't propagate (having items.custom_chapter=1)
 	const queryMarkDoNotPropagate = `
-		INSERT INTO groups_items_propagate (id, propagate_access)
-		SELECT
-			groups_items.id AS id,
-			'done' as propagate_access
-		FROM groups_items
-		JOIN items
-			ON groups_items.item_id = items.id AND items.custom_chapter
-		ON DUPLICATE KEY UPDATE propagate_access='done'`
+		DELETE FROM groups_items_propagate
+		WHERE id IN (
+			SELECT groups_items.id FROM groups_items
+			JOIN items ON groups_items.item_id = items.id AND items.custom_chapter
+		)`
 	stmtMarkDoNotPropagate, err = s.db.CommonDB().Prepare(queryMarkDoNotPropagate)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkDoNotPropagate.Close()) }()
@@ -89,11 +86,8 @@ func (s *GroupItemStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkExistingChildren.Close()) }()
 
-	// marking 'children' groups_items_propagate as 'done'
-	const queryMarkFinishedItems = `
-		UPDATE groups_items_propagate
-		SET propagate_access = 'done'
-		WHERE propagate_access = 'children'`
+	// deleting 'children' groups_items_propagate
+	const queryMarkFinishedItems = `DELETE FROM groups_items_propagate WHERE propagate_access = 'children'`
 	stmtMarkFinishedItems, err = s.db.CommonDB().Prepare(queryMarkFinishedItems)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkFinishedItems.Close()) }()

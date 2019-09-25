@@ -6,9 +6,11 @@ UPDATE `groups_items_propagate` JOIN `groups_items` USING(`id`)
         `groups_items_propagate`.`propagate_access`
     );
 INSERT IGNORE INTO `groups_items_propagate` SELECT id, propagate_access FROM `groups_items`;
+DELETE FROM `groups_items_propagate` WHERE `propagate_access` = 'done';
 
 ALTER TABLE `groups_items` DROP INDEX `propagate_access`, DROP COLUMN `propagate_access`;
 ALTER TABLE `history_groups_items` DROP COLUMN `propagate_access`;
+ALTER TABLE `groups_items_propagate` MODIFY COLUMN `propagate_access` enum('self','children') NOT NULL;
 
 DROP TRIGGER `before_insert_groups_items`;
 -- +migrate StatementBegin
@@ -116,7 +118,7 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON 
     INSERT INTO `groups_items_propagate`
     SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
     WHERE `groups_items`.`item_id` = NEW.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access = 'done', 'children', propagate_access);
+    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
 END
 -- +migrate StatementEnd
 
@@ -127,7 +129,7 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `after_update_items_items` AFTER UPDATE ON 
         SELECT `id`, 'children' as `propagate_access`
         FROM `groups_items`
         WHERE `groups_items`.`item_id` = NEW.`parent_item_id` OR `groups_items`.`item_id` = OLD.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access = 'done', 'children', propagate_access);
+    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
 END
 -- +migrate StatementEnd
 
@@ -175,11 +177,12 @@ CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_items` BEFORE DELETE O
     INSERT IGNORE INTO `groups_items_propagate`
     SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
     WHERE `groups_items`.`item_id` = OLD.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access = 'done', 'children', propagate_access);
+    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
 END
 -- +migrate StatementEnd
 
 -- +migrate Down
+ALTER TABLE `groups_items_propagate` MODIFY COLUMN `propagate_access` enum('self','children','done') NOT NULL;
 ALTER TABLE `history_groups_items`
     ADD COLUMN `propagate_access` enum('self','children','done') NOT NULL DEFAULT 'self' AFTER `cached_manager_access`;
 ALTER TABLE `groups_items`
