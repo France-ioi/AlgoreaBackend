@@ -652,7 +652,8 @@ CREATE TABLE `groups_items` (
   KEY `idItemtem` (`idItem`),
   KEY `fullAccess` (`bCachedFullAccess`,`sCachedFullAccessDate`),
   KEY `accessSolutions` (`bCachedAccessSolutions`,`sCachedAccessSolutionsDate`),
-  KEY `sPropagateAccess` (`sPropagateAccess`)
+  KEY `sPropagateAccess` (`sPropagateAccess`),
+  KEY `partialAccess` (`bCachedPartialAccess`,`sCachedPartialAccessDate`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

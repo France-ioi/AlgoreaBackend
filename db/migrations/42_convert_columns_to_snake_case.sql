@@ -161,7 +161,8 @@ ALTER TABLE `groups_items`
 	RENAME INDEX `idItemtem` TO `itemtem_id`,
 	RENAME INDEX `fullAccess` TO `full_access`,
 	RENAME INDEX `accessSolutions` TO `access_solutions`,
-	RENAME INDEX `sPropagateAccess` TO `propagate_access`;
+	RENAME INDEX `sPropagateAccess` TO `propagate_access`,
+	RENAME INDEX `partialAccess` TO `partial_access`;
 ALTER TABLE `groups_items_propagate`
 	RENAME COLUMN `ID` TO `id`,
 	RENAME COLUMN `sPropagateAccess` TO `propagate_access`,
@@ -1463,7 +1464,8 @@ ALTER TABLE `groups_items`
 	RENAME INDEX `itemtem_id` TO `idItemtem`,
 	RENAME INDEX `full_access` TO `fullAccess`,
 	RENAME INDEX `access_solutions` TO `accessSolutions`,
-	RENAME INDEX `propagate_access` TO `sPropagateAccess`;
+	RENAME INDEX `propagate_access` TO `sPropagateAccess`,
+	RENAME INDEX `partial_access` TO `partialAccess`;
 ALTER TABLE `groups_items_propagate`
 	RENAME COLUMN `id` TO `ID`,
 	RENAME COLUMN `propagate_access` TO `sPropagateAccess`,
