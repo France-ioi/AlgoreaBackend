@@ -1059,7 +1059,8 @@ CREATE TABLE `history_groups_attempts` (
   KEY `iVersion` (`iVersion`),
   KEY `idItem` (`idItem`),
   KEY `GroupItem` (`idGroup`,`idItem`),
-  KEY `idGroup` (`idGroup`)
+  KEY `idGroup` (`idGroup`),
+  KEY `ID` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
