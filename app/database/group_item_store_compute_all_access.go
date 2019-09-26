@@ -15,9 +15,9 @@ import "database/sql"
 // 3. Then the loop repeats from step 1 for all children (from items_items) of the processed group_items.
 //
 // Notes:
-//  - Items having custom_chapter=1 are always skipped.
-//  - Processed groups_items are marked with propagate_access = 'done'
-//  - The function may loop endlessly if items_items is a cyclic graph
+//  - Access rights are not propagated from items having custom_chapter=1 to their children.
+//  - Processed groups_items are removed from groups_items_propagate.
+//  - The function may loop endlessly if items_items is a cyclic graph.
 //
 func (s *GroupItemStore) computeAllAccess() {
 	s.mustBeInTransaction()
