@@ -15,9 +15,9 @@ import "database/sql"
 // 3. Then the loop repeats from step 1 for all children (from items_items) of the processed group_items.
 //
 // Notes:
-//  - Items having custom_chapter=1 are always skipped.
-//  - Processed groups_items are marked with propagate_access = 'done'
-//  - The function may loop endlessly if items_items is a cyclic graph
+//  - Access rights are not propagated from items having custom_chapter=1 to their children.
+//  - Processed groups_items are removed from groups_items_propagate.
+//  - The function may loop endlessly if items_items is a cyclic graph.
 //
 func (s *GroupItemStore) computeAllAccess() {
 	s.mustBeInTransaction()
@@ -25,8 +25,8 @@ func (s *GroupItemStore) computeAllAccess() {
 	// ------------------------------------------------------------------------------------
 	// Here we declare and prepare DB statements that will be used by the function later on
 	// ------------------------------------------------------------------------------------
-	var stmtCreateTemporaryTable, stmtDropTemporaryTable, stmtMarkDoNotPropagate,
-		stmtMarkExistingChildren, stmtMarkFinishedItems, stmtUpdateGroupItems, stmtMarkChildrenItems *sql.Stmt
+	var stmtCreateTemporaryTable, stmtDropTemporaryTable, stmtDeleteDoNotPropagate,
+		stmtMarkChildrenOfChildrenAsSelf, stmtDeleteProcessedChildren, stmtUpdateGroupItems, stmtMarkSelfAsChildren *sql.Stmt
 	var err error
 
 	// We cannot JOIN groups_items_propagate directly in the INSERT query
@@ -35,6 +35,17 @@ func (s *GroupItemStore) computeAllAccess() {
 	stmtDropTemporaryTable, err = s.db.CommonDB().Prepare(queryDropTemporaryTable)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtDropTemporaryTable.Close()) }()
+
+	// delete groups_items_propagate marked as 'children' that shouldn't propagate (having items.custom_chapter=1)
+	const queryDeleteDoNotPropagate = `
+		DELETE FROM groups_items_propagate
+		WHERE id IN (
+			SELECT groups_items.id FROM groups_items
+			JOIN items ON groups_items.item_id = items.id AND items.custom_chapter
+		) AND propagate_access = 'children'`
+	stmtDeleteDoNotPropagate, err = s.db.CommonDB().Prepare(queryDeleteDoNotPropagate)
+	mustNotBeError(err)
+	defer func() { mustNotBeError(stmtDeleteDoNotPropagate.Close()) }()
 
 	const queryCreateTemporaryTable = `
 		CREATE TEMPORARY TABLE parents_propagate
@@ -56,20 +67,9 @@ func (s *GroupItemStore) computeAllAccess() {
 			ON parents.item_id = items_items.parent_item_id
 		JOIN parents_propagate ON parents_propagate.id = parents.id`
 
-	// delete groups_items_propagate that shouldn't propagate (having items.custom_chapter=1)
-	const queryMarkDoNotPropagate = `
-		DELETE FROM groups_items_propagate
-		WHERE id IN (
-			SELECT groups_items.id FROM groups_items
-			JOIN items ON groups_items.item_id = items.id AND items.custom_chapter
-		)`
-	stmtMarkDoNotPropagate, err = s.db.CommonDB().Prepare(queryMarkDoNotPropagate)
-	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkDoNotPropagate.Close()) }()
-
 	// marking 'self' groups_items sons of groups_items in groups_items_propagate
 	// whose parents are marked with groups_items_propagate.propagate_access='children'
-	const queryMarkExistingChildren = `
+	const queryMarkChildrenOfChildrenAsSelf = `
 		INSERT INTO groups_items_propagate (id, propagate_access)
 		SELECT
 			children.id AS id,
@@ -82,20 +82,21 @@ func (s *GroupItemStore) computeAllAccess() {
 		JOIN groups_items_propagate AS parents_propagate
 			ON parents_propagate.id = parents.id AND parents_propagate.propagate_access = 'children'
 		ON DUPLICATE KEY UPDATE propagate_access='self'`
-	stmtMarkExistingChildren, err = s.db.CommonDB().Prepare(queryMarkExistingChildren)
+	stmtMarkChildrenOfChildrenAsSelf, err = s.db.CommonDB().Prepare(queryMarkChildrenOfChildrenAsSelf)
 	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkExistingChildren.Close()) }()
+	defer func() { mustNotBeError(stmtMarkChildrenOfChildrenAsSelf.Close()) }()
 
 	// deleting 'children' groups_items_propagate
-	const queryMarkFinishedItems = `DELETE FROM groups_items_propagate WHERE propagate_access = 'children'`
-	stmtMarkFinishedItems, err = s.db.CommonDB().Prepare(queryMarkFinishedItems)
+	const queryDeleteProcessedChildren = `DELETE FROM groups_items_propagate WHERE propagate_access = 'children'`
+	stmtDeleteProcessedChildren, err = s.db.CommonDB().Prepare(queryDeleteProcessedChildren)
 	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkFinishedItems.Close()) }()
+	defer func() { mustNotBeError(stmtDeleteProcessedChildren.Close()) }()
 
-	// computation for groups_items marked as 'self' in groups_items_propagate.
+	// computation for groups_items marked as 'self' in groups_items_propagate (so all of them)
 	const queryUpdateGroupItems = `
 		UPDATE groups_items
-		LEFT JOIN (
+		JOIN groups_items_propagate USING(id)
+		LEFT JOIN LATERAL (
 			SELECT
 				child.id,
 				MIN(parent.cached_full_access_date) AS cached_full_access_date,
@@ -112,14 +113,12 @@ func (s *GroupItemStore) computeAllAccess() {
 			FROM groups_items AS child
 			JOIN items_items
 				ON items_items.child_item_id = child.item_id
-			LEFT JOIN groups_items_propagate
-				ON groups_items_propagate.id = child.id
 			JOIN groups_items AS parent
 				ON parent.item_id = items_items.parent_item_id AND parent.group_id = child.group_id
 			JOIN items AS parent_item
 				ON parent_item.id = items_items.parent_item_id
 			WHERE
-				(groups_items_propagate.propagate_access = 'self' OR groups_items_propagate.id IS NULL) AND
+				child.id = groups_items_propagate.id AND
 				(
 					parent.cached_full_access_date IS NOT NULL OR
 					(parent.cached_partial_access_date IS NOT NULL AND items_items.partial_access_propagation != 'None') OR
@@ -130,7 +129,6 @@ func (s *GroupItemStore) computeAllAccess() {
 			GROUP BY child.id
 		) AS new_data
 			USING(id)
-		JOIN groups_items_propagate USING(id)
 		SET
 			groups_items.cached_full_access_date = LEAST(
 				IFNULL(new_data.cached_full_access_date, groups_items.full_access_date),
@@ -149,8 +147,7 @@ func (s *GroupItemStore) computeAllAccess() {
 				IFNULL(groups_items.access_solutions_date, new_data.cached_access_solutions_date)
 			),
 			groups_items.cached_grayed_access_date = new_data.cached_grayed_access_date,
-			groups_items.cached_access_reason = new_data.access_reason_ancestors
-		WHERE groups_items_propagate.propagate_access = 'self'`
+			groups_items.cached_access_reason = new_data.access_reason_ancestors`
 	stmtUpdateGroupItems, err = s.db.CommonDB().Prepare(queryUpdateGroupItems)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdateGroupItems.Close()) }()
@@ -163,13 +160,13 @@ func (s *GroupItemStore) computeAllAccess() {
 	}()
 
 	// marking 'self' groups_items_propagate as 'children'
-	const queryMarkChildrenItems = `
+	const queryMarkSelfAsChildren = `
 		UPDATE groups_items_propagate
 		SET propagate_access = 'children'
 		WHERE propagate_access = 'self'`
-	stmtMarkChildrenItems, err = s.db.CommonDB().Prepare(queryMarkChildrenItems)
+	stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
 	mustNotBeError(err)
-	defer func() { mustNotBeError(stmtMarkChildrenItems.Close()) }()
+	defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
 
 	// ------------------------------------------------------------------------------------
 	// Here we execute the statements
@@ -179,16 +176,16 @@ func (s *GroupItemStore) computeAllAccess() {
 
 	hasChanges := true
 	for hasChanges {
+		_, err = stmtDeleteDoNotPropagate.Exec()
+		mustNotBeError(err)
 		_, err = stmtCreateTemporaryTable.Exec()
 		mustNotBeError(err)
 		mustNotBeError(s.Exec(queryInsertMissingChildren).Error())
 		_, err = stmtDropTemporaryTable.Exec()
 		mustNotBeError(err)
-		_, err = stmtMarkDoNotPropagate.Exec()
+		_, err = stmtMarkChildrenOfChildrenAsSelf.Exec()
 		mustNotBeError(err)
-		_, err = stmtMarkExistingChildren.Exec()
-		mustNotBeError(err)
-		_, err = stmtMarkFinishedItems.Exec()
+		_, err = stmtDeleteProcessedChildren.Exec()
 		mustNotBeError(err)
 		_, err = stmtUpdateGroupItems.Exec()
 		mustNotBeError(err)
@@ -199,7 +196,7 @@ func (s *GroupItemStore) computeAllAccess() {
 		}
 
 		var result sql.Result
-		result, err = stmtMarkChildrenItems.Exec()
+		result, err = stmtMarkSelfAsChildren.Exec()
 		mustNotBeError(err)
 		var rowsAffected int64
 		rowsAffected, err = result.RowsAffected()

@@ -113,23 +113,21 @@ DROP TRIGGER IF EXISTS `after_insert_items_items`;
 CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `partial_access_propagation`,`difficulty`)
-    VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,
-            NEW.`partial_access_propagation`,NEW.`difficulty`);
-    INSERT INTO `groups_items_propagate`
-    SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
-    WHERE `groups_items`.`item_id` = NEW.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
+        VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,
+                NEW.`partial_access_propagation`,NEW.`difficulty`);
+    INSERT IGNORE INTO `groups_items_propagate`
+        SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
+        WHERE `groups_items`.`item_id` = NEW.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
 DROP TRIGGER `after_update_items_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH ROW BEGIN
-    INSERT INTO `groups_items_propagate`
+    INSERT IGNORE INTO `groups_items_propagate`
         SELECT `id`, 'children' as `propagate_access`
         FROM `groups_items`
-        WHERE `groups_items`.`item_id` = NEW.`parent_item_id` OR `groups_items`.`item_id` = OLD.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
+        WHERE `groups_items`.`item_id` = NEW.`parent_item_id` OR `groups_items`.`item_id` = OLD.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
@@ -140,44 +138,43 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
     UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `partial_access_propagation`,`difficulty`, `deleted`)
-    VALUES (OLD.`id`,@curVersion,OLD.`parent_item_id`,OLD.`child_item_id`,OLD.`child_order`,OLD.`category`,
-            OLD.`partial_access_propagation`,OLD.`difficulty`, 1);
+        VALUES (OLD.`id`,@curVersion,OLD.`parent_item_id`,OLD.`child_item_id`,OLD.`child_order`,OLD.`category`,
+                OLD.`partial_access_propagation`,OLD.`difficulty`, 1);
     INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
-    VALUES (OLD.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
+        VALUES (OLD.child_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
     INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
-    VALUES (OLD.parent_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
+        VALUES (OLD.parent_item_id, 'todo') ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
     INSERT IGNORE INTO `items_propagate` (`id`, `ancestors_computation_state`)
         (
             SELECT `items_ancestors`.`child_item_id`, 'todo' FROM `items_ancestors`
             WHERE `items_ancestors`.`ancestor_item_id` = OLD.`child_item_id`
         ) ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
     DELETE `items_ancestors` FROM `items_ancestors`
-    WHERE `items_ancestors`.`child_item_id` = OLD.`child_item_id` AND
+        WHERE `items_ancestors`.`child_item_id` = OLD.`child_item_id` AND
             `items_ancestors`.`ancestor_item_id` = OLD.`parent_item_id`;
     DELETE `bridges` FROM `items_ancestors` `child_descendants`
-                              JOIN `items_ancestors` `parent_ancestors`
-                              JOIN `items_ancestors` `bridges` ON (
-                `bridges`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id` AND
-                `bridges`.`child_item_id` = `child_descendants`.`child_item_id`
+        JOIN `items_ancestors` `parent_ancestors`
+        JOIN `items_ancestors` `bridges` ON (
+            `bridges`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id` AND
+            `bridges`.`child_item_id` = `child_descendants`.`child_item_id`
         )
     WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id` AND
             `child_descendants`.`ancestor_item_id` = OLD.`child_item_id`;
     DELETE `child_ancestors` FROM `items_ancestors` `child_ancestors`
-                                      JOIN  `items_ancestors` `parent_ancestors` ON (
-                `child_ancestors`.`child_item_id` = OLD.`child_item_id` AND
-                `child_ancestors`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id`
+        JOIN  `items_ancestors` `parent_ancestors` ON (
+            `child_ancestors`.`child_item_id` = OLD.`child_item_id` AND
+            `child_ancestors`.`ancestor_item_id` = `parent_ancestors`.`ancestor_item_id`
         )
     WHERE `parent_ancestors`.`child_item_id` = OLD.`parent_item_id`;
     DELETE `parent_ancestors` FROM `items_ancestors` `parent_ancestors`
-                                       JOIN  `items_ancestors` `child_ancestors` ON (
-                `parent_ancestors`.`ancestor_item_id` = OLD.`parent_item_id` AND
-                `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`
+        JOIN  `items_ancestors` `child_ancestors` ON (
+            `parent_ancestors`.`ancestor_item_id` = OLD.`parent_item_id` AND
+            `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`
         )
-    WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id`;
+        WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id`;
     INSERT IGNORE INTO `groups_items_propagate`
-    SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
-    WHERE `groups_items`.`item_id` = OLD.`parent_item_id`
-    ON DUPLICATE KEY UPDATE propagate_access = IF(propagate_access != 'self', 'children', propagate_access);
+        SELECT `id`, 'children' as `propagate_access` FROM `groups_items`
+        WHERE `groups_items`.`item_id` = OLD.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
