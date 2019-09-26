@@ -33,8 +33,7 @@ ALTER TABLE `users_items`
   MODIFY COLUMN `sAllLangProg` varchar(200) DEFAULT NULL COMMENT 'List of programming languages used',
   MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'todo' COMMENT 'Used to denote whether the ancestors data have to be recomputed (after this item''s score was changed for instance)',
   MODIFY COLUMN `sState` mediumtext COMMENT 'Deprecated',
-  MODIFY COLUMN `sAnswer` mediumtext COMMENT 'Deprecated'
-  ;
+  MODIFY COLUMN `sAnswer` mediumtext COMMENT 'Deprecated';
 
 -- +migrate Down
 ALTER TABLE `users_items`
@@ -71,5 +70,4 @@ ALTER TABLE `users_items`
   MODIFY COLUMN `sAllLangProg` varchar(200) DEFAULT NULL,
   MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'todo',
   MODIFY COLUMN `sState` mediumtext,
-  MODIFY COLUMN `sAnswer` mediumtext
-  ;
+  MODIFY COLUMN `sAnswer` mediumtext;

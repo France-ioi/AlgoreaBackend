@@ -30,8 +30,7 @@ ALTER TABLE `groups_attempts`
   MODIFY COLUMN `sContestStartDate` datetime DEFAULT NULL COMMENT 'When the user started the timer (if this item is time-limited)',
   MODIFY COLUMN `bRanked` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether this attempt is official for this item (as opposed to an extra attempt after an exam has ended, for example)',
   MODIFY COLUMN `sAllLangProg` varchar(200) DEFAULT NULL COMMENT 'List of programming languages used',
-  MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'done'  COMMENT 'Whether the data was propagated to the users'' individual users_items.'
-  ;
+  MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'done'  COMMENT 'Whether the data was propagated to the users'' individual users_items.';
 
 -- +migrate Down
 ALTER TABLE `groups_attempts`
@@ -69,5 +68,4 @@ ALTER TABLE `groups_attempts`
   MODIFY COLUMN `sContestStartDate` datetime DEFAULT NULL,
   MODIFY COLUMN `bRanked` tinyint(1) NOT NULL DEFAULT '0',
   MODIFY COLUMN `sAllLangProg` varchar(200) DEFAULT NULL,
-  MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'done'
-  ;
+  MODIFY COLUMN `sAncestorsComputationState` enum('done','processing','todo','temp') NOT NULL DEFAULT 'done';
