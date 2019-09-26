@@ -26,7 +26,7 @@ Background:
     | id | group_id | item_id | manager_access | cached_manager_access | owner_access | creator_user_id |
     | 40 | 11       | 50      | false          | false                 | true         | 1               |
     | 41 | 11       | 21      | true           | true                  | false        | 1               |
-    | 42 | 11       | 60      | false          | true                  | true         | 1               |
+    | 42 | 11       | 60      | false          | false                 | true         | 1               |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
@@ -55,7 +55,7 @@ Scenario: Valid
     | group_id | item_id | manager_access | cached_manager_access | owner_access |
     | 11       | 21      | true           | true                  | false        |
     | 11       | 50      | false          | false                 | true         |
-    | 11       | 60      | false          | true                  | true         |
+    | 11       | 60      | false          | false                 | true         |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "1"
