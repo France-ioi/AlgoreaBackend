@@ -89,14 +89,11 @@ jobs:
       - restore_cache: *CACHEKEYMOD
       - run: make lint
   swagger-gen:
-    working_directory: /go/src/github.com/France-ioi/AlgoreaBackend
     docker:
-      - image: quay.io/goswagger/swagger
+      - image: quay.io/goswagger/swagger:v0.20.1
     steps:
       - checkout
-      - run:
-          name: Install deps (not using go modules)
-          command: go get -t ./...
+      - run: go build -v # do not use 'make' as the image does not support '-race' arg
       - run: swagger generate spec --scan-models -o ./swagger.yaml
       - run: swagger validate ./swagger.yaml
       - persist_to_workspace:
