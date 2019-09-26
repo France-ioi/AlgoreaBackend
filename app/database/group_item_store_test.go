@@ -36,7 +36,7 @@ func TestGroupItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testing.T) {
+func TestGroupItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testing.T) {
 	expectedError := errors.New("some error")
 
 	db, dbMock := NewDBMock()
@@ -44,8 +44,8 @@ func TestItemItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testi
 	dbMock.ExpectBegin()
 	for _, sql := range [...]string{
 		"^DROP TEMPORARY TABLE IF EXISTS",
-		"^CREATE TEMPORARY TABLE",
 		"^DELETE FROM groups_items_propagate",
+		"^CREATE TEMPORARY TABLE",
 		"^INSERT INTO groups_items_propagate",
 		"^DELETE FROM groups_items_propagate",
 		"^UPDATE groups_items",
@@ -59,10 +59,10 @@ func TestItemItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testi
 	}
 	for _, sql := range [...]string{
 		"^DROP TEMPORARY TABLE IF EXISTS",
+		"^DELETE FROM groups_items_propagate",
 		"^CREATE TEMPORARY TABLE",
 		"^INSERT IGNORE INTO groups_items ",
 		"^DROP TEMPORARY TABLE IF EXISTS",
-		"^DELETE FROM groups_items_propagate",
 		"^INSERT INTO groups_items_propagate",
 		"^DELETE FROM groups_items_propagate",
 		"^UPDATE groups_items",

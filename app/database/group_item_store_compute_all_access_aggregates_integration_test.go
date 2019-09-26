@@ -43,12 +43,10 @@ var expectedRow14 = groupItemsAggregatesResultRow{
 	CachedPartialAccess:       true,
 	CachedManagerAccess:       true,
 	ManagerAccess:             true,
-	CachedGrayedAccessDate:    (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
-	CachedGrayedAccess:        true,
+	CachedGrayedAccess:        false,
 	CachedAccessSolutionsDate: (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	AccessSolutionsDate:       (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedAccessSolutions:     true,
-	CachedAccessReason:        ptrString("some cached reason"),
 	AccessReason:              ptrString("some reason"),
 }
 
