@@ -15,7 +15,6 @@ import (
 type groupItemsAggregatesResultRow struct {
 	GroupID                   int64
 	ItemID                    int64
-	PropagateAccess           string
 	CachedFullAccessDate      *database.Time
 	FullAccessDate            *database.Time
 	CachedFullAccess          bool
@@ -44,14 +43,11 @@ var expectedRow14 = groupItemsAggregatesResultRow{
 	CachedPartialAccess:       true,
 	CachedManagerAccess:       true,
 	ManagerAccess:             true,
-	CachedGrayedAccessDate:    (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
-	CachedGrayedAccess:        true,
+	CachedGrayedAccess:        false,
 	CachedAccessSolutionsDate: (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	AccessSolutionsDate:       (*database.Time)(ptrTime(time.Date(2017, 1, 1, 12, 13, 14, 0, time.UTC))),
 	CachedAccessSolutions:     true,
-	CachedAccessReason:        ptrString("some cached reason"),
 	AccessReason:              ptrString("some reason"),
-	PropagateAccess:           "done",
 }
 
 func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testing.T) {
@@ -64,12 +60,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 		UpdateColumn("full_access_date", currentDate.AddDate(0, 0, -8)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("full_access_date", currentDate.AddDate(0, 0, -9)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_full_access_date", currentDate.AddDate(0, 0, -10)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("full_access_date", currentDate.AddDate(0, 0, -11)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
@@ -80,8 +78,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -90,7 +89,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedFullAccess:     true,
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              1,
@@ -98,7 +96,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: nil, // since it has been already done
 			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedFullAccess:     true, // since it has been already done
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              1,
@@ -106,7 +103,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			FullAccessDate:       nil,
 			CachedFullAccess:     true,
-			PropagateAccess:      "done",
 		},
 		expectedRow14,
 		{
@@ -115,13 +111,11 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedFullAccess: false, // since it is a new record and we do not set cached_full_access=1 in ComputeAllAccess()
-			PropagateAccess:  "done",
 		},
 		{
 			GroupID:              1,
 			ItemID:               12,
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_2, 1_11)
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
@@ -129,7 +123,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedFullAccess:     true,
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
@@ -137,14 +130,12 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedFullAccessDate(t *testi
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedFullAccess:     true,
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              2,
 			ItemID:               12,
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedFullAccess:     false, // since it is a new record and we do not set cached_full_access=1 in ComputeAllAccess()
-			PropagateAccess:      "done",
 		},
 	}, result)
 }
@@ -159,12 +150,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -8)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -9)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_partial_access_date", currentDate.AddDate(0, 0, -10)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -11)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
@@ -175,8 +168,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -185,7 +179,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedPartialAccess:     true,
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
@@ -193,7 +186,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: nil, // since it has been already done
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedPartialAccess:     true, // since it has been already done
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
@@ -201,7 +193,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			PartialAccessDate:       nil,
 			CachedPartialAccess:     true,
-			PropagateAccess:         "done",
 		},
 		expectedRow14,
 		{
@@ -210,13 +201,11 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedPartialAccess: false, // since it is a new record and we do not set cached_partial_access=1 in ComputeAllAccess()
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:                 1,
 			ItemID:                  12,
 			CachedPartialAccessDate: nil, // since partial_access_propagation!='AsPartial'
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
@@ -224,7 +213,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedPartialAccess:     true,
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
@@ -232,13 +220,11 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedPartialAccessDate(t *te
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedPartialAccess:     true,
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
 			ItemID:                  12,
 			CachedPartialAccessDate: nil, // since partial_access_propagation!='AsPartial'
-			PropagateAccess:         "done",
 		},
 	}, result)
 }
@@ -252,12 +238,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedManagerAccess(t *testin
 		UpdateColumn("manager_access", 1).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("manager_access", 1).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_manager_access", 1).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("manager_access", 1).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
@@ -267,8 +255,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedManagerAccess(t *testin
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -276,54 +265,46 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedManagerAccess(t *testin
 			ItemID:              1,
 			CachedManagerAccess: true,
 			ManagerAccess:       true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             1,
 			ItemID:              2,
 			CachedManagerAccess: false, // since it has been already done
 			ManagerAccess:       true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             1,
 			ItemID:              3,
 			CachedManagerAccess: true,
 			ManagerAccess:       false,
-			PropagateAccess:     "done",
 		},
 		expectedRow14,
 		{
 			GroupID:             1,
 			ItemID:              11,
 			CachedManagerAccess: true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             1,
 			ItemID:              12,
 			CachedManagerAccess: true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             2,
 			ItemID:              1,
 			CachedManagerAccess: true,
 			ManagerAccess:       true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             2,
 			ItemID:              11,
 			CachedManagerAccess: true,
 			ManagerAccess:       true,
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:             2,
 			ItemID:              12,
 			CachedManagerAccess: true,
-			PropagateAccess:     "done",
 		},
 	}, result)
 }
@@ -338,14 +319,16 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -8)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -9)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_partial_access_date", currentDate.AddDate(0, 0, -10)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -11)).Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
 		UpdateColumn("partial_access_date", currentDate.AddDate(0, 0, -12)).Error())
 	assert.NoError(t, groupItemStore.UpdateColumn("cached_grayed_access", 1).Error())
@@ -357,8 +340,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -367,7 +351,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedGrayedAccess:      false, // since we have partial access here
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
@@ -375,7 +358,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedPartialAccessDate: nil, // since it has been already done
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedGrayedAccess:      true, // since it has been already done
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 1,
@@ -383,7 +365,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			PartialAccessDate:       nil,
 			CachedGrayedAccess:      true,
-			PropagateAccess:         "done",
 		},
 		expectedRow14,
 		{
@@ -394,7 +375,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least cached_partial_access_date(1_1, 1_3)
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set cached_grayed_access=1 in ComputeAllAccess()
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:                 1,
@@ -404,14 +384,12 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))), // from 1_1
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set cached_grayed_access=1 in ComputeAllAccess()
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:                 2,
 			ItemID:                  1,
 			CachedPartialAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                 2,
@@ -421,7 +399,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedGrayedAccessDate:  (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))), // from 2_1
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set cached_grayed_access=1 in ComputeAllAccess()
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID: 2,
@@ -432,7 +409,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedGrayedAccessDate(t *tes
 			CachedGrayedAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))), // from 2_11
 
 			CachedGrayedAccess: false, // since it is a new record and we do not set cached_grayed_access=1 in ComputeAllAccess()
-			PropagateAccess:    "done",
 		},
 	}, result)
 }
@@ -447,12 +423,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		UpdateColumn("access_solutions_date", currentDate.AddDate(0, 0, -8)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("access_solutions_date", currentDate.AddDate(0, 0, -9)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_access_solutions_date", currentDate.AddDate(0, 0, -10)).Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("access_solutions_date", currentDate.AddDate(0, 0, -11)).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
@@ -463,8 +441,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -473,7 +452,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedAccessSolutions:     true,
-			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   1,
@@ -481,7 +459,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: nil, // since it has been already done
 			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -9))),
 			CachedAccessSolutions:     true, // since it has been already done
-			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   1,
@@ -489,7 +466,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // since it has been already done
 			AccessSolutionsDate:       nil,
 			CachedAccessSolutions:     true,
-			PropagateAccess:           "done",
 		},
 		expectedRow14,
 		{
@@ -498,7 +474,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_3)
 
 			CachedAccessSolutions: false, // since it is a new record and we do not set cached_access_solutions=1 in ComputeAllAccess()
-			PropagateAccess:       "done",
 		},
 		{
 			GroupID:                   1,
@@ -506,7 +481,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -10))), // least(1_1, 1_2, 1_11)
 
 			CachedAccessSolutions: false, // since it is a new record and we do not set cached_access_solutions=1 in ComputeAllAccess()
-			PropagateAccess:       "done",
 		},
 		{
 			GroupID:                   2,
@@ -514,7 +488,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedAccessSolutions:     true,
-			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   2,
@@ -522,14 +495,12 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessSolutionsDate(t *
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessSolutions:     true,
-			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   2,
 			ItemID:                    12,
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessSolutions:     false, // since it is a new record and we do not set cached_access_solutions=1 in ComputeAllAccess()
-			PropagateAccess:           "done",
 		},
 	}, result)
 }
@@ -543,12 +514,14 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsNotSetWh
 		UpdateColumn("access_reason", "reason 1_1").Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
 		UpdateColumn("access_reason", "reason 1_2").Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=2").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=2`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_access_reason", "cached reason 1_3").Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("access_reason", "reason 2_1").Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=11").
@@ -558,8 +531,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsNotSetWh
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -567,54 +541,46 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsNotSetWh
 			ItemID:             1,
 			CachedAccessReason: nil,
 			AccessReason:       ptrString("reason 1_1"),
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            1,
 			ItemID:             2,
 			CachedAccessReason: nil,
 			AccessReason:       ptrString("reason 1_2"),
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            1,
 			ItemID:             3,
 			CachedAccessReason: ptrString("cached reason 1_3"), // since it has been 'done'
 			AccessReason:       nil,
-			PropagateAccess:    "done",
 		},
 		expectedRow14,
 		{
 			GroupID:            1,
 			ItemID:             11,
 			CachedAccessReason: nil,
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            1,
 			ItemID:             12,
 			CachedAccessReason: nil,
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            2,
 			ItemID:             1,
 			CachedAccessReason: nil,
 			AccessReason:       ptrString("reason 2_1"),
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            2,
 			ItemID:             11,
 			CachedAccessReason: nil,
 			AccessReason:       ptrString("reason 2_11"),
-			PropagateAccess:    "done",
 		},
 		{
 			GroupID:            2,
 			ItemID:             12,
 			CachedAccessReason: nil,
-			PropagateAccess:    "done",
 		},
 	}, result)
 }
@@ -636,8 +602,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		UpdateColumn("manager_access", 1).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
 		UpdateColumn("cached_access_reason", "cached reason 1_3").Error())
-	assert.NoError(t, groupItemStore.Where("group_id=1 AND item_id=3").
-		UpdateColumn("propagate_access", "done").Error())
+	assert.NoError(t, groupItemStore.Exec(`
+		DELETE groups_items_propagate FROM groups_items_propagate JOIN groups_items USING (id)
+			WHERE group_id=1 AND item_id=3`).Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("access_reason", "reason 2_1").Error())
 	assert.NoError(t, groupItemStore.Where("group_id=2 AND item_id=1").
@@ -651,8 +618,9 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 		return nil
 	}))
 
-	var result []groupItemsAggregatesResultRow
+	assertAllGroupItemsAreDone(t, groupItemStore)
 
+	var result []groupItemsAggregatesResultRow
 	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
 	assertGroupsItemsAggregatesResultRowsEqual(t, []groupItemsAggregatesResultRow{
 		{
@@ -662,7 +630,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			FullAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedAccessReason:   nil,
 			AccessReason:         ptrString("reason 1_1"),
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:             1,
@@ -671,14 +638,12 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			ManagerAccess:       true,
 			CachedAccessReason:  nil,
 			AccessReason:        ptrString("reason 1_2"),
-			PropagateAccess:     "done",
 		},
 		{
 			GroupID:            1,
 			ItemID:             3,
 			CachedAccessReason: ptrString("cached reason 1_3"), // since it has been 'done'
 			AccessReason:       nil,
-			PropagateAccess:    "done",
 		},
 		expectedRow14,
 		{
@@ -687,7 +652,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedManagerAccess:  true,
 			CachedAccessReason:   ptrString("From ancestor group(s) reason 1_1, reason 1_2"), // concat(1_1, 1_2, 1_3)
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:              1,
@@ -695,7 +659,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			CachedFullAccessDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -8))),
 			CachedManagerAccess:  true,
 			CachedAccessReason:   ptrString("From ancestor group(s) reason 1_1, reason 1_2"), // concat(1_1, 1_2, 1_11)
-			PropagateAccess:      "done",
 		},
 		{
 			GroupID:                 2,
@@ -704,7 +667,6 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			PartialAccessDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -11))),
 			CachedAccessReason:      nil,
 			AccessReason:            ptrString("reason 2_1"),
-			PropagateAccess:         "done",
 		},
 		{
 			GroupID:                   2,
@@ -714,14 +676,12 @@ func TestGroupItemStore_ComputeAllAccess_AggregatesCachedAccessReason_IsSetWhenA
 			AccessSolutionsDate:       (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessReason:        ptrString("From ancestor group(s) reason 2_1"),
 			AccessReason:              ptrString("reason 2_11"),
-			PropagateAccess:           "done",
 		},
 		{
 			GroupID:                   2,
 			ItemID:                    12,
 			CachedAccessSolutionsDate: (*database.Time)(ptrTime(currentDate.AddDate(0, 0, -12))),
 			CachedAccessReason:        ptrString("From ancestor group(s) reason 2_11"),
-			PropagateAccess:           "done",
 		},
 	}, result)
 }
@@ -738,4 +698,10 @@ func assertGroupsItemsAggregatesResultRowsEqual(t *testing.T, expected, got []gr
 	for i := 0; i < len(expected); i++ {
 		assert.Equal(t, expected[i], got[i])
 	}
+}
+
+func assertAllGroupItemsAreDone(t *testing.T, groupItemStore *database.GroupItemStore) {
+	var cnt int
+	assert.NoError(t, groupItemStore.Table("groups_items_propagate").Count(&cnt).Error())
+	assert.Zero(t, cnt, "found not done groups_items")
 }

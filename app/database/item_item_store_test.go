@@ -73,7 +73,7 @@ func TestItemItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
 	dbMock.ExpectExec("INSERT IGNORE INTO items_ancestors").WillReturnResult(sqlmock.NewResult(0, 0))
 	dbMock.ExpectExec("UPDATE items_propagate").WillReturnResult(sqlmock.NewResult(0, 0))
-	dbMock.ExpectPrepare("INSERT IGNORE INTO groups_items").WillReturnError(expectedError)
+	dbMock.ExpectPrepare("^DROP TEMPORARY TABLE IF EXISTS").WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {

@@ -26,7 +26,7 @@ func TestGroupItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
-	dbMock.ExpectPrepare("^INSERT IGNORE INTO groups_items").WillReturnError(expectedError)
+	dbMock.ExpectPrepare("^DROP TEMPORARY TABLE IF EXISTS").WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
@@ -36,30 +36,42 @@ func TestGroupItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testing.T) {
+func TestGroupItemStore_After_HandlesErrorOfGrantCachedAccessWhereNeeded(t *testing.T) {
 	expectedError := errors.New("some error")
 
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
-	expectedComputeAllAccessSQL := []string{
-		"^INSERT IGNORE INTO groups_items",
+	for _, sql := range [...]string{
+		"^DROP TEMPORARY TABLE IF EXISTS",
+		"^DELETE FROM groups_items_propagate",
+		"^CREATE TEMPORARY TABLE",
 		"^INSERT INTO groups_items_propagate",
+		"^DELETE FROM groups_items_propagate",
 		"^UPDATE groups_items",
-		"^INSERT INTO groups_items_propagate",
-		"^INSERT INTO groups_items_propagate",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
 		"^UPDATE groups_items_propagate",
-		"^UPDATE groups_items",
-		"^UPDATE groups_items",
-		"^UPDATE groups_items",
-		"^UPDATE groups_items",
-		"^UPDATE groups_items",
-		"^UPDATE groups_items_propagate",
-	}
-	for _, sql := range expectedComputeAllAccessSQL {
+	} {
 		dbMock.ExpectPrepare(sql)
 	}
-	for _, sql := range expectedComputeAllAccessSQL {
+	for _, sql := range [...]string{
+		"^DROP TEMPORARY TABLE IF EXISTS",
+		"^DELETE FROM groups_items_propagate",
+		"^CREATE TEMPORARY TABLE",
+		"^INSERT IGNORE INTO groups_items ",
+		"^DROP TEMPORARY TABLE IF EXISTS",
+		"^INSERT INTO groups_items_propagate",
+		"^DELETE FROM groups_items_propagate",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items",
+		"^UPDATE groups_items_propagate",
+	} {
 		dbMock.ExpectExec(sql).WillReturnResult(sqlmock.NewResult(0, 0))
 	}
 	dbMock.ExpectExec("^UPDATE `groups_items`").WillReturnError(expectedError)

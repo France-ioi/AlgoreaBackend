@@ -44,10 +44,12 @@ func TestGroupItemStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		{GroupID: 2, ItemID: 12, PropagateAccess: "done"},
 	}
 
-	assert.NoError(t, groupItemStore.Order("group_id, item_id").Scan(&result).Error())
-	assert.Equal(t, allDone, result)
-
-	assert.NoError(t, groupItemStore.Table("groups_items_propagate").Joins("LEFT JOIN groups_items USING(id)").
-		Order("group_id, item_id").Select("group_id, item_id, groups_items_propagate.propagate_access").Scan(&result).Error())
+	assert.NoError(t, groupItemStore.Joins("LEFT JOIN groups_items_propagate USING(id)").
+		Order("group_id, item_id").
+		Select(`
+			group_id,
+			item_id,
+			IF(groups_items_propagate.id IS NULL, 'done', groups_items_propagate.propagate_access) AS propagate_access`).
+		Scan(&result).Error())
 	assert.Equal(t, allDone, result)
 }

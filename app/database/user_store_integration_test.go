@@ -39,7 +39,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 		assertTableColumn(t, db, table, "parent_group_id", []int64{1, 5001, 5002, 6001, 6002})
 		assertTableColumn(t, db, table, "child_group_id", []int64{5001, 5002, 6001, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_items_propagate", "id", []int64{2, 3, 5, 6})
+	assertTableColumn(t, db, "groups_items_propagate", "id", []int64(nil))
 	for _, table := range []string{
 		"groups_items", "history_groups_items", "groups_attempts", "history_groups_attempts",
 		"groups_login_prefixes", "history_groups_login_prefixes",
@@ -87,7 +87,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 		assertTableColumn(t, db, table, "parent_group_id", []int64{1, 5000, 5002, 6000, 6002})
 		assertTableColumn(t, db, table, "child_group_id", []int64{5000, 5002, 6000, 6002, 7000})
 	}
-	assertTableColumn(t, db, "groups_items_propagate", "id", []int64{1, 3, 4, 6})
+	assertTableColumn(t, db, "groups_items_propagate", "id", []int64(nil))
 	for _, table := range []string{
 		"groups_items", "history_groups_items", "groups_attempts", "history_groups_attempts",
 		"groups_login_prefixes", "history_groups_login_prefixes",
@@ -143,7 +143,6 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 			history_filters: [{user_id: 500, id: 1, version: 1}, {user_id: 501, id: 2, version: 1}, {user_id: 502, id: 3, version: 1}]
 			refresh_tokens: [{user_id: 500, refresh_token: token}, {user_id: 501, refresh_token: token2},
 			                 {user_id: 502, refresh_token: token3}]
-			groups_items_propagate: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}, {id: 6}]
 			groups_items:
 				- {id: 1, group_id: 5000, item_id: 1, creator_user_id: 1}
 				- {id: 2, group_id: 5001, item_id: 1, creator_user_id: 1}
@@ -239,5 +238,5 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 func assertTableColumn(t *testing.T, db *database.DB, table, column string, expectedValues interface{}) {
 	reflValues := reflect.New(reflect.TypeOf(expectedValues))
 	assert.NoError(t, db.Table(table).Order(column).Pluck("DISTINCT "+column, reflValues.Interface()).Error())
-	assert.Equal(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
+	assert.EqualValues(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
 }
