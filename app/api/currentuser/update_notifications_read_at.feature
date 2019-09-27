@@ -7,7 +7,7 @@ Feature: Set users.notifications_read_at to NOW() for the current user
 
   Scenario: Successfully send a request
     Given I am the user with id "1"
-    When I send a PUT request to "/current-user/notification-read-at"
+    When I send a PUT request to "/current-user/notifications-read-at"
     Then the response should be "updated"
     And the table "users" should stay unchanged but the row with id "1"
     And the table "users" at id "1" should be:
