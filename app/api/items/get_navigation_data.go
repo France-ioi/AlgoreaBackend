@@ -34,7 +34,7 @@ type navigationItemAccessRights struct {
 
 type navigationItemString struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
-	Title string `json:"title"`
+	Title *string `json:"title"`
 }
 
 type navigationItemCommonFields struct {

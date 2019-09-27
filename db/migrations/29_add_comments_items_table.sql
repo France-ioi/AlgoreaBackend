@@ -35,8 +35,7 @@ ALTER TABLE `items`
   MODIFY COLUMN `sContestPhase` enum('Running','Analysis','Closed') NOT NULL COMMENT 'In running mode, users can only access to the tasks during their participation. In Analysis, they may look at their submissions, or try new attemps. Not sure what Closed would be.',
   MODIFY COLUMN `iLevel` int(11) DEFAULT NULL COMMENT 'On our old website, chapters were attached to a level, and we could displayed stats specific to a level.',
   MODIFY COLUMN `bNoScore` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether this item should not have any score displayed / propagated to the parent.',
-  MODIFY COLUMN `groupCodeEnter` tinyint(1) DEFAULT '0' COMMENT 'Whether users can enter through a group code'
-  ;
+  MODIFY COLUMN `groupCodeEnter` tinyint(1) DEFAULT '0' COMMENT 'Whether users can enter through a group code';
 
 -- +migrate Down
 ALTER TABLE `items`
@@ -75,5 +74,4 @@ ALTER TABLE `items`
   MODIFY COLUMN `sContestPhase` enum('Running','Analysis','Closed') NOT NULL,
   MODIFY COLUMN `iLevel` int(11) DEFAULT NULL,
   MODIFY COLUMN `bNoScore` tinyint(1) NOT NULL,
-  MODIFY COLUMN `groupCodeEnter` tinyint(1) DEFAULT '0' COMMENT 'Offer users to enter through a group code'
-  ;
+  MODIFY COLUMN `groupCodeEnter` tinyint(1) DEFAULT '0' COMMENT 'Offer users to enter through a group code';

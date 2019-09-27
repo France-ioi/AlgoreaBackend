@@ -46,8 +46,7 @@ ALTER TABLE `users`
   MODIFY COLUMN `sNotificationReadDate` datetime DEFAULT NULL COMMENT 'When the user last read notifications',
   MODIFY COLUMN `loginModulePrefix` varchar(100) DEFAULT NULL COMMENT 'Set to enable login module accounts manager',
   MODIFY COLUMN `creatorID` bigint(20) DEFAULT NULL COMMENT 'Which user created a given login with the login generation tool',
-  MODIFY COLUMN `allowSubgroups` tinyint(4) DEFAULT NULL COMMENT 'Allow to create subgroups'
-  ;
+  MODIFY COLUMN `allowSubgroups` tinyint(4) DEFAULT NULL COMMENT 'Allow to create subgroups';
 
 -- +migrate Down
 ALTER TABLE `users`
@@ -97,5 +96,4 @@ ALTER TABLE `users`
   MODIFY COLUMN `sNotificationReadDate` datetime DEFAULT NULL,
   MODIFY COLUMN `loginModulePrefix` varchar(100) DEFAULT NULL COMMENT 'Set to enable login module accounts manager',
   MODIFY COLUMN `creatorID` bigint(20) DEFAULT NULL COMMENT 'which user created a given login with the login generation tool',
-  MODIFY COLUMN `allowSubgroups` tinyint(4) DEFAULT NULL COMMENT 'Allow to create subgroups'
-  ;
+  MODIFY COLUMN `allowSubgroups` tinyint(4) DEFAULT NULL COMMENT 'Allow to create subgroups';

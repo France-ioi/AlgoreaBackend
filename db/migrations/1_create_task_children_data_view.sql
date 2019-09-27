@@ -7,7 +7,6 @@ SET character_set_client      = utf8mb4;
 SET character_set_results     = utf8mb4;
 SET collation_connection      = utf8mb4_general_ci;
 CREATE ALGORITHM=UNDEFINED
-  DEFINER=`algorea`@`%` SQL SECURITY DEFINER
   VIEW `task_children_data_view` AS
   SELECT
     `parent_users_items`.`ID` AS `idUserItem`,

@@ -8,8 +8,7 @@ ALTER TABLE `users_answers`
   MODIFY COLUMN `iScore` float DEFAULT NULL COMMENT 'Score obtained',
   MODIFY COLUMN `bValidated` tinyint(1) DEFAULT NULL COMMENT 'Whether it is considered "validated" (above validation threshold for this item)',
   MODIFY COLUMN `sGradingDate` datetime DEFAULT NULL COMMENT 'When was it last graded',
-  MODIFY COLUMN `idUserGrader` int(11) DEFAULT NULL COMMENT 'Who did the last grading'
-  ;
+  MODIFY COLUMN `idUserGrader` int(11) DEFAULT NULL COMMENT 'Who did the last grading';
 
 -- +migrate Down
 ALTER TABLE `users_answers`
@@ -21,5 +20,4 @@ ALTER TABLE `users_answers`
   MODIFY COLUMN `iScore` float DEFAULT NULL,
   MODIFY COLUMN `bValidated` tinyint(1) DEFAULT NULL,
   MODIFY COLUMN `sGradingDate` datetime DEFAULT NULL,
-  MODIFY COLUMN `idUserGrader` int(11) DEFAULT NULL
-  ;
+  MODIFY COLUMN `idUserGrader` int(11) DEFAULT NULL;

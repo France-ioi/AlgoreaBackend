@@ -12,7 +12,7 @@ ALTER TABLE `history_items_items` DROP COLUMN `access_restricted`, DROP COLUMN `
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
+CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `partial_access_propagation`,`difficulty`)
         VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,
@@ -25,10 +25,10 @@ END
 -- +migrate StatementEnd
 DROP TRIGGER IF EXISTS `before_update_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN
+CREATE TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN
     IF NEW.version <> OLD.version THEN
         SET @curVersion = NEW.version;
-    ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
+    ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion;
     END IF;
     IF NOT (OLD.`id` = NEW.`id` AND OLD.`parent_item_id` <=> NEW.`parent_item_id` AND
             OLD.`child_item_id` <=> NEW.`child_item_id` AND OLD.`child_order` <=> NEW.`child_order` AND
@@ -84,8 +84,8 @@ END
 -- +migrate StatementEnd
 DROP TRIGGER IF EXISTS `before_delete_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN
-    SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
+CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN
+    SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion;
     UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `partial_access_propagation`,`difficulty`, `deleted`)
@@ -148,7 +148,7 @@ UPDATE `history_items_items` SET `always_visible` = (`partial_access_propagation
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
+CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `access_restricted`,`always_visible`,`difficulty`)
     VALUES (NEW.`id`,@curVersion,NEW.`parent_item_id`,NEW.`child_item_id`,NEW.`child_order`,NEW.`category`,
@@ -161,10 +161,10 @@ END
 -- +migrate StatementEnd
 DROP TRIGGER IF EXISTS `before_update_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN
+CREATE TRIGGER `before_update_items_items` BEFORE UPDATE ON `items_items` FOR EACH ROW BEGIN
     IF NEW.version <> OLD.version THEN
         SET @curVersion = NEW.version;
-    ELSE SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
+    ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion;
     END IF;
     IF NOT (OLD.`id` = NEW.`id` AND OLD.`parent_item_id` <=> NEW.`parent_item_id` AND
             OLD.`child_item_id` <=> NEW.`child_item_id` AND OLD.`child_order` <=> NEW.`child_order` AND
@@ -220,8 +220,8 @@ END
 -- +migrate StatementEnd
 DROP TRIGGER IF EXISTS `before_delete_items_items`;
 -- +migrate StatementBegin
-CREATE DEFINER=`algorea`@`%` TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN
-    SELECT (UNIX_TIMESTAMP() * 10) INTO @curVersion;
+CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EACH ROW BEGIN
+    SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion;
     UPDATE `history_items_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
     INSERT INTO `history_items_items` (`id`,`version`,`parent_item_id`,`child_item_id`,`child_order`,`category`,
                                        `access_restricted`,`always_visible`,`difficulty`, `deleted`)
