@@ -18,10 +18,10 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 210 | Chapter  |
       | 211 | Task     |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
-      | 21       | 211     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 212     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 213     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
+      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |

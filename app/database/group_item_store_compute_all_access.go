@@ -6,8 +6,8 @@ import "database/sql"
 //
 // It starts from groups_items marked with propagate_access = 'self'.
 //
-// 1. cached_full_access_date, cached_partial_access_date, cached_manager_access,
-// cached_access_solutions_date, cached_grayed_access_date, and cached_access_reason are updated.
+// 1. cached_full_access_since, cached_partial_access_since, cached_manager_access,
+// cached_solutions_access_since, cached_grayed_access_since, and cached_access_reason are updated.
 //
 // 2. cached_full_access, cached_partial_access, cached_access_solutions, cached_grayed_access
 // are zeroed for rows where the calculation revealed access rights revocation.
@@ -99,12 +99,12 @@ func (s *GroupItemStore) computeAllAccess() {
 		LEFT JOIN LATERAL (
 			SELECT
 				child.id,
-				MIN(parent.cached_full_access_date) AS cached_full_access_date,
-				MIN(IF(items_items.partial_access_propagation = 'AsPartial', parent.cached_partial_access_date, NULL)) AS cached_partial_access_date,
+				MIN(parent.cached_full_access_since) AS cached_full_access_since,
+				MIN(IF(items_items.partial_access_propagation = 'AsPartial', parent.cached_partial_access_since, NULL)) AS cached_partial_access_since,
 				MAX(parent.cached_manager_access) AS cached_manager_access,
-				MIN(IF(items_items.partial_access_propagation = 'AsGrayed', parent.cached_partial_access_date, NULL))
-					AS cached_grayed_access_date,
-				MIN(parent.cached_access_solutions_date) AS cached_access_solutions_date,
+				MIN(IF(items_items.partial_access_propagation = 'AsGrayed', parent.cached_partial_access_since, NULL))
+					AS cached_grayed_access_since,
+				MIN(parent.cached_solutions_access_since) AS cached_solutions_access_since,
 				CONCAT('From ancestor group(s) ', GROUP_CONCAT(
 					DISTINCT IF(parent.access_reason = '', NULL, parent.access_reason)
 					ORDER BY parent_item.id
@@ -120,9 +120,9 @@ func (s *GroupItemStore) computeAllAccess() {
 			WHERE
 				child.id = groups_items_propagate.id AND
 				(
-					parent.cached_full_access_date IS NOT NULL OR
-					(parent.cached_partial_access_date IS NOT NULL AND items_items.partial_access_propagation != 'None') OR
-					parent.cached_access_solutions_date IS NOT NULL OR
+					parent.cached_full_access_since IS NOT NULL OR
+					(parent.cached_partial_access_since IS NOT NULL AND items_items.partial_access_propagation != 'None') OR
+					parent.cached_solutions_access_since IS NOT NULL OR
 					parent.cached_manager_access
 				) AND
 				parent_item.custom_chapter = 0
@@ -130,23 +130,23 @@ func (s *GroupItemStore) computeAllAccess() {
 		) AS new_data
 			USING(id)
 		SET
-			groups_items.cached_full_access_date = LEAST(
-				IFNULL(new_data.cached_full_access_date, groups_items.full_access_date),
-				IFNULL(groups_items.full_access_date, new_data.cached_full_access_date)
+			groups_items.cached_full_access_since = LEAST(
+				IFNULL(new_data.cached_full_access_since, groups_items.full_access_since),
+				IFNULL(groups_items.full_access_since, new_data.cached_full_access_since)
 			),
-			groups_items.cached_partial_access_date = LEAST(
-				IFNULL(new_data.cached_partial_access_date, groups_items.partial_access_date),
-				IFNULL(groups_items.partial_access_date, new_data.cached_partial_access_date)
+			groups_items.cached_partial_access_since = LEAST(
+				IFNULL(new_data.cached_partial_access_since, groups_items.partial_access_since),
+				IFNULL(groups_items.partial_access_since, new_data.cached_partial_access_since)
 			),
 			groups_items.cached_manager_access = GREATEST(
 				IFNULL(new_data.cached_manager_access, 0),
 				groups_items.manager_access
 			),
-			groups_items.cached_access_solutions_date = LEAST(
-				IFNULL(new_data.cached_access_solutions_date, groups_items.access_solutions_date),
-				IFNULL(groups_items.access_solutions_date, new_data.cached_access_solutions_date)
+			groups_items.cached_solutions_access_since = LEAST(
+				IFNULL(new_data.cached_solutions_access_since, groups_items.solutions_access_since),
+				IFNULL(groups_items.solutions_access_since, new_data.cached_solutions_access_since)
 			),
-			groups_items.cached_grayed_access_date = new_data.cached_grayed_access_date,
+			groups_items.cached_grayed_access_since = new_data.cached_grayed_access_since,
 			groups_items.cached_access_reason = new_data.access_reason_ancestors`
 	stmtUpdateGroupItems, err = s.db.CommonDB().Prepare(queryUpdateGroupItems)
 	mustNotBeError(err)
@@ -207,10 +207,10 @@ func (s *GroupItemStore) computeAllAccess() {
 
 func (s *GroupItemStore) prepareStatementsForRevokingCachedAccessWhereNeeded() []*sql.Stmt {
 	listFields := map[string]string{
-		"cached_full_access":      "cached_full_access_date",
-		"cached_partial_access":   "cached_partial_access_date",
-		"cached_access_solutions": "cached_access_solutions_date",
-		"cached_grayed_access":    "cached_grayed_access_date",
+		"cached_full_access":      "cached_full_access_since",
+		"cached_partial_access":   "cached_partial_access_since",
+		"cached_access_solutions": "cached_solutions_access_since",
+		"cached_grayed_access":    "cached_grayed_access_since",
 	}
 
 	statements := make([]*sql.Stmt, 0, len(listFields))

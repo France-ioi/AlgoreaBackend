@@ -27,24 +27,24 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	}))
 	assert.True(t, newID > 0)
 	type resultType struct {
-		GroupID             int64
-		ItemID              int64
-		StartDateSet        bool
-		LastActivityDateSet bool
-		Order               int32
+		GroupID           int64
+		ItemID            int64
+		StartedAtSet      bool
+		LastActivityAtSet bool
+		Order             int32
 	}
 	var result resultType
 	assert.NoError(t, database.NewDataStore(db).GroupAttempts().ByID(newID).
 		Select(`
-			group_id, item_id, ABS(TIMESTAMPDIFF(SECOND, start_date, NOW())) < 3 AS start_date_set,
-			ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 AS last_activity_date_set, `+"`order`").
+			group_id, item_id, ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 AS started_at_set,
+			ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 AS last_activity_at_set, `+"`order`").
 		Take(&result).Error())
 	assert.Equal(t, resultType{
-		GroupID:             10,
-		ItemID:              20,
-		StartDateSet:        true,
-		LastActivityDateSet: true,
-		Order:               2,
+		GroupID:           10,
+		ItemID:            20,
+		StartedAtSet:      true,
+		LastActivityAtSet: true,
+		Order:             2,
 	}, result)
 }
 
@@ -266,10 +266,10 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 					- {id: 50, has_attempts: 0}
 					- {id: 60, has_attempts: 1}
 				groups_items:
-					- {group_id: 101, item_id: 50, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
-					- {group_id: 101, item_id: 60, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
-					- {group_id: 111, item_id: 50, cached_full_access_date: "2017-05-29 06:38:38", creator_user_id: 1}
-					- {group_id: 121, item_id: 50, cached_grayed_access_date: "2017-05-29 06:38:38", creator_user_id: 1}`,
+					- {group_id: 101, item_id: 50, cached_partial_access_since: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 101, item_id: 60, cached_partial_access_since: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 111, item_id: 50, cached_full_access_since: "2017-05-29 06:38:38", creator_user_id: 1}
+					- {group_id: 121, item_id: 50, cached_grayed_access_since: "2017-05-29 06:38:38", creator_user_id: 1}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
@@ -458,13 +458,13 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 					- {id: 60, has_attempts: 1}
 					- {id: 70, has_attempts: 0}
 				groups_items:
-					- {group_id: 101, item_id: 50, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 101, item_id: 60, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 101, item_id: 70, cached_partial_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 111, item_id: 50, cached_full_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 111, item_id: 70, cached_full_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 121, item_id: 50, cached_grayed_access_date: "2017-05-29 06:38:38", creator_user_id: 10}
-					- {group_id: 121, item_id: 70, cached_grayed_access_date: "2017-05-29 06:38:38", creator_user_id: 10}`,
+					- {group_id: 101, item_id: 50, cached_partial_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 101, item_id: 60, cached_partial_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 101, item_id: 70, cached_partial_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 111, item_id: 50, cached_full_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 111, item_id: 70, cached_full_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 121, item_id: 50, cached_grayed_access_since: "2017-05-29 06:38:38", creator_user_id: 10}
+					- {group_id: 121, item_id: 70, cached_grayed_access_since: "2017-05-29 06:38:38", creator_user_id: 10}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)

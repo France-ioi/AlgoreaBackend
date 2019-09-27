@@ -46,22 +46,22 @@ Feature: Change item access rights for a group - robustness
       | 101              | 103           |
       | 102              | 103           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | full_access_date | cached_full_access_date | partial_access_date | cached_partial_access_date | cached_grayed_access_date | access_solutions_date | cached_access_solutions_date | owner_access | access_reason                                  | creator_user_id |
-      | 21       | 100     | null             | null                    | null                | null                       | null                      | null                  | null                         | 1            | owner owns the item                            | 2               |
-      | 21       | 101     | null             | null                    | null                | null                       | null                      | null                  | null                         | 0            | null                                           | 2               |
-      | 21       | 102     | null             | null                    | null                | null                       | null                      | null                  | null                         | 0            | null                                           | 2               |
-      | 21       | 103     | null             | null                    | null                | null                       | null                      | null                  | null                         | 0            | null                                           | 2               |
-      | 25       | 100     | null             | null                    | 2019-01-06 09:26:40 | 2019-01-06 09:26:40        | null                      | null                  | null                         | 0            | the parent item is visible to the user's class | 2               |
-      | 25       | 101     | null             | null                    | null                | null                       | 2019-01-06 09:26:40       | null                  | null                         | 0            | null                                           | 2               |
+      | group_id | item_id | full_access_since | cached_full_access_since | partial_access_since | cached_partial_access_since | cached_grayed_access_since | solutions_access_since | cached_solutions_access_since | owner_access | access_reason                                  | creator_user_id |
+      | 21       | 100     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 1            | owner owns the item                            | 2               |
+      | 21       | 101     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 2               |
+      | 21       | 102     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 2               |
+      | 21       | 103     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 2               |
+      | 25       | 100     | null              | null                     | 2019-01-06 09:26:40  | 2019-01-06 09:26:40         | null                       | null                   | null                          | 0            | the parent item is visible to the user's class | 2               |
+      | 25       | 101     | null              | null                     | null                 | null                        | 2019-01-06 09:26:40        | null                   | null                          | 0            | null                                           | 2               |
 
   Scenario: Invalid group_id
     Given I am the user with id "1"
     When I send a PUT request to "/groups/abc/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -74,9 +74,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/abc" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -89,9 +89,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
     }
     """
@@ -114,9 +114,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -129,9 +129,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -144,9 +144,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/404" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -159,9 +159,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/21/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -174,9 +174,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/404/items/102" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """
@@ -189,9 +189,9 @@ Feature: Change item access rights for a group - robustness
     When I send a PUT request to "/groups/23/items/103" with the following body:
     """
     {
-      "partial_access_date": "2019-03-06T09:26:40Z",
-      "full_access_date": "2019-04-06T09:26:40Z",
-      "access_solutions_date": "2019-05-06T09:26:40Z",
+      "partial_access_since": "2019-03-06T09:26:40Z",
+      "full_access_since": "2019-04-06T09:26:40Z",
+      "solutions_access_since": "2019-05-06T09:26:40Z",
       "access_reason": "the user really needs this access"
     }
     """

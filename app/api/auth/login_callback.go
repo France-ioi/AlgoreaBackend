@@ -113,8 +113,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		Where("login_id = ?", userData["login_id"]).Select("id, self_group_id, owned_group_id").
 		Take(&userInfo).Error()
 
-	userData["last_login_date"] = database.Now()
-	userData["last_activity_date"] = database.Now()
+	userData["last_login_at"] = database.Now()
+	userData["last_activity_at"] = database.Now()
 
 	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
 		userData["default_language"] = database.Default()
@@ -123,7 +123,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	if gorm.IsRecordNotFoundError(err) {
 		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
-		userData["registration_date"] = database.Now()
+		userData["registered_at"] = database.Now()
 		userData["self_group_id"] = selfGroupID
 		userData["owned_group_id"] = ownedGroupID
 
@@ -163,26 +163,26 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
-			"id":           selfGroupID,
-			"name":         login,
-			"type":         "UserSelf",
-			"description":  login,
-			"date_created": database.Now(),
-			"opened":       false,
-			"send_emails":  false,
+			"id":          selfGroupID,
+			"name":        login,
+			"type":        "UserSelf",
+			"description": login,
+			"created_at":  database.Now(),
+			"opened":      false,
+			"send_emails": false,
 		})
 	}))
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		ownedGroupID = retryIDStore.NewID()
 		adminGroupName := login + "-admin"
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
-			"id":           ownedGroupID,
-			"name":         adminGroupName,
-			"type":         "UserAdmin",
-			"description":  adminGroupName,
-			"date_created": database.Now(),
-			"opened":       false,
-			"send_emails":  false,
+			"id":          ownedGroupID,
+			"name":        adminGroupName,
+			"type":        "UserAdmin",
+			"description": adminGroupName,
+			"created_at":  database.Now(),
+			"opened":      false,
+			"send_emails": false,
 		})
 	}))
 

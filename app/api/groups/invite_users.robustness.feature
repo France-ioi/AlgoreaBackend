@@ -20,8 +20,8 @@ Feature: Invite users - robustness
       | 22                | 13             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_date |
-      | 15 | 22              | 13             | direct | null        |
+      | id | parent_group_id | child_group_id | type   | status_changed_at |
+      | 15 | 22              | 13             | direct | null              |
 
   Scenario: Fails when the user is not an owner of the parent group
     Given I am the user with id "2"

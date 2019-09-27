@@ -7,5 +7,5 @@ type LoginStateStore struct {
 
 // DeleteExpired deletes all expired cookie/state pairs from the DB
 func (s *LoginStateStore) DeleteExpired() error {
-	return s.Delete("expiration_date <= NOW()").Error()
+	return s.Delete("expires_at <= NOW()").Error()
 }

@@ -245,45 +245,45 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
-      | 21       | 211     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 212     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 213     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 214     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 215     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 216     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 217     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 20       | 218     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 219     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 221     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 222     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 223     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 224     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 225     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 226     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 227     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 21       | 228     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 229     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 311     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 312     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 313     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 314     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 315     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 316     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 317     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 20       | 318     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 319     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 411     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 412     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 413     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 414     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 415     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 416     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 417     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 21       | 418     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 419     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
+      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 214     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 215     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 216     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 217     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 20       | 218     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 219     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 221     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 222     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 223     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 224     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 225     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 226     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 227     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 21       | 228     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 229     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 311     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 312     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 313     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 314     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 315     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 316     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 317     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 20       | 318     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 319     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 411     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 412     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 413     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 414     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 415     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 416     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 417     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 21       | 418     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 419     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | start_date          | score | best_answer_date    | hints_cached | submissions_attempts | validated | validation_date     |
+      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        |
       | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 |
       | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 0         | null                |
       | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4                    | 1         | null                | # hints_cached & submissions_attempts for 14,211 come from this line

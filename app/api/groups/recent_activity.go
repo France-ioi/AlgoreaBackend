@@ -15,7 +15,7 @@ type groupRecentActivityResponseRow struct {
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
-	SubmissionDate *database.Time `json:"submission_date"`
+	SubmittedAt *database.Time `json:"submitted_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
@@ -83,19 +83,19 @@ type groupRecentActivityResponseRow struct {
 //   default: false
 // - name: sort
 //   in: query
-//   default: [-submission_date,id]
+//   default: [-submitted_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [submission_date,-submission_date,id,-id]
-// - name: from.submission_date
-//   description: Start the page from the row next to the row with `users_answers.submission_date` = `from.submission_date`
-//                (`from.id` is required when `from.submission_date` is present)
+//     enum: [submitted_at,-submitted_at,id,-id]
+// - name: from.submitted_at
+//   description: Start the page from the row next to the row with `users_answers.submitted_at` = `from.submitted_at`
+//                (`from.id` is required when `from.submitted_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
 //   description: Start the page from the row next to the row with `users_answers.id`=`from.id`
-//                (`from.submission_date` is required when from.id is present)
+//                (`from.submitted_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -139,7 +139,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.UserAnswers().WithUsers().WithItems().
 		Select(
-			`users_answers.id as id, users_answers.submission_date, users_answers.validated, users_answers.score,
+			`users_answers.id as id, users_answers.submitted_at, users_answers.validated, users_answers.score,
        items.id AS item__id, items.type AS item__type,
 		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
 			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
@@ -154,9 +154,9 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"submission_date": {ColumnName: "users_answers.submission_date", FieldType: "time"},
-			"id":              {ColumnName: "users_answers.id", FieldType: "int64"}},
-		"-submission_date")
+			"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
+			"id":           {ColumnName: "users_answers.id", FieldType: "int64"}},
+		"-submitted_at")
 	if apiError != service.NoError {
 		return apiError
 	}

@@ -38,21 +38,21 @@ import (
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-submission_date,id]
+//   default: [-submitted_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [submission_date,-submission_date,id,-id]
-// - name: from.submission_date
-//   description: Start the page from the answer next to the answer with `submission_date` = `from.submission_date`
+//     enum: [submitted_at,-submitted_at,id,-id]
+// - name: from.submitted_at
+//   description: Start the page from the answer next to the answer with `submitted_at` = `from.submitted_at`
 //                and `users_answers.id` = `from.id`
-//                (`from.id` is required when `from.submission_date` is present)
+//                (`from.id` is required when `from.submitted_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the answer next to the answer with `submission_date`=`from.submission_date`
+//   description: Start the page from the answer next to the answer with `submitted_at`=`from.submitted_at`
 //                and `users_answers.id`=`from.id`
-//                (`from.submission_date` is required when from.id is present)
+//                (`from.submitted_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -83,7 +83,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 	dataQuery := srv.Store.UserAnswers().WithUsers().
 		Select(`users_answers.id, users_answers.name, users_answers.type, users_answers.lang_prog,
-		        users_answers.submission_date, users_answers.score, users_answers.validated,
+		        users_answers.submitted_at, users_answers.score, users_answers.validated,
 		        users.login, users.first_name, users.last_name`)
 
 	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
@@ -110,9 +110,9 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"submission_date": {ColumnName: "users_answers.submission_date", FieldType: "time"},
-		"id":              {ColumnName: "users_answers.id", FieldType: "int64"},
-	}, "-submission_date,id")
+		"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
+		"id":           {ColumnName: "users_answers.id", FieldType: "int64"},
+	}, "-submitted_at,id")
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -129,16 +129,16 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 // swagger:ignore
 type rawAnswersData struct {
-	ID             int64
-	Name           *string
-	Type           string
-	LangProg       *string
-	SubmissionDate database.Time
-	Score          *float32
-	Validated      *bool
-	UserLogin      string  `sql:"column:login"`
-	UserFirstName  *string `sql:"column:first_name"`
-	UserLastName   *string `sql:"column:last_name"`
+	ID            int64
+	Name          *string
+	Type          string
+	LangProg      *string
+	SubmittedAt   database.Time
+	Score         *float32
+	Validated     *bool
+	UserLogin     string  `sql:"column:login"`
+	UserFirstName *string `sql:"column:first_name"`
+	UserLastName  *string `sql:"column:last_name"`
 }
 
 type answersResponseAnswerUser struct {
@@ -167,7 +167,7 @@ type answersResponseAnswer struct {
 	// required: true
 	LangProg *string `json:"lang_prog"`
 	// required: true
-	SubmissionDate database.Time `json:"submission_date"`
+	SubmittedAt database.Time `json:"submitted_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
@@ -183,13 +183,13 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	responseData := make([]answersResponseAnswer, 0, len(rawData))
 	for _, row := range rawData {
 		responseData = append(responseData, answersResponseAnswer{
-			ID:             row.ID,
-			Name:           row.Name,
-			Type:           row.Type,
-			LangProg:       row.LangProg,
-			SubmissionDate: row.SubmissionDate,
-			Score:          row.Score,
-			Validated:      row.Validated,
+			ID:          row.ID,
+			Name:        row.Name,
+			Type:        row.Type,
+			LangProg:    row.LangProg,
+			SubmittedAt: row.SubmittedAt,
+			Score:       row.Score,
+			Validated:   row.Validated,
 			User: answersResponseAnswerUser{
 				Login:     row.UserLogin,
 				FirstName: row.UserFirstName,

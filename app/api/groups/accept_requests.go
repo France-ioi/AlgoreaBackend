@@ -11,7 +11,7 @@ import (
 // summary: Accept requests to join a group
 // description:
 //   Lets an admin approve requests to join a group.
-//   On success the service sets `groups_groups.type` to "requestAccepted" and `status_date` to current UTC time
+//   On success the service sets `groups_groups.type` to "requestAccepted" and `status_changed_at` to current UTC time
 //   for each of `group_ids`.
 //   It also refreshes the access rights.
 //

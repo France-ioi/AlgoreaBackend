@@ -26,7 +26,7 @@ type groupTeamProgressResponseRow struct {
 	Validated bool `json:"validated"`
 	// Nullable
 	// required:true
-	LastActivityDate *database.Time `json:"last_activity_date"`
+	LastActivityAt *database.Time `json:"last_activity_at"`
 	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
 	// If there are no attempts, the number of hints is 0.
 	// required:true
@@ -39,11 +39,11 @@ type groupTeamProgressResponseRow struct {
 	//
 	//   1) if no attempts yet: 0
 	//
-	//   2) if one attempt validated: min(`validation_date`) - min(`start_date`)
+	//   2) if one attempt validated: min(`validated_at`) - min(`started_at`)
 	//     (i.e., time between the first time it started one (any) attempt
 	//      and the time he first validated the task)
 	//
-	//   3) if no attempts validated: `now` - min(`start_date`)
+	//   3) if no attempts validated: `now` - min(`started_at`)
 	// required:true
 	TimeSpent int32 `json:"time_spent"`
 }
@@ -150,15 +150,15 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			groups.id AS group_id,
 			IFNULL(attempt_with_best_score.score, 0) AS score,
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
-			(SELECT MAX(last_activity_date) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS last_activity_date,
+			(SELECT MAX(last_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS last_activity_at,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
 			IFNULL(attempt_with_best_score.submissions_attempts, 0) AS submissions_attempts,
 			IF(attempt_with_best_score.group_id IS NULL,
 				0,
 				(
 					SELECT IF(attempt_with_best_score.validated,
-						TIMESTAMPDIFF(SECOND, MIN(start_date), MIN(validation_date)),
-						TIMESTAMPDIFF(SECOND, MIN(start_date), NOW())
+						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
+						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
 					FROM groups_attempts
 					WHERE group_id = groups.id AND item_id = items.id
@@ -170,7 +170,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			ON attempt_with_best_score.id = (
 				SELECT id FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, minus_score, best_answer_date LIMIT 1
+				ORDER BY group_id, item_id, minus_score, best_answer_at LIMIT 1
 			)`).
 		Where("groups.id IN (?)", teamIDs).
 		Order(gorm.Expr(

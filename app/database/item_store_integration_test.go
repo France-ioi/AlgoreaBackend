@@ -65,10 +65,10 @@ func TestItemStore_AccessRights(t *testing.T) {
 	mockUser := &database.User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT item_id, MIN(cached_full_access_date) <= NOW() AS full_access, "+
-			"MIN(cached_partial_access_date) <= NOW() AS partial_access, "+
-			"MIN(cached_grayed_access_date) <= NOW() AS grayed_access, "+
-			"MIN(cached_access_solutions_date) <= NOW() AS access_solutions "+
+		"SELECT item_id, MIN(cached_full_access_since) <= NOW() AS full_access, "+
+			"MIN(cached_partial_access_since) <= NOW() AS partial_access, "+
+			"MIN(cached_grayed_access_since) <= NOW() AS grayed_access, "+
+			"MIN(cached_solutions_access_since) <= NOW() AS access_solutions "+
 			"FROM `groups_items` "+
 			"JOIN (SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.child_group_id = ?)) AS ancestors "+
 			"ON groups_items.group_id = ancestors.ancestor_group_id GROUP BY item_id") + "$").
@@ -142,7 +142,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("item_id = ?", 500). // chapter
 					Where("user_id = ?", 4).
-					UpdateColumn("contest_start_date", database.Now()).Error()
+					UpdateColumn("contest_started_at", database.Now()).Error()
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
@@ -150,7 +150,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("item_id = ?", 115). // chapter
 					Where("user_id = ?", 5).
-					UpdateColumn("contest_start_date", database.Now()).Error()
+					UpdateColumn("contest_started_at", database.Now()).Error()
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
@@ -158,7 +158,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 				return database.NewDataStore(db).UserItems().
 					Where("item_id = ?", 114). // chapter
 					Where("user_id = ?", 7).
-					UpdateColumn("contest_start_date", database.Now()).Error()
+					UpdateColumn("contest_started_at", database.Now()).Error()
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
 			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +
@@ -208,11 +208,11 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {ancestor_group_id: 106, child_group_id: 106}
 		users_items:
 			- {user_id: 2, item_id: 12} # not started
-			- {user_id: 3, item_id: 13, contest_start_date: 2019-03-22 08:44:55, finish_date: 2019-03-23 08:44:55} #finished
-			- {user_id: 4, item_id: 14, contest_start_date: 2019-03-22 08:44:55} # ok
-			- {user_id: 5, item_id: 15, contest_start_date: 2019-04-22 08:44:55} # ok with team mode
-			- {user_id: 6, item_id: 14, contest_start_date: 2019-03-22 08:44:55} # multiple
-			- {user_id: 6, item_id: 15, contest_start_date: 2019-03-22 08:43:55} # multiple
+			- {user_id: 3, item_id: 13, contest_started_at: 2019-03-22 08:44:55, finished_at: 2019-03-23 08:44:55} #finished
+			- {user_id: 4, item_id: 14, contest_started_at: 2019-03-22 08:44:55} # ok
+			- {user_id: 5, item_id: 15, contest_started_at: 2019-04-22 08:44:55} # ok with team mode
+			- {user_id: 6, item_id: 14, contest_started_at: 2019-03-22 08:44:55} # multiple
+			- {user_id: 6, item_id: 15, contest_started_at: 2019-03-22 08:43:55} # multiple
 		groups_items:
 			- {group_id: 102, item_id: 12, creator_user_id: 1}
 			- {group_id: 103, item_id: 13, creator_user_id: 1}
@@ -294,8 +294,8 @@ func TestItemStore_CloseContest(t *testing.T) {
 		groups_items:
 			- {group_id: 20, item_id: 11, creator_user_id: 1}
 			- {group_id: 20, item_id: 12, creator_user_id: 1}
-			- {group_id: 20, item_id: 13, cached_full_access_date: 2030-03-22 08:44:55, creator_user_id: 1} # no full access
-			- {group_id: 20, item_id: 14, cached_full_access_date: 2018-03-22 08:44:55, creator_user_id: 1} # full access
+			- {group_id: 20, item_id: 13, cached_full_access_since: 2030-03-22 08:44:55, creator_user_id: 1} # no full access
+			- {group_id: 20, item_id: 14, cached_full_access_since: 2018-03-22 08:44:55, creator_user_id: 1} # full access
 			- {group_id: 20, item_id: 15, owner_access: 1, creator_user_id: 1}
 			- {group_id: 20, item_id: 16, manager_access: 1, creator_user_id: 1}
 			- {group_id: 21, item_id: 12, creator_user_id: 1}`)
@@ -309,18 +309,18 @@ func TestItemStore_CloseContest(t *testing.T) {
 	type userItemInfo struct {
 		UserID        int64
 		ItemID        int64
-		FinishDateSet bool
+		FinishedAtSet bool
 	}
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("user_id, item_id, (finish_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finish_date, NOW())) < 3) AS finish_date_set").
+		Select("user_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) AS finished_at_set").
 		Order("user_id, item_id").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{
-		{UserID: 1, ItemID: 11, FinishDateSet: true},
-		{UserID: 1, ItemID: 12, FinishDateSet: false},
-		{UserID: 2, ItemID: 11, FinishDateSet: false},
+		{UserID: 1, ItemID: 11, FinishedAtSet: true},
+		{UserID: 1, ItemID: 12, FinishedAtSet: false},
+		{UserID: 2, ItemID: 11, FinishedAtSet: false},
 	}, userItems)
 
 	type groupItemInfo struct {
@@ -371,18 +371,18 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {user_id: 3, item_id: 11}
 			- {user_id: 4, item_id: 11}
 		groups_items:
-			- {group_id: 20, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
-				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
-			- {group_id: 40, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
-				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
-			- {group_id: 20, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
-				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
-			- {group_id: 40, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
-				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
-			- {group_id: 50, item_id: 11, cached_partial_access_date: 2018-03-22 08:44:55,
-				partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
-			- {group_id: 50, item_id: 12, cached_partial_access_date: 2018-03-22 08:44:55,
-			   partial_access_date: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}`)
+			- {group_id: 20, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
+				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+			- {group_id: 40, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
+				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+			- {group_id: 20, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
+				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+			- {group_id: 40, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
+				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+			- {group_id: 50, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
+				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+			- {group_id: 50, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
+			   partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{ID: 1, SelfGroupID: ptrInt64(10)}
 		store.Items().CloseTeamContest(11, user)
@@ -392,42 +392,42 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	type userItemInfo struct {
 		UserID        int64
 		ItemID        int64
-		FinishDateSet bool
+		FinishedAtSet bool
 	}
 	var userItems []userItemInfo
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.UserItems().
-		Select("user_id, item_id, (finish_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finish_date, NOW())) < 3) as finish_date_set").
+		Select("user_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) as finished_at_set").
 		Order("user_id, item_id").
 		Scan(&userItems).Error())
 	assert.Equal(t, []userItemInfo{
-		{UserID: 1, ItemID: 11, FinishDateSet: true},
-		{UserID: 1, ItemID: 12, FinishDateSet: false},
-		{UserID: 2, ItemID: 11, FinishDateSet: false},
-		{UserID: 3, ItemID: 11, FinishDateSet: true},
-		{UserID: 4, ItemID: 11, FinishDateSet: true},
+		{UserID: 1, ItemID: 11, FinishedAtSet: true},
+		{UserID: 1, ItemID: 12, FinishedAtSet: false},
+		{UserID: 2, ItemID: 11, FinishedAtSet: false},
+		{UserID: 3, ItemID: 11, FinishedAtSet: true},
+		{UserID: 4, ItemID: 11, FinishedAtSet: true},
 	}, userItems)
 
 	type groupItemInfo struct {
-		GroupID                 int64
-		ItemID                  int64
-		PartialAccessDate       *database.Time
-		CachedPartialAccessDate *database.Time
-		CachedPartialAccess     bool
+		GroupID                  int64
+		ItemID                   int64
+		PartialAccessSince       *database.Time
+		CachedPartialAccessSince *database.Time
+		CachedPartialAccess      bool
 	}
 	var groupItems []groupItemInfo
 	assert.NoError(t, store.GroupItems().
-		Select("group_id, item_id, partial_access_date, cached_partial_access_date, cached_partial_access").
+		Select("group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access").
 		Order("group_id, item_id").
 		Scan(&groupItems).Error())
 	expectedDate := (*database.Time)(ptrTime(time.Date(2018, 3, 22, 8, 44, 55, 0, time.UTC)))
 	assert.Equal(t, []groupItemInfo{
-		{GroupID: 20, ItemID: 11, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
-		{GroupID: 20, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
-		{GroupID: 40, ItemID: 11, PartialAccessDate: nil, CachedPartialAccessDate: nil, CachedPartialAccess: false},
-		{GroupID: 40, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
-		{GroupID: 50, ItemID: 11, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
-		{GroupID: 50, ItemID: 12, PartialAccessDate: expectedDate, CachedPartialAccessDate: expectedDate, CachedPartialAccess: true},
+		{GroupID: 20, ItemID: 11, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
+		{GroupID: 20, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
+		{GroupID: 40, ItemID: 11, PartialAccessSince: nil, CachedPartialAccessSince: nil, CachedPartialAccess: false},
+		{GroupID: 40, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
+		{GroupID: 50, ItemID: 11, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
+		{GroupID: 50, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
 	}, groupItems)
 }
 
@@ -443,13 +443,13 @@ func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
 			- {ancestor_group_id: 40, child_group_id: 10}
 			- {ancestor_group_id: 40, child_group_id: 40}
 		groups_items:
-			- {group_id: 40, item_id: 11, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2018-03-22 08:44:55,
+			- {group_id: 40, item_id: 11, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2018-03-22 08:44:55,
 		     creator_user_id: 1}
-			- {group_id: 10, item_id: 11, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2019-03-22 08:44:55,
+			- {group_id: 10, item_id: 11, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2019-03-22 08:44:55,
 			   creator_user_id: 1}
-			- {group_id: 10, item_id: 12, cached_full_access_date: 2018-03-22 08:44:55, cached_access_solutions_date: 2019-04-22 08:44:55,
+			- {group_id: 10, item_id: 12, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2019-04-22 08:44:55,
 			   creator_user_id: 1}
-			- {group_id: 10, item_id: 13, cached_full_access_date: 2018-03-22 08:44:55, creator_user_id: 1}`)
+			- {group_id: 10, item_id: 13, cached_full_access_since: 2018-03-22 08:44:55, creator_user_id: 1}`)
 	type resultType struct {
 		ID              int64
 		AccessSolutions bool

@@ -29,13 +29,13 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 			Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"active_attempt_id":           groupsAttemptID,
-				"last_activity_date":          database.Now(),
+				"last_activity_at":            database.Now(),
 				"ancestors_computation_state": "todo",
 			}).Error())
 		service.MustNotBeError(store.GroupAttempts().
 			ByID(groupsAttemptID).
 			UpdateColumn(map[string]interface{}{
-				"last_activity_date": database.Now(),
+				"last_activity_at": database.Now(),
 			}).Error())
 		service.MustNotBeError(userItemStore.ComputeAllUserItems())
 		return nil

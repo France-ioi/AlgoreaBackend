@@ -159,14 +159,14 @@ func TestApplySorting(t *testing.T) {
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.name, from.version)`))},
 		{name: "paging by time",
 			args: args{
-				urlParameters: "?from.submission_date=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
+				urlParameters: "?from.submitted_at=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
 				acceptedFields: map[string]*FieldSortingParams{
-					"submission_date": {ColumnName: "submission_date", FieldType: "time"},
+					"submitted_at": {ColumnName: "submitted_at", FieldType: "time"},
 				},
-				defaultRules: "submission_date",
+				defaultRules: "submitted_at",
 			},
-			wantSQL: "SELECT id FROM `users`  WHERE ((submission_date > ?) OR (submission_date = ? AND id > ?)) " +
-				"ORDER BY submission_date ASC, id ASC",
+			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
+				"ORDER BY submitted_at ASC, id ASC",
 			wantSQLArguments: []driver.Value{
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},
 				sqlMockTime{time.Date(2006, 1, 2, 15, 4, 5, 0, time.FixedZone("MSK", 3*3600))},

@@ -90,8 +90,8 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 				IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id").
 		Having(`
-			MIN(groups_items.cached_full_access_date) <= NOW() OR MIN(groups_items.cached_partial_access_date) <= NOW() OR
-			MIN(groups_items.cached_grayed_access_date) <= NOW()`).
+			MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_partial_access_since) <= NOW() OR
+			MIN(groups_items.cached_grayed_access_since) <= NOW()`).
 		Order("groups.id")
 
 	if isTeamOnly {

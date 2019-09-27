@@ -37,16 +37,16 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10 | 00:00:02 |
       | 70 | 00:00:03 |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
-      | 1  | 10       | 50      | null                       | null                      | null                    | null                         | 01:00:00        | 3               |
-      | 2  | 11       | 50      | null                       | null                      | null                    | null                         | 00:01:00        | 3               |
-      | 3  | 13       | 50      | 2017-05-29 06:38:38        | null                      | null                    | null                         | 00:00:01        | 3               |
-      | 4  | 11       | 60      | null                       | null                      | null                    | null                         | null            | 3               |
-      | 5  | 13       | 60      | null                       | 2017-05-29 06:38:38       | null                    | null                         | 00:00:30        | 3               |
-      | 6  | 11       | 70      | null                       | null                      | 2017-05-29 06:38:38     | null                         | null            | 3               |
-      | 7  | 21       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 00:01:00        | 3               |
-      | 8  | 21       | 60      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 00:01:00        | 3               |
-      | 9  | 21       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 00:01:00        | 3               |
+      | id | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | additional_time | creator_user_id |
+      | 1  | 10       | 50      | null                        | null                       | null                     | null                          | 01:00:00        | 3               |
+      | 2  | 11       | 50      | null                        | null                       | null                     | null                          | 00:01:00        | 3               |
+      | 3  | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 00:00:01        | 3               |
+      | 4  | 11       | 60      | null                        | null                       | null                     | null                          | null            | 3               |
+      | 5  | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 00:00:30        | 3               |
+      | 6  | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          | null            | 3               |
+      | 7  | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 00:01:00        | 3               |
+      | 8  | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 3               |
+      | 9  | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 3               |
 
   Scenario: Updates an existing row
     Given I am the user with id "1"
@@ -55,8 +55,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "3"
     And the table "groups_items" at id "3" should be:
-      | id | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
-      | 3  | 13       | 50      | 2017-05-29 06:38:38        | null                      | null                    | null                         | 838:59:59       | 3               |
+      | id | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | additional_time | creator_user_id |
+      | 3  | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 838:59:59       | 3               |
 
   Scenario: Creates a new row
     Given I am the user with id "1"
@@ -65,8 +65,8 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups_items" at id "5577006791947779410" should be:
-      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
-      | 5577006791947779410 | 13       | 70      | null                       | null                      | null                    | null                         | -838:59:59      | 1               |
+      | id                  | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | additional_time | creator_user_id |
+      | 5577006791947779410 | 13       | 70      | null                        | null                       | null                     | null                          | -838:59:59      | 1               |
 
   Scenario: Doesn't create a new row when seconds=0
     Given I am the user with id "1"
@@ -82,5 +82,5 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the response should be "updated"
     And the table "groups_items" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups_items" at id "5577006791947779410" should be:
-      | id                  | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | additional_time | creator_user_id |
-      | 5577006791947779410 | 31       | 70      | null                       | null                      | null                    | null                         | -838:59:59      | 1               |
+      | id                  | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | additional_time | creator_user_id |
+      | 5577006791947779410 | 31       | 70      | null                        | null                       | null                     | null                          | -838:59:59      | 1               |

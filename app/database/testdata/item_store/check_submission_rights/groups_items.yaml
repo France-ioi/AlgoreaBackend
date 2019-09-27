@@ -1,4 +1,4 @@
-- {group_id: 20, item_id: 12, cached_partial_access_date: 2019-02-22 08:44:55, creator_user_id: 1}
-- {group_id: 20, item_id: 13, cached_partial_access_date: 2019-02-22 08:44:55, creator_user_id: 1}
-- {group_id: 20, item_id: 14, cached_partial_access_date: 2019-02-22 08:44:55, creator_user_id: 1}
-- {group_id: 20, item_id: 114, cached_full_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+- {group_id: 20, item_id: 12, cached_partial_access_since: 2019-02-22 08:44:55, creator_user_id: 1}
+- {group_id: 20, item_id: 13, cached_partial_access_since: 2019-02-22 08:44:55, creator_user_id: 1}
+- {group_id: 20, item_id: 14, cached_partial_access_since: 2019-02-22 08:44:55, creator_user_id: 1}
+- {group_id: 20, item_id: 114, cached_full_access_since: 2019-03-22 08:44:55, creator_user_id: 1}

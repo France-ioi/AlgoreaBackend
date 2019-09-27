@@ -4,10 +4,10 @@ package database
 // The formula is cached_*_access_*_date <= NOW().
 func (s *GroupItemStore) grantCachedAccessWhereNeeded() {
 	listFields := map[string]string{
-		"cached_full_access":      "cached_full_access_date",
-		"cached_partial_access":   "cached_partial_access_date",
-		"cached_access_solutions": "cached_access_solutions_date",
-		"cached_grayed_access":    "cached_grayed_access_date",
+		"cached_full_access":      "cached_full_access_since",
+		"cached_partial_access":   "cached_partial_access_since",
+		"cached_access_solutions": "cached_solutions_access_since",
+		"cached_grayed_access":    "cached_grayed_access_since",
 	}
 
 	for accessField, accessDateField := range listFields {

@@ -25,9 +25,9 @@ func (s *GroupItemStore) After() (err error) {
 func (s *GroupItemStore) removePartialAccess(groupID, itemID int64) {
 	mustNotBeError(s.Where("item_id = ? AND group_id = ? AND manager_access = 0", itemID, groupID).
 		UpdateColumn(map[string]interface{}{
-			"partial_access_date":        nil,
-			"cached_partial_access_date": nil,
-			"cached_partial_access":      0,
+			"partial_access_since":        nil,
+			"cached_partial_access_since": nil,
+			"cached_partial_access":       0,
 		}).Error())
 }
 
@@ -39,10 +39,10 @@ func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB 
 	return s.
 		Select(`
 			item_id,
-			MIN(cached_full_access_date) <= NOW() AS full_access,
-			MIN(cached_partial_access_date) <= NOW() AS partial_access,
-			MIN(cached_grayed_access_date) <= NOW() AS grayed_access,
-			MIN(cached_access_solutions_date) <= NOW() AS access_solutions`).
+			MIN(cached_full_access_since) <= NOW() AS full_access,
+			MIN(cached_partial_access_since) <= NOW() AS partial_access,
+			MIN(cached_grayed_access_since) <= NOW() AS grayed_access,
+			MIN(cached_solutions_access_since) <= NOW() AS access_solutions`).
 		Joins(`
 			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.child_group_id = ?)) AS ancestors
 			ON ancestors.ancestor_group_id = groups_items.group_id`, groupID).

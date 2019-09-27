@@ -15,11 +15,11 @@ import (
 // swagger:model
 type updateGroupItemInput struct {
 	// Nullable
-	PartialAccessDate *time.Time `json:"partial_access_date"`
+	PartialAccessSince *time.Time `json:"partial_access_since"`
 	// Nullable
-	FullAccessDate *time.Time `json:"full_access_date"`
+	FullAccessSince *time.Time `json:"full_access_since"`
 	// Nullable
-	AccessSolutionsDate *time.Time `json:"access_solutions_date"`
+	SolutionsAccessSince *time.Time `json:"solutions_access_since"`
 	// Nullable
 	// maxLength: 200
 	AccessReason *string `json:"access_reason" validate:"max=200"`

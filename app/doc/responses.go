@@ -195,7 +195,7 @@ type itemAnswerGetResponse struct {
 		// required:true
 		Answer *string `json:"answer"`
 		// required:true
-		SubmissionDate time.Time `json:"submission_date"`
+		SubmittedAt time.Time `json:"submitted_at"`
 		// Nullable
 		// required:true
 		Score *float32 `json:"score"`
@@ -204,7 +204,7 @@ type itemAnswerGetResponse struct {
 		Validated *bool `json:"validated"`
 		// Nullable
 		// required:true
-		GradingDate *time.Time `json:"grading_date"`
+		GradedAt *time.Time `json:"graded_at"`
 		// Nullable
 		// format:integer
 		// required:true

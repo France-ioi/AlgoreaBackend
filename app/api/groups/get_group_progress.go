@@ -29,24 +29,24 @@ type groupGroupProgressResponseRow struct {
 	// Average number of hints requested by each "end-member".
 	// The number of hints requested of an "end-member" is the `groups_attempts.hints_cached`
 	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `best_answer_date`).
+	// (if several with the same score, we use the first attempt chronologically on `best_answer_at`).
 	// required:true
 	AvgHintsRequested float32 `json:"avg_hints_requested"`
 	// Average number of submissions made by each "end-member".
 	// The number of submissions made by an "end-member" is the `groups_attempts.submissions_attempts`.
 	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `best_answer_date`).
+	// (if several with the same score, we use the first attempt chronologically on `best_answer_at`).
 	// required:true
 	AvgSubmissionsAttempts float32 `json:"avg_submissions_attempts"`
 	// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
 	//
 	//   1) if no attempts yet: 0
 	//
-	//   2) if one attempt validated: min(`validation_date`) - min(`start_date`)
+	//   2) if one attempt validated: min(`validated_at`) - min(`started_at`)
 	//     (i.e., time between the first time it started one (any) attempt
 	//      and the time he first validated the task)
 	//
-	//   3) if no attempts validated: `now` - min(`start_date`)
+	//   3) if no attempts validated: `now` - min(`started_at`)
 	// required:true
 	AvgTimeSpent float32 `json:"avg_time_spent"`
 }
@@ -201,8 +201,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				0,
 				(
 					SELECT IF(attempt_with_best_score.validated,
-						TIMESTAMPDIFF(SECOND, MIN(start_date), MIN(validation_date)),
-						TIMESTAMPDIFF(SECOND, MIN(start_date), NOW())
+						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
+						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
 					FROM groups_attempts FORCE INDEX (group_item_minus_score_best_answer_date_id)
 					WHERE group_id = end_members.id AND item_id = items.id
@@ -215,7 +215,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			ON attempt_with_best_score.id = (
 				SELECT id FROM groups_attempts FORCE INDEX (group_item_minus_score_best_answer_date_id)
 				WHERE group_id = end_members.id AND item_id = items.id
-				ORDER BY group_id, item_id, minus_score, best_answer_date LIMIT 1
+				ORDER BY group_id, item_id, minus_score, best_answer_at LIMIT 1
 			)`)
 
 	var result []groupGroupProgressResponseRow

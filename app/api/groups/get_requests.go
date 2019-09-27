@@ -16,7 +16,7 @@ type groupRequestsViewResponseRow struct {
 	ID int64 `json:"id,string"`
 	// Nullable
 	// required: true
-	StatusDate *database.Time `json:"status_date"`
+	StatusChangedAt *database.Time `json:"status_changed_at"`
 	// `groups_groups.type`
 	// enum: invitationSent,requestSent,invitationRefused,requestRefused
 	// required: true
@@ -71,7 +71,7 @@ type groupRequestsViewResponseRow struct {
 //
 //   When `old_rejections_weeks` is given, only those rejected invitations/requests
 //   (`groups_groups.type` is "invitationRefused" or "requestRefused") are shown
-//   whose `status_date` has changed in the last `old_rejections_weeks` weeks.
+//   whose `status_changed_at` has changed in the last `old_rejections_weeks` weeks.
 //   Otherwise all rejected invitations/requests are shown.
 //
 //
@@ -90,14 +90,14 @@ type groupRequestsViewResponseRow struct {
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-status_date,id]
+//   default: [-status_changed_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [status_date,-status_date,joining_user.login,-joining_user.login,type,-type,id,-id]
-// - name: from.status_date
+//     enum: [status_changed_at,-status_changed_at,joining_user.login,-joining_user.login,type,-type,id,-id]
+// - name: from.status_changed_at
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `groups_groups.status_date` = `from.status_date`
+//                `groups_groups.status_changed_at` = `from.status_changed_at`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
@@ -154,7 +154,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.id,
-			groups_groups.status_date,
+			groups_groups.status_changed_at,
 			groups_groups.type,
 			joining_user.id AS joining_user__id,
 			joining_user.login AS joining_user__login,
@@ -177,7 +177,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		}
 		query = query.Where(`
 			groups_groups.type IN ('invitationSent', 'requestSent') OR
-			NOW() - INTERVAL ? WEEK < groups_groups.status_date`, oldRejectionsWeeks)
+			NOW() - INTERVAL ? WEEK < groups_groups.status_changed_at`, oldRejectionsWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
@@ -185,9 +185,9 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		map[string]*service.FieldSortingParams{
 			"type":               {ColumnName: "groups_groups.type"},
 			"joining_user.login": {ColumnName: "joining_user.login"},
-			"status_date":        {ColumnName: "groups_groups.status_date", FieldType: "time"},
+			"status_changed_at":  {ColumnName: "groups_groups.status_changed_at", FieldType: "time"},
 			"id":                 {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-status_date")
+		"-status_changed_at")
 
 	if apiError != service.NoError {
 		return apiError

@@ -21,9 +21,9 @@ type navigationItemUser struct {
 	Finished            bool           `json:"finished"`
 	KeyObtained         bool           `json:"key_obtained"`
 	SubmissionsAttempts int32          `json:"submissions_attempts"`
-	StartDate           *database.Time `json:"start_date"`
-	ValidationDate      *database.Time `json:"validation_date"`
-	FinishDate          *database.Time `json:"finish_date"`
+	StartedAt           *database.Time `json:"started_at"`
+	ValidatedAt         *database.Time `json:"validated_at"`
+	FinishedAt          *database.Time `json:"finished_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -139,9 +139,9 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 			Finished:            rawData.UserFinished,
 			KeyObtained:         rawData.UserKeyObtained,
 			SubmissionsAttempts: rawData.UserSubmissionsAttempts,
-			StartDate:           rawData.UserStartDate,
-			ValidationDate:      rawData.UserValidationDate,
-			FinishDate:          rawData.UserFinishDate,
+			StartedAt:           rawData.UserStartedAt,
+			ValidatedAt:         rawData.UserValidatedAt,
+			FinishedAt:          rawData.UserFinishedAt,
 		},
 		AccessRights: navigationItemAccessRights{
 			FullAccess:    rawData.FullAccess,

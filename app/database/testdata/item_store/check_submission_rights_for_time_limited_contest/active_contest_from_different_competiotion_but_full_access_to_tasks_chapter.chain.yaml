@@ -8,6 +8,6 @@ groups_ancestors:
   - {ancestor_group_id: 23, child_group_id: 14}
   - {ancestor_group_id: 23, child_group_id: 23}
 groups_items:
-  - {group_id: 14, item_id: 115, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+  - {group_id: 14, item_id: 115, full_access_since: 2019-03-22 08:44:55, cached_full_access_since: 2019-03-22 08:44:55, creator_user_id: 1}
   - {group_id: 23, item_id: 500, additional_time: 0000-00-00 01:00:00, creator_user_id: 1}
-  - {group_id: 23, item_id: 115, partial_access_date: 2019-03-22 08:44:55, cached_partial_access_date: 2019-03-22 08:44:55, creator_user_id: 1}
+  - {group_id: 23, item_id: 115, partial_access_since: 2019-03-22 08:44:55, cached_partial_access_since: 2019-03-22 08:44:55, creator_user_id: 1}

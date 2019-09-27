@@ -30,7 +30,7 @@ type groupUpdateInput struct {
 	// example: 838:59:59
 	CodeTimer *string `json:"code_timer" validate:"omitempty,duration"`
 	// Nullable
-	CodeEnd *time.Time `json:"code_end"`
+	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable
 	// pattern:  ^(\d+(/\d+))$
 	RedirectPath *string `json:"redirect_path" validate:"omitempty,redirect_path"`

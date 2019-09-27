@@ -50,10 +50,10 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 func (s *ItemStore) AccessRights(user *User) *DB {
 	return s.GroupItems().MatchingUserAncestors(user).
 		Select(
-			"item_id, MIN(cached_full_access_date) <= NOW() AS full_access, " +
-				"MIN(cached_partial_access_date) <= NOW() AS partial_access, " +
-				"MIN(cached_grayed_access_date) <= NOW() AS grayed_access, " +
-				"MIN(cached_access_solutions_date) <= NOW() AS access_solutions").
+			"item_id, MIN(cached_full_access_since) <= NOW() AS full_access, " +
+				"MIN(cached_partial_access_since) <= NOW() AS partial_access, " +
+				"MIN(cached_grayed_access_since) <= NOW() AS grayed_access, " +
+				"MIN(cached_solutions_access_since) <= NOW() AS access_solutions").
 		Group("item_id")
 }
 
@@ -314,7 +314,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		DurationInSeconds       int32
 		ItemID                  int64
 		AdditionalTimeInSeconds int32
-		ContestStartDate        Time
+		ContestStartedAt        Time
 		TeamMode                *string
 	}
 	mustNotBeError(s.
@@ -324,16 +324,16 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			items.id AS item_id,
 			items.team_mode,
 			IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(users_items.contest_start_date) AS contest_start_date`).
+			MIN(users_items.contest_started_at) AS contest_started_at`).
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
 				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 		Joins(`
 			JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ? AND
-				users_items.contest_start_date IS NOT NULL AND users_items.finish_date IS NULL`, user.ID).
+				users_items.contest_started_at IS NOT NULL AND users_items.finished_at IS NULL`, user.ID).
 		Group("items.id").
-		Order("MIN(users_items.contest_start_date) DESC").Scan(&results).Error())
+		Order("MIN(users_items.contest_started_at) DESC").Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
@@ -344,12 +344,12 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
-	endTime := time.Time(results[0].ContestStartDate).Add(time.Duration(totalDuration) * time.Second)
+	endTime := time.Time(results[0].ContestStartedAt).Add(time.Duration(totalDuration) * time.Second)
 
 	return &activeContestInfo{
 		Now:               time.Time(results[0].Now),
 		DurationInSeconds: totalDuration,
-		StartTime:         time.Time(results[0].ContestStartDate),
+		StartTime:         time.Time(results[0].ContestStartedAt),
 		EndTime:           endTime,
 		ItemID:            results[0].ItemID,
 		UserID:            user.ID,
@@ -360,7 +360,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 func (s *ItemStore) closeContest(itemID int64, user *User) {
 	mustNotBeError(s.UserItems().
 		Where("item_id = ? AND user_id = ?", itemID, user.ID).
-		UpdateColumn("finish_date", Now()).Error())
+		UpdateColumn("finished_at", Now()).Error())
 
 	groupItemStore := s.GroupItems()
 
@@ -374,7 +374,7 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 			items_ancestors.child_item_id = groups_items.item_id AND
 			items_ancestors.ancestor_item_id = ?
 		WHERE groups_items.group_id = ? AND
-			(cached_full_access_date IS NULL OR cached_full_access_date > NOW()) AND
+			(cached_full_access_since IS NULL OR cached_full_access_since > NOW()) AND
 			owner_access = 0 AND manager_access = 0`, itemID, *user.SelfGroupID).Error)
 		// we do not need to call GroupItemStore.After() because we do not grant new access here
 		groupItemStore.computeAllAccess()
@@ -393,7 +393,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 			Joins(`JOIN groups_groups
 				ON groups_groups.child_group_id = users.self_group_id AND groups_groups.parent_group_id = ?`, teamGroupID).
 			Where("users_items.item_id = ?", itemID).
-			UpdateColumn("finish_date", Now()).Error())
+			UpdateColumn("finished_at", Now()).Error())
 	*/ // nolint:gocritic
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
@@ -402,7 +402,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 			ON groups_groups.child_group_id = users.self_group_id AND
 				groups_groups.type`+GroupRelationIsActiveCondition+` AND
 				groups_groups.parent_group_id = ?
-		SET finish_date = NOW()
+		SET finished_at = NOW()
 		WHERE users_items.item_id = ?`, teamGroupID, itemID).Error)
 
 	groupItemStore := s.GroupItems()

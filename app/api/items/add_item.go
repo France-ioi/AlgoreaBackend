@@ -68,7 +68,7 @@ type item struct {
 	TitleBarVisible  bool   `json:"title_bar_visible"`
 	HasAttempts      bool   `json:"has_attempts"`
 	// Nullable
-	AccessOpenDate *time.Time `json:"access_open_date"`
+	ContestOpensAt *time.Time `json:"contest_opens_at"`
 	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)
@@ -76,7 +76,7 @@ type item struct {
 	// example: 838:59:59
 	Duration *string `json:"duration" validate:"duration"`
 	// Nullable
-	EndContestDate *time.Time `json:"end_contest_date"`
+	ContestClosesAt *time.Time `json:"contest_closes_at"`
 	// Nullable
 	// enum: Running,Analysis,Closed
 	ContestPhase  *string `json:"contest_phase" validate:"oneof=Running Analysis Closed"`
@@ -128,16 +128,16 @@ type NewItemRequest struct {
 // groupItemData creates a map containing the db data to be inserted into the groups_items table
 func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int64) map[string]interface{} {
 	return map[string]interface{}{
-		"id":               groupItemID,
-		"item_id":          itemID,
-		"group_id":         groupID,
-		"creator_user_id":  userID,
-		"full_access_date": database.Now(),
-		"owner_access":     true,
-		"manager_access":   true,
+		"id":                groupItemID,
+		"item_id":           itemID,
+		"group_id":          groupID,
+		"creator_user_id":   userID,
+		"full_access_since": database.Now(),
+		"owner_access":      true,
+		"manager_access":    true,
 		// as the owner gets full access, there is no need to request parents' access to get the actual access level
-		"cached_full_access_date": database.Now(),
-		"cached_full_access":      true,
+		"cached_full_access_since": database.Now(),
+		"cached_full_access":       true,
 	}
 }
 
@@ -171,7 +171,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //     * gives full access to the item for the current user (creates a new `groups_items` row with: `item_id` = `items.id`,
 //       `group_id` = `self_group_id` of the current user, `creator_user_id` = `users.id` of the current user,
-//       `full_access_date` = now(), `cached_full_access_date` = now(), `cached_full_access` = 1, `owner_access` = 1,
+//       `full_access_since` = now(), `cached_full_access_since` = now(), `cached_full_access` = 1, `owner_access` = 1,
 //       `manager_access` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `groups_items`.

@@ -5,7 +5,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 1  | john   | 21            | 22             |
       | 2  | nobody | null          | null           |
     And the database has the following table 'groups':
-      | id | type      | code       | code_end            | code_timer | free_access | team_item_id |
+      | id | type      | code       | code_expires_at     | code_timer | free_access | team_item_id |
       | 11 | Team      | 3456789abc | 2017-04-29 06:38:38 | null       | true        | null         |
       | 12 | Team      | abc3456789 | null                | null       | true        | null         |
       | 14 | Team      | cba9876543 | null                | null       | true        | 1234         |
@@ -26,7 +26,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | status_changed_at   |
       | 1  | 11              | 21             | invitationSent     | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
 

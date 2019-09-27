@@ -38,7 +38,7 @@ import (
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with
-//                `now() < lock_user_deletion_date`.
+//                `now() < lock_user_deletion_until`.
 // responses:
 //   "200":
 //     "$ref": "#/responses/deletedResponse"
@@ -53,12 +53,12 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	doNotDelete, err := srv.Store.GroupGroups().WhereUserIsMember(user).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
-		Where("NOW() < `groups`.lock_user_deletion_date").HasRows()
+		Where("NOW() < `groups`.lock_user_deletion_until").HasRows()
 	service.MustNotBeError(err)
 
 	if doNotDelete {
 		logging.GetLogEntry(r).
-			Infof("A user with id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_date >= NOW()",
+			Infof("A user with id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()",
 				user.ID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
 	}

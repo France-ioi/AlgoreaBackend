@@ -2,14 +2,14 @@ Feature: Delete the current user - robustness
   Background:
     Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
-      | id | type      | name       | lock_user_deletion_date |
-      | 1  | Base      | Root       | null                    |
-      | 2  | Base      | RootSelf   | null                    |
-      | 3  | Base      | RootAdmin  | null                    |
-      | 4  | Base      | RootTemp   | null                    |
-      | 21 | UserSelf  | user       | null                    |
-      | 22 | UserAdmin | user-admin | null                    |
-      | 50 | Class     | Our class  | 2019-08-10              |
+      | id | type      | name       | lock_user_deletion_until |
+      | 1  | Base      | Root       | null                     |
+      | 2  | Base      | RootSelf   | null                     |
+      | 3  | Base      | RootAdmin  | null                     |
+      | 4  | Base      | RootTemp   | null                     |
+      | 21 | UserSelf  | user       | null                     |
+      | 22 | UserAdmin | user-admin | null                     |
+      | 50 | Class     | Our class  | 2019-08-10               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 1               | 2              | direct             |
@@ -57,7 +57,7 @@ Feature: Delete the current user - robustness
     And the response error message should contain "You cannot delete yourself right now"
     And logs should contain:
       """
-      A user with id = 11 tried to delete himself, but he is a member of a group with lock_user_deletion_date >= NOW()
+      A user with id = 11 tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()
       """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
@@ -76,12 +76,12 @@ Feature: Delete the current user - robustness
     And the response error message should contain "Can't unlink the user"
     And the table "users" should be empty
     And the table "groups" should be:
-      | id | type  | name      | lock_user_deletion_date |
-      | 1  | Base  | Root      | null                    |
-      | 2  | Base  | RootSelf  | null                    |
-      | 3  | Base  | RootAdmin | null                    |
-      | 4  | Base  | RootTemp  | null                    |
-      | 50 | Class | Our class | 2019-08-10              |
+      | id | type  | name      | lock_user_deletion_until |
+      | 1  | Base  | Root      | null                     |
+      | 2  | Base  | RootSelf  | null                     |
+      | 3  | Base  | RootAdmin | null                     |
+      | 4  | Base  | RootTemp  | null                     |
+      | 50 | Class | Our class | 2019-08-10               |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type   |
       | 1               | 2              | direct |

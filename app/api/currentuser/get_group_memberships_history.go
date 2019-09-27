@@ -12,26 +12,26 @@ import (
 // ---
 // summary: Get a history of invitations/requests for the current user
 // description:
-//   Returns the records from `groups_groups` having `status_date` >= `users.notification_read_date`
+//   Returns the records from `groups_groups` having `status_changed_at` >= `users.notifications_read_at`
 //   and any user-related type (`type` != "direct") with the corresponding `groups` for the current user.
 // parameters:
 // - name: sort
 //   in: query
-//   default: [-status_date,id]
+//   default: [-status_changed_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [status_date,-status_date,id,-id]
-// - name: from.status_date
-//   description: Start the page from the invitation/request next to one with `status_date` = `from.status_date`
+//     enum: [status_changed_at,-status_changed_at,id,-id]
+// - name: from.status_changed_at
+//   description: Start the page from the invitation/request next to one with `status_changed_at` = `from.status_changed_at`
 //                and `groups_groups.id` = `from.id`
-//                (`from.id` is required when `from.status_date` is present)
+//                (`from.id` is required when `from.status_changed_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the invitation/request next to one with `status_date`=`from.status_date`
+//   description: Start the page from the invitation/request next to one with `status_changed_at`=`from.status_changed_at`
 //                and `groups_groups.id`=`from.id`
-//                (`from.status_date` is required when from.id is present)
+//                (`from.status_changed_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -59,23 +59,23 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.id,
-			groups_groups.status_date,
+			groups_groups.status_changed_at,
 			groups_groups.type,
 			groups.name AS group__name,
 			groups.type AS group__type`).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
 		Where("groups_groups.type != 'direct'").
 		Where("groups_groups.child_group_id = ?", user.SelfGroupID)
-	if user.NotificationReadDate != nil {
-		query = query.Where("groups_groups.status_date >= ?", user.NotificationReadDate)
+	if user.NotificationsReadAt != nil {
+		query = query.Where("groups_groups.status_changed_at >= ?", user.NotificationsReadAt)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"status_date": {ColumnName: "groups_groups.status_date", FieldType: "time"},
-			"id":          {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-status_date")
+			"status_changed_at": {ColumnName: "groups_groups.status_changed_at", FieldType: "time"},
+			"id":                {ColumnName: "groups_groups.id", FieldType: "int64"}},
+		"-status_changed_at")
 	if apiError != service.NoError {
 		return apiError
 	}

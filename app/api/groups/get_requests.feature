@@ -12,7 +12,7 @@ Feature: Get requests for group_id
       | 77 | 22                | 11             | 0       | 0       |
       | 78 | 21                | 21             | 1       | 0       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date               | inviting_user_id |
+      | id | parent_group_id | child_group_id | type               | status_changed_at         | inviting_user_id |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} | 2                |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} | null             |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} | 1                |
@@ -44,7 +44,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": null,
-        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
         "type": "requestRefused"
       },
       {
@@ -62,7 +62,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
         "type": "requestSent"
       },
       {
@@ -75,7 +75,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[2][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[2][status_changed_at]"))}}",
         "type": "invitationRefused"
       },
       {
@@ -93,7 +93,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[1][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[1][status_changed_at]"))}}",
         "type": "invitationSent"
       }
     ]
@@ -121,7 +121,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[1][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[1][status_changed_at]"))}}",
         "type": "invitationSent"
       },
       {
@@ -139,7 +139,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
         "type": "requestSent"
       },
       {
@@ -152,7 +152,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[2][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[2][status_changed_at]"))}}",
         "type": "invitationRefused"
       },
       {
@@ -164,7 +164,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": null,
-        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
         "type": "requestRefused"
       }
     ]
@@ -186,7 +186,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": null,
-        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
         "type": "requestRefused"
       },
       {
@@ -204,7 +204,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
         "type": "requestSent"
       },
       {
@@ -222,7 +222,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[1][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[1][status_changed_at]"))}}",
         "type": "invitationSent"
       },
       {
@@ -235,7 +235,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[2][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[2][status_changed_at]"))}}",
         "type": "invitationRefused"
       }
     ]
@@ -257,7 +257,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": null,
-        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
         "type": "requestRefused"
       }
     ]
@@ -279,7 +279,7 @@ Feature: Get requests for group_id
           "login": "user"
         },
         "joining_user": null,
-        "status_date": "{{timeToRFC(db("groups_groups[4][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
         "type": "requestRefused"
       },
       {
@@ -297,7 +297,7 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[3][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
         "type": "requestSent"
       },
       {
@@ -315,7 +315,7 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "status_date": "{{timeToRFC(db("groups_groups[1][status_date]"))}}",
+        "status_changed_at": "{{timeToRFC(db("groups_groups[1][status_changed_at]"))}}",
         "type": "invitationSent"
       }
     ]

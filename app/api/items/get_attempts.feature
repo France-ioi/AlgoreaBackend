@@ -40,11 +40,11 @@ Feature: Get groups attempts for current user and item_id
       | 200 | 0            |
       | 210 | 1            |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | creator_user_id |
-      | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
-      | 46 | 23       | 210     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 1               |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | creator_user_id |
+      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 1               |
+      | 46 | 23       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 1               |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | score | order | validated | start_date          | creator_user_id |
+      | id  | group_id | item_id | score | order | validated | started_at          | creator_user_id |
       | 150 | 11       | 200     | 100   | 1     | true      | 2018-05-29 06:38:38 | 3               |
       | 151 | 11       | 200     | 99    | 0     | false     | 2018-05-29 06:38:38 | null            |
       | 250 | 13       | 210     | 99    | 0     | true      | 2019-05-29 06:38:38 | 1               |
@@ -60,7 +60,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "151",
         "order": 0,
         "score": 99,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
         "validated": false
       },
@@ -68,7 +68,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "150",
         "order": 1,
         "score": 100,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
           "first_name": "Jane",
           "last_name": "Doe",
@@ -90,7 +90,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "151",
         "order": 0,
         "score": 99,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
         "validated": false
       }
@@ -108,7 +108,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "150",
         "order": 1,
         "score": 100,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
           "first_name": "Jane",
           "last_name": "Doe",
@@ -120,7 +120,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "151",
         "order": 0,
         "score": 99,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
         "validated": false
       }
@@ -138,7 +138,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "151",
         "order": 0,
         "score": 99,
-        "start_date": "2018-05-29T06:38:38Z",
+        "started_at": "2018-05-29T06:38:38Z",
         "user_creator": null,
         "validated": false
       }
@@ -156,7 +156,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "250",
         "order": 0,
         "score": 99,
-        "start_date": "2019-05-29T06:38:38Z",
+        "started_at": "2019-05-29T06:38:38Z",
         "user_creator": {
           "first_name": "John",
           "last_name": "Doe",
@@ -178,7 +178,7 @@ Feature: Get groups attempts for current user and item_id
         "id": "250",
         "order": 0,
         "score": 99,
-        "start_date": "2019-05-29T06:38:38Z",
+        "started_at": "2019-05-29T06:38:38Z",
         "user_creator": {
           "first_name": "John",
           "last_name": "Doe",

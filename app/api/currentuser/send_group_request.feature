@@ -17,7 +17,7 @@ Feature: User sends a request to join a group
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type        | status_date         |
+      | id | parent_group_id | child_group_id | type        | status_changed_at   |
       | 7  | 14              | 21             | requestSent | 2017-02-21 06:38:38 |
 
   Scenario: Successfully send a request
@@ -33,9 +33,9 @@ Feature: User sends a request to join a group
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type        | ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3 |
-      | 11              | 21             | requestSent | 1                                                  |
-      | 14              | 21             | requestSent | 0                                                  |
+      | parent_group_id | child_group_id | type        | ABS(TIMESTAMPDIFF(SECOND, status_changed_at, NOW())) < 3 |
+      | 11              | 21             | requestSent | 1                                                        |
+      | 14              | 21             | requestSent | 0                                                        |
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
@@ -56,7 +56,7 @@ Feature: User sends a request to join a group
   Scenario: Automatically accepts the request if the user owns the group
     Given I am the user with id "1"
     And the database table 'groups_groups' has also the following row:
-      | id | parent_group_id | child_group_id | type   | status_date         |
+      | id | parent_group_id | child_group_id | type   | status_changed_at   |
       | 8  | 22              | 11             | direct | 2017-02-21 06:38:38 |
     And the database table 'groups_ancestors' has also the following row:
       | ancestor_group_id | child_group_id | is_self |
@@ -72,10 +72,10 @@ Feature: User sends a request to join a group
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type            | ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3 |
-      | 11              | 21             | requestAccepted | 1                                                  |
-      | 14              | 21             | requestSent     | 0                                                  |
-      | 22              | 11             | direct          | 0                                                  |
+      | parent_group_id | child_group_id | type            | ABS(TIMESTAMPDIFF(SECOND, status_changed_at, NOW())) < 3 |
+      | 11              | 21             | requestAccepted | 1                                                        |
+      | 14              | 21             | requestSent     | 0                                                        |
+      | 22              | 11             | direct          | 0                                                        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

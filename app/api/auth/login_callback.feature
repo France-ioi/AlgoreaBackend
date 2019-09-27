@@ -1,7 +1,7 @@
 Feature: Login callback
   Background:
     Given the database has the following table 'groups':
-      | id | type | name      | date_created        |
+      | id | type | name      | created_at          |
       | 2  | Base | RootSelf  | 2015-08-10 12:34:55 |
       | 3  | Base | RootAdmin | 2015-08-10 12:34:56 |
     And the application config is:
@@ -27,7 +27,7 @@ Feature: Login callback
     And the template constant "access_token_from_oauth" is "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc3M2IyMjY0ZDU0MDUzNWQ5OTFlMjNlODY0MzljNzJmYjI0MWI5ZWY1ZTI5NjMyYjc3OWQwNjdlNmJmZWRiYmUyZDM4NmQ4YmQ2OTBlNGI3In0.eyJhdWQiOiIxIiwianRpIjoiNzczYjIyNjRkNTQwNTM1ZDk5MWUyM2U4NjQzOWM3MmZiMjQxYjllZjVlMjk2MzJiNzc5ZDA2N2U2YmZlZGJiZTJkMzg2ZDhiZDY5MGU0YjciLCJpYXQiOjE1NjM1Mjk4MjUsIm5iZiI6MTU2MzUyOTgyNSwiZXhwIjoxNTk1MTUyMjI0LCJzdWIiOiIxMDAwMDAwMDEiLCJzY29wZXMiOlsiYWNjb3VudCJdfQ.hcMLfoK8ocb0dpJg-R6EViMePCE4uw_Zzid_CIzFMFT6khY7m1kLorzKgYLWbDBxyxG-RBWTjJIbE-0J96VvLegYoZo5JObHzZP_FQyOUQ-qVe98mjI3Mc0a-dmr5bQyPTS2OC2COlFnletMHhBe4D_DSh2Zi8TfN79kTjsYErN59Vc4Bz0sPPmnLRqdKbg8r6jVX-s6cidN8mgDjujAljiaPkjCCiumdMj9kSfTKLNxMu1e9-4GfN41xc72ikstcBXjvakTyeq2-M9Wcby4XA5fys313kKlKQy3WJAVW3D6qMEwRH566vesEIx-RWUIlkPyV4QvIaE3k4mKdiO6c21LSFFSlIfr6jkVaGDvi8Rc9g77CWgUXaZOsETliW0Yea0tL9fG1negRr9uQGKyOZCM1dxSlBJAKlD3kyLi4ykEw6uTp0tM-AdwRB7mUpu9bw3evpr7f0mN65Nhd-byAuys0PXyegZeSKxZB3i1mAzE6s7vUbADJcBOx0kRmfkpT3kfUkJ4c9QohVCpkIMl80sbxcv9RTck0P9W1J-LGUULTtcPeaLNz85q7DKKbdiTAcbqzQkxZn0hO2wrF-3L0p_ms-yQg8ebu-ZJIzUG5LQq6Szu-QpXyQPP3NdKqHEvMhKoFY-9BZwA9SCEfiB8kMwCm9TAfztZBiCRcS2I4LE"
     And the template constant "refresh_token_from_oauth" is "def502008be6565fe7888139650994031dcf475fd4ec863d9d088562aeff095c4fb5026d189b05385b5d6e834bb26ed98d67b19f21c8e4f70e035083b8aba36027c748eb0a8fc987b900a96734eb3952733d8d87368cbf5194195dfee364ebe774117dc8e51075ea7afe356d985021a38be505ea7328137d0f3552dcf4ed1b7187affee3399964b81d396a597fb9ef78c1651c5203529cd016a9c9584fc024e597e47327c36431981000741c8e6e24066718b3b46d6278a0f13b0d1bd87e2811269a2464b832b765f45d40a878ce4d3bc9da03aad32dc6f17caa52f67befffd89bae734ac0b424d9a32bd2e47c47dfee43e534d36d6cc180759b3d220ddea18ba70d8490501934e960a9ad99012184fcd67f471a16c65db5185f24ace83857efefdd935280cc0a9653150d89f9ca531283ec9e566592de626d0c350ddd682f59ede69f29acfb0bc3104d826afabd0f1e1a246375154c78a9ad27a2c47bde5159686a4264bd91f16ffa185554d09858402a68"
     And the database has the following table 'login_states':
-      | cookie     | state     | expiration_date     |
+      | cookie     | state     | expires_at          |
       | {{cookie}} | {{state}} | 2019-07-16 22:02:29 |
     And the "Cookie" request header is "login_csrf={{cookie}}"
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
@@ -73,10 +73,10 @@ Feature: Login callback
       """
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
     And the table "users" should be:
-      | id                  | self_group_id       | owned_group_id      | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
+      | id                  | self_group_id       | owned_group_id      | last_login_at       | last_activity_at    | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
       | 3916589616287113937 | 5577006791947779410 | 8674665223082153551 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
-      | id                  | name           | type      | description    | date_created        | opened | send_emails |
+      | id                  | name           | type      | description    | created_at          | opened | send_emails |
       | 2                   | RootSelf       | Base      | null           | 2015-08-10 12:34:55 | false  | false       |
       | 3                   | RootAdmin      | Base      | null           | 2015-08-10 12:34:56 | false  | false       |
       | 5577006791947779410 | mohammed       | UserSelf  | mohammed       | 2019-07-16 22:02:28 | false  | false       |
@@ -95,7 +95,7 @@ Feature: Login callback
       | 8674665223082153551 | 8674665223082153551 | true    |
     And the table "login_states" should be empty
     And the table "sessions" should be:
-      | expiration_date     | user_id             | issuer       | issued_at_date      | access_token                |
+      | expires_at          | user_id             | issuer       | issued_at           | access_token                |
       | 2020-07-16 22:02:29 | 3916589616287113937 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id             | refresh_token                |
@@ -148,11 +148,11 @@ Feature: Login callback
       }
       """
     And the database has the following table 'users':
-      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | id | self_group_id | owned_group_id | last_login_at       | last_activity_at    | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 2  | 13            | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database table 'groups' has also the following rows:
-      | id | name           | type      | description    | date_created        | opened | send_emails |
+      | id | name           | type      | description    | created_at          | opened | send_emails |
       | 11 | mohammed       | UserSelf  | mohammed       | 2019-05-10 10:42:11 | false  | true        |
       | 12 | mohammed-admin | UserAdmin | mohammed-admin | 2019-05-10 10:42:11 | false  | false       |
       | 13 | john           | UserSelf  | john           | 2018-05-10 10:42:11 | false  | false       |
@@ -176,11 +176,11 @@ Feature: Login callback
       | 13                | 13             | true    |
       | 14                | 14             | true    |
     And the database has the following table 'login_states':
-      | cookie                           | state                            | expiration_date     |
+      | cookie                           | state                            | expires_at          |
       | {{cookie}}                       | {{state}}                        | 2019-07-16 22:02:29 |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the database has the following table 'sessions':
-      | expiration_date     | user_id | issuer       | issued_at_date      | access_token         |
+      | expires_at          | user_id | issuer       | issued_at           | access_token         |
       | 2020-06-16 22:02:49 | 1       | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
       | 2020-06-16 22:02:49 | 2       | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
     And the database has the following table 'refresh_tokens':
@@ -217,16 +217,16 @@ Feature: Login callback
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
     And the table "users" should stay unchanged but the row with id "1"
     And the table "users" at id "1" should be:
-      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
+      | id | self_group_id | owned_group_id | last_login_at       | last_activity_at    | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
       | 1  | 11            | 12             | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "login_states" should be:
-      | cookie                           | state                            | expiration_date     |
+      | cookie                           | state                            | expires_at          |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the table "sessions" should be:
-      | expiration_date     | user_id | issuer       | issued_at_date      | access_token                |
+      | expires_at          | user_id | issuer       | issued_at           | access_token                |
       | 2020-06-16 22:02:49 | 1       | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
       | 2020-06-16 22:02:49 | 2       | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
       | 2020-07-16 22:02:49 | 1       | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
@@ -254,14 +254,14 @@ Feature: Login callback
     And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
     And the template constant "code_from_oauth" is "somecode"
     And the database has the following table 'users':
-      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | id | self_group_id | owned_group_id | last_login_at       | last_activity_at    | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | true    |
       | 12                | 12             | true    |
     And the database has the following table 'login_states':
-      | cookie     | state     | expiration_date     |
+      | cookie     | state     | expires_at          |
       | {{cookie}} | {{state}} | 2019-07-16 22:02:29 |
     And the "Cookie" request header is "login_csrf={{cookie}}"
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
@@ -327,7 +327,7 @@ Feature: Login callback
     And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
     And the template constant "code_from_oauth" is "somecode"
     And the database has the following table 'login_states':
-      | cookie     | state     | expiration_date     |
+      | cookie     | state     | expires_at          |
       | {{cookie}} | {{state}} | 2019-07-16 22:02:29 |
     And the "Cookie" request header is "login_csrf={{cookie}}"
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:

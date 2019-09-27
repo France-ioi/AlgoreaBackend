@@ -4,6 +4,6 @@ groups_groups: [{parent_group_id: 20, child_group_id: 12, type: requestAccepted}
 groups_ancestors:
   - {ancestor_group_id: 11, child_group_id: 11}
   - {ancestor_group_id: 20, child_group_id: 11}
-groups_items: [{group_id: 20, item_id: 114, full_access_date: 2019-03-22 08:44:55, cached_full_access_date: 2019-03-22 08:44:55,
+groups_items: [{group_id: 20, item_id: 114, full_access_since: 2019-03-22 08:44:55, cached_full_access_since: 2019-03-22 08:44:55,
                 creator_user_id: 1}]
 

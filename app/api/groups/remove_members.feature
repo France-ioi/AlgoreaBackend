@@ -79,7 +79,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 122               | 122            | 1       |
       | 132               | 132            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | status_changed_at         |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 31             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 41             | requestSent        | {{relativeTime("-168h")}} |
@@ -119,20 +119,20 @@ Feature: Remove members from a group (groupRemoveMembers)
     }
     """
     And the table "groups_groups" should be:
-      | id | parent_group_id | child_group_id | type               | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
-      | 1  | 13              | 21             | invitationSent     | 0                                                                                  |
-      | 2  | 13              | 31             | invitationRefused  | 0                                                                                  |
-      | 3  | 13              | 41             | requestSent        | 0                                                                                  |
-      | 6  | 14              | 41             | invitationAccepted | 0                                                                                  |
-      | 7  | 14              | 51             | requestSent        | 0                                                                                  |
-      | 9  | 13              | 51             | removed            | 1                                                                                  |
-      | 10 | 13              | 61             | removed            | 1                                                                                  |
-      | 11 | 13              | 71             | removed            | 0                                                                                  |
-      | 12 | 13              | 81             | left               | 0                                                                                  |
-      | 13 | 13              | 91             | direct             | 0                                                                                  |
-      | 14 | 13              | 101            | requestSent        | 0                                                                                  |
-      | 15 | 13              | 111            | removed            | 1                                                                                  |
-      | 16 | 22              | 13             | direct             | 0                                                                                  |
+      | id | parent_group_id | child_group_id | type               | (status_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_changed_at, NOW())) < 3) |
+      | 1  | 13              | 21             | invitationSent     | 0                                                                                              |
+      | 2  | 13              | 31             | invitationRefused  | 0                                                                                              |
+      | 3  | 13              | 41             | requestSent        | 0                                                                                              |
+      | 6  | 14              | 41             | invitationAccepted | 0                                                                                              |
+      | 7  | 14              | 51             | requestSent        | 0                                                                                              |
+      | 9  | 13              | 51             | removed            | 1                                                                                              |
+      | 10 | 13              | 61             | removed            | 1                                                                                              |
+      | 11 | 13              | 71             | removed            | 0                                                                                              |
+      | 12 | 13              | 81             | left               | 0                                                                                              |
+      | 13 | 13              | 91             | direct             | 0                                                                                              |
+      | 14 | 13              | 101            | requestSent        | 0                                                                                              |
+      | 15 | 13              | 111            | removed            | 1                                                                                              |
+      | 16 | 22              | 13             | direct             | 0                                                                                              |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
