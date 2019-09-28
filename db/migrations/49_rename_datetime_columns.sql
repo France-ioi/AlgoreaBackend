@@ -1,8 +1,4 @@
 -- +migrate Up
-
-
-ALTER TABLE `filters`
-    RENAME COLUMN `start_date` TO `started_at`;
 ALTER TABLE `groups`
     RENAME COLUMN `date_created` TO `created_at`,
     RENAME COLUMN `code_end` TO `code_expires_at`,
@@ -27,8 +23,6 @@ ALTER TABLE `groups_items`
     RENAME COLUMN `cached_partial_access_date` TO `cached_partial_access_since`,
     RENAME COLUMN `cached_access_solutions_date` TO `cached_solutions_access_since`,
     RENAME COLUMN `cached_grayed_access_date` TO `cached_grayed_access_since`;
-ALTER TABLE `history_filters`
-    RENAME COLUMN `start_date` TO `started_at`;
 ALTER TABLE `history_groups`
     RENAME COLUMN `date_created` TO `created_at`,
     RENAME COLUMN `code_end` TO `code_expires_at`,
@@ -115,18 +109,6 @@ ALTER TABLE `users_threads`
     RENAME COLUMN `last_write_date` TO `last_wrote_at`;
 
 
-DROP TRIGGER `after_insert_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `after_insert_filters` AFTER INSERT ON `filters` FOR EACH ROW BEGIN INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`started_at`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`name`,NEW.`selected`,NEW.`starred`,NEW.`started_at`,NEW.`end_date`,NEW.`archived`,NEW.`participated`,NEW.`unread`,NEW.`item_id`,NEW.`group_id`,NEW.`older_than`,NEW.`newer_than`,NEW.`users_search`,NEW.`body_search`,NEW.`important`); END
--- +migrate StatementEnd
-DROP TRIGGER `before_update_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `before_update_filters` BEFORE UPDATE ON `filters` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`name` <=> NEW.`name` AND OLD.`starred` <=> NEW.`starred` AND OLD.`started_at` <=> NEW.`started_at` AND OLD.`end_date` <=> NEW.`end_date` AND OLD.`archived` <=> NEW.`archived` AND OLD.`participated` <=> NEW.`participated` AND OLD.`unread` <=> NEW.`unread` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`older_than` <=> NEW.`older_than` AND OLD.`newer_than` <=> NEW.`newer_than` AND OLD.`users_search` <=> NEW.`users_search` AND OLD.`body_search` <=> NEW.`body_search` AND OLD.`important` <=> NEW.`important`) THEN   SET NEW.version = @curVersion;   UPDATE `history_filters` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`started_at`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`name`,NEW.`selected`,NEW.`starred`,NEW.`started_at`,NEW.`end_date`,NEW.`archived`,NEW.`participated`,NEW.`unread`,NEW.`item_id`,NEW.`group_id`,NEW.`older_than`,NEW.`newer_than`,NEW.`users_search`,NEW.`body_search`,NEW.`important`) ; END IF; END
--- +migrate StatementEnd
-DROP TRIGGER `before_delete_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `before_delete_filters` BEFORE DELETE ON `filters` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_filters` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`started_at`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`name`,OLD.`selected`,OLD.`starred`,OLD.`started_at`,OLD.`end_date`,OLD.`archived`,OLD.`participated`,OLD.`unread`,OLD.`item_id`,OLD.`group_id`,OLD.`older_than`,OLD.`newer_than`,OLD.`users_search`,OLD.`body_search`,OLD.`important`, 1); END
--- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups`;
 -- +migrate StatementBegin
 CREATE TRIGGER `after_insert_groups` AFTER INSERT ON `groups` FOR EACH ROW BEGIN INSERT INTO `history_groups` (`id`,`version`,`name`,`grade`,`grade_details`,`description`,`created_at`,`opened`,`free_access`,`team_item_id`,`team_participating`,`code`,`code_timer`,`code_expires_at`,`redirect_path`,`open_contest`,`type`,`send_emails`) VALUES (NEW.`id`,@curVersion,NEW.`name`,NEW.`grade`,NEW.`grade_details`,NEW.`description`,NEW.`created_at`,NEW.`opened`,NEW.`free_access`,NEW.`team_item_id`,NEW.`team_participating`,NEW.`code`,NEW.`code_timer`,NEW.`code_expires_at`,NEW.`redirect_path`,NEW.`open_contest`,NEW.`type`,NEW.`send_emails`); INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (NEW.`id`, 'todo') ; END
@@ -440,8 +422,6 @@ GROUP BY `user_item_id`;
 
 
 -- +migrate Down
-ALTER TABLE `filters`
-RENAME COLUMN `started_at` TO `start_date`;
 ALTER TABLE `groups`
     RENAME COLUMN `created_at` TO `date_created`,
     RENAME COLUMN `code_expires_at` TO `code_end`,
@@ -466,8 +446,6 @@ ALTER TABLE `groups_items`
     RENAME COLUMN `cached_partial_access_since` TO `cached_partial_access_date`,
     RENAME COLUMN `cached_solutions_access_since` TO `cached_access_solutions_date`,
     RENAME COLUMN `cached_grayed_access_since` TO `cached_grayed_access_date`;
-ALTER TABLE `history_filters`
-    RENAME COLUMN `started_at` TO `start_date`;
 ALTER TABLE `history_groups`
     RENAME COLUMN `created_at` TO `date_created`,
     RENAME COLUMN `code_expires_at` TO `code_end`,
@@ -553,18 +531,6 @@ ALTER TABLE `users_threads`
     RENAME COLUMN `last_read_at` TO `last_read_date`,
     RENAME COLUMN `last_wrote_at` TO `last_write_date`;
 
-DROP TRIGGER `after_insert_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `after_insert_filters` AFTER INSERT ON `filters` FOR EACH ROW BEGIN INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`start_date`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`name`,NEW.`selected`,NEW.`starred`,NEW.`start_date`,NEW.`end_date`,NEW.`archived`,NEW.`participated`,NEW.`unread`,NEW.`item_id`,NEW.`group_id`,NEW.`older_than`,NEW.`newer_than`,NEW.`users_search`,NEW.`body_search`,NEW.`important`); END
--- +migrate StatementEnd
-DROP TRIGGER `before_update_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `before_update_filters` BEFORE UPDATE ON `filters` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`name` <=> NEW.`name` AND OLD.`starred` <=> NEW.`starred` AND OLD.`start_date` <=> NEW.`start_date` AND OLD.`end_date` <=> NEW.`end_date` AND OLD.`archived` <=> NEW.`archived` AND OLD.`participated` <=> NEW.`participated` AND OLD.`unread` <=> NEW.`unread` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`older_than` <=> NEW.`older_than` AND OLD.`newer_than` <=> NEW.`newer_than` AND OLD.`users_search` <=> NEW.`users_search` AND OLD.`body_search` <=> NEW.`body_search` AND OLD.`important` <=> NEW.`important`) THEN   SET NEW.version = @curVersion;   UPDATE `history_filters` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`start_date`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`name`,NEW.`selected`,NEW.`starred`,NEW.`start_date`,NEW.`end_date`,NEW.`archived`,NEW.`participated`,NEW.`unread`,NEW.`item_id`,NEW.`group_id`,NEW.`older_than`,NEW.`newer_than`,NEW.`users_search`,NEW.`body_search`,NEW.`important`) ; END IF; END
--- +migrate StatementEnd
-DROP TRIGGER `before_delete_filters`;
--- +migrate StatementBegin
-CREATE TRIGGER `before_delete_filters` BEFORE DELETE ON `filters` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_filters` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_filters` (`id`,`version`,`user_id`,`name`,`selected`,`starred`,`start_date`,`end_date`,`archived`,`participated`,`unread`,`item_id`,`group_id`,`older_than`,`newer_than`,`users_search`,`body_search`,`important`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`name`,OLD.`selected`,OLD.`starred`,OLD.`start_date`,OLD.`end_date`,OLD.`archived`,OLD.`participated`,OLD.`unread`,OLD.`item_id`,OLD.`group_id`,OLD.`older_than`,OLD.`newer_than`,OLD.`users_search`,OLD.`body_search`,OLD.`important`, 1); END
--- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups`;
 -- +migrate StatementBegin
 CREATE TRIGGER `after_insert_groups` AFTER INSERT ON `groups` FOR EACH ROW BEGIN INSERT INTO `history_groups` (`id`,`version`,`name`,`grade`,`grade_details`,`description`,`date_created`,`opened`,`free_access`,`team_item_id`,`team_participating`,`code`,`code_timer`,`code_end`,`redirect_path`,`open_contest`,`type`,`send_emails`) VALUES (NEW.`id`,@curVersion,NEW.`name`,NEW.`grade`,NEW.`grade_details`,NEW.`description`,NEW.`date_created`,NEW.`opened`,NEW.`free_access`,NEW.`team_item_id`,NEW.`team_participating`,NEW.`code`,NEW.`code_timer`,NEW.`code_end`,NEW.`redirect_path`,NEW.`open_contest`,NEW.`type`,NEW.`send_emails`); INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (NEW.`id`, 'todo') ; END
