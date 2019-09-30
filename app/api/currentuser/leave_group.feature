@@ -17,7 +17,7 @@ Feature: User leaves a group
       | 4  | 21                | 21             | 1       |
       | 5  | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_changed_at   |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 1  | 11              | 21             | invitationAccepted | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | left               | 2017-02-21 06:38:38 |
 
@@ -35,8 +35,8 @@ Feature: User leaves a group
     """
     And the table "groups_groups" should stay unchanged but the row with id "1"
     And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type | (status_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_changed_at, NOW())) < 3) |
-      | 1  | 11              | 21             | left | 1                                                                                              |
+      | id | parent_group_id | child_group_id | type | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 1  | 11              | 21             | left | 1                                                                                          |
     And the table "groups_ancestors" should stay unchanged but the row with id "2"
     And the table "groups_ancestors" should not contain id "2"
 
@@ -70,8 +70,8 @@ Feature: User leaves a group
     """
     And the table "groups_groups" should stay unchanged but the row with id "1"
     And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type | (status_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_changed_at, NOW())) < 3) |
-      | 1  | 11              | 21             | left | 1                                                                                              |
+      | id | parent_group_id | child_group_id | type | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 1  | 11              | 21             | left | 1                                                                                          |
     And the table "groups_ancestors" should stay unchanged but the row with id "2"
     And the table "groups_ancestors" should not contain id "2"
 

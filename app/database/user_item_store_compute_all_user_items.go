@@ -24,7 +24,7 @@ const computeAllUserItemsLockTimeout = 10 * time.Second
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
 //  Then, if an object has children, we update
-//    last_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
+//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
@@ -92,7 +92,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			userItemStore.collectItemsToUnlock(groupItemsToUnlock)
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
-			//  - last_activity_at as the max of children's
+			//  - latest_activity_at as the max of children's
 			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's field
 			//  - children_validated as the sum of children with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
@@ -101,7 +101,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					UPDATE users_items
 					LEFT JOIN (
 						SELECT
-							MAX(children.last_activity_at) AS last_activity_at,
+							MAX(children.latest_activity_at) AS latest_activity_at,
 							SUM(children.tasks_tried) AS tasks_tried,
 							SUM(children.tasks_with_help) AS tasks_with_help,
 							SUM(children.tasks_solved) AS tasks_solved,
@@ -120,9 +120,9 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					LEFT JOIN items_items
 						ON items_items.parent_item_id = users_items.item_id
 					SET
-						users_items.last_activity_at = IF(task_children_data.user_item_id IS NOT NULL AND
+						users_items.latest_activity_at = IF(task_children_data.user_item_id IS NOT NULL AND
 							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.last_activity_at, users_items.last_activity_at),
+							children_data.latest_activity_at, users_items.latest_activity_at),
 						users_items.tasks_tried = IF(task_children_data.user_item_id IS NOT NULL AND
 							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_data.tasks_tried, users_items.tasks_tried),

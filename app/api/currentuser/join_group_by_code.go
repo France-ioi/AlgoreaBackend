@@ -17,7 +17,7 @@ import (
 // description:
 //   Lets a user to join a team group by a code.
 //   On success the service inserts a row into `groups_groups` (or updates an existing one)
-//   with `type`=`requestAccepted` and `status_changed_at` = current UTC time.
+//   with `type`=`requestAccepted` and `type_changed_at` = current UTC time.
 //   It also refreshes the access rights.
 //
 //   * If there is no team with `free_access` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,

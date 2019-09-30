@@ -24,7 +24,7 @@ Feature: User leaves a group - robustness
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_changed_at   |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 1  | 11              | 21             | requestSent        | 2017-04-29 06:38:38 |
       | 2  | 14              | 21             | direct             | 2017-03-29 06:38:38 |
       | 3  | 15              | 31             | invitationAccepted | 2017-03-29 06:38:38 |

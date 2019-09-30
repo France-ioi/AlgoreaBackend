@@ -113,8 +113,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		Where("login_id = ?", userData["login_id"]).Select("id, self_group_id, owned_group_id").
 		Take(&userInfo).Error()
 
-	userData["last_login_at"] = database.Now()
-	userData["last_activity_at"] = database.Now()
+	userData["latest_login_at"] = database.Now()
+	userData["latest_activity_at"] = database.Now()
 
 	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
 		userData["default_language"] = database.Default()

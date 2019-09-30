@@ -21,7 +21,7 @@ Feature: Get group invitations for the current user
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_changed_at         | inviting_user_id |
+      | id | parent_group_id | child_group_id | type               | type_changed_at           | inviting_user_id |
       | 2  | 1               | 21             | invitationSent     | {{relativeTime("-169h")}} | null             |
       | 3  | 2               | 21             | invitationRefused  | {{relativeTime("-168h")}} | 1                |
       | 4  | 3               | 21             | requestSent        | {{relativeTime("-167h")}} | 1                |
@@ -55,7 +55,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
         "type": "requestRefused"
       },
       {
@@ -72,7 +72,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
         "type": "requestSent"
       },
       {
@@ -84,7 +84,7 @@ Feature: Get group invitations for the current user
           "description": "Our class group",
           "type": "Class"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[1][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
         "type": "invitationSent"
       }
     ]
@@ -111,7 +111,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
         "type": "requestRefused"
       }
     ]
@@ -138,7 +138,7 @@ Feature: Get group invitations for the current user
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[4][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
         "type": "requestRefused"
       },
       {
@@ -155,7 +155,7 @@ Feature: Get group invitations for the current user
           "description": "Our club group",
           "type": "Club"
         },
-        "status_changed_at": "{{timeToRFC(db("groups_groups[3][status_changed_at]"))}}",
+        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
         "type": "requestSent"
       }
     ]

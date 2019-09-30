@@ -45,10 +45,10 @@ Feature: Update active attempt for an item
   Scenario: User is able to update an active attempt (full access)
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 11      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
@@ -60,19 +60,19 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 11      | 50      | 100               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 11      | 50      | 100               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 100 | 111      | 50      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 111      | 50      | done                        | 1                                                         |
 
   Scenario: User is able to fetch an active attempt (partial access)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 10      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 101      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
@@ -84,19 +84,19 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 10      | 50      | 100               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 10      | 50      | 100               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 100 | 101      | 50      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 101      | 50      | done                        | 1                                                         |
 
   Scenario: User is able to update an active attempt (full access, groups_groups.type=joinedByCode)
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 11      | 50      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
@@ -108,20 +108,20 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 11      | 50      | 100               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 11      | 50      | 100               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 100 | 111      | 50      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 111      | 50      | done                        | 1                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=invitationAccepted)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 102      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
@@ -133,21 +133,21 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 10      | 10      | null              | done                        | 1                                                       |
-      | 10      | 60      | 200               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 10      | 10      | null              | done                        | 1                                                         |
+      | 10      | 60      | 200               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 200 | 102      | 60      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 200 | 102      | 60      | done                        | 1                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=requestAccepted)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 103      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
@@ -159,21 +159,21 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 10      | 10      | null              | done                        | 1                                                       |
-      | 10      | 60      | 200               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 10      | 10      | null              | done                        | 1                                                         |
+      | 10      | 60      | 200               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 200 | 103      | 60      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 200 | 103      | 60      | done                        | 1                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=direct)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 10      | 10      | null              | 2018-05-29 06:38:38 |
       | 10      | 60      | null              | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 104      | 60      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
@@ -185,20 +185,20 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 10      | 10      | null              | done                        | 1                                                       |
-      | 10      | 60      | 200               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 10      | 10      | null              | done                        | 1                                                         |
+      | 10      | 60      | 200               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 200 | 104      | 60      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 200 | 104      | 60      | done                        | 1                                                         |
 
   Scenario: User is able to update an active attempt when this attempt is already active
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 11      | 50      | 100               | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
@@ -210,20 +210,20 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 11      | 50      | 100               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 11      | 50      | 100               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 100 | 111      | 50      | done                        | 1                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 111      | 50      | done                        | 1                                                         |
 
 
   Scenario: User is able to update an active attempt when another attempt is active
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | last_activity_at    |
+      | user_id | item_id | active_attempt_id | latest_activity_at  |
       | 11      | 50      | 101               | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | last_activity_at    | order |
+      | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
       | 101 | 111      | 50      | 2018-05-29 06:38:38 | 1     |
     When I send a PUT request to "/attempts/100/active"
@@ -236,9 +236,9 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 11      | 50      | 100               | done                        | 1                                                       |
+      | user_id | item_id | active_attempt_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 11      | 50      | 100               | done                        | 1                                                         |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 |
-      | 100 | 111      | 50      | done                        | 1                                                       |
-      | 101 | 111      | 50      | done                        | 0                                                       |
+      | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 111      | 50      | done                        | 1                                                         |
+      | 101 | 111      | 50      | done                        | 0                                                         |

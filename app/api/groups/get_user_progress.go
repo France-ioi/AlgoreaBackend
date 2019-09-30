@@ -26,7 +26,7 @@ type groupUserProgressResponseRow struct {
 	Validated bool `json:"validated"`
 	// Nullable
 	// required:true
-	LastActivityAt *database.Time `json:"last_activity_at"`
+	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
 	// If there are no attempts, the number of hints is 0.
 	// required:true
@@ -165,7 +165,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			groups.id AS group_id,
 			IFNULL(MAX(attempt_with_best_score.score), 0) AS score,
 			IFNULL(MAX(attempt_with_best_score.validated), 0) AS validated,
-			MAX(last_attempt.last_activity_at) AS last_activity_at,
+			MAX(last_attempt.latest_activity_at) AS latest_activity_at,
 			IFNULL(MAX(attempt_with_best_score.hints_cached), 0) AS hints_requested,
 			IFNULL(MAX(attempt_with_best_score.submissions_attempts), 0) AS submissions_attempts,
 			IF(MAX(attempt_with_best_score.group_id) IS NULL,
@@ -215,15 +215,15 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			LEFT JOIN groups_attempts AS last_attempt_of_user
 			ON last_attempt_of_user.id = (
 				SELECT id FROM groups_attempts
-				WHERE group_id = groups.id AND item_id = items.id AND last_activity_at IS NOT NULL
-				ORDER BY last_activity_at DESC LIMIT 1
+				WHERE group_id = groups.id AND item_id = items.id AND latest_activity_at IS NOT NULL
+				ORDER BY latest_activity_at DESC LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt_of_team
 			ON last_attempt_of_team.id = (
 				SELECT id FROM groups_attempts
-				WHERE group_id = teams.id AND item_id = items.id AND last_activity_at IS NOT NULL
-				ORDER BY last_activity_at DESC LIMIT 1
+				WHERE group_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
+				ORDER BY latest_activity_at DESC LIMIT 1
 			)`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt
@@ -231,7 +231,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				(
 					last_attempt_of_team.id IS NOT NULL AND
 					last_attempt_of_user.id IS NOT NULL AND
-					last_attempt_of_team.last_activity_at > last_attempt_of_user.last_activity_at
+					last_attempt_of_team.latest_activity_at > last_attempt_of_user.latest_activity_at
 				) OR last_attempt_of_user.id IS NULL,
 				last_attempt_of_team.id,
 				last_attempt_of_user.id

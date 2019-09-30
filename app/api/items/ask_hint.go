@@ -131,8 +131,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		columnsToUpdate := map[string]interface{}{
 			"tasks_with_help":             1,
 			"ancestors_computation_state": "todo",
-			"last_activity_at":            database.Now(),
-			"last_hint_at":                database.Now(),
+			"latest_activity_at":          database.Now(),
+			"latest_hint_at":              database.Now(),
 		}
 		// Update users_items with the hint request
 		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).

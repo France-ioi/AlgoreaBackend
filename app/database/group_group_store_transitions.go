@@ -293,7 +293,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				Select("IFNULL(MAX(child_order), 0)").
 				Where("parent_group_id = ?", parentGroupID).Scan(&maxChildOrder).Error())
 
-			insertQuery := "INSERT INTO groups_groups (id, parent_group_id, child_group_id, type, child_order, status_changed_at"
+			insertQuery := "INSERT INTO groups_groups (id, parent_group_id, child_group_id, type, child_order, type_changed_at"
 			valuesTemplate := "(?, ?, ?, ?, ?, NOW()"
 			paramsCount := 5
 			if setIDUserInviting {
@@ -364,7 +364,7 @@ func performTransitionUpdate(
 
 		updateQuery := `
 			UPDATE groups_groups
-			SET type = ?, status_changed_at = NOW()`
+			SET type = ?, type_changed_at = NOW()`
 		if setIDUserInviting {
 			updateQuery += ", inviting_user_id = ?"
 		}

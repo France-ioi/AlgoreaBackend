@@ -92,9 +92,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
-		"last_activity_at",
+		"latest_activity_at",
 		"best_answer_at",
-		"last_answer_at",
+		"latest_answer_at",
 		"score",
 	}
 	values := []interface{}{

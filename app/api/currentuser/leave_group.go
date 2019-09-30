@@ -11,7 +11,7 @@ import (
 // summary: Leave a group
 // description:
 //   Lets a user to leave a group.
-//   On success the service sets `groups_groups.type` to `left` and `status_changed_at` to current UTC time.
+//   On success the service sets `groups_groups.type` to `left` and `type_changed_at` to current UTC time.
 //   It also refreshes the access rights.
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent

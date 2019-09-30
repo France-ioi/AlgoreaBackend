@@ -10,8 +10,8 @@ Feature: Save grading result - robustness
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_changed_at |
-      | 15 | 22              | 13             | direct | null              |
+      | id | parent_group_id | child_group_id | type   | type_changed_at |
+      | 15 | 22              | 13             | direct | null            |
     And the database has the following table 'platforms':
       | id | uses_tokens | regexp                                             | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |

@@ -27,24 +27,24 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	}))
 	assert.True(t, newID > 0)
 	type resultType struct {
-		GroupID           int64
-		ItemID            int64
-		StartedAtSet      bool
-		LastActivityAtSet bool
-		Order             int32
+		GroupID             int64
+		ItemID              int64
+		StartedAtSet        bool
+		LatestActivityAtSet bool
+		Order               int32
 	}
 	var result resultType
 	assert.NoError(t, database.NewDataStore(db).GroupAttempts().ByID(newID).
 		Select(`
 			group_id, item_id, ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 AS started_at_set,
-			ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 AS last_activity_at_set, `+"`order`").
+			ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 AS latest_activity_at_set, `+"`order`").
 		Take(&result).Error())
 	assert.Equal(t, resultType{
-		GroupID:           10,
-		ItemID:            20,
-		StartedAtSet:      true,
-		LastActivityAtSet: true,
-		Order:             2,
+		GroupID:             10,
+		ItemID:              20,
+		StartedAtSet:        true,
+		LatestActivityAtSet: true,
+		Order:               2,
 	}, result)
 }
 

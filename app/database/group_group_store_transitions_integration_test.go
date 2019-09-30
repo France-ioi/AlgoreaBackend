@@ -15,12 +15,12 @@ import (
 )
 
 type groupGroup struct {
-	ParentGroupID   int64
-	ChildGroupID    int64
-	Type            string
-	InvitingUserID  *int64
-	ChildOrder      int64
-	StatusChangedAt *database.Time
+	ParentGroupID  int64
+	ChildGroupID   int64
+	Type           string
+	InvitingUserID *int64
+	ChildOrder     int64
+	TypeChangedAt  *database.Time
 }
 
 type groupAncestor struct {
@@ -135,19 +135,19 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, database.RequestSent,
 				map[string]*groupGroup{
 					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted",
-						InvitingUserID: userIDPtr, ChildOrder: 0, StatusChangedAt: currentTimePtr},
+						InvitingUserID: userIDPtr, ChildOrder: 0, TypeChangedAt: currentTimePtr},
 					"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "invitationSent",
-						InvitingUserID: userIDPtr, ChildOrder: 2, StatusChangedAt: currentTimePtr},
+						InvitingUserID: userIDPtr, ChildOrder: 2, TypeChangedAt: currentTimePtr},
 					"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "invitationSent",
-						InvitingUserID: userIDPtr, ChildOrder: 3, StatusChangedAt: currentTimePtr},
+						InvitingUserID: userIDPtr, ChildOrder: 3, TypeChangedAt: currentTimePtr},
 					"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "invitationSent",
-						InvitingUserID: userIDPtr, ChildOrder: 4, StatusChangedAt: currentTimePtr},
+						InvitingUserID: userIDPtr, ChildOrder: 4, TypeChangedAt: currentTimePtr},
 					"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "invitationSent",
-						InvitingUserID: userIDPtr, ChildOrder: 5, StatusChangedAt: currentTimePtr},
+						InvitingUserID: userIDPtr, ChildOrder: 5, TypeChangedAt: currentTimePtr},
 				},
 				[]groupGroup{
 					{ParentGroupID: 20, ChildGroupID: 1, Type: "invitationSent", InvitingUserID: userIDPtr, ChildOrder: 1,
-						StatusChangedAt: currentTimePtr},
+						TypeChangedAt: currentTimePtr},
 				}),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged, nil,
 				[]groupAncestor{
@@ -168,13 +168,13 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			},
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "requestSent", ChildOrder: 2, StatusChangedAt: currentTimePtr},
-					"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "requestSent", ChildOrder: 3, StatusChangedAt: currentTimePtr},
-					"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "requestSent", ChildOrder: 4, StatusChangedAt: currentTimePtr},
-					"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "requestSent", ChildOrder: 5, StatusChangedAt: currentTimePtr},
+					"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "requestSent", ChildOrder: 2, TypeChangedAt: currentTimePtr},
+					"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "requestSent", ChildOrder: 3, TypeChangedAt: currentTimePtr},
+					"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "requestSent", ChildOrder: 4, TypeChangedAt: currentTimePtr},
+					"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "requestSent", ChildOrder: 5, TypeChangedAt: currentTimePtr},
 				},
 				[]groupGroup{
-					{ParentGroupID: 20, ChildGroupID: 1, Type: "requestSent", ChildOrder: 1, StatusChangedAt: currentTimePtr},
+					{ParentGroupID: 20, ChildGroupID: 1, Type: "requestSent", ChildOrder: 1, TypeChangedAt: currentTimePtr},
 				}),
 			wantGroupAncestors: groupAncestorsUnchanged,
 			shouldRunListeners: true,
@@ -189,7 +189,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, database.InvitationSent,
 				map[string]*groupGroup{
-					"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "invitationAccepted", StatusChangedAt: currentTimePtr},
+					"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "invitationAccepted", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				nil,
@@ -219,7 +219,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, database.RequestSent,
 				map[string]*groupGroup{
-					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", StatusChangedAt: currentTimePtr},
+					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				nil,
@@ -238,7 +238,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "invitationRefused", StatusChangedAt: currentTimePtr},
+					"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "invitationRefused", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
 			shouldRunListeners: true,
@@ -252,7 +252,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestRefused", StatusChangedAt: currentTimePtr},
+					"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestRefused", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged,
 			shouldRunListeners: true,
@@ -266,9 +266,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "removed", StatusChangedAt: currentTimePtr},
-					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "removed", StatusChangedAt: currentTimePtr},
-					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "removed", StatusChangedAt: currentTimePtr},
+					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "removed", TypeChangedAt: currentTimePtr},
+					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "removed", TypeChangedAt: currentTimePtr},
+					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "removed", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{"20_4": nil, "20_5": nil, "20_11": nil, "30_4": nil, "30_5": nil, "30_11": nil}, nil),
@@ -296,10 +296,10 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}),
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "",
 				map[string]*groupGroup{
-					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "left", StatusChangedAt: currentTimePtr},
-					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "left", StatusChangedAt: currentTimePtr},
-					"20_10": {ParentGroupID: 20, ChildGroupID: 10, Type: "left", StatusChangedAt: currentTimePtr},
-					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "left", StatusChangedAt: currentTimePtr},
+					"20_4":  {ParentGroupID: 20, ChildGroupID: 4, Type: "left", TypeChangedAt: currentTimePtr},
+					"20_5":  {ParentGroupID: 20, ChildGroupID: 5, Type: "left", TypeChangedAt: currentTimePtr},
+					"20_10": {ParentGroupID: 20, ChildGroupID: 10, Type: "left", TypeChangedAt: currentTimePtr},
+					"20_11": {ParentGroupID: 20, ChildGroupID: 11, Type: "left", TypeChangedAt: currentTimePtr},
 				}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{
@@ -333,17 +333,17 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
-				{ParentGroupID: 20, ChildGroupID: 1, Type: "direct", ChildOrder: 1, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 2, Type: "direct", ChildOrder: 2, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 3, Type: "direct", ChildOrder: 3, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 4, Type: "direct", ChildOrder: 4, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 5, Type: "direct", ChildOrder: 5, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 6, Type: "direct", ChildOrder: 6, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 7, Type: "direct", ChildOrder: 7, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 8, Type: "direct", ChildOrder: 8, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 9, Type: "direct", ChildOrder: 9, StatusChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 1, Type: "direct", ChildOrder: 1, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 2, Type: "direct", ChildOrder: 2, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 3, Type: "direct", ChildOrder: 3, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 4, Type: "direct", ChildOrder: 4, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 5, Type: "direct", ChildOrder: 5, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 6, Type: "direct", ChildOrder: 6, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 7, Type: "direct", ChildOrder: 7, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 8, Type: "direct", ChildOrder: 8, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 9, Type: "direct", ChildOrder: 9, TypeChangedAt: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 10, Type: "direct", ChildOrder: 10},
-				{ParentGroupID: 20, ChildGroupID: 11, Type: "direct", ChildOrder: 11, StatusChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 11, Type: "direct", ChildOrder: 11, TypeChangedAt: currentTimePtr},
 				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
 			},
 			wantGroupAncestors: allPossibleGroupsAncestors,
@@ -360,14 +360,14 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				30: "cycle",
 			},
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, "", map[string]*groupGroup{
-				"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "requestAccepted", ChildOrder: 2, StatusChangedAt: currentTimePtr},
-				"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", ChildOrder: 3, StatusChangedAt: currentTimePtr},
-				"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "requestAccepted", ChildOrder: 4, StatusChangedAt: currentTimePtr},
-				"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "requestAccepted", ChildOrder: 5, StatusChangedAt: currentTimePtr},
-				"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "requestAccepted", ChildOrder: 6, StatusChangedAt: currentTimePtr},
-				"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "requestAccepted", ChildOrder: 7, StatusChangedAt: currentTimePtr},
+				"20_2": {ParentGroupID: 20, ChildGroupID: 2, Type: "requestAccepted", ChildOrder: 2, TypeChangedAt: currentTimePtr},
+				"20_3": {ParentGroupID: 20, ChildGroupID: 3, Type: "requestAccepted", ChildOrder: 3, TypeChangedAt: currentTimePtr},
+				"20_6": {ParentGroupID: 20, ChildGroupID: 6, Type: "requestAccepted", ChildOrder: 4, TypeChangedAt: currentTimePtr},
+				"20_7": {ParentGroupID: 20, ChildGroupID: 7, Type: "requestAccepted", ChildOrder: 5, TypeChangedAt: currentTimePtr},
+				"20_8": {ParentGroupID: 20, ChildGroupID: 8, Type: "requestAccepted", ChildOrder: 6, TypeChangedAt: currentTimePtr},
+				"20_9": {ParentGroupID: 20, ChildGroupID: 9, Type: "requestAccepted", ChildOrder: 7, TypeChangedAt: currentTimePtr},
 			}, []groupGroup{
-				{ParentGroupID: 20, ChildGroupID: 1, Type: "requestAccepted", ChildOrder: 1, StatusChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 1, Type: "requestAccepted", ChildOrder: 1, TypeChangedAt: currentTimePtr},
 			}),
 			wantGroupAncestors: allPossibleGroupsAncestors,
 			shouldRunListeners: true,
@@ -384,15 +384,15 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				30: "cycle",
 			},
 			wantGroupGroups: []groupGroup{
-				{ParentGroupID: 20, ChildGroupID: 1, Type: "joinedByCode", ChildOrder: 1, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 2, Type: "joinedByCode", ChildOrder: 2, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 3, Type: "joinedByCode", ChildOrder: 3, StatusChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 1, Type: "joinedByCode", ChildOrder: 1, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 2, Type: "joinedByCode", ChildOrder: 2, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 3, Type: "joinedByCode", ChildOrder: 3, TypeChangedAt: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 4, Type: "invitationAccepted"},
 				{ParentGroupID: 20, ChildGroupID: 5, Type: "requestAccepted"},
-				{ParentGroupID: 20, ChildGroupID: 6, Type: "joinedByCode", ChildOrder: 4, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 7, Type: "joinedByCode", ChildOrder: 5, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 8, Type: "joinedByCode", ChildOrder: 6, StatusChangedAt: currentTimePtr},
-				{ParentGroupID: 20, ChildGroupID: 9, Type: "joinedByCode", ChildOrder: 7, StatusChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 6, Type: "joinedByCode", ChildOrder: 4, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 7, Type: "joinedByCode", ChildOrder: 5, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 8, Type: "joinedByCode", ChildOrder: 6, TypeChangedAt: currentTimePtr},
+				{ParentGroupID: 20, ChildGroupID: 9, Type: "joinedByCode", ChildOrder: 7, TypeChangedAt: currentTimePtr},
 				{ParentGroupID: 20, ChildGroupID: 10, Type: "direct"},
 				{ParentGroupID: 20, ChildGroupID: 11, Type: "joinedByCode"},
 				{ParentGroupID: 30, ChildGroupID: 20, Type: "direct"},
@@ -518,7 +518,7 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 
 func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupStore, expected []groupGroup) {
 	var groupsGroups []groupGroup
-	assert.NoError(t, groupGroupStore.Select("parent_group_id, child_group_id, inviting_user_id, child_order, type, status_changed_at").
+	assert.NoError(t, groupGroupStore.Select("parent_group_id, child_group_id, inviting_user_id, child_order, type, type_changed_at").
 		Order("parent_group_id, child_group_id").Scan(&groupsGroups).Error())
 
 	assert.Len(t, groupsGroups, len(expected))
@@ -541,13 +541,13 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 			assert.False(t, usedChildOrders[groupsGroups[index].ChildOrder])
 			usedChildOrders[groupsGroups[index].ChildOrder] = true
 		}
-		if row.StatusChangedAt == nil {
-			assert.Nil(t, groupsGroups[index].StatusChangedAt)
+		if row.TypeChangedAt == nil {
+			assert.Nil(t, groupsGroups[index].TypeChangedAt)
 		} else {
-			assert.NotNil(t, groupsGroups[index].StatusChangedAt, "StatusChangedAt should not be nil in row %#v", groupsGroups[index])
-			if groupsGroups[index].StatusChangedAt != nil {
-				assert.True(t, (*time.Time)(groupsGroups[index].StatusChangedAt).Sub(time.Now().UTC())/time.Second < 5)
-				assert.True(t, time.Now().UTC().Sub(time.Time(*groupsGroups[index].StatusChangedAt))/time.Second > -5)
+			assert.NotNil(t, groupsGroups[index].TypeChangedAt, "TypeChangedAt should not be nil in row %#v", groupsGroups[index])
+			if groupsGroups[index].TypeChangedAt != nil {
+				assert.True(t, (*time.Time)(groupsGroups[index].TypeChangedAt).Sub(time.Now().UTC())/time.Second < 5)
+				assert.True(t, time.Now().UTC().Sub(time.Time(*groupsGroups[index].TypeChangedAt))/time.Second > -5)
 			}
 		}
 	}

@@ -10,8 +10,8 @@ Feature: Ask for a hint
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_changed_at |
-      | 15 | 22              | 13             | direct | null              |
+      | id | parent_group_id | child_group_id | type   | type_changed_at |
+      | 15 | 22              | 13             | direct | null            |
     And the database has the following table 'platforms':
       | id | uses_tokens | regexp                                            | public_key                |
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.* | {{taskPlatformPublicKey}} |
@@ -88,12 +88,12 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                       | null                                                |
-      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                       | 1                                                   |
+      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
+      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                         | 1                                                     |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                       | 1                                                   |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "10"
@@ -149,12 +149,12 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                       | null                                                |
-      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                       | 1                                                   |
+      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
+      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                         | 1                                                     |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                       | 1                                                   |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "10"
@@ -210,12 +210,12 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                       | null                                                |
-      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                       | 1                                                   |
+      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
+      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                         | 1                                                     |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                        | 1                                                       | 1                                                   |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                        | 1                                                         | 1                                                     |
 
   Scenario: Can't parse hints_requested
     Given I am the user with id "10"
@@ -271,12 +271,12 @@ Feature: Ask for a hint
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                       | null                                                |
-      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                       | 1                                                   |
+      | user_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 10      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
+      | 10      | 50      | 1               | 1            | [{"rotorIndex":0}] | done                        | 1                                                         | 1                                                     |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, last_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, last_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                        | 1                                                       | 1                                                   |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
     And logs should contain:
       """
       Unable to parse hints_requested ({"idAttempt":100,"idItemLocal":50,"idUser":10}) having value "not an array": invalid character 'o' in literal null (expecting 'u')

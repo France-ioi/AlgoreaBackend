@@ -11,7 +11,7 @@ import (
 // summary: Reject requests to join a group
 // description:
 //   Lets an admin reject requests to join a group.
-//   On success the service sets `groups_groups.type` to "requestRefused" and `status_changed_at` to current UTC time
+//   On success the service sets `groups_groups.type` to "requestRefused" and `type_changed_at` to current UTC time
 //   for each of `group_ids`.
 //
 //

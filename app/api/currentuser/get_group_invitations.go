@@ -14,28 +14,28 @@ import (
 // description:
 //   Returns the list of invitations that the current user received and requests sent by him
 //   (`groups_groups.type` is “invitationSent” or “requestSent” or “requestRefused”)
-//   with `groups_groups.status_changed_at` within `within_weeks` back from now (if `within_weeks` is present).
+//   with `groups_groups.type_changed_at` within `within_weeks` back from now (if `within_weeks` is present).
 // parameters:
 // - name: within_weeks
 //   in: query
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-status_changed_at,id]
+//   default: [-type_changed_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [status_changed_at,-status_changed_at,id,-id]
-// - name: from.status_changed_at
-//   description: Start the page from the request/invitation next to one with `status_changed_at` = `from.status_changed_at`
+//     enum: [type_changed_at,-type_changed_at,id,-id]
+// - name: from.type_changed_at
+//   description: Start the page from the request/invitation next to one with `type_changed_at` = `from.type_changed_at`
 //                and `groups_groups.id` = `from.id`
-//                (`from.id` is required when `from.status_changed_at` is present)
+//                (`from.id` is required when `from.type_changed_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the request/invitation next to one with `status_changed_at`=`from.status_changed_at`
+//   description: Start the page from the request/invitation next to one with `type_changed_at`=`from.type_changed_at`
 //                and `groups_groups.id`=`from.id`
-//                (`from.status_changed_at` is required when from.id is present)
+//                (`from.type_changed_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -63,7 +63,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.id,
-			groups_groups.status_changed_at,
+			groups_groups.type_changed_at,
 			groups_groups.type,
 			users.id AS inviting_user__id,
 			users.login AS inviting_user__login,
@@ -83,15 +83,15 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
-		query = query.Where("NOW() - INTERVAL ? WEEK < groups_groups.status_changed_at", withinWeeks)
+		query = query.Where("NOW() - INTERVAL ? WEEK < groups_groups.type_changed_at", withinWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"status_changed_at": {ColumnName: "groups_groups.status_changed_at", FieldType: "time"},
-			"id":                {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-status_changed_at")
+			"type_changed_at": {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
+			"id":              {ColumnName: "groups_groups.id", FieldType: "int64"}},
+		"-type_changed_at")
 	if apiError != service.NoError {
 		return apiError
 	}

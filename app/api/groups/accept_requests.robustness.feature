@@ -35,7 +35,7 @@ Feature: Accept group requests - robustness
       | 122               | 122            | 1       |
       | 123               | 123            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_changed_at         |
+      | id | parent_group_id | child_group_id | type               | type_changed_at           |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |

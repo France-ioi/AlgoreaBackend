@@ -7,14 +7,14 @@ ALTER TABLE `groups_attempts`
     RENAME COLUMN `start_date` TO `started_at`,
     RENAME COLUMN `validation_date` TO `validated_at`,
     RENAME COLUMN `finish_date` TO `finished_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `thread_start_date` TO `thread_started_at`,
     RENAME COLUMN `best_answer_date` TO `best_answer_at`,
-    RENAME COLUMN `last_answer_date` TO `last_answer_at`,
-    RENAME COLUMN `last_hint_date` TO `last_hint_at`,
+    RENAME COLUMN `last_answer_date` TO `latest_answer_at`,
+    RENAME COLUMN `last_hint_date` TO `latest_hint_at`,
     RENAME COLUMN `contest_start_date` TO `contest_started_at`;
 ALTER TABLE `groups_groups`
-    RENAME COLUMN `status_date` TO `status_changed_at`;
+    RENAME COLUMN `status_date` TO `type_changed_at`;
 ALTER TABLE `groups_items`
     RENAME COLUMN `partial_access_date` TO `partial_access_since`,
     RENAME COLUMN `full_access_date` TO `full_access_since`,
@@ -31,14 +31,14 @@ ALTER TABLE `history_groups_attempts`
     RENAME COLUMN `start_date` TO `started_at`,
     RENAME COLUMN `validation_date` TO `validated_at`,
     RENAME COLUMN `finish_date` TO `finished_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `thread_start_date` TO `thread_started_at`,
     RENAME COLUMN `best_answer_date` TO `best_answer_at`,
-    RENAME COLUMN `last_answer_date` TO `last_answer_at`,
-    RENAME COLUMN `last_hint_date` TO `last_hint_at`,
+    RENAME COLUMN `last_answer_date` TO `latest_answer_at`,
+    RENAME COLUMN `last_hint_date` TO `latest_hint_at`,
     RENAME COLUMN `contest_start_date` TO `contest_started_at`;
 ALTER TABLE `history_groups_groups`
-    RENAME COLUMN `status_date` TO `status_changed_at`;
+    RENAME COLUMN `status_date` TO `type_changed_at`;
 ALTER TABLE `history_groups_items`
     RENAME COLUMN `partial_access_date` TO `partial_access_since`,
     RENAME COLUMN `full_access_date` TO `full_access_since`,
@@ -53,25 +53,25 @@ ALTER TABLE `history_items`
 ALTER TABLE `history_messages`
     RENAME COLUMN `submission_date` TO `submitted_at`;
 ALTER TABLE `history_threads`
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`;
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`;
 ALTER TABLE `history_users`
     RENAME COLUMN `registration_date` TO `registered_at`,
-    RENAME COLUMN `last_login_date` TO `last_login_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_login_date` TO `latest_login_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `notification_read_date` TO `notifications_read_at`;
 ALTER TABLE `history_users_items`
     RENAME COLUMN `start_date` TO `started_at`,
     RENAME COLUMN `validation_date` TO `validated_at`,
     RENAME COLUMN `finish_date` TO `finished_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `thread_start_date` TO `thread_started_at`,
     RENAME COLUMN `best_answer_date` TO `best_answer_at`,
-    RENAME COLUMN `last_answer_date` TO `last_answer_at`,
-    RENAME COLUMN `last_hint_date` TO `last_hint_at`,
+    RENAME COLUMN `last_answer_date` TO `latest_answer_at`,
+    RENAME COLUMN `last_hint_date` TO `latest_hint_at`,
     RENAME COLUMN `contest_start_date` TO `contest_started_at`;
 ALTER TABLE `history_users_threads`
-    RENAME COLUMN `last_read_date` TO `last_read_at`,
-    RENAME COLUMN `last_write_date` TO `last_wrote_at`;
+    RENAME COLUMN `last_read_date` TO `lately_viewed_at`,
+    RENAME COLUMN `last_write_date` TO `lately_posted_at`;
 ALTER TABLE `items`
     RENAME COLUMN `access_open_date` TO `contest_opens_at`,
     RENAME COLUMN `end_contest_date` TO `contest_closes_at`;
@@ -85,11 +85,11 @@ ALTER TABLE `sessions`
     RENAME COLUMN `issued_at_date` TO `issued_at`,
     RENAME INDEX `expiration_date` TO `expires_at`;
 ALTER TABLE `threads`
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`;
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`;
 ALTER TABLE `users`
     RENAME COLUMN `registration_date` TO `registered_at`,
-    RENAME COLUMN `last_login_date` TO `last_login_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_login_date` TO `latest_login_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `notification_read_date` TO `notifications_read_at`;
 ALTER TABLE `users_answers`
     RENAME COLUMN `submission_date` TO `submitted_at`,
@@ -98,15 +98,15 @@ ALTER TABLE `users_items`
     RENAME COLUMN `start_date` TO `started_at`,
     RENAME COLUMN `validation_date` TO `validated_at`,
     RENAME COLUMN `finish_date` TO `finished_at`,
-    RENAME COLUMN `last_activity_date` TO `last_activity_at`,
+    RENAME COLUMN `last_activity_date` TO `latest_activity_at`,
     RENAME COLUMN `thread_start_date` TO `thread_started_at`,
     RENAME COLUMN `best_answer_date` TO `best_answer_at`,
-    RENAME COLUMN `last_answer_date` TO `last_answer_at`,
-    RENAME COLUMN `last_hint_date` TO `last_hint_at`,
+    RENAME COLUMN `last_answer_date` TO `latest_answer_at`,
+    RENAME COLUMN `last_hint_date` TO `latest_hint_at`,
     RENAME COLUMN `contest_start_date` TO `contest_started_at`;
 ALTER TABLE `users_threads`
-    RENAME COLUMN `last_read_date` TO `last_read_at`,
-    RENAME COLUMN `last_write_date` TO `last_wrote_at`;
+    RENAME COLUMN `last_read_date` TO `lately_viewed_at`,
+    RENAME COLUMN `last_write_date` TO `lately_posted_at`;
 
 
 DROP TRIGGER `after_insert_groups`;
@@ -123,19 +123,19 @@ CREATE TRIGGER `before_delete_groups` BEFORE DELETE ON `groups` FOR EACH ROW BEG
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_attempts`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_groups_attempts` AFTER INSERT ON `groups_attempts` FOR EACH ROW BEGIN INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`last_answer_at`,NEW.`thread_started_at`,NEW.`last_hint_at`,NEW.`finished_at`,NEW.`last_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`); END
+CREATE TRIGGER `after_insert_groups_attempts` AFTER INSERT ON `groups_attempts` FOR EACH ROW BEGIN INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`) VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`latest_answer_at`,NEW.`thread_started_at`,NEW.`latest_hint_at`,NEW.`finished_at`,NEW.`latest_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_attempts`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_update_groups_attempts` BEFORE UPDATE ON `groups_attempts` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`order` <=> NEW.`order` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`submissions_attempts` <=> NEW.`submissions_attempts` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`started_at` <=> NEW.`started_at` AND OLD.`validated_at` <=> NEW.`validated_at` AND OLD.`best_answer_at` <=> NEW.`best_answer_at` AND OLD.`last_answer_at` <=> NEW.`last_answer_at` AND OLD.`thread_started_at` <=> NEW.`thread_started_at` AND OLD.`last_hint_at` <=> NEW.`last_hint_at` AND OLD.`finished_at` <=> NEW.`finished_at` AND OLD.`contest_started_at` <=> NEW.`contest_started_at` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`last_answer_at`,NEW.`thread_started_at`,NEW.`last_hint_at`,NEW.`finished_at`,NEW.`last_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`) ; SET NEW.minus_score = -NEW.score; END IF; END
+CREATE TRIGGER `before_update_groups_attempts` BEFORE UPDATE ON `groups_attempts` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`group_id` <=> NEW.`group_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`order` <=> NEW.`order` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`submissions_attempts` <=> NEW.`submissions_attempts` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`started_at` <=> NEW.`started_at` AND OLD.`validated_at` <=> NEW.`validated_at` AND OLD.`best_answer_at` <=> NEW.`best_answer_at` AND OLD.`latest_answer_at` <=> NEW.`latest_answer_at` AND OLD.`thread_started_at` <=> NEW.`thread_started_at` AND OLD.`latest_hint_at` <=> NEW.`latest_hint_at` AND OLD.`finished_at` <=> NEW.`finished_at` AND OLD.`contest_started_at` <=> NEW.`contest_started_at` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog`) THEN   SET NEW.version = @curVersion;   UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`)       VALUES (NEW.`id`,@curVersion,NEW.`group_id`,NEW.`item_id`,NEW.`creator_user_id`,NEW.`order`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`latest_answer_at`,NEW.`thread_started_at`,NEW.`latest_hint_at`,NEW.`finished_at`,NEW.`latest_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`) ; SET NEW.minus_score = -NEW.score; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_groups_attempts`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_delete_groups_attempts` BEFORE DELETE ON `groups_attempts` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`creator_user_id`,OLD.`order`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`started_at`,OLD.`validated_at`,OLD.`best_answer_at`,OLD.`last_answer_at`,OLD.`thread_started_at`,OLD.`last_hint_at`,OLD.`finished_at`,OLD.`last_activity_at`,OLD.`contest_started_at`,OLD.`ranked`,OLD.`all_lang_prog`, 1); END
+CREATE TRIGGER `before_delete_groups_attempts` BEFORE DELETE ON `groups_attempts` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_groups_attempts` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_groups_attempts` (`id`,`version`,`group_id`,`item_id`,`creator_user_id`,`order`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`group_id`,OLD.`item_id`,OLD.`creator_user_id`,OLD.`order`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`started_at`,OLD.`validated_at`,OLD.`best_answer_at`,OLD.`latest_answer_at`,OLD.`thread_started_at`,OLD.`latest_hint_at`,OLD.`finished_at`,OLD.`latest_activity_at`,OLD.`contest_started_at`,OLD.`ranked`,OLD.`all_lang_prog`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_groups_groups`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_groups_groups` AFTER INSERT ON `groups_groups` FOR EACH ROW BEGIN INSERT INTO `history_groups_groups` (`id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_changed_at`,`inviting_user_id`) VALUES (NEW.`id`,@curVersion,NEW.`parent_group_id`,NEW.`child_group_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,NEW.`status_changed_at`,NEW.`inviting_user_id`); END
+CREATE TRIGGER `after_insert_groups_groups` AFTER INSERT ON `groups_groups` FOR EACH ROW BEGIN INSERT INTO `history_groups_groups` (`id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`type_changed_at`,`inviting_user_id`) VALUES (NEW.`id`,@curVersion,NEW.`parent_group_id`,NEW.`child_group_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,NEW.`type_changed_at`,NEW.`inviting_user_id`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_groups_groups`;
 -- +migrate StatementBegin
@@ -147,15 +147,15 @@ CREATE TRIGGER `before_update_groups_groups` BEFORE UPDATE ON `groups_groups` FO
     END IF;
     IF NOT (OLD.`id` = NEW.`id` AND OLD.`parent_group_id` <=> NEW.`parent_group_id` AND
             OLD.`child_group_id` <=> NEW.`child_group_id` AND OLD.`child_order` <=> NEW.`child_order`AND
-            OLD.`type` <=> NEW.`type` AND OLD.`role` <=> NEW.`role` AND OLD.`status_changed_at` <=> NEW.`status_changed_at` AND
+            OLD.`type` <=> NEW.`type` AND OLD.`role` <=> NEW.`role` AND OLD.`type_changed_at` <=> NEW.`type_changed_at` AND
             OLD.`inviting_user_id` <=> NEW.`inviting_user_id`) THEN
         SET NEW.version = @curVersion;
         UPDATE `history_groups_groups` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
         INSERT INTO `history_groups_groups` (
-            `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_changed_at`,`inviting_user_id`
+            `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`type_changed_at`,`inviting_user_id`
         ) VALUES (
                      NEW.`id`,@curVersion,NEW.`parent_group_id`,NEW.`child_group_id`,NEW.`child_order`,NEW.`type`,NEW.`role`,
-                     NEW.`status_changed_at`,NEW.`inviting_user_id`
+                     NEW.`type_changed_at`,NEW.`inviting_user_id`
                  );
     END IF;
     IF (OLD.child_group_id != NEW.child_group_id OR OLD.parent_group_id != NEW.parent_group_id OR OLD.type != NEW.type) THEN
@@ -199,10 +199,10 @@ CREATE TRIGGER `before_delete_groups_groups` BEFORE DELETE ON `groups_groups` FO
     SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion;
     UPDATE `history_groups_groups` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;
     INSERT INTO `history_groups_groups` (
-        `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`status_changed_at`,`inviting_user_id`,`deleted`
+        `id`,`version`,`parent_group_id`,`child_group_id`,`child_order`,`type`,`role`,`type_changed_at`,`inviting_user_id`,`deleted`
     ) VALUES (
                  OLD.`id`,@curVersion,OLD.`parent_group_id`,OLD.`child_group_id`,OLD.`child_order`,OLD.`type`,OLD.`role`,
-                 OLD.`status_changed_at`,OLD.`inviting_user_id`, 1
+                 OLD.`type_changed_at`,OLD.`inviting_user_id`, 1
              );
     INSERT IGNORE INTO `groups_propagate` (`id`, `ancestors_computation_state`) VALUES (OLD.child_group_id, 'todo')
     ON DUPLICATE KEY UPDATE `ancestors_computation_state` = 'todo';
@@ -347,51 +347,51 @@ CREATE TRIGGER `before_delete_messages` BEFORE DELETE ON `messages` FOR EACH ROW
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_threads` AFTER INSERT ON `threads` FOR EACH ROW BEGIN INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_at`) VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_at`); END
+CREATE TRIGGER `after_insert_threads` AFTER INSERT ON `threads` FOR EACH ROW BEGIN INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`latest_activity_at`) VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`latest_activity_at`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_update_threads` BEFORE UPDATE ON `threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`type` <=> NEW.`type` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`title` <=> NEW.`title` AND OLD.`admin_help_asked` <=> NEW.`admin_help_asked` AND OLD.`hidden` <=> NEW.`hidden` AND OLD.`last_activity_at` <=> NEW.`last_activity_at`) THEN   SET NEW.version = @curVersion;   UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_at`)       VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`last_activity_at`) ; END IF; END
+CREATE TRIGGER `before_update_threads` BEFORE UPDATE ON `threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`type` <=> NEW.`type` AND OLD.`creator_user_id` <=> NEW.`creator_user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`title` <=> NEW.`title` AND OLD.`admin_help_asked` <=> NEW.`admin_help_asked` AND OLD.`hidden` <=> NEW.`hidden` AND OLD.`latest_activity_at` <=> NEW.`latest_activity_at`) THEN   SET NEW.version = @curVersion;   UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`latest_activity_at`)       VALUES (NEW.`id`,@curVersion,NEW.`type`,NEW.`creator_user_id`,NEW.`item_id`,NEW.`title`,NEW.`admin_help_asked`,NEW.`hidden`,NEW.`latest_activity_at`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_delete_threads` BEFORE DELETE ON `threads` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`last_activity_at`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`type`,OLD.`creator_user_id`,OLD.`item_id`,OLD.`title`,OLD.`admin_help_asked`,OLD.`hidden`,OLD.`last_activity_at`, 1); END
+CREATE TRIGGER `before_delete_threads` BEFORE DELETE ON `threads` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_threads` (`id`,`version`,`type`,`creator_user_id`,`item_id`,`title`,`admin_help_asked`,`hidden`,`latest_activity_at`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`type`,OLD.`creator_user_id`,OLD.`item_id`,OLD.`title`,OLD.`admin_help_asked`,OLD.`hidden`,OLD.`latest_activity_at`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_users`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_users` AFTER INSERT ON `users` FOR EACH ROW BEGIN INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_at`,`last_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`) VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registered_at`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_at`,NEW.`last_activity_at`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notifications_read_at`,NEW.`login_module_prefix`,NEW.`allow_subgroups`); END
+CREATE TRIGGER `after_insert_users` AFTER INSERT ON `users` FOR EACH ROW BEGIN INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`latest_login_at`,`latest_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`) VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registered_at`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`latest_login_at`,NEW.`latest_activity_at`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notifications_read_at`,NEW.`login_module_prefix`,NEW.`allow_subgroups`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_users`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_update_users` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`login` <=> NEW.`login` AND OLD.`open_id_identity` <=> NEW.`open_id_identity` AND OLD.`password_md5` <=> NEW.`password_md5` AND OLD.`salt` <=> NEW.`salt` AND OLD.`recover` <=> NEW.`recover` AND OLD.`registered_at` <=> NEW.`registered_at` AND OLD.`email` <=> NEW.`email` AND OLD.`email_verified` <=> NEW.`email_verified` AND OLD.`first_name` <=> NEW.`first_name` AND OLD.`last_name` <=> NEW.`last_name` AND OLD.`country_code` <=> NEW.`country_code` AND OLD.`time_zone` <=> NEW.`time_zone` AND OLD.`birth_date` <=> NEW.`birth_date` AND OLD.`graduation_year` <=> NEW.`graduation_year` AND OLD.`grade` <=> NEW.`grade` AND OLD.`sex` <=> NEW.`sex` AND OLD.`student_id` <=> NEW.`student_id` AND OLD.`address` <=> NEW.`address` AND OLD.`zipcode` <=> NEW.`zipcode` AND OLD.`city` <=> NEW.`city` AND OLD.`land_line_number` <=> NEW.`land_line_number` AND OLD.`cell_phone_number` <=> NEW.`cell_phone_number` AND OLD.`default_language` <=> NEW.`default_language` AND OLD.`notify_news` <=> NEW.`notify_news` AND OLD.`notify` <=> NEW.`notify` AND OLD.`public_first_name` <=> NEW.`public_first_name` AND OLD.`public_last_name` <=> NEW.`public_last_name` AND OLD.`free_text` <=> NEW.`free_text` AND OLD.`web_site` <=> NEW.`web_site` AND OLD.`photo_autoload` <=> NEW.`photo_autoload` AND OLD.`lang_prog` <=> NEW.`lang_prog` AND OLD.`last_login_at` <=> NEW.`last_login_at` AND OLD.`last_activity_at` <=> NEW.`last_activity_at` AND OLD.`last_ip` <=> NEW.`last_ip` AND OLD.`basic_editor_mode` <=> NEW.`basic_editor_mode` AND OLD.`spaces_for_tab` <=> NEW.`spaces_for_tab` AND OLD.`member_state` <=> NEW.`member_state` AND OLD.`godfather_user_id` <=> NEW.`godfather_user_id` AND OLD.`step_level_in_site` <=> NEW.`step_level_in_site` AND OLD.`is_admin` <=> NEW.`is_admin` AND OLD.`no_ranking` <=> NEW.`no_ranking` AND OLD.`help_given` <=> NEW.`help_given` AND OLD.`self_group_id` <=> NEW.`self_group_id` AND OLD.`owned_group_id` <=> NEW.`owned_group_id` AND OLD.`access_group_id` <=> NEW.`access_group_id` AND OLD.`notifications_read_at` <=> NEW.`notifications_read_at` AND OLD.`login_module_prefix` <=> NEW.`login_module_prefix` AND OLD.`allow_subgroups` <=> NEW.`allow_subgroups`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_at`,`last_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`)       VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registered_at`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`last_login_at`,NEW.`last_activity_at`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notifications_read_at`,NEW.`login_module_prefix`,NEW.`allow_subgroups`) ; END IF; END
+CREATE TRIGGER `before_update_users` BEFORE UPDATE ON `users` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`login` <=> NEW.`login` AND OLD.`open_id_identity` <=> NEW.`open_id_identity` AND OLD.`password_md5` <=> NEW.`password_md5` AND OLD.`salt` <=> NEW.`salt` AND OLD.`recover` <=> NEW.`recover` AND OLD.`registered_at` <=> NEW.`registered_at` AND OLD.`email` <=> NEW.`email` AND OLD.`email_verified` <=> NEW.`email_verified` AND OLD.`first_name` <=> NEW.`first_name` AND OLD.`last_name` <=> NEW.`last_name` AND OLD.`country_code` <=> NEW.`country_code` AND OLD.`time_zone` <=> NEW.`time_zone` AND OLD.`birth_date` <=> NEW.`birth_date` AND OLD.`graduation_year` <=> NEW.`graduation_year` AND OLD.`grade` <=> NEW.`grade` AND OLD.`sex` <=> NEW.`sex` AND OLD.`student_id` <=> NEW.`student_id` AND OLD.`address` <=> NEW.`address` AND OLD.`zipcode` <=> NEW.`zipcode` AND OLD.`city` <=> NEW.`city` AND OLD.`land_line_number` <=> NEW.`land_line_number` AND OLD.`cell_phone_number` <=> NEW.`cell_phone_number` AND OLD.`default_language` <=> NEW.`default_language` AND OLD.`notify_news` <=> NEW.`notify_news` AND OLD.`notify` <=> NEW.`notify` AND OLD.`public_first_name` <=> NEW.`public_first_name` AND OLD.`public_last_name` <=> NEW.`public_last_name` AND OLD.`free_text` <=> NEW.`free_text` AND OLD.`web_site` <=> NEW.`web_site` AND OLD.`photo_autoload` <=> NEW.`photo_autoload` AND OLD.`lang_prog` <=> NEW.`lang_prog` AND OLD.`latest_login_at` <=> NEW.`latest_login_at` AND OLD.`latest_activity_at` <=> NEW.`latest_activity_at` AND OLD.`last_ip` <=> NEW.`last_ip` AND OLD.`basic_editor_mode` <=> NEW.`basic_editor_mode` AND OLD.`spaces_for_tab` <=> NEW.`spaces_for_tab` AND OLD.`member_state` <=> NEW.`member_state` AND OLD.`godfather_user_id` <=> NEW.`godfather_user_id` AND OLD.`step_level_in_site` <=> NEW.`step_level_in_site` AND OLD.`is_admin` <=> NEW.`is_admin` AND OLD.`no_ranking` <=> NEW.`no_ranking` AND OLD.`help_given` <=> NEW.`help_given` AND OLD.`self_group_id` <=> NEW.`self_group_id` AND OLD.`owned_group_id` <=> NEW.`owned_group_id` AND OLD.`access_group_id` <=> NEW.`access_group_id` AND OLD.`notifications_read_at` <=> NEW.`notifications_read_at` AND OLD.`login_module_prefix` <=> NEW.`login_module_prefix` AND OLD.`allow_subgroups` <=> NEW.`allow_subgroups`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`latest_login_at`,`latest_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`)       VALUES (NEW.`id`,@curVersion,NEW.`login`,NEW.`open_id_identity`,NEW.`password_md5`,NEW.`salt`,NEW.`recover`,NEW.`registered_at`,NEW.`email`,NEW.`email_verified`,NEW.`first_name`,NEW.`last_name`,NEW.`country_code`,NEW.`time_zone`,NEW.`birth_date`,NEW.`graduation_year`,NEW.`grade`,NEW.`sex`,NEW.`student_id`,NEW.`address`,NEW.`zipcode`,NEW.`city`,NEW.`land_line_number`,NEW.`cell_phone_number`,NEW.`default_language`,NEW.`notify_news`,NEW.`notify`,NEW.`public_first_name`,NEW.`public_last_name`,NEW.`free_text`,NEW.`web_site`,NEW.`photo_autoload`,NEW.`lang_prog`,NEW.`latest_login_at`,NEW.`latest_activity_at`,NEW.`last_ip`,NEW.`basic_editor_mode`,NEW.`spaces_for_tab`,NEW.`member_state`,NEW.`godfather_user_id`,NEW.`step_level_in_site`,NEW.`is_admin`,NEW.`no_ranking`,NEW.`help_given`,NEW.`self_group_id`,NEW.`owned_group_id`,NEW.`access_group_id`,NEW.`notifications_read_at`,NEW.`login_module_prefix`,NEW.`allow_subgroups`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_users`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_delete_users` BEFORE DELETE ON `users` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`last_login_at`,`last_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`login`,OLD.`open_id_identity`,OLD.`password_md5`,OLD.`salt`,OLD.`recover`,OLD.`registered_at`,OLD.`email`,OLD.`email_verified`,OLD.`first_name`,OLD.`last_name`,OLD.`country_code`,OLD.`time_zone`,OLD.`birth_date`,OLD.`graduation_year`,OLD.`grade`,OLD.`sex`,OLD.`student_id`,OLD.`address`,OLD.`zipcode`,OLD.`city`,OLD.`land_line_number`,OLD.`cell_phone_number`,OLD.`default_language`,OLD.`notify_news`,OLD.`notify`,OLD.`public_first_name`,OLD.`public_last_name`,OLD.`free_text`,OLD.`web_site`,OLD.`photo_autoload`,OLD.`lang_prog`,OLD.`last_login_at`,OLD.`last_activity_at`,OLD.`last_ip`,OLD.`basic_editor_mode`,OLD.`spaces_for_tab`,OLD.`member_state`,OLD.`godfather_user_id`,OLD.`step_level_in_site`,OLD.`is_admin`,OLD.`no_ranking`,OLD.`help_given`,OLD.`self_group_id`,OLD.`owned_group_id`,OLD.`access_group_id`,OLD.`notifications_read_at`,OLD.`login_module_prefix`,OLD.`allow_subgroups`, 1); END
+CREATE TRIGGER `before_delete_users` BEFORE DELETE ON `users` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users` (`id`,`version`,`login`,`open_id_identity`,`password_md5`,`salt`,`recover`,`registered_at`,`email`,`email_verified`,`first_name`,`last_name`,`country_code`,`time_zone`,`birth_date`,`graduation_year`,`grade`,`sex`,`student_id`,`address`,`zipcode`,`city`,`land_line_number`,`cell_phone_number`,`default_language`,`notify_news`,`notify`,`public_first_name`,`public_last_name`,`free_text`,`web_site`,`photo_autoload`,`lang_prog`,`latest_login_at`,`latest_activity_at`,`last_ip`,`basic_editor_mode`,`spaces_for_tab`,`member_state`,`godfather_user_id`,`step_level_in_site`,`is_admin`,`no_ranking`,`help_given`,`self_group_id`,`owned_group_id`,`access_group_id`,`notifications_read_at`,`login_module_prefix`,`allow_subgroups`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`login`,OLD.`open_id_identity`,OLD.`password_md5`,OLD.`salt`,OLD.`recover`,OLD.`registered_at`,OLD.`email`,OLD.`email_verified`,OLD.`first_name`,OLD.`last_name`,OLD.`country_code`,OLD.`time_zone`,OLD.`birth_date`,OLD.`graduation_year`,OLD.`grade`,OLD.`sex`,OLD.`student_id`,OLD.`address`,OLD.`zipcode`,OLD.`city`,OLD.`land_line_number`,OLD.`cell_phone_number`,OLD.`default_language`,OLD.`notify_news`,OLD.`notify`,OLD.`public_first_name`,OLD.`public_last_name`,OLD.`free_text`,OLD.`web_site`,OLD.`photo_autoload`,OLD.`lang_prog`,OLD.`latest_login_at`,OLD.`latest_activity_at`,OLD.`last_ip`,OLD.`basic_editor_mode`,OLD.`spaces_for_tab`,OLD.`member_state`,OLD.`godfather_user_id`,OLD.`step_level_in_site`,OLD.`is_admin`,OLD.`no_ranking`,OLD.`help_given`,OLD.`self_group_id`,OLD.`owned_group_id`,OLD.`access_group_id`,OLD.`notifications_read_at`,OLD.`login_module_prefix`,OLD.`allow_subgroups`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_users_items`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_users_items` AFTER INSERT ON `users_items` FOR EACH ROW BEGIN INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`last_answer_at`,NEW.`thread_started_at`,NEW.`last_hint_at`,NEW.`finished_at`,NEW.`last_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`); END
+CREATE TRIGGER `after_insert_users_items` AFTER INSERT ON `users_items` FOR EACH ROW BEGIN INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`latest_answer_at`,NEW.`thread_started_at`,NEW.`latest_hint_at`,NEW.`finished_at`,NEW.`latest_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_users_items`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_update_users_items` BEFORE UPDATE ON `users_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`active_attempt_id` <=> NEW.`active_attempt_id` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`started_at` <=> NEW.`started_at` AND OLD.`validated_at` <=> NEW.`validated_at` AND OLD.`best_answer_at` <=> NEW.`best_answer_at` AND OLD.`last_answer_at` <=> NEW.`last_answer_at` AND OLD.`thread_started_at` <=> NEW.`thread_started_at` AND OLD.`last_hint_at` <=> NEW.`last_hint_at` AND OLD.`finished_at` <=> NEW.`finished_at` AND OLD.`contest_started_at` <=> NEW.`contest_started_at` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog` AND OLD.`state` <=> NEW.`state` AND OLD.`answer` <=> NEW.`answer`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`last_answer_at`,NEW.`thread_started_at`,NEW.`last_hint_at`,NEW.`finished_at`,NEW.`last_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`) ; END IF; END
+CREATE TRIGGER `before_update_users_items` BEFORE UPDATE ON `users_items` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`item_id` <=> NEW.`item_id` AND OLD.`active_attempt_id` <=> NEW.`active_attempt_id` AND OLD.`score` <=> NEW.`score` AND OLD.`score_computed` <=> NEW.`score_computed` AND OLD.`score_reeval` <=> NEW.`score_reeval` AND OLD.`score_diff_manual` <=> NEW.`score_diff_manual` AND OLD.`score_diff_comment` <=> NEW.`score_diff_comment` AND OLD.`tasks_tried` <=> NEW.`tasks_tried` AND OLD.`children_validated` <=> NEW.`children_validated` AND OLD.`validated` <=> NEW.`validated` AND OLD.`finished` <=> NEW.`finished` AND OLD.`key_obtained` <=> NEW.`key_obtained` AND OLD.`tasks_with_help` <=> NEW.`tasks_with_help` AND OLD.`hints_requested` <=> NEW.`hints_requested` AND OLD.`hints_cached` <=> NEW.`hints_cached` AND OLD.`corrections_read` <=> NEW.`corrections_read` AND OLD.`precision` <=> NEW.`precision` AND OLD.`autonomy` <=> NEW.`autonomy` AND OLD.`started_at` <=> NEW.`started_at` AND OLD.`validated_at` <=> NEW.`validated_at` AND OLD.`best_answer_at` <=> NEW.`best_answer_at` AND OLD.`latest_answer_at` <=> NEW.`latest_answer_at` AND OLD.`thread_started_at` <=> NEW.`thread_started_at` AND OLD.`latest_hint_at` <=> NEW.`latest_hint_at` AND OLD.`finished_at` <=> NEW.`finished_at` AND OLD.`contest_started_at` <=> NEW.`contest_started_at` AND OLD.`ranked` <=> NEW.`ranked` AND OLD.`all_lang_prog` <=> NEW.`all_lang_prog` AND OLD.`state` <=> NEW.`state` AND OLD.`answer` <=> NEW.`answer`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`item_id`,NEW.`active_attempt_id`,NEW.`score`,NEW.`score_computed`,NEW.`score_reeval`,NEW.`score_diff_manual`,NEW.`score_diff_comment`,NEW.`submissions_attempts`,NEW.`tasks_tried`,NEW.`children_validated`,NEW.`validated`,NEW.`finished`,NEW.`key_obtained`,NEW.`tasks_with_help`,NEW.`hints_requested`,NEW.`hints_cached`,NEW.`corrections_read`,NEW.`precision`,NEW.`autonomy`,NEW.`started_at`,NEW.`validated_at`,NEW.`best_answer_at`,NEW.`latest_answer_at`,NEW.`thread_started_at`,NEW.`latest_hint_at`,NEW.`finished_at`,NEW.`latest_activity_at`,NEW.`contest_started_at`,NEW.`ranked`,NEW.`all_lang_prog`,NEW.`state`,NEW.`answer`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_users_items`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_delete_users_items` BEFORE DELETE ON `users_items` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`last_answer_at`,`thread_started_at`,`last_hint_at`,`finished_at`,`last_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`item_id`,OLD.`active_attempt_id`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`started_at`,OLD.`validated_at`,OLD.`best_answer_at`,OLD.`last_answer_at`,OLD.`thread_started_at`,OLD.`last_hint_at`,OLD.`finished_at`,OLD.`last_activity_at`,OLD.`contest_started_at`,OLD.`ranked`,OLD.`all_lang_prog`,OLD.`state`,OLD.`answer`, 1); END
+CREATE TRIGGER `before_delete_users_items` BEFORE DELETE ON `users_items` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_items` (`id`,`version`,`user_id`,`item_id`,`active_attempt_id`,`score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,`submissions_attempts`,`tasks_tried`,`children_validated`,`validated`,`finished`,`key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,`autonomy`,`started_at`,`validated_at`,`best_answer_at`,`latest_answer_at`,`thread_started_at`,`latest_hint_at`,`finished_at`,`latest_activity_at`,`contest_started_at`,`ranked`,`all_lang_prog`,`state`,`answer`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`item_id`,OLD.`active_attempt_id`,OLD.`score`,OLD.`score_computed`,OLD.`score_reeval`,OLD.`score_diff_manual`,OLD.`score_diff_comment`,OLD.`submissions_attempts`,OLD.`tasks_tried`,OLD.`children_validated`,OLD.`validated`,OLD.`finished`,OLD.`key_obtained`,OLD.`tasks_with_help`,OLD.`hints_requested`,OLD.`hints_cached`,OLD.`corrections_read`,OLD.`precision`,OLD.`autonomy`,OLD.`started_at`,OLD.`validated_at`,OLD.`best_answer_at`,OLD.`latest_answer_at`,OLD.`thread_started_at`,OLD.`latest_hint_at`,OLD.`finished_at`,OLD.`latest_activity_at`,OLD.`contest_started_at`,OLD.`ranked`,OLD.`all_lang_prog`,OLD.`state`,OLD.`answer`, 1); END
 -- +migrate StatementEnd
 DROP TRIGGER `after_insert_users_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `after_insert_users_threads` AFTER INSERT ON `users_threads` FOR EACH ROW BEGIN INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`last_read_at`,`last_wrote_at`,`starred`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`thread_id`,NEW.`last_read_at`,NEW.`last_wrote_at`,NEW.`starred`); END
+CREATE TRIGGER `after_insert_users_threads` AFTER INSERT ON `users_threads` FOR EACH ROW BEGIN INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`lately_viewed_at`,`lately_posted_at`,`starred`) VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`thread_id`,NEW.`lately_viewed_at`,NEW.`lately_posted_at`,NEW.`starred`); END
 -- +migrate StatementEnd
 DROP TRIGGER `before_update_users_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_update_users_threads` BEFORE UPDATE ON `users_threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`thread_id` <=> NEW.`thread_id` AND OLD.`last_read_at` <=> NEW.`last_read_at` AND OLD.`last_wrote_at` <=> NEW.`last_wrote_at` AND OLD.`starred` <=> NEW.`starred`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`last_read_at`,`last_wrote_at`,`starred`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`thread_id`,NEW.`last_read_at`,NEW.`last_wrote_at`,NEW.`starred`) ; END IF; END
+CREATE TRIGGER `before_update_users_threads` BEFORE UPDATE ON `users_threads` FOR EACH ROW BEGIN IF NEW.version <> OLD.version THEN SET @curVersion = NEW.version; ELSE SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; END IF; IF NOT (OLD.`id` = NEW.`id` AND OLD.`user_id` <=> NEW.`user_id` AND OLD.`thread_id` <=> NEW.`thread_id` AND OLD.`lately_viewed_at` <=> NEW.`lately_viewed_at` AND OLD.`lately_posted_at` <=> NEW.`lately_posted_at` AND OLD.`starred` <=> NEW.`starred`) THEN   SET NEW.version = @curVersion;   UPDATE `history_users_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL;   INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`lately_viewed_at`,`lately_posted_at`,`starred`)       VALUES (NEW.`id`,@curVersion,NEW.`user_id`,NEW.`thread_id`,NEW.`lately_viewed_at`,NEW.`lately_posted_at`,NEW.`starred`) ; END IF; END
 -- +migrate StatementEnd
 DROP TRIGGER `before_delete_users_threads`;
 -- +migrate StatementBegin
-CREATE TRIGGER `before_delete_users_threads` BEFORE DELETE ON `users_threads` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`last_read_at`,`last_wrote_at`,`starred`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`thread_id`,OLD.`last_read_at`,OLD.`last_wrote_at`,OLD.`starred`, 1); END
+CREATE TRIGGER `before_delete_users_threads` BEFORE DELETE ON `users_threads` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_users_threads` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_users_threads` (`id`,`version`,`user_id`,`thread_id`,`lately_viewed_at`,`lately_posted_at`,`starred`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`user_id`,OLD.`thread_id`,OLD.`lately_viewed_at`,OLD.`lately_posted_at`,OLD.`starred`, 1); END
 -- +migrate StatementEnd
 
 ALTER ALGORITHM=UNDEFINED
@@ -430,14 +430,14 @@ ALTER TABLE `groups_attempts`
     RENAME COLUMN `started_at` TO `start_date`,
     RENAME COLUMN `validated_at` TO `validation_date`,
     RENAME COLUMN `finished_at` TO `finish_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `thread_started_at` TO `thread_start_date`,
     RENAME COLUMN `best_answer_at` TO `best_answer_date`,
-    RENAME COLUMN `last_answer_at` TO `last_answer_date`,
-    RENAME COLUMN `last_hint_at` TO `last_hint_date`,
+    RENAME COLUMN `latest_answer_at` TO `last_answer_date`,
+    RENAME COLUMN `latest_hint_at` TO `last_hint_date`,
     RENAME COLUMN `contest_started_at` TO `contest_start_date`;
 ALTER TABLE `groups_groups`
-    RENAME COLUMN `status_changed_at` TO `status_date`;
+    RENAME COLUMN `type_changed_at` TO `status_date`;
 ALTER TABLE `groups_items`
     RENAME COLUMN `partial_access_since` TO `partial_access_date`,
     RENAME COLUMN `full_access_since` TO `full_access_date`,
@@ -454,14 +454,14 @@ ALTER TABLE `history_groups_attempts`
     RENAME COLUMN `started_at` TO `start_date`,
     RENAME COLUMN `validated_at` TO `validation_date`,
     RENAME COLUMN `finished_at` TO `finish_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `thread_started_at` TO `thread_start_date`,
     RENAME COLUMN `best_answer_at` TO `best_answer_date`,
-    RENAME COLUMN `last_answer_at` TO `last_answer_date`,
-    RENAME COLUMN `last_hint_at` TO `last_hint_date`,
+    RENAME COLUMN `latest_answer_at` TO `last_answer_date`,
+    RENAME COLUMN `latest_hint_at` TO `last_hint_date`,
     RENAME COLUMN `contest_started_at` TO `contest_start_date`;
 ALTER TABLE `history_groups_groups`
-    RENAME COLUMN `status_changed_at` TO `status_date`;
+    RENAME COLUMN `type_changed_at` TO `status_date`;
 ALTER TABLE `history_groups_items`
     RENAME COLUMN `partial_access_since` TO `partial_access_date`,
     RENAME COLUMN `full_access_since` TO `full_access_date`,
@@ -476,25 +476,25 @@ ALTER TABLE `history_items`
 ALTER TABLE `history_messages`
     RENAME COLUMN `submitted_at` TO `submission_date`;
 ALTER TABLE `history_threads`
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`;
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`;
 ALTER TABLE `history_users`
     RENAME COLUMN `registered_at` TO `registration_date`,
-    RENAME COLUMN `last_login_at` TO `last_login_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_login_at` TO `last_login_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `notifications_read_at` TO `notification_read_date`;
 ALTER TABLE `history_users_items`
     RENAME COLUMN `started_at` TO `start_date`,
     RENAME COLUMN `validated_at` TO `validation_date`,
     RENAME COLUMN `finished_at` TO `finish_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `thread_started_at` TO `thread_start_date`,
     RENAME COLUMN `best_answer_at` TO `best_answer_date`,
-    RENAME COLUMN `last_answer_at` TO `last_answer_date`,
-    RENAME COLUMN `last_hint_at` TO `last_hint_date`,
+    RENAME COLUMN `latest_answer_at` TO `last_answer_date`,
+    RENAME COLUMN `latest_hint_at` TO `last_hint_date`,
     RENAME COLUMN `contest_started_at` TO `contest_start_date`;
 ALTER TABLE `history_users_threads`
-    RENAME COLUMN `last_read_at` TO `last_read_date`,
-    RENAME COLUMN `last_wrote_at` TO `last_write_date`;
+    RENAME COLUMN `lately_viewed_at` TO `last_read_date`,
+    RENAME COLUMN `lately_posted_at` TO `last_write_date`;
 ALTER TABLE `items`
     RENAME COLUMN `contest_opens_at` TO `access_open_date`,
     RENAME COLUMN `contest_closes_at` TO `end_contest_date`;
@@ -508,11 +508,11 @@ ALTER TABLE `sessions`
     RENAME COLUMN `issued_at` TO `issued_at_date`,
     RENAME INDEX `expires_at` TO `expiration_date`;
 ALTER TABLE `threads`
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`;
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`;
 ALTER TABLE `users`
     RENAME COLUMN `registered_at` TO `registration_date`,
-    RENAME COLUMN `last_login_at` TO `last_login_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_login_at` TO `last_login_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `notifications_read_at` TO `notification_read_date`;
 ALTER TABLE `users_answers`
     RENAME COLUMN `submitted_at` TO `submission_date`,
@@ -521,15 +521,15 @@ ALTER TABLE `users_items`
     RENAME COLUMN `started_at` TO `start_date`,
     RENAME COLUMN `validated_at` TO `validation_date`,
     RENAME COLUMN `finished_at` TO `finish_date`,
-    RENAME COLUMN `last_activity_at` TO `last_activity_date`,
+    RENAME COLUMN `latest_activity_at` TO `last_activity_date`,
     RENAME COLUMN `thread_started_at` TO `thread_start_date`,
     RENAME COLUMN `best_answer_at` TO `best_answer_date`,
-    RENAME COLUMN `last_answer_at` TO `last_answer_date`,
-    RENAME COLUMN `last_hint_at` TO `last_hint_date`,
+    RENAME COLUMN `latest_answer_at` TO `last_answer_date`,
+    RENAME COLUMN `latest_hint_at` TO `last_hint_date`,
     RENAME COLUMN `contest_started_at` TO `contest_start_date`;
 ALTER TABLE `users_threads`
-    RENAME COLUMN `last_read_at` TO `last_read_date`,
-    RENAME COLUMN `last_wrote_at` TO `last_write_date`;
+    RENAME COLUMN `lately_viewed_at` TO `last_read_date`,
+    RENAME COLUMN `lately_posted_at` TO `last_write_date`;
 
 DROP TRIGGER `after_insert_groups`;
 -- +migrate StatementBegin

@@ -26,7 +26,7 @@ type groupTeamProgressResponseRow struct {
 	Validated bool `json:"validated"`
 	// Nullable
 	// required:true
-	LastActivityAt *database.Time `json:"last_activity_at"`
+	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the attempt with the best score (if multiple, take the first one, chronologically).
 	// If there are no attempts, the number of hints is 0.
 	// required:true
@@ -150,7 +150,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			groups.id AS group_id,
 			IFNULL(attempt_with_best_score.score, 0) AS score,
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
-			(SELECT MAX(last_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS last_activity_at,
+			(SELECT MAX(latest_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
 			IFNULL(attempt_with_best_score.submissions_attempts, 0) AS submissions_attempts,
 			IF(attempt_with_best_score.group_id IS NULL,
