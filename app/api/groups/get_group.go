@@ -16,9 +16,9 @@ type GroupViewResponseCodePart struct {
 	// Nullable
 	Code *string `json:"code"`
 	// Nullable
-	CodeTimer *string `json:"code_timer"`
+	CodeLifetime *string `json:"code_lifetime"`
 	// Nullable
-	CodeEnd *database.Time `json:"code_end"`
+	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
 
 // swagger:model groupViewResponse
@@ -35,7 +35,7 @@ type groupViewResponse struct {
 	Description *string `json:"description"`
 	// Nullable
 	// required:true
-	DateCreated *database.Time `json:"date_created"`
+	CreatedAt *database.Time `json:"created_at"`
 	// required:true
 	// enum: Class,Team,Club,Friends,Other,UserSelf
 	Type string `json:"type"`
@@ -109,11 +109,11 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 					groups_groups.parent_group_id = groups.id AND groups_groups.child_group_id = ?`, user.SelfGroupID).
 		Where("groups_ancestors.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
 		Where("groups.id = ?", groupID).Select(
-		`groups.id, groups.name, groups.grade, groups.description, groups.date_created,
+		`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
 			groups.type, groups.redirect_path, groups.opened, groups.free_access,
 			IF(groups_ancestors.id IS NOT NULL, groups.code, NULL) AS code,
-			IF(groups_ancestors.id IS NOT NULL, groups.code_timer, NULL) AS code_timer,
-			IF(groups_ancestors.id IS NOT NULL, groups.code_end, NULL) AS code_end,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_lifetime, NULL) AS code_lifetime,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_contest,
 			groups_ancestors.id IS NOT NULL AS current_user_is_owner,
 			groups_groups.id IS NOT NULL AS current_user_is_member`).Limit(1)

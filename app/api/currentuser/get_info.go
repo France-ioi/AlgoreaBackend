@@ -20,7 +20,7 @@ type getInfoData struct {
 	Login string `json:"login"`
 	// Nullable
 	// required: true
-	RegistrationDate *database.Time `json:"registration_date"`
+	RegisteredAt *database.Time `json:"registered_at"`
 	// Nullable
 	// required: true
 	Email *string `json:"email"`
@@ -128,7 +128,7 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 
 	var userInfo getInfoData
 	err := srv.Store.Users().ByID(user.ID).
-		Select(`id, temp_user, login, registration_date, email, email_verified, first_name, last_name,
+		Select(`id, temp_user, login, registered_at, email, email_verified, first_name, last_name,
 			student_id, country_code, time_zone,
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
 			city, land_line_number, cell_phone_number, default_language, public_first_name, public_last_name,

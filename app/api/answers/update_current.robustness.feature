@@ -10,16 +10,16 @@ Feature: Update the 'current' answer
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_date |
-      | 15 | 22              | 13             | direct | null        |
+      | id | parent_group_id | child_group_id | type   | type_changed_at |
+      | 15 | 22              | 13             | direct | null            |
     And the database has the following table 'items':
       | id |
       | 50 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
+      | group_id | item_id | cached_partial_access_since | creator_user_id |
+      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | attempt_id | submission_date     |
+      | id  | user_id | item_id | attempt_id | submitted_at        |
       | 100 | 10      | 50      | 200        | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |

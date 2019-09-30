@@ -29,9 +29,9 @@ func CreateLoginState(s *database.LoginStateStore, conf *config.Server) (*http.C
 			return err
 		}
 		return retryStore.LoginStates().InsertMap(map[string]interface{}{
-			"cookie":          cookie,
-			"state":           state,
-			"expiration_date": gorm.Expr("? + INTERVAL ? SECOND", database.Now(), loginStateLifetimeInSeconds),
+			"cookie":     cookie,
+			"state":      state,
+			"expires_at": gorm.Expr("? + INTERVAL ? SECOND", database.Now(), loginStateLifetimeInSeconds),
 		})
 	})
 	if err != nil {
@@ -87,7 +87,7 @@ func LoadLoginState(s *database.LoginStateStore, r *http.Request, state string) 
 	}
 
 	var stateFromDB []string
-	err = s.Where("cookie = ?", cookie.Value).Where("expiration_date > NOW()").
+	err = s.Where("cookie = ?", cookie.Value).Where("expires_at > NOW()").
 		Limit(1).Pluck("state", &stateFromDB).Error()
 	if err != nil {
 		return &LoginState{ok: false}, err

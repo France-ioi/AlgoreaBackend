@@ -43,7 +43,7 @@ Feature: Reject group requests
       | 141               | 141            | 1       |
       | 151               | 151            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | type_changed_at           |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |
@@ -81,7 +81,7 @@ Feature: Reject group requests
     """
     And the table "groups_groups" should stay unchanged but the row with id "3,14"
     And the table "groups_groups" at id "3,14" should be:
-      | id | parent_group_id | child_group_id | type           | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
-      | 3  | 13              | 31             | requestRefused | 1                                                                                  |
-      | 14 | 13              | 141            | requestRefused | 1                                                                                  |
+      | id | parent_group_id | child_group_id | type           | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 3  | 13              | 31             | requestRefused | 1                                                                                          |
+      | 14 | 13              | 141            | requestRefused | 1                                                                                          |
     And the table "groups_ancestors" should stay unchanged

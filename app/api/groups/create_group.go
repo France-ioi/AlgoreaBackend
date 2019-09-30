@@ -31,7 +31,7 @@ type createGroupRequest struct {
 // summary: Create a group
 // description: >
 //
-//   Creates a group with the input `name`, `type`, `date_created` = now(), and default values in other columns.
+//   Creates a group with the input `name`, `type`, `created_at` = now(), and default values in other columns.
 //   If `item_id` is given:
 //
 //     * If `type` != "Team", returns the "badRequest" response
@@ -106,7 +106,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 				"name":         input.Name,
 				"type":         input.Type,
 				"team_item_id": input.ItemID,
-				"date_created": database.Now(),
+				"created_at":   database.Now(),
 			})
 		}))
 		return store.GroupGroups().CreateRelationsWithoutChecking([]database.ParentChild{

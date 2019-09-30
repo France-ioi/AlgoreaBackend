@@ -30,7 +30,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //     * `type` = "invitationSent"
 //
-//     * `status_date` = current UTC time
+//     * `type_changed_at` = current UTC time
 //
 //     * `inviting_user_id` = `users.id` of the authorized user,
 //

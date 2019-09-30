@@ -45,7 +45,7 @@ Feature: Get members of group_id
       | 92                | 92             | 1       |
       | 22                | 11             | 0       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         | inviting_user_id |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     | inviting_user_id |
       | 2  | 13              | 11             | invitationRefused  | 2017-11-29 06:38:38 | 3                |
       | 1  | 13              | 21             | invitationSent     | 2017-10-29 06:38:38 | 2                |
       | 3  | 13              | 31             | requestSent        | 2017-09-29 06:38:38 | 1                |
@@ -77,7 +77,7 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "invitationAccepted"
       },
       {
@@ -89,7 +89,7 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -101,7 +101,7 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "status_date": "2017-03-29T06:38:38Z",
+        "type_changed_at": "2017-03-29T06:38:38Z",
         "type": "direct"
       }
     ]
@@ -123,7 +123,7 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "invitationAccepted"
       },
       {
@@ -135,7 +135,7 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "status_date": "2017-03-29T06:38:38Z",
+        "type_changed_at": "2017-03-29T06:38:38Z",
         "type": "direct"
       },
       {
@@ -147,7 +147,7 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "requestAccepted"
       }
     ]
@@ -169,7 +169,7 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -181,7 +181,7 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "status_date": "2017-03-29T06:38:38Z",
+        "type_changed_at": "2017-03-29T06:38:38Z",
         "type": "direct"
       },
       {
@@ -193,7 +193,7 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "invitationAccepted"
       }
     ]
@@ -215,7 +215,7 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "invitationAccepted"
       }
     ]
@@ -231,7 +231,7 @@ Feature: Get members of group_id
       {
         "id": "15",
         "user": null,
-        "status_date": "2016-10-29T06:38:38Z",
+        "type_changed_at": "2016-10-29T06:38:38Z",
         "type": "direct"
       }
     ]

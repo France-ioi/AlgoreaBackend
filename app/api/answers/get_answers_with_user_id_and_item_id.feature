@@ -28,15 +28,15 @@ Background:
     | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
     | 210 | Category | false          | false    | 1234,2345         | true               | 0       |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-    | 45 | 23       | 190     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-    | 46 | 23       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-    | 47 | 23       | 210     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | 45 | 23       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+    | 46 | 23       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | 47 | 23       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
   And the database has the following table 'users_answers':
-    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submission_date     | score | validated |
+    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
     | 1  | 1       | 200     | 1          | My answer        | Submission | Current | python    | 2017-05-29 06:37:38 | 100   | true      |
     | 2  | 1       | 200     | 2          | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     | 3  | 1       | 210     | 3          | My third answer  | Submission | Current | python    | 2017-05-29 06:39:38 | 100   | true      |
@@ -53,7 +53,7 @@ Background:
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -67,7 +67,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:37:38Z",
+        "submitted_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -91,7 +91,7 @@ Background:
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -105,7 +105,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:37:38Z",
+        "submitted_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -129,7 +129,7 @@ Background:
         "lang_prog": "python",
         "name": "My third answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:39:38Z",
+        "submitted_at": "2017-05-29T06:39:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -153,7 +153,7 @@ Background:
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -167,7 +167,7 @@ Background:
 
   Scenario: Full access on the item+user pair (same user) [with limit and reversed order]
     Given I am the user with id "1"
-    When I send a GET request to "/answers?item_id=200&user_id=1&limit=1&sort=submission_date"
+    When I send a GET request to "/answers?item_id=200&user_id=1&limit=1&sort=submitted_at"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -177,7 +177,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:37:38Z",
+        "submitted_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -191,7 +191,7 @@ Background:
 
   Scenario: Start from the second row
     Given I am the user with id "2"
-    When I send a GET request to "/answers?item_id=200&user_id=1&from.submission_date=2017-05-29T06:38:38Z&from.id=2"
+    When I send a GET request to "/answers?item_id=200&user_id=1&from.submitted_at=2017-05-29T06:38:38Z&from.id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -201,7 +201,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:37:38Z",
+        "submitted_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",

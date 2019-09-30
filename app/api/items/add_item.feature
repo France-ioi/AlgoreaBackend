@@ -47,8 +47,8 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | access_open_date | duration | end_contest_date | show_user_infos | contest_phase | level | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | null      | 0              | null               | 0                | 0            | null             | null     | null             | 0               | Running       | null  | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | contest_opens_at | duration | contest_closes_at | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | null      | 0              | null               | 0                | 0            | null             | null     | null              | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
       | 6129484611666145821 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -59,8 +59,8 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |
+      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "1"
@@ -103,9 +103,9 @@ Feature: Add item
         "qualified_group_id": "12345",
         "team_max_members": 2345,
         "has_attempts": true,
-        "access_open_date": "2018-01-02T03:04:05Z",
+        "contest_opens_at": "2018-01-02T03:04:05Z",
         "duration": "01:02:03",
-        "end_contest_date": "2019-02-03T04:05:06Z",
+        "contest_closes_at": "2019-02-03T04:05:06Z",
         "show_user_infos": true,
         "contest_phase": "Analysis",
         "level": 345,
@@ -134,7 +134,7 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | access_open_date    | duration | end_contest_date    | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | contest_opens_at    | duration | contest_closes_at   | show_user_infos | contest_phase | level | no_score | group_code_enter |
       | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1              | 1                         | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34             | 34               | All       | 1              | 12345              | 2345             | 1            | 2018-01-02 03:04:05 | 01:02:03 | 2019-02-03 04:05:06 | 1               | Analysis      | 345   | 1        | 1                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
@@ -152,8 +152,8 @@ Feature: Add item
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |
+      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "1"
@@ -178,8 +178,8 @@ Feature: Add item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | access_open_date | duration | end_contest_date | show_user_infos | contest_phase | level | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | null      | 0              | null               | 0                | 0            | null             | null     | null             | 0               | Running       | null  | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | team_mode | teams_editable | qualified_group_id | team_max_members | has_attempts | contest_opens_at | duration | contest_closes_at | show_user_infos | contest_phase | level | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | null      | 0              | null               | 0                | 0            | null             | null     | null              | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url | subtitle | description |
       | 6129484611666145821 | 5577006791947779410 | 3           | my title | null      | null     | null        |
@@ -190,5 +190,5 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_date, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_date, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                       | 1            | 1                     | 1                                                              | 1                  |
+      | id                  | group_id | item_id             | creator_user_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 1               | 1                                                        | 1            | 1                     | 1                                                               | 1                  |

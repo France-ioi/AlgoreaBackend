@@ -16,7 +16,7 @@ Feature: User rejects an invitation to join a group
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type              | status_date         |
+      | id | parent_group_id | child_group_id | type              | type_changed_at     |
       | 1  | 11              | 21             | invitationSent    | 2017-04-29 06:38:38 |
       | 7  | 14              | 21             | invitationRefused | 2017-02-21 06:38:38 |
 
@@ -34,8 +34,8 @@ Feature: User rejects an invitation to join a group
     """
     And the table "groups_groups" should stay unchanged but the row with id "1"
     And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type              | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
-      | 1  | 11              | 21             | invitationRefused | 1                                                                                  |
+      | id | parent_group_id | child_group_id | type              | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 1  | 11              | 21             | invitationRefused | 1                                                                                          |
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Reject an already rejected invitation

@@ -41,11 +41,11 @@ Feature: Update active attempt for an item - robustness
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_full_access_date | cached_grayed_access_date | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38        | null                    | null                      | 101             |
-      | 101      | 60      | 2017-05-29 06:38:38        | null                    | null                      | 101             |
-      | 111      | 50      | null                       | 2017-05-29 06:38:38     | null                      | 101             |
-      | 121      | 50      | null                       | null                    | 2017-05-29 06:38:38       | 101             |
+      | group_id | item_id | cached_partial_access_since | cached_full_access_since | cached_grayed_access_since | creator_user_id |
+      | 101      | 50      | 2017-05-29 06:38:38         | null                     | null                       | 101             |
+      | 101      | 60      | 2017-05-29 06:38:38         | null                     | null                       | 101             |
+      | 111      | 50      | null                        | 2017-05-29 06:38:38      | null                       | 101             |
+      | 121      | 50      | null                        | null                     | 2017-05-29 06:38:38        | 101             |
 
   Scenario: Invalid groups_attempt_id
     Given I am the user with id "10"

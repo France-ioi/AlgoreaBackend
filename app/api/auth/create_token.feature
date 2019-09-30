@@ -7,7 +7,7 @@ Feature: Request a new access token
       | 4  | john        | false     |
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | user_id | expiration_date     | access_token              |
+      | user_id | expires_at          | access_token              |
       | 2       | 2019-07-16 22:02:29 | someaccesstoken           |
       | 2       | 2019-07-16 22:02:40 | anotheraccesstoken        |
       | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
@@ -43,7 +43,7 @@ Feature: Request a new access token
       Generated a session token expiring in 7200 seconds for a temporary user 2
       """
     And the table "sessions" should be:
-      | user_id | expiration_date     | access_token              |
+      | user_id | expires_at          | access_token              |
       | 2       | 2019-07-16 22:02:29 | someaccesstoken           |
       | 2       | 2019-07-17 00:02:28 | newaccesstoken            |
       | 3       | 2019-07-16 22:02:29 | accesstokenforjane        |
@@ -73,7 +73,7 @@ Feature: Request a new access token
       }
       """
     And the table "sessions" should be:
-      | user_id | expiration_date     | access_token          |
+      | user_id | expires_at          | access_token          |
       | 2       | 2019-07-16 22:02:29 | someaccesstoken       |
       | 2       | 2019-07-16 22:02:40 | anotheraccesstoken    |
       | 3       | 2019-07-16 22:02:29 | accesstokenforjane    |

@@ -40,12 +40,12 @@ Feature: Create a temporary user
       Generated a session token expiring in 7200 seconds for a temporary user 5577006791947779410
       """
     And the table "users" at id "5577006791947779410" should be:
-      | id                  | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registration_date, NOW())) < 3 | self_group_id       | owned_group_id | last_ip   |
-      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                     | 6129484611666145821 | null           | 127.0.0.1 |
+      | id                  | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | self_group_id       | owned_group_id | last_ip   |
+      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | 6129484611666145821 | null           | 127.0.0.1 |
     And the table "groups" should stay unchanged but the row with id "6129484611666145821"
     And the table "groups" at id "6129484611666145821" should be:
-      | id                  | name         | type     | description  | ABS(TIMESTAMPDIFF(SECOND, date_created, NOW())) < 3 | opened | send_emails |
-      | 6129484611666145821 | tmp-49727887 | UserSelf | tmp-49727887 | true                                                | false  | false       |
+      | id                  | name         | type     | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | opened | send_emails |
+      | 6129484611666145821 | tmp-49727887 | UserSelf | tmp-49727887 | true                                              | false  | false       |
     And the table "groups_groups" should stay unchanged but the row with id "4037200794235010051"
     And the table "groups_groups" at id "4037200794235010051" should be:
       | id                  | parent_group_id | child_group_id      | child_order |
@@ -65,5 +65,5 @@ Feature: Create a temporary user
       | 4                   | 6129484611666145821 | false   |
       | 6129484611666145821 | 6129484611666145821 | true    |
     And the table "sessions" should be:
-      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expiration_date) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at_date)) < 3 | issuer  |
-      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                          | 5577006791947779410 | true                                                  | backend |
+      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
+      | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend |

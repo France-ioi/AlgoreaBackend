@@ -15,11 +15,11 @@ import (
 )
 
 type unlocksResultRow struct {
-	GroupID                 int64
-	ItemID                  int64
-	PartialAccessDate       *database.Time
-	CachedPartialAccessDate *database.Time
-	CachedPartialAccess     bool
+	GroupID                  int64
+	ItemID                   int64
+	PartialAccessSince       *database.Time
+	CachedPartialAccessSince *database.Time
+	CachedPartialAccess      bool
 }
 
 func TestUserItemStore_ComputeAllUserItems_Unlocks(t *testing.T) {
@@ -114,15 +114,15 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	}, result)
 	var count int64
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, cached_partial_access_date, NOW()) > 1").Count(&count).Error())
+		Where("TIMESTAMPDIFF(SECOND, cached_partial_access_since, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, partial_access_date, NOW()) > 1").Count(&count).Error())
+		Where("TIMESTAMPDIFF(SECOND, partial_access_since, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("cached_partial_access_date IS NULL").Count(&count).Error())
+		Where("cached_partial_access_since IS NULL").Count(&count).Error())
 	assert.Zero(t, count)
 	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("partial_access_date IS NULL").Count(&count).Error())
+		Where("partial_access_since IS NULL").Count(&count).Error())
 	assert.Zero(t, count)
 }

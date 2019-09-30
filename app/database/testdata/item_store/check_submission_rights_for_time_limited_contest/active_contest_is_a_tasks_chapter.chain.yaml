@@ -1,8 +1,8 @@
 users: [{id: 5, self_group_id: 15, login: 5}]
 users_items: [{user_id: 5, item_id: 115}]
 groups: [{id: 15}, {id: 24}]
-groups_items: [{group_id: 24, item_id: 115, partial_access_date: 2019-03-22 08:44:55,
-                cached_partial_access_date: 2019-03-22 08:44:55, additional_time: 0000-00-00 01:00:00, creator_user_id: 1}]
+groups_items: [{group_id: 24, item_id: 115, partial_access_since: 2019-03-22 08:44:55,
+                cached_partial_access_since: 2019-03-22 08:44:55, additional_time: 0000-00-00 01:00:00, creator_user_id: 1}]
 groups_groups: [{parent_group_id: 24, child_group_id: 15, type: requestAccepted}]
 groups_ancestors:
   - {ancestor_group_id: 15, child_group_id: 15}

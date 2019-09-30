@@ -39,7 +39,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Delete("/current-user/group-memberships/{group_id}", service.AppHandler(srv.leaveGroup).ServeHTTP)
 	router.Get("/current-user/group-memberships-history", service.AppHandler(srv.getGroupMembershipsHistory).ServeHTTP)
 
-	router.Put("/current-user/notification-read-date", service.AppHandler(srv.updateNotificationReadDate).ServeHTTP)
+	router.Put("/current-user/notifications-read-at", service.AppHandler(srv.updateNotificationsReadAt).ServeHTTP)
 	router.Put("/current-user/refresh", service.AppHandler(srv.refresh).ServeHTTP)
 
 	router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
@@ -72,7 +72,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	if action == leaveGroupAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).
-			Where("lock_user_deletion_date IS NULL OR lock_user_deletion_date <= NOW()").HasRows()
+			Where("lock_user_deletion_until IS NULL OR lock_user_deletion_until <= NOW()").HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.ErrForbidden(errors.New("user deletion is locked for this group"))

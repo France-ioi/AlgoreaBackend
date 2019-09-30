@@ -118,16 +118,16 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {id: 501, login: 501, temp_user: 1, self_group_id: 5001, owned_group_id: 6001}
 				- {id: 502, login: 502, self_group_id: 5002, owned_group_id: 6002}
 			sessions:
-				- {user_id: 500, expiration_date: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
-				- {user_id: 501, expiration_date: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
-				- {user_id: 501, expiration_date: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 500, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 501, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 501, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
 			users_threads: [{user_id: 500, thread_id: 1}, {user_id: 501, thread_id: 1}, {user_id: 502, thread_id: 1}]
 			history_users_threads: [{user_id: 500, id: 1, thread_id: 1, version: 1}, {user_id: 501, id: 2, thread_id: 2, version: 1},
 			                        {user_id: 502, id: 3, thread_id: 3, version: 1}]
 			users_answers:
-				- {user_id: 500, item_id: 1, submission_date: 2019-05-30 11:00:00}
-				- {user_id: 501, item_id: 1, submission_date: 2019-05-30 11:00:00}
-				- {user_id: 502, item_id: 1, submission_date: 2019-05-30 11:00:00}
+				- {user_id: 500, item_id: 1, submitted_at: 2019-05-30 11:00:00}
+				- {user_id: 501, item_id: 1, submitted_at: 2019-05-30 11:00:00}
+				- {user_id: 502, item_id: 1, submitted_at: 2019-05-30 11:00:00}
 			users_items: [{user_id: 500, item_id: 1}, {user_id: 501, item_id: 1}, {user_id: 502, item_id: 1}]
 			history_users_items:
 				- {user_id: 500, item_id: 1, id: 1, submissions_attempts: 0, tasks_tried: 0, children_validated: 0,

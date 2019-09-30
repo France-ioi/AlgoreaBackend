@@ -26,7 +26,7 @@ Feature: Export the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         | inviting_user_id |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     | inviting_user_id |
       | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
       | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 1                |
       | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 1                |
@@ -61,7 +61,7 @@ Feature: Export the current user's data
       | 12                | 2              | false   |
       | 12                | 12             | true    |
     And the database has the following table 'users_answers':
-      | id | user_id | item_id | submission_date     |
+      | id | user_id | item_id | submitted_at        |
       | 1  | 2       | 404     | 2019-07-09 21:02:28 |
       | 2  | 3       | 405     | 2019-07-09 21:02:28 |
     And the database has the following table 'users_items':
@@ -91,9 +91,9 @@ Feature: Export the current user's data
         "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
-        "last_activity_date": null, "last_ip": null, "last_login_date": null, "last_name": "Doe", "login": "user",
-        "notification_read_date": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
-        "recover": null, "registration_date": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
+        "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
+        "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
+        "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
         "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_attempts": [
@@ -103,9 +103,9 @@ Feature: Export the current user's data
           "group_id": "11", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
-          "best_answer_date": null, "contest_start_date": null, "finish_date": null, "hints_requested": null,
-          "last_activity_date": null, "last_answer_date": null, "last_hint_date": null, "score_diff_comment": "",
-          "start_date": null, "thread_start_date": null, "validation_date": null
+          "best_answer_at": null, "contest_started_at": null, "finished_at": null, "hints_requested": null,
+          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
+          "started_at": null, "thread_started_at": null, "validated_at": null
         },
         {
           "id": "112", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0, "minus_score": -0,
@@ -113,51 +113,51 @@ Feature: Export the current user's data
           "group_id": "2", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
-          "best_answer_date": null, "contest_start_date": null, "finish_date": null, "hints_requested": null,
-          "last_activity_date": null, "last_answer_date": null, "last_hint_date": null, "score_diff_comment": "",
-          "start_date": null, "thread_start_date": null, "validation_date": null
+          "best_answer_at": null, "contest_started_at": null, "finished_at": null, "hints_requested": null,
+          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
+          "started_at": null, "thread_started_at": null, "validated_at": null
         }
       ],
       "groups_groups": [
         {
           "id": "2", "child_order": 0, "child_group_id": "11", "parent_group_id": "1", "inviting_user_id": null,
-          "name": "Our Class", "role": "member", "status_date": "2019-07-09T21:02:28Z", "type": "invitationSent"
+          "name": "Our Class", "role": "member", "type_changed_at": "2019-07-09T21:02:28Z", "type": "invitationSent"
         },
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "1",
-          "name": "Our Team", "role": "member", "status_date": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
+          "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
         },
         {
           "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "1",
-          "name": "Our Club", "role": "member", "status_date": "2019-07-09T23:02:28Z", "type": "requestSent"
+          "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent"
         },
         {
           "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "2",
-          "name": "Our Friends", "role": "member", "status_date": "2019-07-10T00:02:28Z", "type": "requestRefused"
+          "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "2",
-          "name": "Other people", "role": "member", "status_date": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
+          "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "2",
-          "name": "Another Class", "role": "member", "status_date": "2019-07-10T02:02:28Z", "type": "requestAccepted"
+          "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted"
         },
         {
           "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "1",
-          "name": "Another Team", "role": "member", "status_date": "2019-07-10T03:02:28Z", "type": "removed"
+          "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed"
         },
         {
           "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "1",
-          "name": "Another Club", "role": "member", "status_date": "2019-07-10T04:02:28Z", "type": "left"
+          "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "2",
-          "name": "Some other friends", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "direct"
+          "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct"
         },
         {
           "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10", "inviting_user_id": null,
-          "name": "Secret group", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "joinedByCode"
+          "name": "Secret group", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "joinedByCode"
         }
       ],
       "joined_groups": [
@@ -174,15 +174,15 @@ Feature: Export the current user's data
       "refresh_token": {"user_id": "2", "refresh_token": "***"},
       "sessions": [
         {
-          "user_id": "2", "access_token": "***", "expiration_date": "2019-07-17T00:02:28Z",
-          "issued_at_date": "2019-07-16T22:02:28Z", "issuer": null
+          "user_id": "2", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
+          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
       "users_answers": [
         {
           "id": "1", "validated": null, "score": null, "attempt_id": null, "item_id": "404",
-          "user_id": "2", "grader_user_id": null, "answer": null, "grading_date": null, "lang_prog": null,
-          "name": null, "state": null, "submission_date": "2019-07-09T21:02:28Z", "type": "Submission"
+          "user_id": "2", "grader_user_id": null, "answer": null, "graded_at": null, "lang_prog": null,
+          "name": null, "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],
       "users_items": [
@@ -192,9 +192,9 @@ Feature: Export the current user's data
           "active_attempt_id": null, "item_id": "404", "user_id": "2", "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "todo",
-          "answer": null, "best_answer_date": null, "contest_start_date": null, "finish_date": null,
-          "hints_requested": null, "last_activity_date": null, "last_answer_date": null, "last_hint_date": null,
-          "score_diff_comment": "", "start_date": null, "state": null, "thread_start_date": null, "validation_date": null
+          "answer": null, "best_answer_at": null, "contest_started_at": null, "finished_at": null,
+          "hints_requested": null, "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null,
+          "score_diff_comment": "", "started_at": null, "state": null, "thread_started_at": null, "validated_at": null
         }
       ]
     }
@@ -216,9 +216,9 @@ Feature: Export the current user's data
         "owned_group_id": "32", "self_group_id": "31", "godfather_user_id": null, "login_id": null, "login_module_prefix": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
         "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
-        "free_text": null, "land_line_number": null, "lang_prog": "Python", "last_activity_date": null, "last_ip": null,
-        "last_login_date": null, "last_name": "Doe", "login": "jane", "notification_read_date": null, "notify": "Answers",
-        "open_id_identity": null, "password_md5": null, "recover": null, "registration_date": null, "salt": null,
+        "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
+        "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
+        "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_attempts": [],
@@ -228,8 +228,8 @@ Feature: Export the current user's data
       "refresh_token": null,
       "sessions": [
         {
-          "user_id": "4", "access_token": "***", "expiration_date": "2019-07-17T00:02:28Z",
-          "issued_at_date": "2019-07-16T22:02:28Z", "issuer": null
+          "user_id": "4", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
+          "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
       "users_answers": [],

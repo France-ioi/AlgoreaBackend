@@ -23,7 +23,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 1  | 11              | 21             | requestSent        | 2017-04-29 06:38:38 |
       | 2  | 13              | 21             | invitationSent     | 2017-03-29 06:38:38 |
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |

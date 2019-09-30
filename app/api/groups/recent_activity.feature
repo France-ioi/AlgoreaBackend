@@ -12,21 +12,21 @@ Feature: Get recent activity for group_id and item_id
 			| 77 | 22                | 11             | 0       | 0       |
 			| 78 | 21                | 21             | 1       | 0       |
 		And the database has the following table 'users_answers':
-			| id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submission_date     | score | validated |
-			| 2  | 2       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-			| 1  | 2       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-			| 3  | 2       | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-			| 4  | 2       | 200     | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-			| 5  | 2       | 200     | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-			| 6  | 3       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-			| 7  | 3       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-			| 8  | 3       | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+   | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+   | 2  | 2       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+   | 1  | 2       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+   | 3  | 2       | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+   | 4  | 2       | 200     | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+   | 5  | 2       | 200     | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+   | 6  | 3       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+   | 7  | 3       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+   | 8  | 3       | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
 		And the database has the following table 'items':
 			| id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
 			| 200 | Category | false          | false    | 1234,2345         | true               | 0       |
 		And the database has the following table 'groups_items':
-			| id | group_id | item_id | cached_grayed_access_date | creator_user_id | version |
-			| 43 | 21       | 200     | 2019-03-22 06:38:38       | 0               | 0       |
+   | id | group_id | item_id | cached_grayed_access_since | creator_user_id | version |
+   | 43 | 21       | 200     | 2019-03-22 06:38:38        | 0               | 0       |
 		And the database has the following table 'items_ancestors':
 			| id | ancestor_item_id | child_item_id | version |
 			| 1  | 200              | 200           | 0       |
@@ -59,7 +59,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-30T06:38:38Z",
+				"submitted_at": "2017-05-30T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -77,7 +77,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -95,7 +95,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -123,7 +123,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-30T06:38:38Z",
+				"submitted_at": "2017-05-30T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -136,7 +136,7 @@ Feature: Get recent activity for group_id and item_id
 
 	Scenario: User is an admin of the group and there are visible descendants of the item; request the second and the third rows
 		Given I am the user with id "1"
-		When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submission_date=2017-05-30T06:38:38Z&from.id=3"
+		When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z&from.id=3"
 		Then the response code should be 200
 		And the response body should be, in JSON:
 		"""
@@ -151,7 +151,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -169,7 +169,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -182,7 +182,7 @@ Feature: Get recent activity for group_id and item_id
 
 	Scenario: User is an admin of the group and there are visible descendants of the item; request the third row
 		Given I am the user with id "1"
-		When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submission_date=2017-05-29T06:38:38Z&from.id=1"
+		When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-29T06:38:38Z&from.id=1"
 		Then the response code should be 200
 		And the response body should be, in JSON:
 		"""
@@ -197,7 +197,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -225,7 +225,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-30T06:38:38Z",
+				"submitted_at": "2017-05-30T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",
@@ -243,7 +243,7 @@ Feature: Get recent activity for group_id and item_id
 					"type": "Category"
 				},
 				"score": 100,
-				"submission_date": "2017-05-29T06:38:38Z",
+				"submitted_at": "2017-05-29T06:38:38Z",
 				"user": {
 					"first_name": "John",
 					"last_name": "Doe",

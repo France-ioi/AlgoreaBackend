@@ -25,7 +25,7 @@ Feature: Export the short version of the current user's data
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         | inviting_user_id |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     | inviting_user_id |
       | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
       | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 1                |
       | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 1                |
@@ -58,7 +58,7 @@ Feature: Export the short version of the current user's data
       | 12                | 2              | false   |
       | 12                | 12             | true    |
     And the database has the following table 'users_answers':
-      | id | user_id | item_id | submission_date     |
+      | id | user_id | item_id | submitted_at        |
       | 1  | 2       | 404     | 2019-07-09 20:02:28 |
       | 2  | 3       | 404     | 2019-07-09 20:02:28 |
     And the database has the following table 'users_items':
@@ -88,47 +88,47 @@ Feature: Export the short version of the current user's data
         "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
-        "last_activity_date": null, "last_ip": null, "last_login_date": null, "last_name": "Doe", "login": "user",
-        "notification_read_date": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
-        "recover": null, "registration_date": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
+        "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
+        "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
+        "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
         "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_groups": [
         {
           "id": "2", "child_order": 0, "child_group_id": "11", "parent_group_id": "1", "inviting_user_id": null,
-          "name": "Our Class", "role": "member", "status_date": "2019-07-09T21:02:28Z", "type": "invitationSent"
+          "name": "Our Class", "role": "member", "type_changed_at": "2019-07-09T21:02:28Z", "type": "invitationSent"
         },
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "1",
-          "name": "Our Team", "role": "member", "status_date": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
+          "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
         },
         {
           "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "1",
-          "name": "Our Club", "role": "member", "status_date": "2019-07-09T23:02:28Z", "type": "requestSent"
+          "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent"
         },
         {
           "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "2",
-          "name": "Our Friends", "role": "member", "status_date": "2019-07-10T00:02:28Z", "type": "requestRefused"
+          "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "2",
-          "name": "Other people", "role": "member", "status_date": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
+          "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "2",
-          "name": "Another Class", "role": "member", "status_date": "2019-07-10T02:02:28Z", "type": "requestAccepted"
+          "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted"
         },
         {
           "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "1",
-          "name": "Another Team", "role": "member", "status_date": "2019-07-10T03:02:28Z", "type": "removed"
+          "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed"
         },
         {
           "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "1",
-          "name": "Another Club", "role": "member", "status_date": "2019-07-10T04:02:28Z", "type": "left"
+          "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "2",
-          "name": "Some other friends", "role": "member", "status_date": "2019-07-10T05:02:28Z", "type": "direct"
+          "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct"
         }
       ],
       "joined_groups": [
@@ -160,9 +160,9 @@ Feature: Export the short version of the current user's data
         "owned_group_id": "32", "self_group_id": "31", "godfather_user_id": null, "login_id": null, "login_module_prefix": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
         "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
-        "free_text": null, "land_line_number": null, "lang_prog": "Python", "last_activity_date": null, "last_ip": null,
-        "last_login_date": null, "last_name": "Doe", "login": "jane", "notification_read_date": null, "notify": "Answers",
-        "open_id_identity": null, "password_md5": null, "recover": null, "registration_date": null, "salt": null,
+        "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
+        "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
+        "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_groups": [],

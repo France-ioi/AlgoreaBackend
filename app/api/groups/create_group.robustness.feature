@@ -31,10 +31,10 @@ Feature: Create a group (groupCreate) - robustness
       | 52                | 52             | 1       |
       | 61                | 61             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
-      | 21       | 10      | 2019-07-16 21:28:47     | null                       | null                      | 1               |
-      | 21       | 11      | null                    | 2019-07-16 21:28:47        | null                      | 1               |
-      | 21       | 12      | null                    | null                       | 2019-07-16 21:28:47       | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
+      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       | 1               |
+      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       | 1               |
+      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        | 1               |
 
   Scenario: No name
     Given I am the user with id "1"

@@ -40,7 +40,7 @@ Feature: Accept group requests
       | 151               | 151            | 1       |
       | 161               | 161            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date               |
+      | id | parent_group_id | child_group_id | type               | type_changed_at           |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
       | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
       | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |
@@ -80,9 +80,9 @@ Feature: Accept group requests
     """
     And the table "groups_groups" should stay unchanged but the row with id "3,14"
     And the table "groups_groups" at id "3,14" should be:
-      | id | parent_group_id | child_group_id | type            | (status_date IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, status_date, NOW())) < 3) |
-      | 3  | 13              | 31             | requestAccepted | 1                                                                                  |
-      | 14 | 13              | 141            | requestAccepted | 1                                                                                  |
+      | id | parent_group_id | child_group_id | type            | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 3  | 13              | 31             | requestAccepted | 1                                                                                          |
+      | 14 | 13              | 141            | requestAccepted | 1                                                                                          |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -117,10 +117,10 @@ Feature: Accept group requests
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
     Given I am the user with id "1"
     And the database table 'groups_groups' has also the following rows:
-      | id | parent_group_id | child_group_id | type               | status_date |
-      | 18 | 444             | 31             | joinedByCode       | null        |
-      | 19 | 444             | 141            | invitationAccepted | null        |
-      | 20 | 444             | 161            | requestAccepted    | null        |
+      | id | parent_group_id | child_group_id | type               | type_changed_at |
+      | 18 | 444             | 31             | joinedByCode       | null            |
+      | 19 | 444             | 141            | invitationAccepted | null            |
+      | 20 | 444             | 161            | requestAccepted    | null            |
     And the database table 'groups_ancestors' has also the following rows:
       | ancestor_group_id | child_group_id | is_self |
       | 444               | 31             | 0       |

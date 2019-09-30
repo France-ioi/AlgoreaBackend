@@ -255,56 +255,56 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id |
-      | 21       | 211     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 212     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 213     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 214     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 215     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 216     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 217     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 20       | 218     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 219     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 221     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 222     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 223     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 224     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 225     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 226     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 227     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 21       | 228     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 229     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 311     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 312     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 313     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 314     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 315     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 316     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 21       | 317     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 20       | 318     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 319     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 411     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 21       | 412     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 20       | 413     | 2017-05-29 06:38:38     | null                       | null                      | 1               |
-      | 21       | 414     | null                    | null                       | 2017-05-29 06:38:38       | 1               |
-      | 20       | 415     | null                    | 2017-05-29 06:38:38        | null                      | 1               |
-      | 21       | 416     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
-      | 20       | 417     | null                    | 2037-05-29 06:38:38        | null                      | 1               |
-      | 21       | 418     | 2037-05-29 06:38:38     | null                       | null                      | 1               |
-      | 20       | 419     | null                    | null                       | 2037-05-29 06:38:38       | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
+      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 214     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 215     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 216     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 217     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 20       | 218     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 219     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 221     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 222     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 223     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 224     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 225     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 226     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 227     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 21       | 228     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 229     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 311     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 312     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 313     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 314     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 315     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 316     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 21       | 317     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 20       | 318     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 319     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 411     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 21       | 412     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 20       | 413     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
+      | 21       | 414     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
+      | 20       | 415     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
+      | 21       | 416     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | 20       | 417     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
+      | 21       | 418     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
+      | 20       | 419     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | start_date          | score | best_answer_date    | hints_cached | submissions_attempts | validated | validation_date     | last_activity_date  |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # last_activity_date for 51, 211 comes from this line (the last activity is made by a team)
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 1         | 2017-05-29 06:38:58 | null                | # min(validation_date) for 51, 211 comes from this line (from a team)
+      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        | latest_activity_at  |
+      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 1         | 2017-05-29 06:38:58 | null                | # min(validated_at) for 51, 211 comes from this line (from a team)
       | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4                    | 1         | 2017-05-31 06:58:38 | null                | # hints_cached & submissions_attempts for 51, 211 come from this line (the best attempt is made by a team)
       | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20                   | 1         | null                | null                |
       | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
       | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
-      | 16       | 212     | 0     | 2018-12-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 0            | 0                    | 0         | null                | 2019-06-01 00:00:00 | # start_date for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
+      | 16       | 212     | 0     | 2018-12-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 0            | 0                    | 0         | null                | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
       | 67       | 212     | 0     | 2019-01-01 00:00:00 | 20    | 2017-06-30 06:38:38 | 1            | 2                    | 0         | null                | 2019-06-01 00:00:00 | # hints_cached & submissions_attempts for 67, 212 come from this line (the best attempt is made by a user)
-      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 6            | 7                    | 0         | null                | 2019-07-01 00:00:00 | # last_activity_date for 67, 212 comes from this line (the last activity is made by a user)
-      | 67       | 213     | 0     | 2018-11-01 00:00:00 | 0     | null                | 0            | 0                    | 0         | null                | 2018-11-01 00:00:00 | # start_date for 67, 213 comes from this line (the first attempt is started by a user)
-      | 67       | 214     | 0     | 2017-05-29 06:38:38 | 15    | 2017-05-29 06:38:48 | 10           | 11                   | 1         | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validation_date) for 67, 214 comes from this line (from a user)
+      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 6            | 7                    | 0         | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
+      | 67       | 213     | 0     | 2018-11-01 00:00:00 | 0     | null                | 0            | 0                    | 0         | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
+      | 67       | 214     | 0     | 2017-05-29 06:38:38 | 15    | 2017-05-29 06:38:48 | 10           | 11                   | 1         | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
       | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
       | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
       | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0                    | 1         | null                | null                |
@@ -322,7 +322,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       {
         "group_id": "67",
         "item_id": "211",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
         "submissions_attempts": 0,
@@ -333,7 +333,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "67",
         "hints_requested": 1,
         "item_id": "212",
-        "last_activity_date": "2019-07-01T00:00:00Z",
+        "latest_activity_at": "2019-07-01T00:00:00Z",
         "score": 20,
         "submissions_attempts": 2,
         "time_spent": 18303545,
@@ -343,7 +343,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "67",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": "2018-11-01T00:00:00Z",
+        "latest_activity_at": "2018-11-01T00:00:00Z",
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 20895545,
@@ -353,7 +353,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "67",
         "hints_requested": 10,
         "item_id": "214",
-        "last_activity_date": "2017-05-30T06:38:48Z",
+        "latest_activity_at": "2017-05-30T06:38:48Z",
         "score": 15,
         "submissions_attempts": 11,
         "time_spent": 10,
@@ -363,7 +363,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "67",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -373,7 +373,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       {
         "group_id": "51",
         "item_id": "211",
-        "last_activity_date": "2018-05-30T06:38:38Z",
+        "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "hints_requested": 3,
         "submissions_attempts": 4,
@@ -384,7 +384,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "212",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -394,7 +394,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -404,7 +404,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "214",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -414,7 +414,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -436,7 +436,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       {
         "group_id": "63",
         "item_id": "211",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
         "submissions_attempts": 0,
@@ -447,7 +447,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "212",
-        "last_activity_date": "2019-06-01T00:00:00Z",
+        "latest_activity_at": "2019-06-01T00:00:00Z",
         "score": 10,
         "submissions_attempts": 0,
         "time_spent": 18303545,
@@ -457,7 +457,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -467,7 +467,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "214",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -477,7 +477,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -487,7 +487,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "221",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -497,7 +497,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "222",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -507,7 +507,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "223",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -517,7 +517,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "224",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -527,7 +527,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "225",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -537,7 +537,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "311",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -547,7 +547,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "312",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -557,7 +557,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "313",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -567,7 +567,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "314",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -577,7 +577,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "63",
         "hints_requested": 0,
         "item_id": "315",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -627,7 +627,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 3,
         "item_id": "211",
-        "last_activity_date": "2018-05-30T06:38:38Z",
+        "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "submissions_attempts": 4,
         "time_spent": 20,
@@ -637,7 +637,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "212",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -647,7 +647,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -657,7 +657,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "214",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -667,7 +667,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "51",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -677,7 +677,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "53",
         "hints_requested": 3,
         "item_id": "211",
-        "last_activity_date": "2018-05-30T06:38:38Z",
+        "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "submissions_attempts": 4,
         "time_spent": 20,
@@ -687,7 +687,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "53",
         "hints_requested": 0,
         "item_id": "212",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -697,7 +697,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "53",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -707,7 +707,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "53",
         "hints_requested": 0,
         "item_id": "214",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -717,7 +717,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "53",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -727,7 +727,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "55",
         "hints_requested": 3,
         "item_id": "211",
-        "last_activity_date": "2018-05-30T06:38:38Z",
+        "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "submissions_attempts": 4,
         "time_spent": 20,
@@ -737,7 +737,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "55",
         "hints_requested": 0,
         "item_id": "212",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -747,7 +747,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "55",
         "hints_requested": 0,
         "item_id": "213",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -757,7 +757,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "55",
         "hints_requested": 0,
         "item_id": "214",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,
@@ -767,7 +767,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "group_id": "55",
         "hints_requested": 0,
         "item_id": "215",
-        "last_activity_date": null,
+        "latest_activity_at": null,
         "score": 0,
         "submissions_attempts": 0,
         "time_spent": 0,

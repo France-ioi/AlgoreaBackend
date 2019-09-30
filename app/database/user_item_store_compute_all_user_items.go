@@ -24,7 +24,7 @@ const computeAllUserItemsLockTimeout = 10 * time.Second
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
 //  Then, if an object has children, we update
-//    last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validation_date.
+//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
 func (s *UserItemStore) ComputeAllUserItems() (err error) {
@@ -92,7 +92,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			userItemStore.collectItemsToUnlock(groupItemsToUnlock)
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
-			//  - last_activity_date as the max of children's
+			//  - latest_activity_at as the max of children's
 			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's field
 			//  - children_validated as the sum of children with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
@@ -101,7 +101,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					UPDATE users_items
 					LEFT JOIN (
 						SELECT
-							MAX(children.last_activity_date) AS last_activity_date,
+							MAX(children.latest_activity_at) AS latest_activity_at,
 							SUM(children.tasks_tried) AS tasks_tried,
 							SUM(children.tasks_with_help) AS tasks_with_help,
 							SUM(children.tasks_solved) AS tasks_solved,
@@ -120,9 +120,9 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					LEFT JOIN items_items
 						ON items_items.parent_item_id = users_items.item_id
 					SET
-						users_items.last_activity_date = IF(task_children_data.user_item_id IS NOT NULL AND
+						users_items.latest_activity_at = IF(task_children_data.user_item_id IS NOT NULL AND
 							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.last_activity_date, users_items.last_activity_date),
+							children_data.latest_activity_at, users_items.latest_activity_at),
 						users_items.tasks_tried = IF(task_children_data.user_item_id IS NOT NULL AND
 							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_data.tasks_tried, users_items.tasks_tried),
@@ -144,12 +144,12 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								WHEN items.validation_type = 'One' THEN task_children_data.children_validated > 0
 								ELSE 0
 							END, users_items.validated),
-						users_items.validation_date = IF(task_children_data.user_item_id IS NOT NULL AND items_items.id IS NOT NULL,
+						users_items.validated_at = IF(task_children_data.user_item_id IS NOT NULL AND items_items.id IS NOT NULL,
 							IFNULL(
-								users_items.validation_date,
+								users_items.validated_at,
 								IF(items.validation_type = 'Categories',
-									task_children_data.max_validation_date_categories, task_children_data.max_validation_date)
-							), users_items.validation_date),
+									task_children_data.max_validated_at_categories, task_children_data.max_validated_at)
+							), users_items.validated_at),
 						users_items.ancestors_computation_state = 'done'
 					WHERE users_items.ancestors_computation_state = 'processing'`
 				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
@@ -219,7 +219,7 @@ func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bo
 	}
 	query := `
 		INSERT INTO groups_items
-			(group_id, item_id, partial_access_date, cached_partial_access_date, cached_partial_access, creator_user_id)
+			(group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access, creator_user_id)
 		VALUES (?, ?, NOW(), NOW(), 1, -1)` // Note: creator_user_id is incorrect here, but it is required
 	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
 	valuesTemplate := ", (?, ?, NOW(), NOW(), 1, -1)"
@@ -228,7 +228,7 @@ func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bo
 	}
 
 	query += strings.Repeat(valuesTemplate, len(groupItemsToUnlock)-1) +
-		" ON DUPLICATE KEY UPDATE partial_access_date = NOW(), cached_partial_access_date = NOW(), cached_partial_access = 1"
+		" ON DUPLICATE KEY UPDATE partial_access_since = NOW(), cached_partial_access_since = NOW(), cached_partial_access = 1"
 	result := s.db.Exec(query, values...)
 	mustNotBeError(result.Error)
 	return result.RowsAffected

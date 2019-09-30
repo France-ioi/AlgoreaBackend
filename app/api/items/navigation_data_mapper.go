@@ -24,9 +24,9 @@ type rawNavigationItem struct {
 	UserFinished            bool           `sql:"column:finished"`
 	UserKeyObtained         bool           `sql:"column:key_obtained"`
 	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
-	UserStartDate           *database.Time `sql:"column:start_date"`
-	UserValidationDate      *database.Time `sql:"column:validation_date"`
-	UserFinishDate          *database.Time `sql:"column:finish_date"`
+	UserStartedAt           *database.Time `sql:"column:started_at"`
+	UserValidatedAt         *database.Time `sql:"column:validated_at"`
+	UserFinishedAt          *database.Time `sql:"column:finished_at"`
 
 	// items_items
 	ParentItemID int64
@@ -66,8 +66,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			users_items.score AS score, users_items.validated AS validated,
 			users_items.finished AS finished, users_items.key_obtained AS key_obtained,
 			users_items.submissions_attempts AS submissions_attempts,
-			users_items.start_date AS start_date, users_items.validation_date AS validation_date,
-			users_items.finish_date AS finish_date,
+			users_items.started_at AS started_at, users_items.validated_at AS validated_at,
+			users_items.finished_at AS finished_at,
 			items.child_order AS child_order,
 			items.partial_access_propagation,
 			items.parent_item_id AS parent_item_id,

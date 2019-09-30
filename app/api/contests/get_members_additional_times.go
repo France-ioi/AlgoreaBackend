@@ -130,8 +130,8 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS total_additional_time`).
 		Group("found_group.id").
 		Having(`
-			MIN(groups_items.cached_full_access_date) <= NOW() OR MIN(groups_items.cached_partial_access_date) <= NOW() OR
-			MIN(groups_items.cached_grayed_access_date) <= NOW()`)
+			MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_partial_access_since) <= NOW() OR
+			MIN(groups_items.cached_grayed_access_since) <= NOW()`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

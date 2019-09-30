@@ -7,10 +7,10 @@ Feature: Discard the code of the given group - robustness
       | 2  | user  | 0         | 11            | 12             | John        | Doe       | en               |
       | 3  | jane  | 0         | 31            | 32             | Jane        | Doe       | en               |
     And the database has the following table 'groups':
-      | id | name    | grade | description     | date_created        | type      | code       | code_timer | code_end            |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 3456789abc | 01:00:00   | 2017-10-14 05:39:48 |
-      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null       | null       | null                |
+      | id | name    | grade | description     | created_at          | type      | code       | code_lifetime | code_expires_at     |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 3456789abc | 01:00:00      | 2017-10-14 05:39:48 |
+      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null       | null          | null                |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self | version |
       | 75 | 22                | 13             | 0       | 0       |

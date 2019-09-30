@@ -21,7 +21,7 @@ func (s *GroupAttemptStore) After() error {
 }
 
 // CreateNew creates inserts a new row into groups_attempts with group_id=groupID, item_id=itemID.
-// It also sets order, start_date, last_activity_date
+// It also sets order, started_at, latest_activity_at
 func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
@@ -34,7 +34,7 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err e
 		store := NewDataStore(db)
 		newID = store.NewID()
 		return store.db.Exec(`
-			INSERT INTO groups_attempts (id, group_id, item_id, `+"`order`"+`, start_date, last_activity_date)
+			INSERT INTO groups_attempts (id, group_id, item_id, `+"`order`"+`, started_at, latest_activity_at)
 			VALUES (?, ?, ?, @maxIOrder+1, NOW(), NOW())`,
 			newID, groupID, itemID).Error
 	}))

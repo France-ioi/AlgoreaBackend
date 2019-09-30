@@ -47,12 +47,12 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 				err := sessionStore.
 					Select(`
 						users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id,
-						users.temp_user, users.allow_subgroups, users.notification_read_date,
+						users.temp_user, users.allow_subgroups, users.notifications_read_at,
 						users.default_language, l.id as default_language_id`).
 					Joins("JOIN users ON users.id = sessions.user_id").
 					Joins("LEFT JOIN languages l ON users.default_language = l.code").
 					Where("access_token = ?", accessToken).
-					Where("expiration_date > NOW()").Take(&user).
+					Where("expires_at > NOW()").Take(&user).
 					Error()
 				authorized = err == nil
 				if err != nil && !gorm.IsRecordNotFoundError(err) {

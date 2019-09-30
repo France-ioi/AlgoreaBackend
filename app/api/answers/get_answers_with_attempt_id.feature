@@ -26,13 +26,13 @@ Background:
     | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
     | 210 | Category | false          | false    | 1234,2345         | true               | 0       |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-    | 45 | 41       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | 45 | 41       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
   And the database has the following table 'users_answers':
-    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submission_date     | score | validated |
+    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
     | 1  | 1       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     | 2  | 1       | 200     | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     | 3  | 1       | 210     | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
@@ -54,7 +54,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -78,7 +78,7 @@ Background:
         "lang_prog": "python",
         "name": "My answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -102,7 +102,7 @@ Background:
         "lang_prog": "python",
         "name": "My second answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -126,7 +126,7 @@ Background:
         "lang_prog": "python",
         "name": "My third answer",
         "score": 100,
-        "submission_date": "2017-05-29T06:38:38Z",
+        "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",

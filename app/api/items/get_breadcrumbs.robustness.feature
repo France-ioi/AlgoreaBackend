@@ -32,10 +32,10 @@ Feature: Get item information for breadcrumb - robustness
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing), but user has full access to all
     Given the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 41 | 13       | 21      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 42 | 13       | 22      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 43 | 13       | 23      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 43 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty | version |
       | 52 | 22             | 23            | 1           | 0          | 0       |
@@ -46,11 +46,11 @@ Feature: Get item information for breadcrumb - robustness
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one parent-child link missing at the end), but user has full access to all
     Given the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 41 | 13       | 21      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 42 | 13       | 22      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 43 | 13       | 23      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 44 | 13       | 24      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 43 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 44 | 13       | 24      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty | version |
       | 52 | 21             | 22            | 1           | 0          | 0       |
@@ -62,10 +62,10 @@ Feature: Get item information for breadcrumb - robustness
 
   Scenario: Should fail when breadcrumb hierarchy is corrupt (one item missing), and user has full access to all
     Given the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 41 | 13       | 21      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 42 | 13       | 22      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 44 | 13       | 24      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 44 | 13       | 24      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty | version |
       | 51 | 21             | 22            | 1           | 0          | 0       |
@@ -78,9 +78,9 @@ Feature: Get item information for breadcrumb - robustness
 
   Scenario: Should fail when the first item of hierarchy is not a root item, and user has full access to all
     Given the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 42 | 13       | 22      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 44 | 13       | 23      | 2017-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 44 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty | version |
       | 52 | 22             | 23            | 1           | 0          | 0       |
@@ -92,10 +92,10 @@ Feature: Get item information for breadcrumb - robustness
 
   Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
     Given the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 41 | 13       | 21      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-      | 42 | 13       | 22      | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-      | 43 | 13       | 23      | 2037-05-29 06:38:38     | 2017-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+      | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+      | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty | version |
       | 52 | 22             | 23            | 1           | 0          | 0       |

@@ -8,7 +8,7 @@ Feature: Feature: Get user's answer by user_answer_id
       | 200 | 0            |
       | 210 | 1            |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submission_date     | score | validated | grading_date        | grader_user_id |
+      | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           | grader_user_id |
       | 101 | 1       | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 | 123            |
 
   Scenario: Wrong answer_id

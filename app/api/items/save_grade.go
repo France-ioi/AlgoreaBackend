@@ -89,28 +89,28 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 
 	// Build query to update users_items
 	// The score is set towards the end, so that the IF condition on
-	// best_answer_date is computed before score is updated
+	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
-		"last_activity_date",
-		"best_answer_date",
-		"last_answer_date",
+		"latest_activity_at",
+		"best_answer_at",
+		"latest_answer_at",
 		"score",
 	}
 	values := []interface{}{
 		1,
 		database.Now(),
-		gorm.Expr("IF(? > score, ?, best_answer_date)", score, database.Now()),
+		gorm.Expr("IF(? > score, ?, best_answer_at)", score, database.Now()),
 		database.Now(),
 		gorm.Expr("GREATEST(?, score)", score),
 	}
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate,
-			"ancestors_computation_state", "validated", "validation_date",
+			"ancestors_computation_state", "validated", "validated_at",
 		)
 		values = append(values,
-			todo, 1, gorm.Expr("IFNULL(validation_date, ?)", database.Now()))
+			todo, 1, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
 	}
 	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
 		keyObtained = true
@@ -151,9 +151,9 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 
 	updateResult := userAnswerScope.Where("score = ? OR score IS NULL", score).
 		UpdateColumn(map[string]interface{}{
-			"grading_date": database.Now(),
-			"validated":    validated,
-			"score":        score,
+			"graded_at": database.Now(),
+			"validated": validated,
+			"score":     score,
 		})
 	service.MustNotBeError(updateResult.Error())
 

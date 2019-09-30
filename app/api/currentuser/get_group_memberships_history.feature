@@ -1,10 +1,10 @@
 Feature: Get group memberships history for the current user
   Background:
     Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade | notification_read_date |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38    |
-      | 2  | user  | 11            | 12             | John        | Doe       | 1     | null                   |
-      | 3  | jane  | 13            | 14             | Jane        | Doe       | 2     | 2019-06-29 06:38:38    |
+      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade | notifications_read_at |
+      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |
+      | 2  | user  | 11            | 12             | John        | Doe       | 1     | null                  |
+      | 3  | jane  | 13            | 14             | Jane        | Doe       | 2     | 2019-06-29 06:38:38   |
     And the database has the following table 'groups':
       | id | type      | name               |
       | 1  | Class     | Our Class          |
@@ -21,7 +21,7 @@ Feature: Get group memberships history for the current user
       | 21 | UserSelf  | owner self         |
       | 22 | UserAdmin | owner admin        |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
       | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
       | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |
@@ -44,7 +44,7 @@ Feature: Get group memberships history for the current user
       | 23 | 2               | 13             | invitationRefused  | 2016-03-29 06:38:38 |
       | 24 | 3               | 13             | requestSent        | 2016-04-29 06:38:38 |
 
-  Scenario: Show all the history (with notification_read_date set)
+  Scenario: Show all the history (with notifications_read_at set)
     Given I am the user with id "1"
     When I send a GET request to "/current-user/group-memberships-history"
     Then the response code should be 200
@@ -57,7 +57,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Club",
           "type": "Club"
         },
-        "status_date": "2017-09-29T06:38:38Z",
+        "type_changed_at": "2017-09-29T06:38:38Z",
         "type": "left"
       },
       {
@@ -66,7 +66,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Team",
           "type": "Team"
         },
-        "status_date": "2017-08-29T06:38:38Z",
+        "type_changed_at": "2017-08-29T06:38:38Z",
         "type": "removed"
       },
       {
@@ -75,7 +75,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Class",
           "type": "Class"
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -84,15 +84,15 @@ Feature: Get group memberships history for the current user
           "name": "Other people",
           "type": "Other"
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "invitationAccepted"
       }
     ]
     """
 
-  Scenario: Show all the history in reverse order (with notification_read_date set)
+  Scenario: Show all the history in reverse order (with notifications_read_at set)
     Given I am the user with id "1"
-    When I send a GET request to "/current-user/group-memberships-history?sort=status_date"
+    When I send a GET request to "/current-user/group-memberships-history?sort=type_changed_at"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -103,7 +103,7 @@ Feature: Get group memberships history for the current user
           "name": "Other people",
           "type": "Other"
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "invitationAccepted"
       },
       {
@@ -112,7 +112,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Class",
           "type": "Class"
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -121,7 +121,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Team",
           "type": "Team"
         },
-        "status_date": "2017-08-29T06:38:38Z",
+        "type_changed_at": "2017-08-29T06:38:38Z",
         "type": "removed"
       },
       {
@@ -130,13 +130,13 @@ Feature: Get group memberships history for the current user
           "name": "Another Club",
           "type": "Club"
         },
-        "status_date": "2017-09-29T06:38:38Z",
+        "type_changed_at": "2017-09-29T06:38:38Z",
         "type": "left"
       }
     ]
     """
 
-  Scenario: Show all the history (without notification_read_date set)
+  Scenario: Show all the history (without notifications_read_at set)
     Given I am the user with id "2"
     When I send a GET request to "/current-user/group-memberships-history"
     Then the response code should be 200
@@ -149,7 +149,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Club",
           "type": "Club"
         },
-        "status_date": "2016-09-29T06:38:38Z",
+        "type_changed_at": "2016-09-29T06:38:38Z",
         "type": "left"
       },
       {
@@ -158,7 +158,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Team",
           "type": "Team"
         },
-        "status_date": "2016-08-29T06:38:38Z",
+        "type_changed_at": "2016-08-29T06:38:38Z",
         "type": "removed"
       },
       {
@@ -167,7 +167,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Class",
           "type": "Class"
         },
-        "status_date": "2016-07-29T06:38:38Z",
+        "type_changed_at": "2016-07-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -176,7 +176,7 @@ Feature: Get group memberships history for the current user
           "name": "Other people",
           "type": "Other"
         },
-        "status_date": "2016-06-29T06:38:38Z",
+        "type_changed_at": "2016-06-29T06:38:38Z",
         "type": "invitationAccepted"
       },
       {
@@ -185,7 +185,7 @@ Feature: Get group memberships history for the current user
           "name": "Our Friends",
           "type": "Friends"
         },
-        "status_date": "2016-05-29T06:38:38Z",
+        "type_changed_at": "2016-05-29T06:38:38Z",
         "type": "requestRefused"
       },
       {
@@ -194,7 +194,7 @@ Feature: Get group memberships history for the current user
           "name": "Our Club",
           "type": "Club"
         },
-        "status_date": "2016-04-29T06:38:38Z",
+        "type_changed_at": "2016-04-29T06:38:38Z",
         "type": "requestSent"
       },
       {
@@ -203,7 +203,7 @@ Feature: Get group memberships history for the current user
           "name": "Our Team",
           "type": "Team"
         },
-        "status_date": "2016-03-29T06:38:38Z",
+        "type_changed_at": "2016-03-29T06:38:38Z",
         "type": "invitationRefused"
       },
       {
@@ -212,7 +212,7 @@ Feature: Get group memberships history for the current user
           "name": "Our Class",
           "type": "Class"
         },
-        "status_date": "2016-02-28T06:38:38Z",
+        "type_changed_at": "2016-02-28T06:38:38Z",
         "type": "invitationSent"
       }
     ]
@@ -231,7 +231,7 @@ Feature: Get group memberships history for the current user
           "name": "Another Club",
           "type": "Club"
         },
-        "status_date": "2017-09-29T06:38:38Z",
+        "type_changed_at": "2017-09-29T06:38:38Z",
         "type": "left"
       }
     ]
@@ -239,7 +239,7 @@ Feature: Get group memberships history for the current user
 
   Scenario: Request the first row starting from some date
     Given I am the user with id "1"
-    When I send a GET request to "/current-user/group-memberships-history?limit=1&from.status_date=2017-07-29T06:38:38Z&from.id=7"
+    When I send a GET request to "/current-user/group-memberships-history?limit=1&from.type_changed_at=2017-07-29T06:38:38Z&from.id=7"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -250,7 +250,7 @@ Feature: Get group memberships history for the current user
           "name": "Other people",
           "type": "Other"
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "invitationAccepted"
       }
     ]

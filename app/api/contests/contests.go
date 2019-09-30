@@ -53,7 +53,7 @@ func (srv *Service) getTeamModeForTimedContestManagedByUser(itemID int64, user *
 			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
 				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 		Group("items.id").
-		Having("MIN(groups_items.cached_full_access_date) <= NOW() OR MIN(groups_items.cached_access_solutions_date) <= NOW()").
+		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()").
 		PluckFirst("items.has_attempts", &isTeamOnly).Error()
 	return isTeamOnly, err
 }

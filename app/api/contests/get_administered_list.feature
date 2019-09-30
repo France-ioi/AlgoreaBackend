@@ -51,23 +51,23 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70      | 1           | Contest 2  |
       | 70      | 2           | Concours 2 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | cached_grayed_access_date | cached_full_access_date | cached_access_solutions_date | creator_user_id |
-      | 21       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 4               |
-      | 21       | 60      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 21       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 31       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 4               |
-      | 31       | 60      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 31       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 41       | 10      | 2018-05-29 06:38:38        | null                      | null                    | null                         | 4               |
-      | 41       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 4               |
-      | 41       | 60      | null                       | 2018-05-29 06:38:38       | null                    | 2018-05-29 06:38:38          | 4               |
-      | 41       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 51       | 10      | null                       | 2018-05-29 06:38:38       | null                    | null                         | 4               |
-      | 51       | 50      | null                       | null                      | null                    | 2018-05-29 06:38:38          | 4               |
-      | 51       | 60      | null                       | null                      | 2018-05-29 06:38:38     | 2018-05-29 06:38:38          | 4               |
-      | 51       | 70      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 71       | 80      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
-      | 71       | 90      | null                       | null                      | 2018-05-29 06:38:38     | null                         | 4               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 31       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
+      | 31       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 41       | 10      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 4               |
+      | 41       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
+      | 41       | 60      | null                        | 2018-05-29 06:38:38        | null                     | 2018-05-29 06:38:38           | 4               |
+      | 41       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 51       | 10      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 4               |
+      | 51       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
+      | 51       | 60      | null                        | null                       | 2018-05-29 06:38:38      | 2018-05-29 06:38:38           | 4               |
+      | 51       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 71       | 80      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | 71       | 90      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with id "1"

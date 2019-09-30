@@ -13,16 +13,16 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 78 | 21                | 21             | 1       | 0       |
       | 79 | 23                | 23             | 1       | 0       |
     And the database has the following table 'users_answers':
-      | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submission_date     | score | validated |
+      | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
       | 1  | 2       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
       | 2  | 2       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
       | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-      | 43 | 21       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
-      | 44 | 23       | 200     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+      | 43 | 21       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+      | 44 | 23       | 200     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id | version |
       | 1  | 200              | 200           | 0       |
@@ -60,14 +60,14 @@ Feature: Get recent activity for group_id and item_id - robustness
     []
     """
 
-  Scenario: Should fail when from.id is given, but from.submission_date is not
+  Scenario: Should fail when from.id is given, but from.submitted_at is not
     Given I am the user with id "3"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.id=1"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.submission_date, from.id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.submitted_at, from.id) or none of them must be present"
 
-  Scenario: Should fail when from.submission_date is given, but from.id is not
+  Scenario: Should fail when from.submitted_at is given, but from.id is not
     Given I am the user with id "3"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submission_date=2017-05-30T06:38:38Z"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.submission_date, from.id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.submitted_at, from.id) or none of them must be present"

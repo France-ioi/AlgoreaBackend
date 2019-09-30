@@ -14,7 +14,7 @@ import (
 
 type aggregatesResultRow struct {
 	ID                        int64
-	LastActivityDate          *database.Time
+	LatestActivityAt          *database.Time
 	TasksTried                int64
 	TasksWithHelp             int64
 	TasksSolved               int64
@@ -32,7 +32,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	oldDate := currentDate.AddDate(-1, -1, -1)
 
 	assert.NoError(t, userItemStore.Where("id=11").Updates(map[string]interface{}{
-		"last_activity_date": oldDate,
+		"latest_activity_at": oldDate,
 		"tasks_tried":        1,
 		"tasks_with_help":    2,
 		"tasks_solved":       3,
@@ -40,14 +40,14 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		"validated":          1,
 	}).Error())
 	assert.NoError(t, userItemStore.Where("id=13").Updates(map[string]interface{}{
-		"last_activity_date": currentDate,
+		"latest_activity_at": currentDate,
 		"tasks_tried":        5,
 		"tasks_with_help":    6,
 		"tasks_solved":       7,
 		"children_validated": 8,
 	}).Error())
 	assert.NoError(t, userItemStore.Where("id=14").Updates(map[string]interface{}{
-		"last_activity_date": nil,
+		"latest_activity_at": nil,
 		"tasks_tried":        9,
 		"tasks_with_help":    10,
 		"tasks_solved":       11,
@@ -61,16 +61,16 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	assert.NoError(t, err)
 
 	expected := []aggregatesResultRow{
-		{ID: 11, LastActivityDate: (*database.Time)(&oldDate), TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4,
+		{ID: 11, LatestActivityAt: (*database.Time)(&oldDate), TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3, ChildrenValidated: 4,
 			AncestorsComputationState: "done"},
-		{ID: 12, LastActivityDate: (*database.Time)(&currentDate), TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11,
+		{ID: 12, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10, TasksSolved: 3 + 7 + 11,
 			ChildrenValidated: 2, AncestorsComputationState: "done"},
-		{ID: 13, LastActivityDate: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
+		{ID: 13, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
 			AncestorsComputationState: "done"},
-		{ID: 14, LastActivityDate: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
+		{ID: 14, LatestActivityAt: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
 			AncestorsComputationState: "done"},
 		// another user
-		{ID: 22, LastActivityDate: nil, AncestorsComputationState: "done"},
+		{ID: 22, LatestActivityAt: nil, AncestorsComputationState: "done"},
 	}
 
 	assertAggregatesEqual(t, userItemStore, expected)
@@ -88,7 +88,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 
 	var result []aggregatesResultRow
 	assert.NoError(t, userItemStore.
-		Select("id, last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
+		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 
 	expected := []aggregatesResultRow{
@@ -102,7 +102,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 func assertAggregatesEqual(t *testing.T, userItemStore *database.UserItemStore, expected []aggregatesResultRow) {
 	var result []aggregatesResultRow
 	assert.NoError(t, userItemStore.
-		Select("id, last_activity_date, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
+		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 	assert.Equal(t, expected, result)
 }

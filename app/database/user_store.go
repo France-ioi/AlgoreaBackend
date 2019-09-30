@@ -32,7 +32,7 @@ func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		userScope := store.Users().
-			Joins("LEFT JOIN sessions ON sessions.user_id = users.id AND NOW() < sessions.expiration_date").
+			Joins("LEFT JOIN sessions ON sessions.user_id = users.id AND NOW() < sessions.expires_at").
 			Where("sessions.user_id IS NULL").Where("temp_user = 1")
 		return store.Users().deleteWithTraps(userScope)
 	})

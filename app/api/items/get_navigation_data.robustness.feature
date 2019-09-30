@@ -23,14 +23,14 @@ Background:
     | 190 | Category | false          | false    | 1234,2345         | true               | 0       |
     | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_date | cached_partial_access_date | cached_grayed_access_date | creator_user_id | version |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38     | 2037-05-29 06:38:38        | 2037-05-29 06:38:38       | 0               | 0       |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38     | 2017-05-29 06:38:38        | 2017-05-29 06:38:38       | 0               | 0       |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
   And the database has the following table 'items_strings':
     | id | item_id | language_id | title      | version |
     | 53 | 200     | 1           | Category 1 | 0       |
   And the database has the following table 'users_items':
-    | id | user_id | item_id | score | submissions_attempts | validated | finished | key_obtained | start_date          | finish_date         | validation_date     | version |
+    | id | user_id | item_id | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        | version |
     | 1  | 1       | 200     | 12345 | 10                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 0       |
 
   Scenario: Should fail when the user doesn't have access to the root item

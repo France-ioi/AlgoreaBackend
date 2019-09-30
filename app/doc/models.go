@@ -34,9 +34,9 @@ type groupsMembershipHistoryResponseRow struct {
 	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.status_date`
+	// `groups_groups.type_changed_at`
 	// required: true
-	StatusDate time.Time `json:"status_date"`
+	TypeChangedAt time.Time `json:"type_changed_at"`
 	// `groups_groups.type`
 	// required: true
 	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,joinedByCode,requestRefused,removed,left
@@ -57,9 +57,9 @@ type invitationsViewResponseRow struct {
 	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.status_date`
+	// `groups_groups.type_changed_at`
 	// required: true
-	StatusDate time.Time `json:"status_date"`
+	TypeChangedAt time.Time `json:"type_changed_at"`
 	// `groups_groups.type`
 	// required: true
 	// enum: invitationSent,requestSent,requestRefused
@@ -102,9 +102,9 @@ type membershipsViewResponseRow struct {
 	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.status_date`
+	// `groups_groups.type_changed_at`
 	// required: true
-	StatusDate time.Time `json:"status_date"`
+	TypeChangedAt time.Time `json:"type_changed_at"`
 	// `groups_groups.type`
 	// required: true
 	// enum: invitationAccepted,requestAccepted,joinedByCode,direct

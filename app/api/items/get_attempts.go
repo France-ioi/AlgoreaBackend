@@ -21,7 +21,7 @@ type itemAttemptsViewResponseRow struct {
 	Validated bool `json:"validated"`
 	// Nullable
 	// required: true
-	StartDate   *database.Time `json:"start_date"`
+	StartedAt   *database.Time `json:"started_at"`
 	UserCreator *struct {
 		// required: true
 		Login string `json:"login"`
@@ -98,7 +98,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		Joins("LEFT JOIN users AS creators ON creators.id = groups_attempts.creator_user_id").
 		Select(`
 			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,
-			groups_attempts.start_date, creators.login AS user_creator__login,
+			groups_attempts.started_at, creators.login AS user_creator__login,
 			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
 			creators.id AS user_creator__id`)
 	query = service.NewQueryLimiter().Apply(r, query)

@@ -17,21 +17,21 @@ import (
 // parameters:
 // - name: sort
 //   in: query
-//   default: [-status_date,id]
+//   default: [-type_changed_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [status_date,-status_date,id,-id]
-// - name: from.status_date
-//   description: Start the page from the membership next to one with `status_date` = `from.status_date`
+//     enum: [type_changed_at,-type_changed_at,id,-id]
+// - name: from.type_changed_at
+//   description: Start the page from the membership next to one with `type_changed_at` = `from.type_changed_at`
 //                and `groups_groups.id` = `from.id`
-//                (`from.id` is required when `from.status_date` is present)
+//                (`from.id` is required when `from.type_changed_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the membership next to one with `status_date`=`from.status_date`
+//   description: Start the page from the membership next to one with `type_changed_at`=`from.type_changed_at`
 //                and `groups_groups.id`=`from.id`
-//                (`from.status_date` is required when from.id is present)
+//                (`from.type_changed_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -59,7 +59,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.id,
-			groups_groups.status_date,
+			groups_groups.type_changed_at,
 			groups_groups.type,
 			groups.id AS group__id,
 			groups.name AS group__name,
@@ -72,9 +72,9 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"status_date": {ColumnName: "groups_groups.status_date", FieldType: "time"},
-			"id":          {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-status_date")
+			"type_changed_at": {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
+			"id":              {ColumnName: "groups_groups.id", FieldType: "int64"}},
+		"-type_changed_at")
 	if apiError != service.NoError {
 		return apiError
 	}

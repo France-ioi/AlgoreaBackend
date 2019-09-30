@@ -10,16 +10,16 @@ Feature: Update the 'current' answer
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_date |
-      | 15 | 22              | 13             | direct | null        |
+      | id | parent_group_id | child_group_id | type   | type_changed_at |
+      | 15 | 22              | 13             | direct | null            |
     And the database has the following table 'items':
       | id |
       | 50 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
+      | group_id | item_id | cached_partial_access_since | creator_user_id |
+      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | attempt_id | type       | submission_date     |
+      | id  | user_id | item_id | attempt_id | type       | submitted_at        |
       | 100 | 10      | 50      | 200        | Submission | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
@@ -50,9 +50,9 @@ Feature: Update the 'current' answer
       | user_id | item_id | active_attempt_id | answer  | state      |
       | 10      | 50      | 200               | print 1 | some state |
     And the table "users_answers" should be:
-      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
-      | 10      | 50      | 200        | Submission | null    | null       | 0                                                      |
-      | 10      | 50      | 200        | Current    | print 1 | some state | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 10      | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 10      | 50      | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id != request.attempt_id
     Given I am the user with id "10"
@@ -77,14 +77,14 @@ Feature: Update the 'current' answer
       """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should be:
-      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
-      | 10      | 50      | 200        | Submission | null    | null       | 0                                                      |
-      | 10      | 50      | 200        | Current    | print 1 | some state | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 10      | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 10      | 50      | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to update the 'current' answer
     Given I am the user with id "10"
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | attempt_id | type    | submission_date     |
+      | id  | user_id | item_id | attempt_id | type    | submitted_at        |
       | 101 | 10      | 50      | 200        | Current | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
@@ -109,6 +109,6 @@ Feature: Update the 'current' answer
       | user_id | item_id | active_attempt_id | answer  | state      |
       | 10      | 50      | 200               | print 1 | some state |
     And the table "users_answers" should be:
-      | id  | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
-      | 100 | 10      | 50      | 200        | Submission | null    | null       | 0                                                      |
-      | 101 | 10      | 50      | 200        | Current    | print 1 | some state | 0                                                      |
+      | id  | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 100 | 10      | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 101 | 10      | 50      | 200        | Current    | print 1 | some state | 0                                                   |

@@ -202,7 +202,7 @@ func writeValue(w io.Writer, value interface{}) {
 			if int64Number, isInt64 := valueMap[key].(int64); isInt64 &&
 				((len(key) > 3 && key[len(key)-3:] == "_id") || key == "id") {
 				valueMap[key] = strconv.FormatInt(int64Number, 10)
-			} else if stringValue, isString := valueMap[key].(string); isString && len(key) > 5 && key[len(key)-5:] == "_date" {
+			} else if stringValue, isString := valueMap[key].(string); isString && isDateColumnName(key) {
 				parsedTime, _ := time.Parse("2006-01-02 15:04:05", stringValue)
 				valueMap[key] = parsedTime.Format(time.RFC3339)
 			}
@@ -212,4 +212,9 @@ func writeValue(w io.Writer, value interface{}) {
 	service.MustNotBeError(err)
 	_, err = w.Write(data)
 	service.MustNotBeError(err)
+}
+
+func isDateColumnName(name string) bool {
+	return strings.HasSuffix(name, "_at") || strings.HasSuffix(name, "_since") ||
+		strings.HasSuffix(name, "_until")
 }

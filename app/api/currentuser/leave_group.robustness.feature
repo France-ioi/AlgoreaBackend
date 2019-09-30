@@ -6,12 +6,12 @@ Feature: User leaves a group - robustness
       | 2  | null          | null           | guest |
       | 3  | 31            | 32             | jane  |
     And the database has the following table 'groups':
-      | id | lock_user_deletion_date |
-      | 11 | null                    |
-      | 14 | null                    |
-      | 15 | 2037-04-29              |
-      | 21 | null                    |
-      | 22 | null                    |
+      | id | lock_user_deletion_until |
+      | 11 | null                     |
+      | 14 | null                     |
+      | 15 | 2037-04-29               |
+      | 21 | null                     |
+      | 22 | null                     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -24,7 +24,7 @@ Feature: User leaves a group - robustness
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 1  | 11              | 21             | requestSent        | 2017-04-29 06:38:38 |
       | 2  | 14              | 21             | direct             | 2017-03-29 06:38:38 |
       | 3  | 15              | 31             | invitationAccepted | 2017-03-29 06:38:38 |
@@ -66,14 +66,14 @@ Feature: User leaves a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Fails if lock_user_deletion_date = NOW() + 1
+  Scenario: Fails if lock_user_deletion_until = NOW() + 1
     Given the DB time now is "2037-04-28 23:59:59"
     And I am the user with id "3"
     When I send a DELETE request to "/current-user/group-memberships/15"
     Then the response code should be 403
     And the response error message should contain "User deletion is locked for this group"
 
-  Scenario: Fails if lock_user_deletion_date > NOW()
+  Scenario: Fails if lock_user_deletion_until > NOW()
     Given I am the user with id "3"
     When I send a DELETE request to "/current-user/group-memberships/15"
     Then the response code should be 403

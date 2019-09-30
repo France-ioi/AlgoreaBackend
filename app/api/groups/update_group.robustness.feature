@@ -10,10 +10,10 @@ Feature: Update a group (groupEdit) - robustness
       | 76 | 13                | 11             | 0       | 0       |
       | 77 | 32                | 15             | 0       | 0       |
     And the database has the following table 'groups':
-      | id | name    | grade | description     | date_created        | type      | redirect_path                          | opened | free_access | code       | code_timer | code_end            | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00   | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | true        | null       | null       | null                | false        |
+      | id | name    | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | true        | null       | null          | null                | false        |
 
   Scenario: Should fail if the user is not an owner of the group
     Given I am the user with id "2"
@@ -58,8 +58,8 @@ Feature: Update a group (groupEdit) - robustness
       "grade": "grade",
       "description": 14.5,
       "opened": "true",
-      "code_timer": 1234,
-      "code_end": "the end",
+      "code_lifetime": 1234,
+      "code_expires_at": "the end",
       "open_contest": 12,
       "redirect_path": "some path"
     }
@@ -76,8 +76,8 @@ Feature: Update a group (groupEdit) - robustness
         "name": ["expected type 'string', got unconvertible type 'float64'"],
         "open_contest": ["expected type 'bool', got unconvertible type 'float64'"],
         "opened": ["expected type 'bool', got unconvertible type 'string'"],
-        "code_end": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
-        "code_timer": ["expected type 'string', got unconvertible type 'float64'"],
+        "code_expires_at": ["decoding error: parsing time \"the end\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"the end\" as \"2006\""],
+        "code_lifetime": ["expected type 'string', got unconvertible type 'float64'"],
         "redirect_path": ["invalid redirect path"]
       },
       "message": "Bad Request",

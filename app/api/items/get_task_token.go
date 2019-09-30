@@ -24,7 +24,7 @@ import (
 //   the service chooses the most recent one among all the user's attempts (or the team's attempts if
 //   `items.has_attempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
 //
-//   * Then `start_date` (if it is NULL) and `last_activity_date` of `groups_attempts` & `user_items` are set to the current time.
+//   * Then `started_at` (if it is NULL) and `latest_activity_at` of `groups_attempts` & `user_items` are set to the current time.
 //
 //   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
 //
@@ -134,7 +134,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			var attemptID int64
 			groupAttemptScope := store.GroupAttempts().
 				Where("group_id = ?", groupID).Where("item_id = ?", itemID)
-			err = groupAttemptScope.Order("last_activity_date DESC").
+			err = groupAttemptScope.Order("latest_activity_at DESC").
 				Select("id, hints_requested, hints_cached").Limit(1).
 				Take(&groupsAttemptInfo).Error()
 
@@ -142,22 +142,22 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			if gorm.IsRecordNotFoundError(err) {
 				attemptID, err = store.GroupAttempts().CreateNew(groupID, itemID)
 				service.MustNotBeError(err)
-			} else { // otherwise, update groups_attempts.start_date (if it is NULL) & groups_attempts.last_activity_date
+			} else { // otherwise, update groups_attempts.started_at (if it is NULL) & groups_attempts.latest_activity_at
 				attemptID = groupsAttemptInfo.ID
 				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
-					"start_date":         gorm.Expr("IFNULL(start_date, ?)", database.Now()),
-					"last_activity_date": database.Now(),
+					"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
+					"latest_activity_at": database.Now(),
 				}).Error())
 			}
 			activeAttemptID = &attemptID
 		}
 
-		// update users_items.active_attempt_id, users_items.start_date (if it is NULL), and users_items.last_activity_date
+		// update users_items.active_attempt_id, users_items.started_at (if it is NULL), and users_items.latest_activity_at
 		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
 				"active_attempt_id":  *activeAttemptID,
-				"start_date":         gorm.Expr("IFNULL(start_date, ?)", database.Now()),
-				"last_activity_date": database.Now(),
+				"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
+				"latest_activity_at": database.Now(),
 			}).Error())
 
 		// propagate groups_attempts and compute users_items

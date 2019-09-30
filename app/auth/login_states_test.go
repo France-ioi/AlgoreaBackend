@@ -34,7 +34,7 @@ func TestCreateLoginState(t *testing.T) {
 
 	db, mock := database.NewDBMock()
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `login_states` (cookie, expiration_date, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
+		"INSERT INTO `login_states` (cookie, expires_at, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
 	)+"$").WithArgs("randomcookie", 7200, "randomstate").WillReturnResult(sqlmock.NewResult(12, 1))
 
 	conf := config.Server{
@@ -105,11 +105,11 @@ func TestCreateLoginState_RetriesOnCollision(t *testing.T) {
 
 	db, mock := database.NewDBMock()
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `login_states` (cookie, expiration_date, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
+		"INSERT INTO `login_states` (cookie, expires_at, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
 	)+"$").WithArgs("randomcookie", 7200, "randomstate").
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry 'randomcookie' for key 'PRIMARY'"})
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `login_states` (cookie, expiration_date, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
+		"INSERT INTO `login_states` (cookie, expires_at, state) VALUES (?, NOW() + INTERVAL ? SECOND, ?)",
 	)+"$").WithArgs("newrandomcookie", 7200, "randomstate").WillReturnResult(sqlmock.NewResult(12, 1))
 
 	conf := config.Server{
@@ -150,7 +150,7 @@ func TestLoadLoginState(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			db, mock := database.NewDBMock()
 			expectation := mock.ExpectQuery("^" + regexp.QuoteMeta(
-				"SELECT state FROM `login_states` WHERE (cookie = ?) AND (expiration_date > NOW()) LIMIT 1",
+				"SELECT state FROM `login_states` WHERE (cookie = ?) AND (expires_at > NOW()) LIMIT 1",
 			) + "$").WithArgs("somecookie")
 			if test.dbError != nil {
 				expectation.WillReturnError(test.dbError)

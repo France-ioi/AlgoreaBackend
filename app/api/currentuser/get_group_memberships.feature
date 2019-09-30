@@ -20,7 +20,7 @@ Feature: Get group memberships for the current user
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | status_date         |
+      | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
       | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
       | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |
@@ -47,7 +47,7 @@ Feature: Get group memberships for the current user
           "description": "Another friends group",
           "type": "Friends"
         },
-        "status_date": "2017-10-29T06:38:38Z",
+        "type_changed_at": "2017-10-29T06:38:38Z",
         "type": "direct"
       },
       {
@@ -58,7 +58,7 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "status_date": "2017-07-29T06:38:38Z",
+        "type_changed_at": "2017-07-29T06:38:38Z",
         "type": "requestAccepted"
       },
       {
@@ -69,7 +69,7 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "status_date": "2017-06-29T06:38:38Z",
+        "type_changed_at": "2017-06-29T06:38:38Z",
         "type": "invitationAccepted"
       }
     ]
@@ -90,7 +90,7 @@ Feature: Get group memberships for the current user
           "description": "Another friends group",
           "type": "Friends"
         },
-        "status_date": "2017-10-29T06:38:38Z",
+        "type_changed_at": "2017-10-29T06:38:38Z",
         "type": "direct"
       }
     ]

@@ -11,7 +11,7 @@ import (
 // summary: Accept a group invitation
 // description:
 //   Let a user approve an invitation to join a group.
-//   On success the service sets `groups_groups.type` to `invitationAccepted` and `status_date` to current UTC time.
+//   On success the service sets `groups_groups.type` to `invitationAccepted` and `type_changed_at` to current UTC time.
 //   It also refreshes the access rights.
 //
 //   * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,

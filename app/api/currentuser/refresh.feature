@@ -50,11 +50,11 @@ Feature: Update the local user info cache
       }
       """
     And the database has the following table 'users':
-      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | registration_date   | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | id | self_group_id | owned_group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 2  | 13            | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database has the following table 'sessions':
-      | expiration_date     | user_id | issuer       | issued_at_date      | access_token |
+      | expires_at          | user_id | issuer       | issued_at           | access_token |
       | 2020-06-16 22:02:49 | 1       | login-module | 2019-06-16 22:02:28 | accesstoken  |
     And the login module "account" endpoint for token "accesstoken" returns 200 with body:
       """
@@ -72,7 +72,7 @@ Feature: Update the local user info cache
       """
     And the table "users" should stay unchanged but the row with id "1"
     And the table "users" at id "1" should be:
-      | id | self_group_id | owned_group_id | last_login_date     | last_activity_date  | temp_user | registration_date   | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip     |
+      | id | self_group_id | owned_group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip     |
       | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 192.168.0.1 |
   Examples:
     | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified |

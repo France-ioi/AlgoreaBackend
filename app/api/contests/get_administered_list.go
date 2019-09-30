@@ -91,7 +91,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins("JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id").
 		JoinsUserAndDefaultItemStrings(user).
-		Where("groups_items.cached_full_access_date <= NOW() OR groups_items.cached_access_solutions_date <= NOW()").
+		Where("groups_items.cached_full_access_since <= NOW() OR groups_items.cached_solutions_access_since <= NOW()").
 		Where("groups_ancestors.child_group_id = ?", user.SelfGroupID).
 		Where("items.duration IS NOT NULL").
 		Group("items.id")
@@ -126,9 +126,9 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			Joins(`
 				JOIN groups_items AS parent_groups_items
 					ON parent_groups_items.item_id = items.id AND (
-						parent_groups_items.cached_full_access_date <= NOW() OR
-						parent_groups_items.cached_partial_access_date <= NOW() OR
-						parent_groups_items.cached_grayed_access_date <= NOW()
+						parent_groups_items.cached_full_access_since <= NOW() OR
+						parent_groups_items.cached_partial_access_since <= NOW() OR
+						parent_groups_items.cached_grayed_access_since <= NOW()
 				)`).
 			Joins(`
 				JOIN groups_ancestors AS parent_groups_ancestors

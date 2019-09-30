@@ -10,14 +10,14 @@ Feature: Submit a new answer
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | status_date |
-      | 15 | 22              | 13             | direct | null        |
+      | id | parent_group_id | child_group_id | type   | type_changed_at |
+      | 15 | 22              | 13             | direct | null            |
     And the database has the following table 'items':
       | id |
       | 50 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_date | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38        | 10              |
+      | group_id | item_id | cached_partial_access_since | creator_user_id |
+      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
     And the database has the following table 'users_items':
       | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts |
       | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    |
@@ -69,13 +69,13 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
-      | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
-      | 10      | 50      | 100        | Submission | print 1 | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 10      | 50      | 100        | Submission | print 1 | 1                                                   |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
@@ -126,11 +126,11 @@ Feature: Submit a new answer
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
-      | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submission_date, NOW())) < 3 |
-      | 10      | 50      | 100        | Submission | print(2) | 1                                                      |
+      | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 10      | 50      | 100        | Submission | print(2) | 1                                                   |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, last_activity_date, NOW())) < 3 |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |

@@ -17,10 +17,10 @@ import (
 // description:
 //   Lets a user to join a team group by a code.
 //   On success the service inserts a row into `groups_groups` (or updates an existing one)
-//   with `type`=`requestAccepted` and `status_date` = current UTC time.
+//   with `type`=`requestAccepted` and `type_changed_at` = current UTC time.
 //   It also refreshes the access rights.
 //
-//   * If there is no team with `free_access` = 1, `code_end` > NOW() (or NULL), and `code` = `code`,
+//   * If there is no team with `free_access` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
 //     the forbidden error is returned.
 //
 //   * If the team has `team_item_id` set and the user is already on a team with the same `team_item_id`,
@@ -67,16 +67,16 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
-			ID              int64
-			TeamItemID      *int64
-			CodeEndIsNull   bool
-			CodeTimerIsNull bool
+			ID                 int64
+			TeamItemID         *int64
+			CodeEndIsNull      bool
+			CodeLifetimeIsNull bool
 		}
 		errInTransaction := store.Groups().WithWriteLock().
 			Where("type = 'Team'").Where("free_access").
 			Where("code LIKE ?", code).
-			Where("code_end IS NULL OR NOW() < code_end").
-			Select("id, team_item_id, code_end IS NULL AS code_end_is_null, code_timer IS NULL AS code_timer_is_null").
+			Where("code_expires_at IS NULL OR NOW() < code_expires_at").
+			Select("id, team_item_id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
 			logging.GetLogEntry(r).Warnf("A user with id = %d tried to join a group using a wrong/expired code", user.ID)
@@ -97,9 +97,9 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			}
 		}
 
-		if groupInfo.CodeEndIsNull && !groupInfo.CodeTimerIsNull {
+		if groupInfo.CodeEndIsNull && !groupInfo.CodeLifetimeIsNull {
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
-				UpdateColumn("code_end", gorm.Expr("ADDTIME(NOW(), code_timer)")).Error())
+				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
 			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)

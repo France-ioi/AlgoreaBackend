@@ -63,17 +63,17 @@ type itemUserNotGrayed struct {
 	HintsCached int32 `json:"hints_cached"`
 	// Nullable; only if not grayed
 	// example: 2019-09-11T07:30:56Z
-	StartDate *database.Time `json:"start_date,string"`
+	StartedAt *database.Time `json:"started_at,string"`
 	// only if not grayed
 	// example: 2019-09-11T07:30:56Z
 	// type: string
-	ValidationDate *database.Time `json:"validation_date,string"`
+	ValidatedAt *database.Time `json:"validated_at,string"`
 	// Nullable; only if not grayed
 	// example: 2019-09-11T07:30:56Z
-	FinishDate *database.Time `json:"finish_date,string"`
+	FinishedAt *database.Time `json:"finished_at,string"`
 	// Nullable; only if not grayed
 	// example: 2019-09-11T07:30:56Z
-	ContestStartDate *database.Time `json:"contest_start_date,string"`
+	ContestStartedAt *database.Time `json:"contest_started_at,string"`
 }
 
 type itemUserRootNodeNotChapter struct {
@@ -125,7 +125,7 @@ type itemCommonFields struct {
 	// Nullable
 	// required: true
 	// example: 2019-09-11T07:30:56Z
-	AccessOpenDate *database.Time `json:"access_open_date"`
+	ContestOpensAt *database.Time `json:"contest_opens_at"`
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// Nullable
@@ -134,7 +134,7 @@ type itemCommonFields struct {
 	// Nullable
 	// required: true
 	// example: 2019-09-11T07:30:56Z
-	EndContestDate *database.Time `json:"end_contest_date"`
+	ContestClosesAt *database.Time `json:"contest_closes_at"`
 	// required: true
 	NoScore bool `json:"no_score"`
 	// Nullable
@@ -283,9 +283,9 @@ type rawItem struct {
 	TeamsEditable          bool
 	TeamMaxMembers         int32
 	HasAttempts            bool
-	AccessOpenDate         *database.Time
+	ContestOpensAt         *database.Time
 	Duration               *string
-	EndContestDate         *database.Time
+	ContestClosesAt        *database.Time
 	NoScore                bool
 	GroupCodeEnter         *bool
 
@@ -317,10 +317,10 @@ type rawItem struct {
 	UserFinished            bool           `sql:"column:finished"`
 	UserKeyObtained         bool           `sql:"column:key_obtained"`
 	UserHintsCached         int32          `sql:"column:hints_cached"`
-	UserStartDate           *database.Time `sql:"column:start_date"`
-	UserValidationDate      *database.Time `sql:"column:validation_date"`
-	UserFinishDate          *database.Time `sql:"column:finish_date"`
-	UserContestStartDate    *database.Time `sql:"column:contest_start_date"`
+	UserStartedAt           *database.Time `sql:"column:started_at"`
+	UserValidatedAt         *database.Time `sql:"column:validated_at"`
+	UserFinishedAt          *database.Time `sql:"column:finished_at"`
+	UserContestStartedAt    *database.Time `sql:"column:contest_started_at"`
 	UserState               *string        `sql:"column:state"`  // only if not a chapter
 	UserAnswer              *string        `sql:"column:answer"` // only if not a chapter
 
@@ -349,9 +349,9 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.teams_editable,
 		items.team_max_members,
 		items.has_attempts,
-		items.access_open_date,
+		items.contest_opens_at,
 		items.duration,
-		items.end_contest_date,
+		items.contest_closes_at,
 		items.no_score,
 		items.default_language_id,
 		items.group_code_enter, `
@@ -399,9 +399,9 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.teams_editable,
 			items.team_max_members,
 			items.has_attempts,
-			items.access_open_date,
+			items.contest_opens_at,
 			items.duration,
-			items.end_contest_date,
+			items.contest_closes_at,
 			items.no_score,
 			items.group_code_enter,
 
@@ -419,10 +419,10 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			users_items.finished AS finished,
 			users_items.key_obtained AS key_obtained,
 			users_items.hints_cached AS hints_cached,
-			users_items.start_date AS start_date,
-			users_items.validation_date AS validation_date,
-			users_items.finish_date AS finish_date,
-			users_items.contest_start_date AS contest_start_date,
+			users_items.started_at AS started_at,
+			users_items.validated_at AS validated_at,
+			users_items.finished_at AS finished_at,
+			users_items.contest_started_at AS contest_started_at,
 			IF(items.type <> 'Chapter', users_items.state, NULL) as state,
 			users_items.answer,
 
@@ -520,10 +520,10 @@ func constructUserNotGrayed(rawData *rawItem) *itemUserNotGrayed {
 		Finished:            rawData.UserFinished,
 		KeyObtained:         rawData.UserKeyObtained,
 		HintsCached:         rawData.UserHintsCached,
-		StartDate:           rawData.UserStartDate,
-		ValidationDate:      rawData.UserValidationDate,
-		FinishDate:          rawData.UserFinishDate,
-		ContestStartDate:    rawData.UserContestStartDate,
+		StartedAt:           rawData.UserStartedAt,
+		ValidatedAt:         rawData.UserValidatedAt,
+		FinishedAt:          rawData.UserFinishedAt,
+		ContestStartedAt:    rawData.UserContestStartedAt,
 	}
 }
 
@@ -539,9 +539,9 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		TeamsEditable:          rawData.TeamsEditable,
 		TeamMaxMembers:         rawData.TeamMaxMembers,
 		HasAttempts:            rawData.HasAttempts,
-		AccessOpenDate:         rawData.AccessOpenDate,
+		ContestOpensAt:         rawData.ContestOpensAt,
 		Duration:               rawData.Duration,
-		EndContestDate:         rawData.EndContestDate,
+		ContestClosesAt:        rawData.ContestClosesAt,
 		NoScore:                rawData.NoScore,
 		GroupCodeEnter:         rawData.GroupCodeEnter,
 	}

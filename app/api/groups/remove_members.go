@@ -14,7 +14,7 @@ import (
 // summary: Remove members from a group
 // description:
 //   Lets an admin remove users from a group.
-//   On success the service sets `groups_groups.type` to "removed" and `status_date` to current UTC time
+//   On success the service sets `groups_groups.type` to "removed" and `type_changed_at` to current UTC time
 //   for each self group of `user_ids`. It also refreshes the access rights.
 //
 //
