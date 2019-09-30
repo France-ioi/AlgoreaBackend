@@ -16,7 +16,7 @@ type GroupViewResponseCodePart struct {
 	// Nullable
 	Code *string `json:"code"`
 	// Nullable
-	CodeTimer *string `json:"code_timer"`
+	CodeLifetime *string `json:"code_lifetime"`
 	// Nullable
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
@@ -112,7 +112,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
 			groups.type, groups.redirect_path, groups.opened, groups.free_access,
 			IF(groups_ancestors.id IS NOT NULL, groups.code, NULL) AS code,
-			IF(groups_ancestors.id IS NOT NULL, groups.code_timer, NULL) AS code_timer,
+			IF(groups_ancestors.id IS NOT NULL, groups.code_lifetime, NULL) AS code_lifetime,
 			IF(groups_ancestors.id IS NOT NULL, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_contest,
 			groups_ancestors.id IS NOT NULL AS current_user_is_owner,

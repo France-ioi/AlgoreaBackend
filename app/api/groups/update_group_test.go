@@ -22,15 +22,15 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		json    string
 		wantErr bool
 	}{
-		{"code_timer=99:59:59", `{"code_timer":"99:59:59"}`, false},
-		{"code_timer=00:00:00", `{"code_timer":"00:00:00"}`, false},
+		{"code_lifetime=99:59:59", `{"code_lifetime":"99:59:59"}`, false},
+		{"code_lifetime=00:00:00", `{"code_lifetime":"00:00:00"}`, false},
 
-		{"code_timer=99:60:59", `{"code_timer":"99:60:59"}`, true},
-		{"code_timer=99:59:60", `{"code_timer":"99:59:60"}`, true},
-		{"code_timer=59:59", `{"code_timer":"59:59"}`, true},
-		{"code_timer=59", `{"code_timer":"59"}`, true},
-		{"code_timer=59", `{"code_timer":"invalid"}`, true},
-		{"code_timer=", `{"code_timer":""}`, true},
+		{"code_lifetime=99:60:59", `{"code_lifetime":"99:60:59"}`, true},
+		{"code_lifetime=99:59:60", `{"code_lifetime":"99:59:60"}`, true},
+		{"code_lifetime=59:59", `{"code_lifetime":"59:59"}`, true},
+		{"code_lifetime=59", `{"code_lifetime":"59"}`, true},
+		{"code_lifetime=59", `{"code_lifetime":"invalid"}`, true},
+		{"code_lifetime=", `{"code_lifetime":""}`, true},
 
 		{"redirect_path=9", `{"redirect_path":"9"}`, false},
 		{"redirect_path=1234567890", `{"redirect_path":"1234567890"}`, false},

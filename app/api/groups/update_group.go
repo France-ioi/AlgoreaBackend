@@ -28,7 +28,7 @@ type groupUpdateInput struct {
 	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	CodeTimer *string `json:"code_timer" validate:"omitempty,duration"`
+	CodeLifetime *string `json:"code_lifetime" validate:"omitempty,duration"`
 	// Nullable
 	CodeExpiresAt *time.Time `json:"code_expires_at"`
 	// Nullable

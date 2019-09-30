@@ -10,25 +10,25 @@ Feature: Get group by groupID (groupView)
       | 6  | dirk  | 71            | 72             |
       | 7  | chuck | 81            | 82             |
     And the database has the following table 'groups':
-      | id | name        | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_timer | code_expires_at     | open_contest |
-      | 11 | Group A     | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | false       | ybqybxnlyo | 01:00:00   | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B     | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | false       | ybabbxnlyo | 01:00:00   | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C     | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null       | null                | false        |
-      | 15 | Group D     | -4    | Other Group     | 2019-04-06 09:26:40 | Other     | null                                   | false  | true        | abcdefghij | null       | null                | false        |
-      | 21 | owner       | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 22 | owner-admin | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 31 | john        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 32 | john-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 41 | jane        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 42 | jane-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 51 | rick        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 52 | rick-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 61 | ian         | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 62 | ian-admin   | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 71 | dirk        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 72 | dirk-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
-      | 81 | chuck       | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null       | null                | false        |
-      | 82 | chuck-admin | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null       | null                | false        |
+      | id | name        | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A     | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | false       | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B     | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | false       | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 14 | Group C     | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null          | null                | false        |
+      | 15 | Group D     | -4    | Other Group     | 2019-04-06 09:26:40 | Other     | null                                   | false  | true        | abcdefghij | null          | null                | false        |
+      | 21 | owner       | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 22 | owner-admin | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 31 | john        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 32 | john-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 41 | jane        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 42 | jane-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 51 | rick        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 52 | rick-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 61 | ian         | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 62 | ian-admin   | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 71 | dirk        | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 72 | dirk-admin  | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 81 | chuck       | 0     | null            | 2019-01-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 82 | chuck-admin | 0     | null            | 2019-01-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 11              | 31             | invitationAccepted |
@@ -89,7 +89,7 @@ Feature: Get group by groupID (groupView)
       "opened": true,
       "free_access": false,
       "code": "ybabbxnlyo",
-      "code_timer": "01:00:00",
+      "code_lifetime": "01:00:00",
       "code_expires_at": "2017-10-14T05:39:48Z",
       "open_contest": true,
       "current_user_is_owner": true,
