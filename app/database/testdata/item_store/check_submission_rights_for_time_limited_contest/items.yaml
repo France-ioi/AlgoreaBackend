@@ -1,4 +1,4 @@
 - {id: 14}
-- {id: 114, duration: 00:00:01, team_mode: None}
+- {id: 114, duration: 00:00:01, contest_entering_condition: None}
 - {id: 15}
 - {id: 115, duration: 00:00:01}

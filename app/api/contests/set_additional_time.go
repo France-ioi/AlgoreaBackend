@@ -85,7 +85,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 	service.MustNotBeError(err)
 
-	isTeamOnly, err := srv.getTeamModeForTimedContestManagedByUser(itemID, user)
+	isTeamOnly, err := srv.getContestEnteringConditionForTimedContestManagedByUser(itemID, user)
 	if gorm.IsRecordNotFoundError(err) || (isTeamOnly && groupType == "UserSelf") {
 		return service.InsufficientAccessRightsError
 	}

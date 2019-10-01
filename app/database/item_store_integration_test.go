@@ -139,26 +139,35 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).UserItems().
-					Where("item_id = ?", 500). // chapter
-					Where("user_id = ?", 4).
-					UpdateColumn("contest_started_at", database.Now()).Error()
+				return database.NewDataStore(db).GroupItems().InsertMap(
+					map[string]interface{}{
+						"item_id":            500, // chapter
+						"group_id":           14,
+						"creator_user_id":    1,
+						"contest_started_at": database.Now(),
+					})
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).UserItems().
-					Where("item_id = ?", 115). // chapter
-					Where("user_id = ?", 5).
-					UpdateColumn("contest_started_at", database.Now()).Error()
+				return database.NewDataStore(db).GroupItems().
+					InsertMap(map[string]interface{}{
+						"item_id":            115,
+						"group_id":           15,
+						"creator_user_id":    1,
+						"contest_started_at": database.Now(),
+					})
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).UserItems().
-					Where("item_id = ?", 114). // chapter
-					Where("user_id = ?", 7).
-					UpdateColumn("contest_started_at", database.Now()).Error()
+				return database.NewDataStore(db).GroupItems().
+					InsertMap(map[string]interface{}{
+						"item_id":            114,
+						"group_id":           17,
+						"creator_user_id":    1,
+						"contest_started_at": database.Now(),
+					})
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
 			wantReason: errors.New("the exercise for which you wish to submit an answer is a part " +
@@ -198,7 +207,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {id: 4, login: 4, self_group_id: 104}
 			- {id: 5, login: 5, self_group_id: 105}
 			- {id: 6, login: 6, self_group_id: 106}
-		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15, team_mode: "None"}]
+		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15, contest_entering_condition: "None"}]
 		groups_ancestors:
 			- {ancestor_group_id: 101, child_group_id: 101}
 			- {ancestor_group_id: 102, child_group_id: 102}
@@ -207,19 +216,21 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {ancestor_group_id: 105, child_group_id: 105}
 			- {ancestor_group_id: 106, child_group_id: 106}
 		users_items:
-			- {user_id: 2, item_id: 12} # not started
-			- {user_id: 3, item_id: 13, contest_started_at: 2019-03-22 08:44:55, finished_at: 2019-03-23 08:44:55} #finished
-			- {user_id: 4, item_id: 14, contest_started_at: 2019-03-22 08:44:55} # ok
-			- {user_id: 5, item_id: 15, contest_started_at: 2019-04-22 08:44:55} # ok with team mode
-			- {user_id: 6, item_id: 14, contest_started_at: 2019-03-22 08:44:55} # multiple
-			- {user_id: 6, item_id: 15, contest_started_at: 2019-03-22 08:43:55} # multiple
+			- {user_id: 2, item_id: 12}
+			- {user_id: 3, item_id: 13, finished_at: 2019-03-23 08:44:55} #finished
+			- {user_id: 4, item_id: 14} # ok
+			- {user_id: 5, item_id: 15} # ok with team mode
+			- {user_id: 6, item_id: 14} # multiple
+			- {user_id: 6, item_id: 15} # multiple
 		groups_items:
-			- {group_id: 102, item_id: 12, creator_user_id: 1}
-			- {group_id: 103, item_id: 13, creator_user_id: 1}
-			- {group_id: 104, item_id: 14, additional_time: 0000-00-00 00:01:00, creator_user_id: 1}
-			- {group_id: 105, item_id: 15, creator_user_id: 1}
-			- {group_id: 106, item_id: 14, additional_time: 0000-00-00 00:01:00, creator_user_id: 1}
-			- {group_id: 106, item_id: 15, additional_time: 0000-00-00 00:01:00, creator_user_id: 1}`)
+			- {group_id: 102, item_id: 12, creator_user_id: 1} # not started
+			- {group_id: 104, item_id: 14, additional_time: 0000-00-00 00:01:00, creator_user_id: 1,
+				 contest_started_at: 2019-03-22 08:44:55} # ok
+			- {group_id: 105, item_id: 15, creator_user_id: 1, contest_started_at: 2019-04-22 08:44:55}  # ok with team mode
+			- {group_id: 106, item_id: 14, additional_time: 0000-00-00 00:01:00, creator_user_id: 1,
+				 contest_started_at: 2019-03-22 08:44:55} # multiple
+			- {group_id: 106, item_id: 15, additional_time: 0000-00-00 00:01:00, creator_user_id: 1,
+				 contest_started_at: 2019-03-22 08:43:55} # multiple`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -239,12 +250,12 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
 		}},
 		{name: "ok with team mode", userID: 5, want: &database.ActiveContestInfo{
-			ItemID:            15,
-			UserID:            5,
-			DurationInSeconds: 0,
-			EndTime:           time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
-			StartTime:         time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
-			TeamMode:          ptrString("None"),
+			ItemID:                   15,
+			UserID:                   5,
+			DurationInSeconds:        0,
+			EndTime:                  time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
+			StartTime:                time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
+			ContestEnteringCondition: ptrString("None"),
 		}},
 		{
 			name: "ok with multiple active contests", userID: 6, want: &database.ActiveContestInfo{

@@ -532,13 +532,13 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Wrong team_mode
+  Scenario: Wrong contest_entering_condition
     Given I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """
       {
         "type": "Chapter",
-        "team_mode": "Wrong",
+        "contest_entering_condition": "Wrong",
         "language_id": "3",
         "title": "my title",
         "parent_item_id": "21",
@@ -553,7 +553,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_mode": ["team_mode must be one of [All Half One None]"]
+          "contest_entering_condition": ["contest_entering_condition must be one of [All Half One None]"]
         }
       }
       """

@@ -339,12 +339,12 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Wrong team_mode
+  Scenario: Wrong contest_entering_condition
     Given I am the user with id "1"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "team_mode": "Wrong"
+        "contest_entering_condition": "Wrong"
       }
       """
     Then the response code should be 400
@@ -355,7 +355,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "team_mode": ["team_mode must be one of [All Half One None]"]
+          "contest_entering_condition": ["contest_entering_condition must be one of [All Half One None]"]
         }
       }
       """
