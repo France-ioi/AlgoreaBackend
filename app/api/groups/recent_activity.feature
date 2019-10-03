@@ -6,11 +6,11 @@ Feature: Get recent activity for group_id and item_id
 			| 2  | user  | 0         | 11            | 12             | John        | Doe       | en               |
 			| 3  | jane  | 0         | 31            | 32             | Jane        | Doe       | en               |
 		And the database has the following table 'groups_ancestors':
-			| id | ancestor_group_id | child_group_id | is_self | version |
-			| 75 | 22                | 13             | 0       | 0       |
-			| 76 | 13                | 11             | 0       | 0       |
-			| 77 | 22                | 11             | 0       | 0       |
-			| 78 | 21                | 21             | 1       | 0       |
+			| id | ancestor_group_id | child_group_id | is_self |
+			| 75 | 22                | 13             | 0       |
+			| 76 | 13                | 11             | 0       |
+			| 77 | 22                | 11             | 0       |
+			| 78 | 21                | 21             | 1       |
 		And the database has the following table 'users_answers':
    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
    | 2  | 2       | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
@@ -22,18 +22,18 @@ Feature: Get recent activity for group_id and item_id
    | 7  | 3       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
    | 8  | 3       | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
 		And the database has the following table 'items':
-			| id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
-			| 200 | Category | false          | false    | 1234,2345         | true               | 0       |
+			| id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
+			| 200 | Category | false          | false    | 1234,2345         | true               |
 		And the database has the following table 'groups_items':
-   | id | group_id | item_id | cached_grayed_access_since | creator_user_id | version |
-   | 43 | 21       | 200     | 2019-03-22 06:38:38        | 0               | 0       |
+   | id | group_id | item_id | cached_grayed_access_since | creator_user_id |
+   | 43 | 21       | 200     | 2019-03-22 06:38:38        | 0               |
 		And the database has the following table 'items_ancestors':
-			| id | ancestor_item_id | child_item_id | version |
-			| 1  | 200              | 200           | 0       |
+			| id | ancestor_item_id | child_item_id |
+			| 1  | 200              | 200           |
 		And the database has the following table 'items_strings':
-			| id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    | version |
-			| 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   | 0       |
-			| 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire | 0       |
+			| id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
+			| 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+			| 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
 		And the database has the following table 'languages':
 			| id | code |
 			| 2  | fr   |

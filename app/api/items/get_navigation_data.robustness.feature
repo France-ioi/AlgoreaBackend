@@ -1,37 +1,37 @@
 Feature: Get item for tree navigation - robustness
 Background:
   Given the database has the following table 'users':
-    | id | login | temp_user | self_group_id | owned_group_id | version |
-    | 1  | jdoe  | 0         | 11            | 12             | 0       |
-    | 2  | guest | 0         | 404           | 404            | 0       |
+    | id | login | temp_user | self_group_id | owned_group_id |
+    | 1  | jdoe  | 0         | 11            | 12             |
+    | 2  | guest | 0         | 404           | 404            |
   And the database has the following table 'groups':
-    | id | name       | text_id | grade | type      | version |
-    | 11 | jdoe       |         | -2    | UserAdmin | 0       |
-    | 12 | jdoe-admin |         | -2    | UserAdmin | 0       |
-    | 13 | Group B    |         | -2    | Class     | 0       |
+    | id | name       | text_id | grade | type      |
+    | 11 | jdoe       |         | -2    | UserAdmin |
+    | 12 | jdoe-admin |         | -2    | UserAdmin |
+    | 13 | Group B    |         | -2    | Class     |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id | version |
-    | 61 | 13              | 11             | 0       |
+    | id | parent_group_id | child_group_id |
+    | 61 | 13              | 11             |
   And the database has the following table 'groups_ancestors':
-    | id | ancestor_group_id | child_group_id | is_self | version |
-    | 71 | 11                | 11             | 1       | 0       |
-    | 72 | 12                | 12             | 1       | 0       |
-    | 73 | 13                | 13             | 1       | 0       |
-    | 74 | 13                | 11             | 0       | 0       |
+    | id | ancestor_group_id | child_group_id | is_self |
+    | 71 | 11                | 11             | 1       |
+    | 72 | 12                | 12             | 1       |
+    | 73 | 13                | 13             | 1       |
+    | 74 | 13                | 11             | 0       |
   And the database has the following table 'items':
-    | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder | version |
-    | 190 | Category | false          | false    | 1234,2345         | true               | 0       |
-    | 200 | Category | false          | false    | 1234,2345         | true               | 0       |
+    | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
+    | 190 | Category | false          | false    | 1234,2345         | true               |
+    | 200 | Category | false          | false    | 1234,2345         | true               |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id | version |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               | 0       |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               | 0       |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
   And the database has the following table 'items_strings':
-    | id | item_id | language_id | title      | version |
-    | 53 | 200     | 1           | Category 1 | 0       |
+    | id | item_id | language_id | title      |
+    | 53 | 200     | 1           | Category 1 |
   And the database has the following table 'users_items':
-    | id | user_id | item_id | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        | version |
-    | 1  | 1       | 200     | 12345 | 10                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 0       |
+    | id | user_id | item_id | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        |
+    | 1  | 1       | 200     | 12345 | 10                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
 
   Scenario: Should fail when the user doesn't have access to the root item
     Given I am the user with id "1"

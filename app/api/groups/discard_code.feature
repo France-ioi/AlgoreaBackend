@@ -10,11 +10,11 @@ Feature: Discard the code of the given group
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 3456789abc | 01:00:00      | 2017-10-14 05:39:48 |
       | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null       | null          | null                |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self | version |
-      | 75 | 22                | 13             | 0       | 0       |
-      | 76 | 13                | 11             | 0       | 0       |
-      | 77 | 22                | 11             | 0       | 0       |
-      | 78 | 21                | 21             | 1       | 0       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 75 | 22                | 13             | 0       |
+      | 76 | 13                | 11             | 0       |
+      | 77 | 22                | 11             | 0       |
+      | 78 | 21                | 21             | 1       |
 
   Scenario: User is an admin of the group
     Given I am the user with id "1"

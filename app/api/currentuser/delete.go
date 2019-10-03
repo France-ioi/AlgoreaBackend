@@ -20,21 +20,19 @@ import (
 //
 //                The data to be deleted:
 //
-//                1. [`users_threads`, `history_users_threads`, `users_answers`, `users_items`, `history_users_items`,
-//                    `filters`, `history_filters`, `sessions`, `refresh_tokens`]
+//                1. [`users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
 //                   having `user_id` = `users.id`;
-//                2. [`groups_items`, `history_groups_items`, `groups_attempts`, `history_groups_attempts`,
-//                    `groups_login_prefixes`, `history_groups_login_prefixes`]
+//                2. [`groups_items`, `groups_attempts`, `groups_login_prefixes`]
 //                   having `group_id` = `users.self_group_id` or `group_id` = `users.owned_group_id`;
 //                3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
 //
-//                4. [`groups_groups`, `history_groups_groups`] having `parent_group_id` or `child_group_id` equal
+//                4. `groups_groups` having `parent_group_id` or `child_group_id` equal
 //                   to one of `users.self_group_id`/`users.owned_group_id`;
-//                5. [`groups_ancestors`, `history_groups_ancestors`] having `ancestor_group_id` or `child_group_id` equal
+//                5. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
 //                   to one of `users.self_group_id`/`users.owned_group_id`;
-//                6. [`groups_propagate`, `groups`, `history_groups`] having `id` equal to one of
+//                6. [`groups_propagate`, `groups`] having `id` equal to one of
 //                   `users.self_group_id`/`users.owned_group_id`;
-//                7. `users`, `history_users` having `id` = `users.id`.
+//                7. `users` having `id` = `users.id`.
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with

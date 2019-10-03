@@ -19,14 +19,14 @@ import (
 //   Returns a downloadable JSON file with all the current user's data.
 //   The content returned is just the dump of raw entries of each table related to the user
 //
-//     * `current_user` (from `users`): all attributes except `version`
-//     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”
+//     * `current_user` (from `users`): all attributes;
+//     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
 //     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
 //     * `users_answers`: all attributes;
-//     * `users_items`: all attributes except `version`;
-//     * `groups_attempts`: the user's or his teams' attempts, all attributes except `version`;
-//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes except `version` + `groups.name`.
+//     * `users_items`: all attributes;
+//     * `groups_attempts`: the user's or his teams' attempts, all attributes;
+//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -57,7 +57,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	service.MustNotBeError(err)
 
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "users", []string{"version"})
+		columns := getColumnsList(srv.Store, databaseName, "users", nil)
 		var userData []map[string]interface{}
 		service.MustNotBeError(srv.Store.Users().ByID(user.ID).Select(columns).ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
@@ -111,14 +111,14 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 		writeComma(w)
 		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "users_items", []string{"version"})
+			columns := getColumnsList(srv.Store, databaseName, "users_items", nil)
 			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.ID).
 				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("groups_attempts", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", []string{"version"})
+			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", nil)
 			service.MustNotBeError(srv.Store.GroupAttempts().
 				Select(columns).
 				Where("group_id = ?", user.SelfGroupID).
@@ -137,7 +137,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	writeComma(w)
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "groups_groups", []string{"version"})
+		columns := getColumnsList(srv.Store, databaseName, "groups_groups", nil)
 		service.MustNotBeError(srv.Store.GroupGroups().
 			Where("child_group_id = ?", user.SelfGroupID).
 			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
@@ -152,12 +152,14 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 }
 
 func getColumnsList(store *database.DataStore, databaseName, tableName string, excludeColumns []string) string {
-	var columns []string
-	service.MustNotBeError(store.Table("INFORMATION_SCHEMA.COLUMNS").
+	query := store.Table("INFORMATION_SCHEMA.COLUMNS").
 		Where("TABLE_SCHEMA = ?", databaseName).
-		Where("TABLE_NAME = ?", tableName).
-		Where("COLUMN_NAME NOT IN (?)", excludeColumns).
-		Pluck("CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`')", &columns).Error())
+		Where("TABLE_NAME = ?", tableName)
+	if len(excludeColumns) > 0 {
+		query = query.Where("COLUMN_NAME NOT IN (?)", excludeColumns)
+	}
+	var columns []string
+	service.MustNotBeError(query.Pluck("CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`')", &columns).Error())
 	return strings.Join(columns, ", ")
 }
 

@@ -2,58 +2,58 @@ Feature: Get item view information
 
   Background:
     Given the database has the following table 'users':
-      | id | login      | temp_user | self_group_id | owned_group_id | default_language | version |
-      | 1  | jdoe       | 0         | 11            | 12             |                  | 0       |
-      | 2  | nosolution | 0         | 14            | 16             |                  | 0       |
-      | 3  | fr         | 0         | 17            | 21             | fr               | 0       |
-      | 4  | grayed     | 0         | 22            | 26             |                  | 0       |
+      | id | login      | temp_user | self_group_id | owned_group_id | default_language |
+      | 1  | jdoe       | 0         | 11            | 12             |                  |
+      | 2  | nosolution | 0         | 14            | 16             |                  |
+      | 3  | fr         | 0         | 17            | 21             | fr               |
+      | 4  | grayed     | 0         | 22            | 26             |                  |
     And the database has the following table 'groups':
-      | id | name       | text_id | grade | type      | version |
-      | 11 | jdoe       |         | -2    | UserAdmin | 0       |
-      | 12 | jdoe-admin |         | -2    | UserAdmin | 0       |
-      | 13 | Group B    |         | -2    | Class     | 0       |
-      | 14 | nosolution |         | -2    | UserAdmin | 0       |
-      | 15 | Group C    |         | -2    | Class     | 0       |
-      | 22 | grayed     |         | -2    | Class     | 0       |
-      | 26 | Group D    |         | -2    | Class     | 0       |
+      | id | name       | text_id | grade | type      |
+      | 11 | jdoe       |         | -2    | UserAdmin |
+      | 12 | jdoe-admin |         | -2    | UserAdmin |
+      | 13 | Group B    |         | -2    | Class     |
+      | 14 | nosolution |         | -2    | UserAdmin |
+      | 15 | Group C    |         | -2    | Class     |
+      | 22 | grayed     |         | -2    | Class     |
+      | 26 | Group D    |         | -2    | Class     |
     And the database has the following table 'items':
       | id  | type     | no_score | unlocked_item_ids | contest_opens_at    | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | contest_closes_at   | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
       | 200 | Category | true     | 1234,2345         | 2019-02-06 09:26:40 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
       | 210 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:41 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
       | 220 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:42 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
     And the database has the following table 'items_strings':
-      | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    | version |
-      | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   | 0       |
-      | 54 | 210     | 1           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   | 0       |
-      | 55 | 220     | 1           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   | 0       |
-      | 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire | 0       |
-      | 64 | 210     | 2           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire | 0       |
-      | 66 | 220     | 2           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire | 0       |
+      | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
+      | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 54 | 210     | 1           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
+      | 55 | 220     | 1           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
+      | 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 64 | 210     | 2           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
+      | 66 | 220     | 2           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self | version |
-      | 71 | 11                | 11             | 1       | 0       |
-      | 72 | 12                | 12             | 1       | 0       |
-      | 73 | 13                | 13             | 1       | 0       |
-      | 74 | 13                | 11             | 0       | 0       |
-      | 75 | 15                | 14             | 0       | 0       |
-      | 76 | 13                | 17             | 0       | 0       |
-      | 77 | 26                | 22             | 0       | 0       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 71 | 11                | 11             | 1       |
+      | 72 | 12                | 12             | 1       |
+      | 73 | 13                | 13             | 1       |
+      | 74 | 13                | 11             | 0       |
+      | 75 | 15                | 14             | 0       |
+      | 76 | 13                | 17             | 0       |
+      | 77 | 26                | 22             | 0       |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | category  | partial_access_propagation | version |
-      | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   | 0       |
-      | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   | 0       |
+      | id | parent_item_id | child_item_id | child_order | category  | partial_access_propagation |
+      | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   |
+      | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   |
     And the database has the following table 'users_items':
-      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        | state      | answer      | version |
-      | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
-      | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
-      | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | Some answer | 0       |
-      | 4  | 2       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
-      | 5  | 3       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
-      | 6  | 3       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
-      | 7  | 3       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        | 0       |
-      | 8  | 4       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
-      | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
-      | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        | 0       |
+      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        | state      | answer      |
+      | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
+      | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
+      | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | Some answer |
+      | 4  | 2       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
+      | 5  | 3       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
+      | 6  | 3       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
+      | 7  | 3       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        |
+      | 8  | 4       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
+      | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
+      | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        |
     And the database has the following table 'groups_items':
       | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since | creator_user_id |
       | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
