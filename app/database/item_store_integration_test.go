@@ -202,7 +202,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {id: 4, login: 4, self_group_id: 104}
 			- {id: 5, login: 5, self_group_id: 105}
 			- {id: 6, login: 6, self_group_id: 106}
-		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15, contest_entering_condition: "None"}]
+		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15}]
 		groups_ancestors:
 			- {ancestor_group_id: 101, child_group_id: 101}
 			- {ancestor_group_id: 102, child_group_id: 102}
@@ -239,11 +239,12 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 		{name: "not started", userID: 2, want: nil},
 		{name: "finished", userID: 3, want: nil},
 		{name: "ok", userID: 4, want: &database.ActiveContestInfo{
-			ItemID:            14,
-			UserID:            4,
-			DurationInSeconds: 36060,
-			EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
-			StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+			ItemID:                   14,
+			UserID:                   4,
+			DurationInSeconds:        36060,
+			EndTime:                  time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
+			StartTime:                time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+			ContestEnteringCondition: "None",
 		}},
 		{name: "ok with team mode", userID: 5, want: &database.ActiveContestInfo{
 			ItemID:                   15,
@@ -251,15 +252,16 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			DurationInSeconds:        0,
 			EndTime:                  time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
 			StartTime:                time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
-			ContestEnteringCondition: ptrString("None"),
+			ContestEnteringCondition: "None",
 		}},
 		{
 			name: "ok with multiple active contests", userID: 6, want: &database.ActiveContestInfo{
-				ItemID:            14,
-				UserID:            6,
-				DurationInSeconds: 36060,
-				EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
-				StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+				ItemID:                   14,
+				UserID:                   6,
+				DurationInSeconds:        36060,
+				EndTime:                  time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
+				StartTime:                time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+				ContestEnteringCondition: "None",
 			},
 		},
 	}

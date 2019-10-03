@@ -71,7 +71,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
   Examples:
     | entering_condition | expected_state |
-    | null               | ready          |
     | None               | ready          |
     | All                | not_ready      |
     | Half               | not_ready      |
@@ -98,7 +97,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -138,7 +136,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 0                     |
       | None               | 0                     |
       | All                | 100                   |
       | Half               | 100                   |
@@ -181,7 +178,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 2                     |
       | None               | 2                     |
       | All                | 100                   |
       | Half               | 100                   |
@@ -225,7 +221,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 2                     |
       | None               | 2                     |
       | All                | 100                   |
       | Half               | 2                     |
@@ -270,7 +265,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -311,7 +305,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
 
   Scenario Outline: State is ready for a team-only contest (although only one member can enter)
@@ -351,7 +344,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
 
@@ -393,7 +385,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
       | Half               | 3                     |
@@ -437,7 +428,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
       | Half               | 3                     |
@@ -464,7 +454,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -507,7 +496,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |

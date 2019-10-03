@@ -39,10 +39,9 @@ type contestGetQualificationStateResponse struct {
 	State string `json:"state"`
 	// `items.contest_max_team_size` (for team-only contests)
 	MaxTeamSize *int32 `json:"max_team_size,omitempty"`
-	// Nullable
 	// required: true
 	// enum: All,Half,One,None
-	EnteringCondition *string `json:"entering_condition"`
+	EnteringCondition string `json:"entering_condition"`
 	// whether at least one user's ancestor group has now() in the `can_enter_from` -` can_enter_until` range for this item
 	// required: true
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
@@ -105,7 +104,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	var contestInfo struct {
 		IsTeamOnly               bool `gorm:"column:has_attempts"`
 		ContestMaxTeamSize       int32
-		ContestEnteringCondition *string
+		ContestEnteringCondition string
 	}
 	err = srv.Store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
 		Select("items.has_attempts, items.contest_max_team_size, items.contest_entering_condition").
@@ -163,7 +162,7 @@ func (srv *Service) checkGroupIDForGetQualificationState(groupID, itemID int64, 
 	return service.NoError
 }
 
-func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int32, contestEnteringCondition *string,
+func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int32, contestEnteringCondition string,
 	membersCount, qualifiedMembersCount int32) string {
 	var qualificationState string
 	if alreadyStarted {
@@ -171,8 +170,7 @@ func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int3
 	} else {
 		qualificationState = "ready"
 		if isTeamOnly && maxTeamSize < membersCount ||
-			contestEnteringCondition != nil &&
-				!isContestEnteringConditionSatisfied(*contestEnteringCondition, membersCount, qualifiedMembersCount) {
+			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
 			qualificationState = "not_ready"
 		}
 	}

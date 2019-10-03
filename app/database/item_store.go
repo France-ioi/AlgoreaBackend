@@ -270,7 +270,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	}
 
 	if activeContest.IsOver() {
-		if activeContest.ContestEnteringCondition != nil {
+		if activeContest.IsTeamContest {
 			s.closeTeamContest(activeContest.ItemID, user)
 		} else {
 			s.closeContest(activeContest.ItemID, user)
@@ -292,7 +292,8 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 type activeContestInfo struct {
 	ItemID                   int64
 	UserID                   int64
-	ContestEnteringCondition *string
+	ContestEnteringCondition string
+	IsTeamContest            bool
 
 	Now               time.Time
 	DurationInSeconds int32
@@ -315,7 +316,8 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		ItemID                   int64
 		AdditionalTimeInSeconds  int32
 		EnteredAt                Time
-		ContestEnteringCondition *string
+		ContestEnteringCondition string
+		IsTeamContest            bool
 	}
 	mustNotBeError(s.
 		Select(`
@@ -323,6 +325,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
 			items.id AS item_id,
 			items.contest_entering_condition,
+			items.has_attempts AS is_team_contest,
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
 			MIN(contest_participations.entered_at) AS entered_at`).
 		Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = ?", user.SelfGroupID).
@@ -351,6 +354,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		ItemID:                   results[0].ItemID,
 		UserID:                   user.ID,
 		ContestEnteringCondition: results[0].ContestEnteringCondition,
+		IsTeamContest:            results[0].IsTeamContest,
 	}
 }
 
