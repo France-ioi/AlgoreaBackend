@@ -29,6 +29,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.setAdditionalTime).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+	router.Get("/contests/{item_id}/groups/{group_id}/qualification-state",
+		service.AppHandler(srv.getQualificationState).ServeHTTP)
 }
 
 // swagger:model contestInfo
