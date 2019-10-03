@@ -28,7 +28,7 @@ type contestGetQualificationStateOtherMember struct {
 
 // swagger:model contestGetQualificationStateResponse
 type contestGetQualificationStateResponse struct {
-	// * 'already_started' if the participant has a non-null `contest_started_at` for the item
+	// * 'already_started' if the participant has a non-null `entered_at` for the item
 	//
 	// * 'not_ready' if there are more members than `contest_max_team_size` or
 	//   if the qualification state is not met globally for the team/user
@@ -39,10 +39,9 @@ type contestGetQualificationStateResponse struct {
 	State string `json:"state"`
 	// `items.contest_max_team_size` (for team-only contests)
 	MaxTeamSize *int32 `json:"max_team_size,omitempty"`
-	// Nullable
 	// required: true
 	// enum: All,Half,One,None
-	EnteringCondition *string `json:"entering_condition"`
+	EnteringCondition string `json:"entering_condition"`
 	// whether at least one user's ancestor group has now() in the `can_enter_from` -` can_enter_until` range for this item
 	// required: true
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
@@ -105,7 +104,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	var contestInfo struct {
 		IsTeamOnly               bool `gorm:"column:has_attempts"`
 		ContestMaxTeamSize       int32
-		ContestEnteringCondition *string
+		ContestEnteringCondition string
 	}
 	err = srv.Store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
 		Select("items.has_attempts, items.contest_max_team_size, items.contest_entering_condition").
@@ -120,9 +119,9 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	}
 
 	alreadyStarted, err := srv.Store.ContestParticipations().
-		Where("contest_item_id = ?", itemID).
+		Where("item_id = ?", itemID).
 		Where("group_id = ?", groupID).
-		Where("contest_started_at IS NOT NULL").HasRows()
+		Where("entered_at IS NOT NULL").HasRows()
 	service.MustNotBeError(err)
 
 	membersCount, members, currentUserCanEnter, qualifiedMembersCount :=
@@ -163,7 +162,7 @@ func (srv *Service) checkGroupIDForGetQualificationState(groupID, itemID int64, 
 	return service.NoError
 }
 
-func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int32, contestEnteringCondition *string,
+func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int32, contestEnteringCondition string,
 	membersCount, qualifiedMembersCount int32) string {
 	var qualificationState string
 	if alreadyStarted {
@@ -171,8 +170,7 @@ func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int3
 	} else {
 		qualificationState = "ready"
 		if isTeamOnly && maxTeamSize < membersCount ||
-			contestEnteringCondition != nil &&
-				!isContestEnteringConditionSatisfied(*contestEnteringCondition, membersCount, qualifiedMembersCount) {
+			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
 			qualificationState = "not_ready"
 		}
 	}
@@ -195,7 +193,7 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 			Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = groups_groups.child_group_id").
 			Joins(`
 					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id AND
-						groups_contest_items.contest_item_id = ?`, itemID).
+						groups_contest_items.item_id = ?`, itemID).
 			Group("groups_groups.child_group_id").
 			Order("groups_groups.child_group_id").
 			Select(`
@@ -221,7 +219,7 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 		service.MustNotBeError(srv.Store.GroupAncestors().Where("groups_ancestors.child_group_id = ?", groupID).
 			Joins(`
 					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id
-						AND groups_contest_items.contest_item_id = ?`, itemID).
+						AND groups_contest_items.item_id = ?`, itemID).
 			Group("groups_ancestors.child_group_id").
 			PluckFirst(`
 					IFNULL(

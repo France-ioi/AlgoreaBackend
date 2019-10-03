@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -141,9 +139,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().InsertMap(
 					map[string]interface{}{
-						"contest_item_id":    500, // chapter
-						"group_id":           14,
-						"contest_started_at": database.Now(),
+						"item_id":    500, // chapter
+						"group_id":   14,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
@@ -151,9 +149,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().
 					InsertMap(map[string]interface{}{
-						"contest_item_id":    115,
-						"group_id":           15,
-						"contest_started_at": database.Now(),
+						"item_id":    115,
+						"group_id":   15,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
@@ -161,9 +159,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().
 					InsertMap(map[string]interface{}{
-						"contest_item_id":    114,
-						"group_id":           17,
-						"contest_started_at": database.Now(),
+						"item_id":    114,
+						"group_id":   17,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
@@ -204,7 +202,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {id: 4, login: 4, self_group_id: 104}
 			- {id: 5, login: 5, self_group_id: 105}
 			- {id: 6, login: 6, self_group_id: 106}
-		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15, contest_entering_condition: "None"}]
+		items: [{id: 12}, {id: 13}, {id: 14, duration: 10:00:00}, {id: 15}]
 		groups_ancestors:
 			- {ancestor_group_id: 101, child_group_id: 101}
 			- {ancestor_group_id: 102, child_group_id: 102}
@@ -220,33 +218,33 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {user_id: 6, item_id: 14} # multiple
 			- {user_id: 6, item_id: 15} # multiple
 		groups_contest_items:
-			- {group_id: 102, contest_item_id: 12} # not started
-			- {group_id: 104, contest_item_id: 14, additional_time: 00:01:00} # ok
-			- {group_id: 105, contest_item_id: 15}  # ok with team mode
-			- {group_id: 106, contest_item_id: 14, additional_time: 00:01:00} # multiple
-			- {group_id: 106, contest_item_id: 15, additional_time: 00:01:00} # multiple
+			- {group_id: 102, item_id: 12} # not started
+			- {group_id: 104, item_id: 14, additional_time: 00:01:00} # ok
+			- {group_id: 105, item_id: 15}  # ok with team mode
+			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
+			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
 		contest_participations:
-			- {group_id: 104, contest_item_id: 14, contest_started_at: 2019-03-22 08:44:55} # ok
-			- {group_id: 105, contest_item_id: 15, contest_started_at: 2019-04-22 08:44:55}  # ok with team mode
-			- {group_id: 106, contest_item_id: 14, contest_started_at: 2019-03-22 08:44:55} # multiple
-			- {group_id: 106, contest_item_id: 15, contest_started_at: 2019-03-22 08:43:55} # multiple`)
+			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55} # ok
+			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55}  # ok with team mode
+			- {group_id: 106, item_id: 14, entered_at: 2019-03-22 08:44:55} # multiple
+			- {group_id: 106, item_id: 15, entered_at: 2019-03-22 08:43:55} # multiple`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
-		name    string
-		userID  int64
-		want    *database.ActiveContestInfo
-		wantLog string
+		name   string
+		userID int64
+		want   *database.ActiveContestInfo
 	}{
 		{name: "no item", userID: 1, want: nil},
 		{name: "not started", userID: 2, want: nil},
 		{name: "finished", userID: 3, want: nil},
 		{name: "ok", userID: 4, want: &database.ActiveContestInfo{
-			ItemID:            14,
-			UserID:            4,
-			DurationInSeconds: 36060,
-			EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
-			StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+			ItemID:                   14,
+			UserID:                   4,
+			DurationInSeconds:        36060,
+			EndTime:                  time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
+			StartTime:                time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+			ContestEnteringCondition: "None",
 		}},
 		{name: "ok with team mode", userID: 5, want: &database.ActiveContestInfo{
 			ItemID:                   15,
@@ -254,17 +252,17 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			DurationInSeconds:        0,
 			EndTime:                  time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
 			StartTime:                time.Date(2019, 4, 22, 8, 44, 55, 0, time.UTC),
-			ContestEnteringCondition: ptrString("None"),
+			ContestEnteringCondition: "None",
 		}},
 		{
 			name: "ok with multiple active contests", userID: 6, want: &database.ActiveContestInfo{
-				ItemID:            14,
-				UserID:            6,
-				DurationInSeconds: 36060,
-				EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
-				StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+				ItemID:                   14,
+				UserID:                   6,
+				DurationInSeconds:        36060,
+				EndTime:                  time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
+				StartTime:                time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
+				ContestEnteringCondition: "None",
 			},
-			wantLog: "User with id = 6 has 2 (>1) active contests",
 		},
 	}
 	for _, test := range tests {
@@ -273,8 +271,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			store := database.NewDataStore(db)
 			user := &database.User{}
 			assert.NoError(t, user.LoadByID(store, test.userID))
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
 
 			got := store.Items().GetActiveContestInfoForUser(user)
 			if got != nil && test.want != nil {
@@ -284,7 +280,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				got.Now = test.want.Now
 			}
 			assert.Equal(t, test.want, got)
-			assert.Equal(t, test.wantLog, (&loggingtest.Hook{Hook: hook}).GetAllLogs())
 		})
 	}
 }

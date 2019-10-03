@@ -270,7 +270,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	}
 
 	if activeContest.IsOver() {
-		if activeContest.ContestEnteringCondition != nil {
+		if activeContest.IsTeamContest {
 			s.closeTeamContest(activeContest.ItemID, user)
 		} else {
 			s.closeContest(activeContest.ItemID, user)
@@ -292,7 +292,8 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 type activeContestInfo struct {
 	ItemID                   int64
 	UserID                   int64
-	ContestEnteringCondition *string
+	ContestEnteringCondition string
+	IsTeamContest            bool
 
 	Now               time.Time
 	DurationInSeconds int32
@@ -314,8 +315,9 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		DurationInSeconds        int32
 		ItemID                   int64
 		AdditionalTimeInSeconds  int32
-		ContestStartedAt         Time
-		ContestEnteringCondition *string
+		EnteredAt                Time
+		ContestEnteringCondition string
+		IsTeamContest            bool
 	}
 	mustNotBeError(s.
 		Select(`
@@ -323,37 +325,36 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
 			items.id AS item_id,
 			items.contest_entering_condition,
+			items.has_attempts AS is_team_contest,
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(contest_participations.contest_started_at) AS contest_started_at`).
+			MIN(contest_participations.entered_at) AS entered_at`).
 		Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = ?", user.SelfGroupID).
-		Joins(`LEFT JOIN contest_participations ON contest_participations.contest_item_id = items.id AND
+		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors.ancestor_group_id`).
 		Joins(`
-			LEFT JOIN groups_contest_items ON groups_contest_items.contest_item_id = items.id AND
+			LEFT JOIN groups_contest_items ON groups_contest_items.item_id = items.id AND
 				groups_contest_items.group_id = groups_ancestors.ancestor_group_id`).
 		Group("items.id").
-		Order("MIN(contest_participations.contest_started_at) DESC").
-		Having("contest_started_at IS NOT NULL").Scan(&results).Error())
+		Order("MIN(contest_participations.entered_at) DESC").
+		Having("entered_at IS NOT NULL").
+		Limit(1).Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
 	}
 
-	if len(results) > 1 {
-		log.Warnf("User with id = %d has %d (>1) active contests", user.ID, len(results))
-	}
-
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
-	endTime := time.Time(results[0].ContestStartedAt).Add(time.Duration(totalDuration) * time.Second)
+	endTime := time.Time(results[0].EnteredAt).Add(time.Duration(totalDuration) * time.Second)
 
 	return &activeContestInfo{
 		Now:                      time.Time(results[0].Now),
 		DurationInSeconds:        totalDuration,
-		StartTime:                time.Time(results[0].ContestStartedAt),
+		StartTime:                time.Time(results[0].EnteredAt),
 		EndTime:                  endTime,
 		ItemID:                   results[0].ItemID,
 		UserID:                   user.ID,
 		ContestEnteringCondition: results[0].ContestEnteringCondition,
+		IsTeamContest:            results[0].IsTeamContest,
 	}
 }
 

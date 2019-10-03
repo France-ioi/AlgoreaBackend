@@ -71,7 +71,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
   Examples:
     | entering_condition | expected_state |
-    | null               | ready          |
     | None               | ready          |
     | All                | not_ready      |
     | Half               | not_ready      |
@@ -82,8 +81,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition |
       | 50 | 00:00:00 | 0            | <entering_condition>       |
     And the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from      | can_enter_until     |
-      | 31       | 50              | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from      | can_enter_until     |
+      | 31       | 50      | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
@@ -98,7 +97,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -138,7 +136,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 0                     |
       | None               | 0                     |
       | All                | 100                   |
       | Half               | 100                   |
@@ -149,8 +146,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
       | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -181,7 +178,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 2                     |
       | None               | 2                     |
       | All                | 100                   |
       | Half               | 100                   |
@@ -192,9 +188,9 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
       | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -225,7 +221,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 2                     |
       | None               | 2                     |
       | All                | 100                   |
       | Half               | 2                     |
@@ -236,10 +231,10 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 2                     |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -270,7 +265,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -311,7 +305,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
 
   Scenario Outline: State is ready for a team-only contest (although only one member can enter)
@@ -319,8 +312,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
       | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -351,7 +344,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
 
@@ -360,9 +352,9 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
       | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -393,7 +385,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
       | Half               | 3                     |
@@ -403,10 +394,10 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
       | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
     Given the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | can_enter_from   | can_enter_until     |
-      | 10       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60              | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 10       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -437,7 +428,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | null               | 3                     |
       | None               | 3                     |
       | One                | 3                     |
       | Half               | 3                     |
@@ -448,8 +438,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     |
     And the database has the following table 'contest_participations':
-      | group_id | contest_item_id | contest_started_at  |
-      | 31       | 50              | 2019-05-30 15:00:00 |
+      | group_id | item_id | entered_at          |
+      | 31       | 50      | 2019-05-30 15:00:00 |
     And I am the user with id "2"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
@@ -464,7 +454,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |
@@ -475,8 +464,8 @@ Feature: Get qualification state (contestGetQualificationState)
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     |
     And the database has the following table 'contest_participations':
-      | group_id | contest_item_id | contest_started_at  |
-      | 11       | 60              | 2019-05-30 15:00:00 |
+      | group_id | item_id | entered_at          |
+      | 11       | 60      | 2019-05-30 15:00:00 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -507,7 +496,6 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition |
-      | null               |
       | None               |
       | All                |
       | Half               |

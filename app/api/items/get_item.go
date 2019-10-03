@@ -109,10 +109,9 @@ type itemCommonFields struct {
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 	// required: true
 	ScoreMinUnlock int32 `json:"score_min_unlock"`
-	// Nullable
 	// required: true
 	// enum: All,Half,One,None
-	ContestEnteringCondition *string `json:"contest_entering_condition"`
+	ContestEnteringCondition string `json:"contest_entering_condition"`
 	// required: true
 	TeamsEditable bool `json:"teams_editable"`
 	// required: true
@@ -276,7 +275,7 @@ type rawItem struct {
 	ValidationType           string
 	HasUnlockedItems         bool // whether items.unlocked_item_ids is empty
 	ScoreMinUnlock           int32
-	ContestEnteringCondition *string
+	ContestEnteringCondition string
 	TeamsEditable            bool
 	ContestMaxTeamSize       int32
 	HasAttempts              bool

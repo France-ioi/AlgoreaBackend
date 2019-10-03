@@ -1,15 +1,16 @@
 -- +migrate Up
+UPDATE `items` SET `team_mode` = 'None' WHERE `team_mode` IS NULL;
+UPDATE `history_items` SET `team_mode` = 'None' WHERE `team_mode` IS NULL;
 ALTER TABLE `history_items`
-    RENAME COLUMN `team_mode` TO `contest_entering_condition`,
+    CHANGE COLUMN `team_mode` `contest_entering_condition` enum('All','Half','One','None') NOT NULL DEFAULT 'None',
     RENAME COLUMN `team_max_members` TO `contest_max_team_size`;
 ALTER TABLE `items`
     CHANGE COLUMN `team_max_members` `contest_max_team_size` int(11) NOT NULL DEFAULT '0'
         COMMENT 'The maximum number of members a team can have to enter the contest',
-    CHANGE COLUMN `team_mode` `contest_entering_condition` enum('All','Half','One','None') DEFAULT NULL
+    CHANGE COLUMN `team_mode` `contest_entering_condition` enum('All','Half','One','None') NOT NULL DEFAULT 'None'
         COMMENT 'The ratio of members in the team (a user alone being considered as a team of one) who needs the “can_enter” permission so that the group can enter',
     MODIFY `qualified_group_id` bigint(20) DEFAULT NULL
         COMMENT 'group id in which "qualified" users will belong. contest_entering_condition dictates how many of a team''s members must be "qualified" in order to start the item.';
-
 
 DROP TRIGGER `after_insert_items`;
 -- +migrate StatementBegin
@@ -27,8 +28,8 @@ CREATE TRIGGER `before_delete_items` BEFORE DELETE ON `items` FOR EACH ROW BEGIN
 
 -- +migrate Down
 ALTER TABLE `history_items`
-RENAME COLUMN `contest_entering_condition` TO `team_mode`,
-	RENAME COLUMN `contest_max_team_size` TO `team_max_members`;
+    CHANGE COLUMN `contest_entering_condition` `team_mode` enum('All','Half','One','None') DEFAULT NULL,
+    RENAME COLUMN `contest_max_team_size` TO `team_max_members`;
 ALTER TABLE `items`
     CHANGE COLUMN `contest_max_team_size` `team_max_members` int(11) NOT NULL DEFAULT '0'
         COMMENT 'Maximum number of members of teams participating to this item',
@@ -36,7 +37,6 @@ ALTER TABLE `items`
         COMMENT 'If qualified_group_id is not NULL, this field specifies how many team members need to belong to that group in order for the whole team to be qualified and able to start the item.',
     MODIFY `qualified_group_id` bigint(20) DEFAULT NULL
         COMMENT 'group id in which "qualified" users will belong. team_mode dictates how many of a team''s members must be "qualified" in order to start the item.';
-
 
 DROP TRIGGER `after_insert_items`;
 -- +migrate StatementBegin
@@ -50,3 +50,6 @@ DROP TRIGGER `before_delete_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `before_delete_items` BEFORE DELETE ON `items` FOR EACH ROW BEGIN SELECT ROUND(UNIX_TIMESTAMP(CURTIME(2)) * 10) INTO @curVersion; UPDATE `history_items` SET `next_version` = @curVersion WHERE `id` = OLD.`id` AND `next_version` IS NULL; INSERT INTO `history_items` (`id`,`version`,`url`,`platform_id`,`text_id`,`repository_path`,`type`,`uses_api`,`read_only`,`full_screen`,`show_difficulty`,`show_source`,`hints_allowed`,`fixed_ranks`,`validation_type`,`validation_min`,`preparation_state`,`unlocked_item_ids`,`score_min_unlock`,`supported_lang_prog`,`default_language_id`,`team_mode`,`teams_editable`,`qualified_group_id`,`team_max_members`,`has_attempts`,`contest_opens_at`,`duration`,`contest_closes_at`,`show_user_infos`,`contest_phase`,`level`,`no_score`,`title_bar_visible`,`transparent_folder`,`display_details_in_parent`,`display_children_as_tabs`,`custom_chapter`,`group_code_enter`, `deleted`) VALUES (OLD.`id`,@curVersion,OLD.`url`,OLD.`platform_id`,OLD.`text_id`,OLD.`repository_path`,OLD.`type`,OLD.`uses_api`,OLD.`read_only`,OLD.`full_screen`,OLD.`show_difficulty`,OLD.`show_source`,OLD.`hints_allowed`,OLD.`fixed_ranks`,OLD.`validation_type`,OLD.`validation_min`,OLD.`preparation_state`,OLD.`unlocked_item_ids`,OLD.`score_min_unlock`,OLD.`supported_lang_prog`,OLD.`default_language_id`,OLD.`team_mode`,OLD.`teams_editable`,OLD.`qualified_group_id`,OLD.`team_max_members`,OLD.`has_attempts`,OLD.`contest_opens_at`,OLD.`duration`,OLD.`contest_closes_at`,OLD.`show_user_infos`,OLD.`contest_phase`,OLD.`level`,OLD.`no_score`,OLD.`title_bar_visible`,OLD.`transparent_folder`,OLD.`display_details_in_parent`,OLD.`display_children_as_tabs`,OLD.`custom_chapter`,OLD.`group_code_enter`, 1); END
 -- +migrate StatementEnd
+
+UPDATE `items` SET `team_mode` = NULL WHERE `team_mode` = 'None' AND NOT `has_attempts`;
+UPDATE `history_items` SET `team_mode` = NULL WHERE `team_mode` = 'None' AND NOT `has_attempts`;
