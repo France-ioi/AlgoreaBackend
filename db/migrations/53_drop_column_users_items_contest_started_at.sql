@@ -32,8 +32,8 @@ CREATE TRIGGER `before_delete_users_items` BEFORE DELETE ON `users_items` FOR EA
 -- +migrate StatementEnd
 
 INSERT INTO `users_items` (`user_id`, `item_id`, `contest_started_at`)
-    SELECT users.id, contest_participations.contest_item_id, contest_participations.contest_started_at
+    SELECT users.id, contest_participations.item_id, contest_participations.entered_at
     FROM contest_participations
          JOIN users ON users.self_group_id = contest_participations.group_id
-    WHERE contest_participations.contest_started_at IS NOT NULL
-ON DUPLICATE KEY UPDATE contest_started_at = contest_participations.contest_started_at;
+    WHERE contest_participations.entered_at IS NOT NULL
+ON DUPLICATE KEY UPDATE contest_started_at = contest_participations.entered_at;

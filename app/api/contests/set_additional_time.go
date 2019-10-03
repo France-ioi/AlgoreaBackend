@@ -100,14 +100,14 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds int64) {
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		groupContestItemStore := store.GroupContestItems()
-		scope := groupContestItemStore.Where("group_id = ?", groupID).Where("contest_item_id = ?", itemID)
+		scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
 		found, err := scope.WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			service.MustNotBeError(scope.UpdateColumn("additional_time", gorm.Expr("SEC_TO_TIME(?)", seconds)).Error())
 		} else if seconds != 0 {
 			service.MustNotBeError(groupContestItemStore.Exec(
-				"INSERT INTO groups_contest_items (group_id, contest_item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
+				"INSERT INTO groups_contest_items (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
 				groupID, itemID, seconds).Error())
 		}
 		return nil

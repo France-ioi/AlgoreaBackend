@@ -125,11 +125,11 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				groups_items.item_id = ?`, itemID).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
-				groups_contest_items.contest_item_id = ?`, itemID).
+				groups_contest_items.item_id = ?`, itemID).
 		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.group_id = found_group.id AND main_group_item.item_id = ?", itemID).
 		Joins(`
 			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = found_group.id AND
-				main_group_contest_item.contest_item_id = ?`, itemID).
+				main_group_contest_item.item_id = ?`, itemID).
 		Select(`
 				found_group.id AS group_id,
 				found_group.name,

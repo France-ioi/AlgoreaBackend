@@ -39,9 +39,9 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
       | 21       | 80      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
     And the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | additional_time |
-      | 13       | 50              | 01:00:00        |
-      | 13       | 60              | 01:01:00        |
+      | group_id | item_id | additional_time |
+      | 13       | 50      | 01:00:00        |
+      | 13       | 60      | 01:01:00        |
 
   Scenario: Wrong item_id
     Given I am the user with id "1"

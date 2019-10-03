@@ -139,9 +139,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().InsertMap(
 					map[string]interface{}{
-						"contest_item_id":    500, // chapter
-						"group_id":           14,
-						"contest_started_at": database.Now(),
+						"item_id":    500, // chapter
+						"group_id":   14,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 4, wantHasAccess: true, wantReason: nil},
@@ -149,9 +149,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().
 					InsertMap(map[string]interface{}{
-						"contest_item_id":    115,
-						"group_id":           15,
-						"contest_started_at": database.Now(),
+						"item_id":    115,
+						"group_id":   15,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 5, wantHasAccess: true, wantReason: nil},
@@ -159,9 +159,9 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			initFunc: func(db *database.DB) error {
 				return database.NewDataStore(db).ContestParticipations().
 					InsertMap(map[string]interface{}{
-						"contest_item_id":    114,
-						"group_id":           17,
-						"contest_started_at": database.Now(),
+						"item_id":    114,
+						"group_id":   17,
+						"entered_at": database.Now(),
 					})
 			},
 			itemID: 15, userID: 7, wantHasAccess: false,
@@ -218,16 +218,16 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {user_id: 6, item_id: 14} # multiple
 			- {user_id: 6, item_id: 15} # multiple
 		groups_contest_items:
-			- {group_id: 102, contest_item_id: 12} # not started
-			- {group_id: 104, contest_item_id: 14, additional_time: 00:01:00} # ok
-			- {group_id: 105, contest_item_id: 15}  # ok with team mode
-			- {group_id: 106, contest_item_id: 14, additional_time: 00:01:00} # multiple
-			- {group_id: 106, contest_item_id: 15, additional_time: 00:01:00} # multiple
+			- {group_id: 102, item_id: 12} # not started
+			- {group_id: 104, item_id: 14, additional_time: 00:01:00} # ok
+			- {group_id: 105, item_id: 15}  # ok with team mode
+			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
+			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
 		contest_participations:
-			- {group_id: 104, contest_item_id: 14, contest_started_at: 2019-03-22 08:44:55} # ok
-			- {group_id: 105, contest_item_id: 15, contest_started_at: 2019-04-22 08:44:55}  # ok with team mode
-			- {group_id: 106, contest_item_id: 14, contest_started_at: 2019-03-22 08:44:55} # multiple
-			- {group_id: 106, contest_item_id: 15, contest_started_at: 2019-03-22 08:43:55} # multiple`)
+			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55} # ok
+			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55}  # ok with team mode
+			- {group_id: 106, item_id: 14, entered_at: 2019-03-22 08:44:55} # multiple
+			- {group_id: 106, item_id: 15, entered_at: 2019-03-22 08:43:55} # multiple`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {

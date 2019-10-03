@@ -81,18 +81,18 @@ Feature: Get group by name (contestGetGroupByName)
       | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
       | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 1               |
     And the database has the following table 'groups_contest_items':
-      | group_id | contest_item_id | additional_time |
-      | 10       | 50              | 01:00:00        |
-      | 11       | 50              | 00:01:00        |
-      | 13       | 50              | 00:00:01        |
-      | 13       | 60              | 00:00:30        |
-      | 15       | 60              | 00:00:45        |
-      | 21       | 50              | 00:01:00        |
-      | 21       | 60              | 00:01:00        |
-      | 21       | 70              | 00:01:00        |
-      | 31       | 50              | 00:01:00        |
-      | 31       | 70              | 00:01:00        |
-      | 41       | 70              | 00:01:00        |
+      | group_id | item_id | additional_time |
+      | 10       | 50      | 01:00:00        |
+      | 11       | 50      | 00:01:00        |
+      | 13       | 50      | 00:00:01        |
+      | 13       | 60      | 00:00:30        |
+      | 15       | 60      | 00:00:45        |
+      | 21       | 50      | 00:01:00        |
+      | 21       | 60      | 00:01:00        |
+      | 21       | 70      | 00:01:00        |
+      | 31       | 50      | 00:01:00        |
+      | 31       | 70      | 00:01:00        |
+      | 41       | 70      | 00:01:00        |
 
   Scenario: Partial access for group, solutions access for user, additional time from parent groups
     Given I am the user with id "1"

@@ -8,7 +8,7 @@ ALTER TABLE `groups_items`
         AFTER `cached_manager_access`;
 
 INSERT INTO `groups_items` (`group_id`, `item_id`, `additional_time`)
-    SELECT group_id, groups_contest_items.contest_item_id, groups_contest_items.additional_time
+    SELECT group_id, groups_contest_items.item_id, groups_contest_items.additional_time
     FROM groups_contest_items
     WHERE groups_contest_items.additional_time != '00:00:00'
 ON DUPLICATE KEY UPDATE additional_time = groups_contest_items.additional_time;
