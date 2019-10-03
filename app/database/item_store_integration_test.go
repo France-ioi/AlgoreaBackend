@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -233,10 +231,9 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
-		name    string
-		userID  int64
-		want    *database.ActiveContestInfo
-		wantLog string
+		name   string
+		userID int64
+		want   *database.ActiveContestInfo
 	}{
 		{name: "no item", userID: 1, want: nil},
 		{name: "not started", userID: 2, want: nil},
@@ -264,7 +261,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				EndTime:           time.Date(2019, 3, 22, 18, 45, 55, 0, time.UTC),
 				StartTime:         time.Date(2019, 3, 22, 8, 44, 55, 0, time.UTC),
 			},
-			wantLog: "User with id = 6 has 2 (>1) active contests",
 		},
 	}
 	for _, test := range tests {
@@ -273,8 +269,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			store := database.NewDataStore(db)
 			user := &database.User{}
 			assert.NoError(t, user.LoadByID(store, test.userID))
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
 
 			got := store.Items().GetActiveContestInfoForUser(user)
 			if got != nil && test.want != nil {
@@ -284,7 +278,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 				got.Now = test.want.Now
 			}
 			assert.Equal(t, test.want, got)
-			assert.Equal(t, test.wantLog, (&loggingtest.Hook{Hook: hook}).GetAllLogs())
 		})
 	}
 }

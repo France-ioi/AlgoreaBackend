@@ -333,14 +333,11 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 				groups_contest_items.group_id = groups_ancestors.ancestor_group_id`).
 		Group("items.id").
 		Order("MIN(contest_participations.contest_started_at) DESC").
-		Having("contest_started_at IS NOT NULL").Scan(&results).Error())
+		Having("contest_started_at IS NOT NULL").
+		Limit(1).Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
-	}
-
-	if len(results) > 1 {
-		log.Warnf("User with id = %d has %d (>1) active contests", user.ID, len(results))
 	}
 
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
