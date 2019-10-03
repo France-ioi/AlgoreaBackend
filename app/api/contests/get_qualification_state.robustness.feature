@@ -112,6 +112,3 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-      | All                | 100                   |
-      | Half               | 100                   |
-      | One                | 100                   |
