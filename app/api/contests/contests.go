@@ -45,7 +45,7 @@ type contestInfo struct {
 	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
-func (srv *Service) getContestEnteringConditionForTimedContestManagedByUser(itemID int64, user *database.User) (bool, error) {
+func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.User) (bool, error) {
 	var isTeamOnly bool
 	err := srv.Store.Items().ByID(itemID).Where("items.duration IS NOT NULL").
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").

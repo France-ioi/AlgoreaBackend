@@ -72,7 +72,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		return service.ErrInvalidRequest(err)
 	}
 
-	isTeamOnly, err := srv.getContestEnteringConditionForTimedContestManagedByUser(itemID, user)
+	isTeamOnly, err := srv.isTeamOnlyContestManagedByUser(itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
