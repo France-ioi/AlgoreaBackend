@@ -864,7 +864,7 @@ CREATE TABLE `history_items` (
   `score_min_unlock` int(11) NOT NULL DEFAULT '100',
   `supported_lang_prog` varchar(200) DEFAULT NULL,
   `default_language_id` bigint(20) DEFAULT '1',
-  `contest_entering_condition` enum('All','Half','One','None') DEFAULT NULL,
+  `contest_entering_condition` enum('All','Half','One','None') NOT NULL DEFAULT 'None',
   `teams_editable` tinyint(1) NOT NULL,
   `qualified_group_id` bigint(20) DEFAULT NULL,
   `contest_max_team_size` int(11) NOT NULL DEFAULT '0',
