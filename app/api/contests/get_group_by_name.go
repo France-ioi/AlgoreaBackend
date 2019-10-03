@@ -81,13 +81,18 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	query := srv.Store.Groups().OwnedBy(user).
 		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.child_group_id = groups.id").
 		Joins("LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND groups_items.item_id = ?", itemID).
-		Joins("LEFT JOIN groups_items AS main_group_item ON main_group_item.group_id = groups.id AND main_group_item.item_id = ?", itemID).
+		Joins(`
+			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
+				groups_contest_items.contest_item_id = ?`, itemID).
+		Joins(`
+			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = groups.id AND
+				main_group_contest_item.contest_item_id = ?`, itemID).
 		Select(`
 				groups.id AS group_id,
 				groups.name,
 				groups.type,
-				IFNULL(TIME_TO_SEC(MAX(main_group_item.additional_time)), 0) AS additional_time,
-				IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS total_additional_time`).
+				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
+				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id").
 		Having(`
 			MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_partial_access_since) <= NOW() OR

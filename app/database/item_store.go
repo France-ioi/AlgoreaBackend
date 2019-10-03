@@ -308,7 +308,7 @@ func (contest *activeContestInfo) IsOver() bool {
 func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Get info for the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
-	// Note: both users_items & groups_items rows should exist to make this function return the info
+	// Note: contest_participations rows should exist to make this function return the info
 	var results []struct {
 		Now                      Time
 		DurationInSeconds        int32
@@ -323,15 +323,17 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
 			items.id AS item_id,
 			items.contest_entering_condition,
-			IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(groups_items.contest_started_at) AS contest_started_at`).
-		Joins("JOIN groups_items ON groups_items.item_id = items.id").
+			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
+			MIN(contest_participations.contest_started_at) AS contest_started_at`).
+		Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = ?", user.SelfGroupID).
+		Joins(`LEFT JOIN contest_participations ON contest_participations.contest_item_id = items.id AND
+			contest_participations.group_id = groups_ancestors.ancestor_group_id`).
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
-				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
+			LEFT JOIN groups_contest_items ON groups_contest_items.contest_item_id = items.id AND
+				groups_contest_items.group_id = groups_ancestors.ancestor_group_id`).
 		Group("items.id").
-		Order("MIN(groups_items.contest_started_at) DESC").
-		Having(" contest_started_at IS NOT NULL").Scan(&results).Error())
+		Order("MIN(contest_participations.contest_started_at) DESC").
+		Having("contest_started_at IS NOT NULL").Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil

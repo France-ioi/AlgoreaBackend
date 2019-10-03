@@ -15,7 +15,7 @@ import (
 // ---
 // summary: Set additional time in the contest for the group
 // description: >
-//                For the input group and item, sets the `groups_items.additional_time` to the `time` value.
+//                For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
 //                If there is no `groups_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
 //                (with default values in other columns).
 //                If no `groups_items` and `seconds` == 0, succeed without doing any change.
@@ -91,27 +91,24 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 	service.MustNotBeError(err)
 
-	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds, user.ID)
+	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds)
 
 	render.Respond(w, r, service.UpdateSuccess(nil))
 	return service.NoError
 }
 
-func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds, creatorUserID int64) {
+func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds int64) {
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		groupItemStore := store.GroupItems()
-		scope := groupItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
+		groupContestItemStore := store.GroupContestItems()
+		scope := groupContestItemStore.Where("group_id = ?", groupID).Where("contest_item_id = ?", itemID)
 		found, err := scope.WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			service.MustNotBeError(scope.UpdateColumn("additional_time", gorm.Expr("SEC_TO_TIME(?)", seconds)).Error())
 		} else if seconds != 0 {
-			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-				id := retryStore.NewID()
-				return retryStore.Exec(
-					"INSERT INTO groups_items (id, group_id, item_id, additional_time, creator_user_id) VALUES(?, ?, ?, SEC_TO_TIME(?), ?)",
-					id, groupID, itemID, seconds, creatorUserID).Error()
-			}))
+			service.MustNotBeError(groupContestItemStore.Exec(
+				"INSERT INTO groups_contest_items (group_id, contest_item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
+				groupID, itemID, seconds).Error())
 		}
 		return nil
 	}))

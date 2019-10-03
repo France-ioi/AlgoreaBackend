@@ -18,10 +18,12 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		function  func(store *DataStore) *DB
 		wantTable string
 	}{
+		{"ContestParticipations", func(store *DataStore) *DB { return store.ContestParticipations().Where("") }, "contest_participations"},
 		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "groups"},
 		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "groups_ancestors"},
 		{"GroupAttempts", func(store *DataStore) *DB { return store.GroupAttempts().Where("") }, "groups_attempts"},
 		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "groups_groups"},
+		{"GroupContestItems", func(store *DataStore) *DB { return store.GroupContestItems().Where("") }, "groups_contest_items"},
 		{"GroupItems", func(store *DataStore) *DB { return store.GroupItems().Where("") }, "groups_items"},
 		{"Items", func(store *DataStore) *DB { return store.Items().Where("") }, "items"},
 		{"ItemAncestors", func(store *DataStore) *DB { return store.ItemAncestors().Where("") }, "items_ancestors"},
@@ -57,10 +59,12 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		function func(store *DataStore) interface{}
 		wantType interface{}
 	}{
+		{"ContestParticipations", func(store *DataStore) interface{} { return store.ContestParticipations() }, &ContestParticipationStore{}},
 		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
 		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
 		{"GroupAttempts", func(store *DataStore) interface{} { return store.GroupAttempts() }, &GroupAttemptStore{}},
 		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
+		{"GroupContestItems", func(store *DataStore) interface{} { return store.GroupContestItems() }, &GroupContestItemStore{}},
 		{"GroupItems", func(store *DataStore) interface{} { return store.GroupItems() }, &GroupItemStore{}},
 		{"Items", func(store *DataStore) interface{} { return store.Items() }, &ItemStore{}},
 		{"ItemAncestors", func(store *DataStore) interface{} { return store.ItemAncestors() }, &ItemAncestorStore{}},
