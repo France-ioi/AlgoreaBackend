@@ -136,7 +136,7 @@ Feature: Get qualification state (contestGetQualificationState)
     """
     Examples:
       | entering_condition | contest_max_team_size |
-      | None               | 0                     |
+      | None               | 2                     |
       | All                | 100                   |
       | Half               | 100                   |
       | One                | 100                   |
