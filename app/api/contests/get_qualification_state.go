@@ -115,7 +115,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	}
 
 	var contestInfo struct {
-		IsTeamOnly               bool `gorm:"column:has_attempts"`
+		IsTeamContest            bool `gorm:"column:has_attempts"`
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
 	}
@@ -127,7 +127,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	}
 	service.MustNotBeError(err)
 
-	if apiError := srv.checkGroupID(groupID, itemID, contestInfo.IsTeamOnly, user); apiError != service.NoError {
+	if apiError := srv.checkGroupID(groupID, itemID, contestInfo.IsTeamContest, user); apiError != service.NoError {
 		return apiError
 	}
 
@@ -138,10 +138,10 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	service.MustNotBeError(err)
 
 	membersCount, members, currentUserCanEnter, qualifiedMembersCount :=
-		srv.getQualificatonInfo(contestInfo.IsTeamOnly, groupID, itemID, user)
+		srv.getQualificatonInfo(contestInfo.IsTeamContest, groupID, itemID, user)
 
 	qualificationState := computeQualificationState(
-		alreadyStarted, contestInfo.IsTeamOnly, contestInfo.ContestMaxTeamSize,
+		alreadyStarted, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
 		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
@@ -150,15 +150,15 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 		CurrentUserCanEnter: currentUserCanEnter,
 		OtherMembers:        members,
 	}
-	if contestInfo.IsTeamOnly {
+	if contestInfo.IsTeamContest {
 		result.MaxTeamSize = &contestInfo.ContestMaxTeamSize
 	}
 	render.Respond(w, r, result)
 	return service.NoError
 }
 
-func (srv *Service) checkGroupID(groupID, itemID int64, isTeamOnly bool, user *database.User) service.APIError {
-	if isTeamOnly {
+func (srv *Service) checkGroupID(groupID, itemID int64, isTeamContest bool, user *database.User) service.APIError {
+	if isTeamContest {
 		var teamGroupID int64
 		err := srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
 			PluckFirst("groups.id", &teamGroupID).Error()
@@ -175,14 +175,14 @@ func (srv *Service) checkGroupID(groupID, itemID int64, isTeamOnly bool, user *d
 	return service.NoError
 }
 
-func computeQualificationState(alreadyStarted, isTeamOnly bool, maxTeamSize int32, contestEnteringCondition string,
+func computeQualificationState(alreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
 	membersCount, qualifiedMembersCount int32) string {
 	var qualificationState string
 	if alreadyStarted {
 		qualificationState = "already_started"
 	} else {
 		qualificationState = "ready"
-		if isTeamOnly && maxTeamSize < membersCount ||
+		if isTeamContest && maxTeamSize < membersCount ||
 			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
 			qualificationState = "not_ready"
 		}
