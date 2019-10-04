@@ -104,6 +104,15 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: group_id is a user self group while the item's has_attempts = true
+    Given the database has the following table 'items':
+      | id | duration | has_attempts |
+      | 60 | 00:00:00 | true         |
+    And I am the user with id "2"
+    When I send a GET request to "/contests/60/groups/31/qualification-state"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
   Scenario: The current user is not a member of group_id while the item's has_attempts = true
     Given the database has the following table 'items':
       | id | duration | has_attempts |
