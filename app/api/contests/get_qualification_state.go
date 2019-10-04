@@ -191,10 +191,10 @@ func computeQualificationState(alreadyStarted, isTeamContest bool, maxTeamSize i
 }
 
 func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
-	return !(contestEnteringCondition == "All" &&
-		qualifiedMembersCount != membersCount ||
-		contestEnteringCondition == "Half" && qualifiedMembersCount*2 < membersCount ||
-		contestEnteringCondition == "One" && qualifiedMembersCount < 1)
+	return contestEnteringCondition == "None" ||
+		(contestEnteringCondition == "All" && qualifiedMembersCount == membersCount ||
+			contestEnteringCondition == "Half" && membersCount <= qualifiedMembersCount*2 ||
+			contestEnteringCondition == "One" && qualifiedMembersCount >= 1)
 }
 
 func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, user *database.User) (
