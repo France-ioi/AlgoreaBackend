@@ -147,6 +147,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
