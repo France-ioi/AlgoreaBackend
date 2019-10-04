@@ -17,10 +17,10 @@ Feature: Get item view information
       | 22 | grayed     |         | -2    | Class     | 0       |
       | 26 | Group D    |         | -2    | Class     | 0       |
     And the database has the following table 'items':
-      | id  | type     | no_score | unlocked_item_ids | contest_opens_at    | display_details_in_parent | validation_type | score_min_unlock | team_mode | teams_editable | team_max_members | has_attempts | duration | contest_closes_at   | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
-      | 200 | Category | true     | 1234,2345         | 2019-02-06 09:26:40 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
-      | 210 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:41 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
-      | 220 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:42 | true                      | All             | 100              | All       | true           | 10               | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | id  | type     | no_score | unlocked_item_ids | contest_opens_at    | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | contest_closes_at   | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
+      | 200 | Category | true     | 1234,2345         | 2019-02-06 09:26:40 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
+      | 210 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:41 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | 220 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:42 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    | version |
       | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   | 0       |
@@ -43,26 +43,26 @@ Feature: Get item view information
       | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   | 0       |
       | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   | 0       |
     And the database has the following table 'users_items':
-      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        | contest_started_at  | state      | answer      | version |
-      | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 2019-02-01 06:26:41 | Some state | Some answer | 0       |
-      | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
-      | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 2019-02-01 06:26:44 | Some state | Some answer | 0       |
-      | 4  | 2       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
-      | 5  | 3       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 2019-02-01 06:26:41 | Some state | Some answer | 0       |
-      | 6  | 3       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
-      | 7  | 3       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 2019-02-01 06:26:44 | Some state | null        | 0       |
-      | 8  | 4       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | 2019-02-01 06:26:41 | Some state | Some answer | 0       |
-      | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | 2019-02-01 06:26:42 | Some state | null        | 0       |
-      | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | 2019-02-01 06:26:44 | Some state | null        | 0       |
+      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        | state      | answer      | version |
+      | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
+      | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
+      | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | Some answer | 0       |
+      | 4  | 2       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
+      | 5  | 3       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
+      | 6  | 3       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
+      | 7  | 3       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        | 0       |
+      | 8  | 4       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer | 0       |
+      | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        | 0       |
+      | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        | 0       |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since | creator_user_id | version |
-      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
-      | 44 | 13       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
-      | 45 | 13       | 220     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
-      | 46 | 15       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2037-05-29 06:38:38           | 0               | 0       |
-      | 47 | 26       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
-      | 48 | 26       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
-      | 49 | 26       | 220     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               | 0       |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since | creator_user_id |
+      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | 44 | 13       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | 45 | 13       | 220     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | 46 | 15       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2037-05-29 06:38:38           | 0               |
+      | 47 | 26       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | 48 | 26       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | 49 | 26       | 220     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
     And the database has the following table 'languages':
       | id | code |
       | 2  | fr   |
@@ -80,9 +80,9 @@ Feature: Get item view information
       "validation_type": "All",
       "has_unlocked_items": true,
       "score_min_unlock": 100,
-      "team_mode": "All",
+      "contest_entering_condition": "All",
       "teams_editable": true,
-      "team_max_members": 10,
+      "contest_max_team_size": 10,
       "has_attempts": true,
       "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
@@ -121,7 +121,6 @@ Feature: Get item view information
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
         "finished_at": "2019-02-01T09:26:41Z",
-        "contest_started_at": "2019-02-01T06:26:41Z",
 
         "state": "Some state",
         "answer": "Some answer"
@@ -139,9 +138,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
@@ -167,8 +166,7 @@ Feature: Get item view information
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:44Z",
             "validated_at": "2019-01-31T09:26:44Z",
-            "finished_at": "2019-02-01T09:26:44Z",
-            "contest_started_at": "2019-02-01T06:26:44Z"
+            "finished_at": "2019-02-01T09:26:44Z"
           }
         },
         {
@@ -183,9 +181,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",
@@ -211,8 +209,7 @@ Feature: Get item view information
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:42Z",
             "validated_at": "2019-01-31T09:26:42Z",
-            "finished_at": "2019-02-01T09:26:42Z",
-            "contest_started_at": "2019-02-01T06:26:42Z"
+            "finished_at": "2019-02-01T09:26:42Z"
           }
         }
       ]
@@ -232,9 +229,9 @@ Feature: Get item view information
       "validation_type": "All",
       "has_unlocked_items": true,
       "score_min_unlock": 100,
-      "team_mode": "All",
+      "contest_entering_condition": "All",
       "teams_editable": true,
-      "team_max_members": 10,
+      "contest_max_team_size": 10,
       "has_attempts": true,
       "contest_opens_at": "2019-02-06T09:26:41Z",
       "duration": "10:20:31",
@@ -269,8 +266,7 @@ Feature: Get item view information
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:42Z",
         "validated_at": "2019-01-31T09:26:42Z",
-        "finished_at": "2019-02-01T09:26:42Z",
-        "contest_started_at": "2019-02-01T06:26:42Z"
+        "finished_at": "2019-02-01T09:26:42Z"
       },
 
       "children": []
@@ -290,9 +286,9 @@ Feature: Get item view information
       "validation_type": "All",
       "has_unlocked_items": true,
       "score_min_unlock": 100,
-      "team_mode": "All",
+      "contest_entering_condition": "All",
       "teams_editable": true,
-      "team_max_members": 10,
+      "contest_max_team_size": 10,
       "has_attempts": true,
       "contest_opens_at": "2019-02-06T09:26:41Z",
       "duration": "10:20:31",
@@ -326,8 +322,7 @@ Feature: Get item view information
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:42Z",
         "validated_at": "2019-01-31T09:26:42Z",
-        "finished_at": "2019-02-01T09:26:42Z",
-        "contest_started_at": "2019-02-01T06:26:42Z"
+        "finished_at": "2019-02-01T09:26:42Z"
       },
 
       "children": []
@@ -347,9 +342,9 @@ Feature: Get item view information
       "validation_type": "All",
       "has_unlocked_items": true,
       "score_min_unlock": 100,
-      "team_mode": "All",
+      "contest_entering_condition": "All",
       "teams_editable": true,
-      "team_max_members": 10,
+      "contest_max_team_size": 10,
       "has_attempts": true,
       "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
@@ -388,7 +383,6 @@ Feature: Get item view information
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
         "finished_at": "2019-02-01T09:26:41Z",
-        "contest_started_at": "2019-02-01T06:26:41Z",
 
         "state": "Some state",
         "answer": "Some answer"
@@ -406,9 +400,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
@@ -434,8 +428,7 @@ Feature: Get item view information
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:44Z",
             "validated_at": "2019-01-31T09:26:44Z",
-            "finished_at": "2019-02-01T09:26:44Z",
-            "contest_started_at": "2019-02-01T06:26:44Z"
+            "finished_at": "2019-02-01T09:26:44Z"
           }
         },
         {
@@ -450,9 +443,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",
@@ -478,8 +471,7 @@ Feature: Get item view information
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:42Z",
             "validated_at": "2019-01-31T09:26:42Z",
-            "finished_at": "2019-02-01T09:26:42Z",
-            "contest_started_at": "2019-02-01T06:26:42Z"
+            "finished_at": "2019-02-01T09:26:42Z"
           }
         }
       ]
@@ -499,9 +491,9 @@ Feature: Get item view information
       "validation_type": "All",
       "has_unlocked_items": true,
       "score_min_unlock": 100,
-      "team_mode": "All",
+      "contest_entering_condition": "All",
       "teams_editable": true,
-      "team_max_members": 10,
+      "contest_max_team_size": 10,
       "has_attempts": true,
       "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
@@ -540,7 +532,6 @@ Feature: Get item view information
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
         "finished_at": "2019-02-01T09:26:41Z",
-        "contest_started_at": "2019-02-01T06:26:41Z",
 
         "state": "Some state",
         "answer": "Some answer"
@@ -558,9 +549,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
@@ -589,9 +580,9 @@ Feature: Get item view information
           "validation_type": "All",
           "has_unlocked_items": true,
           "score_min_unlock": 100,
-          "team_mode": "All",
+          "contest_entering_condition": "All",
           "teams_editable": true,
-          "team_max_members": 10,
+          "contest_max_team_size": 10,
           "has_attempts": true,
           "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",

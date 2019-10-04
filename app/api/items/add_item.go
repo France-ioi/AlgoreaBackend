@@ -57,16 +57,16 @@ type item struct {
 	UnlockedItemIDs *string `json:"unlocked_item_ids" validate:"unlocked_item_ids"`
 	// Nullable
 	ScoreMinUnlock *int32 `json:"score_min_unlock"`
-	// Nullable
 	// enum: All,Half,One,None
-	TeamMode *string `json:"team_mode" validate:"oneof=All Half One None"`
+	// default: None
+	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
 	// Nullable
 	//
 	// Should be owned by the current user
-	QualifiedGroupID *int64 `json:"qualified_group_id" validate:"qualified_group_id"`
-	TeamMaxMembers   int32  `json:"team_max_members"`
-	TitleBarVisible  bool   `json:"title_bar_visible"`
-	HasAttempts      bool   `json:"has_attempts"`
+	QualifiedGroupID   *int64 `json:"qualified_group_id" validate:"qualified_group_id"`
+	ContestMaxTeamSize int32  `json:"contest_max_team_size"`
+	TitleBarVisible    bool   `json:"title_bar_visible"`
+	HasAttempts        bool   `json:"has_attempts"`
 	// Nullable
 	ContestOpensAt *time.Time `json:"contest_opens_at"`
 	// Nullable

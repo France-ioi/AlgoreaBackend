@@ -66,20 +66,33 @@ Feature: Get group by name (contestGetGroupByName)
       | ancestor_item_id | child_item_id |
       | 60               | 70            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | additional_time | creator_user_id |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 01:00:00        | 1               |
-      | 11       | 50      | null                        | null                       | null                     | null                          | 00:01:00        | 1               |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | null            | 1               |
-      | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          | null            | 1               |
-      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 00:00:01        | 1               |
-      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 00:00:30        | 1               |
-      | 15       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 00:00:45        | 1               |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 00:01:00        | 1               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 1               |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 1               |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 1               |
-      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 00:01:00        | 1               |
-      | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 00:01:00        | 1               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
+      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 1               |
+      | 11       | 50      | null                        | null                       | null                     | null                          | 1               |
+      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
+      | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          | 1               |
+      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 1               |
+      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
+      | 15       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 1               |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 1               |
+    And the database has the following table 'groups_contest_items':
+      | group_id | item_id | additional_time |
+      | 10       | 50      | 01:00:00        |
+      | 11       | 50      | 00:01:00        |
+      | 13       | 50      | 00:00:01        |
+      | 13       | 60      | 00:00:30        |
+      | 15       | 60      | 00:00:45        |
+      | 21       | 50      | 00:01:00        |
+      | 21       | 60      | 00:01:00        |
+      | 21       | 70      | 00:01:00        |
+      | 31       | 50      | 00:01:00        |
+      | 31       | 70      | 00:01:00        |
+      | 41       | 70      | 00:01:00        |
 
   Scenario: Partial access for group, solutions access for user, additional time from parent groups
     Given I am the user with id "1"

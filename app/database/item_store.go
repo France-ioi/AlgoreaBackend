@@ -270,7 +270,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	}
 
 	if activeContest.IsOver() {
-		if activeContest.TeamMode != nil {
+		if activeContest.IsTeamContest {
 			s.closeTeamContest(activeContest.ItemID, user)
 		} else {
 			s.closeContest(activeContest.ItemID, user)
@@ -290,9 +290,10 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 }
 
 type activeContestInfo struct {
-	ItemID   int64
-	UserID   int64
-	TeamMode *string
+	ItemID                   int64
+	UserID                   int64
+	ContestEnteringCondition string
+	IsTeamContest            bool
 
 	Now               time.Time
 	DurationInSeconds int32
@@ -308,52 +309,52 @@ func (contest *activeContestInfo) IsOver() bool {
 func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Get info for the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
-	// Note: both users_items & groups_items rows should exist to make this function return the info
+	// Note: contest_participations rows should exist to make this function return the info
 	var results []struct {
-		Now                     Time
-		DurationInSeconds       int32
-		ItemID                  int64
-		AdditionalTimeInSeconds int32
-		ContestStartedAt        Time
-		TeamMode                *string
+		Now                      Time
+		DurationInSeconds        int32
+		ItemID                   int64
+		AdditionalTimeInSeconds  int32
+		EnteredAt                Time
+		ContestEnteringCondition string
+		IsTeamContest            bool
 	}
 	mustNotBeError(s.
 		Select(`
 			NOW() AS now,
 			TIME_TO_SEC(items.duration) AS duration_in_seconds,
 			items.id AS item_id,
-			items.team_mode,
-			IFNULL(SUM(TIME_TO_SEC(groups_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(users_items.contest_started_at) AS contest_started_at`).
-		Joins("JOIN groups_items ON groups_items.item_id = items.id").
+			items.contest_entering_condition,
+			items.has_attempts AS is_team_contest,
+			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
+			MIN(contest_participations.entered_at) AS entered_at`).
+		Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = ?", user.SelfGroupID).
+		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
+			contest_participations.group_id = groups_ancestors.ancestor_group_id`).
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
-				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
-		Joins(`
-			JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ? AND
-				users_items.contest_started_at IS NOT NULL AND users_items.finished_at IS NULL`, user.ID).
+			LEFT JOIN groups_contest_items ON groups_contest_items.item_id = items.id AND
+				groups_contest_items.group_id = groups_ancestors.ancestor_group_id`).
 		Group("items.id").
-		Order("MIN(users_items.contest_started_at) DESC").Scan(&results).Error())
+		Order("MIN(contest_participations.entered_at) DESC").
+		Having("entered_at IS NOT NULL").
+		Limit(1).Scan(&results).Error())
 
 	if len(results) == 0 {
 		return nil
 	}
 
-	if len(results) > 1 {
-		log.Warnf("User with id = %d has %d (>1) active contests", user.ID, len(results))
-	}
-
 	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
-	endTime := time.Time(results[0].ContestStartedAt).Add(time.Duration(totalDuration) * time.Second)
+	endTime := time.Time(results[0].EnteredAt).Add(time.Duration(totalDuration) * time.Second)
 
 	return &activeContestInfo{
-		Now:               time.Time(results[0].Now),
-		DurationInSeconds: totalDuration,
-		StartTime:         time.Time(results[0].ContestStartedAt),
-		EndTime:           endTime,
-		ItemID:            results[0].ItemID,
-		UserID:            user.ID,
-		TeamMode:          results[0].TeamMode,
+		Now:                      time.Time(results[0].Now),
+		DurationInSeconds:        totalDuration,
+		StartTime:                time.Time(results[0].EnteredAt),
+		EndTime:                  endTime,
+		ItemID:                   results[0].ItemID,
+		UserID:                   user.ID,
+		ContestEnteringCondition: results[0].ContestEnteringCondition,
+		IsTeamContest:            results[0].IsTeamContest,
 	}
 }
 

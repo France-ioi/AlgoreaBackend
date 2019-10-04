@@ -29,6 +29,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.setAdditionalTime).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+	router.Get("/contests/{item_id}/groups/{group_id}/qualification-state",
+		service.AppHandler(srv.getQualificationState).ServeHTTP)
 }
 
 // swagger:model contestInfo
@@ -45,7 +47,7 @@ type contestInfo struct {
 	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
-func (srv *Service) getTeamModeForTimedContestManagedByUser(itemID int64, user *database.User) (bool, error) {
+func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.User) (bool, error) {
 	var isTeamOnly bool
 	err := srv.Store.Items().ByID(itemID).Where("items.duration IS NOT NULL").
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").

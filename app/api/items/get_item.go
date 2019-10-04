@@ -71,9 +71,6 @@ type itemUserNotGrayed struct {
 	// Nullable; only if not grayed
 	// example: 2019-09-11T07:30:56Z
 	FinishedAt *database.Time `json:"finished_at,string"`
-	// Nullable; only if not grayed
-	// example: 2019-09-11T07:30:56Z
-	ContestStartedAt *database.Time `json:"contest_started_at,string"`
 }
 
 type itemUserRootNodeNotChapter struct {
@@ -112,14 +109,13 @@ type itemCommonFields struct {
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 	// required: true
 	ScoreMinUnlock int32 `json:"score_min_unlock"`
-	// Nullable
 	// required: true
 	// enum: All,Half,One,None
-	TeamMode *string `json:"team_mode"`
+	ContestEnteringCondition string `json:"contest_entering_condition"`
 	// required: true
 	TeamsEditable bool `json:"teams_editable"`
 	// required: true
-	TeamMaxMembers int32 `json:"team_max_members"`
+	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
 	// required: true
 	HasAttempts bool `json:"has_attempts"`
 	// Nullable
@@ -273,21 +269,21 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 // rawItem represents one row of the getItem service data returned from the DB
 type rawItem struct {
 	// items
-	ID                     int64
-	Type                   string
-	DisplayDetailsInParent bool
-	ValidationType         string
-	HasUnlockedItems       bool // whether items.unlocked_item_ids is empty
-	ScoreMinUnlock         int32
-	TeamMode               *string
-	TeamsEditable          bool
-	TeamMaxMembers         int32
-	HasAttempts            bool
-	ContestOpensAt         *database.Time
-	Duration               *string
-	ContestClosesAt        *database.Time
-	NoScore                bool
-	GroupCodeEnter         *bool
+	ID                       int64
+	Type                     string
+	DisplayDetailsInParent   bool
+	ValidationType           string
+	HasUnlockedItems         bool // whether items.unlocked_item_ids is empty
+	ScoreMinUnlock           int32
+	ContestEnteringCondition string
+	TeamsEditable            bool
+	ContestMaxTeamSize       int32
+	HasAttempts              bool
+	ContestOpensAt           *database.Time
+	Duration                 *string
+	ContestClosesAt          *database.Time
+	NoScore                  bool
+	GroupCodeEnter           *bool
 
 	// root node only
 	TitleBarVisible bool
@@ -320,7 +316,6 @@ type rawItem struct {
 	UserStartedAt           *database.Time `sql:"column:started_at"`
 	UserValidatedAt         *database.Time `sql:"column:validated_at"`
 	UserFinishedAt          *database.Time `sql:"column:finished_at"`
-	UserContestStartedAt    *database.Time `sql:"column:contest_started_at"`
 	UserState               *string        `sql:"column:state"`  // only if not a chapter
 	UserAnswer              *string        `sql:"column:answer"` // only if not a chapter
 
@@ -345,9 +340,9 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.validation_type,
 		items.unlocked_item_ids,
 		items.score_min_unlock,
-		items.team_mode,
+		items.contest_entering_condition,
 		items.teams_editable,
-		items.team_max_members,
+		items.contest_max_team_size,
 		items.has_attempts,
 		items.contest_opens_at,
 		items.duration,
@@ -395,9 +390,9 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		// Here we consider both NULL and an empty string as FALSE
 		` COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
 			items.score_min_unlock,
-			items.team_mode,
+			items.contest_entering_condition,
 			items.teams_editable,
-			items.team_max_members,
+			items.contest_max_team_size,
 			items.has_attempts,
 			items.contest_opens_at,
 			items.duration,
@@ -422,7 +417,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			users_items.started_at AS started_at,
 			users_items.validated_at AS validated_at,
 			users_items.finished_at AS finished_at,
-			users_items.contest_started_at AS contest_started_at,
 			IF(items.type <> 'Chapter', users_items.state, NULL) as state,
 			users_items.answer,
 
@@ -523,27 +517,26 @@ func constructUserNotGrayed(rawData *rawItem) *itemUserNotGrayed {
 		StartedAt:           rawData.UserStartedAt,
 		ValidatedAt:         rawData.UserValidatedAt,
 		FinishedAt:          rawData.UserFinishedAt,
-		ContestStartedAt:    rawData.UserContestStartedAt,
 	}
 }
 
 func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 	result := &itemCommonFields{
-		ID:                     rawData.ID,
-		Type:                   rawData.Type,
-		DisplayDetailsInParent: rawData.DisplayDetailsInParent,
-		ValidationType:         rawData.ValidationType,
-		HasUnlockedItems:       rawData.HasUnlockedItems,
-		ScoreMinUnlock:         rawData.ScoreMinUnlock,
-		TeamMode:               rawData.TeamMode,
-		TeamsEditable:          rawData.TeamsEditable,
-		TeamMaxMembers:         rawData.TeamMaxMembers,
-		HasAttempts:            rawData.HasAttempts,
-		ContestOpensAt:         rawData.ContestOpensAt,
-		Duration:               rawData.Duration,
-		ContestClosesAt:        rawData.ContestClosesAt,
-		NoScore:                rawData.NoScore,
-		GroupCodeEnter:         rawData.GroupCodeEnter,
+		ID:                       rawData.ID,
+		Type:                     rawData.Type,
+		DisplayDetailsInParent:   rawData.DisplayDetailsInParent,
+		ValidationType:           rawData.ValidationType,
+		HasUnlockedItems:         rawData.HasUnlockedItems,
+		ScoreMinUnlock:           rawData.ScoreMinUnlock,
+		ContestEnteringCondition: rawData.ContestEnteringCondition,
+		TeamsEditable:            rawData.TeamsEditable,
+		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
+		HasAttempts:              rawData.HasAttempts,
+		ContestOpensAt:           rawData.ContestOpensAt,
+		Duration:                 rawData.Duration,
+		ContestClosesAt:          rawData.ContestClosesAt,
+		NoScore:                  rawData.NoScore,
+		GroupCodeEnter:           rawData.GroupCodeEnter,
 	}
 	return result
 }
