@@ -149,6 +149,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
