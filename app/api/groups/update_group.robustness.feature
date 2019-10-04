@@ -5,10 +5,10 @@ Feature: Update a group (groupEdit) - robustness
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  |
       | 2  | user  | 0         | 31            | 32             | John        | Doe       |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self | version |
-      | 75 | 22                | 13             | 0       | 0       |
-      | 76 | 13                | 11             | 0       | 0       |
-      | 77 | 32                | 15             | 0       | 0       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 75 | 22                | 13             | 0       |
+      | 76 | 13                | 11             | 0       |
+      | 77 | 32                | 15             | 0       |
     And the database has the following table 'groups':
       | id | name    | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |

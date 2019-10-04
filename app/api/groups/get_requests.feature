@@ -6,11 +6,11 @@ Feature: Get requests for group_id
       | 2  | user  | 0         | 11            | 12             | John        | Doe       | 1     |
       | 3  | jane  | 0         | 31            | 32             | Jane        | Doe       | 2     |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self | version |
-      | 75 | 22                | 13             | 0       | 0       |
-      | 76 | 13                | 11             | 0       | 0       |
-      | 77 | 22                | 11             | 0       | 0       |
-      | 78 | 21                | 21             | 1       | 0       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 75 | 22                | 13             | 0       |
+      | 76 | 13                | 11             | 0       |
+      | 77 | 22                | 11             | 0       |
+      | 78 | 21                | 21             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | type               | type_changed_at           | inviting_user_id |
       | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} | 2                |

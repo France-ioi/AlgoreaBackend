@@ -4,8 +4,8 @@ Feature: Get group children (groupChildrenView) - robustness
       | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | default_language |
       | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self | version |
-      | 75 | 22                | 13             | 0       | 0       |
+      | id | ancestor_group_id | child_group_id | is_self |
+      | 75 | 22                | 13             | 0       |
     And the database has the following table 'groups':
       | id | name    | grade | type  | opened | free_access | code       |
       | 11 | Group A | -3    | Class | true   | true        | ybqybxnlyo |

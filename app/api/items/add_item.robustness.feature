@@ -265,8 +265,8 @@ Feature: Add item - robustness
 
   Scenario: Not enough perm on parent
     Given the database has the following table 'groups':
-      | id | name | text_id | grade | type      | version |
-      | 11 | jdoe |         | -2    | UserAdmin | 0       |
+      | id | name | text_id | grade | type      |
+      | 11 | jdoe |         | -2    | UserAdmin |
     And I am the user with id "1"
     When I send a POST request to "/items" with the following body:
       """

@@ -45,12 +45,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 				os.Exit(1)
 			}
 
-			tablesToTruncate := []string{
-				"groups", "history_groups",
-				"groups_groups", "history_groups_groups",
-				"groups_ancestors", "history_groups_ancestors",
-				"groups_attempts", "history_groups_attempts",
-			}
+			tablesToTruncate := []string{"groups", "groups_groups", "groups_ancestors", "groups_attempts"}
 			for _, tableName := range tablesToTruncate {
 				if _, err := rawdb.Exec(fmt.Sprintf("TRUNCATE %s", tableName)); err != nil {
 					panic(err)

@@ -13,10 +13,10 @@ import (
 //   Returns a downloadable JSON file with all the short version of the current user's data.
 //   The content returned is just the dump of raw entries of tables related to the user
 //
-//     * `current_user` (from `users`): all attributes except `version`
+//     * `current_user` (from `users`): all attributes;
 //     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
-//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes except `version` + `groups.name`.
+//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
