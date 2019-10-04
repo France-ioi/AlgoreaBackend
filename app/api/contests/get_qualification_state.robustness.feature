@@ -77,7 +77,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is visible, but it's not a timed contest
+  Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
       | id |
       | 50 |
