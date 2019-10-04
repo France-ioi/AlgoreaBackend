@@ -102,10 +102,10 @@ Feature: Get qualification state (contestGetQualificationState)
       | Half               |
       | One                |
 
-  Scenario Outline: State is not_ready for a team-only contest (no one can enter)
+  Scenario Outline: Team-only contest when no one can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
     And I am the user with id "2"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -114,7 +114,7 @@ Feature: Get qualification state (contestGetQualificationState)
     {
       "current_user_can_enter": false,
       "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
+      "max_team_size": 3,
       "other_members": [
         {
           "can_enter": false,
@@ -131,20 +131,20 @@ Feature: Get qualification state (contestGetQualificationState)
           "login": "jack"
         }
       ],
-      "state": "not_ready"
+      "state": "<expected_state>"
     }
     """
     Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 2                     |
-      | All                | 100                   |
-      | Half               | 100                   |
-      | One                | 100                   |
+      | entering_condition | expected_state |
+      | None               | ready          |
+      | All                | not_ready      |
+      | Half               | not_ready      |
+      | One                | not_ready      |
 
-  Scenario Outline: State is not_ready for a team-only contest (but one member can enter)
+  Scenario Outline: Team-only contest when one member can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -156,7 +156,7 @@ Feature: Get qualification state (contestGetQualificationState)
     {
       "current_user_can_enter": false,
       "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
+      "max_team_size": 3,
       "other_members": [
         {
           "can_enter": true,
@@ -173,20 +173,20 @@ Feature: Get qualification state (contestGetQualificationState)
           "login": "jack"
         }
       ],
-      "state": "not_ready"
+      "state": "<expected_state>"
     }
     """
     Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 2                     |
-      | All                | 100                   |
-      | Half               | 100                   |
-      | One                | 2                     |
+      | entering_condition | expected_state |
+      | None               | ready          |
+      | All                | not_ready      |
+      | Half               | not_ready      |
+      | One                | ready          |
 
-  Scenario Outline: State is not_ready for a team-only contest (but half of members can enter)
+  Scenario Outline: Team-only contest when half of members can enter
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -199,7 +199,7 @@ Feature: Get qualification state (contestGetQualificationState)
     {
       "current_user_can_enter": true,
       "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
+      "max_team_size": 3,
       "other_members": [
         {
           "can_enter": true,
@@ -216,17 +216,61 @@ Feature: Get qualification state (contestGetQualificationState)
           "login": "jack"
         }
       ],
-      "state": "not_ready"
+      "state": "<expected_state>"
     }
     """
     Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 2                     |
-      | All                | 100                   |
-      | Half               | 2                     |
-      | One                | 2                     |
+      | entering_condition | expected_state |
+      | None               | ready          |
+      | All                | not_ready      |
+      | Half               | ready          |
+      | One                | ready          |
 
-  Scenario Outline: State is not_ready for a team-only contest (but all members can enter)
+  Scenario Outline: Team-only contest when all members can enter
+    Given the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+    Given the database has the following table 'groups_contest_items':
+      | group_id | item_id | can_enter_from   | can_enter_until     |
+      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
+    And I am the user with id "2"
+    When I send a GET request to "/contests/60/groups/11/qualification-state"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": true,
+      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": true,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": true,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "state": "ready"
+    }
+    """
+    Examples:
+      | entering_condition |
+      | None               |
+      | All                |
+      | Half               |
+      | One                |
+
+  Scenario Outline: Team-only contest when all members can enter, but the team is too large
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 2                     |
@@ -269,169 +313,6 @@ Feature: Get qualification state (contestGetQualificationState)
       | All                |
       | Half               |
       | One                |
-
-
-  Scenario Outline: State is ready for a team-only contest (although no one can enter)
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
-    And I am the user with id "2"
-    When I send a GET request to "/contests/60/groups/11/qualification-state"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
-      "other_members": [
-        {
-          "can_enter": false,
-          "first_name": "Jane",
-          "group_id": "41",
-          "last_name": null,
-          "login": "jane"
-        },
-        {
-          "can_enter": false,
-          "first_name": "Jack",
-          "group_id": "51",
-          "last_name": "Daniel",
-          "login": "jack"
-        }
-      ],
-      "state": "ready"
-    }
-    """
-    Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 3                     |
-
-  Scenario Outline: State is ready for a team-only contest (although only one member can enter)
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
-    When I send a GET request to "/contests/60/groups/11/qualification-state"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "current_user_can_enter": false,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
-      "other_members": [
-        {
-          "can_enter": true,
-          "first_name": "Jane",
-          "group_id": "41",
-          "last_name": null,
-          "login": "jane"
-        },
-        {
-          "can_enter": false,
-          "first_name": "Jack",
-          "group_id": "51",
-          "last_name": "Daniel",
-          "login": "jack"
-        }
-      ],
-      "state": "ready"
-    }
-    """
-    Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 3                     |
-      | One                | 3                     |
-
-  Scenario Outline: State is ready for a team-only contest (although only half of members can enter)
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
-    When I send a GET request to "/contests/60/groups/11/qualification-state"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
-      "other_members": [
-        {
-          "can_enter": true,
-          "first_name": "Jane",
-          "group_id": "41",
-          "last_name": null,
-          "login": "jane"
-        },
-        {
-          "can_enter": false,
-          "first_name": "Jack",
-          "group_id": "51",
-          "last_name": "Daniel",
-          "login": "jack"
-        }
-      ],
-      "state": "ready"
-    }
-    """
-    Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 3                     |
-      | One                | 3                     |
-      | Half               | 3                     |
-
-  Scenario Outline: State is ready for a team-only contest (all members can enter)
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size   |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | <contest_max_team_size> |
-    Given the database has the following table 'groups_contest_items':
-      | group_id | item_id | can_enter_from   | can_enter_until     |
-      | 10       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-      | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
-    When I send a GET request to "/contests/60/groups/11/qualification-state"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "current_user_can_enter": true,
-      "entering_condition": {{"<entering_condition>" != "null" ? "\"<entering_condition>\"" : "null"}},
-      "max_team_size": <contest_max_team_size>,
-      "other_members": [
-        {
-          "can_enter": true,
-          "first_name": "Jane",
-          "group_id": "41",
-          "last_name": null,
-          "login": "jane"
-        },
-        {
-          "can_enter": true,
-          "first_name": "Jack",
-          "group_id": "51",
-          "last_name": "Daniel",
-          "login": "jack"
-        }
-      ],
-      "state": "ready"
-    }
-    """
-    Examples:
-      | entering_condition | contest_max_team_size |
-      | None               | 3                     |
-      | One                | 3                     |
-      | Half               | 3                     |
-      | All                | 3                     |
 
   Scenario Outline: State is already_started for an individual contest
     Given the database has the following table 'items':
