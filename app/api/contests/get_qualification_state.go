@@ -28,12 +28,6 @@ type contestGetQualificationStateOtherMember struct {
 
 // swagger:model contestGetQualificationStateResponse
 type contestGetQualificationStateResponse struct {
-	// * 'already_started' if the participant has a non-null `entered_at` for the item
-	//
-	// * 'not_ready' if there are more members than `contest_max_team_size` or
-	//   if the qualification state is not met globally for the team/user
-	//
-	// * 'ready' otherwise
 	// required: true
 	// enum: ready,already_started,not_ready
 	State string `json:"state"`
@@ -54,8 +48,27 @@ type contestGetQualificationStateResponse struct {
 // summary: Get qualification state
 // description: >
 //                For the given contest and the given participant, returns the qualification state,
-//                i.e. whether he can start the contest, and the state of each team member.
+//                i.e. whether he can enter the contest, and info on each team member.
 //
+//                The qualification state is one of:
+//                  * 'already_started' if the participant has a non-null `entered_at` for the item;
+//
+//                  * 'not_ready' if there are more members than `contest_max_team_size` or
+//                    if the team/user doesn't satisfy the contest entering condition which is computed
+//                    in accordance with `items.contest_entering_condition` as follows:
+//
+//                      * "None": no additional conditions (the team/user can enter the contest);
+//
+//                      * "One": the current time needs to be included in the
+//                        `groups_contest_items`.`can_enter_from`-`can_enter_until` time range
+//                        for the contest item and one of the group ancestors of either the user (if participating alone)
+//                        or at least one member of the team;
+//
+//                      * "All": same but all members of the team;
+//
+//                      * "Half": same but half of the members (ceil-rounded) of the team;
+//
+//                  * 'ready' otherwise.
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
