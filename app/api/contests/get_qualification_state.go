@@ -127,7 +127,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	}
 	service.MustNotBeError(err)
 
-	if apiError := srv.checkGroupIDForGetQualificationState(groupID, itemID, contestInfo.IsTeamOnly, user); apiError != service.NoError {
+	if apiError := srv.checkGroupID(groupID, itemID, contestInfo.IsTeamOnly, user); apiError != service.NoError {
 		return apiError
 	}
 
@@ -157,7 +157,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 	return service.NoError
 }
 
-func (srv *Service) checkGroupIDForGetQualificationState(groupID, itemID int64, isTeamOnly bool, user *database.User) service.APIError {
+func (srv *Service) checkGroupID(groupID, itemID int64, isTeamOnly bool, user *database.User) service.APIError {
 	if isTeamOnly {
 		var teamGroupID int64
 		err := srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
