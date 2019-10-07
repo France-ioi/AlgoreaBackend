@@ -13,7 +13,8 @@ func TestDB_WhereGroupRelationIsActive(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta(
 		"SELECT * FROM `groups_groups` " +
-			"WHERE (groups_groups.type IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode'))")).
+			"WHERE (groups_groups.type IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode') AND " +
+			"NOW() < groups_groups.expires_at)")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}

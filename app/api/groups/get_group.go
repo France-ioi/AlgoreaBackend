@@ -99,13 +99,18 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	query := srv.Store.Groups().
 		Joins(`
 			LEFT JOIN groups_ancestors
-				ON groups_ancestors.child_group_id = groups.id AND groups_ancestors.ancestor_group_id = ?`, user.OwnedGroupID).
+				ON groups_ancestors.child_group_id = groups.id AND
+					NOW() < groups_ancestors.expires_at AND
+					groups_ancestors.ancestor_group_id = ?`, user.OwnedGroupID).
 		Joins(`
 			LEFT JOIN groups_ancestors AS groups_descendants
-				ON groups_descendants.ancestor_group_id = groups.id AND groups_descendants.child_group_id = ?`, user.SelfGroupID).
+				ON groups_descendants.ancestor_group_id = groups.id AND
+					NOW() < groups_descendants.expires_at AND
+					groups_descendants.child_group_id = ?`, user.SelfGroupID).
 		Joins(`
 			LEFT JOIN groups_groups
 				ON groups_groups.type `+database.GroupRelationIsActiveCondition+` AND
+					NOW() < groups_groups.expires_at AND
 					groups_groups.parent_group_id = groups.id AND groups_groups.child_group_id = ?`, user.SelfGroupID).
 		Where("groups_ancestors.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
 		Where("groups.id = ?", groupID).Select(

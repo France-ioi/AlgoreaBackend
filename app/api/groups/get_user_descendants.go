@@ -77,6 +77,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
 				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+				NOW() < groups_ancestors.expires_at AND
 				groups_ancestors.ancestor_group_id = ?`, groupID).
 		Joins("JOIN users ON users.self_group_id = groups.id").
 		Where("groups.type = 'UserSelf'")
@@ -106,9 +107,11 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Joins(`
 			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
 				parent_links.type`+database.GroupRelationIsActiveCondition+` AND
+				NOW() < parent_links.expires_at AND
 				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
 			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+				NOW() < parent_ancestors.expires_at AND
 				parent_ancestors.ancestor_group_id = ?`, groupID).
 		Order("groups.id").
 		Scan(&parentsResult).Error())

@@ -328,7 +328,9 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			items.has_attempts AS is_team_contest,
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
 			MIN(contest_participations.entered_at) AS entered_at`).
-		Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = ?", user.SelfGroupID).
+		Joins(`
+			JOIN groups_ancestors
+				ON NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors.ancestor_group_id`).
 		Joins(`
@@ -402,6 +404,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		JOIN groups_groups
 			ON groups_groups.child_group_id = users.self_group_id AND
 				groups_groups.type`+GroupRelationIsActiveCondition+` AND
+				NOW() < groups_groups.expires_at AND
 				groups_groups.parent_group_id = ?
 		SET finished_at = NOW()
 		WHERE users_items.item_id = ?`, teamGroupID, itemID).Error)

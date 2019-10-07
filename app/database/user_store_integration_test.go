@@ -15,7 +15,7 @@ import (
 
 func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	testhelpers.MockDBTime(currentTime.Format(time.RFC3339))
+	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
 	defer testhelpers.RestoreDBTime()
 
 	db := setupDBForDeleteWithTrapsTests(t, currentTime)
@@ -48,7 +48,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 
 func TestUserStore_DeleteWithTraps(t *testing.T) {
 	currentTime := time.Now().UTC().Truncate(time.Second)
-	testhelpers.MockDBTime(currentTime.Format(time.RFC3339))
+	testhelpers.MockDBTime(currentTime.Format("2006-01-02T15:04:05"))
 	defer testhelpers.RestoreDBTime()
 
 	db := setupDBForDeleteWithTrapsTests(t, currentTime)

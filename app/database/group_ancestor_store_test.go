@@ -13,7 +13,8 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(11), DefaultLanguageID: 0}
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_ancestors` WHERE (groups_ancestors.ancestor_group_id=?")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_ancestors` " +
+		"WHERE (NOW() < groups_ancestors.expires_at AND groups_ancestors.ancestor_group_id=?")).
 		WithArgs(11).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 

@@ -125,7 +125,8 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	userGroupIDQuery := srv.Store.GroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'UserSelf'").
 		Where("groups_ancestors.ancestor_group_id = ?", groupID).
-		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
+		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id").
+		Where("NOW() < groups_ancestors.expires_at")
 	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
@@ -179,6 +180,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`
 			LEFT JOIN groups_groups AS team_links
 			ON team_links.type`+database.GroupRelationIsActiveCondition+` AND
+				NOW() < team_links.expires_at AND
 				team_links.child_group_id = groups.id`).
 		Joins(`
 			JOIN `+"`groups`"+` AS teams

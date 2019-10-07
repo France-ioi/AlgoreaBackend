@@ -120,7 +120,8 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	teamIDQuery := srv.Store.GroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors.ancestor_group_id = ?", groupID).
-		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
+		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id").
+		Where("NOW() < groups_ancestors.expires_at")
 	teamIDQuery, apiError := service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},

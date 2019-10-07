@@ -44,7 +44,10 @@ func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB 
 			MIN(cached_grayed_access_since) <= NOW() AS grayed_access,
 			MIN(cached_solutions_access_since) <= NOW() AS access_solutions`).
 		Joins(`
-			JOIN (SELECT * FROM groups_ancestors WHERE (groups_ancestors.child_group_id = ?)) AS ancestors
+			JOIN (
+				SELECT * FROM groups_ancestors
+				WHERE (NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?)
+			) AS ancestors
 			ON ancestors.ancestor_group_id = groups_items.group_id`, groupID).
 		Group("groups_items.item_id").
 		Having("full_access > 0 OR partial_access > 0 OR grayed_access > 0")

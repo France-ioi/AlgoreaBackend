@@ -202,8 +202,11 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 	if isTeamOnly {
 		service.MustNotBeError(srv.Store.GroupGroups().Where("groups_groups.parent_group_id = ?", groupID).
 			Where("groups_groups.type "+database.GroupRelationIsActiveCondition).
+			Where("NOW() < groups_groups.expires_at").
 			Joins("JOIN users ON users.self_group_id = groups_groups.child_group_id").
-			Joins("LEFT JOIN groups_ancestors ON groups_ancestors.child_group_id = groups_groups.child_group_id").
+			Joins(`
+				LEFT JOIN groups_ancestors ON groups_ancestors.child_group_id = groups_groups.child_group_id AND
+							NOW() < groups_ancestors.expires_at`).
 			Joins(`
 					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id AND
 						groups_contest_items.item_id = ?`, itemID).
@@ -230,6 +233,7 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 		membersCount = 1
 		members = []contestGetQualificationStateOtherMember{}
 		service.MustNotBeError(srv.Store.GroupAncestors().Where("groups_ancestors.child_group_id = ?", groupID).
+			Where("NOW() < groups_ancestors.expires_at").
 			Joins(`
 					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id
 						AND groups_contest_items.item_id = ?`, itemID).

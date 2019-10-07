@@ -53,7 +53,7 @@ func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
 			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
-				groups_ancestors.child_group_id = ?`, user.SelfGroupID).
+				NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 		Group("items.id").
 		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()").
 		PluckFirst("items.has_attempts", &isTeamOnly).Error()

@@ -6,5 +6,5 @@ const GroupRelationIsActiveCondition = " IN ('direct', 'invitationAccepted', 're
 
 // WhereGroupRelationIsActive restricts `groups_groups.type` to values corresponding to actual group membership
 func (conn *DB) WhereGroupRelationIsActive() *DB {
-	return conn.Where("groups_groups.type" + GroupRelationIsActiveCondition)
+	return conn.Where("groups_groups.type" + GroupRelationIsActiveCondition + " AND NOW() < groups_groups.expires_at")
 }

@@ -138,7 +138,8 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				SELECT COUNT(*) FROM `+"`groups`"+` AS user_groups
 				JOIN groups_ancestors
 				ON groups_ancestors.child_group_id = user_groups.id AND
-					groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id
+					groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
+					NOW() < groups_ancestors.expires_at
 				WHERE user_groups.type = 'UserSelf' AND groups_ancestors.ancestor_group_id = groups.id
 			) AS user_count`).
 		Where("groups.id IN(?)",

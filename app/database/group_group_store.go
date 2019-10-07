@@ -51,6 +51,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		mustNotBeError(store.GroupAncestors().
 			WithWriteLock().
 			Select("id").
+			// do not allow cycles even via expired relations
 			Where("child_group_id = ? AND ancestor_group_id = ?", parentGroupID, childGroupID).
 			Limit(1).
 			Scan(&rows).Error())
@@ -124,6 +125,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			Select("1").
 			Where("child_group_id = ?", childGroupID).
 			Where("parent_group_id != ?", parentGroupID).
+			Where("NOW() < expires_at").
 			Limit(1).Scan(&result).Error())
 		if len(result) == 0 {
 			shouldDeleteChildGroup = true

@@ -17,7 +17,8 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
-		"WHERE (groups_groups.child_group_id = ?) AND (groups_groups.type" + GroupRelationIsActiveCondition + ")")).
+		"WHERE (groups_groups.child_group_id = ?) AND " +
+		"(groups_groups.type" + GroupRelationIsActiveCondition + " AND NOW() < groups_groups.expires_at)")).
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 

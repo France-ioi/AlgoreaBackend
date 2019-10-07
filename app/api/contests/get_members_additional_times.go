@@ -102,7 +102,8 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.GroupAncestors().Where("groups_ancestors.ancestor_group_id = ?", groupID)
+	query := srv.Store.GroupAncestors().Where("groups_ancestors.ancestor_group_id = ?", groupID).
+		Where("NOW() < groups_ancestors.expires_at")
 
 	if isTeamOnly {
 		query = query.
@@ -119,7 +120,9 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 
 	query = query.
-		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.child_group_id = found_group.id").
+		Joins(`
+			JOIN groups_ancestors AS found_group_ancestors
+				ON found_group_ancestors.child_group_id = found_group.id AND NOW() < groups_ancestors.expires_at`).
 		Joins(`
 			LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND
 				groups_items.item_id = ?`, itemID).

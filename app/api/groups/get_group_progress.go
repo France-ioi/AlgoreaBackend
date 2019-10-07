@@ -146,6 +146,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	ancestorGroupIDQuery := srv.Store.GroupGroups().
 		Where("groups_groups.parent_group_id = ?", groupID).
 		Where("groups_groups.type = 'direct'").
+		Where("NOW() < groups_groups.expires_at").
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.id = groups_groups.child_group_id AND group_child.type NOT IN('Team', 'UserSelf')`)
@@ -174,6 +175,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			JOIN groups_ancestors
 			ON groups_ancestors.ancestor_group_id IN (?) AND
+				NOW() < groups_ancestors.expires_at AND
 				groups_ancestors.child_group_id = parent.id`, ancestorGroupIDs).
 		WhereGroupRelationIsActive().
 		Group("child.id")
@@ -183,6 +185,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			JOIN groups_ancestors
 			ON groups_ancestors.ancestor_group_id IN (?) AND
+				NOW() < groups_ancestors.expires_at AND
 				groups_ancestors.child_group_id = groups.id`, ancestorGroupIDs).
 		Where("groups.type='Team'").
 		Group("groups.id")
@@ -232,6 +235,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				AVG(member_stats.time_spent) AS avg_time_spent`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors.child_group_id", endMembersStats.SubQuery()).
 			Where("groups_ancestors.ancestor_group_id IN (?)", ancestorGroupIDs).
+			Where("NOW() < groups_ancestors.expires_at").
 			Group("groups_ancestors.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",

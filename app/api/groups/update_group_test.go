@@ -61,7 +61,7 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND NOW() < groups_ancestors.expires_at "+
 			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(ptrInt64(11), 1).WillReturnError(errors.New("error"))
 		mock.ExpectRollback()
@@ -72,7 +72,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND NOW() < groups_ancestors.expires_at "+
 			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
 		mock.ExpectExec("UPDATE `groups_groups` .+").WithArgs("requestRefused", 1).
@@ -85,7 +85,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 	assertUpdateGroupFailsOnDBErrorInTransaction(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
-			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id "+
+			"JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND NOW() < groups_ancestors.expires_at "+
 			"WHERE (groups_ancestors.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
 			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").

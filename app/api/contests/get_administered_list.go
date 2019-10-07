@@ -89,7 +89,9 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
 			COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS title_language_id`).
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
-		Joins("JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id").
+		Joins(`
+			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
+				NOW() < groups_ancestors.expires_at`).
 		JoinsUserAndDefaultItemStrings(user).
 		Where("groups_items.cached_full_access_since <= NOW() OR groups_items.cached_solutions_access_since <= NOW()").
 		Where("groups_ancestors.child_group_id = ?", user.SelfGroupID).
@@ -133,6 +135,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			Joins(`
 				JOIN groups_ancestors AS parent_groups_ancestors
 					ON parent_groups_ancestors.ancestor_group_id = parent_groups_items.group_id AND
+						NOW() < parent_groups_ancestors.expires_at AND
 						parent_groups_ancestors.child_group_id = ?`, user.SelfGroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Group("items_items.parent_item_id, items_items.child_item_id").

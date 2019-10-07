@@ -123,7 +123,9 @@ func (app *Application) CheckConfig() error {
 		} {
 			hasRows, err := groupGroupStore.Where("type = 'direct'").
 				Where("parent_group_id = ?", spec.parentID).
-				Where("child_group_id = ?", spec.childID).Select("1").Limit(1).HasRows()
+				Where("child_group_id = ?", spec.childID).
+				Where("NOW() < groups_groups.expires_at").
+				Select("1").Limit(1).HasRows()
 			if err != nil {
 				return err
 			}
