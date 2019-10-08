@@ -80,6 +80,58 @@ jobs:
           when: on_fail
           name: On failure, run BDD tests with details
           command: make test-bdd
+  migration-tests:
+    docker:
+      - image: circleci/golang:1.11
+      - image: circleci/mysql:8.0
+        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
+        environment:
+          MYSQL_USER: algorea
+          MYSQL_PASSWORD: dummy_password
+          MYSQL_DATABASE: algorea_example
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_HOST: "%"
+    environment:
+      ALGOREA_ENV: test
+      ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
+      ALGOREA_DATABASE.CONNECTION.USER: franceioi
+      ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
+      ALGOREA_DATABASE.CONNECTION.DBNAME: algorea_example
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_cache: *CACHEKEYMOD
+      - run: sudo apt-get update
+      - run: sudo apt-get install default-mysql-client             # required for db-restore
+      - run: cp conf/config.sample.yaml conf/config.yaml           # as env var are not loaded for entries not in config file (bug)
+      - run: cp conf/config.test.sample.yaml conf/config.test.yaml # the dbname is specified in conf/config.test.yaml
+      - run:
+          name: Wait for MySQL
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
+      - run:
+          name: Download a large dump of data
+          command: curl -o - $LARGE_DUMP_URL | gunzip > dump.sql
+      - run:
+          name: Seed database
+          command: mysql -h 127.0.0.1 -u root -proot --protocol=TCP algorea_example < dump.sql
+      - run:
+          name: Apply all migrations
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
+          command: make db-migrate
+      - run:
+          name: Undo all migrations
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
+          command: for m in db/migrations/*.sql; do make db-migrate-undo; done
+      - run:
+          name: Re-apply all migrations
+          environment:
+            ALGOREA_DATABASE.CONNECTION.USER: root
+            ALGOREA_DATABASE.CONNECTION.PASSWD: root
+          command: make db-migrate
   lint:
     docker:
       - image: circleci/golang:1.11
@@ -180,6 +232,9 @@ workflows:
     jobs:
       - deps
       - tests:
+          requires:
+          - deps
+      - migration-tests:
           requires:
           - deps
       - lint:
