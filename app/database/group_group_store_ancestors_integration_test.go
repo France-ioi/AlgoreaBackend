@@ -180,17 +180,17 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=2").
-		UpdateColumn("expires_at", "3019-12-31 20:10:30").Error())
+		UpdateColumn("expires_at", "3020-12-31 20:10:30").Error())
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=3").
-		UpdateColumn("expires_at", "3019-10-20 14:13:55").Error())
+		UpdateColumn("expires_at", "3019-12-31 20:10:30").Error())
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=4").
-		UpdateColumn("expires_at", "3020-09-15 21:13:59").Error())
+		UpdateColumn("expires_at", "3021-12-31 20:10:30").Error())
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=3").
-		UpdateColumn("expires_at", "3020-10-20 10:23:40").Error())
+		UpdateColumn("expires_at", "3022-12-31 20:10:30").Error())
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=4").
-		UpdateColumn("expires_at", "3021-08-10 12:11:45").Error())
+		UpdateColumn("expires_at", "3023-12-31 20:10:30").Error())
 	assert.NoError(t, groupGroupStore.Where("parent_group_id=3 AND child_group_id=4").
-		UpdateColumn("expires_at", "3022-05-11 17:43:24").Error())
+		UpdateColumn("expires_at", "3024-12-31 20:10:30").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
 		ds.GroupGroups().CreateNewAncestors()
@@ -202,14 +202,14 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 
 	assert.Equal(t, []groupAncestorsResultRow{
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 2, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3019-12-31 20:10:30"},
-		{ChildGroupID: 3, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3019-12-31 20:10:30"},
-		{ChildGroupID: 4, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3020-09-15 21:13:59"},
+		{ChildGroupID: 2, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3020-12-31 20:10:30"},
+		{ChildGroupID: 3, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3020-12-31 20:10:30"},
+		{ChildGroupID: 4, AncestorGroupID: 1, IsSelf: false, ExpiresAt: "3021-12-31 20:10:30"},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 4, AncestorGroupID: 2, IsSelf: false, ExpiresAt: "3021-08-10 12:11:45"},
+		{ChildGroupID: 4, AncestorGroupID: 2, IsSelf: false, ExpiresAt: "3023-12-31 20:10:30"},
 		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
-		{ChildGroupID: 4, AncestorGroupID: 3, IsSelf: false, ExpiresAt: "3022-05-11 17:43:24"},
+		{ChildGroupID: 4, AncestorGroupID: 3, IsSelf: false, ExpiresAt: "3024-12-31 20:10:30"},
 		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)
 
