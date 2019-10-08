@@ -86,7 +86,7 @@ jobs:
       - image: circleci/mysql:8.0
         command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760
         environment:
-          MYSQL_USER: algorea
+          MYSQL_USER: franceioi
           MYSQL_PASSWORD: dummy_password
           MYSQL_DATABASE: algorea_example
           MYSQL_ROOT_PASSWORD: root
@@ -94,8 +94,8 @@ jobs:
     environment:
       ALGOREA_ENV: test
       ALGOREA_DATABASE.CONNECTION.ADDR: 127.0.0.1
-      ALGOREA_DATABASE.CONNECTION.USER: franceioi
-      ALGOREA_DATABASE.CONNECTION.PASSWD: dummy_password
+      ALGOREA_DATABASE.CONNECTION.USER: root
+      ALGOREA_DATABASE.CONNECTION.PASSWD: root
       ALGOREA_DATABASE.CONNECTION.DBNAME: algorea_example
     steps:
       - attach_workspace:
@@ -116,21 +116,12 @@ jobs:
           command: mysql -h 127.0.0.1 -u root -proot --protocol=TCP algorea_example < dump.sql
       - run:
           name: Apply all migrations
-          environment:
-            ALGOREA_DATABASE.CONNECTION.USER: root
-            ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: make db-migrate
       - run:
           name: Undo all migrations
-          environment:
-            ALGOREA_DATABASE.CONNECTION.USER: root
-            ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: for m in db/migrations/*.sql; do make db-migrate-undo; done
       - run:
           name: Re-apply all migrations
-          environment:
-            ALGOREA_DATABASE.CONNECTION.USER: root
-            ALGOREA_DATABASE.CONNECTION.PASSWD: root
           command: make db-migrate
   lint:
     docker:

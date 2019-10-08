@@ -50,6 +50,7 @@ func init() { // nolint:gochecknoinits
 			switch {
 			case err != nil:
 				fmt.Println("Unable to apply migration:", err)
+				os.Exit(1)
 			case n == 0:
 				fmt.Println("No migrations to apply!")
 			default:
@@ -58,6 +59,7 @@ func init() { // nolint:gochecknoinits
 
 			if db.Close() != nil {
 				fmt.Println("Cannot close DB connection:", err)
+				os.Exit(1)
 			}
 		},
 	}
