@@ -1,8 +1,8 @@
 -- +migrate Up
 ALTER TABLE `groups_groups` ADD COLUMN `expires_at` datetime  NOT NULL DEFAULT '9999-12-31 23:59:59'
-    COMMENT 'If set, the group membership expires at the specified time';
+    COMMENT 'The group membership expires at the specified time';
 ALTER TABLE `groups_ancestors` ADD COLUMN `expires_at` datetime NOT NULL DEFAULT '9999-12-31 23:59:59'
-    COMMENT 'If set, the group relation expires at the specified time';
+    COMMENT 'The group relation expires at the specified time';
 DROP TRIGGER `before_update_groups_groups`;
 -- +migrate StatementBegin
 CREATE TRIGGER `before_update_groups_groups` BEFORE UPDATE ON `groups_groups` FOR EACH ROW BEGIN
