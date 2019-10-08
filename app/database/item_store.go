@@ -416,3 +416,15 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	// we do not need to call GroupItemStore.After() because we do not grant new access here
 	groupItemStore.computeAllAccess()
 }
+
+// ContestManagedByUser returns a composable query
+// for getting a contest with the given item id managed by the given user
+func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
+	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
+		Joins("JOIN groups_items ON groups_items.item_id = items.id").
+		Joins(`
+			JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND
+				NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?`, user.SelfGroupID).
+		Group("items.id").
+		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()")
+}

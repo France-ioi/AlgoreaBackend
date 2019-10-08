@@ -220,3 +220,12 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	}))
 	return nil
 }
+
+// After is a "listener" that calls GroupGroupStore::createNewAncestors()
+func (s *GroupGroupStore) After() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	s.createNewAncestors()
+	return nil
+}
