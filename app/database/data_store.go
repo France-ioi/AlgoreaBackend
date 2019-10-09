@@ -51,9 +51,19 @@ func (s *DataStore) GroupAncestors() *GroupAncestorStore {
 	return &GroupAncestorStore{NewDataStoreWithTable(s.DB, "groups_ancestors")}
 }
 
+// ActiveGroupAncestors returns a GroupAncestorStore working with the `groups_ancestors_active` view
+func (s *DataStore) ActiveGroupAncestors() *GroupAncestorStore {
+	return &GroupAncestorStore{NewDataStoreWithTable(s.DB, "groups_ancestors_active")}
+}
+
 // GroupGroups returns a GroupGroupStore
 func (s *DataStore) GroupGroups() *GroupGroupStore {
 	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups")}
+}
+
+// ActiveGroupGroups returns a GroupGroupStore working with the `groups_groups_active` view
+func (s *DataStore) ActiveGroupGroups() *GroupGroupStore {
+	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups_active")}
 }
 
 // GroupContestItems returns a GroupContestItemStore

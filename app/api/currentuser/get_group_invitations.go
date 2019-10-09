@@ -76,8 +76,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Joins("LEFT JOIN users ON users.id = groups_groups.inviting_user_id").
 		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
 		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'requestRefused')").
-		Where("groups_groups.child_group_id = ?", user.SelfGroupID).
-		Where("NOW() < groups_groups.expires_at")
+		Where("groups_groups.child_group_id = ?", user.SelfGroupID)
 
 	if len(r.URL.Query()["within_weeks"]) > 0 {
 		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")

@@ -65,8 +65,8 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 			groups.type AS group__type`).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
 		Where("groups_groups.type != 'direct'").
-		Where("groups_groups.child_group_id = ?", user.SelfGroupID).
-		Where("NOW() < groups_groups.expires_at")
+		Where("groups_groups.child_group_id = ?", user.SelfGroupID)
+
 	if user.NotificationsReadAt != nil {
 		query = query.Where("groups_groups.type_changed_at >= ?", user.NotificationsReadAt)
 	}

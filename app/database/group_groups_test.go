@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDB_WhereGroupRelationIsActive(t *testing.T) {
+func TestDB_WhereGroupRelationIsActual(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -18,7 +18,22 @@ func TestDB_WhereGroupRelationIsActive(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := db.Table("groups_groups").WhereGroupRelationIsActive().Scan(&result).Error()
+	err := db.Table("groups_groups").WhereGroupRelationIsActual().Scan(&result).Error()
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_WhereActiveGroupRelationIsActual(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(regexp.QuoteMeta(
+		"SELECT * FROM `groups_groups_active` " +
+			"WHERE (groups_groups_active.type IN ('direct', 'invitationAccepted', 'requestAccepted', 'joinedByCode')")).
+		WillReturnRows(mock.NewRows([]string{"id"}))
+
+	var result []interface{}
+	err := db.Table("groups_groups_active").WhereActiveGroupRelationIsActual().Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

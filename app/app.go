@@ -91,7 +91,7 @@ func New() (*Application, error) {
 // CheckConfig checks that the database contains all the data needed by the config
 func (app *Application) CheckConfig() error {
 	groupStore := database.NewDataStore(app.Database).Groups()
-	groupGroupStore := groupStore.GroupGroups()
+	groupGroupStore := groupStore.ActiveGroupGroups()
 	for _, domainConfig := range app.Config.Domains {
 		for _, spec := range []struct {
 			name string
@@ -124,7 +124,6 @@ func (app *Application) CheckConfig() error {
 			hasRows, err := groupGroupStore.Where("type = 'direct'").
 				Where("parent_group_id = ?", spec.parentID).
 				Where("child_group_id = ?", spec.childID).
-				Where("NOW() < groups_groups.expires_at").
 				Select("1").Limit(1).HasRows()
 			if err != nil {
 				return err
