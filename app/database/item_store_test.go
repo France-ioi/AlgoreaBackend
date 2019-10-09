@@ -134,8 +134,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 
 	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT items.id FROM `items` " +
 		"JOIN groups_items ON groups_items.item_id = items.id " +
-		"JOIN groups_ancestors ON groups_ancestors.ancestor_group_id = groups_items.group_id AND " +
-		"NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ? " +
+		"JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND " +
+		"groups_ancestors_active.child_group_id = ? " +
 		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) " +
 		"GROUP BY items.id " +
 		"HAVING (MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()) " +
