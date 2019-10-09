@@ -1434,11 +1434,11 @@ DROP TABLE IF EXISTS `schema_revision`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8mb4;
 CREATE TABLE `schema_revision` (
-                                   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-                                   `executed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                   `file` varchar(255) NOT NULL DEFAULT '',
-                                   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=utf8;
+    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `executed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `file` varchar(255) NOT NULL DEFAULT '',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 SET character_set_client = @saved_cs_client;
 
 LOCK TABLES `schema_revision` WRITE;
@@ -1451,12 +1451,12 @@ DROP TABLE IF EXISTS `synchro_version`;
 SET @saved_cs_client     = @@character_set_client;
 SET character_set_client = utf8mb4;
 CREATE TABLE `synchro_version` (
-                                   `ID` tinyint(1) NOT NULL,
-                                   `iVersion` int(11) NOT NULL,
-                                   `iLastServerVersion` int(11) NOT NULL,
-                                   `iLastClientVersion` int(11) NOT NULL,
-                                   PRIMARY KEY (`ID`),
-                                   KEY `iVersion` (`iVersion`)
+    `id` tinyint(1) NOT NULL,
+    `version` int(11) NOT NULL,
+    `last_server_version` int(11) NOT NULL,
+    `last_client_version` int(11) NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `version` (`version`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 SET character_set_client = @saved_cs_client;
 
