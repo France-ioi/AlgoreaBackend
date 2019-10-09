@@ -17,10 +17,10 @@ Feature: Get item view information
       | 22 | grayed     |         | -2    | Class     |
       | 26 | Group D    |         | -2    | Class     |
     And the database has the following table 'items':
-      | id  | type     | no_score | unlocked_item_ids | contest_opens_at    | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | contest_closes_at   | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
-      | 200 | Category | true     | 1234,2345         | 2019-02-06 09:26:40 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | 2019-03-06 09:26:40 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
-      | 210 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:41 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | 2019-03-06 09:26:41 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
-      | 220 | Chapter  | true     | 1234,2345         | 2019-02-06 09:26:42 | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | 2019-03-06 09:26:42 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
+      | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
+      | 210 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
+      | 220 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | null           | true     | true          |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -84,9 +84,7 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "has_attempts": true,
-      "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
-      "contest_closes_at": "2019-03-06T09:26:40Z",
       "no_score": true,
       "group_code_enter": true,
 
@@ -142,9 +140,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
-          "contest_closes_at": "2019-03-06T09:26:42Z",
           "no_score": true,
           "group_code_enter": true,
 
@@ -185,9 +181,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",
-          "contest_closes_at": "2019-03-06T09:26:41Z",
           "no_score": true,
           "group_code_enter": true,
 
@@ -233,9 +227,7 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "has_attempts": true,
-      "contest_opens_at": "2019-02-06T09:26:41Z",
       "duration": "10:20:31",
-      "contest_closes_at": "2019-03-06T09:26:41Z",
       "no_score": true,
       "group_code_enter": true,
 
@@ -290,9 +282,7 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "has_attempts": true,
-      "contest_opens_at": "2019-02-06T09:26:41Z",
       "duration": "10:20:31",
-      "contest_closes_at": "2019-03-06T09:26:41Z",
       "no_score": true,
       "group_code_enter": true,
 
@@ -346,9 +336,7 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "has_attempts": true,
-      "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
-      "contest_closes_at": "2019-03-06T09:26:40Z",
       "no_score": true,
       "group_code_enter": true,
 
@@ -404,9 +392,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
-          "contest_closes_at": "2019-03-06T09:26:42Z",
           "no_score": true,
           "group_code_enter": true,
 
@@ -447,9 +433,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",
-          "contest_closes_at": "2019-03-06T09:26:41Z",
           "no_score": true,
           "group_code_enter": true,
 
@@ -495,9 +479,7 @@ Feature: Get item view information
       "teams_editable": true,
       "contest_max_team_size": 10,
       "has_attempts": true,
-      "contest_opens_at": "2019-02-06T09:26:40Z",
       "duration": "10:20:30",
-      "contest_closes_at": "2019-03-06T09:26:40Z",
       "no_score": true,
       "group_code_enter": true,
 
@@ -553,9 +535,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:42Z",
           "duration": "10:20:32",
-          "contest_closes_at": "2019-03-06T09:26:42Z",
           "no_score": true,
           "group_code_enter": true,
 
@@ -584,9 +564,7 @@ Feature: Get item view information
           "teams_editable": true,
           "contest_max_team_size": 10,
           "has_attempts": true,
-          "contest_opens_at": "2019-02-06T09:26:41Z",
           "duration": "10:20:31",
-          "contest_closes_at": "2019-03-06T09:26:41Z",
           "no_score": true,
           "group_code_enter": true,
 

@@ -118,19 +118,11 @@ type itemCommonFields struct {
 	ContestMaxTeamSize int32 `json:"contest_max_team_size"`
 	// required: true
 	HasAttempts bool `json:"has_attempts"`
-	// Nullable
-	// required: true
-	// example: 2019-09-11T07:30:56Z
-	ContestOpensAt *database.Time `json:"contest_opens_at"`
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// Nullable
 	// required: true
 	Duration *string `json:"duration"`
-	// Nullable
-	// required: true
-	// example: 2019-09-11T07:30:56Z
-	ContestClosesAt *database.Time `json:"contest_closes_at"`
 	// required: true
 	NoScore bool `json:"no_score"`
 	// Nullable
@@ -279,9 +271,7 @@ type rawItem struct {
 	TeamsEditable            bool
 	ContestMaxTeamSize       int32
 	HasAttempts              bool
-	ContestOpensAt           *database.Time
 	Duration                 *string
-	ContestClosesAt          *database.Time
 	NoScore                  bool
 	GroupCodeEnter           *bool
 
@@ -344,9 +334,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.teams_editable,
 		items.contest_max_team_size,
 		items.has_attempts,
-		items.contest_opens_at,
 		items.duration,
-		items.contest_closes_at,
 		items.no_score,
 		items.default_language_id,
 		items.group_code_enter, `
@@ -394,9 +382,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.teams_editable,
 			items.contest_max_team_size,
 			items.has_attempts,
-			items.contest_opens_at,
 			items.duration,
-			items.contest_closes_at,
 			items.no_score,
 			items.group_code_enter,
 
@@ -532,9 +518,7 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		TeamsEditable:            rawData.TeamsEditable,
 		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
 		HasAttempts:              rawData.HasAttempts,
-		ContestOpensAt:           rawData.ContestOpensAt,
 		Duration:                 rawData.Duration,
-		ContestClosesAt:          rawData.ContestClosesAt,
 		NoScore:                  rawData.NoScore,
 		GroupCodeEnter:           rawData.GroupCodeEnter,
 	}
