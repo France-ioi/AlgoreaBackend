@@ -122,10 +122,10 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var userGroupIDs []interface{}
-	userGroupIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'UserSelf'").
-		Where("groups_ancestors.ancestor_group_id = ?", groupID).
-		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
+	userGroupIDQuery := srv.Store.ActiveGroupAncestors().
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'UserSelf'").
+		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
 	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
@@ -177,7 +177,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			) AS time_spent`).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
-			LEFT JOIN groups_groups AS team_links
+			LEFT JOIN groups_groups_active AS team_links
 			ON team_links.type`+database.GroupRelationIsActiveCondition+` AND
 				team_links.child_group_id = groups.id`).
 		Joins(`

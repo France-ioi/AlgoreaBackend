@@ -98,25 +98,27 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	query := srv.Store.Groups().
 		Joins(`
-			LEFT JOIN groups_ancestors
-				ON groups_ancestors.child_group_id = groups.id AND groups_ancestors.ancestor_group_id = ?`, user.OwnedGroupID).
+			LEFT JOIN groups_ancestors_active
+				ON groups_ancestors_active.child_group_id = groups.id AND
+					groups_ancestors_active.ancestor_group_id = ?`, user.OwnedGroupID).
 		Joins(`
-			LEFT JOIN groups_ancestors AS groups_descendants
-				ON groups_descendants.ancestor_group_id = groups.id AND groups_descendants.child_group_id = ?`, user.SelfGroupID).
+			LEFT JOIN groups_ancestors_active AS groups_descendants
+				ON groups_descendants.ancestor_group_id = groups.id AND
+					groups_descendants.child_group_id = ?`, user.SelfGroupID).
 		Joins(`
-			LEFT JOIN groups_groups
-				ON groups_groups.type `+database.GroupRelationIsActiveCondition+` AND
-					groups_groups.parent_group_id = groups.id AND groups_groups.child_group_id = ?`, user.SelfGroupID).
-		Where("groups_ancestors.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
+			LEFT JOIN groups_groups_active
+				ON groups_groups_active.type `+database.GroupRelationIsActiveCondition+` AND
+					groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.SelfGroupID).
+		Where("groups_ancestors_active.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
 		Where("groups.id = ?", groupID).Select(
 		`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
 			groups.type, groups.redirect_path, groups.opened, groups.free_access,
-			IF(groups_ancestors.id IS NOT NULL, groups.code, NULL) AS code,
-			IF(groups_ancestors.id IS NOT NULL, groups.code_lifetime, NULL) AS code_lifetime,
-			IF(groups_ancestors.id IS NOT NULL, groups.code_expires_at, NULL) AS code_expires_at,
+			IF(groups_ancestors_active.id IS NOT NULL, groups.code, NULL) AS code,
+			IF(groups_ancestors_active.id IS NOT NULL, groups.code_lifetime, NULL) AS code_lifetime,
+			IF(groups_ancestors_active.id IS NOT NULL, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_contest,
-			groups_ancestors.id IS NOT NULL AS current_user_is_owner,
-			groups_groups.id IS NOT NULL AS current_user_is_member`).Limit(1)
+			groups_ancestors_active.id IS NOT NULL AS current_user_is_owner,
+			groups_groups_active.id IS NOT NULL AS current_user_is_member`).Limit(1)
 
 	var result groupViewResponse
 	err = query.Scan(&result).Error()

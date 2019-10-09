@@ -79,7 +79,9 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	service.MustNotBeError(err)
 
 	query := srv.Store.Groups().OwnedBy(user).
-		Joins("JOIN groups_ancestors AS found_group_ancestors ON found_group_ancestors.child_group_id = groups.id").
+		Joins(`
+			JOIN groups_ancestors_active AS found_group_ancestors
+				ON found_group_ancestors.child_group_id = groups.id`).
 		Joins("LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND groups_items.item_id = ?", itemID).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
@@ -102,7 +104,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	if isTeamOnly {
 		query = query.
 			Joins(`
-				LEFT JOIN groups_ancestors AS found_group_descendants
+				LEFT JOIN groups_ancestors_active AS found_group_descendants
 					ON found_group_descendants.ancestor_group_id = groups.id`).
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS team
@@ -110,12 +112,12 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 						(groups.team_item_id IN (SELECT ancestor_item_id FROM items_ancestors WHERE child_item_id = ?) OR
 						 groups.team_item_id = ?)`, itemID, itemID).
 			Joins(`
-				LEFT JOIN groups_groups
-					ON groups_groups.type IN ('requestAccepted', 'invitationAccepted') AND
-						groups_groups.parent_group_id = team.id`).
+				LEFT JOIN groups_groups_active
+					ON groups_groups_active.type IN ('requestAccepted', 'invitationAccepted') AND
+						groups_groups_active.parent_group_id = team.id`).
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS user_group
-					ON user_group.id = groups_groups.child_group_id AND user_group.type = 'UserSelf' AND
+					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'UserSelf' AND
 						user_group.name LIKE ?`, groupName).
 			Group("groups.id, user_group.id").
 			Having("MAX(user_group.id) IS NOT NULL OR groups.name LIKE ?", groupName)

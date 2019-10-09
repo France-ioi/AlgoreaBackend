@@ -143,12 +143,12 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	// All the "end members" are descendants of these groups.
 	// There should not be too many of groups because we paginate on them.
 	var ancestorGroupIDs []interface{}
-	ancestorGroupIDQuery := srv.Store.GroupGroups().
-		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups_groups.type = 'direct'").
+	ancestorGroupIDQuery := srv.Store.ActiveGroupGroups().
+		Where("groups_groups_active.parent_group_id = ?", groupID).
+		Where("groups_groups_active.type = 'direct'").
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
-			ON group_child.id = groups_groups.child_group_id AND group_child.type NOT IN('Team', 'UserSelf')`)
+			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'UserSelf')`)
 	ancestorGroupIDQuery, apiError := service.ApplySortingAndPaging(r, ancestorGroupIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "group_child.name", FieldType: "string"},
@@ -167,23 +167,23 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.NoError
 	}
 
-	users := srv.Store.GroupGroups().
+	users := srv.Store.ActiveGroupGroups().
 		Select("child.id").
-		Joins("JOIN `groups` AS parent ON parent.id = groups_groups.parent_group_id AND parent.type != 'Team'").
-		Joins("JOIN `groups` AS child ON child.id = groups_groups.child_group_id and child.type = 'UserSelf'").
+		Joins("JOIN `groups` AS parent ON parent.id = groups_groups_active.parent_group_id AND parent.type != 'Team'").
+		Joins("JOIN `groups` AS child ON child.id = groups_groups_active.child_group_id and child.type = 'UserSelf'").
 		Joins(`
-			JOIN groups_ancestors
-			ON groups_ancestors.ancestor_group_id IN (?) AND
-				groups_ancestors.child_group_id = parent.id`, ancestorGroupIDs).
-		WhereGroupRelationIsActive().
+			JOIN groups_ancestors_active
+			ON groups_ancestors_active.ancestor_group_id IN (?) AND
+				groups_ancestors_active.child_group_id = parent.id`, ancestorGroupIDs).
+		WhereActiveGroupRelationIsActual().
 		Group("child.id")
 
 	teams := srv.Store.Table("`groups` FORCE INDEX(type)").
 		Select("groups.id").
 		Joins(`
-			JOIN groups_ancestors
-			ON groups_ancestors.ancestor_group_id IN (?) AND
-				groups_ancestors.child_group_id = groups.id`, ancestorGroupIDs).
+			JOIN groups_ancestors_active
+			ON groups_ancestors_active.ancestor_group_id IN (?) AND
+				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs).
 		Where("groups.type='Team'").
 		Group("groups.id")
 
@@ -221,20 +221,20 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	var result []groupGroupProgressResponseRow
 	// It still takes more than 2 minutes to complete on large data sets
 	service.MustNotBeError(
-		srv.Store.GroupAncestors().
+		srv.Store.ActiveGroupAncestors().
 			Select(`
-				groups_ancestors.ancestor_group_id AS group_id,
+				groups_ancestors_active.ancestor_group_id AS group_id,
 				member_stats.item_id,
 				AVG(member_stats.score) AS average_score,
 				AVG(member_stats.validated) AS validation_rate,
 				AVG(member_stats.hints_cached) AS avg_hints_requested,
 				AVG(member_stats.submissions_attempts) AS avg_submissions_attempts,
 				AVG(member_stats.time_spent) AS avg_time_spent`).
-			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors.child_group_id", endMembersStats.SubQuery()).
-			Where("groups_ancestors.ancestor_group_id IN (?)", ancestorGroupIDs).
-			Group("groups_ancestors.ancestor_group_id, member_stats.item_id").
+			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
+			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs).
+			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
-				"FIELD(groups_ancestors.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
+				"FIELD(groups_ancestors_active.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
 				ancestorGroupIDs...)).
 			Order(gorm.Expr(
 				"FIELD(member_stats.item_id"+strings.Repeat(", ?", len(itemIDs))+")",

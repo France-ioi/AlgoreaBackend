@@ -73,9 +73,9 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	query := srv.Store.Groups().
 		Select("groups.id, groups.name, groups.grade").
 		Joins(`
-			JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id AND
-				groups_ancestors.ancestor_group_id != groups_ancestors.child_group_id AND
-				groups_ancestors.ancestor_group_id = ?`, groupID).
+			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id AND
+				groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id AND
+				groups_ancestors_active.ancestor_group_id = ?`, groupID).
 		Where("groups.type = 'Team'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -102,10 +102,13 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	service.MustNotBeError(srv.Store.Groups().
 		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
-			JOIN groups_groups AS parent_links ON parent_links.parent_group_id = groups.id AND
-				parent_links.type = 'direct' AND parent_links.child_group_id IN (?)`, groupIDs).
+			JOIN groups_groups_active AS parent_links
+			ON parent_links.parent_group_id = groups.id AND
+				parent_links.type = 'direct' AND
+				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
-			JOIN groups_ancestors AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND
+			JOIN groups_ancestors_active AS parent_ancestors
+			ON parent_ancestors.child_group_id = groups.id AND
 				parent_ancestors.ancestor_group_id = ?`, groupID).
 		Order("groups.id").
 		Scan(&parentsResult).Error())
@@ -120,7 +123,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 			member_links.parent_group_id AS linked_group_id,
 			users.self_group_id, users.id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
-			JOIN groups_groups AS member_links ON
+			JOIN groups_groups_active AS member_links ON
 				member_links.type`+database.GroupRelationIsActiveCondition+` AND
 				member_links.child_group_id = users.self_group_id AND
 				member_links.parent_group_id IN (?)`, groupIDs).

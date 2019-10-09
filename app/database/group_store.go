@@ -8,8 +8,10 @@ type GroupStore struct {
 // OwnedBy returns a composable query for getting all the groups
 // that are descendants of the user's owned group using a User object
 func (s *GroupStore) OwnedBy(user *User) *DB {
-	return s.Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = groups.id").
-		Where("groups_ancestors.ancestor_group_id=?", user.OwnedGroupID)
+	return s.Joins(`
+		JOIN groups_ancestors_active
+			ON groups_ancestors_active.child_group_id = groups.id`).
+		Where("groups_ancestors_active.ancestor_group_id=?", user.OwnedGroupID)
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that
@@ -18,10 +20,10 @@ func (s *GroupStore) OwnedBy(user *User) *DB {
 // If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
 func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
-		Joins(`JOIN groups_groups
-			ON groups_groups.parent_group_id = groups.id AND
-				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				groups_groups.child_group_id = ?`, user.SelfGroupID).
+		Joins(`JOIN groups_groups_active
+			ON groups_groups_active.parent_group_id = groups.id AND
+				groups_groups_active.type`+GroupRelationIsActiveCondition+` AND
+				groups_groups_active.child_group_id = ?`, user.SelfGroupID).
 		Where("groups.team_item_id = ?", itemID).
 		Where("groups.type = 'Team'").
 		Order("groups.id").
@@ -34,10 +36,10 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 // If more than one team is found, the one with the smallest `groups.id` is returned.
 func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
-		Joins(`JOIN groups_groups
-			ON groups_groups.parent_group_id = groups.id AND
-				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				groups_groups.child_group_id = ?`, user.SelfGroupID).
+		Joins(`JOIN groups_groups_active
+			ON groups_groups_active.parent_group_id = groups.id AND
+				groups_groups_active.type`+GroupRelationIsActiveCondition+` AND
+				groups_groups_active.child_group_id = ?`, user.SelfGroupID).
 		Joins(`LEFT JOIN items_ancestors
 			ON items_ancestors.ancestor_item_id = groups.team_item_id`).
 		Where("groups.type = 'Team'").
@@ -52,10 +54,10 @@ func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64) *DB {
 	return s.
 		Joins(`
-			JOIN groups_groups
-				ON groups_groups.parent_group_id = groups.id AND
-					groups_groups.type`+GroupRelationIsActiveCondition).
+			JOIN groups_groups_active
+				ON groups_groups_active.parent_group_id = groups.id AND
+					groups_groups_active.type`+GroupRelationIsActiveCondition).
 		Where("groups.type = 'Team'").
-		Where("groups_groups.child_group_id IN (?)", groupsToCheck).
+		Where("groups_groups_active.child_group_id IN (?)", groupsToCheck).
 		Where("groups.team_item_id = ?", teamItemID)
 }

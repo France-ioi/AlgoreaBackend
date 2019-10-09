@@ -200,15 +200,16 @@ func isContestEnteringConditionSatisfied(contestEnteringCondition string, member
 func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, user *database.User) (
 	membersCount int32, members []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32) {
 	if isTeamOnly {
-		service.MustNotBeError(srv.Store.GroupGroups().Where("groups_groups.parent_group_id = ?", groupID).
-			Where("groups_groups.type "+database.GroupRelationIsActiveCondition).
-			Joins("JOIN users ON users.self_group_id = groups_groups.child_group_id").
-			Joins("LEFT JOIN groups_ancestors ON groups_ancestors.child_group_id = groups_groups.child_group_id").
+		service.MustNotBeError(srv.Store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
+			WhereActiveGroupRelationIsActual().
+			Joins("JOIN users ON users.self_group_id = groups_groups_active.child_group_id").
 			Joins(`
-					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id AND
+				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
+			Joins(`
+					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
 						groups_contest_items.item_id = ?`, itemID).
-			Group("groups_groups.child_group_id").
-			Order("groups_groups.child_group_id").
+			Group("groups_groups_active.child_group_id").
+			Order("groups_groups_active.child_group_id").
 			Select(`
 					users.first_name, users.last_name, users.self_group_id AS group_id, users.login,
 					IFNULL(MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0) AS can_enter`).
@@ -229,11 +230,11 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 	} else {
 		membersCount = 1
 		members = []contestGetQualificationStateOtherMember{}
-		service.MustNotBeError(srv.Store.GroupAncestors().Where("groups_ancestors.child_group_id = ?", groupID).
+		service.MustNotBeError(srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins(`
-					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id
+					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id
 						AND groups_contest_items.item_id = ?`, itemID).
-			Group("groups_ancestors.child_group_id").
+			Group("groups_ancestors_active.child_group_id").
 			PluckFirst(`
 					IFNULL(
 						MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0

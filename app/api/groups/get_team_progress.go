@@ -117,10 +117,10 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
-	teamIDQuery := srv.Store.GroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id AND groups.type = 'Team'").
-		Where("groups_ancestors.ancestor_group_id = ?", groupID).
-		Where("groups_ancestors.child_group_id != groups_ancestors.ancestor_group_id")
+	teamIDQuery := srv.Store.ActiveGroupAncestors().
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
+		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
 	teamIDQuery, apiError := service.ApplySortingAndPaging(r, teamIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},

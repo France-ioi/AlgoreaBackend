@@ -121,43 +121,53 @@ Feature: Export the current user's data
       "groups_groups": [
         {
           "id": "2", "child_order": 0, "child_group_id": "11", "parent_group_id": "1", "inviting_user_id": null,
-          "name": "Our Class", "role": "member", "type_changed_at": "2019-07-09T21:02:28Z", "type": "invitationSent"
+          "name": "Our Class", "role": "member", "type_changed_at": "2019-07-09T21:02:28Z", "type": "invitationSent",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "1",
-          "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted"
+          "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "1",
-          "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent"
+          "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "2",
-          "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused"
+          "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "2",
-          "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted"
+          "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "2",
-          "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted"
+          "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "1",
-          "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed"
+          "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "1",
-          "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left"
+          "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "2",
-          "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct"
+          "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct",
+          "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10", "inviting_user_id": null,
-          "name": "Secret group", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "joinedByCode"
+          "name": "Secret group", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "joinedByCode",
+          "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
       "joined_groups": [

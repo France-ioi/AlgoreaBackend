@@ -28,7 +28,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	groupsAcceptedCondition := ""
 	if objectName == groups {
-		groupsAcceptedCondition = " AND (groups_groups.type" + GroupRelationIsActiveCondition + ")"
+		groupsAcceptedCondition = " AND (groups_groups.type" + GroupRelationIsActiveCondition + ") AND NOW() < groups_groups.expires_at"
 	}
 
 	relationsTable := objectName + "_" + objectName
@@ -52,10 +52,17 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
 	isSelfColumn := ""
-	bIsSelfValue := ""
+	isSelfValue := ""
+	expiresAtColumn := ""
+	expiresAtValue := ""
+	expiresAtValueJoin := ""
+
 	if objectName == groups {
 		isSelfColumn = ", is_self"
-		bIsSelfValue = ", '0' AS is_self"
+		isSelfValue = ", '0' AS is_self"
+		expiresAtColumn = ", expires_at"
+		expiresAtValue = ", groups_groups.expires_at"
+		expiresAtValueJoin = ", LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at)"
 	}
 
 	// For every object marked as 'processing', we compute all its ancestors
@@ -65,12 +72,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+`
+			`+isSelfColumn+expiresAtColumn+`
 		)
 		SELECT
 			`+relationsTable+`.parent_`+singleObjectName+`_id,
 			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+bIsSelfValue+`
+			`+isSelfValue+expiresAtValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
@@ -82,12 +89,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+`
+			`+isSelfColumn+expiresAtColumn+`
 		)
 		SELECT
 			`+relationsTable+`.parent_`+singleObjectName+`_id,
 			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+bIsSelfValue+`
+			`+isSelfValue+expiresAtValue+`
 		FROM `+relationsTable+`
 		JOIN `+objectName+`_propagate
 		ON (
@@ -99,23 +106,26 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+isSelfColumn+`
+			`+isSelfColumn+expiresAtColumn+`
 		)
 		SELECT
-			`+objectName+`_ancestors.ancestor_`+singleObjectName+`_id,
+			`+objectName+`_ancestors_select.ancestor_`+singleObjectName+`_id,
 			`+relationsTable+`_join.child_`+singleObjectName+`_id
-			`+bIsSelfValue+`
-		FROM `+objectName+`_ancestors
+			`+isSelfValue+expiresAtValueJoin+`
+		FROM `+objectName+`_ancestors AS `+objectName+`_ancestors_select
 		JOIN `+relationsTable+` AS `+relationsTable+`_join ON (
-			`+relationsTable+`_join.parent_`+singleObjectName+`_id = `+objectName+`_ancestors.child_`+singleObjectName+`_id
+			`+relationsTable+`_join.parent_`+singleObjectName+`_id = `+objectName+`_ancestors_select.child_`+singleObjectName+`_id
 		)
 		JOIN `+objectName+`_propagate ON (
 			`+relationsTable+`_join.child_`+singleObjectName+`_id = `+objectName+`_propagate.id
 		)
-		WHERE 
+		WHERE
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	if objectName == groups {
-		insertQueries[2] += "AND (groups_groups_join.type" + GroupRelationIsActiveCondition + ")"
+		insertQueries[2] += `
+				AND (groups_groups_join.type` + GroupRelationIsActiveCondition + `) AND NOT groups_ancestors_select.is_self
+			ON DUPLICATE KEY UPDATE
+				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at))`
 		insertQueries = append(insertQueries, `
 			INSERT IGNORE INTO `+objectName+`_ancestors
 			(

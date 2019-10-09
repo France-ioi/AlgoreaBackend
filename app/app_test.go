@@ -420,7 +420,8 @@ func TestApplication_CheckConfig(t *testing.T) {
 						rowsToReturn.AddRow(1)
 					}
 					queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-						"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
+						"SELECT 1 FROM `groups_groups_active`  WHERE (type = 'direct') AND (parent_group_id = ?) AND "+
+							"(child_group_id = ?) LIMIT 1",
 					)+"$").
 						WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 					if !expectedRelationToCheck.error {
