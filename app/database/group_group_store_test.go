@@ -11,21 +11,42 @@ import (
 )
 
 func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
+	for _, test := range []struct {
+		tableName     string
+		expectedQuery string
+		storeFunc     func(*DB) *GroupGroupStore
+	}{
+		{
+			tableName: "groups_groups",
+			expectedQuery: "SELECT * FROM `groups_groups` " +
+				"WHERE (`groups_groups`.child_group_id = ?) AND " +
+				"(groups_groups.type" + GroupRelationIsActiveCondition + " AND NOW() < groups_groups.expires_at)",
+			storeFunc: func(db *DB) *GroupGroupStore { return NewDataStore(db).GroupGroups() },
+		},
+		{
+			tableName: "groups_groups_active",
+			expectedQuery: "SELECT * FROM `groups_groups_active` " +
+				"WHERE (`groups_groups_active`.child_group_id = ?) AND " +
+				"(groups_groups_active.type" + GroupRelationIsActiveCondition + ")",
+			storeFunc: func(db *DB) *GroupGroupStore { return NewDataStore(db).ActiveGroupGroups() },
+		},
+	} {
+		test := test
+		t.Run(test.tableName, func(t *testing.T) {
+			db, mock := NewDBMock()
+			defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+			mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2)}
+			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).
+				WithArgs(2).
+				WillReturnRows(mock.NewRows([]string{"id"}))
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `groups_groups` " +
-		"WHERE (groups_groups.child_group_id = ?) AND " +
-		"(groups_groups.type" + GroupRelationIsActiveCondition + " AND NOW() < groups_groups.expires_at)")).
-		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"id"}))
-
-	var result []interface{}
-	err := NewDataStore(db).GroupGroups().WhereUserIsMember(mockUser).Scan(&result).Error()
-	assert.NoError(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
+			var result []interface{}
+			err := test.storeFunc(db).WhereUserIsMember(mockUser).Scan(&result).Error()
+			assert.NoError(t, err)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }
 
 func TestGroupGroupStore_CreateRelation(t *testing.T) {

@@ -70,7 +70,7 @@ func TestItemStore_AccessRights(t *testing.T) {
 			"FROM `groups_items` "+
 			"JOIN ("+
 			"SELECT * FROM `groups_ancestors` "+
-			"WHERE (NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?)"+
+			"WHERE (`groups_ancestors`.child_group_id = ?) AND (NOW() < `groups_ancestors`.expires_at)"+
 			") AS ancestors "+
 			"ON groups_items.group_id = ancestors.ancestor_group_id GROUP BY item_id") + "$").
 		WithArgs(2).

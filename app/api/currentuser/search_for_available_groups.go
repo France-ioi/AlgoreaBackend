@@ -99,7 +99,6 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 		Select("groups_groups.parent_group_id").
 		Where("groups_groups.child_group_id = ?", user.SelfGroupID).
 		Where("groups_groups.type IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct', 'joinedByCode')").
-		Where("NOW() < groups_groups.expires_at").
 		SubQuery()
 
 	escapedSearchString := escapeLikeString(searchString, '|')

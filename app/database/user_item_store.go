@@ -25,9 +25,9 @@ func (s *UserItemStore) PropagateAttempts() (err error) {
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
 		JOIN groups_attempts ON groups_attempts.item_id = users_items.item_id
-		JOIN groups_groups ON groups_groups.parent_group_id = groups_attempts.group_id AND
-			groups_groups.type` + GroupRelationIsActiveCondition + ` AND NOW() < groups_groups.expires_at
-		JOIN users ON users.id = users_items.user_id AND users.self_group_id = groups_groups.child_group_id
+		JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups_attempts.group_id AND
+			groups_groups_active.type` + GroupRelationIsActiveCondition + `
+		JOIN users ON users.id = users_items.user_id AND users.self_group_id = groups_groups_active.child_group_id
 		SET users_items.ancestors_computation_state = 'todo'
 		WHERE groups_attempts.ancestors_computation_state = 'todo'`).Error)
 
@@ -41,9 +41,9 @@ func (s *UserItemStore) PropagateAttempts() (err error) {
 				MAX(attempts.validated) AS validated
 			FROM users AS attempt_user
 			JOIN groups_attempts AS attempts
-			JOIN groups_groups AS attempt_group
+			JOIN groups_groups_active AS attempt_group
 				ON attempts.group_id = attempt_group.parent_group_id AND attempt_user.self_group_id = attempt_group.child_group_id AND
-					attempt_group.type` + GroupRelationIsActiveCondition + ` AND NOW() < attempt_group.expires_at
+					attempt_group.type` + GroupRelationIsActiveCondition + `
 			WHERE attempts.ancestors_computation_state = 'todo'
 			GROUP BY attempt_user.id, attempts.item_id
 		) AS attempts_data

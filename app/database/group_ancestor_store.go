@@ -5,13 +5,23 @@ type GroupAncestorStore struct {
 	*DataStore
 }
 
+const groupsAncestorsActive = "groups_ancestors_active"
+
 // UserAncestors returns a composable query of ancestors of user's self group, i.e. groups of which he is a member
 func (s *GroupAncestorStore) UserAncestors(user *User) *DB {
-	return s.Where("NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?", user.SelfGroupID)
+	result := s.Where(QuoteName(s.tableName)+".child_group_id = ?", user.SelfGroupID)
+	if s.tableName != groupsAncestorsActive {
+		result = result.Where("NOW() < " + QuoteName(s.tableName) + ".expires_at")
+	}
+	return result
 }
 
 // OwnedByUser returns a composable query for getting all the groups_ancestors rows for groups
 // that are descendants of the user's owned group using a User object
 func (s *GroupAncestorStore) OwnedByUser(user *User) *DB {
-	return s.Where("NOW() < groups_ancestors.expires_at AND groups_ancestors.ancestor_group_id=?", user.OwnedGroupID)
+	result := s.Where(QuoteName(s.tableName)+".ancestor_group_id=?", user.OwnedGroupID)
+	if s.tableName != groupsAncestorsActive {
+		result = result.Where("NOW() < " + QuoteName(s.tableName) + ".expires_at")
+	}
+	return result
 }

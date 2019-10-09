@@ -17,8 +17,13 @@ type GroupGroupStore struct {
 // WhereUserIsMember returns a composable query of direct ancestors (parents) of user's self group,
 // i.e. groups of which he is a direct member
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
-	return s.Where("groups_groups.child_group_id = ?", user.SelfGroupID).
-		WhereGroupRelationIsActive()
+	result := s.Where(QuoteName(s.tableName)+".child_group_id = ?", user.SelfGroupID)
+	if s.tableName == "groups_groups_active" {
+		result = result.WhereActiveGroupRelationIsActual()
+	} else {
+		result = result.WhereGroupRelationIsActual()
+	}
+	return result
 }
 
 func (s *GroupGroupStore) createNewAncestors() {
@@ -125,7 +130,6 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 			Select("1").
 			Where("child_group_id = ?", childGroupID).
 			Where("parent_group_id != ?", parentGroupID).
-			Where("NOW() < expires_at").
 			Limit(1).Scan(&result).Error())
 		if len(result) == 0 {
 			shouldDeleteChildGroup = true

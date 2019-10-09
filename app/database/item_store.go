@@ -329,13 +329,13 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
 			MIN(contest_participations.entered_at) AS entered_at`).
 		Joins(`
-			JOIN groups_ancestors
-				ON NOW() < groups_ancestors.expires_at AND groups_ancestors.child_group_id = ?`, user.SelfGroupID).
+			JOIN groups_ancestors_active
+				ON groups_ancestors_active.child_group_id = ?`, user.SelfGroupID).
 		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
-			contest_participations.group_id = groups_ancestors.ancestor_group_id`).
+			contest_participations.group_id = groups_ancestors_active.ancestor_group_id`).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.item_id = items.id AND
-				groups_contest_items.group_id = groups_ancestors.ancestor_group_id`).
+				groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id`).
 		Group("items.id").
 		Order("MIN(contest_participations.entered_at) DESC").
 		Having("entered_at IS NOT NULL").
@@ -401,11 +401,10 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 	mustNotBeError(s.db.Exec(`
 		UPDATE users_items
 		JOIN users ON users.id = users_items.user_id
-		JOIN groups_groups
-			ON groups_groups.child_group_id = users.self_group_id AND
-				groups_groups.type`+GroupRelationIsActiveCondition+` AND
-				NOW() < groups_groups.expires_at AND
-				groups_groups.parent_group_id = ?
+		JOIN groups_groups_active
+			ON groups_groups_active.child_group_id = users.self_group_id AND
+				groups_groups_active.type`+GroupRelationIsActiveCondition+` AND
+				groups_groups_active.parent_group_id = ?
 		SET finished_at = NOW()
 		WHERE users_items.item_id = ?`, teamGroupID, itemID).Error)
 

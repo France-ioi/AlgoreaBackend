@@ -41,7 +41,7 @@ func TestGenerateGroupCode_HandlesError(t *testing.T) {
 func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 	response, _, logs, _ := assertMockedChangeCodeRequest(t, func(mock sqlmock.Sqlmock) {
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `groups_ancestors` "+
-			"WHERE (NOW() < groups_ancestors.expires_at AND groups_ancestors.ancestor_group_id=?) AND (child_group_id = ?)")).
+			"WHERE (`groups_ancestors`.ancestor_group_id=?) AND (NOW() < `groups_ancestors`.expires_at) AND (child_group_id = ?)")).
 			WithArgs(ptrInt64(10), 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE `groups` .+").
