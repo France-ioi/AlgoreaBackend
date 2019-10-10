@@ -187,7 +187,8 @@ func setAdditionalTimeForGroupInContest(
 			contest_participations.entered_at,
 			INTERVAL (? + total_additional_times.total_additional_time) SECOND
 		)
-		WHERE groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
+		WHERE groups_groups.type`+database.GroupRelationIsActiveCondition+` AND
+			groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
 	service.MustNotBeError(result.Error())
 	if result.RowsAffected() > 0 {
 		service.MustNotBeError(store.GroupGroups().After())
