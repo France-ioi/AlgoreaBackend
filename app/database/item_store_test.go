@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -125,4 +126,23 @@ func TestItemStore_HasManagerAccess_HandlesDBErrors(t *testing.T) {
 	}))
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_ContestManagedByUser(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT items.id FROM `items` " +
+		"JOIN groups_items ON groups_items.item_id = items.id " +
+		"JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND " +
+		"groups_ancestors_active.child_group_id = ? " +
+		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) " +
+		"GROUP BY items.id " +
+		"HAVING (MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()) " +
+		"LIMIT 1")).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
+	var id int64
+	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{ID: 1, SelfGroupID: ptrInt64(2)}).
+		PluckFirst("items.id", &id).Error()
+	assert.NoError(t, err)
+	assert.Equal(t, int64(123), id)
 }

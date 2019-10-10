@@ -49,13 +49,6 @@ type contestInfo struct {
 
 func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.User) (bool, error) {
 	var isTeamOnly bool
-	err := srv.Store.Items().ByID(itemID).Where("items.duration IS NOT NULL").
-		Joins("JOIN groups_items ON groups_items.item_id = items.id").
-		Joins(`
-			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND
-				groups_ancestors_active.child_group_id = ?`, user.SelfGroupID).
-		Group("items.id").
-		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()").
-		PluckFirst("items.has_attempts", &isTeamOnly).Error()
+	err := srv.Store.Items().ContestManagedByUser(itemID, user).PluckFirst("items.has_attempts", &isTeamOnly).Error()
 	return isTeamOnly, err
 }

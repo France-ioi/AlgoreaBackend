@@ -21,6 +21,10 @@ import (
 //                If no `groups_items` and `seconds` == 0, succeed without doing any change.
 //
 //
+//                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
+//                `contest_participations.entered_at` + `items.duration` + total additional time.
+//
+//
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have `solutions` or `full` access on the input item;
@@ -57,59 +61,138 @@ import (
 func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	seconds, err := service.ResolveURLQueryGetInt64Field(r, "seconds")
-	if err != nil {
-		return service.ErrInvalidRequest(err)
-	}
-
-	const maxSeconds = 838*3600 + 59*60 + 59 // 838:59:59 is the maximum possible TIME value in MySQL
-	if seconds < -maxSeconds || maxSeconds < seconds {
-		return service.ErrInvalidRequest(fmt.Errorf("'seconds' should be between %d and %d", -maxSeconds, maxSeconds))
+	itemID, groupID, seconds, apiError := srv.getParametersForSetAdditionalTime(r)
+	if apiError != service.NoError {
+		return apiError
 	}
 
 	var groupType string
-	err = srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).
+	err := srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).
 		PluckFirst("groups.type", &groupType).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	isTeamOnly, err := srv.isTeamOnlyContestManagedByUser(itemID, user)
-	if gorm.IsRecordNotFoundError(err) || (isTeamOnly && groupType == "UserSelf") {
-		return service.InsufficientAccessRightsError
+	var contestInfo struct {
+		DurationInSeconds          int64
+		IsTeamOnlyContest          bool
+		ContestParticipantsGroupID int64
+	}
+
+	err = srv.Store.InTransaction(func(store *database.DataStore) error {
+		err = store.Items().ContestManagedByUser(itemID, user).WithWriteLock().
+			Select(`
+			TIME_TO_SEC(items.duration) AS duration_in_seconds,
+			items.has_attempts AS is_team_only_contest,
+			items.contest_participants_group_id`).
+			Take(&contestInfo).Error()
+		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "UserSelf") {
+			apiError = service.InsufficientAccessRightsError
+			return apiError.Error
+		}
+		service.MustNotBeError(err)
+
+		setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ContestParticipantsGroupID,
+			contestInfo.DurationInSeconds, seconds)
+		return nil
+	})
+	if apiError != service.NoError {
+		return apiError
 	}
 	service.MustNotBeError(err)
-
-	srv.setAdditionalTimeForGroupInContest(groupID, itemID, seconds)
 
 	render.Respond(w, r, service.UpdateSuccess(nil))
 	return service.NoError
 }
 
-func (srv *Service) setAdditionalTimeForGroupInContest(groupID, itemID, seconds int64) {
-	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		groupContestItemStore := store.GroupContestItems()
-		scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
-		found, err := scope.WithWriteLock().HasRows()
-		service.MustNotBeError(err)
-		if found {
-			service.MustNotBeError(scope.UpdateColumn("additional_time", gorm.Expr("SEC_TO_TIME(?)", seconds)).Error())
-		} else if seconds != 0 {
-			service.MustNotBeError(groupContestItemStore.Exec(
-				"INSERT INTO groups_contest_items (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
-				groupID, itemID, seconds).Error())
-		}
-		return nil
-	}))
+func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, apiError service.APIError) {
+	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	if err != nil {
+		return 0, 0, 0, service.ErrInvalidRequest(err)
+	}
+	groupID, err = service.ResolveURLQueryPathInt64Field(r, "group_id")
+	if err != nil {
+		return 0, 0, 0, service.ErrInvalidRequest(err)
+	}
+	seconds, err = service.ResolveURLQueryGetInt64Field(r, "seconds")
+	if err != nil {
+		return 0, 0, 0, service.ErrInvalidRequest(err)
+	}
+	const maxSeconds = 838*3600 + 59*60 + 59
+	// 838:59:59 is the maximum possible TIME value in MySQL
+	if seconds < -maxSeconds || maxSeconds < seconds {
+		return 0, 0, 0, service.ErrInvalidRequest(fmt.Errorf("'seconds' should be between %d and %d", -maxSeconds, maxSeconds))
+	}
+	return itemID, groupID, seconds, service.NoError
+}
+
+func setAdditionalTimeForGroupInContest(
+	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64) {
+	groupContestItemStore := store.GroupContestItems()
+	scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
+	found, err := scope.WithWriteLock().HasRows()
+	service.MustNotBeError(err)
+	if found {
+		service.MustNotBeError(scope.UpdateColumn("additional_time",
+			gorm.Expr("SEC_TO_TIME(?)", additionalTimeInSeconds)).Error())
+	} else if additionalTimeInSeconds != 0 {
+		service.MustNotBeError(groupContestItemStore.Exec(
+			"INSERT INTO groups_contest_items (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
+			groupID, itemID, additionalTimeInSeconds).Error())
+	}
+
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS total_additional_times").Error())
+	service.MustNotBeError(store.Exec(`
+		CREATE TEMPORARY TABLE total_additional_times (
+			PRIMARY KEY child_group_id (child_group_id)
+		)
+		?`,
+		// For each of groups participating in the contest ...
+		store.GroupGroups().
+			Where("groups_groups.type"+database.GroupRelationIsActiveCondition).
+			Where("groups_groups.parent_group_id = ?", participantsGroupID).
+			// ... that are descendants of `groupID` (so affected by the change) ...
+			Joins(`
+				JOIN groups_ancestors AS changed_group_descendants
+					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
+						changed_group_descendants.ancestor_group_id = ?`, groupID).
+			// ... and have entered the contest, ...
+			Joins(`
+				JOIN contest_participations
+					ON contest_participations.group_id = groups_groups.child_group_id AND
+						contest_participations.entered_at IS NOT NULL AND
+						contest_participations.item_id = ?`, itemID).
+			// ... we get all the ancestors to calculate the total additional time
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
+			Joins(`
+				JOIN groups_contest_items
+					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
+						groups_contest_items.item_id = contest_participations.item_id`).
+			Group("groups_groups.child_group_id").
+			Select(`
+				groups_groups.child_group_id,
+				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+			WithWriteLock().QueryExpr()).Error())
+
+	//nolint:gosec
+	result := store.Exec(`
+		UPDATE groups_groups
+		JOIN contest_participations
+			ON contest_participations.group_id = groups_groups.child_group_id AND
+				contest_participations.item_id = ? AND
+				contest_participations.entered_at IS NOT NULL
+		JOIN total_additional_times
+			ON total_additional_times.child_group_id = groups_groups.child_group_id
+		SET groups_groups.expires_at = DATE_ADD(
+			contest_participations.entered_at,
+			INTERVAL (? + total_additional_times.total_additional_time) SECOND
+		)
+		WHERE groups_groups.type`+database.GroupRelationIsActiveCondition+` AND
+			groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
+	service.MustNotBeError(result.Error())
+	if result.RowsAffected() > 0 {
+		service.MustNotBeError(store.GroupGroups().After())
+	}
+	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE total_additional_times").Error())
 }
