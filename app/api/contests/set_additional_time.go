@@ -175,6 +175,7 @@ func setAdditionalTimeForGroupInContest(
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 			WithWriteLock().QueryExpr()).Error())
 
+	//nolint:gosec
 	result := store.Exec(`
 		UPDATE groups_groups
 		JOIN contest_participations
