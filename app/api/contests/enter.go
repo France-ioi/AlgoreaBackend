@@ -61,7 +61,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			return apiError.Error
 		}
 
-		if qualificationState.State != ready {
+		if qualificationState.State != string(ready) {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error
 		}
