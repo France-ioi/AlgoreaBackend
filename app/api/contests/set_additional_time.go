@@ -148,22 +148,26 @@ func setAdditionalTimeForGroupInContest(
 			PRIMARY KEY child_group_id (child_group_id)
 		)
 		?`,
+		// For each of groups participating in the contest ...
 		store.GroupGroups().
 			Where("groups_groups.type"+database.GroupRelationIsActiveCondition).
 			Where("groups_groups.parent_group_id = ?", participantsGroupID).
+			// ... that are descendants of `groupID` (so affected by the change) ...
 			Joins(`
 				JOIN groups_ancestors AS changed_group_descendants
 					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
+			// ... and have entered the contest, ...
 			Joins(`
 				JOIN contest_participations
 					ON contest_participations.group_id = groups_groups.child_group_id AND
 						contest_participations.entered_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
-			Joins("JOIN groups_ancestors ON groups_ancestors.child_group_id = groups_groups.child_group_id").
+			// ... we get all the ancestors to calculate the total additional time
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
 			Joins(`
 				JOIN groups_contest_items
-					ON groups_contest_items.group_id = groups_ancestors.ancestor_group_id AND
+					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
 						groups_contest_items.item_id = contest_participations.item_id`).
 			Group("groups_groups.child_group_id").
 			Select(`
