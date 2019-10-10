@@ -149,3 +149,34 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 98                | 51             | 0       | 3019-10-10 16:16:16 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
+
+  Scenario: Enter a contest that don't have items.contest_participants_group_id set
+    Given the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition |
+      | 50 | 01:01:01 | 0            | None                       |
+    Given the database has the following table 'groups_contest_items':
+      | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
+      | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+    And I am the user with id "2"
+    When I send a POST request to "/contests/50/groups/31"
+    Then the response code should be 201
+    And the response body should be, in JSON:
+    """
+    {
+      "message": "created",
+      "success": true,
+      "data": {
+        "duration": "01:01:01",
+        "entered_at": "3019-10-10T10:10:10Z"
+      }
+    }
+    """
+    And the table "contest_participations" should be:
+      | group_id | item_id | entered_at          |
+      | 31       | 50      | 3019-10-10 10:10:10 |
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And logs should contain:
+      """
+      items.contest_participants_group_id is not set for the item with id = 50
+      """
