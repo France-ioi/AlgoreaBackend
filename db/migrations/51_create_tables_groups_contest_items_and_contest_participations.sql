@@ -11,7 +11,7 @@ CREATE TABLE `groups_contest_items` (
 CREATE TABLE `contest_participations` (
     `group_id` bigint(20) NOT NULL,
     `item_id` bigint(20) NOT NULL,
-    `entered_at` datetime DEFAULT NULL COMMENT 'Time at which the group entered the contest',
+    `entered_at` datetime NOT NULL COMMENT 'Time at which the group entered the contest',
     PRIMARY KEY (`group_id`, `item_id`)
 );
 

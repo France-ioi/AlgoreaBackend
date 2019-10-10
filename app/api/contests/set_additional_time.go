@@ -161,7 +161,6 @@ func setAdditionalTimeForGroupInContest(
 			Joins(`
 				JOIN contest_participations
 					ON contest_participations.group_id = groups_groups.child_group_id AND
-						contest_participations.entered_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
 			// ... we get all the ancestors to calculate the total additional time
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
@@ -179,8 +178,7 @@ func setAdditionalTimeForGroupInContest(
 		UPDATE groups_groups
 		JOIN contest_participations
 			ON contest_participations.group_id = groups_groups.child_group_id AND
-				contest_participations.item_id = ? AND
-				contest_participations.entered_at IS NOT NULL
+				contest_participations.item_id = ?
 		JOIN total_additional_times
 			ON total_additional_times.child_group_id = groups_groups.child_group_id
 		SET groups_groups.expires_at = DATE_ADD(

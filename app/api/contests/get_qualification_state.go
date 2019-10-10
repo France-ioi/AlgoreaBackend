@@ -51,7 +51,7 @@ type contestGetQualificationStateResponse struct {
 //                i.e. whether he can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has a non-null `entered_at` for the item;
+//                  * 'already_started' if the participant has a `contest_participations` row for the item;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -133,8 +133,7 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 
 	alreadyStarted, err := srv.Store.ContestParticipations().
 		Where("item_id = ?", itemID).
-		Where("group_id = ?", groupID).
-		Where("entered_at IS NOT NULL").HasRows()
+		Where("group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 
 	membersCount, members, currentUserCanEnter, qualifiedMembersCount :=
