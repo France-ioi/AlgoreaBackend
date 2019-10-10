@@ -2,7 +2,6 @@ package contests
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/go-chi/render"
 
@@ -104,7 +103,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
 		"duration":   itemInfo.Duration,
-		"entered_at": time.Time(*itemInfo.Now).Format(time.RFC3339),
+		"entered_at": itemInfo.Now,
 	})))
 	return service.NoError
 }
