@@ -211,3 +211,26 @@ type itemAnswerGetResponse struct {
 		GraderUserID *string `json:"grader_user_id"`
 	}
 }
+
+// Created. The group has successfully entered the contest.
+// swagger:response contestEnterResponse
+type contestEnterResponse struct {
+	// in:body
+	Body struct {
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
+			// example: 838:59:59
+			// required: true
+			Duration string `json:"duration"`
+			// required: true
+			EnteredAt database.Time `json:"entered_at"`
+		} `json:"data"`
+	}
+}

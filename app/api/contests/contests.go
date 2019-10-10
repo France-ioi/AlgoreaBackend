@@ -31,6 +31,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/qualification-state",
 		service.AppHandler(srv.getQualificationState).ServeHTTP)
+	router.Post("/contests/{item_id}/groups/{group_id}",
+		service.AppHandler(srv.enter).ServeHTTP)
 }
 
 // swagger:model contestInfo
