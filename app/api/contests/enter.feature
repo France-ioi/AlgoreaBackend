@@ -47,7 +47,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
       | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
       | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-    And the DB time now is "2019-10-10 10:10:10"
+    And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
     Given the database has the following table 'items':
@@ -66,19 +66,19 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       "success": true,
       "data": {
         "duration": "01:01:01",
-        "entered_at": "2019-10-10T10:10:10Z"
+        "entered_at": "3019-10-10T10:10:10Z"
       }
     }
     """
     And the table "contest_participations" should be:
       | group_id | item_id | entered_at          |
-      | 31       | 50      | 2019-10-10 10:10:10 |
+      | 31       | 50      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type               | expires_at          |
       | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
       | 11              | 41             | requestAccepted    | 9999-12-31 23:59:59 |
       | 11              | 51             | joinedByCode       | 9999-12-31 23:59:59 |
-      | 99              | 31             | direct             | 2019-10-10 13:13:13 |
+      | 99              | 31             | direct             | 3019-10-10 13:13:13 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
@@ -94,7 +94,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 52                | 52             | 1       | 9999-12-31 23:59:59 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
-      | 99                | 31             | 0       | 2019-10-10 13:13:13 |
+      | 99                | 31             | 0       | 3019-10-10 13:13:13 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a team-only contest
@@ -116,19 +116,19 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       "success": true,
       "data": {
         "duration": "05:05:05",
-        "entered_at": "2019-10-10T10:10:10Z"
+        "entered_at": "3019-10-10T10:10:10Z"
       }
     }
     """
     And the table "contest_participations" should be:
       | group_id | item_id | entered_at          |
-      | 11       | 60      | 2019-10-10 10:10:10 |
+      | 11       | 60      | 3019-10-10 10:10:10 |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type               | expires_at          |
       | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
       | 11              | 41             | requestAccepted    | 9999-12-31 23:59:59 |
       | 11              | 51             | joinedByCode       | 9999-12-31 23:59:59 |
-      | 98              | 11             | direct             | 2019-10-10 16:16:16 |
+      | 98              | 11             | direct             | 3019-10-10 16:16:16 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
@@ -143,9 +143,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 42                | 42             | 1       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 52                | 52             | 1       | 9999-12-31 23:59:59 |
-      | 98                | 11             | 0       | 2019-10-10 16:16:16 |
-      | 98                | 31             | 0       | 2019-10-10 16:16:16 |
-      | 98                | 41             | 0       | 2019-10-10 16:16:16 |
-      | 98                | 51             | 0       | 2019-10-10 16:16:16 |
+      | 98                | 11             | 0       | 3019-10-10 16:16:16 |
+      | 98                | 31             | 0       | 3019-10-10 16:16:16 |
+      | 98                | 41             | 0       | 3019-10-10 16:16:16 |
+      | 98                | 51             | 0       | 3019-10-10 16:16:16 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
