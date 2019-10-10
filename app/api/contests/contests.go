@@ -52,3 +52,11 @@ func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.
 	err := srv.Store.Items().ContestManagedByUser(itemID, user).PluckFirst("items.has_attempts", &isTeamOnly).Error()
 	return isTeamOnly, err
 }
+
+type qualificationState string
+
+const (
+	alreadyStarted qualificationState = "already_started"
+	notReady       qualificationState = "not_ready"
+	ready          qualificationState = "ready"
+)

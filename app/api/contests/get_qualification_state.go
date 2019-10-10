@@ -83,7 +83,7 @@ type contestGetQualificationStateResponse struct {
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
 // - name: item_id
-//   description: "`id` of a timed contest"
+//   description: "`id` of a contest"
 //   in: path
 //   type: integer
 //   format: int64
@@ -156,12 +156,12 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 
 	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
 		srv.getQualificatonInfo(contestInfo.IsTeamContest, groupID, itemID, user, store)
-	qualificationState := computeQualificationState(
+	state := computeQualificationState(
 		alreadyStarted, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
 		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
-		State:               qualificationState,
+		State:               string(state),
 		EnteringCondition:   contestInfo.ContestEnteringCondition,
 		CurrentUserCanEnter: currentUserCanEnter,
 		OtherMembers:        otherMembers,
@@ -193,19 +193,19 @@ func (srv *Service) checkGroupID(
 	return service.NoError
 }
 
-func computeQualificationState(alreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
-	membersCount, qualifiedMembersCount int32) string {
-	var qualificationState string
-	if alreadyStarted {
-		qualificationState = "already_started"
+func computeQualificationState(hasAlreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
+	membersCount, qualifiedMembersCount int32) qualificationState {
+	var state qualificationState
+	if hasAlreadyStarted {
+		state = alreadyStarted
 	} else {
-		qualificationState = "ready"
+		state = ready
 		if isTeamContest && maxTeamSize < membersCount ||
 			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
-			qualificationState = "not_ready"
+			state = notReady
 		}
 	}
-	return qualificationState
+	return state
 }
 
 func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
