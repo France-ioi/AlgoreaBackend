@@ -6,14 +6,14 @@ CREATE TABLE `groups_contest_items` (
     `can_enter_until` datetime NOT NULL DEFAULT '9999-12-31 23:59:59' COMMENT 'Time until which the group can “enter” this contest',
     `additional_time` time NOT NULL DEFAULT '00:00:00' COMMENT 'Time that was attributed (can be negative) to this group for this contest',
     PRIMARY KEY (`group_id`, `item_id`)
-);
+) COMMENT 'Group constraints on contest participations';
 
 CREATE TABLE `contest_participations` (
     `group_id` bigint(20) NOT NULL,
     `item_id` bigint(20) NOT NULL,
     `entered_at` datetime DEFAULT NULL COMMENT 'Time at which the group entered the contest',
     PRIMARY KEY (`group_id`, `item_id`)
-);
+) COMMENT 'Information on when teams or users entered contests';
 
 INSERT INTO `contest_participations` (`group_id`, `item_id`, `entered_at`)
     SELECT users.self_group_id, users_items.item_id, users_items.contest_started_at
