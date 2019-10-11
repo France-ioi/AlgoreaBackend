@@ -41,6 +41,9 @@ type contestGetQualificationStateResponse struct {
 	CurrentUserCanEnter bool `json:"current_user_can_enter"`
 	// required: true
 	OtherMembers []contestGetQualificationStateOtherMember `json:"other_members"`
+
+	groupID int64
+	itemID  int64
 }
 
 // swagger:operation GET /contests/{item_id}/groups/{group_id}/qualification-state contests groups contestGetQualificationState
@@ -51,7 +54,7 @@ type contestGetQualificationStateResponse struct {
 //                i.e. whether he can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has a non-null `entered_at` for the item;
+//                  * 'already_started' if the participant has a `contest_participations` row for the item;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -80,7 +83,7 @@ type contestGetQualificationStateResponse struct {
 //                Otherwise, the "Forbidden" response is returned.
 // parameters:
 // - name: item_id
-//   description: "`id` of a timed contest"
+//   description: "`id` of a contest"
 //   in: path
 //   type: integer
 //   format: int64
@@ -102,16 +105,27 @@ type contestGetQualificationStateResponse struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request) service.APIError {
+	result, apiError := srv.getContestInfoAndQualificationStateFromRequest(r, srv.Store, false)
+	if apiError != service.NoError {
+		return apiError
+	}
+
+	render.Respond(w, r, result)
+	return service.NoError
+}
+
+func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Request, store *database.DataStore, lock bool) (
+	*contestGetQualificationStateResponse, service.APIError) {
 	user := srv.GetUser(r)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
-		return service.ErrInvalidRequest(err)
+		return nil, service.ErrInvalidRequest(err)
 	}
 
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
-		return service.ErrInvalidRequest(err)
+		return nil, service.ErrInvalidRequest(err)
 	}
 
 	var contestInfo struct {
@@ -119,48 +133,52 @@ func (srv *Service) getQualificationState(w http.ResponseWriter, r *http.Request
 		ContestMaxTeamSize       int32
 		ContestEnteringCondition string
 	}
-	err = srv.Store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
+	err = store.Items().VisibleByID(user, itemID).Where("items.duration IS NOT NULL").
 		Select("items.has_attempts, items.contest_max_team_size, items.contest_entering_condition").
 		Take(&contestInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return nil, service.InsufficientAccessRightsError
 	}
 	service.MustNotBeError(err)
 
-	if apiError := srv.checkGroupID(groupID, itemID, contestInfo.IsTeamContest, user); apiError != service.NoError {
-		return apiError
+	if apiError := srv.checkGroupID(groupID, itemID, contestInfo.IsTeamContest, user, store); apiError != service.NoError {
+		return nil, apiError
 	}
 
-	alreadyStarted, err := srv.Store.ContestParticipations().
+	contestParticipationQuery := store.ContestParticipations().
 		Where("item_id = ?", itemID).
-		Where("group_id = ?", groupID).
-		Where("entered_at IS NOT NULL").HasRows()
+		Where("group_id = ?", groupID)
+	if lock {
+		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
+	}
+	alreadyStarted, err := contestParticipationQuery.HasRows()
 	service.MustNotBeError(err)
 
-	membersCount, members, currentUserCanEnter, qualifiedMembersCount :=
-		srv.getQualificatonInfo(contestInfo.IsTeamContest, groupID, itemID, user)
-
-	qualificationState := computeQualificationState(
+	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
+		srv.getQualificatonInfo(contestInfo.IsTeamContest, groupID, itemID, user, store)
+	state := computeQualificationState(
 		alreadyStarted, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
 		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
-		State:               qualificationState,
+		State:               string(state),
 		EnteringCondition:   contestInfo.ContestEnteringCondition,
 		CurrentUserCanEnter: currentUserCanEnter,
-		OtherMembers:        members,
+		OtherMembers:        otherMembers,
+		groupID:             groupID,
+		itemID:              itemID,
 	}
 	if contestInfo.IsTeamContest {
 		result.MaxTeamSize = &contestInfo.ContestMaxTeamSize
 	}
-	render.Respond(w, r, result)
-	return service.NoError
+	return result, service.NoError
 }
 
-func (srv *Service) checkGroupID(groupID, itemID int64, isTeamContest bool, user *database.User) service.APIError {
+func (srv *Service) checkGroupID(
+	groupID, itemID int64, isTeamContest bool, user *database.User, store *database.DataStore) service.APIError {
 	if isTeamContest {
 		var teamGroupID int64
-		err := srv.Store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
+		err := store.Groups().TeamGroupForTeamItemAndUser(itemID, user).
 			PluckFirst("groups.id", &teamGroupID).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			return service.InsufficientAccessRightsError
@@ -175,19 +193,19 @@ func (srv *Service) checkGroupID(groupID, itemID int64, isTeamContest bool, user
 	return service.NoError
 }
 
-func computeQualificationState(alreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
-	membersCount, qualifiedMembersCount int32) string {
-	var qualificationState string
-	if alreadyStarted {
-		qualificationState = "already_started"
+func computeQualificationState(hasAlreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
+	membersCount, qualifiedMembersCount int32) qualificationState {
+	var state qualificationState
+	if hasAlreadyStarted {
+		state = alreadyStarted
 	} else {
-		qualificationState = "ready"
+		state = ready
 		if isTeamContest && maxTeamSize < membersCount ||
 			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
-			qualificationState = "not_ready"
+			state = notReady
 		}
 	}
-	return qualificationState
+	return state
 }
 
 func isContestEnteringConditionSatisfied(contestEnteringCondition string, membersCount, qualifiedMembersCount int32) bool {
@@ -197,10 +215,10 @@ func isContestEnteringConditionSatisfied(contestEnteringCondition string, member
 			contestEnteringCondition == "One" && qualifiedMembersCount >= 1)
 }
 
-func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, user *database.User) (
-	membersCount int32, members []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32) {
+func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, user *database.User, store *database.DataStore) (
+	membersCount int32, otherMembers []contestGetQualificationStateOtherMember, currentUserCanEnter bool, qualifiedMembersCount int32) {
 	if isTeamOnly {
-		service.MustNotBeError(srv.Store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
+		service.MustNotBeError(store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			WhereActiveGroupRelationIsActual().
 			Joins("JOIN users ON users.self_group_id = groups_groups_active.child_group_id").
 			Joins(`
@@ -213,24 +231,24 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 			Select(`
 					users.first_name, users.last_name, users.self_group_id AS group_id, users.login,
 					IFNULL(MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0) AS can_enter`).
-			Scan(&members).Error())
-		membersCount = int32(len(members))
+			Scan(&otherMembers).Error())
+		membersCount = int32(len(otherMembers))
 		var currentUserIndex int
-		for index := range members {
-			if members[index].GroupID == *user.SelfGroupID {
-				currentUserCanEnter = members[index].CanEnter
+		for index := range otherMembers {
+			if otherMembers[index].GroupID == *user.SelfGroupID {
+				currentUserCanEnter = otherMembers[index].CanEnter
 				currentUserIndex = index
 			}
-			if members[index].CanEnter {
+			if otherMembers[index].CanEnter {
 				qualifiedMembersCount++
 			}
 		}
 		// remove the current user from the members list
-		members = append(members[:currentUserIndex], members[currentUserIndex+1:]...)
+		otherMembers = append(otherMembers[:currentUserIndex], otherMembers[currentUserIndex+1:]...)
 	} else {
 		membersCount = 1
-		members = []contestGetQualificationStateOtherMember{}
-		service.MustNotBeError(srv.Store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		otherMembers = []contestGetQualificationStateOtherMember{}
+		service.MustNotBeError(store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins(`
 					LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id
 						AND groups_contest_items.item_id = ?`, itemID).
@@ -244,5 +262,5 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 			qualifiedMembersCount = 1
 		}
 	}
-	return membersCount, members, currentUserCanEnter, qualifiedMembersCount
+	return membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount
 }

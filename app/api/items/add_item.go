@@ -60,23 +60,15 @@ type item struct {
 	// enum: All,Half,One,None
 	// default: None
 	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
-	// Nullable
-	//
-	// Should be owned by the current user
-	QualifiedGroupID   *int64 `json:"qualified_group_id" validate:"qualified_group_id"`
-	ContestMaxTeamSize int32  `json:"contest_max_team_size"`
-	TitleBarVisible    bool   `json:"title_bar_visible"`
-	HasAttempts        bool   `json:"has_attempts"`
-	// Nullable
-	ContestOpensAt *time.Time `json:"contest_opens_at"`
+	ContestMaxTeamSize       int32  `json:"contest_max_team_size"`
+	TitleBarVisible          bool   `json:"title_bar_visible"`
+	HasAttempts              bool   `json:"has_attempts"`
 	// Nullable
 	//
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	Duration *string `json:"duration" validate:"duration"`
-	// Nullable
-	ContestClosesAt *time.Time `json:"contest_closes_at"`
 	// Nullable
 	// enum: Running,Analysis,Closed
 	ContestPhase  *string `json:"contest_phase" validate:"oneof=Running Analysis Closed"`
@@ -182,7 +174,6 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * `children` items (if any),
 //     * `unlocked_item_ids` items (if any),
 //
-//   and be an owner of `qualified_group_id` (if given),
 //   otherwise the "bad request" response is returned.
 // parameters:
 // - in: body
@@ -266,22 +257,6 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	})
 }
 
-// constructQualifiedGroupIDValidator constructs a validator for the QualifiedGroupID field.
-// The validator checks that the group in the QualifiedGroupID field is owned by the user.
-func constructQualifiedGroupIDValidator(store *database.DataStore, user *database.User) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		if field.Kind() == reflect.Ptr { // nil
-			return true
-		}
-		found, err := store.Groups().
-			OwnedBy(user).Where("groups.id = ?", field.Int()).
-			WithWriteLock().HasRows()
-		service.MustNotBeError(err)
-		return found
-	})
-}
-
 // constructUnlockedItemIDsValidator constructs a validator for the UnlockedItemIDs field.
 // The validator checks that the user has access rights to manage all the listed items (owner_access or manager_access).
 func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
@@ -344,9 +319,6 @@ func registerLanguageIDValidator(formData *formdata.FormData, store *database.Da
 }
 
 func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
-	formData.RegisterValidation("qualified_group_id", constructQualifiedGroupIDValidator(store, user))
-	formData.RegisterTranslation("qualified_group_id", "should exist and be owned by the user")
-
 	formData.RegisterValidation("unlocked_item_ids", constructUnlockedItemIDsValidator(store, user))
 	formData.RegisterTranslation("unlocked_item_ids",
 		"all the IDs should exist and the user should have manager/owner access to them")

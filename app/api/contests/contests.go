@@ -31,6 +31,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 	router.Get("/contests/{item_id}/groups/{group_id}/qualification-state",
 		service.AppHandler(srv.getQualificationState).ServeHTTP)
+	router.Post("/contests/{item_id}/groups/{group_id}",
+		service.AppHandler(srv.enter).ServeHTTP)
 }
 
 // swagger:model contestInfo
@@ -52,3 +54,11 @@ func (srv *Service) isTeamOnlyContestManagedByUser(itemID int64, user *database.
 	err := srv.Store.Items().ContestManagedByUser(itemID, user).PluckFirst("items.has_attempts", &isTeamOnly).Error()
 	return isTeamOnly, err
 }
+
+type qualificationState string
+
+const (
+	alreadyStarted qualificationState = "already_started"
+	notReady       qualificationState = "not_ready"
+	ready          qualificationState = "ready"
+)

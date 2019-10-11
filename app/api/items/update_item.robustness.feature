@@ -365,58 +365,6 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "groups_items" should stay unchanged
 
-  Scenario: Non-existent group id in qualified_group_id
-    Given I am the user with id "1"
-    When I send a PUT request to "/items/50" with the following body:
-      """
-      {
-        "qualified_group_id": "404"
-      }
-      """
-    Then the response code should be 400
-    And the response body should be, in JSON:
-      """
-      {
-        "success": false,
-        "message": "Bad Request",
-        "error_text": "Invalid input data",
-        "errors":{
-          "qualified_group_id": ["should exist and be owned by the user"]
-        }
-      }
-      """
-    And the table "items" should stay unchanged
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
-
-  Scenario: qualified_group_id is not owned by the user
-    Given I am the user with id "1"
-    When I send a PUT request to "/items/50" with the following body:
-      """
-      {
-        "qualified_group_id": "11"
-      }
-      """
-    Then the response code should be 400
-    And the response body should be, in JSON:
-      """
-      {
-        "success": false,
-        "message": "Bad Request",
-        "error_text": "Invalid input data",
-        "errors":{
-          "qualified_group_id": ["should exist and be owned by the user"]
-        }
-      }
-      """
-    And the table "items" should stay unchanged
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
-
   Scenario: Wrong duration (wrong format)
     Given I am the user with id "1"
     When I send a PUT request to "/items/50" with the following body:
