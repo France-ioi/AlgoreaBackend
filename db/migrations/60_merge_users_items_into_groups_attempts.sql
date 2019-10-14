@@ -145,7 +145,8 @@ ALTER TABLE `users_items`
     ADD COLUMN `answer` mediumtext COMMENT 'Deprecated'
         AFTER `state`,
     ADD COLUMN `platform_data_removed` tinyint(4) NOT NULL DEFAULT '0'
-        AFTER `answer`;
+        AFTER `answer`,
+    ADD INDEX `ancestors_computation_state` (`ancestors_computation_state`);
 
 INSERT INTO `users_items` (
     `user_id`, `item_id`,
