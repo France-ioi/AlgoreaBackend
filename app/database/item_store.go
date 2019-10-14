@@ -327,7 +327,8 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			items.contest_entering_condition,
 			items.has_attempts AS is_team_contest,
 			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(contest_participations.entered_at) AS entered_at`).
+			MIN(contest_participations.entered_at) AS entered_at,
+			MIN(contest_participations.finished_at) AS finished_at`).
 		Joins(`
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.child_group_id = ?`, user.SelfGroupID).
@@ -338,7 +339,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 				groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id`).
 		Group("items.id").
 		Order("MIN(contest_participations.entered_at) DESC").
-		Having("entered_at IS NOT NULL").
+		Having("entered_at IS NOT NULL AND finished_at IS NULL").
 		Limit(1).Scan(&results).Error())
 
 	if len(results) == 0 {

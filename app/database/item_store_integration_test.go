@@ -213,13 +213,6 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {ancestor_group_id: 104, child_group_id: 104}
 			- {ancestor_group_id: 105, child_group_id: 105}
 			- {ancestor_group_id: 106, child_group_id: 106}
-		users_items:
-			- {user_id: 2, item_id: 12}
-			- {user_id: 3, item_id: 13, finished_at: 2019-03-23 08:44:55} #finished
-			- {user_id: 4, item_id: 14} # ok
-			- {user_id: 5, item_id: 15} # ok with team mode
-			- {user_id: 6, item_id: 14} # multiple
-			- {user_id: 6, item_id: 15} # multiple
 		groups_contest_items:
 			- {group_id: 102, item_id: 12} # not started
 			- {group_id: 104, item_id: 14, additional_time: 00:01:00} # ok
@@ -227,6 +220,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
 			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
 		contest_participations:
+			- {group_id: 103, item_id: 13, entered_at: 2019-03-22 08:44:55, finished_at: 2019-03-22 09:44:55} # finished
 			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55} # ok
 			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55}  # ok with team mode
 			- {group_id: 106, item_id: 14, entered_at: 2019-03-22 08:44:55} # multiple
