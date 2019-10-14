@@ -36,3 +36,12 @@ INSERT INTO `users_items` (`user_id`, `item_id`, `contest_started_at`, `finished
     FROM contest_participations
          JOIN users ON users.self_group_id = contest_participations.group_id
 ON DUPLICATE KEY UPDATE contest_started_at = contest_participations.entered_at, finished_at = contest_participations.finished_at;
+
+INSERT INTO `users_items` (`user_id`, `item_id`, `contest_started_at`, `finished_at`)
+SELECT users.id, contest_participations.item_id, contest_participations.entered_at, contest_participations.finished_at
+FROM contest_participations
+    JOIN `groups` AS parent ON parent.id = contest_participations.group_id AND parent.type = 'Team'
+    JOIN groups_groups ON groups_groups.parent_group_id = parent.id AND
+        groups_groups.type IN ('invitationAccepted', 'requestAccepted', 'direct', 'joinedByCode')
+    JOIN users ON users.self_group_id = groups_groups.child_group_id
+ON DUPLICATE KEY UPDATE contest_started_at = contest_participations.entered_at, finished_at = contest_participations.finished_at;
