@@ -118,9 +118,8 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							parent_groups_attempts.id,
 							IFNULL(SUM(validations_of_children_attempts.validated), 0) AS children_validated,
 							SUM(IFNULL(NOT validations_of_children_attempts.validated, 1)) AS children_non_validated,
-							SUM(IF(items_items.category = 'Validation' AND
-								(ISNULL(validations_of_children_attempts.group_id) OR validations_of_children_attempts.validated != 1), 1, 0))
-								AS children_category,
+							SUM(items_items.category = 'Validation' AND IFNULL(NOT validations_of_children_attempts.validated, 1))
+								AS children_non_validated_categories,
 							MAX(validations_of_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', validations_of_children_attempts.validated_at, NULL)) AS max_validated_at_categories
 						FROM groups_attempts AS parent_groups_attempts
@@ -136,7 +135,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						JOIN items ON(
 							items.ID = items_items.child_item_id
 						)
-						WHERE parent_groups_attempts.id = groups_attempts.id AND items.type <> 'Course' AND items.no_score = 0
+						WHERE parent_groups_attempts.id = groups_attempts.id AND items.type <> 'Course' AND NOT items.no_score
 						GROUP BY parent_groups_attempts.id
 					) AS validations_of_children ON 1
 					JOIN items
@@ -162,7 +161,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						groups_attempts.validated = IF(validations_of_children.id IS NOT NULL AND items_items.id IS NOT NULL,
 							CASE
 								WHEN groups_attempts.validated = 1 THEN 1
-								WHEN items.validation_type = 'Categories' THEN validations_of_children.children_category = 0
+								WHEN items.validation_type = 'Categories' THEN validations_of_children.children_non_validated_categories = 0
 								WHEN items.validation_type = 'All' THEN validations_of_children.children_non_validated = 0
 								WHEN items.validation_type = 'AllButOne' THEN validations_of_children.children_non_validated < 2
 								WHEN items.validation_type = 'One' THEN validations_of_children.children_validated > 0
