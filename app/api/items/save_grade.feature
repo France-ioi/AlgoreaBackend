@@ -36,10 +36,10 @@ Feature: Save grading result
       | 101      | 60      | 2017-05-29 06:38:38         | 10              |
       | 101      | 70      | 2017-05-29 06:38:38         | 10              |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at      | validated_at        |
-      | 10      | 10      | null              | 0     | null                | null                |
-      | 10      | 50      | 100               | 0     | null                | null                |
-      | 10      | 60      | 101               | 10    | 2017-05-29 06:38:38 | 2019-03-29 06:38:38 |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 10      | null              |
+      | 10      | 50      | 100               |
+      | 10      | 60      | 101               |
     And the database has the following table 'users_answers':
       | id  | user_id | item_id | submitted_at        |
       | 123 | 10      | 50      | 2017-05-29 06:38:38 |
@@ -108,10 +108,10 @@ Feature: Save grading result
       | 124 | 10      | 60      | null  | null      | null                                             |
       | 125 | 10      | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 10      | 10      | 0     | 1           | 1         | 0            | done                        | 1                                                         | null                                                    | null                                                  | 1                                                   |
-      | 10      | 50      | 100   | 1           | 1         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
-      | 10      | 60      | 10    | 0           | 0         | 0            | done                        | null                                                      | null                                                    | 0                                                     | 0                                                   |
+      | user_id | item_id |
+      | 10      | 10      |
+      | 10      | 50      |
+      | 10      | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 100   | 1           | 1         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
@@ -176,10 +176,10 @@ Feature: Save grading result
       | 124 | 10      | 60      | null  | null      | null                                             |
       | 125 | 10      | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 10      | 10      | 0     | 1           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | 0                                                   |
-      | 10      | 50      | 99    | 1           | 0         | 0            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
-      | 10      | 60      | 10    | 0           | 0         | 0            | done                        | null                                                      | null                                                    | 0                                                     | 0                                                   |
+      | user_id | item_id |
+      | 10      | 10      |
+      | 10      | 50      |
+      | 10      | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 99    | 1           | 0         | 0            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
@@ -244,10 +244,10 @@ Feature: Save grading result
       | 124 | 10      | 60      | 99    | 0         | 1                                                |
       | 125 | 10      | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 10      | 10      | 0     | 1           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | 0                                                   |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
-      | 10      | 60      | 99    | 1           | 0         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 0                                                   |
+      | user_id | item_id |
+      | 10      | 10      |
+      | 10      | 50      |
+      | 10      | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 99    | 1           | 0         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
@@ -313,10 +313,10 @@ Feature: Save grading result
       | 124 | 10      | 60      | 5     | 0         | 1                                                |
       | 125 | 10      | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 10      | 10      | 0     | 1           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | 0                                                   |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
-      | 10      | 60      | 10    | 1           | 0         | 0            | done                        | 1                                                         | 1                                                       | 0                                                     | 0                                                   |
+      | user_id | item_id |
+      | 10      | 10      |
+      | 10      | 50      |
+      | 10      | 60      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should keep previous sValidationDate if it is earlier
@@ -379,10 +379,10 @@ Feature: Save grading result
       | 124 | 10      | 60      | 100   | 1         | 1                                                |
       | 125 | 10      | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 10      | 10      | 0     | 1           | 1         | 0            | done                        | 1                                                         | null                                                    | null                                                  | 0                                                   |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
-      | 10      | 60      | 100   | 1           | 1         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 0                                                   |
+      | user_id | item_id |
+      | 10      | 10      |
+      | 10      | 50      |
+      | 10      | 60      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated

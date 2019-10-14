@@ -20,15 +20,15 @@ func TestUserItemStore_ComputeAllUserItems_WithCyclicGraph(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/cyclic")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, userItemStore.Select("id, ancestors_computation_state").Order("id").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, ancestors_computation_state").Order("id").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
 		{ID: 11, AncestorsComputationState: "todo"},
 		{ID: 12, AncestorsComputationState: "todo"},

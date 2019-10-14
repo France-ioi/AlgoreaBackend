@@ -60,7 +60,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				users_items: [{user_id: 11, item_id: 50}]
 				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
 			attemptID:      100,
 			userID:         11,
@@ -70,7 +69,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (partial access)",
 			fixture: `
-				users_items: [{user_id: 10, item_id: 50}]
 				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:      100,
 			userID:         10,
@@ -82,8 +80,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 200,
 			fixture: `
-				users_items:
-					- {user_id: 10, item_id: 60}
 				groups_attempts:
 					- {id: 200, group_id: 102, item_id: 60, order: 0}`,
 			expectedFound:  true,
@@ -94,8 +90,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 200,
 			fixture: `
-				users_items:
-					- {user_id: 10, item_id: 60}
 				groups_attempts:
 					- {id: 200, group_id: 120, item_id: 60, order: 0}`,
 			expectedFound:  true,
@@ -106,8 +100,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 200,
 			fixture: `
-				users_items:
-					- {user_id: 10, item_id: 60}
 				groups_attempts:
 					- {id: 200, group_id: 110, item_id: 60, order: 0}`,
 			expectedFound:  true,
@@ -125,7 +117,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    12,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 12, item_id: 50}]
 				groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
 			expectedFound: false,
 		},
@@ -133,7 +124,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			name:          "no groups_attempts",
 			userID:        10,
 			attemptID:     100,
-			fixture:       `users_items: [{user_id: 10, item_id: 50}]`,
+			fixture:       ``,
 			expectedFound: false,
 		},
 		{
@@ -141,19 +132,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 50}]
 				groups_attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "no users_items",
-			userID:    10,
-			attemptID: 100,
-			fixture: `
-				users_items:
-					- {user_id: 10, item_id: 51}
-					- {user_id: 11, item_id: 50}
-				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -161,7 +140,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -170,7 +148,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 104, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -179,7 +156,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 105, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -188,7 +164,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 106, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -197,7 +172,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 107, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -206,7 +180,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 108, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
@@ -215,7 +188,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 60}]
 				groups_attempts: [{id: 100, group_id: 109, item_id: 60, order: 0}]`,
 			expectedFound:  true,
 			expectedItemID: 60,
@@ -225,7 +197,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    10,
 			attemptID: 100,
 			fixture: `
-				users_items: [{user_id: 10, item_id: 50}]
 				groups_attempts: [{id: 100, group_id: 102, item_id: 50, order: 0}]`,
 			expectedFound: false,
 		},

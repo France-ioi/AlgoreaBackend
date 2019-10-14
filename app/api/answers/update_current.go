@@ -72,18 +72,10 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.ID, itemID, &attemptID)
 		service.MustNotBeError(err)
 
-		columnsToUpdate := map[string]interface{}{
+		return userAnswerStore.ByID(currentAnswerID).UpdateColumn(map[string]interface{}{
 			"state":  requestData.State,
 			"answer": requestData.Answer,
-		}
-		service.MustNotBeError(userAnswerStore.ByID(currentAnswerID).UpdateColumn(columnsToUpdate).Error())
-
-		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
-			Where("item_id = ?", itemID).
-			Where("active_attempt_id = ?", requestData.AttemptID).
-			UpdateColumn(columnsToUpdate).Error())
-
-		return nil
+		}).Error()
 	})
 	service.MustNotBeError(err)
 

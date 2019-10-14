@@ -28,9 +28,7 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 		service.MustNotBeError(userItemStore.
 			Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"active_attempt_id":           groupsAttemptID,
-				"latest_activity_at":          database.Now(),
-				"ancestors_computation_state": "todo",
+				"active_attempt_id": groupsAttemptID,
 			}).Error())
 		service.MustNotBeError(store.GroupAttempts().
 			ByID(groupsAttemptID).

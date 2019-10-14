@@ -102,21 +102,6 @@ Feature: Update active attempt for an item - robustness
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
-  Scenario: No users_items
-    Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 51      | null              |
-      | 11      | 50      | null              |
-    And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | order |
-      | 100 | 101      | 50      | 0     |
-    When I send a PUT request to "/attempts/100/active"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
-
   Scenario: User is not a member of the team (invitationSent)
     Given I am the user with id "10"
     And the database has the following table 'users_items':

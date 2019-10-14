@@ -36,8 +36,8 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch an active attempt (no active attempt set)
     Given I am the user with id "11"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at | hints_requested | hints_cached |
-      | 11      | 50      | null              | 0     | null           | null         | null       | 1,2,3           | 3            |
+      | user_id | item_id | active_attempt_id |
+      | 11      | 50      | null              |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -62,8 +62,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 11      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | user_id | item_id | active_attempt_id   |
+      | 11      | 50      | 8674665223082153551 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 8674665223082153551 | 111      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
@@ -71,8 +71,8 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt set, only full access)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at |
-      | 10      | 50      | null              | 0     | null           | null         | null       |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | null              |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -97,8 +97,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | user_id | item_id | active_attempt_id   |
+      | 10      | 50      | 8674665223082153551 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 8674665223082153551 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
@@ -106,8 +106,8 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at |
-      | 10      | 60      | null              | 0     | null           | null         | null       |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 60      | null              |
     When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -132,17 +132,20 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 10      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | user_id | item_id | active_attempt_id   |
+      | 10      | 60      | 8674665223082153551 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 8674665223082153551 | 102      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with id "10"
+    And the database has the following table 'groups_attempts':
+      | id  | group_id | item_id | order | score | best_answer_at | validated_at | started_at |
+      | 100 | 101      | 50      | 1     | 0     | null           | null         | null       |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at |
-      | 10      | 50      | 100               | 0     | null           | null         | null       |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 100               |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -166,16 +169,16 @@ Feature: Get a task token with a refreshed active attempt for an item
         }
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
-    And the table "groups_attempts" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should be:
+      | id  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at |
-      | 10      | 50      | null              | 0     | null           | null         | null       |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 101      | 50      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -207,8 +210,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
@@ -217,8 +220,8 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at |
-      | 10      | 60      | null              | 0     | null           | null         | null       |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 102      | 60      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -250,8 +253,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 10      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 60      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
@@ -260,8 +263,8 @@ Feature: Get a task token with a refreshed active attempt for an item
   Scenario: Keeps previous started_at values
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at | started_at          |
-      | 10      | 50      | null              | 0     | null           | null         | 2017-05-29 06:38:38 |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score | best_answer_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
@@ -289,8 +292,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
-      | 10      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |

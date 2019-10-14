@@ -7,19 +7,6 @@ type GroupAttemptStore struct {
 	*DataStore
 }
 
-// After is a "listener" that calls UserItemStore::PropagateAttempts() & UserItemStore::ComputeAllUserItems()
-func (s *GroupAttemptStore) After() error {
-	s.mustBeInTransaction()
-
-	if err := s.UserItems().PropagateAttempts(); err != nil {
-		return err
-	}
-	if err := s.UserItems().ComputeAllUserItems(); err != nil {
-		return err
-	}
-	return nil
-}
-
 // CreateNew creates inserts a new row into groups_attempts with group_id=groupID, item_id=itemID.
 // It also sets order, started_at, latest_activity_at
 func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err error) {
@@ -51,7 +38,6 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	err = s.Items().Visible(user).
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
-		Joins("JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ?", user.ID).
 		Where("partial_access > 0 OR full_access > 0").
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
 			usersGroupsQuery.SubQuery(), user.SelfGroupID).

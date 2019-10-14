@@ -18,7 +18,8 @@ type rawNavigationItem struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title *string
 
-	// from users_items for current user
+	// from groups_attempts for the active attempt of the current user
+	UserAttemptID           *int64         `sql:"column:attempt_id"`
 	UserScore               float32        `sql:"column:score"`
 	UserValidated           bool           `sql:"column:validated"`
 	UserFinished            bool           `sql:"column:finished"`
@@ -63,11 +64,12 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		SELECT items.id, items.type, items.transparent_folder,
 			COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
 			COALESCE(user_strings.title, default_strings.title) AS title,
-			users_items.score AS score, users_items.validated AS validated,
-			users_items.finished AS finished, users_items.key_obtained AS key_obtained,
-			users_items.submissions_attempts AS submissions_attempts,
-			users_items.started_at AS started_at, users_items.validated_at AS validated_at,
-			users_items.finished_at AS finished_at,
+			groups_attempts.id AS attempt_id,
+			groups_attempts.score AS score, groups_attempts.validated AS validated,
+			groups_attempts.finished AS finished, groups_attempts.key_obtained AS key_obtained,
+			groups_attempts.submissions_attempts AS submissions_attempts,
+			groups_attempts.started_at AS started_at, groups_attempts.validated_at AS validated_at,
+			groups_attempts.finished_at AS finished_at,
 			items.child_order AS child_order,
 			items.partial_access_propagation,
 			items.parent_item_id AS parent_item_id,
@@ -76,6 +78,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.ID).
+		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Order("item_grandparent_id, parent_item_id, child_order")
 
 	if err := query.Scan(&result).Error(); err != nil {

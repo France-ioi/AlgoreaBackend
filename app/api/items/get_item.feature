@@ -43,17 +43,29 @@ Feature: Get item view information
       | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   |
       | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   |
     And the database has the following table 'users_items':
-      | id | user_id | item_id | active_attempt_id | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        | state      | answer      |
-      | 1  | 1       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
-      | 2  | 1       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
-      | 3  | 1       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | Some answer |
-      | 4  | 2       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
-      | 5  | 3       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
-      | 6  | 3       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
-      | 7  | 3       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        |
-      | 8  | 4       | 200     | 100               | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 | Some state | Some answer |
-      | 9  | 4       | 210     | 100               | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 | Some state | null        |
-      | 10 | 4       | 220     | 100               | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 | Some state | null        |
+      | id | user_id | item_id | active_attempt_id |
+      | 1  | 1       | 200     | 101               |
+      | 2  | 1       | 210     | 102               |
+      | 3  | 1       | 220     | 103               |
+      | 4  | 2       | 210     | 104               |
+      | 5  | 3       | 200     | 105               |
+      | 6  | 3       | 210     | 106               |
+      | 7  | 3       | 220     | null              |
+      | 8  | 4       | 200     | 108               |
+      | 9  | 4       | 210     | 109               |
+      | 10 | 4       | 220     | 110               |
+    And the database has the following table 'groups_attempts':
+      | id  | group_id | item_id | order | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        |
+      | 101 | 11       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 103 | 11       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 14       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 17       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 106 | 17       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 107 | 17       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | 108 | 22       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 109 | 22       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 110 | 22       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
     And the database has the following table 'groups_items':
       | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since | creator_user_id |
       | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
@@ -108,8 +120,8 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user": {
-        "active_attempt_id": "100",
+      "user_active_attempt": {
+        "attempt_id": "101",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -118,10 +130,7 @@ Feature: Get item view information
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
-        "finished_at": "2019-02-01T09:26:41Z",
-
-        "state": "Some state",
-        "answer": "Some answer"
+        "finished_at": "2019-02-01T09:26:41Z"
       },
 
       "children": [
@@ -152,8 +161,8 @@ Feature: Get item view information
             "description": "Description 2"
           },
 
-          "user": {
-            "active_attempt_id": "100",
+          "user_active_attempt": {
+            "attempt_id": "103",
             "score": 12344,
             "submissions_attempts": 14,
             "validated": true,
@@ -193,8 +202,8 @@ Feature: Get item view information
             "description": "Description 1"
           },
 
-          "user": {
-            "active_attempt_id": "100",
+          "user_active_attempt": {
+            "attempt_id": "102",
             "score": 12342,
             "submissions_attempts": 12,
             "validated": true,
@@ -248,8 +257,8 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user": {
-        "active_attempt_id": "100",
+      "user_active_attempt": {
+        "attempt_id": "102",
         "score": 12342,
         "submissions_attempts": 12,
         "validated": true,
@@ -302,8 +311,8 @@ Feature: Get item view information
         "description": "Description 1"
       },
 
-      "user": {
-        "active_attempt_id": "100",
+      "user_active_attempt": {
+        "attempt_id": "104",
         "score": 12342,
         "submissions_attempts": 12,
         "validated": true,
@@ -360,8 +369,8 @@ Feature: Get item view information
         "edu_comment": "Un commentaire"
       },
 
-      "user": {
-        "active_attempt_id": "100",
+      "user_active_attempt": {
+        "attempt_id": "105",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -370,10 +379,7 @@ Feature: Get item view information
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
-        "finished_at": "2019-02-01T09:26:41Z",
-
-        "state": "Some state",
-        "answer": "Some answer"
+        "finished_at": "2019-02-01T09:26:41Z"
       },
 
       "children": [
@@ -404,18 +410,7 @@ Feature: Get item view information
             "description": "texte 2"
           },
 
-          "user": {
-            "active_attempt_id": "100",
-            "score": 12344,
-            "submissions_attempts": 14,
-            "validated": true,
-            "finished": true,
-            "key_obtained": true,
-            "hints_cached": 11,
-            "started_at": "2019-01-30T09:26:44Z",
-            "validated_at": "2019-01-31T09:26:44Z",
-            "finished_at": "2019-02-01T09:26:44Z"
-          }
+          "user_active_attempt": null
         },
         {
           "id": "210",
@@ -445,8 +440,8 @@ Feature: Get item view information
             "description": "texte 1"
           },
 
-          "user": {
-            "active_attempt_id": "100",
+          "user_active_attempt": {
+            "attempt_id": "106",
             "score": 12342,
             "submissions_attempts": 12,
             "validated": true,
@@ -503,8 +498,8 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user": {
-        "active_attempt_id": "100",
+      "user_active_attempt": {
+        "attempt_id": "108",
         "score": 12341,
         "submissions_attempts": 11,
         "validated": true,
@@ -513,10 +508,7 @@ Feature: Get item view information
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
-        "finished_at": "2019-02-01T09:26:41Z",
-
-        "state": "Some state",
-        "answer": "Some answer"
+        "finished_at": "2019-02-01T09:26:41Z"
       },
 
       "children": [
@@ -545,8 +537,7 @@ Feature: Get item view information
             "image_url": "http://example.com/my2.jpg"
           },
 
-          "user": {
-          }
+          "user_active_attempt": null
         },
         {
           "id": "210",
@@ -574,8 +565,7 @@ Feature: Get item view information
             "image_url": "http://example.com/my1.jpg"
           },
 
-          "user": {
-          }
+          "user_active_attempt": null
         }
       ]
     }

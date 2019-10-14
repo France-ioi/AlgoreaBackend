@@ -34,9 +34,9 @@ Feature: Save grading result - robustness
       | 101      | 70      | 2017-05-29 06:38:38         | 10              |
       | 101      | 80      | 2017-05-29 06:38:38         | 10              |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | score | best_answer_at | validated_at |
-      | 10      | 10      | null              | 0     | null           | null         |
-      | 10      | 50      | 100               | 0     | null           | null         |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 10      | null              |
+      | 10      | 50      | 100               |
     And the database has the following table 'users_answers':
       | id  | user_id | item_id | submitted_at        |
       | 123 | 10      | 50      | 2017-05-29 06:38:38 |

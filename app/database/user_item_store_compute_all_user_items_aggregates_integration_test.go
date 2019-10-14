@@ -26,12 +26,12 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/aggregates")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	currentDate := time.Now().Round(time.Second).UTC()
 	oldDate := currentDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("id=11").Updates(map[string]interface{}{
+	assert.NoError(t, groupAttemptStore.Where("id=11").Updates(map[string]interface{}{
 		"latest_activity_at": oldDate,
 		"tasks_tried":        1,
 		"tasks_with_help":    2,
@@ -39,14 +39,14 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		"children_validated": 4,
 		"validated":          1,
 	}).Error())
-	assert.NoError(t, userItemStore.Where("id=13").Updates(map[string]interface{}{
+	assert.NoError(t, groupAttemptStore.Where("id=13").Updates(map[string]interface{}{
 		"latest_activity_at": currentDate,
 		"tasks_tried":        5,
 		"tasks_with_help":    6,
 		"tasks_solved":       7,
 		"children_validated": 8,
 	}).Error())
-	assert.NoError(t, userItemStore.Where("id=14").Updates(map[string]interface{}{
+	assert.NoError(t, groupAttemptStore.Where("id=14").Updates(map[string]interface{}{
 		"latest_activity_at": nil,
 		"tasks_tried":        9,
 		"tasks_with_help":    10,
@@ -55,7 +55,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		"validated":          1,
 	}).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
@@ -73,21 +73,21 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		{ID: 22, LatestActivityAt: nil, AncestorsComputationState: "done"},
 	}
 
-	assertAggregatesEqual(t, userItemStore, expected)
+	assertAggregatesEqual(t, groupAttemptStore, expected)
 }
 
 func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []aggregatesResultRow
-	assert.NoError(t, userItemStore.
+	assert.NoError(t, groupAttemptStore.
 		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 
@@ -96,12 +96,12 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T)
 		{ID: 12, AncestorsComputationState: "done"},
 		{ID: 22, AncestorsComputationState: "done"},
 	}
-	assertAggregatesEqual(t, userItemStore, expected)
+	assertAggregatesEqual(t, groupAttemptStore, expected)
 }
 
-func assertAggregatesEqual(t *testing.T, userItemStore *database.UserItemStore, expected []aggregatesResultRow) {
+func assertAggregatesEqual(t *testing.T, groupAttemptStore *database.GroupAttemptStore, expected []aggregatesResultRow) {
 	var result []aggregatesResultRow
-	assert.NoError(t, userItemStore.
+	assert.NoError(t, groupAttemptStore.
 		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, ancestors_computation_state").
 		Scan(&result).Error())
 	assert.Equal(t, expected, result)

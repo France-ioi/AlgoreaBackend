@@ -49,8 +49,8 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	hook, restoreFunc := logging.MockSharedLoggerHook()
 	defer restoreFunc()
 
-	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
@@ -58,7 +58,7 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 		"unlocked_item_ids", "1001,abc",
 	).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
@@ -73,14 +73,14 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
-	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn(
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("id=14").UpdateColumn(
+	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
@@ -94,7 +94,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		"unlocked_item_ids", "4001,4002",
 	).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)

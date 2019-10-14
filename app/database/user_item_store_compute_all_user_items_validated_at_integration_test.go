@@ -22,21 +22,21 @@ func TestUserItemStore_ComputeAllUserItems_ValidatedAtStaysTheSameIfItWasNotNull
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	expectedOldDate := expectedDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("id=12").UpdateColumn("validated_at", expectedOldDate).Error())
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=12").UpdateColumn("validated_at", expectedOldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, userItemStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: (*database.Time)(&expectedOldDate), AncestorsComputationState: "done"},
@@ -49,21 +49,21 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfC
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	oldDate := expectedDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, userItemStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
@@ -79,24 +79,24 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	oldDate := expectedDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(
 		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
 			Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, userItemStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
@@ -112,25 +112,25 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	oldDate := expectedDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(
 		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
 			Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, userItemStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
@@ -146,14 +146,14 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
-	userItemStore := database.NewDataStore(db).UserItems()
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	oldDate := expectedDate.AddDate(-1, -1, -1)
 
 	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (21,23,24)").UpdateColumn("category", "Validation").Error())
 
@@ -164,13 +164,13 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 		"no_score": true,
 	}).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
 	})
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, userItemStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},

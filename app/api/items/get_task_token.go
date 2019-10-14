@@ -144,24 +144,24 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 				service.MustNotBeError(err)
 			} else { // otherwise, update groups_attempts.started_at (if it is NULL) & groups_attempts.latest_activity_at
 				attemptID = groupsAttemptInfo.ID
-				service.MustNotBeError(store.GroupAttempts().ByID(attemptID).UpdateColumn(map[string]interface{}{
-					"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
-					"latest_activity_at": database.Now(),
-				}).Error())
 			}
 			activeAttemptID = &attemptID
 		}
 
-		// update users_items.active_attempt_id, users_items.started_at (if it is NULL), and users_items.latest_activity_at
+		// update groups_attempts
+		service.MustNotBeError(store.GroupAttempts().ByID(*activeAttemptID).UpdateColumn(map[string]interface{}{
+			"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
+			"latest_activity_at": database.Now(),
+		}).Error())
+
+		// update users_items.active_attempt_id
 		service.MustNotBeError(userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
 			UpdateColumn(map[string]interface{}{
-				"active_attempt_id":  *activeAttemptID,
-				"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
-				"latest_activity_at": database.Now(),
+				"active_attempt_id": *activeAttemptID,
 			}).Error())
 
-		// propagate groups_attempts and compute users_items
-		service.MustNotBeError(store.GroupAttempts().After())
+		// propagate compute users_items
+		service.MustNotBeError(store.UserItems().ComputeAllUserItems())
 
 		return nil
 	})

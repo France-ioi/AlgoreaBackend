@@ -18,9 +18,6 @@ Feature: Submit a new answer
     And the database has the following table 'groups_items':
       | group_id | item_id | cached_partial_access_since | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38         | 10              |
-    And the database has the following table 'users_items':
-      | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts |
-      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | order |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0     |
@@ -61,16 +58,13 @@ Feature: Submit a new answer
             "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0}]",
             "nbHintsGiven": "12",
             "sAnswer": "print 1",
-            "idUserAnswer": "8674665223082153551"
+            "idUserAnswer": "5577006791947779410"
           }
         },
         "message": "created",
         "success": true
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
       | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 10      | 50      | 100        | Submission | print 1 | 1                                                   |
@@ -118,16 +112,13 @@ Feature: Submit a new answer
             "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0}]",
             "nbHintsGiven": "12",
             "sAnswer": "print(2)",
-            "idUserAnswer": "8674665223082153551"
+            "idUserAnswer": "5577006791947779410"
           }
         },
         "message": "created",
         "success": true
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 10      | 50      | 3                    | 1                                                         |
     And the table "users_answers" should be:
       | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 10      | 50      | 100        | Submission | print(2) | 1                                                   |

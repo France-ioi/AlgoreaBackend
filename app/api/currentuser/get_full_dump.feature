@@ -197,14 +197,7 @@ Feature: Export the current user's data
       ],
       "users_items": [
         {
-          "id": "11", "finished": 0, "key_obtained": 0, "platform_data_removed": 0, "ranked": 0, "validated": 0,
-          "autonomy": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "active_attempt_id": null, "item_id": "404", "user_id": "2", "children_validated": 0,
-          "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "todo",
-          "answer": null, "best_answer_at": null, "finished_at": null,
-          "hints_requested": null, "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null,
-          "score_diff_comment": "", "started_at": null, "state": null, "thread_started_at": null, "validated_at": null
+          "id": "11", "active_attempt_id": null, "item_id": "404", "user_id": "2"
         }
       ]
     }

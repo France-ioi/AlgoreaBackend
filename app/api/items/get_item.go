@@ -46,9 +46,10 @@ type itemStringRoot struct {
 	*itemStringRootNodeWithSolutionAccess
 }
 
-type itemUserNotGrayed struct {
+// from `groups_attempts`
+type itemUserActiveAttempt struct {
 	// Nullable; only if not grayed
-	ActiveAttemptID *int64 `json:"active_attempt_id,string"`
+	AttemptID int64 `json:"attempt_id,string"`
 	// only if not grayed
 	Score float32 `json:"score"`
 	// only if not grayed
@@ -71,24 +72,6 @@ type itemUserNotGrayed struct {
 	// Nullable; only if not grayed
 	// example: 2019-09-11T07:30:56Z
 	FinishedAt *database.Time `json:"finished_at,string"`
-}
-
-type itemUserRootNodeNotChapter struct {
-	// Nullable; only if not a chapter
-	State *string `json:"state"`
-	// Nullable; only if not a chapter
-	Answer *string `json:"answer"`
-}
-
-// from `users_items`
-type itemUser struct {
-	*itemUserNotGrayed
-}
-
-// from `users_items`
-type itemUserRoot struct {
-	*itemUserNotGrayed
-	*itemUserRootNodeNotChapter
 }
 
 type itemCommonFields struct {
@@ -159,9 +142,9 @@ type itemChildNode struct {
 	// required: true
 	PartialAccessPropagation string `json:"partial_access_propagation"`
 
-	// from `users_items`
+	// Nullable
 	// required: true
-	User itemUser `json:"user"`
+	UserActiveAttempt *itemUserActiveAttempt `json:"user_active_attempt"`
 }
 
 // swagger:model itemResponse
@@ -188,8 +171,9 @@ type itemResponse struct {
 	// enum: Running,Analysis,Closed
 	ContestPhase string `json:"contest_phase"`
 
+	// Nullable
 	// required: true
-	User itemUserRoot `json:"user"`
+	UserActiveAttempt *itemUserActiveAttempt `json:"user_active_attempt"`
 
 	// required: true
 	String itemStringRoot `json:"string"`
@@ -205,7 +189,7 @@ type itemResponse struct {
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
 //              and the current user's interactions with them
-//              (from tables `items`, `items_items`, `items_string`, and `users_items`).
+//              (from tables `items`, `items_items`, `items_string`, and `groups_attempts` for the active attempt).
 //
 //
 //              * If the specified item is not visible by the current user, the 'not found' response is returned.
@@ -295,8 +279,8 @@ type rawItem struct {
 	StringDescription *string `sql:"column:description"`
 	StringEduComment  *string `sql:"column:edu_comment"`
 
-	// from users_items for current user
-	UserActiveAttemptID     *int64         `sql:"column:active_attempt_id"`
+	// from groups_attempts for the active attempt of the current user
+	UserActiveAttemptID     *int64         `sql:"column:attempt_id"`
 	UserScore               float32        `sql:"column:score"`
 	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
 	UserValidated           bool           `sql:"column:validated"`
@@ -306,8 +290,6 @@ type rawItem struct {
 	UserStartedAt           *database.Time `sql:"column:started_at"`
 	UserValidatedAt         *database.Time `sql:"column:validated_at"`
 	UserFinishedAt          *database.Time `sql:"column:finished_at"`
-	UserState               *string        `sql:"column:state"`  // only if not a chapter
-	UserAnswer              *string        `sql:"column:answer"` // only if not a chapter
 
 	// items_items
 	Order                    int32 `sql:"column:child_order"`
@@ -393,18 +375,16 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
-			users_items.active_attempt_id AS active_attempt_id,
-			users_items.score AS score,
-			users_items.submissions_attempts AS submissions_attempts,
-			users_items.validated AS validated,
-			users_items.finished AS finished,
-			users_items.key_obtained AS key_obtained,
-			users_items.hints_cached AS hints_cached,
-			users_items.started_at AS started_at,
-			users_items.validated_at AS validated_at,
-			users_items.finished_at AS finished_at,
-			IF(items.type <> 'Chapter', users_items.state, NULL) as state,
-			users_items.answer,
+			groups_attempts.id AS attempt_id,
+			groups_attempts.score AS score,
+			groups_attempts.submissions_attempts AS submissions_attempts,
+			groups_attempts.validated AS validated,
+			groups_attempts.finished AS finished,
+			groups_attempts.key_obtained AS key_obtained,
+			groups_attempts.hints_cached AS hints_cached,
+			groups_attempts.started_at AS started_at,
+			groups_attempts.validated_at AS validated_at,
+			groups_attempts.finished_at AS finished_at,
 
 			items.child_order AS child_order,
 			items.category AS category,
@@ -424,6 +404,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.ID).
+		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND (full_access>0 OR partial_access>0 OR grayed_access>0)",
 			accessRights.SubQuery()).
 		Order("child_order")
@@ -439,10 +420,6 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {
 		}
 	}
 	if (*rawData)[0].Type != "Chapter" {
-		response.User.itemUserRootNodeNotChapter = &itemUserRootNodeNotChapter{
-			State:  (*rawData)[0].UserState,
-			Answer: (*rawData)[0].UserAnswer,
-		}
 		response.itemRootNodeNotChapterFields = &itemRootNodeNotChapterFields{
 			URL:          (*rawData)[0].URL,
 			UsesAPI:      (*rawData)[0].UsesAPI,
@@ -466,7 +443,7 @@ func constructItemResponseFromDBData(rawData *rawItem) *itemResponse {
 		},
 	}
 	result.String.itemStringNotGrayed = constructStringNotGrayed(rawData)
-	result.User.itemUserNotGrayed = constructUserNotGrayed(rawData)
+	result.UserActiveAttempt = constructUserActiveAttempt(rawData)
 	return result
 }
 
@@ -488,12 +465,12 @@ func constructStringNotGrayed(rawData *rawItem) *itemStringNotGrayed {
 	}
 }
 
-func constructUserNotGrayed(rawData *rawItem) *itemUserNotGrayed {
-	if !rawData.FullAccess && !rawData.PartialAccess {
+func constructUserActiveAttempt(rawData *rawItem) *itemUserActiveAttempt {
+	if !rawData.FullAccess && !rawData.PartialAccess || rawData.UserActiveAttemptID == nil {
 		return nil
 	}
-	return &itemUserNotGrayed{
-		ActiveAttemptID:     rawData.UserActiveAttemptID,
+	return &itemUserActiveAttempt{
+		AttemptID:           *rawData.UserActiveAttemptID,
 		Score:               rawData.UserScore,
 		SubmissionsAttempts: rawData.UserSubmissionsAttempts,
 		Validated:           rawData.UserValidated,
@@ -535,7 +512,7 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
 		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
 		child.String.itemStringNotGrayed = constructStringNotGrayed(&(*rawData)[index])
-		child.User.itemUserNotGrayed = constructUserNotGrayed(&(*rawData)[index])
+		child.UserActiveAttempt = constructUserActiveAttempt(&(*rawData)[index])
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
 		child.PartialAccessPropagation = (*rawData)[index].PartialAccessPropagation

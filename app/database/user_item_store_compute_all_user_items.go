@@ -17,10 +17,10 @@ type groupItemPair struct {
 const computeAllUserItemsLockName = "listener_computeAllUserItems"
 const computeAllUserItemsLockTimeout = 10 * time.Second
 
-// ComputeAllUserItems recomputes fields of users_items
-// For users_items marked with ancestors_computation_state = 'todo':
-// 1. We mark all their ancestors in users_items as 'todo'
-//  (we consider a row in users_items as an ancestor if it has the same value in user_id and
+// ComputeAllUserItems recomputes fields of groups_attempts
+// For groups_attempts marked with ancestors_computation_state = 'todo':
+// 1. We mark all their ancestors in groups_attempts as 'todo'
+//  (we consider a row in groups_attempts as an ancestor if it has the same value in group_id and
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
 //  Then, if an object has children, we update
@@ -39,14 +39,14 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
 		mustNotBeError(userItemStore.db.Exec(
-			`UPDATE users_items AS ancestors
+			`UPDATE groups_attempts AS ancestors
 			JOIN items_ancestors ON (
 				ancestors.item_id = items_ancestors.ancestor_item_id AND
 				items_ancestors.ancestor_item_id != items_ancestors.child_item_id
 			)
-			JOIN users_items AS descendants ON (
+			JOIN groups_attempts AS descendants ON (
 				descendants.item_id = items_ancestors.child_item_id AND
-				descendants.user_id = ancestors.user_id
+				descendants.group_id = ancestors.group_id
 			)
 			SET ancestors.ancestors_computation_state = 'todo'
 			WHERE descendants.ancestors_computation_state = 'todo'`).Error)
@@ -61,21 +61,21 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			// This way we prevent infinite looping as we never process items that are ancestors of themselves
 			if markAsProcessingStatement == nil {
 				const markAsProcessingQuery = `
-					UPDATE users_items AS parent
+					UPDATE groups_attempts AS parent
 					JOIN (
 						SELECT *
 						FROM (
 							SELECT inner_parent.id
-							FROM users_items AS inner_parent
+							FROM groups_attempts AS inner_parent
 							WHERE ancestors_computation_state = 'todo'
 								AND NOT EXISTS (
 									SELECT items_items.child_item_id
 									FROM items_items
-									JOIN users_items AS children
+									JOIN groups_attempts AS children
 										ON children.item_id = items_items.child_item_id
 									WHERE items_items.parent_item_id = inner_parent.item_id AND
 										children.ancestors_computation_state <> 'done' AND
-										children.user_id = inner_parent.user_id
+										children.group_id = inner_parent.group_id
 								)
 							) AS tmp2
 					) AS tmp
@@ -98,7 +98,36 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			//  - validated, depending on the items_items.category and items.validation_type
 			if updateStatement == nil {
 				const updateQuery = `
-					UPDATE users_items
+					WITH task_children_data_view AS (
+						WITH best_scores AS (
+							SELECT group_id, item_id, MAX(score) AS score, MAX(validated) AS validated,
+								MAX(validated_at) AS validated_at
+							FROM groups_attempts
+							GROUP BY group_id, item_id
+						)
+						SELECT
+								parent_groups_attempts.id,
+								SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 1, 0)) AS children_validated,
+								SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 0, 1)) AS children_non_validated,
+								SUM(IF(items_items.category = 'Validation' AND
+											 (ISNULL(task_children.group_id) OR task_children.validated != 1), 1, 0)) AS children_category,
+								MAX(task_children.validated_at) AS max_validated_at,
+								MAX(IF(items_items.category = 'Validation', task_children.validated_at, NULL)) AS max_validated_at_categories
+						FROM groups_attempts AS parent_groups_attempts
+										 JOIN items_items ON(
+										parent_groups_attempts.item_id = items_items.parent_item_id
+								)
+										 LEFT JOIN best_scores AS task_children ON(
+												items_items.child_item_id = task_children.item_id AND
+												task_children.group_id = parent_groups_attempts.group_id
+								)
+										 JOIN items ON(
+										items.ID = items_items.child_item_id
+								)
+						WHERE items.type <> 'Course' AND items.no_score = 0
+						GROUP BY parent_groups_attempts.id
+					)
+					UPDATE groups_attempts
 					LEFT JOIN (
 						SELECT
 							MAX(children.latest_activity_at) AS latest_activity_at,
@@ -106,52 +135,52 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							SUM(children.tasks_with_help) AS tasks_with_help,
 							SUM(children.tasks_solved) AS tasks_solved,
 							SUM(validated) AS children_validated,
-							children.user_id AS user_id,
+							children.group_id AS group_id,
 							items_items.parent_item_id AS item_id
-						FROM users_items AS children 
+						FROM groups_attempts AS children 
 						JOIN items_items ON items_items.child_item_id = children.item_id
-						GROUP BY children.user_id, items_items.parent_item_id
+						GROUP BY children.group_id, items_items.parent_item_id
 					) AS children_data
-						USING(user_id, item_id)
+						USING(group_id, item_id)
 					LEFT JOIN task_children_data_view AS task_children_data
-						ON task_children_data.user_item_id = users_items.id
+						ON task_children_data.id = groups_attempts.id
 					JOIN items
-						ON users_items.item_id = items.id
+						ON groups_attempts.item_id = items.id
 					LEFT JOIN items_items
-						ON items_items.parent_item_id = users_items.item_id
+						ON items_items.parent_item_id = groups_attempts.item_id
 					SET
-						users_items.latest_activity_at = IF(task_children_data.user_item_id IS NOT NULL AND
-							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.latest_activity_at, users_items.latest_activity_at),
-						users_items.tasks_tried = IF(task_children_data.user_item_id IS NOT NULL AND
-							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.tasks_tried, users_items.tasks_tried),
-						users_items.tasks_with_help = IF(task_children_data.user_item_id IS NOT NULL AND
-							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.tasks_with_help, users_items.tasks_with_help),
-						users_items.tasks_solved = IF(task_children_data.user_item_id IS NOT NULL AND
-							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.tasks_solved, users_items.tasks_solved),
-						users_items.children_validated = IF(task_children_data.user_item_id IS NOT NULL AND
-							children_data.user_id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_data.children_validated, users_items.children_validated),
-						users_items.validated = IF(task_children_data.user_item_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.latest_activity_at = IF(task_children_data.id IS NOT NULL AND
+							children_data.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_data.latest_activity_at, groups_attempts.latest_activity_at),
+						groups_attempts.tasks_tried = IF(task_children_data.id IS NOT NULL AND
+							children_data.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_data.tasks_tried, groups_attempts.tasks_tried),
+						groups_attempts.tasks_with_help = IF(task_children_data.id IS NOT NULL AND
+							children_data.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_data.tasks_with_help, groups_attempts.tasks_with_help),
+						groups_attempts.tasks_solved = IF(task_children_data.id IS NOT NULL AND
+							children_data.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_data.tasks_solved, groups_attempts.tasks_solved),
+						groups_attempts.children_validated = IF(task_children_data.id IS NOT NULL AND
+							children_data.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_data.children_validated, groups_attempts.children_validated),
+						groups_attempts.validated = IF(task_children_data.id IS NOT NULL AND items_items.id IS NOT NULL,
 							CASE
-								WHEN users_items.validated = 1 THEN 1
+								WHEN groups_attempts.validated = 1 THEN 1
 								WHEN items.validation_type = 'Categories' THEN task_children_data.children_category = 0
 								WHEN items.validation_type = 'All' THEN task_children_data.children_non_validated = 0
 								WHEN items.validation_type = 'AllButOne' THEN task_children_data.children_non_validated < 2
 								WHEN items.validation_type = 'One' THEN task_children_data.children_validated > 0
 								ELSE 0
-							END, users_items.validated),
-						users_items.validated_at = IF(task_children_data.user_item_id IS NOT NULL AND items_items.id IS NOT NULL,
+							END, groups_attempts.validated),
+						groups_attempts.validated_at = IF(task_children_data.id IS NOT NULL AND items_items.id IS NOT NULL,
 							IFNULL(
-								users_items.validated_at,
+								groups_attempts.validated_at,
 								IF(items.validation_type = 'Categories',
 									task_children_data.max_validated_at_categories, task_children_data.max_validated_at)
-							), users_items.validated_at),
-						users_items.ancestors_computation_state = 'done'
-					WHERE users_items.ancestors_computation_state = 'processing'`
+							), groups_attempts.validated_at),
+						groups_attempts.ancestors_computation_state = 'done'
+					WHERE groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
@@ -182,13 +211,13 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 	const selectUnlocksQuery = `
 		SELECT
 			items.id AS item_id,
-			users.self_group_id AS group_id,
+			groups.id AS group_id,
 			items.unlocked_item_ids as items_ids
-		FROM users_items
-		JOIN items ON users_items.item_id = items.id
-		JOIN users ON users_items.user_id = users.id
-		WHERE users_items.ancestors_computation_state = 'processing' AND
-			users_items.key_obtained AND items.unlocked_item_ids IS NOT NULL`
+		FROM groups_attempts
+		JOIN items ON groups_attempts.item_id = items.id
+		JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
+		WHERE groups_attempts.ancestors_computation_state = 'processing' AND
+			groups_attempts.key_obtained AND items.unlocked_item_ids IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
 		ItemID   int64

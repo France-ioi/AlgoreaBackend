@@ -18,9 +18,6 @@ Feature: Submit a new answer - robustness
     And the database has the following table 'groups_items':
       | group_id | item_id | cached_partial_access_since | creator_user_id |
       | 101      | 50      | 2017-05-29 06:38:38         | 10              |
-    And the database has the following table 'users_items':
-      | user_id | item_id | hints_requested                 | hints_cached |
-      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           |
 
   Scenario: Wrong JSON in request
     Given I am the user with id "10"
@@ -30,7 +27,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type answers.submitRequestWrapper"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: No task_token
@@ -43,7 +39,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing task_token"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong task_token
@@ -57,7 +52,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token: illegal base64 data at input byte 8"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing answer
@@ -79,7 +73,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing answer"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idUser
@@ -102,7 +95,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token: wrong idUser"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idItemLocal
@@ -124,7 +116,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token: wrong idItemLocal"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idAttempt
@@ -147,7 +138,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token: wrong idAttempt"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: idUser doesn't match the user's id
@@ -170,7 +160,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: User not found
@@ -193,7 +182,6 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged
 
   Scenario: No submission rights
@@ -216,5 +204,4 @@ Feature: Submit a new answer - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Item is read-only"
-    And the table "users_items" should stay unchanged
     And the table "users_answers" should stay unchanged

@@ -38,8 +38,8 @@ Background:
     | id | item_id | language_id | title      |
     | 53 | 200     | 1           | Category 1 |
   And the database has the following table 'users_items':
-    | id | user_id | item_id | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        |
-    | 1  | 1       | 200     | 12345 | 10                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+    | id | user_id | item_id |
+    | 1  | 1       | 200     |
 
   Scenario: Should fail when the root item is invalid
     Given I am the user with id "1"

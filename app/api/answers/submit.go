@@ -80,10 +80,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
 		}
 
-		userItemStore := store.UserItems()
-		err = userItemStore.CreateIfMissing(user.ID, requestData.TaskToken.Converted.LocalItemID)
-		service.MustNotBeError(err)
-
 		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
 			user.ID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
@@ -91,15 +87,11 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)
 		service.MustNotBeError(
 			groupAttemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
-		columnsToUpdate := map[string]interface{}{
+
+		return groupAttemptsScope.UpdateColumn(map[string]interface{}{
 			"submissions_attempts": gorm.Expr("submissions_attempts + 1"),
 			"latest_activity_at":   database.Now(),
-		}
-		service.MustNotBeError(userItemStore.
-			Where("user_id = ? AND item_id = ?", user.ID, requestData.TaskToken.LocalItemID).
-			UpdateColumn(columnsToUpdate).Error())
-		service.MustNotBeError(groupAttemptsScope.UpdateColumn(columnsToUpdate).Error())
-		return nil // commit
+		}).Error()
 	})
 
 	if apiError != service.NoError {
