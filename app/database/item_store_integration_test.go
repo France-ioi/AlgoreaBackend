@@ -292,7 +292,10 @@ func TestItemStore_CloseContest(t *testing.T) {
 			- {ancestor_item_id: 11, child_item_id: 14}
 			- {ancestor_item_id: 11, child_item_id: 15}
 			- {ancestor_item_id: 11, child_item_id: 16}
-		users_items: [{user_id: 1, item_id: 11}, {user_id: 1, item_id: 12}, {user_id: 2, item_id: 11}]
+		contest_participations:
+			- {group_id: 20, item_id: 11, entered_at: 2018-03-22 08:44:55}
+			- {group_id: 20, item_id: 12, entered_at: 2018-03-22 08:44:55}
+			- {group_id: 21, item_id: 11, entered_at: 2018-03-22 08:44:55}
 		groups_items:
 			- {group_id: 20, item_id: 11, creator_user_id: 1}
 			- {group_id: 20, item_id: 12, creator_user_id: 1}
@@ -308,22 +311,22 @@ func TestItemStore_CloseContest(t *testing.T) {
 		return nil
 	}))
 
-	type userItemInfo struct {
-		UserID        int64
+	type groupParticipationsInfo struct {
+		GroupID       int64
 		ItemID        int64
 		FinishedAtSet bool
 	}
-	var userItems []userItemInfo
+	var participations []groupParticipationsInfo
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.UserItems().
-		Select("user_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) AS finished_at_set").
-		Order("user_id, item_id").
-		Scan(&userItems).Error())
-	assert.Equal(t, []userItemInfo{
-		{UserID: 1, ItemID: 11, FinishedAtSet: true},
-		{UserID: 1, ItemID: 12, FinishedAtSet: false},
-		{UserID: 2, ItemID: 11, FinishedAtSet: false},
-	}, userItems)
+	assert.NoError(t, store.ContestParticipations().
+		Select("group_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) AS finished_at_set").
+		Order("group_id, item_id").
+		Scan(&participations).Error())
+	assert.Equal(t, []groupParticipationsInfo{
+		{GroupID: 20, ItemID: 11, FinishedAtSet: true},
+		{GroupID: 20, ItemID: 12, FinishedAtSet: false},
+		{GroupID: 21, ItemID: 11, FinishedAtSet: false},
+	}, participations)
 
 	type groupItemInfo struct {
 		GroupID int64
@@ -366,12 +369,9 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		items_ancestors:
 			- {ancestor_item_id: 11, child_item_id: 12}
 			- {ancestor_item_id: 11, child_item_id: 13}
-		users_items:
-			- {user_id: 1, item_id: 11}
-			- {user_id: 1, item_id: 12}
-			- {user_id: 2, item_id: 11}
-			- {user_id: 3, item_id: 11}
-			- {user_id: 4, item_id: 11}
+		contest_participations:
+			- {group_id: 40, item_id: 11, entered_at: 2018-03-22 08:44:55}
+			- {group_id: 40, item_id: 12, entered_at: 2018-03-22 08:44:55}
 		groups_items:
 			- {group_id: 20, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
 				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
@@ -391,24 +391,21 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		return nil
 	}))
 
-	type userItemInfo struct {
-		UserID        int64
+	type contestParticipationsInfo struct {
+		GroupID       int64
 		ItemID        int64
 		FinishedAtSet bool
 	}
-	var userItems []userItemInfo
+	var participations []contestParticipationsInfo
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.UserItems().
-		Select("user_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) as finished_at_set").
-		Order("user_id, item_id").
-		Scan(&userItems).Error())
-	assert.Equal(t, []userItemInfo{
-		{UserID: 1, ItemID: 11, FinishedAtSet: true},
-		{UserID: 1, ItemID: 12, FinishedAtSet: false},
-		{UserID: 2, ItemID: 11, FinishedAtSet: false},
-		{UserID: 3, ItemID: 11, FinishedAtSet: true},
-		{UserID: 4, ItemID: 11, FinishedAtSet: true},
-	}, userItems)
+	assert.NoError(t, store.ContestParticipations().
+		Select("group_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) as finished_at_set").
+		Order("group_id, item_id").
+		Scan(&participations).Error())
+	assert.Equal(t, []contestParticipationsInfo{
+		{GroupID: 40, ItemID: 11, FinishedAtSet: true},
+		{GroupID: 40, ItemID: 12, FinishedAtSet: false},
+	}, participations)
 
 	type groupItemInfo struct {
 		GroupID                  int64
