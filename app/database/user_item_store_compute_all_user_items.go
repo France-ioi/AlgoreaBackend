@@ -98,13 +98,22 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			//  - validated, depending on the items_items.category and items.validation_type
 			if updateStatement == nil {
 				const updateQuery = `
-					WITH task_children_data_view AS (
-						WITH best_scores AS (
-							SELECT group_id, item_id, MAX(score) AS score, MAX(validated) AS validated,
-								MIN(validated_at) AS validated_at
-							FROM groups_attempts
-							GROUP BY group_id, item_id
-						)
+					UPDATE groups_attempts
+					LEFT JOIN LATERAL (
+						SELECT
+							MAX(children.latest_activity_at) AS latest_activity_at,
+							SUM(children.tasks_tried) AS tasks_tried,
+							SUM(children.tasks_with_help) AS tasks_with_help,
+							SUM(children.tasks_solved) AS tasks_solved,
+							SUM(validated) AS children_validated,
+							children.group_id AS group_id,
+							items_items.parent_item_id AS item_id
+						FROM groups_attempts AS children
+						JOIN items_items ON items_items.child_item_id = children.item_id
+						WHERE children.group_id = groups_attempts.group_id AND items_items.parent_item_id = groups_attempts.item_id
+						GROUP BY children.group_id, items_items.parent_item_id
+					) AS children_data ON 1
+					LEFT JOIN LATERAL (
 						SELECT
 							parent_groups_attempts.id,
 							SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 1, 0)) AS children_validated,
@@ -117,33 +126,19 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						JOIN items_items ON(
 							parent_groups_attempts.item_id = items_items.parent_item_id
 						)
-						LEFT JOIN best_scores AS task_children ON(
-							items_items.child_item_id = task_children.item_id AND
-							task_children.group_id = parent_groups_attempts.group_id
-						)
+						LEFT JOIN LATERAL (
+							SELECT group_id, item_id, MAX(score) AS score, MAX(validated) AS validated,
+								MIN(validated_at) AS validated_at
+							FROM groups_attempts
+							WHERE group_id = parent_groups_attempts.group_id AND item_id = items_items.child_item_id
+							GROUP BY group_id, item_id
+						) AS task_children ON 1
 						JOIN items ON(
 							items.ID = items_items.child_item_id
 						)
-						WHERE items.type <> 'Course' AND items.no_score = 0
+						WHERE parent_groups_attempts.id = groups_attempts.id AND items.type <> 'Course' AND items.no_score = 0
 						GROUP BY parent_groups_attempts.id
-					)
-					UPDATE groups_attempts
-					LEFT JOIN (
-						SELECT
-							MAX(children.latest_activity_at) AS latest_activity_at,
-							SUM(children.tasks_tried) AS tasks_tried,
-							SUM(children.tasks_with_help) AS tasks_with_help,
-							SUM(children.tasks_solved) AS tasks_solved,
-							SUM(validated) AS children_validated,
-							children.group_id AS group_id,
-							items_items.parent_item_id AS item_id
-						FROM groups_attempts AS children 
-						JOIN items_items ON items_items.child_item_id = children.item_id
-						GROUP BY children.group_id, items_items.parent_item_id
-					) AS children_data
-						USING(group_id, item_id)
-					LEFT JOIN task_children_data_view AS task_children_data
-						ON task_children_data.id = groups_attempts.id
+					) AS task_children_data ON 1
 					JOIN items
 						ON groups_attempts.item_id = items.id
 					LEFT JOIN items_items
