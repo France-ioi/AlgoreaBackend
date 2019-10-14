@@ -101,29 +101,29 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 					WITH task_children_data_view AS (
 						WITH best_scores AS (
 							SELECT group_id, item_id, MAX(score) AS score, MAX(validated) AS validated,
-								MAX(validated_at) AS validated_at
+								MIN(validated_at) AS validated_at
 							FROM groups_attempts
 							GROUP BY group_id, item_id
 						)
 						SELECT
-								parent_groups_attempts.id,
-								SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 1, 0)) AS children_validated,
-								SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 0, 1)) AS children_non_validated,
-								SUM(IF(items_items.category = 'Validation' AND
-											 (ISNULL(task_children.group_id) OR task_children.validated != 1), 1, 0)) AS children_category,
-								MAX(task_children.validated_at) AS max_validated_at,
-								MAX(IF(items_items.category = 'Validation', task_children.validated_at, NULL)) AS max_validated_at_categories
+							parent_groups_attempts.id,
+							SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 1, 0)) AS children_validated,
+							SUM(IF(task_children.group_id IS NOT NULL AND task_children.validated, 0, 1)) AS children_non_validated,
+							SUM(IF(items_items.category = 'Validation' AND
+								(ISNULL(task_children.group_id) OR task_children.validated != 1), 1, 0)) AS children_category,
+							MAX(task_children.validated_at) AS max_validated_at,
+							MAX(IF(items_items.category = 'Validation', task_children.validated_at, NULL)) AS max_validated_at_categories
 						FROM groups_attempts AS parent_groups_attempts
-										 JOIN items_items ON(
-										parent_groups_attempts.item_id = items_items.parent_item_id
-								)
-										 LEFT JOIN best_scores AS task_children ON(
-												items_items.child_item_id = task_children.item_id AND
-												task_children.group_id = parent_groups_attempts.group_id
-								)
-										 JOIN items ON(
-										items.ID = items_items.child_item_id
-								)
+						JOIN items_items ON(
+							parent_groups_attempts.item_id = items_items.parent_item_id
+						)
+						LEFT JOIN best_scores AS task_children ON(
+							items_items.child_item_id = task_children.item_id AND
+							task_children.group_id = parent_groups_attempts.group_id
+						)
+						JOIN items ON(
+							items.ID = items_items.child_item_id
+						)
 						WHERE items.type <> 'Course' AND items.no_score = 0
 						GROUP BY parent_groups_attempts.id
 					)

@@ -51,11 +51,20 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfC
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
-	expectedDate := time.Now().Round(time.Second).UTC()
-	oldDate := expectedDate.AddDate(-1, -1, -1)
+	baseDate := time.Now().Round(time.Second).UTC()
+	skippedDate := baseDate.AddDate(-2, -1, -1)
+	oldestForItem3 := baseDate.AddDate(-1, -1, -1)
+	skippedInItem3 := oldestForItem3.Add(24 * time.Hour)
+	oldestForItem4AndWinner := baseDate.AddDate(0, -1, -1)
+	skippedInItem4 := oldestForItem4AndWinner.Add(24 * time.Hour)
 
-	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldestForItem3).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=15").UpdateColumn("validated_at", skippedInItem3).Error())
+
+	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn("validated_at", oldestForItem4AndWinner).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=16").UpdateColumn("validated_at", skippedInItem4).Error())
+
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", skippedDate).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.UserItems().ComputeAllUserItems()
@@ -65,10 +74,12 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfC
 	var result []validationDateResultRow
 	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&skippedDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), AncestorsComputationState: "done"}, // the result
+		{ID: 13, ValidatedAt: (*database.Time)(&oldestForItem3), AncestorsComputationState: "done"},
+		{ID: 14, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), AncestorsComputationState: "done"},
+		{ID: 15, ValidatedAt: (*database.Time)(&skippedInItem3), AncestorsComputationState: "done"},
+		{ID: 16, ValidatedAt: (*database.Time)(&skippedInItem4), AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
 	}, result)
@@ -102,6 +113,8 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
 	}, result)
@@ -136,6 +149,8 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 		{ID: 12, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
 	}, result)
@@ -150,9 +165,11 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 
 	expectedDate := time.Now().Round(time.Second).UTC()
 	oldDate := expectedDate.AddDate(-1, -1, -1)
+	oldDatePlusOneDay := oldDate.Add(24 * time.Hour)
 
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=15").UpdateColumn("validated_at", oldDatePlusOneDay).Error()) // should be ignored
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (21,23,24)").UpdateColumn("category", "Validation").Error())
@@ -176,6 +193,8 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 15, ValidatedAt: (*database.Time)(&oldDatePlusOneDay), AncestorsComputationState: "done"},
+		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
 	}, result)
