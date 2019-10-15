@@ -33,9 +33,15 @@ ALTER TABLE `groups_attempts` DROP INDEX `group_id_item_id_order`;
 
 UPDATE `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
-    JOIN `items` ON `items`.`id` = `users_items`.`item_id` AND NOT `items`.`has_attempts`
-    JOIN `groups_attempts` ON `groups_attempts`.`group_id` = `users`.`self_group_id` AND
-        `groups_attempts`.`item_id` = `items`.`id`
+    JOIN `items` ON `items`.`id` = `users_items`.`item_id`
+    JOIN LATERAL (
+        SELECT `id`
+        FROM `groups_attempts`
+        WHERE `groups_attempts`.`creator_user_id` = `users`.`id`
+          AND `groups_attempts`.`item_id` = `items`.`id`
+        ORDER BY `latest_activity_at` DESC
+        LIMIT 1
+    ) AS `groups_attempts`
 SET active_attempt_id = `groups_attempts`.`id`;
 
 ALTER TABLE `users_items`
