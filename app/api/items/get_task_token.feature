@@ -35,9 +35,6 @@ Feature: Get a task token with a refreshed active attempt for an item
 
   Scenario: User is able to fetch an active attempt (no active attempt set)
     Given I am the user with id "11"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 11      | 50      | null              |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -50,29 +47,26 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "8674665223082153551",
+          "idAttempt": "5577006791947779410",
           "idUser": "11",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
-          "randomSeed": "8674665223082153551",
+          "randomSeed": "5577006791947779410",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
     And the table "users_items" should be:
       | user_id | item_id | active_attempt_id   |
-      | 11      | 50      | 8674665223082153551 |
+      | 11      | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 8674665223082153551 | 111      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | 5577006791947779410 | 111      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, only full access)
     Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | null              |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -85,29 +79,26 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "8674665223082153551",
+          "idAttempt": "5577006791947779410",
           "idUser": "10",
           "idItem": "task1",
           "idItemLocal": "50",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
-          "randomSeed": "8674665223082153551",
+          "randomSeed": "5577006791947779410",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
     And the table "users_items" should be:
       | user_id | item_id | active_attempt_id   |
-      | 10      | 50      | 8674665223082153551 |
+      | 10      | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 8674665223082153551 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | 5577006791947779410 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
     Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 60      | null              |
     When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -120,23 +111,23 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bIsAdmin": false,
           "bReadAnswers": true,
           "bSubmissionPossible": true,
-          "idAttempt": "8674665223082153551",
+          "idAttempt": "5577006791947779410",
           "idUser": "10",
           "idItemLocal": "60",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
           "sSupportedLangProg": "c,python",
-          "randomSeed": "8674665223082153551",
+          "randomSeed": "5577006791947779410",
           "platformName": "{{app().TokenConfig.PlatformName}}"
         }
       }
       """
     And the table "users_items" should be:
       | user_id | item_id | active_attempt_id   |
-      | 10      | 60      | 8674665223082153551 |
+      | 10      | 60      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 8674665223082153551 | 102      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | 5577006791947779410 | 102      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with id "10"
@@ -176,9 +167,6 @@ Feature: Get a task token with a refreshed active attempt for an item
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
     Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 101      | 50      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -219,9 +207,6 @@ Feature: Get a task token with a refreshed active attempt for an item
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
     Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 60      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 102      | 60      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -262,9 +247,6 @@ Feature: Get a task token with a refreshed active attempt for an item
 
   Scenario: Keeps previous started_at values
     Given I am the user with id "10"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | null              |
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score | best_answer_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |

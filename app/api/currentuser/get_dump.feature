@@ -57,19 +57,21 @@ Feature: Export the short version of the current user's data
       | 12                | 1              | false   |
       | 12                | 2              | false   |
       | 12                | 12             | true    |
+    And the database has the following table 'items':
+      | id  |
+      | 404 |
     And the database has the following table 'users_answers':
       | id | user_id | item_id | submitted_at        |
       | 1  | 2       | 404     | 2019-07-09 20:02:28 |
       | 2  | 3       | 404     | 2019-07-09 20:02:28 |
-    And the database has the following table 'users_items':
-      | id | user_id | item_id |
-      | 11 | 2       | 404     |
-      | 12 | 3       | 404     |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |
       | 113 | 1        | 404     | 0     |
+    And the database has the following table 'users_items':
+      | user_id | item_id | active_attempt_id |
+      | 2       | 404     | 111               |
 
   Scenario: Full data
     Given I am the user with id "2"

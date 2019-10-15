@@ -94,15 +94,6 @@ Feature: Get item for tree navigation
       | 64 | 210     | 2           | Chapitre A  |
       | 66 | 230     | 2           | Chapitre C  |
       | 67 | 211     | 2           | Tâche 1     |
-    And the database has the following table 'users_items':
-      | id | user_id | item_id | active_attempt_id |
-      | 1  | 1       | 200     | 101               |
-      | 2  | 1       | 210     | 102               |
-      | 5  | 1       | 211     | 105               |
-      | 3  | 1       | 220     | 103               |
-      | 4  | 1       | 230     | 104               |
-      | 6  | 1       | 231     | 106               |
-      | 7  | 1       | 232     | 107               |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        |
       | 101 | 11       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
@@ -112,6 +103,15 @@ Feature: Get item for tree navigation
       | 104 | 11       | 230     | 1     | 12345 | 15                   | true      | true     | true         | 2019-01-30 09:26:45 | 2019-02-01 09:26:45 | 2019-01-31 09:26:45 |
       | 106 | 11       | 231     | 1     | 12346 | 16                   | true      | true     | true         | 2019-01-30 09:26:46 | 2019-02-01 09:26:46 | 2019-01-31 09:26:46 |
       | 107 | 11       | 232     | 1     | 12347 | 17                   | true      | true     | true         | 2019-01-30 09:26:47 | 2019-02-01 09:26:47 | 2019-01-31 09:26:47 |
+    And the database has the following table 'users_items':
+      | user_id | item_id | active_attempt_id |
+      | 1       | 200     | 101               |
+      | 1       | 210     | 102               |
+      | 1       | 211     | 105               |
+      | 1       | 220     | 103               |
+      | 1       | 230     | 104               |
+      | 1       | 231     | 106               |
+      | 1       | 232     | 107               |
 
   Scenario: Get tree structure
     Given I am the user with id "1"

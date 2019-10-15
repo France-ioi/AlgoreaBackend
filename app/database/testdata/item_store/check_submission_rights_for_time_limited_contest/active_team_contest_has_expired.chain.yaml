@@ -1,5 +1,4 @@
 users: [{id: 2, self_group_id: 12, login: 2}]
-users_items: [{user_id: 2, item_id: 114}]
 groups: [{id: 12}, {id: 21, team_item_id: 114, type: Team}]
 groups_groups: [{parent_group_id: 21, child_group_id: 12, type: invitationAccepted}]
 groups_ancestors:

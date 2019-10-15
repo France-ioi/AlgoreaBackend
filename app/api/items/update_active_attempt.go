@@ -24,12 +24,7 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
-		service.MustNotBeError(userItemStore.CreateIfMissing(user.ID, itemID))
-		service.MustNotBeError(userItemStore.
-			Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
-			UpdateColumn(map[string]interface{}{
-				"active_attempt_id": groupsAttemptID,
-			}).Error())
+		service.MustNotBeError(userItemStore.SetActiveAttempt(user.ID, itemID, groupsAttemptID))
 		service.MustNotBeError(store.GroupAttempts().
 			ByID(groupsAttemptID).
 			UpdateColumn(map[string]interface{}{

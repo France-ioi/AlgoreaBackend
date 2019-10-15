@@ -83,10 +83,14 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}, {id: 6000}, {id: 6001}, {id: 6002}]`, `
+			groups_attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 0}, {id: 2001, group_id: 5001, item_id: 1, order: 0},
+			                  {id: 2002, group_id: 5002, item_id: 1, order: 0}, {id: 2003, group_id: 6000, item_id: 1, order: 0},
+			                  {id: 2004, group_id: 6001, item_id: 1, order: 0}, {id: 2005, group_id: 6002, item_id: 1, order: 0}]
 			users:
 				- {id: 500, temp_user: 1, login: 500, self_group_id: 5000, owned_group_id: 6000} # should be deleted
 				- {id: 501, login: 501, temp_user: 1, self_group_id: 5001, owned_group_id: 6001}
 				- {id: 502, login: 502, self_group_id: 5002, owned_group_id: 6002}
+			items: [{id: 1}]`, `
 			sessions:
 				- {user_id: 500, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
 				- {user_id: 501, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
@@ -96,7 +100,10 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {user_id: 500, item_id: 1, submitted_at: 2019-05-30 11:00:00}
 				- {user_id: 501, item_id: 1, submitted_at: 2019-05-30 11:00:00}
 				- {user_id: 502, item_id: 1, submitted_at: 2019-05-30 11:00:00}
-			users_items: [{user_id: 500, item_id: 1}, {user_id: 501, item_id: 1}, {user_id: 502, item_id: 1}]
+			users_items:
+				- {user_id: 500, item_id: 1, active_attempt_id: 2000}
+				- {user_id: 501, item_id: 1, active_attempt_id: 2001}
+				- {user_id: 502, item_id: 1, active_attempt_id: 2002}
 			filters: [{user_id: 500}, {user_id: 501}, {user_id: 502}]
 			refresh_tokens: [{user_id: 500, refresh_token: token}, {user_id: 501, refresh_token: token2},
 			                 {user_id: 502, refresh_token: token3}]
@@ -107,9 +114,6 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {id: 4, group_id: 6000, item_id: 1, creator_user_id: 1}
 				- {id: 5, group_id: 6001, item_id: 1, creator_user_id: 1}
 				- {id: 6, group_id: 6002, item_id: 1, creator_user_id: 1}
-			groups_attempts: [{group_id: 5000, item_id: 1, order: 0}, {group_id: 5001, item_id: 1, order: 0},
-			                  {group_id: 5002, item_id: 1, order: 0}, {group_id: 6000, item_id: 1, order: 0},
-			                  {group_id: 6001, item_id: 1, order: 0}, {group_id: 6002, item_id: 1, order: 0}]
 			groups_login_prefixes: [{group_id: 5000, prefix: 5000, id: 1}, {group_id: 5001, prefix: 5001, id: 2},
 			                        {group_id: 5002, prefix: 5002, id: 3}, {group_id: 6000, prefix: 6000, id: 4},
 			                        {group_id: 6001, prefix: 6001, id: 5}, {group_id: 6002, prefix: 6002, id: 6}]

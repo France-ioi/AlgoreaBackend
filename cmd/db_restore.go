@@ -41,10 +41,14 @@ func init() { // nolint:gochecknoinits
 			// open DB
 			var db *sql.DB
 			db, err = sql.Open("mysql", conf.Database.Connection.FormatDSN())
-			if err != nil {
-				fmt.Println("Unable to connect to the database: ", err)
-				os.Exit(1)
-			}
+			assertNoError(err, "Unable to connect to the database: ")
+			defer func() { _ = db.Close() }()
+
+			tx, err := db.Begin()
+			assertNoError(err, "Unable to start a transaction: ")
+
+			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0")
+			assertNoError(err, "Unable to query the database: ")
 
 			// remove all tables from DB
 			var rows *sql.Rows
@@ -52,28 +56,22 @@ func init() { // nolint:gochecknoinits
                             FROM   information_schema.tables
                             WHERE  table_type   = 'BASE TABLE'
                               AND  table_schema = '` + conf.Database.Connection.DBName + "'")
-			if err != nil {
-				fmt.Println("Unable to query the database: ", err)
-				os.Exit(1)
-			}
+			assertNoError(err, "Unable to query the database: ")
 
-			defer func() {
-				_ = rows.Close()
-				_ = db.Close()
-			}()
+			defer func() { _ = rows.Close() }()
 
 			for rows.Next() {
 				var tableName string
-				if err = rows.Scan(&tableName); err != nil { // nolint: vetshadow
-					fmt.Println("Unable to parse the database result: ", err)
-					os.Exit(1)
-				}
-				_, err = db.Query("DROP TABLE " + tableName)
-				if err != nil {
-					fmt.Println("Unable to drop table: ", err)
-					os.Exit(1)
-				}
+				assertNoError(rows.Scan(&tableName), "Unable to parse the database result: ")
+				_, err = tx.Query("DROP TABLE " + tableName)
+				assertNoError(err, "Unable to drop table: ")
 			}
+
+			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 1")
+			assertNoError(err, "Unable to query the database: ")
+
+			err = tx.Commit()
+			assertNoError(err, "Unable to commit the transaction: ")
 
 			// restore the schema
 			// note: current solution is not really great as it makes some assumptions of the config :-/
@@ -107,4 +105,11 @@ func init() { // nolint:gochecknoinits
 	}
 
 	rootCmd.AddCommand(restoreCmd)
+}
+
+func assertNoError(err error, message string) {
+	if err != nil {
+		fmt.Println(message, err)
+		os.Exit(1)
+	}
 }

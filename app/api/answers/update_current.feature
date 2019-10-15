@@ -23,6 +23,7 @@ Feature: Update the 'current' answer
       | 100 | 10      | 50      | 200        | Submission | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
+      | 100 | 101      | 50      | 0     |
       | 200 | 101      | 50      | 0     |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id = request.attempt_id

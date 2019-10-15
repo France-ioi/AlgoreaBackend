@@ -29,9 +29,6 @@ Background:
   And the database has the following table 'items_strings':
     | id | item_id | language_id | title      |
     | 53 | 200     | 1           | Category 1 |
-  And the database has the following table 'users_items':
-    | id | user_id | item_id |
-    | 1  | 1       | 200     |
 
   Scenario: Should fail when the user doesn't have access to the root item
     Given I am the user with id "1"

@@ -4,6 +4,7 @@ Feature: Export the current user's data
     And the database has the following table 'users':
       | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
       | 2  | user  | 11            | 12             | John        | Doe       | 1     |
+      | 3  | jack  | 21            | 22             | Jack        | Smith     | 2     |
       | 4  | jane  | 31            | 32             | Jane        | Doe       | 2     |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token    |
@@ -23,6 +24,8 @@ Feature: Export the current user's data
       | 10 | Other     | Secret group       | Secret group           |
       | 11 | UserSelf  | user self          |                        |
       | 12 | UserAdmin | user admin         |                        |
+      | 21 | UserSelf  | jack               |                        |
+      | 22 | UserAdmin | jack-admin         |                        |
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
     And the database has the following table 'groups_groups':
@@ -60,19 +63,23 @@ Feature: Export the current user's data
       | 12                | 1              | false   |
       | 12                | 2              | false   |
       | 12                | 12             | true    |
+    And the database has the following table 'items':
+      | id  |
+      | 404 |
+      | 405 |
     And the database has the following table 'users_answers':
       | id | user_id | item_id | submitted_at        |
       | 1  | 2       | 404     | 2019-07-09 21:02:28 |
       | 2  | 3       | 405     | 2019-07-09 21:02:28 |
-    And the database has the following table 'users_items':
-      | id | user_id | item_id |
-      | 11 | 2       | 404     |
-      | 12 | 3       | 405     |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |
       | 113 | 1        | 405     | 0     |
+    And the database has the following table 'users_items':
+      | user_id | item_id | active_attempt_id |
+      | 2       | 404     | 111               |
+      | 3       | 405     | 112               |
 
   Scenario: Full data
     Given I am the user with id "2"
@@ -98,7 +105,7 @@ Feature: Export the current user's data
       },
       "groups_attempts": [
         {
-          "id": "111", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0, "minus_score": -0,
+          "id": "111", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "11", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
@@ -108,7 +115,7 @@ Feature: Export the current user's data
           "started_at": null, "thread_started_at": null, "validated_at": null
         },
         {
-          "id": "112", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0, "minus_score": -0,
+          "id": "112", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "2", "item_id": "404", "creator_user_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
@@ -197,7 +204,7 @@ Feature: Export the current user's data
       ],
       "users_items": [
         {
-          "id": "11", "active_attempt_id": null, "item_id": "404", "user_id": "2"
+          "active_attempt_id": "111", "item_id": "404", "user_id": "2"
         }
       ]
     }
