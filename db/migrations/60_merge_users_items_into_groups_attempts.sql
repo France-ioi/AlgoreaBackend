@@ -31,6 +31,13 @@ FROM `users_items`
 
 ALTER TABLE `groups_attempts` DROP INDEX `group_id_item_id_order`;
 
+UPDATE `users_items`
+    JOIN `users` ON `users`.`id` = `users_items`.`user_id`
+    JOIN `items` ON `items`.`id` = `users_items`.`item_id` AND NOT `items`.`has_attempts`
+    JOIN `groups_attempts` ON `groups_attempts`.`group_id` = `users`.`self_group_id` AND
+        `groups_attempts`.`item_id` = `items`.`id`
+SET active_attempt_id = `groups_attempts`.`id`;
+
 ALTER TABLE `users_items`
     DROP COLUMN `score`,
     DROP COLUMN `score_computed`,
@@ -149,14 +156,14 @@ ALTER TABLE `users_items`
     ADD INDEX `ancestors_computation_state` (`ancestors_computation_state`);
 
 INSERT INTO `users_items` (
-    `user_id`, `item_id`,
+    `user_id`, `item_id`, `active_attempt_id`,
     `score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,
     `submissions_attempts`,`tasks_tried`,`tasks_solved`,`children_validated`,`validated`,`finished`,
     `key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,
     `autonomy`,`started_at`,`validated_at`,`finished_at`,`latest_activity_at`,`thread_started_at`,
     `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`)
 SELECT
-    `users`.`id`, `item_id`,
+    `users`.`id`, `item_id`, NULL,
     `groups_attempts`.`score`,`groups_attempts`.`score_computed`,`groups_attempts`.`score_reeval`,
     `groups_attempts`.`score_diff_manual`,`groups_attempts`.`score_diff_comment`,
     `groups_attempts`.`submissions_attempts`,`groups_attempts`.`tasks_tried`,
@@ -173,7 +180,8 @@ SELECT
 FROM `groups_attempts`
     JOIN `users` ON `users`.`id` = `groups_attempts`.`creator_user_id`
 ON DUPLICATE KEY UPDATE
-    `score`=VALUES(`score`),`score_computed`=VALUES(`score_computed`),
+    `active_attempt_id`=VALUES(`active_attempt_id`),`score`=VALUES(`score`),
+    `score_computed`=VALUES(`score_computed`),
     `score_reeval`=VALUES(`score_reeval`),`score_diff_manual`=VALUES(`score_diff_manual`),
     `score_diff_comment`=VALUES(`score_diff_comment`),
     `submissions_attempts`=VALUES(`submissions_attempts`),`tasks_tried`=VALUES(`tasks_tried`),
