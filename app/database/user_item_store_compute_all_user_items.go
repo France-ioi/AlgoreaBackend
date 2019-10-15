@@ -129,7 +129,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							GROUP BY group_id, item_id
 						) AS aggregated_children_attempts ON 1
 						JOIN items ON(
-							items.ID = items_items.child_item_id
+							items.id = items_items.child_item_id
 						)
 						WHERE parent_groups_attempts.id = groups_attempts.id AND NOT items.no_score
 						GROUP BY parent_groups_attempts.id
