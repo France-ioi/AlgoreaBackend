@@ -98,10 +98,10 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 			//  - validated, depending on the items_items.category and items.validation_type
 			if updateStatement == nil {
 				const updateQuery = `
-					UPDATE groups_attempts
+					UPDATE groups_attempts AS target_groups_attempts
 					LEFT JOIN LATERAL (
 						SELECT
-							parent_groups_attempts.id,
+							target_groups_attempts.id,
 							MAX(aggregated_children_attempts.latest_activity_at) AS latest_activity_at,
 							IFNULL(SUM(aggregated_children_attempts.tasks_tried), 0) AS tasks_tried,
 							IFNULL(SUM(aggregated_children_attempts.tasks_with_help), 0) AS tasks_with_help,
@@ -112,10 +112,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								AS children_non_validated_categories,
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL)) AS max_validated_at_categories
-						FROM groups_attempts AS parent_groups_attempts
-						JOIN items_items ON(
-							parent_groups_attempts.item_id = items_items.parent_item_id
-						)
+						FROM items_items
 						LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
@@ -124,48 +121,48 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								MAX(tasks_tried) AS tasks_tried,
 								MAX(tasks_with_help) AS tasks_with_help,
 								MAX(tasks_solved) AS tasks_solved
-							FROM groups_attempts
-							WHERE group_id = parent_groups_attempts.group_id AND item_id = items_items.child_item_id
-							GROUP BY group_id, item_id
+							FROM groups_attempts AS children_attempts
+							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
+								children_attempts.item_id = items_items.child_item_id
+							GROUP BY children_attempts.group_id, children_attempts.item_id
 						) AS aggregated_children_attempts ON 1
 						JOIN items ON(
 							items.id = items_items.child_item_id
 						)
-						WHERE parent_groups_attempts.id = groups_attempts.id AND NOT items.no_score
-						GROUP BY parent_groups_attempts.id
+						WHERE target_groups_attempts.item_id = items_items.parent_item_id AND NOT items.no_score
 					) AS children_stats ON 1
 					JOIN items
-						ON groups_attempts.item_id = items.id
+						ON target_groups_attempts.item_id = items.id
 					LEFT JOIN items_items
-						ON items_items.parent_item_id = groups_attempts.item_id
+						ON items_items.parent_item_id = target_groups_attempts.item_id
 					SET
-						groups_attempts.latest_activity_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_stats.latest_activity_at, groups_attempts.latest_activity_at),
-						groups_attempts.tasks_tried = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_stats.tasks_tried, groups_attempts.tasks_tried),
-						groups_attempts.tasks_with_help = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_stats.tasks_with_help, groups_attempts.tasks_with_help),
-						groups_attempts.tasks_solved = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_stats.tasks_solved, groups_attempts.tasks_solved),
-						groups_attempts.children_validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
-							children_stats.children_validated, groups_attempts.children_validated),
-						groups_attempts.validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.latest_activity_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_stats.latest_activity_at, target_groups_attempts.latest_activity_at),
+						target_groups_attempts.tasks_tried = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_stats.tasks_tried, target_groups_attempts.tasks_tried),
+						target_groups_attempts.tasks_with_help = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_stats.tasks_with_help, target_groups_attempts.tasks_with_help),
+						target_groups_attempts.tasks_solved = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_stats.tasks_solved, target_groups_attempts.tasks_solved),
+						target_groups_attempts.children_validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							children_stats.children_validated, target_groups_attempts.children_validated),
+						target_groups_attempts.validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							CASE
-								WHEN groups_attempts.validated = 1 THEN 1
+								WHEN target_groups_attempts.validated = 1 THEN 1
 								WHEN items.validation_type = 'Categories' THEN children_stats.children_non_validated_categories = 0
 								WHEN items.validation_type = 'All' THEN children_stats.children_non_validated = 0
 								WHEN items.validation_type = 'AllButOne' THEN children_stats.children_non_validated < 2
 								WHEN items.validation_type = 'One' THEN children_stats.children_validated > 0
 								ELSE 0
-							END, groups_attempts.validated),
-						groups_attempts.validated_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+							END, target_groups_attempts.validated),
+						target_groups_attempts.validated_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							IFNULL(
-								groups_attempts.validated_at,
+								target_groups_attempts.validated_at,
 								IF(items.validation_type = 'Categories',
 									children_stats.max_validated_at_categories, children_stats.max_validated_at)
-							), groups_attempts.validated_at),
-						groups_attempts.ancestors_computation_state = 'done'
-					WHERE groups_attempts.ancestors_computation_state = 'processing'`
+							), target_groups_attempts.validated_at),
+						target_groups_attempts.ancestors_computation_state = 'done'
+					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
