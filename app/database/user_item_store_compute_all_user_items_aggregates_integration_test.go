@@ -39,14 +39,14 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		"children_validated": 4,
 		"validated":          1,
 	}).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=13").Updates(map[string]interface{}{
+	assert.NoError(t, groupAttemptStore.Where("id IN (13, 15)").Updates(map[string]interface{}{
 		"latest_activity_at": currentDate,
 		"tasks_tried":        5,
 		"tasks_with_help":    6,
 		"tasks_solved":       7,
 		"children_validated": 8,
 	}).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=14").Updates(map[string]interface{}{
+	assert.NoError(t, groupAttemptStore.Where("id IN (14, 16)").Updates(map[string]interface{}{
 		"latest_activity_at": nil,
 		"tasks_tried":        9,
 		"tasks_with_help":    10,
@@ -68,6 +68,10 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 		{ID: 13, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
 			AncestorsComputationState: "done"},
 		{ID: 14, LatestActivityAt: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
+			AncestorsComputationState: "done"},
+		{ID: 15, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7, ChildrenValidated: 8,
+			AncestorsComputationState: "done"},
+		{ID: 16, LatestActivityAt: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
 			AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, LatestActivityAt: nil, AncestorsComputationState: "done"},

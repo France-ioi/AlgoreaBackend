@@ -93,85 +93,76 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
 			//  - latest_activity_at as the max of children's
-			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's field
-			//  - children_validated as the sum of children with validated == 1
+			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's per-item maximums
+			//  - children_validated as the number of children items with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
 			if updateStatement == nil {
 				const updateQuery = `
 					UPDATE groups_attempts
 					LEFT JOIN LATERAL (
 						SELECT
-							MAX(children.latest_activity_at) AS latest_activity_at,
-							SUM(children.tasks_tried) AS tasks_tried,
-							SUM(children.tasks_with_help) AS tasks_with_help,
-							SUM(children.tasks_solved) AS tasks_solved,
-							SUM(validated) AS children_validated,
-							children.group_id AS group_id,
-							items_items.parent_item_id AS item_id
-						FROM groups_attempts AS children
-						JOIN items_items ON items_items.child_item_id = children.item_id
-						WHERE children.group_id = groups_attempts.group_id AND items_items.parent_item_id = groups_attempts.item_id
-						GROUP BY children.group_id, items_items.parent_item_id
-					) AS children_stats ON 1
-					LEFT JOIN LATERAL (
-						SELECT
 							parent_groups_attempts.id,
-							IFNULL(SUM(validations_of_children_attempts.validated), 0) AS children_validated,
-							SUM(IFNULL(NOT validations_of_children_attempts.validated, 1)) AS children_non_validated,
-							SUM(items_items.category = 'Validation' AND IFNULL(NOT validations_of_children_attempts.validated, 1))
+							MAX(aggregated_children_attempts.latest_activity_at) AS latest_activity_at,
+							IFNULL(SUM(aggregated_children_attempts.tasks_tried), 0) AS tasks_tried,
+							IFNULL(SUM(aggregated_children_attempts.tasks_with_help), 0) AS tasks_with_help,
+							IFNULL(SUM(aggregated_children_attempts.tasks_solved), 0) AS tasks_solved,
+							IFNULL(SUM(aggregated_children_attempts.validated), 0) AS children_validated,
+							SUM(IFNULL(NOT aggregated_children_attempts.validated, 1)) AS children_non_validated,
+							SUM(items_items.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
 								AS children_non_validated_categories,
-							MAX(validations_of_children_attempts.validated_at) AS max_validated_at,
-							MAX(IF(items_items.category = 'Validation', validations_of_children_attempts.validated_at, NULL)) AS max_validated_at_categories
+							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
+							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL)) AS max_validated_at_categories
 						FROM groups_attempts AS parent_groups_attempts
 						JOIN items_items ON(
 							parent_groups_attempts.item_id = items_items.parent_item_id
 						)
 						LEFT JOIN LATERAL (
-							SELECT group_id, item_id, MAX(validated) AS validated, MIN(validated_at) AS validated_at
+							SELECT
+								MAX(validated) AS validated,
+								MIN(validated_at) AS validated_at,
+								MAX(latest_activity_at) AS latest_activity_at,
+								MAX(tasks_tried) AS tasks_tried,
+								MAX(tasks_with_help) AS tasks_with_help,
+								MAX(tasks_solved) AS tasks_solved
 							FROM groups_attempts
 							WHERE group_id = parent_groups_attempts.group_id AND item_id = items_items.child_item_id
 							GROUP BY group_id, item_id
-						) AS validations_of_children_attempts ON 1
+						) AS aggregated_children_attempts ON 1
 						JOIN items ON(
 							items.ID = items_items.child_item_id
 						)
 						WHERE parent_groups_attempts.id = groups_attempts.id AND items.type <> 'Course' AND NOT items.no_score
 						GROUP BY parent_groups_attempts.id
-					) AS validations_of_children ON 1
+					) AS children_stats ON 1
 					JOIN items
 						ON groups_attempts.item_id = items.id
 					LEFT JOIN items_items
 						ON items_items.parent_item_id = groups_attempts.item_id
 					SET
-						groups_attempts.latest_activity_at = IF(validations_of_children.id IS NOT NULL AND
-							children_stats.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.latest_activity_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_stats.latest_activity_at, groups_attempts.latest_activity_at),
-						groups_attempts.tasks_tried = IF(validations_of_children.id IS NOT NULL AND
-							children_stats.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.tasks_tried = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_stats.tasks_tried, groups_attempts.tasks_tried),
-						groups_attempts.tasks_with_help = IF(validations_of_children.id IS NOT NULL AND
-							children_stats.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.tasks_with_help = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_stats.tasks_with_help, groups_attempts.tasks_with_help),
-						groups_attempts.tasks_solved = IF(validations_of_children.id IS NOT NULL AND
-							children_stats.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.tasks_solved = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_stats.tasks_solved, groups_attempts.tasks_solved),
-						groups_attempts.children_validated = IF(validations_of_children.id IS NOT NULL AND
-							children_stats.group_id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.children_validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							children_stats.children_validated, groups_attempts.children_validated),
-						groups_attempts.validated = IF(validations_of_children.id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							CASE
 								WHEN groups_attempts.validated = 1 THEN 1
-								WHEN items.validation_type = 'Categories' THEN validations_of_children.children_non_validated_categories = 0
-								WHEN items.validation_type = 'All' THEN validations_of_children.children_non_validated = 0
-								WHEN items.validation_type = 'AllButOne' THEN validations_of_children.children_non_validated < 2
-								WHEN items.validation_type = 'One' THEN validations_of_children.children_validated > 0
+								WHEN items.validation_type = 'Categories' THEN children_stats.children_non_validated_categories = 0
+								WHEN items.validation_type = 'All' THEN children_stats.children_non_validated = 0
+								WHEN items.validation_type = 'AllButOne' THEN children_stats.children_non_validated < 2
+								WHEN items.validation_type = 'One' THEN children_stats.children_validated > 0
 								ELSE 0
 							END, groups_attempts.validated),
-						groups_attempts.validated_at = IF(validations_of_children.id IS NOT NULL AND items_items.id IS NOT NULL,
+						groups_attempts.validated_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
 							IFNULL(
 								groups_attempts.validated_at,
 								IF(items.validation_type = 'Categories',
-									validations_of_children.max_validated_at_categories, validations_of_children.max_validated_at)
+									children_stats.max_validated_at_categories, children_stats.max_validated_at)
 							), groups_attempts.validated_at),
 						groups_attempts.ancestors_computation_state = 'done'
 					WHERE groups_attempts.ancestors_computation_state = 'processing'`
