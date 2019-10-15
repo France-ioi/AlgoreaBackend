@@ -108,11 +108,12 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 							IFNULL(SUM(aggregated_children_attempts.tasks_solved), 0) AS tasks_solved,
 							IFNULL(SUM(aggregated_children_attempts.validated), 0) AS children_validated,
 							SUM(IFNULL(NOT aggregated_children_attempts.validated, 1)) AS children_non_validated,
-							SUM(items_items.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
+							SUM(items_items_with_scores.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
 								AS children_non_validated_categories,
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
-							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL)) AS max_validated_at_categories
-						FROM items_items
+							MAX(IF(items_items_with_scores.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
+								AS max_validated_at_categories
+						FROM items_items AS items_items_with_scores
 						LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
@@ -123,30 +124,29 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								MAX(tasks_solved) AS tasks_solved
 							FROM groups_attempts AS children_attempts
 							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
-								children_attempts.item_id = items_items.child_item_id
+								children_attempts.item_id = items_items_with_scores.child_item_id
 							GROUP BY children_attempts.group_id, children_attempts.item_id
 						) AS aggregated_children_attempts ON 1
 						JOIN items ON(
-							items.id = items_items.child_item_id
+							items.id = items_items_with_scores.child_item_id
 						)
-						WHERE target_groups_attempts.item_id = items_items.parent_item_id AND NOT items.no_score
+						WHERE items_items_with_scores.parent_item_id = target_groups_attempts.item_id AND NOT items.no_score
+						GROUP BY items_items_with_scores.parent_item_id
 					) AS children_stats ON 1
 					JOIN items
 						ON target_groups_attempts.item_id = items.id
-					LEFT JOIN items_items
-						ON items_items.parent_item_id = target_groups_attempts.item_id
 					SET
-						target_groups_attempts.latest_activity_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.latest_activity_at = IF(children_stats.id IS NOT NULL,
 							children_stats.latest_activity_at, target_groups_attempts.latest_activity_at),
-						target_groups_attempts.tasks_tried = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.tasks_tried = IF(children_stats.id IS NOT NULL,
 							children_stats.tasks_tried, target_groups_attempts.tasks_tried),
-						target_groups_attempts.tasks_with_help = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.tasks_with_help = IF(children_stats.id IS NOT NULL,
 							children_stats.tasks_with_help, target_groups_attempts.tasks_with_help),
-						target_groups_attempts.tasks_solved = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.tasks_solved = IF(children_stats.id IS NOT NULL,
 							children_stats.tasks_solved, target_groups_attempts.tasks_solved),
-						target_groups_attempts.children_validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.children_validated = IF(children_stats.id IS NOT NULL,
 							children_stats.children_validated, target_groups_attempts.children_validated),
-						target_groups_attempts.validated = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.validated = IF(children_stats.id IS NOT NULL,
 							CASE
 								WHEN target_groups_attempts.validated = 1 THEN 1
 								WHEN items.validation_type = 'Categories' THEN children_stats.children_non_validated_categories = 0
@@ -155,7 +155,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 								WHEN items.validation_type = 'One' THEN children_stats.children_validated > 0
 								ELSE 0
 							END, target_groups_attempts.validated),
-						target_groups_attempts.validated_at = IF(children_stats.id IS NOT NULL AND items_items.id IS NOT NULL,
+						target_groups_attempts.validated_at = IF(children_stats.id IS NOT NULL,
 							IFNULL(
 								target_groups_attempts.validated_at,
 								IF(items.validation_type = 'Categories',
