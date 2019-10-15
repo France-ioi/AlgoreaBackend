@@ -188,21 +188,6 @@ func TestUserItemStore_ComputeAllUserItems_bValidated(t *testing.T) {
 		},
 		{
 			name: "user_item with ValidationType=Categories becomes validated when all its children " +
-				"having Category=Validation are validated (should ignore items with Type=Course)",
-			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
-			validationType: "Categories",
-			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				itemStore := groupAttemptStore.Items()
-				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("type", "Course").Error())
-				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
-				assert.NoError(t, groupAttemptStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
-			},
-			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
-				11: true, 12: true, 13: true, 14: false,
-			}),
-		},
-		{
-			name: "user_item with ValidationType=Categories becomes validated when all its children " +
 				"having Category=Validation are validated (should ignore items with NoScore=1",
 			fixtures:       []string{"users_items_propagation/_common", "users_items_propagation/validated/all_and_category"},
 			validationType: "Categories",

@@ -131,7 +131,7 @@ func (s *UserItemStore) ComputeAllUserItems() (err error) {
 						JOIN items ON(
 							items.ID = items_items.child_item_id
 						)
-						WHERE parent_groups_attempts.id = groups_attempts.id AND items.type <> 'Course' AND NOT items.no_score
+						WHERE parent_groups_attempts.id = groups_attempts.id AND NOT items.no_score
 						GROUP BY parent_groups_attempts.id
 					) AS children_stats ON 1
 					JOIN items

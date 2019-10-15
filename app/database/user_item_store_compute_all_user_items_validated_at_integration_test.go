@@ -156,7 +156,7 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresCoursesAndNoScoreItems( // nolint:lll
+func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
 	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
 	defer func() { _ = db.Close() }()
@@ -190,7 +190,7 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 15, ValidatedAt: (*database.Time)(&oldDatePlusOneDay), AncestorsComputationState: "done"},
