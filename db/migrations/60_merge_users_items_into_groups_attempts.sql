@@ -1,5 +1,4 @@
 -- +migrate Up
-ALTER TABLE `groups_attempts` ADD INDEX `group_id_item_id_order` (`group_id`, `item_id`, `order`);
 
 -- Copy users data for all the items
 INSERT INTO `groups_attempts` (
@@ -29,13 +28,12 @@ FROM `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
     JOIN `items` ON `items`.`id` = `users_items`.`item_id` AND NOT `items`.`has_attempts`;
 
-ALTER TABLE `groups_attempts` DROP INDEX `group_id_item_id_order`;
-
 DELETE `users_items`
     FROM `users_items`
     LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
     WHERE `items`.`id` IS NULL;
 
+ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);
 UPDATE `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
     JOIN `items` ON `items`.`id` = `users_items`.`item_id`
@@ -48,6 +46,7 @@ UPDATE `users_items`
         LIMIT 1
     ) AS `groups_attempts`
 SET active_attempt_id = `groups_attempts`.`id`;
+ALTER TABLE `groups_attempts` DROP KEY `item_id_creator_user_id_latest_activity_at_desc`;
 
 ALTER TABLE `users_items`
     DROP COLUMN `score`,
