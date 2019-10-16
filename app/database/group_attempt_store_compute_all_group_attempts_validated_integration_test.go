@@ -97,7 +97,8 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysNonValidatedFo
 	}
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
+	t *testing.T) {
 	testGroupAttemptStoreComputeAllGroupAttemptsValidated(t,
 		[]string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/one"},
 		"One",
