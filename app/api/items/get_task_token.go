@@ -158,7 +158,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		service.MustNotBeError(userItemStore.SetActiveAttempt(user.ID, itemID, *activeAttemptID))
 
 		// propagate compute users_items
-		service.MustNotBeError(store.UserItems().ComputeAllUserItems())
+		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 
 		return nil
 	})

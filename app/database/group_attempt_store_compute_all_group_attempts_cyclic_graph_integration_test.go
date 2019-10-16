@@ -16,14 +16,14 @@ type stateResultRow struct {
 	AncestorsComputationState string
 }
 
-func TestUserItemStore_ComputeAllUserItems_WithCyclicGraph(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/cyclic")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_WithCyclicGraph(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/cyclic")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 

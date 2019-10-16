@@ -14,10 +14,10 @@ type groupItemPair struct {
 	itemID  int64
 }
 
-const computeAllUserItemsLockName = "listener_computeAllUserItems"
-const computeAllUserItemsLockTimeout = 10 * time.Second
+const computeAllGroupAttemptsLockName = "listener_computeAllGroupAttempts"
+const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 
-// ComputeAllUserItems recomputes fields of groups_attempts
+// ComputeAllGroupAttempts recomputes fields of groups_attempts
 // For groups_attempts marked with ancestors_computation_state = 'todo':
 // 1. We mark all their ancestors in groups_attempts as 'todo'
 //  (we consider a row in groups_attempts as an ancestor if it has the same value in group_id and
@@ -27,14 +27,14 @@ const computeAllUserItemsLockTimeout = 10 * time.Second
 //    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
-func (s *UserItemStore) ComputeAllUserItems() (err error) {
+func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
 	var groupsUnlocked int64
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(computeAllUserItemsLockName, computeAllUserItemsLockTimeout, func(ds *DataStore) error {
+	mustNotBeError(s.WithNamedLock(computeAllGroupAttemptsLockName, computeAllGroupAttemptsLockTimeout, func(ds *DataStore) error {
 		userItemStore := ds.UserItems()
 
 		// We mark as 'todo' all ancestors of objects marked as 'todo'

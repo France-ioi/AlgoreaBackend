@@ -133,7 +133,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE id = ?", values...).Error()) // nolint:gosec
-	service.MustNotBeError(store.UserItems().ComputeAllUserItems())
+	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 	return validated, keyObtained, true
 }
 

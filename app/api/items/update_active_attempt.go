@@ -23,14 +23,14 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 	}
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		userItemStore := store.UserItems()
-		service.MustNotBeError(userItemStore.SetActiveAttempt(user.ID, itemID, groupsAttemptID))
-		service.MustNotBeError(store.GroupAttempts().
-			ByID(groupsAttemptID).
-			UpdateColumn(map[string]interface{}{
-				"latest_activity_at": database.Now(),
-			}).Error())
-		service.MustNotBeError(userItemStore.ComputeAllUserItems())
+		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.ID, itemID, groupsAttemptID))
+		groupAttemptStore := store.GroupAttempts()
+		service.MustNotBeError(
+			groupAttemptStore.ByID(groupsAttemptID).
+				UpdateColumn(map[string]interface{}{
+					"latest_activity_at": database.Now(),
+				}).Error())
+		service.MustNotBeError(groupAttemptStore.ComputeAllGroupAttempts())
 		return nil
 	}))
 

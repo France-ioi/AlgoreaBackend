@@ -22,27 +22,27 @@ type unlocksResultRow struct {
 	CachedPartialAccess      bool
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/unlocks")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks_UpdatesOldRecords(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_UpdatesOldRecords(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"users_items_propagation/_common",
-		"users_items_propagation/unlocks",
-		"users_items_propagation/unlocks_old_records")
+		"groups_attempts_propagation/_common",
+		"groups_attempts_propagation/unlocks",
+		"groups_attempts_propagation/unlocks_old_records")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"users_items_propagation/_common",
-		"users_items_propagation/unlocks",
+		"groups_attempts_propagation/_common",
+		"groups_attempts_propagation/unlocks",
 	)
 	defer func() { _ = db.Close() }()
 
@@ -59,7 +59,7 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 	).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -95,7 +95,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 

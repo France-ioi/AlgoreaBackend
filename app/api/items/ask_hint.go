@@ -135,7 +135,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 				"hints_cached":                len(hintsRequestedParsed),
 			}).Error())
 
-		service.MustNotBeError(store.UserItems().ComputeAllUserItems())
+		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 
 		return nil
 	})

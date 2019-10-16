@@ -18,8 +18,8 @@ type validationDateResultRow struct {
 	AncestorsComputationState string
 }
 
-func TestUserItemStore_ComputeAllUserItems_ValidatedAtStaysTheSameIfItWasNotNull(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedAtStaysTheSameIfItWasNotNull(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -31,7 +31,7 @@ func TestUserItemStore_ComputeAllUserItems_ValidatedAtStaysTheSameIfItWasNotNull
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -45,8 +45,8 @@ func TestUserItemStore_ComputeAllUserItems_ValidatedAtStaysTheSameIfItWasNotNull
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -67,7 +67,7 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfC
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", skippedDate).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -85,9 +85,9 @@ func TestUserItemStore_ComputeAllUserItems_NonCategories_SetsValidatedAtToMaxOfC
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren( // nolint:lll
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -102,7 +102,7 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 			Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -120,9 +120,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation(
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation(
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -138,7 +138,7 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -156,9 +156,9 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	}, result)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems( // nolint:lll
 	t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -182,7 +182,7 @@ func TestUserItemStore_ComputeAllUserItems_Categories_SetsValidatedAtToMaxOfVali
 	}).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 

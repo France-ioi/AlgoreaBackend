@@ -13,23 +13,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUserItemStore_ComputeAllUserItems_RecoverError(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_RecoverError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllUserItems", 10).WillReturnError(expectedError)
+		WithArgs("listener_computeAllGroupAttempts", 10).WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_RecoverRuntimeError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
@@ -51,7 +51,7 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 		}()
 
 		_ = NewDataStore(db).InTransaction(func(s *DataStore) error {
-			return s.UserItems().ComputeAllUserItems()
+			return s.GroupAttempts().ComputeAllGroupAttempts()
 		})
 
 		return false, nil
@@ -63,27 +63,27 @@ func TestUserItemStore_ComputeAllUserItems_RecoverRuntimeError(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestUserItemStore_ComputeAllUserItems_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("listener_computeAllUserItems", 10).
-		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllUserItems', 1)"}).AddRow(int64(0)))
+		WithArgs("listener_computeAllGroupAttempts", 10).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('listener_computeAllGroupAttempts', 1)"}).AddRow(int64(0)))
 	dbMock.ExpectRollback()
 
 	err := NewDataStore(db).InTransaction(func(s *DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestUserItemStore_ComputeAllUserItems_CannotBeCalledWithoutTransaction(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_CannotBeCalledWithoutTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	userItemStore := NewDataStore(db).UserItems()
+	groupAttemptStore := NewDataStore(db).GroupAttempts()
 	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
 		defer func() {
 			if p := recover(); p != nil {
@@ -91,7 +91,7 @@ func TestUserItemStore_ComputeAllUserItems_CannotBeCalledWithoutTransaction(t *t
 				panicValue = p
 			}
 		}()
-		_ = userItemStore.ComputeAllUserItems()
+		_ = groupAttemptStore.ComputeAllGroupAttempts()
 		return false, nil
 	}()
 

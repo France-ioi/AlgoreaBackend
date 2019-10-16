@@ -22,8 +22,8 @@ type aggregatesResultRow struct {
 	AncestorsComputationState string
 }
 
-func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/aggregates")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/aggregates")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
@@ -56,7 +56,7 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	}).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -80,13 +80,13 @@ func TestUserItemStore_ComputeAllUserItems_Aggregates(t *testing.T) {
 	assertAggregatesEqual(t, groupAttemptStore, expected)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Aggregates_OnCommonData(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_OnCommonData(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
