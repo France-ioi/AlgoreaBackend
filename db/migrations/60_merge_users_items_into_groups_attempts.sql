@@ -31,6 +31,11 @@ FROM `users_items`
 
 ALTER TABLE `groups_attempts` DROP INDEX `group_id_item_id_order`;
 
+DELETE `users_items`
+    FROM `users_items`
+    LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
+    WHERE `items`.`id` IS NULL;
+
 UPDATE `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
     JOIN `items` ON `items`.`id` = `users_items`.`item_id`
