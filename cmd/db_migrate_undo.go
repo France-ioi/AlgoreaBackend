@@ -11,7 +11,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/app/config"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 )
 
 func init() { // nolint:gochecknoinits
@@ -54,13 +53,6 @@ func init() { // nolint:gochecknoinits
 			case n == 0:
 				fmt.Println("No migrations to undo!")
 			default:
-				var gormDB *database.DB
-				gormDB, err = database.Open(db)
-				assertNoError(err, "Cannot open GORM db connection: ")
-				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-					return store.GroupAttempts().ComputeAllGroupAttempts()
-				})
-				assertNoError(err, "Cannot compute groups_attempts")
 				fmt.Println("1 migration undone successfully!")
 			}
 
