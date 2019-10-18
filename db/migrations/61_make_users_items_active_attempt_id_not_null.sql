@@ -1,4 +1,8 @@
 -- +migrate Up
+DELETE `users_items` FROM `users_items`
+LEFT JOIN `groups_attempts` ON `groups_attempts`.`id` = `users_items`.`active_attempt_id`
+WHERE `groups_attempts`.`id` IS NULL;
+
 ALTER TABLE `users_items`
     MODIFY COLUMN `active_attempt_id` bigint(20) NOT NULL COMMENT 'Current attempt selected by this user.',
     DROP INDEX `active_attempt_id`,

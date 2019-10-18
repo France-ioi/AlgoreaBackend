@@ -1,4 +1,8 @@
 -- +migrate Up
+DELETE `users_items`
+FROM `users_items`
+         LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
+WHERE `items`.`id` IS NULL;
 
 -- Copy users data for all the items
 INSERT INTO `groups_attempts` (
@@ -9,9 +13,9 @@ INSERT INTO `groups_attempts` (
     `submissions_attempts`,`tasks_tried`,`tasks_solved`,`children_validated`,`validated`,`finished`,
     `key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,
     `autonomy`,`started_at`,`validated_at`,`finished_at`,`latest_activity_at`,`thread_started_at`,
-    `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`)
+    `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`,`ancestors_computation_state`)
 SELECT
-    `users`.`self_group_id`, `item_id`,
+    `groups_to_insert`.`id`, `items`.`id`,
     `users`.`id`,
     (SELECT IFNULL(MAX(`order`)+1, 1) FROM `groups_attempts` WHERE `group_id` = `users`.`self_group_id` AND `groups_attempts`.`item_id` = `users_items`.`item_id`),
     `users_items`.`score`,`users_items`.`score_computed`,`users_items`.`score_reeval`,
@@ -23,15 +27,43 @@ SELECT
     `users_items`.`autonomy`,`users_items`.`started_at`,`users_items`.`validated_at`,
     `users_items`.`finished_at`,`users_items`.`latest_activity_at`,`users_items`.`thread_started_at`,
     `users_items`.`best_answer_at`,`users_items`.`latest_answer_at`,`users_items`.`latest_hint_at`,
-    `users_items`.`ranked`,`users_items`.`all_lang_prog`
+    `users_items`.`ranked`,`users_items`.`all_lang_prog`,
+    IF(`users`.`self_group_id` = `groups_to_insert`.`id`, 'done', 'todo')
 FROM `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
-    JOIN `items` ON `items`.`id` = `users_items`.`item_id` AND NOT `items`.`has_attempts`;
-
-DELETE `users_items`
-    FROM `users_items`
-    LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
-    WHERE `items`.`id` IS NULL;
+    JOIN `items` ON `items`.`id` = `users_items`.`item_id`
+    JOIN LATERAL (
+        SELECT `users`.`self_group_id` AS `id`
+        WHERE (`items`.`type` = 'Task' AND NOT `items`.`has_attempts`) OR (
+            SELECT 1
+            FROM `items_ancestors`
+            JOIN `items` AS `child_items` ON `child_items`.`id` = `items_ancestors`.`child_item_id` AND
+                `child_items`.`type` = 'Task' AND NOT `child_items`.`has_attempts`
+            WHERE `items_ancestors`.`ancestor_item_id` = `items`.`id`
+            LIMIT 1
+        )
+        UNION ALL
+        SELECT `groups`.`id`
+        FROM `groups_groups`
+        JOIN `groups` ON `groups`.`type` = 'Team' AND `groups`.`id` = `groups_groups`.`parent_group_id`
+        WHERE (`items`.`type` != 'Task' OR `items`.`has_attempts`) AND
+            `groups_groups`.`child_group_id` = `users`.`self_group_id` AND
+            `groups_groups`.type IN ('invitationAccepted', 'requestAccepted', 'direct', 'joinedByCode') AND
+            (
+                `groups`.`team_item_id` = `items`.`id` OR `groups`.`team_item_id` IN (
+                    SELECT `ancestor_item_id`
+                    FROM `items_ancestors`
+                    WHERE `items_ancestors`.`child_item_id` = `items`.`id`
+                ) OR `groups`.`team_item_id` IN (
+                    SELECT `child_item_id`
+                    FROM `items_ancestors`
+                    WHERE `items_ancestors`.`ancestor_item_id` = `items`.`id`
+                )
+            )
+    ) AS groups_to_insert ON `groups_to_insert`.`id` IS NOT NULL
+    LEFT JOIN `groups_attempts` AS `existing_attempts`
+        ON `existing_attempts`.`group_id` = `groups_to_insert`.`id` AND `existing_attempts`.`item_id` = `items`.`id`
+    WHERE `existing_attempts`.`id` IS NULL;
 
 ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);
 UPDATE `users_items`
@@ -42,10 +74,10 @@ UPDATE `users_items`
         FROM `groups_attempts`
         WHERE `groups_attempts`.`creator_user_id` = `users`.`id`
           AND `groups_attempts`.`item_id` = `items`.`id`
-        ORDER BY `latest_activity_at` DESC
+        ORDER BY `groups_attempts`.`item_id`, `groups_attempts`.`creator_user_id`, `latest_activity_at` DESC
         LIMIT 1
     ) AS `groups_attempts`
-SET active_attempt_id = `groups_attempts`.`id`;
+SET active_attempt_id = `groups_attempts`.`id` WHERE active_attempt_id IS NULL;
 ALTER TABLE `groups_attempts` DROP KEY `item_id_creator_user_id_latest_activity_at_desc`;
 
 ALTER TABLE `users_items`
@@ -83,6 +115,13 @@ ALTER TABLE `users_items`
     DROP COLUMN `platform_data_removed`;
 
 DROP VIEW `task_children_data_view`;
+
+# There are still some rows with active_attempt_id = NULL:
+# 1) those with `item_id` pointing to top-level items without tasks inside (so we cannot determine if they should
+#    have team attempts or user attempts;
+# 2) those with `user_id` pointing to a user who is not on a team yet, while `item_id` is linked to a team item.
+# Here we delete them.
+DELETE FROM `users_items` WHERE `active_attempt_id` IS NULL;
 
 -- +migrate Down
 ALTER TABLE `users_items`
@@ -165,6 +204,7 @@ ALTER TABLE `users_items`
         AFTER `answer`,
     ADD INDEX `ancestors_computation_state` (`ancestors_computation_state`);
 
+ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);
 INSERT INTO `users_items` (
     `user_id`, `item_id`, `active_attempt_id`,
     `score`,`score_computed`,`score_reeval`,`score_diff_manual`,`score_diff_comment`,
@@ -172,8 +212,8 @@ INSERT INTO `users_items` (
     `key_obtained`,`tasks_with_help`,`hints_requested`,`hints_cached`,`corrections_read`,`precision`,
     `autonomy`,`started_at`,`validated_at`,`finished_at`,`latest_activity_at`,`thread_started_at`,
     `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`)
-SELECT
-    `users`.`id`, `item_id`, NULL,
+(SELECT
+    `users`.`id`, `groups_attempts`.`item_id`, NULL,
     `groups_attempts`.`score`,`groups_attempts`.`score_computed`,`groups_attempts`.`score_reeval`,
     `groups_attempts`.`score_diff_manual`,`groups_attempts`.`score_diff_comment`,
     `groups_attempts`.`submissions_attempts`,`groups_attempts`.`tasks_tried`,
@@ -187,10 +227,23 @@ SELECT
     `groups_attempts`.`thread_started_at`,`groups_attempts`.`best_answer_at`,
     `groups_attempts`.`latest_answer_at`,`groups_attempts`.`latest_hint_at`,
     `groups_attempts`.`ranked`,`groups_attempts`.`all_lang_prog`
-FROM `groups_attempts`
-    JOIN `users` ON `users`.`id` = `groups_attempts`.`creator_user_id`
+FROM `items`
+JOIN LATERAL (
+    SELECT `item_id`, `creator_user_id`
+    FROM `groups_attempts`
+    WHERE `groups_attempts`.`item_id` = `items`.`id`
+    GROUP BY `item_id`, `creator_user_id`
+) AS `pair_ids`
+JOIN LATERAL (
+    SELECT *
+    FROM `groups_attempts`
+    WHERE `groups_attempts`.`item_id` = `pair_ids`.`item_id` AND `groups_attempts`.`creator_user_id` = `pair_ids`.`creator_user_id`
+    ORDER BY `groups_attempts`.`item_id`, `groups_attempts`.`creator_user_id`, `groups_attempts`.`latest_activity_at` DESC
+    LIMIT 1
+) AS `groups_attempts` ON 1
+JOIN `users` ON `users`.`id` = `groups_attempts`.`creator_user_id`)
 ON DUPLICATE KEY UPDATE
-    `active_attempt_id`=VALUES(`active_attempt_id`),`score`=VALUES(`score`),
+    `score`=VALUES(`score`),
     `score_computed`=VALUES(`score_computed`),
     `score_reeval`=VALUES(`score_reeval`),`score_diff_manual`=VALUES(`score_diff_manual`),
     `score_diff_comment`=VALUES(`score_diff_comment`),
@@ -206,6 +259,7 @@ ON DUPLICATE KEY UPDATE
     `best_answer_at`=VALUES(`best_answer_at`),`latest_answer_at`=VALUES(`latest_answer_at`),
     `latest_hint_at`=VALUES(`latest_hint_at`),`ranked`=VALUES(`ranked`),
     `all_lang_prog`=VALUES(`all_lang_prog`);
+ALTER TABLE `groups_attempts` DROP KEY `item_id_creator_user_id_latest_activity_at_desc`;
 
 ALTER TABLE `users_answers` ADD INDEX `user_item_submitted_at_desc` (`user_id`, `item_id`, `submitted_at` DESC);
 UPDATE `users_items`
@@ -218,6 +272,11 @@ JOIN LATERAL (
 ) AS `users_answers`
 SET `users_items`.`answer`=`users_answers`.`answer`, `users_items`.`state`=`users_answers`.`state`;
 ALTER TABLE `users_answers` DROP INDEX `user_item_submitted_at_desc`;
+
+UPDATE `users_items`
+JOIN `groups_attempts` ON `groups_attempts`.`id` = `users_items`.`active_attempt_id`
+JOIN `groups` ON `groups`.`id` = `groups_attempts`.`group_id` AND `groups`.`type` = 'UserSelf'
+SET `active_attempt_id` = NULL;
 
 DELETE `groups_attempts` FROM `groups_attempts`
     JOIN `users` ON `users`.`self_group_id` = `groups_attempts`.`group_id`;
