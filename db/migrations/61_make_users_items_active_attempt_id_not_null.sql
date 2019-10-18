@@ -25,7 +25,7 @@ ALTER TABLE `users_items`
     ADD COLUMN `id` bigint(20) NOT NULL FIRST,
     MODIFY COLUMN `active_attempt_id` bigint(20) DEFAULT NULL COMMENT 'Current attempt selected by this user.',
     ADD INDEX `active_attempt_id` (`active_attempt_id`),
-    ADD INDEX `user_item` (`user_id`, `item_id`);
+    ADD UNIQUE INDEX `user_item` (`user_id`, `item_id`);
 
 UPDATE `users_items` SET `id` = FLOOR(RAND() * 1000000000) + FLOOR(RAND() * 1000000000) * 1000000000;
 
