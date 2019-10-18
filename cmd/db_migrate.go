@@ -58,7 +58,9 @@ func init() { // nolint:gochecknoinits
 				var gormDB *database.DB
 				gormDB, err = database.Open(db)
 				assertNoError(err, "Cannot open GORM db connection: ")
-				err = database.NewDataStore(gormDB).GroupAttempts().ComputeAllGroupAttempts()
+				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+					return store.GroupAttempts().ComputeAllGroupAttempts()
+				})
 				assertNoError(err, "Cannot compute groups_attempts")
 				fmt.Printf("%d migration(s) applied successfully!\n", n)
 			}
