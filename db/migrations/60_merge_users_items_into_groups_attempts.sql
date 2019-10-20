@@ -1,8 +1,13 @@
 -- +migrate Up
 DELETE `users_items`
 FROM `users_items`
-         LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
+LEFT JOIN `items` ON `items`.`id` = `users_items`.`item_id`
 WHERE `items`.`id` IS NULL;
+
+DELETE `users_items`
+FROM `users_items`
+LEFT JOIN `users` ON `users`.`id` = `users_items`.`user_id`
+WHERE `users`.`id` IS NULL;
 
 -- Copy users data for all the items
 INSERT INTO `groups_attempts` (
@@ -67,13 +72,11 @@ FROM `users_items`
 
 ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);
 UPDATE `users_items`
-    JOIN `users` ON `users`.`id` = `users_items`.`user_id`
-    JOIN `items` ON `items`.`id` = `users_items`.`item_id`
     JOIN LATERAL (
         SELECT `id`
         FROM `groups_attempts`
-        WHERE `groups_attempts`.`creator_user_id` = `users`.`id`
-          AND `groups_attempts`.`item_id` = `items`.`id`
+        WHERE `groups_attempts`.`creator_user_id` = `users_items`.`user_id`
+          AND `groups_attempts`.`item_id` = `users_items`.`item_id`
         ORDER BY `groups_attempts`.`item_id`, `groups_attempts`.`creator_user_id`, `latest_activity_at` DESC
         LIMIT 1
     ) AS `groups_attempts`
