@@ -113,8 +113,11 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items_with_scores.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
 								AS max_validated_at_categories
-						FROM items_items AS items_items_with_scores
-						LEFT JOIN LATERAL (
+						FROM items_items AS items_items_with_scores ` +
+					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items_with_scores.child_item_id.
+					// The usual LEFT JOIN conditions in the ON clause would group attempts before joining which would produce
+					// wrong results.
+					`LEFT JOIN LATERAL (
 							SELECT
 								MAX(validated) AS validated,
 								MIN(validated_at) AS validated_at,
