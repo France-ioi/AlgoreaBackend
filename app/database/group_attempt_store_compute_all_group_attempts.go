@@ -108,13 +108,13 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							IFNULL(SUM(aggregated_children_attempts.tasks_solved), 0) AS tasks_solved,
 							IFNULL(SUM(aggregated_children_attempts.validated), 0) AS children_validated,
 							SUM(IFNULL(NOT aggregated_children_attempts.validated, 1)) AS children_non_validated,
-							SUM(items_items_with_scores.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
+							SUM(items_items.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
 								AS children_non_validated_categories,
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
-							MAX(IF(items_items_with_scores.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
+							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
 								AS max_validated_at_categories
-						FROM items_items AS items_items_with_scores ` +
-					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items_with_scores.child_item_id.
+						FROM items_items ` +
+					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items.child_item_id.
 					// The usual LEFT JOIN conditions in the ON clause would group attempts before joining which would produce
 					// wrong results.
 					`LEFT JOIN LATERAL (
@@ -127,14 +127,14 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								MAX(tasks_solved) AS tasks_solved
 							FROM groups_attempts AS children_attempts
 							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
-								children_attempts.item_id = items_items_with_scores.child_item_id
+								children_attempts.item_id = items_items.child_item_id
 							GROUP BY children_attempts.group_id, children_attempts.item_id
 						) AS aggregated_children_attempts ON 1
 						JOIN items ON(
-							items.id = items_items_with_scores.child_item_id
+							items.id = items_items.child_item_id
 						)
-						WHERE items_items_with_scores.parent_item_id = target_groups_attempts.item_id AND NOT items.no_score
-						GROUP BY items_items_with_scores.parent_item_id
+						WHERE items_items.parent_item_id = target_groups_attempts.item_id AND NOT items.no_score
+						GROUP BY items_items.parent_item_id
 					) AS children_stats ON 1
 					JOIN items
 						ON target_groups_attempts.item_id = items.id
