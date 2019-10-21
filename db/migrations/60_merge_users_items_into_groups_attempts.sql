@@ -33,7 +33,7 @@ SELECT
     `users_items`.`finished_at`,`users_items`.`latest_activity_at`,`users_items`.`thread_started_at`,
     `users_items`.`best_answer_at`,`users_items`.`latest_answer_at`,`users_items`.`latest_hint_at`,
     `users_items`.`ranked`,`users_items`.`all_lang_prog`,
-    IF(`users`.`self_group_id` = `groups_to_insert`.`id`, 'done', 'todo')
+    'todo'
 FROM `users_items`
     JOIN `users` ON `users`.`id` = `users_items`.`user_id`
     JOIN `items` ON `items`.`id` = `users_items`.`item_id`
