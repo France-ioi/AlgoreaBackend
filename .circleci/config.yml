@@ -219,18 +219,27 @@ jobs:
 
 workflows:
   version: 2
-  build_test:
+  testing:
     jobs:
       - deps
       - tests:
           requires:
           - deps
-      - migration-tests:
-          requires:
-          - deps
       - lint:
           requires:
           - deps
+  db-migration-check:
+    jobs:
+      - deps
+      - migration-tests:
+          requires:
+          - deps
+  doc-gen:
+    jobs:
+      - deps:
+          filters:
+            branches:
+              only: master
       - swagger-gen
       - swagger-deploy:
           requires:
