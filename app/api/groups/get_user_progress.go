@@ -185,19 +185,17 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			ON teams.type = 'Team' AND
 				teams.id = team_links.parent_group_id`).
 		Joins(`
-			LEFT JOIN groups_attempts AS attempt_with_best_score_for_user
-			ON attempt_with_best_score_for_user.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, score, best_answer_at FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, minus_score, best_answer_at LIMIT 1
-			)`).
+				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+			) AS attempt_with_best_score_for_user ON 1`).
 		Joins(`
-			LEFT JOIN groups_attempts AS attempt_with_best_score_for_team
-			ON attempt_with_best_score_for_team.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, score, best_answer_at FROM groups_attempts
 				WHERE group_id = teams.id AND item_id = items.id
-				ORDER BY group_id, item_id, minus_score, best_answer_at LIMIT 1
-			)`).
+				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+			) AS attempt_with_best_score_for_team ON 1`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
 			ON attempt_with_best_score.id = IF(attempt_with_best_score_for_team.score IS NOT NULL AND
@@ -212,19 +210,17 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				attempt_with_best_score_for_user.id
 			)`).
 		Joins(`
-			LEFT JOIN groups_attempts AS last_attempt_of_user
-			ON last_attempt_of_user.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, latest_activity_at FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY latest_activity_at DESC LIMIT 1
-			)`).
+			) AS last_attempt_of_user ON 1`).
 		Joins(`
-			LEFT JOIN groups_attempts AS last_attempt_of_team
-			ON last_attempt_of_team.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, latest_activity_at FROM groups_attempts
 				WHERE group_id = teams.id AND item_id = items.id AND latest_activity_at IS NOT NULL
 				ORDER BY latest_activity_at DESC LIMIT 1
-			)`).
+			) AS last_attempt_of_team ON 1`).
 		Joins(`
 			LEFT JOIN groups_attempts AS last_attempt
 			ON last_attempt.id = IF(
@@ -237,19 +233,17 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				last_attempt_of_user.id
 			)`).
 		Joins(`
-			LEFT JOIN groups_attempts AS first_attempt_of_user
-			ON first_attempt_of_user.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, started_at FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id AND started_at IS NOT NULL
 				ORDER BY started_at LIMIT 1
-			)`).
+			) AS first_attempt_of_user ON 1`).
 		Joins(`
-			LEFT JOIN groups_attempts AS first_attempt_of_team
-			ON first_attempt_of_team.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, started_at FROM groups_attempts
 				WHERE group_id = teams.id AND item_id = items.id AND started_at IS NOT NULL
 				ORDER BY started_at LIMIT 1
-			)`).
+			) AS first_attempt_of_team ON 1`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_attempt
 			ON first_attempt.id = IF(
@@ -262,19 +256,17 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				first_attempt_of_user.id
 			)`).
 		Joins(`
-			LEFT JOIN groups_attempts AS first_validated_attempt_of_user
-			ON first_validated_attempt_of_user.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, validated_at FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id AND validated_at IS NOT NULL
 				ORDER BY validated_at LIMIT 1
-			)`).
+			) AS first_validated_attempt_of_user ON 1`).
 		Joins(`
-			LEFT JOIN groups_attempts AS first_validated_attempt_of_team
-			ON first_validated_attempt_of_team.id = (
-				SELECT id FROM groups_attempts
+			LEFT JOIN LATERAL (
+				SELECT id, validated_at FROM groups_attempts
 				WHERE group_id = teams.id AND item_id = items.id AND validated_at IS NOT NULL
 				ORDER BY validated_at LIMIT 1
-			)`).
+			) AS first_validated_attempt_of_team ON 1`).
 		Joins(`
 			LEFT JOIN groups_attempts AS first_validated_attempt
 			ON first_validated_attempt.id = IF(
@@ -294,7 +286,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Order(gorm.Expr(
 			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
-		Order("MAX(attempt_with_best_score.minus_score), MAX(attempt_with_best_score.best_answer_at)").
+		Order("MIN(attempt_with_best_score.score), MAX(attempt_with_best_score.best_answer_at)").
 		Scan(&result).Error())
 
 	render.Respond(w, r, result)
