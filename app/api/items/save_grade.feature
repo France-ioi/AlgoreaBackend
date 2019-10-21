@@ -47,7 +47,7 @@ Feature: Save grading result
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 101 | 101      | 50      | [0,  1, "hint" , null] | 2     |
+      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 10      | 50      | 100               |
@@ -121,7 +121,7 @@ Feature: Save grading result
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
-      | 101 | 101      | 50      | [0,  1, "hint" , null] | 2     |
+      | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 10      | 50      | 100               |
@@ -193,7 +193,7 @@ Feature: Save grading result
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | best_answer_at      | order |
-      | 100 | 101      | 60      | 2017-05-29 06:38:38 | 1     |
+      | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
@@ -266,7 +266,7 @@ Feature: Save grading result
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score | best_answer_at      | order |
-      | 100 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 1     |
+      | 100 | 101      | 50      | 20    | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
@@ -336,7 +336,7 @@ Feature: Save grading result
     Given I am the user with id "10"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | validated_at        | order |
-      | 100 | 101      | 60      | 2018-05-29 06:38:38 | 1     |
+      | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
