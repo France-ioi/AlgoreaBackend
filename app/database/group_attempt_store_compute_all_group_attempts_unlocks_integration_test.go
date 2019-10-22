@@ -22,35 +22,35 @@ type unlocksResultRow struct {
 	CachedPartialAccess      bool
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("users_items_propagation/_common", "users_items_propagation/unlocks")
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks_UpdatesOldRecords(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_UpdatesOldRecords(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"users_items_propagation/_common",
-		"users_items_propagation/unlocks",
-		"users_items_propagation/unlocks_old_records")
+		"groups_attempts_propagation/_common",
+		"groups_attempts_propagation/unlocks",
+		"groups_attempts_propagation/unlocks_old_records")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"users_items_propagation/_common",
-		"users_items_propagation/unlocks",
+		"groups_attempts_propagation/_common",
+		"groups_attempts_propagation/unlocks",
 	)
 	defer func() { _ = db.Close() }()
 
 	hook, restoreFunc := logging.MockSharedLoggerHook()
 	defer restoreFunc()
 
-	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
@@ -58,8 +58,8 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 		"unlocked_item_ids", "1001,abc",
 	).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -73,14 +73,14 @@ func TestUserItemStore_ComputeAllUserItems_Unlocks_WarnsWhenIdIsNotInteger(t *te
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
-	userItemStore := database.NewDataStore(db).UserItems()
-	assert.NoError(t, userItemStore.Where("id=11").UpdateColumn(
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("id=13").UpdateColumn(
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
-	assert.NoError(t, userItemStore.Where("id=14").UpdateColumn(
+	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn(
 		"key_obtained", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
@@ -94,8 +94,8 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		"unlocked_item_ids", "4001,4002",
 	).Error())
 
-	err := userItemStore.InTransaction(func(s *database.DataStore) error {
-		return s.UserItems().ComputeAllUserItems()
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.GroupAttempts().ComputeAllGroupAttempts()
 	})
 	assert.NoError(t, err)
 

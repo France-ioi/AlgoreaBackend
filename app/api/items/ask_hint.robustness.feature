@@ -29,13 +29,13 @@ Feature: Ask for a hint - robustness
       | group_id | item_id | cached_partial_access_since | creator_user_id |
       | 101      | 10      | 2017-05-29 06:38:38         | 10              |
       | 101      | 50      | 2017-05-29 06:38:38         | 10              |
-    And the database has the following table 'users_items':
-      | user_id | item_id | hints_requested                 | hints_cached | submissions_attempts | active_attempt_id |
-      | 10      | 10      | null                            | 0            | 0                    | null              |
-      | 10      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 100               |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
+      | 200 | 101      | 10      | null                   | 0     |
+    And the database has the following table 'users_items':
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 100               |
     And time is frozen
 
   Scenario: Wrong JSON in request

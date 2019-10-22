@@ -104,10 +104,6 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
 		}
 
-		userItemStore := store.UserItems()
-		err = userItemStore.CreateIfMissing(user.ID, requestData.TaskToken.Converted.LocalItemID)
-		service.MustNotBeError(err)
-
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, user, r)
@@ -128,25 +124,18 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		hintsGivenCountString := strconv.Itoa(len(hintsRequestedParsed))
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
-		columnsToUpdate := map[string]interface{}{
-			"tasks_with_help":             1,
-			"ancestors_computation_state": "todo",
-			"latest_activity_at":          database.Now(),
-			"latest_hint_at":              database.Now(),
-		}
-		// Update users_items with the hint request
-		service.MustNotBeError(store.UserItems().Where("user_id = ?", user.ID).
-			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
-			Where("active_attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
-			UpdateColumn(columnsToUpdate).Error())
-
 		// Update groups_attempts with the hint request
-		columnsToUpdate["hints_requested"] = hintsRequestedNew
-		columnsToUpdate["hints_cached"] = len(hintsRequestedParsed)
 		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
-			UpdateColumn(columnsToUpdate).Error())
+			UpdateColumn(map[string]interface{}{
+				"tasks_with_help":             1,
+				"ancestors_computation_state": "todo",
+				"latest_activity_at":          database.Now(),
+				"latest_hint_at":              database.Now(),
+				"hints_requested":             hintsRequestedNew,
+				"hints_cached":                len(hintsRequestedParsed),
+			}).Error())
 
-		service.MustNotBeError(store.GroupAttempts().After())
+		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 
 		return nil
 	})

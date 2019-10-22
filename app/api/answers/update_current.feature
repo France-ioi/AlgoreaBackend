@@ -23,6 +23,7 @@ Feature: Update the 'current' answer
       | 100 | 10      | 50      | 200        | Submission | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
+      | 100 | 101      | 50      | 0     |
       | 200 | 101      | 50      | 0     |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id = request.attempt_id
@@ -47,8 +48,8 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | answer  | state      |
-      | 10      | 50      | 200               | print 1 | some state |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 200               |
     And the table "users_answers" should be:
       | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 10      | 50      | 200        | Submission | null    | null       | 0                                                   |
@@ -57,8 +58,8 @@ Feature: Update the 'current' answer
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id != request.attempt_id
     Given I am the user with id "10"
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id | answer | state |
-      | 10      | 50      | 100               | null   | null  |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 100               |
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -106,8 +107,8 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id | answer  | state      |
-      | 10      | 50      | 200               | print 1 | some state |
+      | user_id | item_id | active_attempt_id |
+      | 10      | 50      | 200               |
     And the table "users_answers" should be:
       | id  | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 100 | 10      | 50      | 200        | Submission | null    | null       | 0                                                   |

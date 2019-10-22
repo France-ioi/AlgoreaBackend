@@ -15,7 +15,7 @@ type GetItemRequest struct {
 	ID int64 `json:"id"`
 }
 
-type navigationItemUser struct {
+type navigationItemUserActiveAttempt struct {
 	Score               float32        `json:"score"`
 	Validated           bool           `json:"validated"`
 	Finished            bool           `json:"finished"`
@@ -44,9 +44,9 @@ type navigationItemCommonFields struct {
 	// whether items.unlocked_item_ids is empty
 	HasUnlockedItems bool `json:"has_unlocked_items"`
 
-	String       navigationItemString       `json:"string"`
-	User         navigationItemUser         `json:"user"`
-	AccessRights navigationItemAccessRights `json:"access_rights"`
+	String            navigationItemString             `json:"string"`
+	UserActiveAttempt *navigationItemUserActiveAttempt `json:"user_active_attempt"`
+	AccessRights      navigationItemAccessRights       `json:"access_rights"`
 
 	Children []navigationItemChild `json:"children"`
 }
@@ -133,16 +133,6 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 		TransparentFolder: rawData.TransparentFolder,
 		HasUnlockedItems:  rawData.HasUnlockedItems,
 		String:            navigationItemString{Title: rawData.Title},
-		User: navigationItemUser{
-			Score:               rawData.UserScore,
-			Validated:           rawData.UserValidated,
-			Finished:            rawData.UserFinished,
-			KeyObtained:         rawData.UserKeyObtained,
-			SubmissionsAttempts: rawData.UserSubmissionsAttempts,
-			StartedAt:           rawData.UserStartedAt,
-			ValidatedAt:         rawData.UserValidatedAt,
-			FinishedAt:          rawData.UserFinishedAt,
-		},
 		AccessRights: navigationItemAccessRights{
 			FullAccess:    rawData.FullAccess,
 			PartialAccess: rawData.PartialAccess,
@@ -151,6 +141,18 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 	}
 	if rawData.ItemGrandparentID == nil {
 		result.Children = make([]navigationItemChild, 0)
+	}
+	if rawData.UserAttemptID != nil {
+		result.UserActiveAttempt = &navigationItemUserActiveAttempt{
+			Score:               rawData.UserScore,
+			Validated:           rawData.UserValidated,
+			Finished:            rawData.UserFinished,
+			KeyObtained:         rawData.UserKeyObtained,
+			SubmissionsAttempts: rawData.UserSubmissionsAttempts,
+			StartedAt:           rawData.UserStartedAt,
+			ValidatedAt:         rawData.UserValidatedAt,
+			FinishedAt:          rawData.UserFinishedAt,
+		}
 	}
 	return result
 }

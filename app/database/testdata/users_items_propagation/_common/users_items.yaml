@@ -1,3 +1,0 @@
-- { id: 11, item_id: 1, user_id: 1, ancestors_computation_state: todo}
-- { id: 12, item_id: 2, user_id: 1, ancestors_computation_state: done}
-- { id: 22, item_id: 2, user_id: 2, ancestors_computation_state: todo}
