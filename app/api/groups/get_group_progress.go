@@ -204,19 +204,19 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
-					FROM groups_attempts FORCE INDEX (group_item_minus_score_best_answer_date_id)
+					FROM groups_attempts
 					WHERE group_id = end_members.id AND item_id = items.id
 				)
 			) AS time_spent
 		FROM ? AS end_members`, endMembers.SubQuery()).
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
-			LEFT JOIN groups_attempts AS attempt_with_best_score
-			ON attempt_with_best_score.id = (
-				SELECT id FROM groups_attempts FORCE INDEX (group_item_minus_score_best_answer_date_id)
+			LEFT JOIN LATERAL (
+				SELECT score, validated, hints_cached, submissions_attempts, group_id
+				FROM groups_attempts
 				WHERE group_id = end_members.id AND item_id = items.id
-				ORDER BY group_id, item_id, minus_score, best_answer_at LIMIT 1
-			)`)
+				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+			) AS attempt_with_best_score ON 1`)
 
 	var result []groupGroupProgressResponseRow
 	// It still takes more than 2 minutes to complete on large data sets
