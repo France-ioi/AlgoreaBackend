@@ -59,6 +59,64 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 	return nil
 }
 
+func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
+	if len(data.Rows) > 1 {
+		groupsToCreate := &gherkin.DataTable{
+			Rows: make([]*gherkin.TableRow, 1, (len(data.Rows)-1)*2+1),
+		}
+		groupsToCreate.Rows[0] = &gherkin.TableRow{Cells: []*gherkin.TableCell{
+			{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
+		}}
+		head := data.Rows[0].Cells
+		groupIDColumnNumber := -1
+		ownedGroupIDColumnNumber := -1
+		loginColumnNumber := -1
+		for number, cell := range head {
+			if cell.Value == "group_id" {
+				groupIDColumnNumber = number
+				continue
+			}
+			if cell.Value == "owned_group_id" {
+				ownedGroupIDColumnNumber = number
+				continue
+			}
+			if cell.Value == "login" {
+				loginColumnNumber = number
+				continue
+			}
+		}
+
+		for i := 1; i < len(data.Rows); i++ {
+			login := "null"
+			if loginColumnNumber != -1 {
+				login = data.Rows[i].Cells[loginColumnNumber].Value
+			}
+
+			if groupIDColumnNumber != -1 {
+				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
+					Cells: []*gherkin.TableCell{
+						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "UserSelf"},
+					},
+				})
+			}
+			if ownedGroupIDColumnNumber != -1 {
+				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
+					Cells: []*gherkin.TableCell{
+						{Value: data.Rows[i].Cells[ownedGroupIDColumnNumber].Value},
+						{Value: login + "-admin"}, {Value: login + "-admin"}, {Value: "UserAdmin"},
+					},
+				})
+			}
+		}
+
+		if err := ctx.DBHasTable("groups", groupsToCreate); err != nil {
+			return err
+		}
+	}
+
+	return ctx.DBHasTable("users", data)
+}
+
 func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
 	db := ctx.db()
 	sqlRows, err := db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec
