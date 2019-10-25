@@ -117,12 +117,15 @@ jobs:
       - run:
           name: Apply all migrations
           command: make db-migrate
+          no_output_timeout: 30m
       - run:
           name: Undo all migrations
           command: for m in db/migrations/*.sql; do make db-migrate-undo; done
+          no_output_timeout: 30m
       - run:
           name: Re-apply all migrations
           command: make db-migrate
+          no_output_timeout: 30m
   lint:
     docker:
       - image: circleci/golang:1.11
