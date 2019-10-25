@@ -142,7 +142,7 @@ func LoadFixture(db *sql.DB, fileName string) {
 func loadFixtureChainFromString(db *sql.DB, fixture string) {
 	mustNotBeInProdEnv()
 
-	var content map[string][]map[string]interface{}
+	var content yaml.MapSlice
 	fixture = dedent.Dedent(fixture)
 	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
 	bytesFixture := []byte(fixture)
@@ -151,8 +151,17 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 	if err != nil {
 		panic(err)
 	}
-	for tableName, tableData := range content {
-		InsertBatch(db, tableName, tableData)
+	for _, item := range content {
+		data := make([]map[string]interface{}, 0, len(item.Value.([]interface{})))
+		for _, row := range item.Value.([]interface{}) {
+			rowSlice := row.(yaml.MapSlice)
+			rowData := make(map[string]interface{}, len(rowSlice))
+			for _, column := range rowSlice {
+				rowData[column.Key.(string)] = column.Value
+			}
+			data = append(data, rowData)
+		}
+		InsertBatch(db, item.Key.(string), data)
 	}
 }
 
