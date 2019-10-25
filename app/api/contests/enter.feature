@@ -1,12 +1,6 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
-      | 2  | john  | 31            | 32             | John        | Doe       |
-      | 3  | jane  | 41            | 42             | Jane        | null      |
-      | 4  | jack  | 51            | 52             | Jack        | Daniel    |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name         | type      | team_item_id |
       | 11 | Team 2       | Team      | 60           |
       | 21 | owner        | UserSelf  | null         |
@@ -19,6 +13,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 52 | jack-admin   | UserAdmin | null         |
       | 98 | item60-group | Other     | null         |
       | 99 | item50-group | Other     | null         |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  |
+      | john  | 31       | 32             | John        | Doe       |
+      | jane  | 41       | 42             | Jane        | null      |
+      | jack  | 51       | 52             | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 11              | 31             | invitationAccepted |
@@ -41,12 +41,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 98                | 98             | 1       |
       | 99                | 99             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 11       | 50      | null                        | null                       | null                     | null                          | 1               |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 11       | 50      | null                        | null                       | null                     | null                          |
+      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
@@ -56,7 +56,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -106,7 +106,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 01:01:01        |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 03:03:03        |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -157,7 +157,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 201
     And the response body should be, in JSON:

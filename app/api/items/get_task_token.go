@@ -112,12 +112,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
-		err = userItemStore.Where("user_id = ?", user.ID).Where("item_id = ?", itemID).
+		err = userItemStore.Where("user_group_id = ?", user.GroupID).Where("item_id = ?", itemID).
 			WithWriteLock().PluckFirst("active_attempt_id", &activeAttemptID).Error()
 
 		// No active attempt set in `users_items` so we should choose or create one
 		if gorm.IsRecordNotFoundError(err) {
-			groupID := *user.SelfGroupID // not null since we have passed the access rights checking
+			groupID := user.GroupID
 
 			// if items.has_attempts = 1, we use use a team group instead of the user's self group
 			if itemInfo.HasAttempts {
@@ -155,7 +155,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		}).Error())
 
 		// update users_items.active_attempt_id
-		service.MustNotBeError(userItemStore.SetActiveAttempt(user.ID, itemID, *activeAttemptID))
+		service.MustNotBeError(userItemStore.SetActiveAttempt(user.GroupID, itemID, *activeAttemptID))
 
 		// propagate compute users_items
 		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
@@ -175,7 +175,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		HintsGivenCount:    ptrString(strconv.Itoa(int(groupsAttemptInfo.HintsCachedCount))),
 		IsAdmin:            ptrBool(false),
 		ReadAnswers:        ptrBool(true),
-		UserID:             strconv.FormatInt(user.ID, 10),
+		UserID:             strconv.FormatInt(user.GroupID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
 		AttemptID:          strconv.FormatInt(*activeAttemptID, 10),

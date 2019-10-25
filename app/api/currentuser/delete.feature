@@ -38,9 +38,9 @@ Feature: Delete the current user
       | 22                | 22             | true    |
       | 31                | 31             | true    |
     And the database has the following table 'users':
-      | id | temp_user | login    | self_group_id | owned_group_id | login_id |
-      | 11 | 0         | user     | 21            | 22             | 1234567  |
-      | 12 | 1         | tmp-1234 | 31            | null           | null     |
+      | temp_user | login    | group_id | owned_group_id | login_id |
+      | 0         | user     | 21       | 22             | 1234567  |
+      | 1         | tmp-1234 | 31       | null           | null     |
     And the application config is:
       """
       auth:
@@ -51,7 +51,7 @@ Feature: Delete the current user
       """
 
   Scenario: Regular user
-    Given I am the user with id "11"
+    Given I am the user with group_id "21"
     And the login module "unlink_client" endpoint for user id "1234567" returns 200 with encoded body:
       """
       {"success":true}
@@ -66,8 +66,8 @@ Feature: Delete the current user
       }
       """
     And the table "users" should be:
-      | id | temp_user | login    | self_group_id | owned_group_id |
-      | 12 | 1         | tmp-1234 | 31            | null           |
+      | temp_user | login    | group_id | owned_group_id |
+      | 1         | tmp-1234 | 31       | null           |
     And the table "groups" should be:
       | id | type     | name      |
       | 1  | Base     | Root      |
@@ -97,7 +97,7 @@ Feature: Delete the current user
       | 31                | 31             | true    |
 
   Scenario: Temporary user
-    Given I am the user with id "12"
+    Given I am the user with group_id "31"
     When I send a DELETE request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -108,8 +108,8 @@ Feature: Delete the current user
       }
       """
     And the table "users" should be:
-      | id | temp_user | login   | self_group_id | owned_group_id |
-      | 11 | 0         | user    | 21            | 22             |
+      | temp_user | login | group_id | owned_group_id |
+      | 0         | user  | 21       | 22             |
     And the table "groups" should be:
       | id | type      | name       |
       | 1  | Base      | Root       |

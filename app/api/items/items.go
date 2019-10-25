@@ -38,15 +38,15 @@ func (srv *Service) SetRoutes(router chi.Router) {
 func checkHintOrScoreTokenRequiredFields(user *database.User, taskToken *token.Task, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string) service.APIError {
-	if user.ID != taskToken.Converted.UserID {
+	if user.GroupID != taskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in task_token doesn't correspond to user session: got idUser=%d, expected %d",
-			taskToken.Converted.UserID, user.ID))
+			taskToken.Converted.UserID, user.GroupID))
 	}
-	if user.ID != otherTokenConvertedUserID {
+	if user.GroupID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
-			otherTokenFieldName, otherTokenConvertedUserID, user.ID))
+			otherTokenFieldName, otherTokenConvertedUserID, user.GroupID))
 	}
 	if taskToken.LocalItemID != otherTokenLocalItemID {
 		return service.ErrInvalidRequest(fmt.Errorf("wrong idItemLocal in %s token", otherTokenFieldName))

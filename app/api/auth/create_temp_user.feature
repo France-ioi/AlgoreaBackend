@@ -37,33 +37,33 @@ Feature: Create a temporary user
       """
     And logs should contain:
       """
-      Generated a session token expiring in 7200 seconds for a temporary user 5577006791947779410
+      Generated a session token expiring in 7200 seconds for a temporary user with group_id = 5577006791947779410
       """
-    And the table "users" at id "5577006791947779410" should be:
-      | id                  | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | self_group_id       | owned_group_id | last_ip   |
-      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | 6129484611666145821 | null           | 127.0.0.1 |
-    And the table "groups" should stay unchanged but the row with id "6129484611666145821"
-    And the table "groups" at id "6129484611666145821" should be:
+    And the table "users" at group_id "5577006791947779410" should be:
+      | group_id            | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | owned_group_id | last_ip   |
+      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | null           | 127.0.0.1 |
+    And the table "groups" should stay unchanged but the row with id "5577006791947779410"
+    And the table "groups" at id "5577006791947779410" should be:
       | id                  | name         | type     | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | opened | send_emails |
-      | 6129484611666145821 | tmp-49727887 | UserSelf | tmp-49727887 | true                                              | false  | false       |
-    And the table "groups_groups" should stay unchanged but the row with id "4037200794235010051"
-    And the table "groups_groups" at id "4037200794235010051" should be:
+      | 5577006791947779410 | tmp-49727887 | UserSelf | tmp-49727887 | true                                              | false  | false       |
+    And the table "groups_groups" should stay unchanged but the row with id "6129484611666145821"
+    And the table "groups_groups" at id "6129484611666145821" should be:
       | id                  | parent_group_id | child_group_id      | child_order |
-      | 4037200794235010051 | 4               | 6129484611666145821 | 1           |
+      | 6129484611666145821 | 4               | 5577006791947779410 | 1           |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 1                   | 1                   | true    |
       | 1                   | 2                   | false   |
       | 1                   | 3                   | false   |
       | 1                   | 4                   | false   |
-      | 1                   | 6129484611666145821 | false   |
+      | 1                   | 5577006791947779410 | false   |
       | 2                   | 2                   | true    |
       | 2                   | 4                   | false   |
-      | 2                   | 6129484611666145821 | false   |
+      | 2                   | 5577006791947779410 | false   |
       | 3                   | 3                   | true    |
       | 4                   | 4                   | true    |
-      | 4                   | 6129484611666145821 | false   |
-      | 6129484611666145821 | 6129484611666145821 | true    |
+      | 4                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
     And the table "sessions" should be:
-      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_id             | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
+      | access_token                     | ABS(TIMESTAMPDIFF(SECOND, NOW(), expires_at) - 7200) < 3 | user_group_id       | ABS(TIMESTAMPDIFF(SECOND, NOW(), issued_at)) < 3 | issuer  |
       | ny93zqri9a2adn4v1ut6izd76xb3pccw | true                                                     | 5577006791947779410 | true                                             | backend |

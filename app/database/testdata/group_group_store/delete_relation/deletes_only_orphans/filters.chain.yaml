@@ -1,0 +1,18 @@
+groups:
+  - {id: 1}
+  - {id: 2, type: "Class"}
+  - {id: 3, type: "Team"}
+  - {id: 4, type: "Club"}
+  - {id: 5, type: "Friends"}
+  - {id: 10, type: "Other"}
+  - {id: 111, type: "UserSelf"}
+
+users: [{group_id: 111}]
+
+filters:
+  - {group_id: 1, user_group_id: 111}
+  - {group_id: 2, user_group_id: 111}
+  - {group_id: 3, user_group_id: 111}
+  - {group_id: 4, user_group_id: 111}
+  - {group_id: 5, user_group_id: 111}
+  - {group_id: 10, user_group_id: 111}

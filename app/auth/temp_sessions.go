@@ -13,7 +13,7 @@ import (
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user
-func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken string, expiresIn int32, err error) {
+func CreateNewTempSession(s *database.SessionStore, userGroupID int64) (accessToken string, expiresIn int32, err error) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	err = s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
@@ -22,10 +22,10 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 			return err
 		}
 		return retryStore.Sessions().InsertMap(map[string]interface{}{
-			"access_token": accessToken,
-			"expires_at":   gorm.Expr("?  + INTERVAL ? SECOND", database.Now(), expiresIn),
-			"user_id":      userID,
-			"issuer":       "backend",
+			"access_token":  accessToken,
+			"expires_at":    gorm.Expr("?  + INTERVAL ? SECOND", database.Now(), expiresIn),
+			"user_group_id": userGroupID,
+			"issuer":        "backend",
 		})
 	})
 	if err != nil {
@@ -33,7 +33,8 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 		return
 	}
 
-	logging.Infof("Generated a session token expiring in %d seconds for a temporary user %d", expiresIn, userID)
+	logging.Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+		expiresIn, userGroupID)
 
 	return
 }

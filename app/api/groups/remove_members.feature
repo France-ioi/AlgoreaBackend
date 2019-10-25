@@ -1,20 +1,6 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
-    Given the database has the following table 'users':
-      | id | login  | self_group_id | owned_group_id |
-      | 1  | owner  | 21            | 22             |
-      | 2  | john   | 31            | 32             |
-      | 3  | jane   | 41            | 42             |
-      | 4  | jack   | 51            | 52             |
-      | 5  | james  | 61            | 62             |
-      | 6  | jacob  | 71            | 72             |
-      | 7  | janis  | 81            | 82             |
-      | 8  | jeff   | 91            | 92             |
-      | 9  | jenna  | 101           | 102            |
-      | 10 | jannet | 111           | 112            |
-      | 11 | judith | 121           | 122            |
-      | 12 | nobody | null          | 132            |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id  |
       | 13  |
       | 14  |
@@ -41,6 +27,19 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 121 |
       | 122 |
       | 132 |
+    And the database has the following table 'users':
+      | login  | group_id | owned_group_id |
+      | owner  | 21       | 22             |
+      | john   | 31       | 32             |
+      | jane   | 41       | 42             |
+      | jack   | 51       | 52             |
+      | james  | 61       | 62             |
+      | jacob  | 71       | 72             |
+      | janis  | 81       | 82             |
+      | jeff   | 91       | 92             |
+      | jenna  | 101      | 102            |
+      | jannet | 111      | 112            |
+      | judith | 121      | 122            |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
@@ -95,23 +94,23 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 16 | 22              | 13             | direct             | null                      |
 
   Scenario: Remove members
-    Given I am the user with id "1"
-    When I send a DELETE request to "/groups/13/members?user_ids=2,3,4,5,6,7,8,9,10,11,12,404"
+    Given I am the user with group_id "21"
+    When I send a DELETE request to "/groups/13/members?user_group_ids=31,41,51,61,71,81,91,101,111,121,131,404"
     And the response body should be, in JSON:
     """
     {
       "data": {
-        "2":   "invalid",
-        "3":   "invalid",
-        "4":   "success",
-        "5":   "success",
-        "6":   "unchanged",
-        "7":   "invalid",
-        "8":   "invalid",
-        "9":   "invalid",
-        "10":  "success",
-        "11":  "invalid",
-        "12":  "not_found",
+        "31":  "invalid",
+        "41":  "invalid",
+        "51":  "success",
+        "61":  "success",
+        "71":  "unchanged",
+        "81":  "invalid",
+        "91":  "invalid",
+        "101": "invalid",
+        "111": "success",
+        "121": "invalid",
+        "131": "not_found",
         "404": "not_found"
       },
       "message": "deleted",

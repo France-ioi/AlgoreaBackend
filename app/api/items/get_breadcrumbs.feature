@@ -1,18 +1,18 @@
 Feature: Get item information for breadcrumb
 
 Background:
-  Given the database has the following table 'users':
-    | id | login | self_group_id | owned_group_id | default_language |
-    | 1  | jdoe  | 11            | 12             | fr               |
-  Given the database has the following table 'languages':
-    | id | code |
-    | 1  | en   |
-    | 2  | fr   |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | id | name       | text_id | grade | type      |
     | 11 | jdoe       |         | -2    | UserAdmin |
     | 12 | jdoe-admin |         | -2    | UserAdmin |
     | 13 | Group B    |         | -2    | Class     |
+  And the database has the following table 'languages':
+    | id | code |
+    | 1  | en   |
+    | 2  | fr   |
+  And the database has the following table 'users':
+    | login | group_id | owned_group_id | default_language |
+    | jdoe  | 11       | 12             | fr               |
   And the database has the following table 'items':
     | id | type     | default_language_id |
     | 21 | Root     | 1                   |
@@ -37,15 +37,15 @@ Background:
 
 Scenario: Full access on all breadcrumb
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-    | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 43 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+    | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 43 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with id "1"
+  And I am the user with group_id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
@@ -59,15 +59,15 @@ Scenario: Full access on all breadcrumb
 
 Scenario: Partial access on all breadcrumb
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with id "1"
+  And I am the user with group_id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
@@ -81,15 +81,15 @@ Scenario: Partial access on all breadcrumb
 
 Scenario: Partial access to all items except for last which is greyed
   Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with id "1"
+  And I am the user with group_id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:

@@ -291,7 +291,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 
 type activeContestInfo struct {
 	ItemID                   int64
-	UserID                   int64
+	UserGroupID              int64
 	ContestEnteringCondition string
 	IsTeamContest            bool
 
@@ -331,7 +331,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 			MIN(contest_participations.finished_at) AS finished_at`).
 		Joins(`
 			JOIN groups_ancestors_active
-				ON groups_ancestors_active.child_group_id = ?`, user.SelfGroupID).
+				ON groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors_active.ancestor_group_id`).
 		Joins(`
@@ -355,35 +355,33 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		StartTime:                time.Time(results[0].EnteredAt),
 		EndTime:                  endTime,
 		ItemID:                   results[0].ItemID,
-		UserID:                   user.ID,
+		UserGroupID:              user.GroupID,
 		ContestEnteringCondition: results[0].ContestEnteringCondition,
 		IsTeamContest:            results[0].IsTeamContest,
 	}
 }
 
 func (s *ItemStore) closeContest(itemID int64, user *User) {
-	if user.SelfGroupID != nil {
-		mustNotBeError(s.ContestParticipations().
-			Where("item_id = ? AND group_id = ?", itemID, user.SelfGroupID).
-			UpdateColumn("finished_at", Now()).Error())
+	mustNotBeError(s.ContestParticipations().
+		Where("item_id = ? AND group_id = ?", itemID, user.GroupID).
+		UpdateColumn("finished_at", Now()).Error())
 
-		groupItemStore := s.GroupItems()
+	groupItemStore := s.GroupItems()
 
-		// TODO: "remove partial access if other access were present" (what did he mean???)
-		groupItemStore.removePartialAccess(*user.SelfGroupID, itemID)
-		mustNotBeError(groupItemStore.db.Exec(`
-			DELETE groups_items
-			FROM groups_items
-			JOIN items_ancestors ON
-				items_ancestors.child_item_id = groups_items.item_id AND
-				items_ancestors.ancestor_item_id = ?
-			WHERE groups_items.group_id = ? AND
-				(cached_full_access_since IS NULL OR cached_full_access_since > NOW()) AND
-				owner_access = 0 AND manager_access = 0`, itemID, *user.SelfGroupID).Error)
+	// TODO: "remove partial access if other access were present" (what did he mean???)
+	groupItemStore.removePartialAccess(user.GroupID, itemID)
+	mustNotBeError(groupItemStore.db.Exec(`
+		DELETE groups_items
+		FROM groups_items
+		JOIN items_ancestors ON
+			items_ancestors.child_item_id = groups_items.item_id AND
+			items_ancestors.ancestor_item_id = ?
+		WHERE groups_items.group_id = ? AND
+			(cached_full_access_since IS NULL OR cached_full_access_since > NOW()) AND
+			owner_access = 0 AND manager_access = 0`, itemID, user.GroupID).Error)
 
-		// we do not need to call GroupItemStore.After() because we do not grant new access here
-		groupItemStore.computeAllAccess()
-	}
+	// we do not need to call GroupItemStore.After() because we do not grant new access here
+	groupItemStore.computeAllAccess()
 }
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
@@ -411,7 +409,7 @@ func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 		Joins("JOIN groups_items ON groups_items.item_id = items.id").
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND
-				groups_ancestors_active.child_group_id = ?`, user.SelfGroupID).
+				groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Group("items.id").
 		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()")
 }

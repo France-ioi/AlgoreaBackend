@@ -1,11 +1,8 @@
 Feature: Ask for a hint - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id |
-      | 10 | john  | 101           |
-    And the database has the following table 'groups':
-      | id  |
-      | 101 |
+    Given the database has the following users:
+      | login | group_id |
+      | john  | 101      |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
@@ -26,20 +23,20 @@ Feature: Ask for a hint - robustness
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | creator_user_id |
-      | 101      | 10      | 2017-05-29 06:38:38         | 10              |
-      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
+      | group_id | item_id | cached_partial_access_since |
+      | 101      | 10      | 2017-05-29 06:38:38         |
+      | 101      | 50      | 2017-05-29 06:38:38         |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 50      | 100               |
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     When I send a POST request to "/items/ask-hint" with the following body:
       """
       []
@@ -50,7 +47,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with id "404"
+    Given I am the user with group_id "404"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -84,7 +81,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -98,7 +95,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -118,11 +115,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: itemUrls of task_token and hint_requested don't match
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -132,7 +129,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=555555555555555555",
@@ -152,11 +149,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in hint_requested doesn't match the user's id
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -186,11 +183,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt in hint_requested & task_token don't match
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -200,7 +197,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "101",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -220,11 +217,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idItemLocal in hint_requested & task_token don't match
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -234,7 +231,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idAttempt": "100",
         "idItemLocal": "51",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -254,11 +251,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -268,7 +265,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -288,11 +285,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt not found
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -302,7 +299,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "10",
         "idAttempt": "101",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -322,11 +319,11 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: missing askedHint
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -336,7 +333,7 @@ Feature: Ask for a hint - robustness
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936"

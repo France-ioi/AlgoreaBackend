@@ -233,10 +233,10 @@ func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bo
 	}
 	query := `
 		INSERT INTO groups_items
-			(group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access, creator_user_id)
-		VALUES (?, ?, NOW(), NOW(), 1, -1)` // Note: creator_user_id is incorrect here, but it is required
+			(group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access)
+		VALUES (?, ?, NOW(), NOW(), 1)`
 	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
-	valuesTemplate := ", (?, ?, NOW(), NOW(), 1, -1)"
+	valuesTemplate := ", (?, ?, NOW(), NOW(), 1)"
 	for item := range groupItemsToUnlock {
 		values = append(values, item.groupID, item.itemID)
 	}

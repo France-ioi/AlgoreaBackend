@@ -24,9 +24,9 @@ type groupsMembersViewResponseRow struct {
 	// Nullable
 	// required: true
 	User *struct {
-		// `users.id`
+		// `users.group_id`
 		// required: true
-		ID *int64 `json:"id,string"`
+		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 		// Nullable
@@ -123,12 +123,12 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			groups_groups.id,
 			groups_groups.type_changed_at,
 			groups_groups.type,
-			users.id AS user__id,
+			users.group_id AS user__group_id,
 			users.login AS user__login,
 			users.first_name AS user__first_name,
 			users.last_name AS user__last_name,
 			users.grade AS user__grade`).
-		Joins("LEFT JOIN users ON users.self_group_id = groups_groups.child_group_id").
+		Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
 		WhereGroupRelationIsActual().
 		Where("groups_groups.parent_group_id = ?", groupID)
 
@@ -148,7 +148,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 	var result []groupsMembersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 	for index := range result {
-		if result[index].User.ID == nil {
+		if result[index].User.GroupID == nil {
 			result[index].User = nil
 		}
 	}

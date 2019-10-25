@@ -37,7 +37,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2)}
+			mockUser := &User{GroupID: 2}
 			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).
 				WithArgs(2).
 				WillReturnRows(mock.NewRows([]string{"id"}))

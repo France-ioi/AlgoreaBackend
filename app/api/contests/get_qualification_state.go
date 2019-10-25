@@ -187,7 +187,7 @@ func (srv *Service) checkGroupID(
 		if teamGroupID != groupID {
 			return service.InsufficientAccessRightsError
 		}
-	} else if user.SelfGroupID == nil || groupID != *user.SelfGroupID {
+	} else if groupID != user.GroupID {
 		return service.InsufficientAccessRightsError
 	}
 	return service.NoError
@@ -220,7 +220,7 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 	if isTeamOnly {
 		service.MustNotBeError(store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			WhereActiveGroupRelationIsActual().
-			Joins("JOIN users ON users.self_group_id = groups_groups_active.child_group_id").
+			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
 			Joins(`
 				LEFT JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id`).
 			Joins(`
@@ -229,13 +229,13 @@ func (srv *Service) getQualificatonInfo(isTeamOnly bool, groupID, itemID int64, 
 			Group("groups_groups_active.child_group_id").
 			Order("groups_groups_active.child_group_id").
 			Select(`
-					users.first_name, users.last_name, users.self_group_id AS group_id, users.login,
+					users.first_name, users.last_name, users.group_id AS group_id, users.login,
 					IFNULL(MAX(groups_contest_items.can_enter_from <= NOW() AND NOW() < groups_contest_items.can_enter_until), 0) AS can_enter`).
 			Scan(&otherMembers).Error())
 		membersCount = int32(len(otherMembers))
 		var currentUserIndex int
 		for index := range otherMembers {
-			if otherMembers[index].GroupID == *user.SelfGroupID {
+			if otherMembers[index].GroupID == user.GroupID {
 				currentUserCanEnter = otherMembers[index].CanEnter
 				currentUserIndex = index
 			}

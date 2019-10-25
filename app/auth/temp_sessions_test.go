@@ -27,21 +27,21 @@ func TestCreateNewTempSession(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	expectedUserID := int64(12345)
+	expectedUserGroupID := int64(12345)
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
+		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_group_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserGroupID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserGroupID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
-			int32(2*60*60), expectedUserID)))
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+			int32(2*60*60), expectedUserGroupID)))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -57,32 +57,32 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	expectedUserID := int64(12345)
+	expectedUserGroupID := int64(12345)
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessTokens[0], 2*60*60, "backend", expectedUserID).
+		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_group_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessTokens[0], 2*60*60, "backend", expectedUserGroupID).
 		WillReturnError(
 			&mysql.MySQLError{
 				Number:  1062,
 				Message: fmt.Sprintf("ERROR 1062 (23000): Duplicate entry '%s' for key 'PRIMARY'", expectedAccessTokens[0]),
 			})
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessTokens[1], 2*60*60, "backend", expectedUserID).
+		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_group_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessTokens[1], 2*60*60, "backend", expectedUserGroupID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserGroupID)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedAccessTokens[1], accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
-			int32(2*60*60), expectedUserID)))
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+			int32(2*60*60), expectedUserGroupID)))
 	assert.Equal(t, 1, strings.Count(logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
-			int32(2*60*60), expectedUserID))))
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+			int32(2*60*60), expectedUserGroupID))))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -95,9 +95,9 @@ func TestCreateNewTempSession_HandlesGeneratorError(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	expectedUserID := int64(12345)
+	expectedUserGroupID := int64(12345)
 
-	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserGroupID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
@@ -113,14 +113,14 @@ func TestCreateNewTempSession_HandlesDBError(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	expectedUserID := int64(12345)
+	expectedUserGroupID := int64(12345)
 	expectedError := errors.New("some error")
 	mock.ExpectExec("^"+regexp.QuoteMeta(
-		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
-	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserID).
+		"INSERT INTO `sessions` (access_token, expires_at, issuer, user_group_id) VALUES (?, NOW() + INTERVAL ? SECOND, ?, ?)",
+	)+"$").WithArgs(expectedAccessToken, 2*60*60, "backend", expectedUserGroupID).
 		WillReturnError(expectedError)
 
-	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserID)
+	accessToken, expireIn, err := CreateNewTempSession(database.NewDataStore(db).Sessions(), expectedUserGroupID)
 	assert.Equal(t, expectedError, err)
 	assert.Equal(t, "", accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours

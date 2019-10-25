@@ -1,11 +1,6 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id |
-      | 1  | owner | 21            | 22             |
-      | 2  | john  | 31            | 32             |
-      | 3  | jane  | 41            | 42             |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name        | type      | team_item_id |
       | 10 | Parent      | Club      | null         |
       | 11 | Group A     | Friends   | null         |
@@ -20,6 +15,11 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 32 | john-admin  | UserAdmin | null         |
       | 41 | jane        | UserSelf  | null         |
       | 42 | jane-admin  | UserAdmin | null         |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id |
+      | owner | 21       | 22             |
+      | john  | 31       | 32             |
+      | jane  | 41       | 42             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 10              | 11             | direct             |
@@ -89,21 +89,21 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 10               | 70            |
       | 60               | 70            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 10       | 50      | null                        | null                       | null                     | null                          | 1               |
-      | 11       | 50      | null                        | null                       | null                     | null                          | 1               |
-      | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          | 1               |
-      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 1               |
-      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
-      | 15       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 1               |
-      | 16       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 1               |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 41       | 50      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 1               |
-      | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 1               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 10       | 50      | null                        | null                       | null                     | null                          |
+      | 11       | 50      | null                        | null                       | null                     | null                          |
+      | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          |
+      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
+      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
+      | 15       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          |
+      | 16       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 41       | 50      | 2018-05-29 06:38:38         | null                       | null                     | null                          |
+      | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -120,7 +120,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 41       | 70      | 00:01:00        |
 
   Scenario: Non-team contest
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/contests/50/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -144,7 +144,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     """
 
   Scenario: Team-only contest
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/contests/60/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -168,7 +168,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     """
 
   Scenario: Team-only contest (only the first row)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/contests/60/groups/11/members/additional-times?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -185,7 +185,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     """
 
   Scenario: Non-team contest (only the first row, inverse order)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/contests/50/groups/11/members/additional-times?limit=1&sort=-name"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -202,7 +202,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     """
 
   Scenario: Team-only contest (start from the second row)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/contests/60/groups/11/members/additional-times?from.name=Group%20B&from.id=13"
     Then the response code should be 200
     And the response body should be, in JSON:

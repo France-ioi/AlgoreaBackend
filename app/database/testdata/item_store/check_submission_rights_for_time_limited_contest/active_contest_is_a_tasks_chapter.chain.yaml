@@ -1,7 +1,7 @@
-users: [{id: 5, self_group_id: 15, login: 5}]
 groups: [{id: 15}, {id: 24}]
+users: [{group_id: 15, login: 5}]
 groups_items: [{group_id: 24, item_id: 115, partial_access_since: 2019-03-22 08:44:55,
-                cached_partial_access_since: 2019-03-22 08:44:55, creator_user_id: 1}]
+                cached_partial_access_since: 2019-03-22 08:44:55}]
 groups_contest_items: [{group_id: 24, item_id: 115, additional_time: 01:00:00}]
 groups_groups: [{parent_group_id: 24, child_group_id: 15, type: requestAccepted}]
 groups_ancestors:

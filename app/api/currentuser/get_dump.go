@@ -15,8 +15,8 @@ import (
 //
 //     * `current_user` (from `users`): all attributes;
 //     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
-//     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
-//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes + `groups.name`.
+//     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
+//     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```

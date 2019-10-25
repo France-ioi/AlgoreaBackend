@@ -178,7 +178,7 @@ type itemAnswerGetResponse struct {
 		// required:true
 		ID int64 `json:"id,string"`
 		// required:true
-		UserID int64 `json:"user_id,string"`
+		UserGroupID int64 `json:"user_group_id,string"`
 		// required:true
 		ItemID int64 `json:"item_id,string"`
 		// Nullable
@@ -205,10 +205,6 @@ type itemAnswerGetResponse struct {
 		// Nullable
 		// required:true
 		GradedAt *time.Time `json:"graded_at"`
-		// Nullable
-		// format:integer
-		// required:true
-		GraderUserID *string `json:"grader_user_id"`
 	}
 }
 

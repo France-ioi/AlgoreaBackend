@@ -38,20 +38,20 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	done := make(chan bool)
 	doRequest := func(timeout bool) {
 		response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-			"POST", "/auth/token", "", &database.User{ID: 2},
+			"POST", "/auth/token", "", &database.User{GroupID: 2},
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
 					mock.ExpectQuery("^" +
-						regexp.QuoteMeta("SELECT refresh_token FROM `refresh_tokens`  WHERE (user_id = ?) LIMIT 1") + "$").
+						regexp.QuoteMeta("SELECT refresh_token FROM `refresh_tokens`  WHERE (user_group_id = ?) LIMIT 1") + "$").
 						WithArgs(int64(2)).WillReturnRows(mock.NewRows([]string{"refresh_token"}).AddRow("firstrefreshtoken"))
 					mock.ExpectBegin()
-					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_id = ? AND access_token != ?)")+"$").
+					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_group_id = ? AND access_token != ?)")+"$").
 						WithArgs(int64(2), "accesstoken").WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
-						"INSERT INTO `sessions` (access_token, expires_at, issued_at, issuer, user_id) VALUES (?, ?, NOW(), ?, ?)")+
+						"INSERT INTO `sessions` (access_token, expires_at, issued_at, issuer, user_group_id) VALUES (?, ?, NOW(), ?, ?)")+
 						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), "login-module", int64(2)).
 						WillReturnResult(sqlmock.NewResult(123, 1))
-					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_id = ?)")+
+					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_group_id = ?)")+
 						"$").WithArgs("newfirstrefreshtoken", int64(2)).WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectCommit()
 				}

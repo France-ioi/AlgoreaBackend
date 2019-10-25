@@ -15,9 +15,9 @@ func TestGroupItemStore_RemovePartialAccess(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups_items:
 			- {group_id: 10, item_id: 1234, manager_access: 0, partial_access_since: 2019-03-22 08:44:55,
-				cached_partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}
+				cached_partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
 			- {group_id: 11, item_id: 1235, manager_access: 1, partial_access_since: 2019-03-22 08:44:55,
-				cached_partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1, creator_user_id: 1}`)
+				cached_partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}`)
 	defer func() { _ = db.Close() }()
 
 	groupItemStore := database.NewDataStore(db).GroupItems()

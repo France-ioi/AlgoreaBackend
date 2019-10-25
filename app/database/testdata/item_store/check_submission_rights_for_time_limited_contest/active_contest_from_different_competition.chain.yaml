@@ -1,13 +1,12 @@
-users: [{id: 7, self_group_id: 17, login: 7}]
 groups: [{id: 17}, {id: 26}]
+users: [{group_id: 17, login: 7}]
 groups_groups: [{parent_group_id: 26, child_group_id: 17, type: requestAccepted}]
 groups_ancestors:
   - {ancestor_group_id: 17, child_group_id: 17}
   - {ancestor_group_id: 26, child_group_id: 17}
   - {ancestor_group_id: 26, child_group_id: 26}
 groups_items:
-  - {group_id: 26, item_id: 114, partial_access_since: 2019-03-22 08:44:55, cached_partial_access_since: 2019-03-22 08:44:55,
-    creator_user_id: 1}
-  - {group_id: 26, item_id: 115, partial_access_since: 2019-03-22 08:44:55, cached_partial_access_since: 2019-03-22 08:44:55, creator_user_id: 1}
+  - {group_id: 26, item_id: 114, partial_access_since: 2019-03-22 08:44:55, cached_partial_access_since: 2019-03-22 08:44:55}
+  - {group_id: 26, item_id: 115, partial_access_since: 2019-03-22 08:44:55, cached_partial_access_since: 2019-03-22 08:44:55}
 groups_contest_items:
   - {group_id: 26, item_id: 114, additional_time: 01:00:00}

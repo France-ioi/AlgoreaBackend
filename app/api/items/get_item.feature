@@ -1,21 +1,24 @@
 Feature: Get item view information
 
   Background:
-    Given the database has the following table 'users':
-      | id | login      | temp_user | self_group_id | owned_group_id | default_language |
-      | 1  | jdoe       | 0         | 11            | 12             |                  |
-      | 2  | nosolution | 0         | 14            | 16             |                  |
-      | 3  | fr         | 0         | 17            | 21             | fr               |
-      | 4  | grayed     | 0         | 22            | 26             |                  |
-    And the database has the following table 'groups':
-      | id | name       | text_id | grade | type      |
-      | 11 | jdoe       |         | -2    | UserAdmin |
-      | 12 | jdoe-admin |         | -2    | UserAdmin |
-      | 13 | Group B    |         | -2    | Class     |
-      | 14 | nosolution |         | -2    | UserAdmin |
-      | 15 | Group C    |         | -2    | Class     |
-      | 22 | grayed     |         | -2    | Class     |
-      | 26 | Group D    |         | -2    | Class     |
+    Given the database has the following table 'groups':
+      | id | name             | text_id | grade | type      |
+      | 11 | jdoe             |         | -2    | UserSelf  |
+      | 12 | jdoe-admin       |         | -2    | UserAdmin |
+      | 13 | Group B          |         | -2    | Class     |
+      | 14 | nosolution       |         | -2    | UserSelf  |
+      | 15 | Group C          |         | -2    | Class     |
+      | 16 | nosolution-admin |         | -2    | UserAdmin |
+      | 17 | fr               |         | -2    | UserSelf  |
+      | 21 | fr-admin         |         | -2    | UserAdmin |
+      | 22 | grayed           |         | -2    | UserSelf  |
+      | 26 | grayed-admin     |         | -2    | UserAdmin |
+    And the database has the following table 'users':
+      | login      | temp_user | group_id | owned_group_id | default_language |
+      | jdoe       | 0         | 11       | 12             |                  |
+      | nosolution | 0         | 14       | 16             |                  |
+      | fr         | 0         | 17       | 21             | fr               |
+      | grayed     | 0         | 22       | 26             |                  |
     And the database has the following table 'items':
       | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
       | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
@@ -55,31 +58,31 @@ Feature: Get item view information
       | 109 | 22       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
       | 110 | 22       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 1       | 200     | 101               |
-      | 1       | 210     | 102               |
-      | 1       | 220     | 103               |
-      | 2       | 210     | 104               |
-      | 3       | 200     | 105               |
-      | 3       | 210     | 106               |
-      | 4       | 200     | 108               |
-      | 4       | 210     | 109               |
-      | 4       | 220     | 110               |
+      | user_group_id | item_id | active_attempt_id |
+      | 11            | 200     | 101               |
+      | 11            | 210     | 102               |
+      | 11            | 220     | 103               |
+      | 14            | 210     | 104               |
+      | 17            | 200     | 105               |
+      | 17            | 210     | 106               |
+      | 22            | 200     | 108               |
+      | 22            | 210     | 109               |
+      | 22            | 220     | 110               |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since | creator_user_id |
-      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
-      | 44 | 13       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
-      | 45 | 13       | 220     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
-      | 46 | 15       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2037-05-29 06:38:38           | 0               |
-      | 47 | 26       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
-      | 48 | 26       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
-      | 49 | 26       | 220     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           | 0               |
+      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since |
+      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+      | 44 | 13       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+      | 45 | 13       | 220     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+      | 46 | 15       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2037-05-29 06:38:38           |
+      | 47 | 26       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+      | 48 | 26       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+      | 49 | 26       | 220     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
     And the database has the following table 'languages':
       | id | code |
       | 2  | fr   |
 
   Scenario: Full access on all items
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -219,7 +222,7 @@ Feature: Get item view information
     """
 
   Scenario: Chapter as a root node (full access)
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     When I send a GET request to "/items/210"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -274,7 +277,7 @@ Feature: Get item view information
     """
 
   Scenario: Chapter as a root node (without solution access)
-    Given I am the user with id "2"
+    Given I am the user with group_id "14"
     When I send a GET request to "/items/210"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -328,7 +331,7 @@ Feature: Get item view information
     """
 
   Scenario: Full access on all items (with user language)
-    Given I am the user with id "3"
+    Given I am the user with group_id "17"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -457,7 +460,7 @@ Feature: Get item view information
     """
 
   Scenario: Grayed access on children
-    Given I am the user with id "4"
+    Given I am the user with group_id "22"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:

@@ -20,14 +20,14 @@ import (
 func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"GET", "/current-user/full-dump", ``,
-		&database.User{ID: 1, OwnedGroupID: ptrInt64(10), SelfGroupID: ptrInt64(11)},
+		&database.User{OwnedGroupID: ptrInt64(10), GroupID: 11},
 		func(sqlmock sqlmock.Sqlmock) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`') FROM `INFORMATION_SCHEMA`.`COLUMNS`  "+
 					"WHERE (TABLE_SCHEMA = ?) AND (TABLE_NAME = ?)",
-			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.id").AddRow("users.name"))
+			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.group_id").AddRow("users.name"))
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
-				"SELECT users.id, users.name FROM `users`  WHERE (users.id = ?)") + "$").
+				"SELECT users.group_id, users.name FROM `users`  WHERE (group_id = ?)") + "$").
 				WillReturnError(errors.New("some error"))
 		},
 		func(router *chi.Mux, baseService *service.Base) {

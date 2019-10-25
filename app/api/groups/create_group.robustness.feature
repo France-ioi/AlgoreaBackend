@@ -1,23 +1,21 @@
 Feature: Create a group (groupCreate) - robustness
 
   Background:
-    Given the database has the following table 'users':
-      | id | login  | temp_user | self_group_id | owned_group_id |
-      | 1  | owner  | 0         | 21            | 22             |
-      | 2  | tmp12  | 1         | 31            | 32             |
-      | 3  | noself | 0         | null          | 42             |
-      | 4  | john   | 0         | 51            | 52             |
-      | 5  | weird  | 0         | 61            | null           |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name         | type      | team_item_id |
       | 21 | owner        | UserSelf  | null         |
       | 22 | owner-admin  | UserAdmin | null         |
       | 31 | tmp12        | UserSelf  | null         |
       | 32 | tmp12-admin  | UserAdmin | null         |
-      | 42 | noself-admin | UserAdmin | null         |
       | 51 | john         | UserSelf  | null         |
       | 52 | john-admin   | UserAdmin | null         |
       | 61 | weird        | UserSelf  | null         |
+    And the database has the following table 'users':
+      | login  | temp_user | group_id | owned_group_id |
+      | owner  | 0         | 21       | 22             |
+      | tmp12  | 1         | 31       | 32             |
+      | john   | 0         | 51       | 52             |
+      | weird  | 0         | 61       | null           |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type |
     And the database has the following table 'groups_ancestors':
@@ -31,13 +29,13 @@ Feature: Create a group (groupCreate) - robustness
       | 52                | 52             | 1       |
       | 61                | 61             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       | 1               |
-      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       | 1               |
-      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       |
+      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       |
+      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        |
 
   Scenario: No name
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"type": "Class"}
@@ -57,7 +55,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Empty name
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "", "type": "Class"}
@@ -77,7 +75,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: No type
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name"}
@@ -97,7 +95,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario Outline: Empty or wrong type
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "<type>"}
@@ -127,7 +125,7 @@ Feature: Create a group (groupCreate) - robustness
     | RootTemp  |
 
   Scenario: Zero item_id
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": "0"}
@@ -147,7 +145,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: item_id set for non-team group
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class", "item_id": "1"}
@@ -159,19 +157,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Temporary user
-    Given I am the user with id "2"
-    When I send a POST request to "/groups" with the following body:
-    """
-    {"name": "some name", "type": "Class"}
-    """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: User with empty self group
-    Given I am the user with id "3"
+    Given I am the user with group_id "31"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -183,7 +169,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User with empty owned group
-    Given I am the user with id "5"
+    Given I am the user with group_id "61"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -195,7 +181,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: The item is not visible
-    Given I am the user with id "4"
+    Given I am the user with group_id "51"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": 10}

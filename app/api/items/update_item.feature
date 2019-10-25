@@ -1,13 +1,13 @@
 Feature: Update item
 
 Background:
-  Given the database has the following table 'users':
-    | id | login | temp_user | self_group_id | owned_group_id |
-    | 1  | jdoe  | 0         | 11            | 12             |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | id | name       | type      |
     | 11 | jdoe       | UserSelf  |
     | 12 | jdoe-admin | UserAdmin |
+  And the database has the following table 'users':
+    | login | temp_user | group_id | owned_group_id |
+    | jdoe  | 0         | 11       | 12             |
   And the database has the following table 'items':
     | id | type    | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | group_code_enter |
     | 21 | Chapter | http://someurl1.com/ | 2                   | 1        | Task 1  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                 | 99               | Half                       | 1              | 10                    | 1            | 01:20:30 | 1               | Closed        | 3     | 1                |
@@ -23,10 +23,10 @@ Background:
     | 50               | 21            |
     | 50               | 60            |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | manager_access | cached_manager_access | owner_access | creator_user_id |
-    | 40 | 11       | 50      | false          | false                 | true         | 1               |
-    | 41 | 11       | 21      | true           | true                  | false        | 1               |
-    | 42 | 11       | 60      | false          | false                 | true         | 1               |
+    | id | group_id | item_id | manager_access | cached_manager_access | owner_access |
+    | 40 | 11       | 50      | false          | false                 | true         |
+    | 41 | 11       | 21      | true           | true                  | false        |
+    | 42 | 11       | 60      | false          | false                 | true         |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
@@ -37,7 +37,7 @@ Background:
     | 3  |
 
 Scenario: Valid
-  Given I am the user with id "1"
+  Given I am the user with group_id "11"
   When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -58,7 +58,7 @@ Scenario: Valid
     | 11       | 60      | false          | false                 | true         |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     And the database has the following table 'groups':
       | id    |
       | 12345 |
@@ -73,9 +73,9 @@ Scenario: Valid
       | language_id | item_id |
       | 3           | 50      |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | manager_access | cached_manager_access | owner_access | creator_user_id |
-      | 43 | 11       | 12      | true           | true                  | false        | 1               |
-      | 44 | 11       | 34      | false          | false                 | true         | 1               |
+      | id | group_id | item_id | manager_access | cached_manager_access | owner_access |
+      | 43 | 11       | 12      | true           | true                  | false        |
+      | 44 | 11       | 34      | false          | false                 | true         |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -131,7 +131,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty full_screen
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -148,7 +148,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid without any fields
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -162,7 +162,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty children array
-    Given I am the user with id "1"
+    Given I am the user with group_id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {

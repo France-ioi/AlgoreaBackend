@@ -23,7 +23,7 @@ func TestUserMiddleware(t *testing.T) {
 		name                     string
 		authHeaders              []string
 		expectedAccessToken      string
-		userIDReturnedByDB       int64
+		userGroupIDReturnedByDB  int64
 		dbError                  error
 		expectedStatusCode       int
 		expectedServiceWasCalled bool
@@ -34,10 +34,10 @@ func TestUserMiddleware(t *testing.T) {
 			name:                     "valid access token",
 			authHeaders:              []string{"Bearer 1234567"},
 			expectedAccessToken:      "1234567",
-			userIDReturnedByDB:       890123,
+			userGroupIDReturnedByDB:  890123,
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
-			expectedBody:             "user_id:890123\nBearer:1234567",
+			expectedBody:             "user_group_id:890123\nBearer:1234567",
 		},
 		{
 			name:                     "missing access token",
@@ -96,18 +96,18 @@ func TestUserMiddleware(t *testing.T) {
 			authHeaders:              []string{"Bearer " + strings.Repeat("1", 2000)},
 			expectedStatusCode:       200,
 			expectedAccessToken:      strings.Repeat("1", 2000),
-			userIDReturnedByDB:       78234,
+			userGroupIDReturnedByDB:  78234,
 			expectedServiceWasCalled: true,
-			expectedBody:             "user_id:78234\nBearer:" + strings.Repeat("1", 2000),
+			expectedBody:             "user_group_id:78234\nBearer:" + strings.Repeat("1", 2000),
 		},
 		{
 			name:                     "takes the first access token from headers",
 			authHeaders:              []string{"Basic admin:password", "Bearer 1234567", "Bearer abcdefg"},
 			expectedAccessToken:      "1234567",
-			userIDReturnedByDB:       890123,
+			userGroupIDReturnedByDB:  890123,
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
-			expectedBody:             "user_id:890123",
+			expectedBody:             "user_group_id:890123",
 		},
 	}
 	for _, tt := range tests {
@@ -117,7 +117,7 @@ func TestUserMiddleware(t *testing.T) {
 			logHook, restoreFunc := logging.MockSharedLoggerHook()
 			defer restoreFunc()
 
-			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.userIDReturnedByDB, tt.dbError)
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.userGroupIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
@@ -136,25 +136,25 @@ func TestUserMiddleware(t *testing.T) {
 }
 
 func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []string,
-	userID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
+	userGroupID int64, dbError error) (bool, *http.Response, sqlmock.Sqlmock) {
 	dbmock, mock := database.NewDBMock()
 	defer func() { _ = dbmock.Close() }()
 	if expectedSessionID != "" {
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
-				"SELECT users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id, "+
+				"SELECT users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id, "+
 					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language, l.id as default_language_id "+
 					"FROM `sessions` "+
-					"JOIN users ON users.id = sessions.user_id "+
+					"JOIN users ON users.group_id = sessions.user_group_id "+
 					"LEFT JOIN languages l ON users.default_language = l.code "+
 					"WHERE (access_token = ?) AND (expires_at > NOW()) LIMIT 1") +
 			"$").WithArgs(expectedSessionID)
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"id"})
-			if userID != 0 {
-				neededRows = neededRows.AddRow(userID)
+			neededRows := mock.NewRows([]string{"group_id"})
+			if userGroupID != 0 {
+				neededRows = neededRows.AddRow(userGroupID)
 			}
 			expectation.WillReturnRows(neededRows)
 		}
@@ -166,7 +166,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		body := "user_id:" + strconv.FormatInt(user.ID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
+		body := "user_group_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))

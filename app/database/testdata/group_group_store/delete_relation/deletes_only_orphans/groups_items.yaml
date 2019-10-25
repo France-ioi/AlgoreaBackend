@@ -1,6 +1,6 @@
-- {id: 101, group_id: 1, item_id: 1, creator_user_id: 1}
-- {id: 102, group_id: 2, item_id: 1, creator_user_id: 1}
-- {id: 103, group_id: 3, item_id: 1, creator_user_id: 1}
-- {id: 104, group_id: 4, item_id: 1, creator_user_id: 1}
-- {id: 105, group_id: 5, item_id: 1, creator_user_id: 1}
-- {id: 110, group_id: 10, item_id: 1, creator_user_id: 1}
+- {id: 101, group_id: 1, item_id: 1}
+- {id: 102, group_id: 2, item_id: 1}
+- {id: 103, group_id: 3, item_id: 1}
+- {id: 104, group_id: 4, item_id: 1}
+- {id: 105, group_id: 5, item_id: 1}
+- {id: 110, group_id: 10, item_id: 1}

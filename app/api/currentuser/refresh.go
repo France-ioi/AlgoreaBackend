@@ -33,7 +33,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	if defaultLanguage, ok := userProfile["default_language"]; ok && defaultLanguage == nil {
 		userProfile["default_language"] = database.Default()
 	}
-	service.MustNotBeError(srv.Store.Users().ByID(user.ID).UpdateColumn(userProfile).Error())
+	service.MustNotBeError(srv.Store.Users().Where("group_id = ?", user.GroupID).UpdateColumn(userProfile).Error())
 
 	response := service.UpdateSuccess(nil)
 	render.Respond(w, r, &response)

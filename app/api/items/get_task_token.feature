@@ -1,14 +1,14 @@
 Feature: Get a task token with a refreshed active attempt for an item
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id |
-      | 10 | john  | 101           |
-      | 11 | jane  | 111           |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id  | team_item_id | type     |
       | 101 | null         | UserSelf |
       | 102 | 10           | Team     |
       | 111 | null         | UserSelf |
+    And the database has the following table 'users':
+      | login | group_id |
+      | john  | 101      |
+      | jane  | 111      |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 102             | 101            | invitationAccepted |
@@ -27,14 +27,14 @@ Feature: Get a task token with a refreshed active attempt for an item
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38         | null                     | null                          | 10              |
-      | 101      | 60      | 2017-05-29 06:38:38         | null                     | 2017-05-29 06:38:38           | 10              |
-      | 111      | 50      | null                        | 2017-05-29 06:38:38      | null                          | 10              |
+      | group_id | item_id | cached_partial_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 101      | 50      | 2017-05-29 06:38:38         | null                     | null                          |
+      | 101      | 60      | 2017-05-29 06:38:38         | null                     | 2017-05-29 06:38:38           |
+      | 111      | 50      | null                        | 2017-05-29 06:38:38      | null                          |
     And time is frozen
 
   Scenario: User is able to fetch an active attempt (no active attempt set)
-    Given I am the user with id "11"
+    Given I am the user with group_id "111"
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -48,7 +48,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "5577006791947779410",
-          "idUser": "11",
+          "idUser": "111",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -59,14 +59,14 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 11      | 50      | 5577006791947779410 |
+      | user_group_id | item_id | active_attempt_id   |
+      | 111           | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 5577006791947779410 | 111      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, only full access)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -80,7 +80,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "5577006791947779410",
-          "idUser": "10",
+          "idUser": "101",
           "idItem": "task1",
           "idItemLocal": "50",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -91,14 +91,14 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 10      | 50      | 5577006791947779410 |
+      | user_group_id | item_id | active_attempt_id   |
+      | 101           | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 5577006791947779410 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     When I send a GET request to "/items/60/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -112,7 +112,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "5577006791947779410",
-          "idUser": "10",
+          "idUser": "101",
           "idItemLocal": "60",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "0",
@@ -123,20 +123,20 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 10      | 60      | 5577006791947779410 |
+      | user_group_id | item_id | active_attempt_id   |
+      | 101           | 60      | 5577006791947779410 |
     And the table "groups_attempts" should be:
       | id                  | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 5577006791947779410 | 102      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (with active attempt set)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order | score | best_answer_at | validated_at | started_at |
       | 100 | 101      | 50      | 1     | 0     | null           | null         | null       |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 50      | 100               |
     When I send a GET request to "/items/50/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
@@ -150,7 +150,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "100",
-          "idUser": "10",
+          "idUser": "101",
           "idItem": "task1",
           "idItemLocal": "50",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -166,7 +166,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 100 | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 101      | 50      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -186,7 +186,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "2",
-          "idUser": "10",
+          "idUser": "101",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -198,15 +198,15 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 2                 |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
       | 1  | 102      | 60      | 0     | 2017-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
@@ -226,7 +226,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "2",
-          "idUser": "10",
+          "idUser": "101",
           "idItemLocal": "60",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
           "nbHintsGiven": "4",
@@ -238,15 +238,15 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 10      | 60      | 2                 |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 60      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 102      | 60      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: Keeps previous started_at values
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score | best_answer_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
@@ -263,7 +263,7 @@ Feature: Get a task token with a refreshed active attempt for an item
           "bReadAnswers": true,
           "bSubmissionPossible": true,
           "idAttempt": "2",
-          "idUser": "10",
+          "idUser": "101",
           "idItemLocal": "50",
           "idItem": "task1",
           "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -274,10 +274,9 @@ Feature: Get a task token with a refreshed active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 2                 |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
       | 2  | 101      | 50      | 0     | 0           | 0         | 0            | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
-

@@ -1,11 +1,8 @@
 Feature: Save grading result - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id |
-      | 10 | john  | 101           |
-    And the database has the following table 'groups':
-      | id  |
-      | 101 |
+    Given the database has the following users:
+      | login | group_id |
+      | john  | 101      |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
@@ -29,23 +26,23 @@ Feature: Save grading result - robustness
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
-      | 101      | 70      | 2017-05-29 06:38:38         | 10              |
-      | 101      | 80      | 2017-05-29 06:38:38         | 10              |
+      | group_id | item_id | cached_partial_access_since |
+      | 101      | 50      | 2017-05-29 06:38:38         |
+      | 101      | 70      | 2017-05-29 06:38:38         |
+      | 101      | 80      | 2017-05-29 06:38:38         |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | user_group_id | item_id | active_attempt_id |
+      | 101           | 50      | 100               |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | submitted_at        |
-      | 123 | 10      | 50      | 2017-05-29 06:38:38 |
+      | id  | user_group_id | item_id | submitted_at        |
+      | 123 | 101           | 50      | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       []
@@ -57,7 +54,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with id "404"
+    Given I am the user with group_id "404"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -93,7 +90,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -107,7 +104,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -129,11 +126,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in score_token doesn't match the user's id
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -165,11 +162,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt in score_token and task_token don't match
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -179,7 +176,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "idAttempt": "101",
@@ -201,11 +198,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idItemLocal in score_token and task_token don't match
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -215,7 +212,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "51",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
         "idAttempt": "100",
@@ -237,11 +234,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: itemUrl of score_token doesn't match itemUrl of task_token
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -251,7 +248,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -273,11 +270,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Missing task_token
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -298,11 +295,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Invalid task_token
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -324,11 +321,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Invalid score_token
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -349,11 +346,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Scenario: No submission rights
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -363,7 +360,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -385,11 +382,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is missing
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -410,11 +407,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -436,11 +433,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -473,11 +470,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -487,7 +484,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "60",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -510,11 +507,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -524,7 +521,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183",
@@ -547,11 +544,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "100",
@@ -561,7 +558,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idUserAnswer": "123",
@@ -583,11 +580,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "100",
@@ -597,7 +594,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
         "idAttempt": "110",
@@ -620,11 +617,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and score is missing
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -634,7 +631,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -656,11 +653,11 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -670,7 +667,7 @@ Feature: Save grading result - robustness
     And the following token "answerToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "70",
         "idAttempt": "100",
         "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
@@ -693,14 +690,14 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: The answer has been already graded
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | score | submitted_at        |
-      | 124 | 10      | 80      | 0     | 2017-05-29 06:38:38 |
+      | id  | user_group_id | item_id | score | submitted_at        |
+      | 124 | 101           | 80      | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -711,7 +708,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -730,18 +727,18 @@ Feature: Save grading result - robustness
     And the response error message should contain "The answer has been already graded or is not found"
     And logs should contain:
     """
-    A user tries to replay a score token with a different score value ({"idAttempt":100,"idItem":80,"idUser":10,"idUserAnswer":124,"newScore":100,"oldScore":0})
+    A user tries to replay a score token with a different score value ({"idAttempt":100,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
     """
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: The answer is not found
-    Given I am the user with id "10"
+    Given I am the user with group_id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
@@ -752,7 +749,7 @@ Feature: Save grading result - robustness
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "80",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",

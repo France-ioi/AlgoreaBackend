@@ -1,0 +1,30 @@
+groups:
+  - {id: 1}
+  - {id: 2, type: "Class"}
+  - {id: 3, type: "Team"}
+  - {id: 4, type: "Club"}
+  - {id: 5, type: "Friends"}
+  - {id: 6, type: "Class"}
+  - {id: 7, type: "Other"}
+  - {id: 8, type: "Base", name: "Root"}
+  - {id: 9, type: "UserSelf"}
+  - {id: 10, type: "UserAdmin"}
+  - {id: 11, type: "Base", name: "RootSelf"}
+  - {id: 12, type: "Base", name: "RootAdmin"}
+  - {id: 111, type: "UserSelf"}
+
+users: [{group_id: 111}]
+
+filters:
+  - {group_id: 1, user_group_id: 111}
+  - {group_id: 2, user_group_id: 111}
+  - {group_id: 3, user_group_id: 111}
+  - {group_id: 4, user_group_id: 111}
+  - {group_id: 5, user_group_id: 111}
+  - {group_id: 6, user_group_id: 111}
+  - {group_id: 7, user_group_id: 111}
+  - {group_id: 8, user_group_id: 111}
+  - {group_id: 9, user_group_id: 111}
+  - {group_id: 10, user_group_id: 111}
+  - {group_id: 11, user_group_id: 111}
+  - {group_id: 12, user_group_id: 111}

@@ -1,12 +1,6 @@
 Feature: Enters a contest as a group (user self or team) (contestEnter) - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
-      | 2  | john  | 31            | 32             | John        | Doe       |
-      | 3  | jane  | 41            | 42             | Jane        | null      |
-      | 4  | jack  | 51            | 52             | Jack        | Daniel    |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name        | type      | team_item_id |
       | 10 | Team 1      | Team      | 50           |
       | 11 | Team 2      | Team      | 60           |
@@ -18,6 +12,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 42 | jane-admin  | UserAdmin | null         |
       | 51 | jack        | UserSelf  | null         |
       | 52 | jack-admin  | UserAdmin | null         |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  |
+      | john  | 31       | 32             | John        | Doe       |
+      | jane  | 41       | 42             | Jane        | null      |
+      | jack  | 51       | 52             | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 10              | 31             | invitationAccepted |
@@ -45,16 +45,16 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 1               |
-      | 11       | 50      | null                        | null                       | null                     | null                          | 1               |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
+      | 11       | 50      | null                        | null                       | null                     | null                          |
+      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: Wrong item_id
-    Given I am the user with id "2"
+    Given I am the user with group_id "31"
     When I send a POST request to "/contests/abc/groups/31"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
@@ -63,7 +63,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "contest_participations" should be empty
 
   Scenario: Wrong group_id
-    Given I am the user with id "2"
+    Given I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
@@ -72,7 +72,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "contest_participations" should be empty
 
   Scenario: The item is not visible to the current user
-    Given I am the user with id "1"
+    Given I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/21"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -81,7 +81,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "contest_participations" should be empty
 
   Scenario: The item is visible, but it doesn't exist
-    Given I am the user with id "2"
+    Given I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -93,7 +93,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id |
       | 50 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -105,7 +105,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 50 | 00:00:00 | false        |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/21"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -117,7 +117,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -129,7 +129,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -141,7 +141,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with id "1"
+    And I am the user with group_id "21"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -158,7 +158,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

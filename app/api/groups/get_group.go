@@ -104,11 +104,11 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Joins(`
 			LEFT JOIN groups_ancestors_active AS groups_descendants
 				ON groups_descendants.ancestor_group_id = groups.id AND
-					groups_descendants.child_group_id = ?`, user.SelfGroupID).
+					groups_descendants.child_group_id = ?`, user.GroupID).
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.type `+database.GroupRelationIsActiveCondition+` AND
-					groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.SelfGroupID).
+					groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("groups_ancestors_active.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
 		Where("groups.id = ?", groupID).Select(
 		`groups.id, groups.name, groups.grade, groups.description, groups.created_at,

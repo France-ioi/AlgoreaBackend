@@ -59,9 +59,6 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	}
 
 	user := srv.GetUser(r)
-	if user.SelfGroupID == nil {
-		return service.InsufficientAccessRightsError
-	}
 
 	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
@@ -79,7 +76,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			Select("id, team_item_id, code_expires_at IS NULL AS code_end_is_null, code_lifetime IS NULL AS code_lifetime_is_null").
 			Take(&groupInfo).Error()
 		if gorm.IsRecordNotFoundError(errInTransaction) {
-			logging.GetLogEntry(r).Warnf("A user with id = %d tried to join a group using a wrong/expired code", user.ID)
+			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error // rollback
 		}
@@ -87,7 +84,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 
 		if groupInfo.TeamItemID != nil {
 			var found bool
-			found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *groupInfo.TeamItemID).
+			found, err = store.Groups().TeamsMembersForItem([]int64{user.GroupID}, *groupInfo.TeamItemID).
 				WithWriteLock().
 				Where("groups.id != ?", groupInfo.ID).HasRows()
 			service.MustNotBeError(err)
@@ -102,7 +99,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByCode, groupInfo.ID, []int64{*user.SelfGroupID}, user.ID)
+			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID}, user.GroupID)
 		return errInTransaction
 	})
 	if apiError != service.NoError {
@@ -110,5 +107,5 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], joinGroupByCodeAction)
+	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], joinGroupByCodeAction)
 }

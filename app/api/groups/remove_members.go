@@ -15,16 +15,15 @@ import (
 // description:
 //   Lets an admin remove users from a group.
 //   On success the service sets `groups_groups.type` to "removed" and `type_changed_at` to current UTC time
-//   for each self group of `user_ids`. It also refreshes the access rights.
+//   for each of `user_group_ids`. It also refreshes the access rights.
 //
 //
 //   The authenticated user should be an owner of the `group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   Each of the input `user_ids` should have the input `group_id` as a parent of their self group and the
+//   Each of the input `user_group_ids` should have the input `group_id` as a parent and the
 //   `groups_groups.type` should be one of "invitationAccepted"/"requestAccepted"/"joinedByCode",
-//   otherwise the `user_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
-//   If a user is not found or doesn't have a self group, it gets skipped with `not_found` as the result.
+//   otherwise the `user_group_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
 //
 //
 //   The response status code on success (200) doesn't depend on per-group results.
@@ -33,7 +32,7 @@ import (
 //   in: path
 //   type: integer
 //   required: true
-// - name: user_ids
+// - name: user_group_ids
 //   in: query
 //   type: array
 //   items:
@@ -55,7 +54,7 @@ import (
 //           type: string
 //           description: "true"
 //         data:
-//           description: "`user_id` -> `result`"
+//           description: "`user_group_id` -> `result`"
 //           type: object
 //           additionalProperties:
 //             type: string
@@ -74,7 +73,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		return service.ErrInvalidRequest(err)
 	}
 
-	userIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_ids")
+	userGroupIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_group_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -84,37 +83,26 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		return apiErr
 	}
 
-	results := make(database.GroupGroupTransitionResults, len(userIDs))
-	for _, userID := range userIDs {
-		results[userID] = notFound
+	results := make(database.GroupGroupTransitionResults, len(userGroupIDs))
+	for _, userGroupID := range userGroupIDs {
+		results[userGroupID] = notFound
 	}
 
-	var groupsToRemoveRows []struct {
-		UserID      int64
-		SelfGroupID int64
-	}
-	service.MustNotBeError(srv.Store.Users().Select("id AS user_id, self_group_id").
-		Where("id IN (?)", userIDs).Where("self_group_id IS NOT NULL").
-		Scan(&groupsToRemoveRows).Error())
-
-	groupsToRemove := make([]int64, 0, len(groupsToRemoveRows))
-	groupToUserMap := make(map[int64]int64, len(groupsToRemoveRows))
-	for _, row := range groupsToRemoveRows {
-		groupsToRemove = append(groupsToRemove, row.SelfGroupID)
-		groupToUserMap[row.SelfGroupID] = row.UserID
-	}
+	var groupsToRemove []int64
+	service.MustNotBeError(srv.Store.Users().Select("group_id").
+		Where("group_id IN (?)", userGroupIDs).Pluck("group_id", &groupsToRemove).Error())
 
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToRemove) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			groupResults, err = store.GroupGroups().Transition(database.AdminRemovesUser, parentGroupID, groupsToRemove, user.ID)
+			groupResults, err = store.GroupGroups().Transition(database.AdminRemovesUser, parentGroupID, groupsToRemove, user.GroupID)
 			return err
 		})
 	}
 
 	service.MustNotBeError(err)
 	for id, result := range groupResults {
-		results[groupToUserMap[id]] = result
+		results[id] = result
 	}
 
 	response := service.Response{

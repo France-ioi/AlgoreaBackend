@@ -1,14 +1,14 @@
 Feature: User accepts an invitation to join a group
   Background:
-    Given the database has the following table 'users':
-      | id | self_group_id | owned_group_id |
-      | 1  | 21            | 22             |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id |
       | 11 |
       | 14 |
       | 21 |
       | 22 |
+    Given the database has the following table 'users':
+      | group_id | owned_group_id |
+      | 21       | 22             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -22,7 +22,7 @@ Feature: User accepts an invitation to join a group
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
 
   Scenario: Successfully accept an invitation
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/current-user/group-invitations/11/accept"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -47,7 +47,7 @@ Feature: User accepts an invitation to join a group
       | 22                | 22             | 1       |
 
   Scenario: Accept an already accepted invitation
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a POST request to "/current-user/group-invitations/14/accept"
     Then the response code should be 200
     And the response body should be, in JSON:

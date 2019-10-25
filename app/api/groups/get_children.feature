@@ -1,10 +1,37 @@
 Feature: Get group children (groupChildrenView)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
-      | 2  | john  | 51            | 52             | John        | Doe       |
-      | 3  | jane  | 53            | 54             | Jane        | Doe       |
+    Given the database has the following table 'groups':
+      | id | name          | grade | type      | opened | free_access | code       |
+      | 11 | Group A       | -3    | Class     | true   | true        | ybqybxnlyo |
+      | 13 | Group B       | -2    | Class     | true   | true        | ybabbxnlyo |
+      | 14 | Group C       | -4    | UserAdmin | true   | false       | null       |
+      | 21 | user-admin    | -2    | UserAdmin | true   | false       | null       |
+      | 22 | C's Child     | -4    | UserAdmin | true   | false       | null       |
+      | 23 | Our Class     | -3    | Class     | true   | false       | null       |
+      | 24 | Root          | -2    | Base      | true   | false       | 3456789abc |
+      | 25 | Our Team      | -1    | Team      | true   | false       | 456789abcd |
+      | 26 | Our Club      | 0     | Club      | true   | false       | null       |
+      | 27 | Our Friends   | 0     | Friends   | true   | false       | 56789abcde |
+      | 28 | Other         | 0     | Other     | true   | false       | null       |
+      | 29 | UserSelf      | 0     | UserSelf  | true   | false       | null       |
+      | 30 | RootSelf      | 0     | Base      | true   | false       | null       |
+      | 31 | RootAdmin     | 0     | Base      | true   | false       | null       |
+      | 42 | Their Class   | -3    | Class     | true   | false       | null       |
+      | 43 | Other Root    | -2    | Base      | true   | false       | 3567894abc |
+      | 44 | Other Team    | -1    | Team      | true   | false       | 678934abcd |
+      | 45 | Their Club    | 0     | Club      | true   | false       | null       |
+      | 46 | Their Friends | 0     | Friends   | true   | false       | 98765abcde |
+      | 47 | Other         | 0     | Other     | true   | false       | null       |
+      | 51 | john          | 0     | UserSelf  | false  | false       | null       |
+      | 52 | john-admin    | 0     | UserAdmin | false  | false       | null       |
+      | 53 | jane          | 0     | UserSelf  | false  | false       | null       |
+      | 54 | jane-admin    | 0     | UserAdmin | false  | false       | null       |
+      | 90 | Sub-Class     | 0     | Team      | false  | false       | null       |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  |
+      | john  | 51       | 52             | John        | Doe       |
+      | jane  | 53       | 54             | Jane        | Doe       |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -69,33 +96,6 @@ Feature: Get group children (groupChildrenView)
       | 90                | 51             | 0       |
       | 90                | 53             | 0       |
       | 90                | 90             | 1       |
-    And the database has the following table 'groups':
-      | id | name          | grade | type      | opened | free_access | code       |
-      | 11 | Group A       | -3    | Class     | true   | true        | ybqybxnlyo |
-      | 13 | Group B       | -2    | Class     | true   | true        | ybabbxnlyo |
-      | 14 | Group C       | -4    | UserAdmin | true   | false       | null       |
-      | 21 | user-admin    | -2    | UserAdmin | true   | false       | null       |
-      | 22 | C's Child     | -4    | UserAdmin | true   | false       | null       |
-      | 23 | Our Class     | -3    | Class     | true   | false       | null       |
-      | 24 | Root          | -2    | Base      | true   | false       | 3456789abc |
-      | 25 | Our Team      | -1    | Team      | true   | false       | 456789abcd |
-      | 26 | Our Club      | 0     | Club      | true   | false       | null       |
-      | 27 | Our Friends   | 0     | Friends   | true   | false       | 56789abcde |
-      | 28 | Other         | 0     | Other     | true   | false       | null       |
-      | 29 | UserSelf      | 0     | UserSelf  | true   | false       | null       |
-      | 30 | RootSelf      | 0     | Base      | true   | false       | null       |
-      | 31 | RootAdmin     | 0     | Base      | true   | false       | null       |
-      | 42 | Their Class   | -3    | Class     | true   | false       | null       |
-      | 43 | Other Root    | -2    | Base      | true   | false       | 3567894abc |
-      | 44 | Other Team    | -1    | Team      | true   | false       | 678934abcd |
-      | 45 | Their Club    | 0     | Club      | true   | false       | null       |
-      | 46 | Their Friends | 0     | Friends   | true   | false       | 98765abcde |
-      | 47 | Other         | 0     | Other     | true   | false       | null       |
-      | 51 | john          | 0     | UserSelf  | false  | false       | null       |
-      | 52 | john-admin    | 0     | UserAdmin | false  | false       | null       |
-      | 53 | jane          | 0     | UserSelf  | false  | false       | null       |
-      | 54 | jane-admin    | 0     | UserAdmin | false  | false       | null       |
-      | 90 | Sub-Class     | 0     | Team      | false  | false       | null       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 13              | 21             | invitationAccepted |
@@ -122,7 +122,7 @@ Feature: Get group children (groupChildrenView)
       | 90              | 51             | requestAccepted    |
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, UserSelf is skipped
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -141,7 +141,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are by default
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -161,7 +161,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are included explicitly
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?types_include=Base,Class,Team,Club,Friends,Other,UserSelf,UserAdmin"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -181,7 +181,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, some types are excluded
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?types_exclude=Class,Team,Club,Friends"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -197,7 +197,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by grade, UserSelf is skipped
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?sort=grade&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -216,7 +216,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by type, UserSelf is skipped
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?sort=type&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -235,7 +235,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, limit applied
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -246,7 +246,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, paging applied, UserSelf is skipped
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a GET request to "/groups/13/children?from.name=RootSelf&from.id=30&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:

@@ -1,12 +1,6 @@
 Feature: Get qualification state (contestGetQualificationState)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  |
-      | 2  | john  | 31            | 32             | John        | Doe       |
-      | 3  | jane  | 41            | 42             | Jane        | null      |
-      | 4  | jack  | 51            | 52             | Jack        | Daniel    |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name        | type      | team_item_id |
       | 10 | Team 1      | Team      | 50           |
       | 11 | Team 2      | Team      | 60           |
@@ -18,6 +12,12 @@ Feature: Get qualification state (contestGetQualificationState)
       | 42 | jane-admin  | UserAdmin | null         |
       | 51 | jack        | UserSelf  | null         |
       | 52 | jack-admin  | UserAdmin | null         |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  |
+      | john  | 31       | 32             | John        | Doe       |
+      | jane  | 41       | 42             | Jane        | null      |
+      | jack  | 51       | 52             | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 10              | 31             | invitationAccepted |
@@ -45,19 +45,19 @@ Feature: Get qualification state (contestGetQualificationState)
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 1               |
-      | 11       | 50      | null                        | null                       | null                     | null                          | 1               |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 1               |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 1               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 1               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
+      | 11       | 50      | null                        | null                       | null                     | null                          |
+      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition |
       | 50 | 00:00:00 | 0            | <entering_condition>       |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -83,7 +83,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -106,7 +106,7 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -150,7 +150,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -193,7 +193,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -237,7 +237,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -281,7 +281,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -323,7 +323,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'contest_participations':
       | group_id | item_id | entered_at          |
       | 31       | 50      | 2019-05-30 15:00:00 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -349,7 +349,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'contest_participations':
       | group_id | item_id | entered_at          |
       | 11       | 60      | 2019-05-30 15:00:00 |
-    And I am the user with id "2"
+    And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:

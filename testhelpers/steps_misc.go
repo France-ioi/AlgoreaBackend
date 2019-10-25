@@ -39,17 +39,21 @@ func (ctx *TestContext) RunFallbackServer() error { // nolint
 	return nil
 }
 
-func (ctx *TestContext) IAmUserWithID(id int64) error { // nolint
-	ctx.userID = id
+func (ctx *TestContext) IAmUserWithGroupID(groupID int64) error { // nolint
+	ctx.userGroupID = groupID
 	db, err := database.Open(ctx.db())
 	if err != nil {
 		return err
 	}
-	return database.NewDataStore(db).Sessions().InsertMap(map[string]interface{}{
-		"access_token": testAccessToken,
-		"user_id":      ctx.userID,
-		"issued_at":    database.Now(),
-		"expires_at":   gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
+	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		store.Exec("SET FOREIGN_KEY_CHECKS=0")
+		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
+		return store.Sessions().InsertMap(map[string]interface{}{
+			"access_token":  testAccessToken,
+			"user_group_id": ctx.userGroupID,
+			"issued_at":     database.Now(),
+			"expires_at":    gorm.Expr("? + INTERVAL 7200 SECOND", database.Now()),
+		})
 	})
 }
 

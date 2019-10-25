@@ -12,7 +12,7 @@ import (
 func TestUserFromContext(t *testing.T) {
 	assert := assertlib.New(t)
 
-	myUser := &database.User{ID: 8}
+	myUser := &database.User{GroupID: 8}
 	ctx := context.WithValue(context.Background(), ctxUser, myUser)
 	user := UserFromContext(ctx)
 

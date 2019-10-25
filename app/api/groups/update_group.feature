@@ -1,18 +1,22 @@
 Feature: Update a group (groupEdit)
   Background:
-    Given the database has the following table 'users':
-      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | default_language |
-      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | fr               |
+    Given the database has the following table 'groups':
+      | id | name        | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A     | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B     | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 14 | Group C     | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null          | null                | false        |
+      | 21 | owner       | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 22 | owner-admin | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 31 | user        | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
+      | 32 | user-admin  | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+    And the database has the following table 'users':
+      | login | temp_user | group_id | owned_group_id | first_name  | last_name | default_language |
+      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 22                | 13             | 0       |
       | 76 | 13                | 11             | 0       |
       | 77 | 22                | 14             | 0       |
-    And the database has the following table 'groups':
-      | id | name    | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null          | null                | false        |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | type               |
       | 75 | 13              | 21             | invitationSent     |
@@ -22,7 +26,7 @@ Feature: Update a group (groupEdit)
       | 79 | 14              | 22             | requestSent        |
 
   Scenario: User is an owner of the group, all fields are not nulls, updates groups_groups
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -51,7 +55,7 @@ Feature: Update a group (groupEdit)
       | 79 | 14              | 22             | requestSent        |
 
   Scenario: User is an owner of the group, nullable fields are nulls
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -73,7 +77,7 @@ Feature: Update a group (groupEdit)
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | false       | ybabbxnlyo | null          | null            | false        |
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is still true)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -96,7 +100,7 @@ Feature: Update a group (groupEdit)
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is not changed)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -118,7 +122,7 @@ Feature: Update a group (groupEdit)
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access changes from false to true)
-    Given I am the user with id "1"
+    Given I am the user with group_id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
     {

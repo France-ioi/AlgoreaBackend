@@ -56,10 +56,10 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 	user := srv.GetUser(httpReq)
 
-	if user.ID != requestData.TaskToken.Converted.UserID {
+	if user.GroupID != requestData.TaskToken.Converted.UserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token doesn't correspond to user session: got idUser=%d, expected %d",
-			requestData.TaskToken.Converted.UserID, user.ID))
+			requestData.TaskToken.Converted.UserID, user.GroupID))
 	}
 
 	var userAnswerID int64
@@ -81,7 +81,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		}
 
 		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
-			user.ID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
+			user.GroupID, requestData.TaskToken.Converted.LocalItemID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
 		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)

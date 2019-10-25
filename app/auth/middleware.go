@@ -46,10 +46,10 @@ func UserMiddleware(sessionStore *database.SessionStore) func(next http.Handler)
 			if len(accessToken) <= 2000 {
 				err := sessionStore.
 					Select(`
-						users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id,
+						users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
 						users.default_language, l.id as default_language_id`).
-					Joins("JOIN users ON users.id = sessions.user_id").
+					Joins("JOIN users ON users.group_id = sessions.user_group_id").
 					Joins("LEFT JOIN languages l ON users.default_language = l.code").
 					Where("access_token = ?", accessToken).
 					Where("expires_at > NOW()").Take(&user).

@@ -31,7 +31,7 @@ type dbquery struct {
 type TestContext struct {
 	// nolint
 	application      *app.Application // do NOT call it directly, use `app()`
-	userID           int64            // userID that will be used for the next requests
+	userGroupID      int64            // userGroupID that will be used for the next requests
 	featureQueries   []dbquery
 	lastResponse     *http.Response
 	lastResponseBody string
@@ -60,7 +60,7 @@ func (ctx *TestContext) SetupTestContext(data interface{}) { // nolint
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
 
 	ctx.setupApp()
-	ctx.userID = 0 // not set
+	ctx.userGroupID = 0 // not set
 	ctx.lastResponse = nil
 	ctx.lastResponseBody = ""
 	ctx.inScenario = true
