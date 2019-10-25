@@ -74,7 +74,7 @@ func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
 }
 
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
+	return ctx.tableAtIDShouldBe(tableName, "", nil, false, data)
 }
 
 func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
@@ -84,23 +84,23 @@ func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // no
 			{Cells: []*gherkin.TableCell{{Value: "1"}}}},
 		}
 	}
-	return ctx.tableAtIDShouldBe(tableName, nil, false, data)
+	return ctx.tableAtIDShouldBe(tableName, "", nil, false, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName string, ids string) error { // nolint
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName, idColumnName, ids string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
 	}
-	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), true, data)
+	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), true, data)
 }
 
-func (ctx *TestContext) TableAtIDShouldBe(tableName string, ids string, data *gherkin.DataTable) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false, data)
+func (ctx *TestContext) TableAtIDShouldBe(tableName, idColumnName, ids string, data *gherkin.DataTable) error { // nolint
+	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), false, data)
 }
 
-func (ctx *TestContext) TableShouldNotContainID(tableName string, ids string) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, parseMultipleIDString(ids), false,
+func (ctx *TestContext) TableShouldNotContainID(tableName, idColumnName, ids string) error { // nolint
+	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), false,
 		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "id"}}}}})
 }
 
@@ -169,7 +169,7 @@ func parseMultipleIDString(idsString string) []int64 {
 
 var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
-func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
+func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
 	// For that, we build a SQL request with only the attribute we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
@@ -199,9 +199,9 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	where := ""
 	if len(ids) > 0 {
 		if excludeIDs {
-			where = fmt.Sprintf(" WHERE ID NOT IN (%s) ", idsString) // #nosec
+			where = fmt.Sprintf(" WHERE %s NOT IN (%s) ", idColumnName, idsString) // #nosec
 		} else {
-			where = fmt.Sprintf(" WHERE ID IN (%s) ", idsString) // #nosec
+			where = fmt.Sprintf(" WHERE %s IN (%s) ", idColumnName, idsString) // #nosec
 		}
 	}
 
@@ -217,7 +217,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName string, ids []int64, exclude
 	dataCols := data.Rows[0].Cells
 	idColumnIndex := -1
 	for index, cell := range dataCols {
-		if cell.Value == "id" {
+		if cell.Value == idColumnName {
 			idColumnIndex = index
 			break
 		}
