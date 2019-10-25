@@ -185,10 +185,11 @@ ALTER TABLE `groups_attempts`
     DROP FOREIGN KEY `fk_groups_attempts_creator_user_group_id_users_group_id`,
     DROP COLUMN `creator_user_group_id`;
 
-ALTER TABLE `groups_groups` ADD COLUMN `inviting_user_id` bigint(20) DEFAULT NULL
+ALTER TABLE `groups_groups` ADD COLUMN `inviting_user_id` int(11) DEFAULT NULL
     COMMENT 'User (one of the admins of the parent group) who initiated the invitation or accepted the request'
     AFTER `inviting_user_group_id`;
-UPDATE `groups_groups` LEFT JOIN `users` ON `users`.`group_id` = `groups_groups`.`inviting_user_group_id` SET `groups_groups`.`inviting_user_id` = `users`.`id`;
+UPDATE `groups_groups` LEFT JOIN `users` ON `users`.`group_id` = `groups_groups`.`inviting_user_group_id`
+    SET `groups_groups`.`inviting_user_id` = IF(`users`.`id` <= 2147483647, `users`.`id`, NULL);
 ALTER TABLE `groups_groups`
     DROP FOREIGN KEY `fk_groups_groups_inviting_user_group_id_users_group_id`,
     DROP COLUMN `inviting_user_group_id`;
