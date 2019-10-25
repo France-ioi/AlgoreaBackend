@@ -1,4 +1,9 @@
 -- +migrate Up
+SET @saved_sql_mode       = @@sql_mode;
+SET sql_mode              = 'NO_ENGINE_SUBSTITUTION';
+UPDATE `users` SET `birth_date` = NULL WHERE `birth_date` = '0000-00-00';
+SET sql_mode              = @saved_sql_mode;
+
 UPDATE `groups` JOIN `users` ON `users`.`self_group_id` = `groups`.`id` SET `groups`.`type` = 'UserSelf';
 
 DELETE `groups` FROM `groups` LEFT JOIN `users` ON `users`.`self_group_id` = `groups`.`id`
