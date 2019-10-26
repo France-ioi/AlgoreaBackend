@@ -24,6 +24,7 @@ import (
 
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
+	appenv.SetDefaultEnvToTest()
 	app, err := New()
 	assert.NotNil(app)
 	assert.NoError(err)
