@@ -48,7 +48,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 					mock.ExpectExec("^"+regexp.QuoteMeta("DELETE FROM `sessions`  WHERE (user_group_id = ? AND access_token != ?)")+"$").
 						WithArgs(int64(2), "accesstoken").WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta(
-						"INSERT INTO `sessions` (access_token, expires_at, issued_at, issuer, user_group_id) VALUES (?, ?, NOW(), ?, ?)")+
+						"INSERT INTO `sessions` (`access_token`, `expires_at`, `issued_at`, `issuer`, `user_group_id`) VALUES (?, ?, NOW(), ?, ?)")+
 						"$").WithArgs("newaccesstoken", sqlmock.AnyArg(), "login-module", int64(2)).
 						WillReturnResult(sqlmock.NewResult(123, 1))
 					mock.ExpectExec("^"+regexp.QuoteMeta("UPDATE `refresh_tokens` SET `refresh_token` = ? WHERE (user_group_id = ?)")+

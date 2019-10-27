@@ -472,6 +472,11 @@ func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) erro
 	}
 	sort.Strings(keys)
 
+	escapedKeys := make([]string, 0, len(keys))
+	for _, key := range keys {
+		escapedKeys = append(escapedKeys, QuoteName(key))
+	}
+
 	for _, key := range keys {
 		if dataMap[key] == nil {
 			valueMarks = append(valueMarks, "NULL")
@@ -482,7 +487,7 @@ func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) erro
 	}
 	// nolint:gosec
 	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
-		strings.Join(keys, ", "),
+		strings.Join(escapedKeys, ", "),
 		strings.Join(valueMarks, ", "))
 	return conn.db.Exec(query, values...).Error
 }

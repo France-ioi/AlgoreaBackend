@@ -54,7 +54,8 @@ type contestGetQualificationStateResponse struct {
 //                i.e. whether he can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has a `contest_participations` row for the item;
+//                  * 'already_started' if the participant has a `groups_attempts` row for the item
+//                    with non-null `entered_at` and `finished_at` = NULL;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -145,9 +146,11 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, apiError
 	}
 
-	contestParticipationQuery := store.ContestParticipations().
+	contestParticipationQuery := store.GroupAttempts().
 		Where("item_id = ?", itemID).
-		Where("group_id = ?", groupID)
+		Where("group_id = ?", groupID).
+		Where("entered_at IS NOT NULL").
+		Where("finished_at IS NULL")
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
 	}

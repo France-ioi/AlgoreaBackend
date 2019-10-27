@@ -18,7 +18,6 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		function  func(store *DataStore) *DB
 		wantTable string
 	}{
-		{"ContestParticipations", func(store *DataStore) *DB { return store.ContestParticipations().Where("") }, "contest_participations"},
 		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "groups"},
 		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "groups_ancestors"},
 		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "groups_ancestors_active"},
@@ -61,7 +60,6 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		function func(store *DataStore) interface{}
 		wantType interface{}
 	}{
-		{"ContestParticipations", func(store *DataStore) interface{} { return store.ContestParticipations() }, &ContestParticipationStore{}},
 		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
 		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
 		{"ActiveGroupAncestors", func(store *DataStore) interface{} { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},
@@ -249,7 +247,7 @@ func TestDataStore_InsertMap(t *testing.T) {
 	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (id, sField, sNullField) VALUES (?, ?, NULL)")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)")).
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 
