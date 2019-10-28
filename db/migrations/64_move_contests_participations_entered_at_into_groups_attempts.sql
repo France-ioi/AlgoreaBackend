@@ -7,9 +7,9 @@ UPDATE `groups_attempts` JOIN contest_participations USING(group_id, item_id)
 SET `groups_attempts`.`entered_at` = `contest_participations`.`entered_at`,
     `groups_attempts`.`finished_at` = `contest_participations`.`finished_at`;
 
-INSERT INTO `groups_attempts` (`group_id`, `item_id`, `entered_at`, `finished_at`)
+INSERT INTO `groups_attempts` (`group_id`, `item_id`, `entered_at`, `finished_at`, `order`)
 SELECT `contest_participations`.`group_id`, `contest_participations`.`item_id`,
-       `contest_participations`.`entered_at`, `contest_participations`.`finished_at`
+       `contest_participations`.`entered_at`, `contest_participations`.`finished_at`, 1
 FROM `contest_participations`
 LEFT JOIN `groups_attempts` AS `existing_attempts` USING (`group_id`, `item_id`)
 WHERE `existing_attempts`.`id` IS NULL;
