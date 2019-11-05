@@ -39,40 +39,42 @@ func (s *PermissionGrantedStore) removePartialAccess(groupID, itemID int64) {
 
 // ViewIndexByKind returns the index of the given view kind in the 'can_view' enum
 func (s *PermissionGrantedStore) ViewIndexByKind(kind string) int {
+	getterFunc := func() int { return requireIndexByKind(viewKinds, kind, "can_view") }
 	enumsMutex.RLock()
 	if len(viewKinds) != 0 {
 		defer enumsMutex.RUnlock()
-		return requireIndexByKind(viewKinds, kind, "can_view")
+		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
 	if len(viewKinds) != 0 {
-		return requireIndexByKind(viewKinds, kind, "can_view")
+		return getterFunc()
 	}
 
 	s.loadViewKinds()
-	return requireIndexByKind(viewKinds, kind, "can_view")
+	return getterFunc()
 }
 
 // ViewKindByIndex returns the view kind with the given index from the 'can_view' enum
 func (s *PermissionGrantedStore) ViewKindByIndex(index int) string {
+	getterFunc := func() string { return requireKindByIndex(viewIndexes, index, "can_view") }
 	enumsMutex.RLock()
 	if len(viewIndexes) != 0 {
 		defer enumsMutex.RUnlock()
-		return requireKindByIndex(viewIndexes, index, "can_view")
+		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
 	if len(viewIndexes) != 0 {
-		return requireKindByIndex(viewIndexes, index, "can_view")
+		return getterFunc()
 	}
 
 	s.loadViewKinds()
-	return requireKindByIndex(viewIndexes, index, "can_view")
+	return getterFunc()
 }
 
 func (s *PermissionGrantedStore) loadViewKinds() {
@@ -102,40 +104,42 @@ func (s *PermissionGrantedStore) loadKindsIntoMaps(tableName, columnName string)
 
 // GrantViewIndexByKind returns the index of the given "grant view" kind in the 'can_grant_view' enum
 func (s *PermissionGrantedStore) GrantViewIndexByKind(kind string) int {
+	getterFunc := func() int { return requireIndexByKind(grantViewKinds, kind, "can_grant_view") }
 	enumsMutex.RLock()
 	if len(grantViewKinds) != 0 {
 		defer enumsMutex.RUnlock()
-		return requireIndexByKind(grantViewKinds, kind, "can_grant_view")
+		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
 	if len(grantViewKinds) != 0 {
-		return requireIndexByKind(grantViewKinds, kind, "can_grant_view")
+		return getterFunc()
 	}
 
 	s.loadViewKinds()
-	return requireIndexByKind(grantViewKinds, kind, "can_grant_view")
+	return getterFunc()
 }
 
 // EditIndexByKind returns the index of the given "edit" kind in the 'can_edit' enum
 func (s *PermissionGrantedStore) EditIndexByKind(kind string) int {
+	getterFunc := func() int { return requireIndexByKind(editKinds, kind, "can_edit") }
 	enumsMutex.RLock()
 	if len(editKinds) != 0 {
 		defer enumsMutex.RUnlock()
-		return requireIndexByKind(editKinds, kind, "can_edit")
+		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
 	if len(editKinds) != 0 {
-		return requireIndexByKind(editKinds, kind, "can_edit")
+		return getterFunc()
 	}
 
 	s.loadViewKinds()
-	return requireIndexByKind(editKinds, kind, "can_edit")
+	return getterFunc()
 }
 
 func requireIndexByKind(m map[string]int, kind, name string) int {
