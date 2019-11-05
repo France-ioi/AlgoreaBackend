@@ -47,18 +47,20 @@ Feature: Change item access rights for a group - robustness
       | 102              | 103           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
-      | 21       | 100     | solution           | none           | 1                  |
-      | 21       | 101     | none               | none           | 0                  |
-      | 21       | 102     | none               | solution       | 0                  |
-      | 21       | 103     | none               | none           | 0                  |
-      | 25       | 100     | content            | none           | 0                  |
-      | 25       | 101     | info               | none           | 0                  |
+      | 21       | 100     | solution           | none                     | 1                  |
+      | 21       | 101     | none               | none                     | 0                  |
+      | 21       | 102     | none               | solution                 | 0                  |
+      | 21       | 103     | none               | none                     | 0                  |
+      | 25       | 100     | content            | none                     | 0                  |
+      | 25       | 101     | info               | none                     | 0                  |
+      | 31       | 102     | none               | content_with_descendants | 0                  |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | is_owner | giver_group_id |
-      | 21       | 100     | none     | none           | 1        | 23             |
-      | 21       | 102     | none     | solution       | 1        | 23             |
-      | 25       | 100     | content  | none           | 0        | 23             |
-      | 25       | 101     | info     | none           | 0        | 23             |
+      | group_id | item_id | can_view | can_grant_view           | is_owner | giver_group_id |
+      | 21       | 100     | none     | none                     | 1        | 23             |
+      | 21       | 102     | none     | solution                 | 1        | 23             |
+      | 25       | 100     | content  | none                     | 0        | 23             |
+      | 25       | 101     | info     | none                     | 0        | 23             |
+      | 31       | 102     | none     | content_with_descendants | 0        | 31             |
 
   Scenario: Invalid group_id
     Given I am the user with group_id "21"
@@ -122,12 +124,25 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: The user is not a manager/owner of the item
+  Scenario: The user doesn't have enough rights to set can_view
     Given I am the user with group_id "31"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
       "can_view": "solution"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: The user doesn't have enough rights to set can_view = info
+    Given I am the user with group_id "31"
+    When I send a PUT request to "/groups/23/items/103" with the following body:
+    """
+    {
+      "can_view": "info"
     }
     """
     Then the response code should be 403

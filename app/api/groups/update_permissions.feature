@@ -55,7 +55,7 @@ Feature: Change item access rights for a group
       | group_id | item_id | can_view | giver_group_id |
       | 25       | 100     | content  | 23             |
 
-  Scenario: Create a new permissions_granted row
+  Scenario Outline: Create a new permissions_granted row
     Given I am the user with group_id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated |
@@ -67,25 +67,29 @@ Feature: Change item access rights for a group
     When I send a PUT request to "/groups/23/items/102" with the following body:
       """
       {
-        "can_view": "solution"
+        "can_view": "<can_view>"
       }
       """
     Then the response should be "updated"
     And the table "permissions_granted" should be:
-      | group_id | item_id | giver_group_id | can_view |
-      | 21       | 102     | 23             | solution |
-      | 23       | 102     | 21             | solution |
-      | 25       | 100     | 23             | content  |
+      | group_id | item_id | giver_group_id | can_view   |
+      | 21       | 102     | 23             | solution   |
+      | 23       | 102     | 21             | <can_view> |
+      | 25       | 100     | 23             | content    |
     And the table "permissions_generated" should be:
-      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated |
-      | 21       | 102     | solution           | transfer                 | transfer            | transfer           |
-      | 21       | 103     | content            | none                     | none                | none               |
-      | 23       | 102     | solution           | none                     | none                | none               |
-      | 23       | 103     | content            | none                     | none                | none               |
-      | 25       | 100     | content            | none                     | none                | none               |
-      | 25       | 101     | info               | none                     | none                | none               |
-      | 25       | 102     | none               | none                     | none                | none               |
-      | 25       | 103     | none               | none                     | none                | none               |
+      | group_id | item_id | can_view_generated    | can_grant_view_generated | can_watch_generated | can_edit_generated |
+      | 21       | 102     | solution              | transfer                 | transfer            | transfer           |
+      | 21       | 103     | content               | none                     | none                | none               |
+      | 23       | 102     | <can_view>            | none                     | none                | none               |
+      | 23       | 103     | <propagated_can_view> | none                     | none                | none               |
+      | 25       | 100     | content               | none                     | none                | none               |
+      | 25       | 101     | info                  | none                     | none                | none               |
+      | 25       | 102     | none                  | none                     | none                | none               |
+      | 25       | 103     | none                  | none                     | none                | none               |
+  Examples:
+    | can_view | propagated_can_view |
+    | solution | content             |
+    | info     | none                |
 
   Scenario: Update an existing permissions_granted row
     Given I am the user with group_id "21"
