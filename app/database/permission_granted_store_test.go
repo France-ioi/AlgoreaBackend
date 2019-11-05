@@ -112,8 +112,9 @@ func TestPermissionGrantedStore_GrantViewIndexByKind(t *testing.T) {
 	defer monkey.UnpatchAll()
 	defer clearAllPermissionEnums()
 
-	assert.Panics(t, func() { permissionGrantedStore.GrantViewIndexByKind("unknown") })
 	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByKind("transfer"))
+	assert.Equal(t, 3, permissionGrantedStore.GrantViewIndexByKind("content_with_descendants"))
+	assert.Panics(t, func() { permissionGrantedStore.GrantViewIndexByKind("unknown") })
 	assert.Equal(t, 4, permissionGrantedStore.GrantViewIndexByKind("solution"))
 }
 
