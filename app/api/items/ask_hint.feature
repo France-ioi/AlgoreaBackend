@@ -22,9 +22,9 @@ Feature: Ask for a hint
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 101      | 50      | content            |
     And time is frozen
 
   Scenario: User is able to ask for a hint

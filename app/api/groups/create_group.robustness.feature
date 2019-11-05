@@ -28,11 +28,16 @@ Feature: Create a group (groupCreate) - robustness
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
       | 61                | 61             | 1       |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       |
-      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       |
-      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        |
+    And the database has the following table 'items':
+      | id |
+      | 10 |
+      | 11 |
+      | 12 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 21       | 10      | content_with_descendants |
+      | 21       | 11      | content                  |
+      | 21       | 12      | info                     |
 
   Scenario: No name
     Given I am the user with group_id "21"

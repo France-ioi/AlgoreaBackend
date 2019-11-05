@@ -38,7 +38,7 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	err = s.Items().Visible(user).
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
-		Where("partial_access > 0 OR full_access > 0").
+		Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content")).
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
 			usersGroupsQuery.SubQuery(), user.GroupID).
 		PluckFirst("items.id", &itemID).Error()
@@ -59,7 +59,7 @@ func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least partial access to the item
 	itemsQuery := s.Items().Visible(user).Where("items.id = ?", itemID).
-		Where("partial_access > 0 OR full_access > 0")
+		Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content"))
 
 	return s.
 		// the user should have at least partial access to the users_answers.item_id

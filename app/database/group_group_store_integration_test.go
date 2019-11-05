@@ -142,16 +142,12 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.GroupAttempts().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.GroupItems().Order("group_id").
+	assert.NoError(t, dataStore.PermissionsGranted().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Table("groups_items_propagate").Order("id").
-		Pluck("id", &ids).Error())
-	expectedGroupsItemsPropagateIDs := make([]int64, len(remainingGroupIDs))
-	for index, id := range remainingGroupIDs {
-		expectedGroupsItemsPropagateIDs[index] = id + 100
-	}
-	assert.Equal(t, expectedGroupsItemsPropagateIDs, ids)
+	assert.NoError(t, dataStore.PermissionsGenerated().Order("group_id").
+		Pluck("group_id", &ids).Error())
+	assert.Equal(t, remainingGroupIDs, ids)
 	assert.NoError(t, dataStore.Table("groups_login_prefixes").Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)

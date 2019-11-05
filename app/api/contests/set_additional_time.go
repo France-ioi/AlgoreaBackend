@@ -27,7 +27,7 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `solutions` or `full` access on the input item;
+//                  * the authenticated user should have `solution` or `content_with_descendants` access on the input item;
 //                  * the authenticated user should own the `group_id`;
 //                  * if the contest is team-only (`items.has_attempts` = 1), then the group should not be a user group.
 //

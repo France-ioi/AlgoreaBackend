@@ -36,11 +36,11 @@ Background:
     | 74 | 13                | 11             | 0       |
 
 Scenario: Full access on all breadcrumb
-  Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-    | 41 | 13       | 21      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 42 | 13       | 22      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 43 | 13       | 23      | 2017-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+  Given the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated       |
+    | 13       | 21      | content_with_descendants |
+    | 13       | 22      | content_with_descendants |
+    | 13       | 23      | content_with_descendants |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
@@ -58,11 +58,11 @@ Scenario: Full access on all breadcrumb
   """
 
 Scenario: Partial access on all breadcrumb
-  Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
+  Given the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated |
+    | 13       | 21      | content            |
+    | 13       | 22      | content            |
+    | 13       | 23      | content            |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
@@ -79,12 +79,12 @@ Scenario: Partial access on all breadcrumb
     ]
     """
 
-Scenario: Partial access to all items except for last which is greyed
-  Given the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-    | 41 | 13       | 21      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 42 | 13       | 22      | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 43 | 13       | 23      | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        |
+Scenario: Partial access to all items except for last which is grayed
+  Given the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated |
+    | 13       | 21      | content            |
+    | 13       | 22      | content            |
+    | 13       | 23      | info               |
   And the database has the following table 'items_items':
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |

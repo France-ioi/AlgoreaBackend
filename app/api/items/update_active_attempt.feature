@@ -36,12 +36,12 @@ Feature: Update active attempt for an item
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 60            | 0           |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_full_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         | null                     |
-      | 101      | 60      | 2017-05-29 06:38:38         | null                     |
-      | 111      | 50      | null                        | 2017-05-29 06:38:38      |
-      | 121      | 50      | null                        | 2017-05-29 06:38:38      |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 101      | 50      | content                  |
+      | 101      | 60      | content                  |
+      | 111      | 50      | content_with_descendants |
+      | 121      | 50      | content_with_descendants |
 
   Scenario: User is able to update an active attempt (full access)
     Given I am the user with group_id "111"

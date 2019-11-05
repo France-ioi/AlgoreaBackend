@@ -22,11 +22,16 @@ Background:
     | 21               | 60            |
     | 50               | 21            |
     | 50               | 60            |
-  And the database has the following table 'groups_items':
-    | id | group_id | item_id | manager_access | cached_manager_access | owner_access |
-    | 40 | 11       | 50      | false          | false                 | true         |
-    | 41 | 11       | 21      | true           | true                  | false        |
-    | 42 | 11       | 60      | false          | false                 | true         |
+  And the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
+    | 11       | 21      | solution           | none               | false              |
+    | 11       | 50      | solution           | transfer           | true               |
+    | 11       | 60      | solution           | transfer           | true               |
+  And the database has the following table 'permissions_granted':
+    | group_id | item_id | can_view | is_owner | giver_group_id |
+    | 11       | 21      | solution | false    | 11             |
+    | 11       | 50      | none     | true     | 11             |
+    | 11       | 60      | none     | true     | 11             |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
@@ -36,26 +41,27 @@ Background:
     | 2  |
     | 3  |
 
-Scenario: Valid
-  Given I am the user with group_id "11"
-  When I send a PUT request to "/items/50" with the following body:
-    """
-    {
-      "type": "Course"
-    }
-    """
-  Then the response should be "updated"
-  And the table "items" at id "50" should be:
-    | id | type   | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | group_code_enter |
-    | 50 | Course | http://someurl2.com/ | 2                   | 1        | Task 2  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                 | 99               | Half                       | 1              | 10                    | 1            | 01:20:30 | 1               | Closed        | 3     | 1                |
-  And the table "items_strings" should stay unchanged
-  And the table "items_items" should stay unchanged
-  And the table "items_ancestors" should stay unchanged
-  And the table "groups_items" should be:
-    | group_id | item_id | manager_access | cached_manager_access | owner_access |
-    | 11       | 21      | true           | true                  | false        |
-    | 11       | 50      | false          | false                 | true         |
-    | 11       | 60      | false          | false                 | true         |
+  Scenario: Valid
+    Given I am the user with group_id "11"
+    When I send a PUT request to "/items/50" with the following body:
+      """
+      {
+        "type": "Course"
+      }
+      """
+    Then the response should be "updated"
+    And the table "items" at id "50" should be:
+      | id | type   | url                  | default_language_id | no_score | text_id | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | group_code_enter |
+      | 50 | Course | http://someurl2.com/ | 2                   | 1        | Task 2  | 0                 | 1              | 1                         | 0        | 1         | forceNo     | 1               | 1           | 1             | 1           | One             | 12             | 1                 | 99               | Half                       | 1              | 10                    | 1            | 01:20:30 | 1               | Closed        | 3     | 1                |
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should be:
+      | group_id | item_id | can_view_generated | is_owner_generated |
+      | 11       | 21      | solution           | false              |
+      | 11       | 50      | solution           | true               |
+      | 11       | 60      | solution           | true               |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with group_id "11"
@@ -66,16 +72,20 @@ Scenario: Valid
       | id | ancestor_group_id | child_group_id | is_self |
       | 73 | 12                | 12345          | 0       |
     And the database has the following table 'items':
-      | id |
-      | 12 |
-      | 34 |
+      | id  |
+      | 112 |
+      | 134 |
     And the database has the following table 'items_strings':
       | language_id | item_id |
       | 3           | 50      |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | manager_access | cached_manager_access | owner_access |
-      | 43 | 11       | 12      | true           | true                  | false        |
-      | 44 | 11       | 34      | false          | false                 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
+      | 11       | 112     | solution           | content                  | false              |
+      | 11       | 134     | solution           | transfer                 | true               |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | can_grant_view | is_owner | giver_group_id |
+      | 11       | 112     | solution | content        | false    | 11             |
+      | 11       | 134     | none     | none           | true     | 11             |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -94,7 +104,7 @@ Scenario: Valid
         "fixed_ranks": false,
         "validation_type": "AllButOne",
         "validation_min": 1234,
-        "unlocked_item_ids": "12,34",
+        "unlocked_item_ids": "112,134",
         "score_min_unlock": 34,
         "contest_entering_condition": "All",
         "teams_editable": false,
@@ -108,27 +118,27 @@ Scenario: Valid
         "group_code_enter": false,
         "default_language_id": "3",
         "children": [
-          {"item_id": "12", "order": 0},
-          {"item_id": "34", "order": 1}
+          {"item_id": "112", "order": 0},
+          {"item_id": "134", "order": 1}
         ]
       }
       """
     Then the response should be "updated"
     And the table "items" at id "50" should be:
       | id | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | custom_chapter | display_details_in_parent | uses_api | read_only | full_screen | show_difficulty | show_source | hints_allowed | fixed_ranks | validation_type | validation_min | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | group_code_enter |
-      | 50 | Course | http://myurl.com/ | 3                   | 0              | 0        | Task number 1 | 1                 | 0              | 0                         | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 12,34             | 34               | All                        | 0              | 2345                  | 0            | 01:02:03 | 0               | Analysis      | 345   | 0                |
+      | 50 | Course | http://myurl.com/ | 3                   | 0              | 0        | Task number 1 | 1                 | 0              | 0                         | 1        | 0         | forceYes    | 0               | 0           | 0             | 0           | AllButOne       | 1234           | 112,134           | 34               | All                        | 0              | 2345                  | 0            | 01:02:03 | 0               | Analysis      | 345   | 0                |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id |
       | 21             | 60            |
-      | 50             | 12            |
-      | 50             | 34            |
+      | 50             | 112           |
+      | 50             | 134           |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
       | 21               | 60            |
-      | 50               | 12            |
-      | 50               | 34            |
-    And the table "groups_items" should stay unchanged
+      | 50               | 112           |
+      | 50               | 134           |
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid with empty full_screen
     Given I am the user with group_id "11"
@@ -145,7 +155,7 @@ Scenario: Valid
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid without any fields
     Given I am the user with group_id "11"
@@ -159,7 +169,7 @@ Scenario: Valid
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid with empty children array
     Given I am the user with group_id "11"
@@ -178,4 +188,4 @@ Scenario: Valid
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
       | 21               | 60            |
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged

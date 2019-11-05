@@ -20,7 +20,7 @@ import (
 //
 //
 //   If a group gets deleted, the service also deletes `groups_groups`, `groups_attempts`,
-//   `groups_items`, `groups_login_prefixes`, and `filters` linked to the group.
+//   `permissions_granted`, `permissions_generated`, `groups_login_prefixes`, and `filters` linked to the group.
 //   Access rights are updated accordingly too.
 //
 //

@@ -90,7 +90,8 @@ func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userGroupID, itemID int64, at
 func (s *UserAnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least partial access to the item
-	itemsQuery := s.Items().Visible(user).Where("partial_access > 0 OR full_access > 0")
+	itemsQuery := s.Items().Visible(user).Where("can_view_generated_value >= ?",
+		s.PermissionsGranted().ViewIndexByKind("content"))
 
 	return s.
 		// the user should have at least partial access to the users_answers.item_id

@@ -137,10 +137,10 @@ type itemChildNode struct {
 	// required: true
 	// enum: Undefined,Discovery,Application,Validation,Challenge
 	Category string `json:"category"`
-	// Partial access propagation rule between the parent item and this child
-	// enum: None,AsGrayed,AsPartial
+	// The rule used to propagate can_view='content' between the parent item and this child
+	// enum: none,as_info,as_content
 	// required: true
-	PartialAccessPropagation string `json:"partial_access_propagation"`
+	ContentViewPropagation string `json:"content_view_propagation"`
 
 	// Nullable
 	// required: true
@@ -229,14 +229,15 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if !rawData[0].FullAccess && !rawData[0].PartialAccess {
+	if rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByKind("info") {
 		return service.ErrForbidden(errors.New("the item is grayed"))
 	}
 
-	response := constructItemResponseFromDBData(&rawData[0])
+	permissionGrantedStore := srv.Store.PermissionsGranted()
+	response := constructItemResponseFromDBData(&rawData[0], permissionGrantedStore)
 
-	setItemResponseRootNodeFields(response, &rawData)
-	srv.fillItemResponseWithChildren(response, &rawData)
+	setItemResponseRootNodeFields(response, &rawData, permissionGrantedStore)
+	srv.fillItemResponseWithChildren(response, &rawData, permissionGrantedStore)
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
@@ -292,11 +293,11 @@ type rawItem struct {
 	UserFinishedAt          *database.Time `sql:"column:finished_at"`
 
 	// items_items
-	Order                    int32 `sql:"column:child_order"`
-	Category                 string
-	PartialAccessPropagation string
+	Order                  int32 `sql:"column:child_order"`
+	Category               string
+	ContentViewPropagation string
 
-	*database.ItemAccessDetails
+	CanViewGeneratedValue int
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's
@@ -332,7 +333,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
-		NULL AS child_order, NULL AS category, NULL AS partial_access_propagation`)
+		NULL AS child_order, NULL AS category, NULL AS content_view_propagation`)
 
 	childrenQuery := s.Select(
 		commonColumns+`NULL AS title_bar_visible,
@@ -345,7 +346,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
-		child_order, category, partial_access_propagation`).
+		child_order, category, content_view_propagation`).
 		Joins("JOIN items_items ON items.id=child_item_id AND parent_item_id=?", rootID)
 
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
@@ -388,7 +389,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 
 			items.child_order AS child_order,
 			items.category AS category,
-			items.partial_access_propagation, `+
+			items.content_view_propagation, `+
 		// inputItem only
 		` items.title_bar_visible,
 			items.read_only,
@@ -400,21 +401,21 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.url,
 			items.uses_api,
 			items.hints_allowed,
-			access_rights.full_access, access_rights.partial_access, access_rights.grayed_access, access_rights.access_solutions
+			access_rights.can_view_generated_value
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_group_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
-		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND (full_access>0 OR partial_access>0 OR grayed_access>0)",
-			accessRights.SubQuery()).
+		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND can_view_generated_value > ?",
+			accessRights.SubQuery(), s.PermissionsGranted().ViewIndexByKind("none")).
 		Order("child_order")
 
 	service.MustNotBeError(query.Scan(&result).Error())
 	return result
 }
 
-func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {
-	if (*rawData)[0].AccessSolutions {
+func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem, permissionGrantedStore *database.PermissionGrantedStore) {
+	if (*rawData)[0].CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("solution") {
 		response.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
 			EduComment: (*rawData)[0].StringEduComment,
 		}
@@ -435,15 +436,15 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem) {
 	response.ContestPhase = (*rawData)[0].ContestPhase
 }
 
-func constructItemResponseFromDBData(rawData *rawItem) *itemResponse {
+func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemResponse {
 	result := &itemResponse{
 		itemCommonFields: fillItemCommonFieldsWithDBData(rawData),
 		String: itemStringRoot{
 			itemStringCommon: constructItemStringCommon(rawData),
 		},
 	}
-	result.String.itemStringNotGrayed = constructStringNotGrayed(rawData)
-	result.UserActiveAttempt = constructUserActiveAttempt(rawData)
+	result.String.itemStringNotGrayed = constructStringNotGrayed(rawData, permissionGrantedStore)
+	result.UserActiveAttempt = constructUserActiveAttempt(rawData, permissionGrantedStore)
 	return result
 }
 
@@ -455,8 +456,8 @@ func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
 	}
 }
 
-func constructStringNotGrayed(rawData *rawItem) *itemStringNotGrayed {
-	if !rawData.FullAccess && !rawData.PartialAccess {
+func constructStringNotGrayed(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemStringNotGrayed {
+	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("info") {
 		return nil
 	}
 	return &itemStringNotGrayed{
@@ -465,8 +466,8 @@ func constructStringNotGrayed(rawData *rawItem) *itemStringNotGrayed {
 	}
 }
 
-func constructUserActiveAttempt(rawData *rawItem) *itemUserActiveAttempt {
-	if !rawData.FullAccess && !rawData.PartialAccess || rawData.UserActiveAttemptID == nil {
+func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemUserActiveAttempt {
+	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("info") || rawData.UserActiveAttemptID == nil {
 		return nil
 	}
 	return &itemUserActiveAttempt{
@@ -502,7 +503,8 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 	return result
 }
 
-func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]rawItem) {
+func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData *[]rawItem,
+	permissionGrantedStore *database.PermissionGrantedStore) {
 	response.Children = make([]itemChildNode, 0, len(*rawData))
 	for index := range *rawData {
 		if index == 0 {
@@ -511,11 +513,11 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 
 		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
 		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
-		child.String.itemStringNotGrayed = constructStringNotGrayed(&(*rawData)[index])
-		child.UserActiveAttempt = constructUserActiveAttempt(&(*rawData)[index])
+		child.String.itemStringNotGrayed = constructStringNotGrayed(&(*rawData)[index], permissionGrantedStore)
+		child.UserActiveAttempt = constructUserActiveAttempt(&(*rawData)[index], permissionGrantedStore)
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
-		child.PartialAccessPropagation = (*rawData)[index].PartialAccessPropagation
+		child.ContentViewPropagation = (*rawData)[index].ContentViewPropagation
 		response.Children = append(response.Children, *child)
 	}
 }

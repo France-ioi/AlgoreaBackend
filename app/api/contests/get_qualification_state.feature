@@ -44,19 +44,14 @@ Feature: Get qualification state (contestGetQualificationState)
       | 42                | 42             | 1       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition |
       | 50 | 00:00:00 | 0            | <entering_condition>       |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 31       | 50      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
@@ -80,6 +75,9 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition |
       | 50 | 00:00:00 | 0            | <entering_condition>       |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
@@ -106,6 +104,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -145,6 +147,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -189,6 +195,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -232,6 +242,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 3                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -276,6 +290,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 2                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
@@ -320,6 +338,12 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
@@ -346,6 +370,10 @@ Feature: Get qualification state (contestGetQualificationState)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |

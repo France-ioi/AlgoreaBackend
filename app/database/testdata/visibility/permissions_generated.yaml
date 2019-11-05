@@ -1,0 +1,38 @@
+# lev1 items
+- {group_id: 11, item_id: 190, can_view_generated: content_with_descendants}
+- {group_id: 11, item_id: 191, can_view_generated: content}
+- {group_id: 11, item_id: 192, can_view_generated: info}
+- {group_id: 11, item_id: 193}
+# group 12 does not get any access to items
+- {group_id: 12, item_id: 190}
+- {group_id: 12, item_id: 191}
+- {group_id: 12, item_id: 192}
+- {group_id: 12, item_id: 193}
+# group 19 should have no impact on our user
+- {group_id: 19, item_id: 194, can_view_generated: content_with_descendants}
+
+# lev 2
+- {group_id: 11, item_id: 1900, can_view_generated: content_with_descendants}
+- {group_id: 11, item_id: 1901, can_view_generated: content}
+- {group_id: 11, item_id: 1902, can_view_generated: info}
+- {group_id: 11, item_id: 1903}
+# group 12 does not get any access to items
+- {group_id: 12, item_id: 1900}
+- {group_id: 12, item_id: 1901}
+- {group_id: 12, item_id: 1902}
+- {group_id: 12, item_id: 1903}
+# group 19 should have no impact on our user
+- {group_id: 19, item_id: 1904, can_view_generated: content_with_descendants}
+
+# lev 3
+- {group_id: 11, item_id: 19000, can_view_generated: content_with_descendants}
+- {group_id: 11, item_id: 19001, can_view_generated: content}
+- {group_id: 11, item_id: 19002, can_view_generated: info}
+- {group_id: 11, item_id: 19003}
+# group 12 does not get any access to items
+- {group_id: 12, item_id: 19000}
+- {group_id: 12, item_id: 19001}
+- {group_id: 12, item_id: 19002}
+- {group_id: 12, item_id: 19003}
+# group 19 should have no impact on our user
+- {group_id: 19, item_id: 19004, can_view_generated: content_with_descendants}

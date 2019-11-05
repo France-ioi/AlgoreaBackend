@@ -2,7 +2,7 @@ package database
 
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
 func (conn *DB) WhereItemsAreVisible(user *User) *DB {
-	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().AccessRightsForItemsVisibleToUser(user)
+	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).PermissionsGenerated().AccessRightsForItemsVisibleToUser(user)
 	return conn.Joins("JOIN ? as visible ON visible.item_id = items.id", visibleItemsPerms.SubQuery())
 }
 

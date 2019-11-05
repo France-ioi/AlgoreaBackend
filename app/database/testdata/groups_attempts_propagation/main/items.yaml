@@ -3,3 +3,5 @@
 - { id: 3}
 - { id: 4, unlocked_item_ids: 55}
 - { id: 5}
+
+- { id: 55}

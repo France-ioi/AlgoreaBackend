@@ -461,22 +461,24 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 // insertMap reads fields from the given map and inserts the values which have been set
 // into the given table
 func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) error {
+	query, values := conn.constructInsertMapStatement(dataMap, tableName)
+	return conn.db.Exec(query, values...).Error
+}
+
+func (conn *DB) constructInsertMapStatement(dataMap map[string]interface{}, tableName string) (query string, values []interface{}) {
 	// data for the building the SQL request
 	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...)", values...
 	var valueMarks = make([]string, 0, len(dataMap))
-	var values = make([]interface{}, 0, len(dataMap))
-
+	values = make([]interface{}, 0, len(dataMap))
 	keys := make([]string, 0, len(dataMap))
 	for key := range dataMap {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-
 	escapedKeys := make([]string, 0, len(keys))
 	for _, key := range keys {
 		escapedKeys = append(escapedKeys, QuoteName(key))
 	}
-
 	for _, key := range keys {
 		if dataMap[key] == nil {
 			valueMarks = append(valueMarks, "NULL")
@@ -486,10 +488,31 @@ func (conn *DB) insertMap(tableName string, dataMap map[string]interface{}) erro
 		}
 	}
 	// nolint:gosec
-	query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
+	query = fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tableName,
 		strings.Join(escapedKeys, ", "),
 		strings.Join(valueMarks, ", "))
-	return conn.db.Exec(query, values...).Error
+	return query, values
+}
+
+// insertOrUpdateMap reads fields from the given map and inserts the values which have been set
+// into the given table (like insertMap does). If it is a duplicate, the listed columns will be updated.
+func (conn *DB) insertOrUpdateMap(tableName string, dataMap map[string]interface{}, updateColumns []string) error {
+	query, values := conn.constructInsertMapStatement(dataMap, tableName)
+
+	var builder strings.Builder
+	_, _ = builder.WriteString(query)
+	_, _ = builder.WriteString(" ON DUPLICATE KEY UPDATE ")
+	for index, column := range updateColumns {
+		quotedColumn := QuoteName(column)
+		if index != 0 {
+			_, _ = builder.WriteString(", ")
+		}
+		_, _ = builder.WriteString(quotedColumn)
+		_, _ = builder.WriteString(" = VALUES(")
+		_, _ = builder.WriteString(quotedColumn)
+		_, _ = builder.WriteRune(')')
+	}
+	return conn.db.Exec(builder.String(), values...).Error
 }
 
 // Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting

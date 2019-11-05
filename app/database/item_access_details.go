@@ -1,15 +1,11 @@
 package database
 
+const canViewInfo = "info"
+
 // ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
-	// MIN(groups_items.cached_full_access_since) <= NOW()
-	FullAccess bool `json:"full_access"`
-	// MIN(groups_items.cached_partial_access_since) <= NOW()
-	PartialAccess bool `json:"partial_access"`
-	// MIN(groups_items.cached_grayed_access_since) <= NOW()
-	GrayedAccess bool `json:"grayed_access"`
-	// MIN(groups_items.cached_solutions_access_since) <= NOW()
-	AccessSolutions bool `json:"access_solutions"`
+	// MAX(permissions_generated.can_view_generated_value) converted back into the string representation
+	CanView string `json:"can_view"`
 }
 
 // ItemAccessDetailsWithID represents access rights for an item + ItemID
@@ -18,12 +14,12 @@ type ItemAccessDetailsWithID struct {
 	ItemAccessDetails
 }
 
-// IsGrayed returns true when GrayedAccess is on, but FullAccess and PartialAccess are off
+// IsGrayed returns true when can_view_generated = 'info'
 func (accessDetails *ItemAccessDetails) IsGrayed() bool {
-	return !accessDetails.FullAccess && !accessDetails.PartialAccess && accessDetails.GrayedAccess
+	return accessDetails.CanView == canViewInfo
 }
 
-// IsForbidden returns true when FullAccess, PartialAccess, GrayedAccess are off
+// IsForbidden returns true when can_view_generated = 'none'
 func (accessDetails *ItemAccessDetails) IsForbidden() bool {
-	return !accessDetails.FullAccess && !accessDetails.PartialAccess && !accessDetails.GrayedAccess
+	return accessDetails.CanView == "none"
 }

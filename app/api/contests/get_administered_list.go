@@ -88,10 +88,10 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			items.has_attempts AS team_only_contest,
 			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
 			COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS title_language_id`).
-		Joins("JOIN groups_items ON groups_items.item_id = items.id").
-		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id").
+		Joins("JOIN permissions_generated ON permissions_generated.item_id = items.id").
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id").
 		JoinsUserAndDefaultItemStrings(user).
-		Where("groups_items.cached_full_access_since <= NOW() OR groups_items.cached_solutions_access_since <= NOW()").
+		Where("permissions_generated.can_view_generated IN ('content_with_descendants', 'solution')").
 		Where("groups_ancestors_active.child_group_id = ?", user.GroupID).
 		Where("items.duration IS NOT NULL").
 		Group("items.id")
@@ -124,15 +124,12 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
 			Joins(`
-				JOIN groups_items AS parent_groups_items
-					ON parent_groups_items.item_id = items.id AND (
-						parent_groups_items.cached_full_access_since <= NOW() OR
-						parent_groups_items.cached_partial_access_since <= NOW() OR
-						parent_groups_items.cached_grayed_access_since <= NOW()
-				)`).
+				JOIN permissions_generated AS parent_permissions_generated
+					ON parent_permissions_generated.item_id = items.id AND
+						parent_permissions_generated.can_view_generated != 'none'`).
 			Joins(`
 				JOIN groups_ancestors_active AS parent_groups_ancestors
-					ON parent_groups_ancestors.ancestor_group_id = parent_groups_items.group_id AND
+					ON parent_groups_ancestors.ancestor_group_id = parent_permissions_generated.group_id AND
 						parent_groups_ancestors.child_group_id = ?`, user.GroupID).
 			JoinsUserAndDefaultItemStrings(user).
 			Group("items_items.parent_item_id, items_items.child_item_id").

@@ -12,9 +12,9 @@ Feature: Submit a new answer
     And the database has the following table 'items':
       | id |
       | 50 |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 101      | 50      | content            |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | order |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0     |

@@ -46,20 +46,15 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 }
 
 // AccessRights returns a composable query for getting
-// (item_id, full_access, partial_access, grayed_access, access_solutions) for the given user
+// (item_id, can_view_generated_value) for the given user
 func (s *ItemStore) AccessRights(user *User) *DB {
-	return s.GroupItems().MatchingUserAncestors(user).
-		Select(
-			"item_id, MIN(cached_full_access_since) <= NOW() AS full_access, " +
-				"MIN(cached_partial_access_since) <= NOW() AS partial_access, " +
-				"MIN(cached_grayed_access_since) <= NOW() AS grayed_access, " +
-				"MIN(cached_solutions_access_since) <= NOW() AS access_solutions").
+	return s.PermissionsGenerated().MatchingUserAncestors(user).
+		Select("item_id, MAX(can_view_generated_value) AS can_view_generated_value").
 		Group("item_id")
 }
 
-// HasManagerAccess returns whether the user has manager access to all the given item_id's
-// It is assumed that the `OwnerAccess` implies manager access
-func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (hasAccess bool, err error) {
+// CanGrantViewContentOnAll returns whether the user can grant 'content' view right on all the listed items (can_grant_view >= content)
+func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasAccess bool, err error) {
 	var count int64
 	if len(itemIDs) == 0 {
 		return true, nil
@@ -69,9 +64,32 @@ func (s *ItemStore) HasManagerAccess(user *User, itemIDs ...int64) (hasAccess bo
 	for _, itemID := range itemIDs {
 		idsMap[itemID] = true
 	}
-	err = s.GroupItems().MatchingUserAncestors(user).
+	err = s.PermissionsGenerated().MatchingUserAncestors(user).
 		WithWriteLock().
-		Where("item_id IN (?) AND (cached_manager_access OR owner_access)", itemIDs).
+		Where("item_id IN (?)", itemIDs).
+		Where("can_grant_view_generated_value >= ?", s.PermissionsGranted().GrantViewIndexByKind("content")).
+		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
+	if err != nil {
+		return false, err
+	}
+	return count == int64(len(idsMap)), nil
+}
+
+// AllItemsAreVisible returns whether all the items are visible to the user
+func (s *ItemStore) AllItemsAreVisible(user *User, itemIDs ...int64) (hasAccess bool, err error) {
+	var count int64
+	if len(itemIDs) == 0 {
+		return true, nil
+	}
+
+	idsMap := make(map[int64]bool, len(itemIDs))
+	for _, itemID := range itemIDs {
+		idsMap[itemID] = true
+	}
+	err = s.PermissionsGenerated().MatchingUserAncestors(user).
+		WithWriteLock().
+		Where("item_id IN (?)", itemIDs).
+		Where("can_view_generated != 'none'").
 		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
 	if err != nil {
 		return false, err
@@ -114,12 +132,20 @@ func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error
 
 // GetAccessDetailsForIDs returns access details for given item IDs and the given user
 func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemAccessDetailsWithID, error) {
-	var accessDetails []ItemAccessDetailsWithID
+	var valuesWithIDs []struct {
+		ItemID                int64
+		CanViewGeneratedValue int
+	}
 	db := s.AccessRights(user).
-		Where("groups_items.item_id IN (?)", itemIDs).
-		Scan(&accessDetails)
+		Where("permissions_generated.item_id IN (?)", itemIDs).
+		Scan(&valuesWithIDs)
 	if err := db.Error(); err != nil {
 		return nil, err
+	}
+	accessDetails := make([]ItemAccessDetailsWithID, len(valuesWithIDs))
+	for i := range valuesWithIDs {
+		accessDetails[i].ItemID = valuesWithIDs[i].ItemID
+		accessDetails[i].CanView = s.PermissionsGranted().ViewKindByIndex(valuesWithIDs[i].CanViewGeneratedValue)
 	}
 	return accessDetails, nil
 }
@@ -143,11 +169,11 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 		if res.ItemID != id {
 			continue
 		}
-		if res.FullAccess || res.PartialAccess {
+		if res.CanView == "solution" || res.CanView == "content_with_descendants" || res.CanView == "content" {
 			// OK, user has full access.
 			return nil
 		}
-		if res.GrayedAccess && last {
+		if res.CanView == "info" && last {
 			// OK, user has grayed access on the last item.
 			return nil
 		}
@@ -217,7 +243,8 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(user).Where("full_access > 0 OR partial_access > 0").Where("id = ?", itemID).
+	err = s.Visible(user).Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content")).
+		Where("id = ?", itemID).
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, errors.New("no access to the task item"), nil
@@ -250,7 +277,8 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	}
 
 	mustNotBeError(s.Visible(user).
-		Select("items.id AS item_id, full_access").
+		Select("items.id AS item_id, can_view_generated_value >= ? AS full_access",
+			s.PermissionsGranted().ViewIndexByKind("content_with_descendants")).
 		Joins("JOIN items_ancestors ON items_ancestors.ancestor_item_id = items.id").
 		Where("items_ancestors.child_item_id = ?", itemID).
 		Where("items.duration IS NOT NULL").
@@ -369,22 +397,21 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 		Where("finished_at IS NULL").
 		UpdateColumn("finished_at", Now()).Error())
 
-	groupItemStore := s.GroupItems()
+	permissionGrantedStore := s.PermissionsGranted()
 
 	// TODO: "remove partial access if other access were present" (what did he mean???)
-	groupItemStore.removePartialAccess(user.GroupID, itemID)
-	mustNotBeError(groupItemStore.db.Exec(`
-		DELETE groups_items
-		FROM groups_items
+	permissionGrantedStore.removePartialAccess(user.GroupID, itemID)
+	mustNotBeError(permissionGrantedStore.db.Exec(`
+		DELETE permissions_granted
+		FROM permissions_granted
 		JOIN items_ancestors ON
-			items_ancestors.child_item_id = groups_items.item_id AND
+			items_ancestors.child_item_id = permissions_granted.item_id AND
 			items_ancestors.ancestor_item_id = ?
-		WHERE groups_items.group_id = ? AND
-			(cached_full_access_since IS NULL OR cached_full_access_since > NOW()) AND
-			owner_access = 0 AND manager_access = 0`, itemID, user.GroupID).Error)
+		WHERE permissions_granted.group_id = ? AND giver_group_id = -1 AND
+			can_view IN ('content', 'info') AND is_owner = 0 AND can_edit='none'`, itemID, user.GroupID).Error)
 
-	// we do not need to call GroupItemStore.After() because we do not grant new access here
-	groupItemStore.computeAllAccess()
+	// we do not need to call PermissionGrantedStore.After() because we do not grant new access here
+	permissionGrantedStore.computeAllAccess()
 }
 
 func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
@@ -397,22 +424,23 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 		SET finished_at = NOW()
 		WHERE group_id = ? AND item_id = ? AND entered_at IS NOT NULL AND finished_at IS NULL`, teamGroupID, itemID).Error)
 
-	groupItemStore := s.GroupItems()
+	permissionGrantedStore := s.PermissionsGranted()
 	// Remove access
-	groupItemStore.removePartialAccess(teamGroupID, itemID)
+	permissionGrantedStore.removePartialAccess(teamGroupID, itemID)
 
-	// we do not need to call GroupItemStore.After() because we do not grant new access here
-	groupItemStore.computeAllAccess()
+	// we do not need to call PermissionGrantedStore.After() because we do not grant new access here
+	permissionGrantedStore.computeAllAccess()
 }
 
 // ContestManagedByUser returns a composable query
 // for getting a contest with the given item id managed by the given user
 func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
-		Joins("JOIN groups_items ON groups_items.item_id = items.id").
+		Joins("JOIN permissions_generated ON permissions_generated.item_id = items.id").
 		Joins(`
-			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND
+			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND
 				groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Group("items.id").
-		Having("MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()")
+		Having("MAX(permissions_generated.can_view_generated_value) >= ?",
+			s.PermissionsGranted().ViewIndexByKind("content_with_descendants"))
 }

@@ -44,14 +44,6 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 42                | 42             | 1       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: Wrong item_id
     Given I am the user with group_id "31"
@@ -93,6 +85,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id |
       | 50 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 403
@@ -105,6 +101,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 50 | 00:00:00 | false        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a POST request to "/contests/50/groups/21"
     Then the response code should be 403
@@ -117,6 +117,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/10"
     Then the response code should be 403
@@ -129,6 +133,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
     And I am the user with group_id "31"
     When I send a POST request to "/contests/60/groups/31"
     Then the response code should be 403
@@ -141,6 +148,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "21"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 403
@@ -153,6 +164,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
       | 60 | 00:00:00 | 1            | All                        | 3                     |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     Given the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |

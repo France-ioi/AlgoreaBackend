@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -32,8 +31,8 @@ func TestCheckAccess(t *testing.T) {
 			desc:    "missing access result on one of the items",
 			itemIDs: []int64{21, 22, 23},
 			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
 			},
 			err: fmt.Errorf("not visible item_id 23"),
 		},
@@ -41,9 +40,9 @@ func TestCheckAccess(t *testing.T) {
 			desc:    "no access on one of the items",
 			itemIDs: []int64{21, 22, 23},
 			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
 				{ItemID: 22},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
 			},
 			err: fmt.Errorf("not enough perm on item_id 22"),
 		},
@@ -51,19 +50,19 @@ func TestCheckAccess(t *testing.T) {
 			desc:    "full access on all items",
 			itemIDs: []int64{21, 22, 23},
 			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{FullAccess: true}},
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
 			},
 			err: nil,
 		},
 		{
-			desc:    "full access on all but last, last with greyed",
+			desc:    "content access on all but last, last is grayed",
 			itemIDs: []int64{21, 22, 23},
 			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{PartialAccess: true}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{GrayedAccess: true}},
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "info"}},
 			},
 			err: nil,
 		},
@@ -99,46 +98,26 @@ func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemStore_HasManagerAccess_MustBeInTransaction(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_, _ = NewDataStore(db).Items().HasManagerAccess(&User{GroupID: 14}, 20)
-	})
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
-func TestItemStore_HasManagerAccess_HandlesDBErrors(t *testing.T) {
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	expectedError := errors.New("some error")
-	dbMock.ExpectBegin()
-	dbMock.ExpectQuery("").WillReturnError(expectedError)
-	dbMock.ExpectRollback()
-
-	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
-		result, err := store.Items().HasManagerAccess(&User{GroupID: 14}, 20)
-		assert.False(t, result)
-		return err
-	}))
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
-}
-
 func TestItemStore_ContestManagedByUser(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
+	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
+		WillReturnRows(dbMock.NewRows([]string{"values"}).
+			AddRow("'none','info','content','content_with_descendants','solution'"))
+	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
+		WillReturnRows(dbMock.NewRows([]string{"values"}).
+			AddRow("'none','content','content_with_descendants','solution','transfer'"))
+	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
+		WillReturnRows(dbMock.NewRows([]string{"values"}).
+			AddRow("'none','children','all','transfer'"))
 	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT items.id FROM `items` " +
-		"JOIN groups_items ON groups_items.item_id = items.id " +
-		"JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups_items.group_id AND " +
+		"JOIN permissions_generated ON permissions_generated.item_id = items.id " +
+		"JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND " +
 		"groups_ancestors_active.child_group_id = ? " +
 		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) " +
 		"GROUP BY items.id " +
-		"HAVING (MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()) " +
+		"HAVING (MAX(permissions_generated.can_view_generated_value) >= ?) " +
 		"LIMIT 1")).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
 	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).

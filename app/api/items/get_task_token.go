@@ -94,9 +94,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		SupportedLangProg *string
 	}
 	err = srv.Store.Items().Visible(user).Where("id = ?", itemID).
-		Where("partial_access > 0 OR full_access > 0").
+		Where("can_view_generated_value >= ?", srv.Store.PermissionsGranted().ViewIndexByKind("content")).
 		Where("items.type IN('Task','Course')").
-		Select("access_solutions, has_attempts, hints_allowed, text_id, url, supported_lang_prog").
+		Select(`
+			can_view_generated_value = ? AS access_solutions,
+			has_attempts, hints_allowed, text_id, url, supported_lang_prog`,
+			srv.Store.PermissionsGranted().ViewIndexByKind("solution")).
 		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError

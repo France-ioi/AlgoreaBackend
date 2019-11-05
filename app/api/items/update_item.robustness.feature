@@ -18,12 +18,17 @@ Feature: Update item - robustness
       | id | ancestor_item_id | child_item_id |
       | 1  | 4                | 21            |
       | 2  | 21               | 50            |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | manager_access | cached_manager_access | owner_access |
-      | 41 | 11       | 21      | true           | true                  | false        |
-      | 42 | 11       | 22      | false          | false                 | false        |
-      | 43 | 11       | 4       | true           | true                  | false        |
-      | 44 | 11       | 50      | true           | true                  | false        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
+      | 11       | 21      | solution           | none               | false              |
+      | 11       | 22      | none               | none               | false              |
+      | 11       | 4       | solution           | none               | false              |
+      | 11       | 50      | solution           | all                | false              |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | can_edit | is_owner | giver_group_id |
+      | 11       | 4       | solution | none     | false    | 11             |
+      | 11       | 21      | solution | none     | false    | 11             |
+      | 11       | 50      | solution | all      | false    | 11             |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -55,7 +60,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: default_language_id doesn't exist
     Given I am the user with group_id "11"
@@ -81,7 +86,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: No strings in default_language_id
     Given I am the user with group_id "11"
@@ -107,7 +112,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Invalid item_id
     And I am the user with group_id "11"
@@ -123,7 +128,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: The user doesn't exist
     And I am the user with group_id "121"
@@ -139,9 +144,9 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
-  Scenario: The user doesn't have rights to manage the item
+  Scenario: The user doesn't have rights to edit the item
     And I am the user with group_id "11"
     When I send a PUT request to "/items/60" with the following body:
       """
@@ -150,12 +155,12 @@ Feature: Update item - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to manage the item"
+    And the response error message should contain "No access rights to edit the item"
     And the table "items" should stay unchanged
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong full_screen
     Given I am the user with group_id "11"
@@ -181,7 +186,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong type
     Given I am the user with group_id "11"
@@ -207,7 +212,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong validation_type
     Given I am the user with group_id "11"
@@ -233,7 +238,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong validation_min
     Given I am the user with group_id "11"
@@ -259,7 +264,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong unlocked_item_ids
     Given I am the user with group_id "11"
@@ -277,7 +282,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -285,7 +290,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Non-existent id in unlocked_item_ids
     Given I am the user with group_id "11"
@@ -303,7 +308,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -311,9 +316,9 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
-  Scenario: unlocked_item_ids not owned/managed by the user
+  Scenario: The user doesn't have can_grant_view >= content on unlocked_item_ids
     Given I am the user with group_id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
@@ -329,7 +334,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -337,7 +342,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong contest_entering_condition
     Given I am the user with group_id "11"
@@ -363,7 +368,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (wrong format)
     Given I am the user with group_id "11"
@@ -389,7 +394,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative hours)
     Given I am the user with group_id "11"
@@ -415,7 +420,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many hours)
     Given I am the user with group_id "11"
@@ -441,7 +446,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative minutes)
     Given I am the user with group_id "11"
@@ -467,7 +472,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many minutes)
     Given I am the user with group_id "11"
@@ -493,7 +498,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative seconds)
     Given I am the user with group_id "11"
@@ -519,7 +524,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many seconds)
     Given I am the user with group_id "11"
@@ -545,7 +550,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong contest_phase
     Given I am the user with group_id "11"
@@ -571,7 +576,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: Non-unique children item IDs
     Given I am the user with group_id "11"
@@ -592,7 +597,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["children IDs should be unique and the user should have manager/owner access to them"]
+          "children": ["children IDs should be unique and each should be visible to the user"]
         }
       }
       """
@@ -600,9 +605,9 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
-  Scenario: User doesn't have manager/owner access to children items
+  Scenario: Children items are not visible to the user
     Given I am the user with group_id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
@@ -621,7 +626,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["children IDs should be unique and the user should have manager/owner access to them"]
+          "children": ["children IDs should be unique and each should be visible to the user"]
         }
       }
       """
@@ -629,7 +634,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: The item is among child items
     Given I am the user with group_id "11"
@@ -647,7 +652,7 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
 
   Scenario: The item is a descendant of a child item
     Given I am the user with group_id "11"
@@ -665,4 +670,4 @@ Feature: Update item - robustness
     And the table "items_strings" should stay unchanged
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged

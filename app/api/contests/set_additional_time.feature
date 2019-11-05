@@ -65,17 +65,17 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 50 | 00:00:00 | 34                            |
       | 60 | 00:00:01 | 35                            |
       | 70 | 00:00:03 | 36                            |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 1  | 10       | 50      | null                        | null                       | null                     | null                          |
-      | 2  | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 3  | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 4  | 11       | 60      | null                        | null                       | null                     | null                          |
-      | 5  | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 6  | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          |
-      | 7  | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 8  | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 9  | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | none                     |
+      | 11       | 50      | none                     |
+      | 11       | 60      | none                     |
+      | 11       | 70      | content_with_descendants |
+      | 13       | 50      | content                  |
+      | 13       | 60      | info                     |
+      | 21       | 50      | solution                 |
+      | 21       | 60      | content_with_descendants |
+      | 21       | 70      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -97,7 +97,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -152,7 +152,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -218,7 +218,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     When I send a PUT request to "/contests/70/groups/31/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |

@@ -16,12 +16,12 @@ func (s *ItemItemStore) createNewAncestors() {
 	s.DataStore.createNewAncestors("items", "item")
 }
 
-// After is a "listener" that calls UserItemStore::createNewAncestors() & GroupItemStore::computeAllAccess()
+// After is a "listener" that calls UserItemStore::createNewAncestors() & PermissionGrantedStore::computeAllAccess()
 func (s *ItemItemStore) After() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
 	s.createNewAncestors()
-	s.GroupItems().computeAllAccess()
+	s.PermissionsGranted().computeAllAccess()
 	return nil
 }

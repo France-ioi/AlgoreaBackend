@@ -40,20 +40,18 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 52                | 52             | 1       |
       | 98                | 98             | 1       |
       | 99                | 99             | 1       |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
     And the DB time now is "3019-10-10 10:10:10"
 
   Scenario: Enter an individual contest
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id |
       | 50 | 01:01:01 | 0            | None                       | 99                            |
-    Given the database has the following table 'groups_contest_items':
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
+    And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And I am the user with group_id "31"
@@ -101,7 +99,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
       | 60 | 05:05:05 | 1            | Half                       | 3                     | 98                            |
-    Given the database has the following table 'groups_contest_items':
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | content                  |
+      | 21       | 60      | content_with_descendants |
+    And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 01:01:01        |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
@@ -154,7 +156,12 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     Given the database has the following table 'items':
       | id | duration | has_attempts | contest_entering_condition |
       | 50 | 01:01:01 | 0            | None                       |
-    Given the database has the following table 'groups_contest_items':
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
+    And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And I am the user with group_id "31"

@@ -15,11 +15,9 @@ import (
 )
 
 type unlocksResultRow struct {
-	GroupID                  int64
-	ItemID                   int64
-	PartialAccessSince       *database.Time
-	CachedPartialAccessSince *database.Time
-	CachedPartialAccess      bool
+	GroupID int64
+	ItemID  int64
+	CanView string
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks(t *testing.T) {
@@ -100,29 +98,26 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	assert.NoError(t, err)
 
 	var result []unlocksResultRow
-	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Select("group_id, item_id, cached_partial_access").
+	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+		Select("group_id, item_id, can_view").
 		Order("group_id, item_id").
 		Scan(&result).Error())
 	assert.Equal(t, []unlocksResultRow{
-		{GroupID: 101, ItemID: 1001, CachedPartialAccess: true},
-		{GroupID: 101, ItemID: 1002, CachedPartialAccess: true},
-		{GroupID: 101, ItemID: 2001, CachedPartialAccess: true},
-		{GroupID: 101, ItemID: 2002, CachedPartialAccess: true},
-		{GroupID: 101, ItemID: 4001, CachedPartialAccess: true},
-		{GroupID: 101, ItemID: 4002, CachedPartialAccess: true},
+		{GroupID: 101, ItemID: 1001, CanView: "content"},
+		{GroupID: 101, ItemID: 1002, CanView: "content"},
+		{GroupID: 101, ItemID: 2001, CanView: "content"},
+		{GroupID: 101, ItemID: 2002, CanView: "content"},
+		{GroupID: 101, ItemID: 4001, CanView: "content"},
+		{GroupID: 101, ItemID: 4002, CanView: "content"},
 	}, result)
 	var count int64
-	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, cached_partial_access_since, NOW()) > 1").Count(&count).Error())
+	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+		Where("TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) > 1").Count(&count).Error())
 	assert.Zero(t, count)
-	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("TIMESTAMPDIFF(SECOND, partial_access_since, NOW()) > 1").Count(&count).Error())
+	assert.NoError(t, database.NewDataStore(db).PermissionsGenerated().
+		Where("can_view_generated != 'content'").Count(&count).Error())
 	assert.Zero(t, count)
-	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("cached_partial_access_since IS NULL").Count(&count).Error())
-	assert.Zero(t, count)
-	assert.NoError(t, database.NewDataStore(db).GroupItems().
-		Where("partial_access_since IS NULL").Count(&count).Error())
+	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
+		Where("can_view != 'content'").Count(&count).Error())
 	assert.Zero(t, count)
 }

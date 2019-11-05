@@ -1,5 +1,0 @@
-# true becomes false
-- {id: 71, group_id: 7, item_id: 1, cached_full_access: true, cached_full_access_since: 2037-01-01 21:30:55}
-- {id: 72, group_id: 7, item_id: 2, cached_partial_access: true, cached_partial_access_since: 2037-01-01 21:30:55}
-- {id: 73, group_id: 7, item_id: 3, cached_access_solutions: true, cached_solutions_access_since: 2037-01-01 21:30:55}
-- {id: 74, group_id: 7, item_id: 4, cached_grayed_access: true, cached_grayed_access_since: 2037-01-01 21:30:55}

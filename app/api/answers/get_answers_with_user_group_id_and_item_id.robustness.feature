@@ -24,11 +24,11 @@ Background:
     | 190 | Category | false          | false    | 1234,2345         | true               |
     | 200 | Category | false          | false    | 1234,2345         | true               |
     | 210 | Category | false          | false    | 1234,2345         | true               |
-  And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        |
+  And the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated       |
+    | 13       | 190     | none                     |
+    | 13       | 200     | content_with_descendants |
+    | 13       | 210     | info                     |
 
   Scenario: Should fail when the user has only grayed access to the item
     Given I am the user with group_id "11"

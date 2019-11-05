@@ -123,8 +123,8 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			JOIN groups_ancestors_active AS found_group_ancestors
 				ON found_group_ancestors.child_group_id = found_group.id`).
 		Joins(`
-			LEFT JOIN groups_items ON groups_items.group_id = found_group_ancestors.ancestor_group_id AND
-				groups_items.item_id = ?`, itemID).
+			LEFT JOIN permissions_generated ON permissions_generated.group_id = found_group_ancestors.ancestor_group_id AND
+				permissions_generated.item_id = ?`, itemID).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = found_group_ancestors.ancestor_group_id AND
 				groups_contest_items.item_id = ?`, itemID).
@@ -138,9 +138,8 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("found_group.id").
-		Having(`
-			MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_partial_access_since) <= NOW() OR
-			MIN(groups_items.cached_grayed_access_since) <= NOW()`)
+		Having("MAX(permissions_generated.can_view_generated_value) > ?",
+			srv.Store.PermissionsGranted().ViewIndexByKind("none"))
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

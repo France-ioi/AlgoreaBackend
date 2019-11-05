@@ -12,8 +12,8 @@ type rawNavigationItem struct {
 	Type              string
 	TransparentFolder bool
 	// whether items.item_unlocked_ids is empty
-	HasUnlockedItems         bool
-	PartialAccessPropagation string
+	HasUnlockedItems       bool
+	ContentViewPropagation string
 
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title *string
@@ -33,7 +33,7 @@ type rawNavigationItem struct {
 	ParentItemID int64
 	Order        int32 `sql:"column:child_order"`
 
-	*database.ItemAccessDetails
+	CanViewGeneratedValue int
 
 	ItemGrandparentID *int64
 }
@@ -46,15 +46,15 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
 	commonAttributes := "items.id, items.type, items.transparent_folder, items.unlocked_item_ids, items.default_language_id, " +
-		"full_access, partial_access, grayed_access"
+		"can_view_generated_value"
 	itemQ := items.VisibleByID(user, rootID).Select(
-		commonAttributes + ", NULL AS parent_item_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS partial_access_propagation")
+		commonAttributes + ", NULL AS parent_item_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS content_view_propagation")
 	service.MustNotBeError(itemQ.Error())
 	childrenQ := items.VisibleChildrenOfID(user, rootID).Select(
-		commonAttributes + ",	parent_item_id, NULL AS item_grandparent_id, child_order, partial_access_propagation")
+		commonAttributes + ",	parent_item_id, NULL AS item_grandparent_id, child_order, content_view_propagation")
 	service.MustNotBeError(childrenQ.Error())
 	gChildrenQ := items.VisibleGrandChildrenOfID(user, rootID).Select(
-		commonAttributes + ", ii1.parent_item_id, ii2.parent_item_id AS item_grandparent_id, ii1.child_order, ii1.partial_access_propagation")
+		commonAttributes + ", ii1.parent_item_id, ii2.parent_item_id AS item_grandparent_id, ii1.child_order, ii1.content_view_propagation")
 
 	service.MustNotBeError(gChildrenQ.Error())
 	itemThreeGenQ := itemQ.Union(childrenQ.QueryExpr()).Union(gChildrenQ.QueryExpr())
@@ -71,10 +71,10 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			groups_attempts.started_at AS started_at, groups_attempts.validated_at AS validated_at,
 			groups_attempts.finished_at AS finished_at,
 			items.child_order AS child_order,
-			items.partial_access_propagation,
+			items.content_view_propagation,
 			items.parent_item_id AS parent_item_id,
 			items.item_grandparent_id AS item_grandparent_id,
-			items.full_access, items.partial_access, items.grayed_access
+			items.can_view_generated_value
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_group_id=?", user.GroupID).

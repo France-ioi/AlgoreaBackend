@@ -53,7 +53,7 @@ type item struct {
 	ValidationMin *int32 `json:"validation_min"`
 	// Nullable
 	//
-	// An optional comma-separated list of items' IDs to unlock (each must be owned/managed by the current user)
+	// An optional comma-separated list of items' IDs to unlock (the current user should have `can_grant_view` >= 'content' on each)
 	UnlockedItemIDs *string `json:"unlocked_item_ids" validate:"unlocked_item_ids"`
 	// Nullable
 	ScoreMinUnlock *int32 `json:"score_min_unlock"`
@@ -117,19 +117,13 @@ type NewItemRequest struct {
 	Children []itemChild `json:"children" validate:"children"`
 }
 
-// groupItemData creates a map containing the db data to be inserted into the groups_items table
-func (in *NewItemRequest) groupItemData(groupItemID, userGroupID, groupID, itemID int64) map[string]interface{} {
+// permissionsGrantedData creates a map containing the db data to be inserted into the permissions_granted table
+func (in *NewItemRequest) permissionsGrantedData(userGroupID, groupID, itemID int64) map[string]interface{} {
 	return map[string]interface{}{
-		"id":                    groupItemID,
-		"item_id":               itemID,
-		"group_id":              groupID,
-		"creator_user_group_id": userGroupID,
-		"full_access_since":     database.Now(),
-		"owner_access":          true,
-		"manager_access":        true,
-		// as the owner gets full access, there is no need to request parents' access to get the actual access level
-		"cached_full_access_since": database.Now(),
-		"cached_full_access":       true,
+		"item_id":        itemID,
+		"group_id":       groupID,
+		"giver_group_id": userGroupID,
+		"is_owner":       true,
 	}
 }
 
@@ -161,18 +155,17 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
-//     * gives full access to the item for the current user (creates a new `groups_items` row with: `item_id` = `items.id`,
-//       `group_id` = `group_id` of the current user, `creator_user_group_id` = `users.group_id` of the current user,
-//       `full_access_since` = now(), `cached_full_access_since` = now(), `cached_full_access` = 1, `owner_access` = 1,
-//       `manager_access` = 1).
+//     * gives full access to the item for the current user (creates a new `permissions_granted` row with: `item_id` = `items.id`,
+//       `group_id` = `group_id` of the current user, `giver_group_id` = `users.group_id` of the current user,
+//       `is_owner` = 1).
 //
-//     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `groups_items`.
+//     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
 //
-//   The user should be an owner/manager of
+//   The user should have
 //
-//     * the `parent_item_id`,
-//     * `children` items (if any),
-//     * `unlocked_item_ids` items (if any),
+//     * `can_edit` >= 'children' on the `parent_item_id`,
+//     * `can_view` != 'none' on the `children` items (if any),
+//     * `can_grant_view` >= 'content' on the `unlocked_item_ids` items (if any),
 //
 //   otherwise the "bad request" response is returned.
 // parameters:
@@ -238,10 +231,13 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 }
 
 // constructParentItemIDValidator constructs a validator for the ParentItemID field.
-// The validator checks that the user has access rights to manage the parent item (owner_access or manager_access).
+// The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		hasAccess, err := store.Items().HasManagerAccess(user, fl.Field().Interface().(int64))
+		hasAccess, err := store.PermissionsGenerated().MatchingUserAncestors(user).WithWriteLock().
+			Where("item_id = ?", fl.Field().Interface().(int64)).
+			Where("can_edit_generated_value >= ?", store.PermissionsGranted().EditIndexByKind("children")).
+			HasRows()
 		service.MustNotBeError(err)
 		return hasAccess
 	})
@@ -258,7 +254,7 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 }
 
 // constructUnlockedItemIDsValidator constructs a validator for the UnlockedItemIDs field.
-// The validator checks that the user has access rights to manage all the listed items (owner_access or manager_access).
+// The validator checks that the user can grant 'content' view right on all the listed items (can_grant_view >= content).
 func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		field := fl.Field()
@@ -274,7 +270,7 @@ func constructUnlockedItemIDsValidator(store *database.DataStore, user *database
 			}
 			int64IDs = append(int64IDs, int64ID)
 		}
-		hasAccess, err := store.Items().HasManagerAccess(user, int64IDs...)
+		hasAccess, err := store.Items().CanGrantViewContentOnAll(user, int64IDs...)
 		service.MustNotBeError(err)
 		return hasAccess
 	})
@@ -282,7 +278,7 @@ func constructUnlockedItemIDsValidator(store *database.DataStore, user *database
 
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
-// the user has access rights to manage all the listed items (owner_access or manager_access).
+// all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
@@ -296,7 +292,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User) 
 		if len(idsMap) != len(children) {
 			return false
 		}
-		hasAccess, err := store.Items().HasManagerAccess(user, ids...)
+		hasAccess, err := store.Items().AllItemsAreVisible(user, ids...)
 		service.MustNotBeError(err)
 		return hasAccess
 	})
@@ -305,7 +301,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User) 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user))
 	formData.RegisterTranslation("parent_item_id",
-		"should exist and the user should have manager/owner access to it")
+		"should exist and the user should be able to manage its children")
 
 	registerLanguageIDValidator(formData, store)
 
@@ -321,13 +317,13 @@ func registerLanguageIDValidator(formData *formdata.FormData, store *database.Da
 func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("unlocked_item_ids", constructUnlockedItemIDsValidator(store, user))
 	formData.RegisterTranslation("unlocked_item_ids",
-		"all the IDs should exist and the user should have manager/owner access to them")
+		"all the IDs should exist and the user should have `can_grant_view` >= 'content' permission on each")
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user))
 	formData.RegisterTranslation("children",
-		"children IDs should be unique and the user should have manager/owner access to them")
+		"children IDs should be unique and each should be visible to the user")
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
@@ -342,7 +338,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemMap["default_language_id"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
-		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.GroupID, user.GroupID, itemID)))
+		service.MustNotBeError(s.PermissionsGranted().InsertMap(newItemRequest.permissionsGrantedData(user.GroupID, user.GroupID, itemID)))
 
 		stringMap["id"] = s.NewID()
 		stringMap["item_id"] = itemID

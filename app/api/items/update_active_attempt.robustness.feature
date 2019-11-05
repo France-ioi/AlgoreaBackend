@@ -41,12 +41,12 @@ Feature: Update active attempt for an item - robustness
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 60            |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_full_access_since | cached_grayed_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         | null                     | null                       |
-      | 101      | 60      | 2017-05-29 06:38:38         | null                     | null                       |
-      | 111      | 50      | null                        | 2017-05-29 06:38:38      | null                       |
-      | 121      | 50      | null                        | null                     | 2017-05-29 06:38:38        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 101      | 50      | content                  |
+      | 101      | 60      | content                  |
+      | 111      | 50      | content_with_descendants |
+      | 121      | 50      | info                     |
 
   Scenario: Invalid groups_attempt_id
     Given I am the user with group_id "101"

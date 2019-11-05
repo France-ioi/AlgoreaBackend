@@ -347,11 +347,11 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 					- {id: 10, has_attempts: 0}
 					- {id: 50, has_attempts: 0}
 					- {id: 60, has_attempts: 1}
-				groups_items:
-					- {group_id: 101, item_id: 50, cached_partial_access_since: "2017-05-29 06:38:38"}
-					- {group_id: 101, item_id: 60, cached_partial_access_since: "2017-05-29 06:38:38"}
-					- {group_id: 111, item_id: 50, cached_full_access_since: "2017-05-29 06:38:38"}
-					- {group_id: 121, item_id: 50, cached_grayed_access_since: "2017-05-29 06:38:38"}`,
+				permissions_generated:
+					- {group_id: 101, item_id: 50, can_view_generated: content}
+					- {group_id: 101, item_id: 60, can_view_generated: content}
+					- {group_id: 111, item_id: 50, can_view_generated: content_with_descendants}
+					- {group_id: 121, item_id: 50, can_view_generated: info}`,
 				test.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)

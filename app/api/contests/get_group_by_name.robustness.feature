@@ -22,14 +22,14 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 60 | null     |
       | 10 | 00:00:02 |
       | 70 | 00:00:03 |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 13       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          |
-      | 21       | 50      | null                        | null                       | null                     | null                          |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 13       | 50      | content                  |
+      | 13       | 60      | info                     |
+      | 13       | 70      | content_with_descendants |
+      | 21       | 50      | none                     |
+      | 21       | 60      | content_with_descendants |
+      | 21       | 70      | content_with_descendants |
 
   Scenario: Wrong item_id
     Given I am the user with group_id "21"

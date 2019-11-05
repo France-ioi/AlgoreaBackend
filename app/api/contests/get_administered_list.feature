@@ -48,24 +48,24 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 60      | 1           | Contest    |
       | 70      | 1           | Contest 2  |
       | 70      | 2           | Concours 2 |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 31       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 41       | 10      | 2018-05-29 06:38:38         | null                       | null                     | null                          |
-      | 41       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 41       | 60      | null                        | 2018-05-29 06:38:38        | null                     | 2018-05-29 06:38:38           |
-      | 41       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 51       | 10      | null                        | 2018-05-29 06:38:38        | null                     | null                          |
-      | 51       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 51       | 60      | null                        | null                       | 2018-05-29 06:38:38      | 2018-05-29 06:38:38           |
-      | 51       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 71       | 80      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 71       | 90      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 21       | 50      | solution                 |
+      | 21       | 60      | content_with_descendants |
+      | 21       | 70      | content_with_descendants |
+      | 31       | 50      | solution                 |
+      | 31       | 60      | content_with_descendants |
+      | 31       | 70      | content_with_descendants |
+      | 41       | 10      | content                  |
+      | 41       | 50      | solution                 |
+      | 41       | 60      | solution                 |
+      | 41       | 70      | content_with_descendants |
+      | 51       | 10      | info                     |
+      | 51       | 50      | solution                 |
+      | 51       | 60      | solution                 |
+      | 51       | 70      | content_with_descendants |
+      | 71       | 80      | content_with_descendants |
+      | 71       | 90      | content_with_descendants |
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with group_id "21"

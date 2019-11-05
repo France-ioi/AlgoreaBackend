@@ -44,14 +44,6 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 42                | 42             | 1       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: Wrong item_id
     Given I am the user with group_id "31"
@@ -90,6 +82,12 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 50 | 00:00:00 | false        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
@@ -99,6 +97,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/10/qualification-state"
     Then the response code should be 403
@@ -108,6 +110,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "31"
     When I send a GET request to "/contests/60/groups/31/qualification-state"
     Then the response code should be 403
@@ -117,6 +123,10 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
     And I am the user with group_id "21"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 403
