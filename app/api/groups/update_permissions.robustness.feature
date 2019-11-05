@@ -47,10 +47,10 @@ Feature: Change item access rights for a group - robustness
       | 102              | 103           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
-      | 21       | 100     | solution           | none                     | 1                  |
+      | 21       | 100     | solution           | transfer                 | 1                  |
       | 21       | 101     | none               | none                     | 0                  |
       | 21       | 102     | none               | solution                 | 0                  |
-      | 21       | 103     | none               | none                     | 0                  |
+      | 21       | 103     | none               | solution                 | 0                  |
       | 25       | 100     | content            | none                     | 0                  |
       | 25       | 101     | info               | none                     | 0                  |
       | 31       | 102     | none               | content_with_descendants | 0                  |
