@@ -158,6 +158,9 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
 END
 -- +migrate StatementEnd
 
+DELETE `groups_items` FROM `groups_items` LEFT JOIN `groups` ON `groups`.`id` = `groups_items`.`group_id` WHERE `groups`.`id` IS NULL;
+DELETE `groups_items` FROM `groups_items` LEFT JOIN `items` ON `items`.`id` = `groups_items`.`item_id` WHERE `items`.`id` IS NULL;
+
 INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
