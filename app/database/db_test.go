@@ -803,6 +803,22 @@ func TestDB_insertMap(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_insertOrUpdateMap(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)"+
+		" ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		WithArgs(int64(1), "some value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.insertOrUpdateMap("myTable", dataRow, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_ScanIntoSlices(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
