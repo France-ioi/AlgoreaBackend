@@ -553,3 +553,76 @@ func TestItemStore_AllItemsAreVisible(t *testing.T) {
 		})
 	}
 }
+
+func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{id: 11}, {id: 12}, {id: 13}]
+		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
+		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
+		groups_groups:
+			- {parent_group_id: 400, child_group_id: 100}
+		groups_ancestors:
+			- {ancestor_group_id: 100, child_group_id: 100}
+			- {ancestor_group_id: 110, child_group_id: 110}
+			- {ancestor_group_id: 400, child_group_id: 100}
+			- {ancestor_group_id: 400, child_group_id: 400}
+		permissions_generated:
+			- {group_id: 400, item_id: 11, can_view_generated: info}
+			- {group_id: 100, item_id: 11, can_view_generated: content}
+			- {group_id: 100, item_id: 12}
+			- {group_id: 100, item_id: 13}
+			- {group_id: 110, item_id: 12, can_view_generated: content_with_descendants}
+			- {group_id: 110, item_id: 13, can_view_generated: solution}`)
+
+	tests := []struct {
+		name        string
+		ids         []int64
+		userGroupID int64
+		wantResult  []database.ItemAccessDetailsWithID
+	}{
+		{name: "two permissions_granted rows for one item", ids: []int64{11}, userGroupID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"},
+			}}},
+		{name: "not visible", ids: []int64{12}, userGroupID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "none"},
+			}}},
+		{name: "one of two items is not visible", ids: []int64{11, 12}, userGroupID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"}},
+				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "none"}},
+			}},
+		{name: "no permissions_generated row", ids: []int64{11}, userGroupID: 110, wantResult: []database.ItemAccessDetailsWithID{}},
+		{name: "can_view_generated = content_with_descendants", ids: []int64{12}, userGroupID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"},
+			}}},
+		{name: "can_view_generated = solution", ids: []int64{13}, userGroupID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"},
+			}}},
+		{name: "empty ids list", ids: []int64{}, userGroupID: 110, wantResult: []database.ItemAccessDetailsWithID{}},
+		{name: "two items", ids: []int64{12, 13}, userGroupID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"}},
+			}},
+		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userGroupID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"}},
+			}},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			store := database.NewDataStore(db)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByGroupID(store, test.userGroupID))
+			accessDetails, err := store.Items().GetAccessDetailsForIDs(user, test.ids)
+			assert.Equal(t, test.wantResult, accessDetails)
+			assert.NoError(t, err)
+		})
+	}
+}
