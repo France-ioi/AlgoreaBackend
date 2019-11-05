@@ -373,7 +373,14 @@ SELECT `permissions_granted`.`group_id`,
           `permissions_granted`.`latest_update_on`, NULL) AS `partial_access_since`,
        `permissions_granted`.`is_owner` AS `owner_access`,
        `permissions_granted`.`can_edit` = 'all' AS `manager_access`
-FROM `permissions_granted`;
+FROM `permissions_granted`
+ON DUPLICATE KEY UPDATE
+    `groups_items`.`creator_user_group_id` = IFNULL(`groups_items`.`creator_user_group_id`, VALUES(`creator_user_group_id`)),
+    `groups_items`.`solutions_access_since` = IFNULL(`groups_items`.`solutions_access_since`, VALUES(`solutions_access_since`)),
+    `groups_items`.`full_access_since` = IFNULL(`groups_items`.`full_access_since`, VALUES(`full_access_since`)),
+    `groups_items`.`partial_access_since` = IFNULL(`groups_items`.`partial_access_since`, VALUES(`partial_access_since`)),
+    `groups_items`.`owner_access` = GREATEST(`groups_items`.`owner_access`, VALUES(`owner_access`)),
+    `groups_items`.`manager_access` = GREATEST(`groups_items`.`manager_access`, VALUES(`manager_access`));
 
 DROP TABLE `permissions_generated`;
 DROP TABLE `permissions_granted`;
