@@ -256,3 +256,20 @@ func TestDataStore_InsertMap(t *testing.T) {
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").InsertMap(dataRow))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDataStore_InsertOrUpdateMap(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL) "+
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		WithArgs(int64(1), "some value").
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
+		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
