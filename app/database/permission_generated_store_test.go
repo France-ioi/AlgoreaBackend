@@ -13,6 +13,9 @@ func TestPermissionGeneratedStore_AccessRightsForItemsVisibleToUser(t *testing.T
 
 	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
+	mockPermissionEnumQueries(mock)
+	defer clearAllPermissionEnums()
+
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
 		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
 			"FROM `permissions_generated` JOIN "+
