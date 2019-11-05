@@ -161,7 +161,7 @@ END
 INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       `groups_items`.`creator_user_group_id` AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_user_group_id`, -1) AS `giver_group_id`,
        IFNULL(NULLIF(GREATEST(
                              IFNULL(`groups_items`.`partial_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`full_access_since`, '1000-01-01 00:00:00'),
@@ -186,7 +186,7 @@ WHERE `groups_items`.`partial_access_since` IS NOT NULL OR
 INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, can_grant_view, can_watch, can_edit, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       `groups_items`.`creator_user_group_id` AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_user_group_id`, -1) AS `giver_group_id`,
        NOW() AS `latest_update_on`,
        'solution' AS `can_view`,
        'solution' AS `can_grant_view`,
@@ -361,7 +361,7 @@ INSERT INTO `groups_items` (
     `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
-       `permissions_granted`.`giver_group_id` AS `creator_user_group_id`,
+       IF(`permissions_granted`.`giver_group_id` = -1, NULL, `permissions_granted`.`giver_group_id`) AS `creator_user_group_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
            `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
