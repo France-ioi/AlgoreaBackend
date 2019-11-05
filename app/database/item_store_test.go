@@ -186,3 +186,17 @@ func TestItemStore_AllItemsAreVisible_HandlesDBErrors(t *testing.T) {
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestItemStore_GetAccessDetailsForIDs_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectQuery("").WillReturnError(expectedError)
+
+	result, err := NewDataStore(db).Items().GetAccessDetailsForIDs(&User{GroupID: 14}, []int64{20})
+	assert.Nil(t, result)
+	assert.Equal(t, expectedError, err)
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
