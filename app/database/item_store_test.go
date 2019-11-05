@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
@@ -124,4 +125,64 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		PluckFirst("items.id", &id).Error()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(123), id)
+}
+
+func TestItemStore_CanGrantViewContentOnAll_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_, _ = NewDataStore(db).Items().CanGrantViewContentOnAll(&User{GroupID: 14}, 20)
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_CanGrantViewContentOnAll_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	grantViewKinds = map[string]int{"content": 3}
+	defer clearAllPermissionEnums()
+	dbMock.ExpectBegin()
+	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	dbMock.ExpectRollback()
+
+	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		result, err := store.Items().CanGrantViewContentOnAll(&User{GroupID: 14}, 20)
+		assert.False(t, result)
+		return err
+	}))
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_AllItemsAreVisible_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_, _ = NewDataStore(db).Items().AllItemsAreVisible(&User{GroupID: 14}, 20)
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_AllItemsAreVisible_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectBegin()
+	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	dbMock.ExpectRollback()
+
+	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		result, err := store.Items().AllItemsAreVisible(&User{GroupID: 14}, 20)
+		assert.False(t, result)
+		return err
+	}))
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
