@@ -66,6 +66,9 @@ CREATE TABLE `permissions_propagate` (
      CONSTRAINT `fk_permissions_propagate_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
 ) COMMENT 'Used by the access rights propagation algorithm to keep track of the status of the propagation' ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DELETE `items_items` FROM `items_items` LEFT JOIN `items` ON `items`.`id` = `items_items`.`parent_item_id` WHERE `items`.`id` IS NULL;
+DELETE `items_items` FROM `items_items` LEFT JOIN `items` ON `items`.`id` = `items_items`.`child_item_id` WHERE `items`.`id` IS NULL;
+
 -- +migrate StatementBegin
 CREATE TRIGGER `after_insert_permissions_granted` AFTER INSERT ON `permissions_granted` FOR EACH ROW BEGIN
     INSERT INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`)
