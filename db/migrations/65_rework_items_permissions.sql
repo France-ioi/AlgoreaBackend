@@ -97,7 +97,7 @@ ALTER TABLE `items_items`
         COMMENT 'Defines how a can_view=”content” permission propagates' AFTER `partial_access_propagation`,
     ADD COLUMN `descendants_and_solution_view_propagation` ENUM('none', 'descendants', 'descendants_and_solution')
         NOT NULL DEFAULT 'none'
-        COMMENT 'Defines which of the “descendants” and “solution” aspects from can_view to propagate',
+        COMMENT 'Defines how can_view="content_with_descendants"|"solution" permissions propagate',
     ADD COLUMN `grant_view_propagation` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether can_grant_view propagates (as the same value, with “solution” as the upper limit)',
     ADD COLUMN `watch_propagation` TINYINT(1) NOT NULL DEFAULT 0
@@ -105,10 +105,10 @@ ALTER TABLE `items_items`
     ADD COLUMN `edit_propagation` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether can_edit propagates (as the same value, with “all” as the upper limit)',
     ADD COLUMN `content_view_propagation_value` TINYINT(3) UNSIGNED AS (`content_view_propagation`) NOT NULL
-        COMMENT 'The type of can_view=”content” permission propagation (as an integer)',
+        COMMENT 'content_view_propagation as an integer (to use comparison operators)',
     ADD COLUMN `descendants_and_solution_view_propagation_value` TINYINT(3) UNSIGNED
         AS (`descendants_and_solution_view_propagation`) NOT NULL
-        COMMENT 'The type of propagation of the “descendants” and “solution” aspects from can_view (as an integer)';
+        COMMENT 'descendants_and_solution_view_propagation as an integer (to use comparison operators)';
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
