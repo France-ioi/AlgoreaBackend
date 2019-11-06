@@ -259,6 +259,6 @@ func assertPermissionsGeneratedResultRowsEqual(t *testing.T, expected, got []per
 
 func assertAllPermissionsGeneratedAreDone(t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore) {
 	var cnt int
-	assert.NoError(t, permissionGeneratedStore.Where("propagate_access != 'done'").Count(&cnt).Error())
-	assert.Zero(t, cnt, "found not done permissions_generated")
+	assert.NoError(t, permissionGeneratedStore.Table("permissions_propagate").Count(&cnt).Error())
+	assert.Zero(t, cnt, "found not done group-item pairs")
 }

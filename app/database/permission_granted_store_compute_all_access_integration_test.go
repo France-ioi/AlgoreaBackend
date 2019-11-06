@@ -44,9 +44,12 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		{GroupID: 2, ItemID: 12, PropagateAccess: "done"},
 	}
 
-	assert.NoError(t, permissionsGeneratedStore.
+	assert.NoError(t, permissionsGeneratedStore.Joins("LEFT JOIN permissions_propagate USING(group_id, item_id)").
 		Order("group_id, item_id").
-		Select(`group_id, item_id, propagate_access`).
+		Select(`
+			group_id,
+			item_id,
+			IF(permissions_propagate.group_id IS NULL, 'done', permissions_propagate.propagate_access) AS propagate_access`).
 		Scan(&result).Error())
 	assert.Equal(t, allDone, result)
 }

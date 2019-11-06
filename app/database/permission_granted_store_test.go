@@ -29,7 +29,7 @@ func TestPermissionGrantedStore_After_HandlesErrorOfComputeAllAccess(t *testing.
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
-	dbMock.ExpectPrepare("^DROP TEMPORARY TABLE IF EXISTS").WillReturnError(expectedError)
+	dbMock.ExpectPrepare("^INSERT INTO permissions_propagate").WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {

@@ -49,18 +49,26 @@ CREATE TABLE `permissions_generated` (
         COMMENT 'can_watch_generated as an integer (to use comparison operators)',
     `can_edit_generated_value` TINYINT(3) UNSIGNED AS (`can_edit_generated` + 0) NOT NULL
         COMMENT 'can_edit_generated as an integer (to use comparison operators)',
-    `propagate_access` enum('done', 'self','children') NOT NULL
-        COMMENT 'Used by the access rights propagation algorithm to keep track of the status of the propagation',
     PRIMARY KEY (`group_id`,`item_id`),
     INDEX `item_id` (`item_id`),
-    INDEX `propagate_access` (`propagate_access`),
     CONSTRAINT `fk_permissions_generated_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_permissions_generated_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
 ) COMMENT 'Actual permissions that the group has, considering the aggregation and the propagation' ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `permissions_propagate` (
+     `group_id` BIGINT(20) NOT NULL,
+     `item_id` BIGINT(20) NOT NULL,
+     `propagate_access` enum('self','children') NOT NULL
+         COMMENT 'Used by the access rights propagation algorithm to keep track of the status of the propagation',
+     PRIMARY KEY (`group_id`,`item_id`),
+     INDEX `propagate_access` (`propagate_access`),
+     CONSTRAINT `fk_permissions_propagate_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
+     CONSTRAINT `fk_permissions_propagate_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
+) COMMENT 'Used by the access rights propagation algorithm to keep track of the status of the propagation' ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 -- +migrate StatementBegin
 CREATE TRIGGER `after_insert_permissions_granted` AFTER INSERT ON `permissions_granted` FOR EACH ROW BEGIN
-    INSERT INTO `permissions_generated` (`group_id`, `item_id`, `propagate_access`)
+    INSERT INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`)
     VALUE (NEW.`group_id`, NEW.`item_id`, 'self')
     ON DUPLICATE KEY UPDATE `propagate_access` = 'self';
 END
@@ -71,7 +79,7 @@ CREATE TRIGGER `after_update_permissions_granted` AFTER UPDATE ON `permissions_g
     IF NOT (NEW.`can_view` <=> OLD.`can_view` AND NEW.`can_grant_view` <=> OLD.`can_grant_view` AND
             NEW.`can_watch` <=> OLD.`can_watch` AND NEW.`can_edit` <=> OLD.`can_edit` AND
             NEW.`is_owner` <=> OLD.`is_owner`) THEN
-        INSERT INTO `permissions_generated` (`group_id`, `item_id`, `propagate_access`) VALUE (NEW.`group_id`, NEW.`item_id`, 'self')
+        INSERT INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`) VALUE (NEW.`group_id`, NEW.`item_id`, 'self')
         ON DUPLICATE KEY UPDATE `propagate_access` = 'self';
     END IF;
 END
@@ -79,7 +87,7 @@ END
 
 -- +migrate StatementBegin
 CREATE TRIGGER `after_delete_permissions_granted` AFTER DELETE ON `permissions_granted` FOR EACH ROW BEGIN
-    INSERT INTO `permissions_generated` (`group_id`, `item_id`, `propagate_access`) VALUE (OLD.`group_id`, OLD.`item_id`, 'self')
+    INSERT INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`) VALUE (OLD.`group_id`, OLD.`item_id`, 'self')
     ON DUPLICATE KEY UPDATE `propagate_access` = 'self';
 END
 -- +migrate StatementEnd
@@ -105,16 +113,20 @@ ALTER TABLE `items_items`
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `after_insert_items_items` AFTER INSERT ON `items_items` FOR EACH ROW BEGIN
-    UPDATE `permissions_generated` SET `propagate_access`='children' WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id`;
+    INSERT IGNORE INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`)
+    SELECT `permissions_generated`.`group_id`, `permissions_generated`.`item_id`, 'children' as `propagate_access`
+    FROM `permissions_generated`
+    WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
 DROP TRIGGER IF EXISTS `after_update_items_items`;
 -- +migrate StatementBegin
 CREATE TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH ROW BEGIN
-    UPDATE `permissions_generated` SET `propagate_access`='children'
-        WHERE (`permissions_generated`.`item_id` = NEW.`parent_item_id` OR `permissions_generated`.`item_id` = OLD.`parent_item_id`) AND
-              `propagate_access` = "done";
+    INSERT IGNORE INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`)
+    SELECT `permissions_generated`.`group_id`, `permissions_generated`.`item_id`, 'children' as `propagate_access`
+    FROM `permissions_generated`
+    WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id` OR `permissions_generated`.`item_id` = OLD.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
@@ -153,8 +165,11 @@ CREATE TRIGGER `before_delete_items_items` BEFORE DELETE ON `items_items` FOR EA
                 `child_ancestors`.`child_item_id` = `parent_ancestors`.`child_item_id`
         )
     WHERE `child_ancestors`.`ancestor_item_id` = OLD.`child_item_id`;
-    UPDATE `permissions_generated` SET `propagate_access` = 'children'
-        WHERE `permissions_generated`.`item_id` = OLD.`parent_item_id` AND `propagate_access` = "done";
+
+    INSERT IGNORE INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_access`)
+        SELECT `permissions_generated`.`group_id`, `permissions_generated`.`item_id`, 'children' as `propagate_access`
+        FROM `permissions_generated`
+        WHERE `permissions_generated`.`item_id` = OLD.`parent_item_id`;
 END
 -- +migrate StatementEnd
 
@@ -384,6 +399,7 @@ ON DUPLICATE KEY UPDATE
 
 DROP TABLE `permissions_generated`;
 DROP TABLE `permissions_granted`;
+DROP TABLE `permissions_propagate`;
 
 ALTER TABLE `items_items`
     DROP COLUMN `content_view_propagation`,
