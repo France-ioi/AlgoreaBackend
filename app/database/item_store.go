@@ -173,7 +173,7 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 			// OK, user has full access.
 			return nil
 		}
-		if res.CanView == "info" && last {
+		if res.CanView == canViewInfo && last {
 			// OK, user has grayed access on the last item.
 			return nil
 		}

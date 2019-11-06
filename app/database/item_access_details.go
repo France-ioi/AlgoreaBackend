@@ -1,6 +1,9 @@
 package database
 
-const canViewInfo = "info"
+const (
+	canViewNone = "none"
+	canViewInfo = "info"
+)
 
 // ItemAccessDetails represents access rights for an item
 type ItemAccessDetails struct {
@@ -21,5 +24,5 @@ func (accessDetails *ItemAccessDetails) IsGrayed() bool {
 
 // IsForbidden returns true when can_view_generated = 'none'
 func (accessDetails *ItemAccessDetails) IsForbidden() bool {
-	return accessDetails.CanView == "none"
+	return accessDetails.CanView == canViewNone
 }
