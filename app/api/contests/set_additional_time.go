@@ -16,9 +16,9 @@ import (
 // summary: Set additional time in the contest for the group
 // description: >
 //                For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
-//                If there is no `groups_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
+//                If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
 //                (with default values in other columns).
-//                If no `groups_items` and `seconds` == 0, succeed without doing any change.
+//                If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
 //
 //
 //                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
