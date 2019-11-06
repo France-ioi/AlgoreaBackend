@@ -4,7 +4,7 @@ CREATE TABLE `permissions_granted` (
     `item_id` BIGINT(20) NOT NULL,
     `giver_group_id` BIGINT(20) NOT NULL,
     `latest_update_on` DATETIME NOT NULL DEFAULT NOW()
-        COMMENT 'When the permissions were modified last time',
+        COMMENT 'Last time one of the attributes has been modified',
     `can_view` ENUM('none','info','content','content_with_descendants','solution') NOT NULL DEFAULT 'none'
         COMMENT 'The level of visibility the group has on the item',
     `can_grant_view` ENUM('none','content','content_with_descendants','solution','transfer') NOT NULL DEFAULT 'none'
@@ -16,13 +16,13 @@ CREATE TABLE `permissions_granted` (
     `is_owner` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether the group is the owner of this item. Implies the maximum level in all of the above permissions. Can delete the item.',
     `can_view_value` TINYINT(3) UNSIGNED AS (`can_view` + 0) NOT NULL
-        COMMENT 'The level of visibility the group has on the item (as an integer)',
+        COMMENT 'can_view as an integer (to use comparison operators)',
     `can_grant_view_value` TINYINT(3) UNSIGNED AS (`can_grant_view` + 0) NOT NULL
-        COMMENT 'The level of visibility that the group can give on this item to other groups (as an integer)',
+        COMMENT 'can_grant_view as an integer (to use comparison operators)',
     `can_watch_value` TINYINT(3) UNSIGNED AS (`can_watch` + 0) NOT NULL
-        COMMENT 'The level of observation a group has for an item (as an integer)',
+        COMMENT 'can_watch as an integer (to use comparison operators)',
     `can_edit_value` TINYINT(3) UNSIGNED AS (`can_edit` + 0) NOT NULL
-        COMMENT 'The level of edition permissions a group has on an item (as an integer)',
+        COMMENT 'can_edit as an integer (to use comparison operators)',
     PRIMARY KEY (`group_id`,`item_id`,`giver_group_id`),
     CONSTRAINT `fk_permissions_granted_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_permissions_granted_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
@@ -42,13 +42,13 @@ CREATE TABLE `permissions_generated` (
     `is_owner_generated` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether the group is the owner of this item. Implies the maximum level in all of the above permissions. Can delete the item.',
     `can_view_generated_value` TINYINT(3) UNSIGNED AS (`can_view_generated` + 0) NOT NULL
-        COMMENT 'The aggregated level of visibility the group has on the item (as an integer)',
+        COMMENT 'can_view_generated as an integer (to use comparison operators)',
     `can_grant_view_generated_value` TINYINT(3) UNSIGNED AS (`can_grant_view_generated` + 0) NOT NULL
-        COMMENT 'The aggregated level of visibility that the group can give on this item to other groups (as an integer)',
+        COMMENT 'can_grant_view_generated as an integer (to use comparison operators)',
     `can_watch_generated_value` TINYINT(3) UNSIGNED AS (`can_watch_generated` + 0) NOT NULL
-        COMMENT 'The aggregated level of observation a group has for an item (as an integer)',
+        COMMENT 'can_watch_generated as an integer (to use comparison operators)',
     `can_edit_generated_value` TINYINT(3) UNSIGNED AS (`can_edit_generated` + 0) NOT NULL
-        COMMENT 'The aggregated level of edition permissions a group has on an item (as an integer)',
+        COMMENT 'can_edit_generated as an integer (to use comparison operators)',
     `propagate_access` enum('done', 'self','children') NOT NULL
         COMMENT 'Used by the access rights propagation algorithm to keep track of the status of the propagation',
     PRIMARY KEY (`group_id`,`item_id`),

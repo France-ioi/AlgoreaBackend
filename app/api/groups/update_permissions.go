@@ -132,7 +132,7 @@ func checkUserHasRightsToSetCanView(canView string, s *database.DataStore, user 
 	if requiredPermission == "info" { // no "info" in can_grant_view
 		requiredPermission = "content"
 	}
-	// permissions_generated.can_grant_view_value should be >= data["can_view"]
+	// permissions_generated.can_grant_view_generated should be >= data["can_view"]
 	found, err := s.PermissionsGenerated().
 		MatchingUserAncestors(user).
 		Select("permissions_generated.item_id").
