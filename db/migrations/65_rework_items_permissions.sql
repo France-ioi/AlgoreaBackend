@@ -188,15 +188,12 @@ SELECT `groups_items`.`group_id`,
                              IFNULL(`groups_items`.`full_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`solutions_access_since`, '1000-01-01 00:00:00')
                          ), '1000-01-01 00:00:00'), NOW()) AS `latest_update_on`,
-       IF(
-            `groups_items`.`solutions_access_since` IS NOT NULL,
-            'solution',
-            IF(
-                `groups_items`.`full_access_since` IS NOT NULL,
-                'content_with_descendants',
-                IF(`groups_items`.`partial_access_since` IS NOT NULL, 'content', 'none')
-            )
-       ) AS 'can_view',
+       CASE
+           WHEN `groups_items`.`solutions_access_since` IS NOT NULL THEN 'solution'
+           WHEN `groups_items`.`full_access_since` IS NOT NULL THEN 'content_with_descendants'
+           WHEN `groups_items`.`partial_access_since` IS NOT NULL THEN 'content'
+           ELSE 'none'
+       END AS 'can_view',
        `groups_items`.`owner_access` AS `is_owner`
 FROM `groups_items`
 WHERE `groups_items`.`partial_access_since` IS NOT NULL OR
