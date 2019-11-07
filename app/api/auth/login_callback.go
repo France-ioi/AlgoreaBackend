@@ -149,7 +149,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(s.Where("group_id = ?", userInfo.GroupID).UpdateColumn(userData).Error())
+	service.MustNotBeError(s.ByID(userInfo.GroupID).UpdateColumn(userData).Error())
 	return userInfo.GroupID
 }
 

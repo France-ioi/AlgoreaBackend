@@ -9,6 +9,11 @@ type UserStore struct {
 	*DataStore
 }
 
+// ByID returns a composable query for filtering by _table_.group_id
+func (s *UserStore) ByID(id int64) *DB {
+	return s.Where(s.tableName+".group_id = ?", id)
+}
+
 const deleteWithTrapsBatchSize = 1000
 
 // DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.

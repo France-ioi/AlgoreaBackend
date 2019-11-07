@@ -33,7 +33,7 @@ func TestUser_Clone(t *testing.T) {
 }
 
 func (u *User) LoadByID(dataStore *DataStore, userID int64) error {
-	err := dataStore.Users().Where("group_id = ?", userID).
+	err := dataStore.Users().ByID(userID).
 		Select(`
 						users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,

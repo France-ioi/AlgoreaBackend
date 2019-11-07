@@ -59,7 +59,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "users", nil)
 		var userData []map[string]interface{}
-		service.MustNotBeError(srv.Store.Users().Where("group_id = ?", user.GroupID).Select(columns).
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).Select(columns).
 			ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
 	})

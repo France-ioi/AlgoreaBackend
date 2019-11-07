@@ -63,7 +63,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	var loginID int64
 	if !user.IsTempUser {
-		service.MustNotBeError(srv.Store.Users().Where("group_id = ?", user.GroupID).
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).
 			PluckFirst("login_id", &loginID).Error())
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
