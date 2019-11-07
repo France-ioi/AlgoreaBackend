@@ -79,12 +79,12 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 	domainConfig := domain.ConfigFromContext(r.Context())
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		userGroupID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
-		service.MustNotBeError(store.Sessions().InsertNewOAuth(userGroupID, token))
+		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		service.MustNotBeError(store.Sessions().InsertNewOAuth(userID, token))
 
 		service.MustNotBeError(store.Exec(
-			"INSERT INTO refresh_tokens (user_group_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
-			userGroupID, token.RefreshToken, token.RefreshToken).Error())
+			"INSERT INTO refresh_tokens (user_id, refresh_token) VALUES (?, ?) ON DUPLICATE KEY UPDATE refresh_token = ?",
+			userID, token.RefreshToken, token.RefreshToken).Error())
 
 		expiredCookie, err := loginState.Delete(store.LoginStates(), &srv.Config.Server)
 		service.MustNotBeError(err)

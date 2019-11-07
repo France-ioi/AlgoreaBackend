@@ -31,12 +31,12 @@ Feature: Ask for a hint - robustness
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a POST request to "/items/ask-hint" with the following body:
       """
       []
@@ -47,7 +47,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -81,7 +81,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -115,7 +115,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: itemUrls of task_token and hint_requested don't match
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -149,7 +149,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in hint_requested doesn't match the user's id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -183,7 +183,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt in hint_requested & task_token don't match
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -217,7 +217,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idItemLocal in hint_requested & task_token don't match
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -251,7 +251,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -285,7 +285,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt not found
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -319,7 +319,7 @@ Feature: Ask for a hint - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: missing askedHint
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

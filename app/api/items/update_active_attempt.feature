@@ -44,14 +44,14 @@ Feature: Update active attempt for an item
       | 121      | 50      | null                        | 2017-05-29 06:38:38      |
 
   Scenario: User is able to update an active attempt (full access)
-    Given I am the user with group_id "111"
+    Given I am the user with id "111"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 111      | 50      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 101               |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -62,22 +62,22 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 100               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 111      | 50      | done                        | 1                                                         |
       | 101 | 111      | 50      | done                        | 0                                                         |
 
   Scenario: User is able to fetch an active attempt (partial access)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 101      | 50      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 101               |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -88,22 +88,22 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | done                        | 1                                                         |
       | 101 | 101      | 50      | done                        | 0                                                         |
 
   Scenario: User is able to update an active attempt (full access, groups_groups.type=joinedByCode)
-    Given I am the user with group_id "111"
+    Given I am the user with id "111"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 111      | 50      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 101               |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -114,23 +114,23 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 100               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 111      | 50      | done                        | 1                                                         |
       | 101 | 111      | 50      | done                        | 0                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=invitationAccepted)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 102      | 60      | 2017-05-29 06:38:38 | 1     |
       | 201 | 102      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 201               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 201               |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -141,24 +141,24 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 200               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 200 | 102      | 60      | done                        | 1                                                         |
       | 201 | 102      | 60      | done                        | 0                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=requestAccepted)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 103      | 60      | 2017-05-29 06:38:38 | 1     |
       | 201 | 103      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 201               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 201               |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -169,24 +169,24 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 200               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 200 | 103      | 60      | done                        | 1                                                         |
       | 201 | 103      | 60      | done                        | 0                                                         |
 
   Scenario: User is able to update an active attempt (has_attempts=1, groups_groups.type=direct)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 200 | 104      | 60      | 2017-05-29 06:38:38 | 1     |
       | 201 | 104      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 201               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 201               |
     When I send a PUT request to "/attempts/200/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -197,22 +197,22 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 10      | 201               |
-      | 101           | 60      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 10      | 201               |
+      | 101     | 60      | 200               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 200 | 104      | 60      | done                        | 1                                                         |
       | 201 | 104      | 60      | done                        | 0                                                         |
 
   Scenario: User is able to update an active attempt when this attempt is already active
-    Given I am the user with group_id "111"
+    Given I am the user with id "111"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 100               |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -223,22 +223,22 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 100               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 111      | 50      | done                        | 1                                                         |
 
 
   Scenario: User is able to update an active attempt when another attempt is active
-    Given I am the user with group_id "111"
+    Given I am the user with id "111"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |
       | 100 | 111      | 50      | 2017-05-29 06:38:38 | 0     |
       | 101 | 111      | 50      | 2018-05-29 06:38:38 | 1     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 101               |
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -249,8 +249,8 @@ Feature: Update active attempt for an item
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 111           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 111     | 50      | 100               |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 111      | 50      | done                        | 1                                                         |

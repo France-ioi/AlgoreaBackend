@@ -32,49 +32,49 @@ Feature: Get group by name (contestGetGroupByName) - robustness
       | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/abc/groups/by-name?name=Group%20B"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: name is missing
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/by-name"
     Then the response code should be 400
     And the response error message should contain "Missing name"
 
   Scenario: No such item
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/90/groups/by-name?name=Group%20B"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No access to the item
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/10/groups/by-name?name=Group%20B"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is not a timed contest
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The user is not a contest admin
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The group is not owned by the user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/by-name?name=Group%20A"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No such group (space)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/by-name?name=Group%20B%20"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

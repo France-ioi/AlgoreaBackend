@@ -17,7 +17,7 @@ Feature: Submit a new answer - robustness
       | 101      | 50      | 2017-05-29 06:38:38         |
 
   Scenario: Wrong JSON in request
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a POST request to "/answers" with the following body:
       """
       []
@@ -27,7 +27,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: No task_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a POST request to "/answers" with the following body:
       """
       {
@@ -39,7 +39,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong task_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a POST request to "/answers" with the following body:
       """
       {
@@ -52,7 +52,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing answer
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -73,7 +73,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idUser
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -95,7 +95,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idItemLocal
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -116,7 +116,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: Wrong idAttempt
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -138,7 +138,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: idUser doesn't match the user's group id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -160,7 +160,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {
@@ -182,7 +182,7 @@ Feature: Submit a new answer - robustness
     And the table "users_answers" should stay unchanged
 
   Scenario: No submission rights
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "userTaskToken" signed by the app is distributed:
       """
       {

@@ -52,7 +52,7 @@ Feature: Accept group requests - robustness
       | 15 | 22              | 13             | direct             | null                      |
 
   Scenario: Fails when the user is not an owner of the parent group
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -60,7 +60,7 @@ Feature: Accept group requests - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
@@ -68,7 +68,7 @@ Feature: Accept group requests - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/abc/requests/accept?group_ids=31,141,21,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
@@ -76,7 +76,7 @@ Feature: Accept group requests - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when group_ids is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,abc,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"

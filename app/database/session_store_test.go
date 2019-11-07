@@ -22,13 +22,13 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 		db, mock := NewDBMock()
 		defer func() { _ = db.Close() }()
 
-		userGroupID := int64(123456)
+		userID := int64(123456)
 		token := oauth2.Token{
 			AccessToken: "accesstoken",
 			Expiry:      time.Now(),
 		}
 		expectedExec := mock.ExpectExec("^" + regexp.QuoteMeta(
-			"INSERT INTO `sessions` (access_token, expires_at, issued_at, issuer, user_group_id) VALUES "+
+			"INSERT INTO `sessions` (access_token, expires_at, issued_at, issuer, user_id) VALUES "+
 				"(?, ?, NOW(), ?, ?)") + "$")
 
 		if test.dbError != nil {
@@ -37,7 +37,7 @@ func TestSessionStore_InsertNewOAuth(t *testing.T) {
 			expectedExec.WillReturnResult(sqlmock.NewResult(1, 1))
 		}
 
-		err := NewDataStore(db).Sessions().InsertNewOAuth(userGroupID, &token)
+		err := NewDataStore(db).Sessions().InsertNewOAuth(userID, &token)
 		assert.Equal(t, test.dbError, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	}

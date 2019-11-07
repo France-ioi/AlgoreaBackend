@@ -66,7 +66,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 55                | 55             | 1       |
 
   Scenario: User tries to delete a relation making a child group an orphan
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/22/relations/13"
     Then the response code should be 422
     And the response error message should contain "Group 13 would become an orphan: confirm that you want to delete it"
@@ -75,7 +75,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups" should stay unchanged
 
   Scenario: Parent group id is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/abc/relations/11"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
@@ -83,7 +83,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group id is missing
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for child_group_id (should be int64)"
@@ -91,7 +91,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: delete_orphans is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/11?delete_orphans=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for delete_orphans (should have a boolean value (0 or 1))"
@@ -99,7 +99,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the child group, but is not an owner of the parent group
-    Given I am the user with group_id "23"
+    Given I am the user with id "23"
     When I send a DELETE request to "/groups/13/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -107,7 +107,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User does not exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a DELETE request to "/groups/13/relations/11"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
@@ -115,7 +115,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is UserAdmin
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/51"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -123,7 +123,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is Root
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/52"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -131,7 +131,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootSelf
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/53"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -139,7 +139,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootAdmin
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/54"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -147,7 +147,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is UserSelf
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/55"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -155,7 +155,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent group is UserSelf
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/55/relations/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -163,7 +163,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent group is Team
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/55/relations/15"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -171,7 +171,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent and child are the same
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -179,7 +179,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Relation doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/14/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -187,7 +187,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Relation is not direct
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

@@ -77,7 +77,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			items.full_access, items.partial_access, items.grayed_access
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_group_id=?", user.GroupID).
+		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Order("item_grandparent_id, parent_item_id, child_order")
 

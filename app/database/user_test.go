@@ -32,8 +32,8 @@ func TestUser_Clone(t *testing.T) {
 	assert.Equal(t, *user, *userClone)
 }
 
-func (u *User) LoadByGroupID(dataStore *DataStore, groupID int64) error {
-	err := dataStore.Users().Where("group_id = ?", groupID).
+func (u *User) LoadByID(dataStore *DataStore, userID int64) error {
+	err := dataStore.Users().Where("group_id = ?", userID).
 		Select(`
 						users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
@@ -41,7 +41,7 @@ func (u *User) LoadByGroupID(dataStore *DataStore, groupID int64) error {
 		Joins("LEFT JOIN languages l ON users.default_language = l.code").
 		Take(&u).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		u.GroupID = groupID
+		u.GroupID = userID
 		return nil
 	}
 	return err

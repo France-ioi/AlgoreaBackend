@@ -23,7 +23,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 7  | 14              | 21             | requestSent    | 2017-02-21 06:38:38 |
 
   Scenario: Successfully join an group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=3456789abc"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -49,7 +49,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 22                | 22             | 1       |
 
   Scenario: Updates the code_expires_at
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=abc3456789"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -79,7 +79,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 22                | 22             | 1       |
 
   Scenario: Doesn't update the code_expires_at if code_lifetime is null
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
     Then the response code should be 201
     And the response body should be, in JSON:

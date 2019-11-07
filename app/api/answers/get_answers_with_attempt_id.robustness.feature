@@ -37,37 +37,37 @@ Background:
     | 120 | 13       | 200     | 0     |
 
   Scenario: Should fail when the user has only grayed access to the item
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=110"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/answers?attempt_id=110"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Should fail when the user doesn't have access to the item
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when the attempt doesn't exist
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=400"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when the authenticated user is not a member of the group and not an owner of the group attached to the attempt
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when 'sort' is wrong
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=120&sort=name"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "name""

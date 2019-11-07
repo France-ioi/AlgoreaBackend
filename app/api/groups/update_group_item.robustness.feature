@@ -46,16 +46,16 @@ Feature: Change item access rights for a group - robustness
       | 101              | 103           |
       | 102              | 103           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | full_access_since | cached_full_access_since | partial_access_since | cached_partial_access_since | cached_grayed_access_since | solutions_access_since | cached_solutions_access_since | owner_access | access_reason                                  | creator_user_group_id |
-      | 21       | 100     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 1            | owner owns the item                            | 23                    |
-      | 21       | 101     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23                    |
-      | 21       | 102     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23                    |
-      | 21       | 103     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23                    |
-      | 25       | 100     | null              | null                     | 2019-01-06 09:26:40  | 2019-01-06 09:26:40         | null                       | null                   | null                          | 0            | the parent item is visible to the user's class | 23                    |
-      | 25       | 101     | null              | null                     | null                 | null                        | 2019-01-06 09:26:40        | null                   | null                          | 0            | null                                           | 23                    |
+      | group_id | item_id | full_access_since | cached_full_access_since | partial_access_since | cached_partial_access_since | cached_grayed_access_since | solutions_access_since | cached_solutions_access_since | owner_access | access_reason                                  | creator_id |
+      | 21       | 100     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 1            | owner owns the item                            | 23         |
+      | 21       | 101     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23         |
+      | 21       | 102     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23         |
+      | 21       | 103     | null              | null                     | null                 | null                        | null                       | null                   | null                          | 0            | null                                           | 23         |
+      | 25       | 100     | null              | null                     | 2019-01-06 09:26:40  | 2019-01-06 09:26:40         | null                       | null                   | null                          | 0            | the parent item is visible to the user's class | 23         |
+      | 25       | 101     | null              | null                     | null                 | null                        | 2019-01-06 09:26:40        | null                   | null                          | 0            | null                                           | 23         |
 
   Scenario: Invalid group_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/abc/items/102" with the following body:
     """
     {
@@ -70,7 +70,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Invalid item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/abc" with the following body:
     """
     {
@@ -85,7 +85,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: Access reason is too long
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -110,7 +110,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -125,7 +125,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The user is not a manager/owner of the item
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -140,7 +140,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The item doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/404" with the following body:
     """
     {
@@ -155,7 +155,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The user doesn't own the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/21/items/102" with the following body:
     """
     {
@@ -170,7 +170,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: The group doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/404/items/102" with the following body:
     """
     {
@@ -185,7 +185,7 @@ Feature: Change item access rights for a group - robustness
     And the table "groups_items" should stay unchanged
 
   Scenario: There are no item's parents visible to the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/103" with the following body:
     """
     {

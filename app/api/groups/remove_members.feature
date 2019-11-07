@@ -94,8 +94,8 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 16 | 22              | 13             | direct             | null                      |
 
   Scenario: Remove members
-    Given I am the user with group_id "21"
-    When I send a DELETE request to "/groups/13/members?user_group_ids=31,41,51,61,71,81,91,101,111,121,131,404"
+    Given I am the user with id "21"
+    When I send a DELETE request to "/groups/13/members?user_ids=31,41,51,61,71,81,91,101,111,121,131,404"
     And the response body should be, in JSON:
     """
     {

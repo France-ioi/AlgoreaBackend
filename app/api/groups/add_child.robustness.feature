@@ -61,7 +61,7 @@ Feature: Add a parent-child relation between two groups - robustness
       | 13              | 11             | 1           |
 
   Scenario: Parent group id is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/abc/relations/11"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
@@ -69,7 +69,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group id is missing
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for child_group_id (should be int64)"
@@ -77,7 +77,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the two groups, but is not allowed to create subgroups
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -85,7 +85,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the parent group, but is not an owner of the child group
-    Given I am the user with group_id "23"
+    Given I am the user with id "23"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -93,7 +93,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the child group, but is not an owner of the parent group
-    Given I am the user with group_id "25"
+    Given I am the user with id "25"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -101,7 +101,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User does not exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
@@ -109,7 +109,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is UserAdmin
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -117,7 +117,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is Root
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/15"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -125,7 +125,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootSelf
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/16"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -133,7 +133,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is RootAdmin
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/17"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -141,7 +141,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Child group is UserSelf
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/18"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -149,7 +149,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent group is UserSelf
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/18/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -157,7 +157,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent group is Team
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/19/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -165,7 +165,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: A group cannot become an ancestor of itself
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/11/relations/13"
     Then the response code should be 403
     And the response error message should contain "A group cannot become an ancestor of itself"
@@ -173,7 +173,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Parent and child are the same
-    Given I am the user with group_id "27"
+    Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/13"
     Then the response code should be 400
     And the response error message should contain "A group cannot become its own parent"

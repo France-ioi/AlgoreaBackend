@@ -29,31 +29,31 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 210            | 211           | 0           |
 
   Scenario: User is not an admin of the group
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/groups/13/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Group id is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/abc/group-progress?parent_item_ids=210,220,310"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: parent_item_ids is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/group-progress?parent_item_ids=abc,123"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'parent_item_ids')"
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/groups/13/group-progress?parent_item_ids=210,220"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: sort is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/group-progress?parent_item_ids=210,220,310&sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""

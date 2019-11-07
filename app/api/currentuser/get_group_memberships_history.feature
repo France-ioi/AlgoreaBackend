@@ -47,7 +47,7 @@ Feature: Get group memberships history for the current user
       | 24 | 3               | 13             | requestSent        | 2016-04-29 06:38:38 |
 
   Scenario: Show all the history (with notifications_read_at set)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships-history"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -93,7 +93,7 @@ Feature: Get group memberships history for the current user
     """
 
   Scenario: Show all the history in reverse order (with notifications_read_at set)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships-history?sort=type_changed_at"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -139,7 +139,7 @@ Feature: Get group memberships history for the current user
     """
 
   Scenario: Show all the history (without notifications_read_at set)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/current-user/group-memberships-history"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -221,7 +221,7 @@ Feature: Get group memberships history for the current user
     """
 
   Scenario: Request the first row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships-history?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -240,7 +240,7 @@ Feature: Get group memberships history for the current user
     """
 
   Scenario: Request the first row starting from some date
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships-history?limit=1&from.type_changed_at=2017-07-29T06:38:38Z&from.id=7"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -259,7 +259,7 @@ Feature: Get group memberships history for the current user
     """
 
   Scenario: No new notifications
-    Given I am the user with group_id "13"
+    Given I am the user with id "13"
     When I send a GET request to "/current-user/group-memberships-history"
     Then the response code should be 200
     And the response body should be, in JSON:

@@ -51,7 +51,7 @@ Feature: Delete the current user
       """
 
   Scenario: Regular user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the login module "unlink_client" endpoint for user id "1234567" returns 200 with encoded body:
       """
       {"success":true}
@@ -97,7 +97,7 @@ Feature: Delete the current user
       | 31                | 31             | true    |
 
   Scenario: Temporary user
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a DELETE request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:

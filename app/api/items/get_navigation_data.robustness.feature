@@ -30,25 +30,25 @@ Background:
     | 53 | 200     | 1           | Category 1 |
 
   Scenario: Should fail when the user doesn't have access to the root item
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/190/as-nav-tree"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item id"
 
   Scenario: Should fail when the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/items/190/as-nav-tree"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Should fail when the root item doesn't exist
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/404/as-nav-tree"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item id"
 
   Scenario: Invalid item_id
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/abc/as-nav-tree"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"

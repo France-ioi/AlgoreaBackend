@@ -12,15 +12,15 @@ Feature: Get recent activity for group_id and item_id
       | 77 | 22                | 11             | 0       |
       | 78 | 21                | 21             | 1       |
     And the database has the following table 'users_answers':
-      | id | user_group_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 2  | 11            | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 1  | 11            | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 3  | 11            | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 4  | 11            | 200     | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 5  | 11            | 200     | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 6  | 31            | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 7  | 31            | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 8  | 31            | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+      | 2  | 11      | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 1  | 11      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+      | 3  | 11      | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 4  | 11      | 200     | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 5  | 11      | 200     | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 6  | 31      | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 7  | 31      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+      | 8  | 31      | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
       | 200 | Category | false          | false    | 1234,2345         | true               |
@@ -43,7 +43,7 @@ Feature: Get recent activity for group_id and item_id
       1) that answers having type!="Submission" are filtered out,
       2) answers ordering,
       3) filtering by users groups
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -107,7 +107,7 @@ Feature: Get recent activity for group_id and item_id
     """
 
   Scenario: User is an admin of the group and there are visible descendants of the item; request the first row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -135,7 +135,7 @@ Feature: Get recent activity for group_id and item_id
     """
 
   Scenario: User is an admin of the group and there are visible descendants of the item; request the second and the third rows
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z&from.id=3"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -181,7 +181,7 @@ Feature: Get recent activity for group_id and item_id
     """
 
   Scenario: User is an admin of the group and there are visible descendants of the item; request the third row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-29T06:38:38Z&from.id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -209,7 +209,7 @@ Feature: Get recent activity for group_id and item_id
     """
 
   Scenario: User is an admin of the group and there are visible descendants of the item; request validated answers only
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&validated=1"
     Then the response code should be 200
     And the response body should be, in JSON:

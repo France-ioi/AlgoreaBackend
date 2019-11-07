@@ -32,7 +32,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //     * `type_changed_at` = current UTC time
 //
-//     * `inviting_user_group_id` = `users.group_id` of the authorized user,
+//     * `inviting_user_id` = `users.group_id` of the authorized user,
 //
 //     * `role` = "member",
 //

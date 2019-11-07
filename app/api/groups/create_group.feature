@@ -19,7 +19,7 @@ Feature: Create a group (groupCreate)
       | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        |
 
   Scenario Outline: Create a group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {

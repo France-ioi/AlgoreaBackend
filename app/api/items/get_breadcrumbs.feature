@@ -45,7 +45,7 @@ Scenario: Full access on all breadcrumb
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with group_id "11"
+  And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
@@ -67,7 +67,7 @@ Scenario: Partial access on all breadcrumb
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with group_id "11"
+  And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:
@@ -89,7 +89,7 @@ Scenario: Partial access to all items except for last which is greyed
     | id | parent_item_id | child_item_id | child_order | difficulty |
     | 51 | 21             | 22            | 1           | 0          |
     | 52 | 22             | 23            | 1           | 0          |
-  And I am the user with group_id "11"
+  And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
   And the response body should be, in JSON:

@@ -24,7 +24,7 @@ Feature: Invite users - robustness
       | 15 | 22              | 13             | direct | null            |
 
   Scenario: Fails when the user is not an owner of the parent group
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -37,7 +37,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -50,7 +50,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/abc/invitations" with the following body:
       """
       {
@@ -63,7 +63,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -76,7 +76,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are not present
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -88,7 +88,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are empty
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -101,7 +101,7 @@ Feature: Invite users - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when too many logins
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {

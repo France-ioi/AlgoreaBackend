@@ -25,7 +25,7 @@ Feature: Change the code of the given group - robustness
       | 78 | 21                | 21             | 1       |
 
   Scenario: User is not an admin of the group
-    Given I am the user with group_id "41"
+    Given I am the user with id "41"
     And the generated group code is "newpassword"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 403
@@ -33,7 +33,7 @@ Feature: Change the code of the given group - robustness
     And the table "groups" should stay unchanged
 
   Scenario: User does not exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     And the generated group code is "newpassword"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 401
@@ -41,7 +41,7 @@ Feature: Change the code of the given group - robustness
     And the table "groups" should stay unchanged
 
   Scenario: User is an admin of the group, but the generated code is not unique
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the generated group codes are "ybqybxnlyo","newpassword"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 200
@@ -55,7 +55,7 @@ Feature: Change the code of the given group - robustness
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class | newpassword | 01:00:00      | 2017-10-14 05:39:48 |
 
   Scenario: User is an admin of the group, but the generated code is not unique 3 times in a row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the generated group codes are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 500
@@ -63,7 +63,7 @@ Feature: Change the code of the given group - robustness
     And the table "groups" should stay unchanged
 
   Scenario: The group id is not a number
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/1_3/code"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"

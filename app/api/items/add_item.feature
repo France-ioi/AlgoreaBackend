@@ -23,7 +23,7 @@ Feature: Add item
       | 3  |
 
   Scenario: Valid
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -59,11 +59,11 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_group_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11                    | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     And the database has the following table 'groups':
       | id    |
       | 12345 |
@@ -149,11 +149,11 @@ Feature: Add item
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_group_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11                    | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
 
   Scenario: Valid with empty full_screen
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
     """
     {
@@ -187,5 +187,5 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_user_group_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11                    | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
+      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |

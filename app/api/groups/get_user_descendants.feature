@@ -113,7 +113,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 54                | 54             | 1       |
       | 55                | 55             | 1       |
       | 56                | 56             | 1       |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -205,7 +205,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 22                | 51             | 0       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -274,7 +274,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 60                | 60             | 1       |
       | 61                | 61             | 1       |
       | 62                | 62             | 1       |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -303,7 +303,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 22                | 51             | 0       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -319,7 +319,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
     """
 
   Scenario: No users
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/18/user-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
