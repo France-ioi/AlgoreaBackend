@@ -31,7 +31,7 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(11), DefaultLanguageID: 0}
+			mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(11), DefaultLanguageID: 0}
 			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).WithArgs(11).
 				WillReturnRows(mock.NewRows([]string{"id"}))
 

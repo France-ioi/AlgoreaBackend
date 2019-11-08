@@ -1,19 +1,6 @@
 Feature: Display the current progress of users on a subset of items (groupUserProgress)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id |
-      | 1  | owner | 21            | 22             |
-      | 11 | johna | 51            | 52             |
-      | 12 | johnb | 53            | 54             |
-      | 13 | johnc | 55            | 56             |
-      | 14 | johnd | 57            | 58             |
-      | 15 | johne | 59            | 60             |
-      | 16 | janea | 61            | 62             |
-      | 17 | janeb | 63            | 64             |
-      | 18 | janec | 65            | 66             |
-      | 19 | janed | 67            | 68             |
-      | 20 | janee | 69            | 70             |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | type      | name           |
       | 1  | Base      | Root 1         |
       | 3  | Base      | Root 2         |
@@ -48,6 +35,19 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 66 | UserAdmin | janec-admin    |
       | 68 | UserAdmin | janed-admin    |
       | 70 | UserAdmin | janee-admin    |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id |
+      | owner | 21       | 22             |
+      | johna | 51       | 52             |
+      | johnb | 53       | 54             |
+      | johnc | 55       | 56             |
+      | johnd | 57       | 58             |
+      | johne | 59       | 60             |
+      | janea | 61       | 62             |
+      | janeb | 63       | 64             |
+      | janec | 65       | 66             |
+      | janed | 67       | 68             |
+      | janee | 69       | 70             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 1               | 11             | direct             |
@@ -255,43 +255,43 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
-      | 20       | 214     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 21       | 215     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 20       | 216     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 21       | 217     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
-      | 20       | 218     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
-      | 21       | 219     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 20       | 221     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 21       | 222     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 20       | 223     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
-      | 21       | 224     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 20       | 225     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 21       | 226     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 20       | 227     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
-      | 21       | 228     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
-      | 20       | 229     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 21       | 311     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 20       | 312     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 21       | 313     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
-      | 20       | 314     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 21       | 315     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 20       | 316     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 21       | 317     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
-      | 20       | 318     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
-      | 21       | 319     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 20       | 411     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 21       | 412     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 20       | 413     | 2017-05-29 06:38:38      | null                        | null                       | 1               |
-      | 21       | 414     | null                     | null                        | 2017-05-29 06:38:38        | 1               |
-      | 20       | 415     | null                     | 2017-05-29 06:38:38         | null                       | 1               |
-      | 21       | 416     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
-      | 20       | 417     | null                     | 2037-05-29 06:38:38         | null                       | 1               |
-      | 21       | 418     | 2037-05-29 06:38:38      | null                        | null                       | 1               |
-      | 20       | 419     | null                     | null                        | 2037-05-29 06:38:38        | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       |
+      | 20       | 214     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 21       | 215     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 20       | 216     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 21       | 217     | null                     | 2037-05-29 06:38:38         | null                       |
+      | 20       | 218     | 2037-05-29 06:38:38      | null                        | null                       |
+      | 21       | 219     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 20       | 221     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 21       | 222     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 20       | 223     | 2017-05-29 06:38:38      | null                        | null                       |
+      | 21       | 224     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 20       | 225     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 21       | 226     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 20       | 227     | null                     | 2037-05-29 06:38:38         | null                       |
+      | 21       | 228     | 2037-05-29 06:38:38      | null                        | null                       |
+      | 20       | 229     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 21       | 311     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 20       | 312     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 21       | 313     | 2017-05-29 06:38:38      | null                        | null                       |
+      | 20       | 314     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 21       | 315     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 20       | 316     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 21       | 317     | null                     | 2037-05-29 06:38:38         | null                       |
+      | 20       | 318     | 2037-05-29 06:38:38      | null                        | null                       |
+      | 21       | 319     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 20       | 411     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 21       | 412     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 20       | 413     | 2017-05-29 06:38:38      | null                        | null                       |
+      | 21       | 414     | null                     | null                        | 2017-05-29 06:38:38        |
+      | 20       | 415     | null                     | 2017-05-29 06:38:38         | null                       |
+      | 21       | 416     | null                     | null                        | 2037-05-29 06:38:38        |
+      | 20       | 417     | null                     | 2037-05-29 06:38:38         | null                       |
+      | 21       | 418     | 2037-05-29 06:38:38      | null                        | null                       |
+      | 20       | 419     | null                     | null                        | 2037-05-29 06:38:38        |
     And the database has the following table 'groups_attempts':
       | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        | latest_activity_at  |
       | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
@@ -311,7 +311,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
 
   Scenario: Get progress of the second and the third users (checks sorting, from.*, and limit)
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
     And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=210&from.name=janec&from.id=65&limit=2"
@@ -425,7 +425,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
 
 
   Scenario: Get progress of the first user for all the visible items (also checks the limit)
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
     And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=210,220,310&limit=1"
@@ -587,7 +587,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: No users
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/17/user-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -597,7 +597,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: No visible items
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=1010"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -607,7 +607,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: The input group_id is a user
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/51/user-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -617,7 +617,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: The input group_id is a team
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/14/user-progress?parent_item_ids=210"
     Then the response code should be 200
     And the response body should be, in JSON:

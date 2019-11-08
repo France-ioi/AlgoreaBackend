@@ -1,15 +1,6 @@
 Feature: Export the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
-    And the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 2  | user  | 11            | 12             | John        | Doe       | 1     |
-      | 3  | jack  | 21            | 22             | Jack        | Smith     | 2     |
-      | 4  | jane  | 31            | 32             | Jane        | Doe       | 2     |
-    And the database has the following table 'refresh_tokens':
-      | user_id | refresh_token    |
-      | 1       | refreshTokenFor1 |
-      | 2       | refreshTokenFor2 |
     And the database has the following table 'groups':
       | id | type      | name               | description            |
       | 1  | Class     | Our Class          | Our class group        |
@@ -28,18 +19,27 @@ Feature: Export the current user's data
       | 22 | UserAdmin | jack-admin         |                        |
       | 31 | UserSelf  | jane               |                        |
       | 32 | UserAdmin | jane-admin         |                        |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name | last_name | grade |
+      | user  | 11       | 12             | John       | Doe       | 1     |
+      | jack  | 21       | 22             | Jack       | Smith     | 2     |
+      | jane  | 31       | 32             | Jane       | Doe       | 2     |
+    And the database has the following table 'refresh_tokens':
+      | user_id | refresh_token    |
+      | 21      | refreshTokenFor1 |
+      | 11      | refreshTokenFor2 |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | type               | type_changed_at     | inviting_user_id |
       | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
-      | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 1                |
-      | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 1                |
-      | 5  | 4               | 11             | requestRefused     | 2019-07-10 00:02:28 | 2                |
-      | 6  | 5               | 11             | invitationAccepted | 2019-07-10 01:02:28 | 2                |
-      | 7  | 6               | 11             | requestAccepted    | 2019-07-10 02:02:28 | 2                |
-      | 8  | 7               | 11             | removed            | 2019-07-10 03:02:28 | 1                |
-      | 9  | 8               | 11             | left               | 2019-07-10 04:02:28 | 1                |
-      | 10 | 9               | 11             | direct             | 2019-07-10 05:02:28 | 2                |
-      | 11 | 1               | 12             | invitationSent     | 2019-07-09 20:02:28 | 2                |
+      | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 11               |
+      | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 11               |
+      | 5  | 4               | 11             | requestRefused     | 2019-07-10 00:02:28 | 21               |
+      | 6  | 5               | 11             | invitationAccepted | 2019-07-10 01:02:28 | 21               |
+      | 7  | 6               | 11             | requestAccepted    | 2019-07-10 02:02:28 | 21               |
+      | 8  | 7               | 11             | removed            | 2019-07-10 03:02:28 | 11               |
+      | 9  | 8               | 11             | left               | 2019-07-10 04:02:28 | 11               |
+      | 10 | 9               | 11             | direct             | 2019-07-10 05:02:28 | 21               |
+      | 11 | 1               | 12             | invitationSent     | 2019-07-09 20:02:28 | 21               |
       | 12 | 12              | 1              | direct             | null                | null             |
       | 13 | 12              | 2              | direct             | null                | null             |
       | 14 | 10              | 11             | joinedByCode       | 2019-07-10 05:02:28 | null             |
@@ -69,8 +69,8 @@ Feature: Export the current user's data
       | 405 |
     And the database has the following table 'users_answers':
       | id | user_id | item_id | submitted_at        |
-      | 1  | 2       | 404     | 2019-07-09 21:02:28 |
-      | 2  | 3       | 405     | 2019-07-09 21:02:28 |
+      | 1  | 11      | 404     | 2019-07-09 21:02:28 |
+      | 2  | 21      | 405     | 2019-07-09 21:02:28 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
@@ -78,11 +78,11 @@ Feature: Export the current user's data
       | 113 | 1        | 405     | 0     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
-      | 2       | 404     | 111               |
-      | 3       | 405     | 112               |
+      | 11      | 404     | 111               |
+      | 21      | 405     | 112               |
 
   Scenario: Full data
-    Given I am the user with id "2"
+    Given I am the user with id "11"
     When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -91,10 +91,10 @@ Feature: Export the current user's data
     """
     {
       "current_user": {
-        "id": "2", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
+        "group_id": "11", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
         "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
         "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "access_group_id": null, "owned_group_id": "12", "self_group_id": "11", "godfather_user_id": null, "login_id": null,
+        "access_group_id": null, "owned_group_id": "12", "login_id": null,
         "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
@@ -107,7 +107,7 @@ Feature: Export the current user's data
         {
           "id": "111", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "group_id": "11", "item_id": "404", "creator_user_id": null, "children_validated": 0,
+          "group_id": "11", "item_id": "404", "creator_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
           "best_answer_at": null, "finished_at": null, "hints_requested": null,
@@ -117,7 +117,7 @@ Feature: Export the current user's data
         {
           "id": "112", "finished": 0, "key_obtained": 0, "ranked": 0, "validated": 0, "autonomy": 0,
           "order": 0, "precision": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
-          "group_id": "2", "item_id": "404", "creator_user_id": null, "children_validated": 0,
+          "group_id": "2", "item_id": "404", "creator_id": null, "children_validated": 0,
           "corrections_read": 0, "hints_cached": 0, "submissions_attempts": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "all_lang_prog": null, "ancestors_computation_state": "done",
           "best_answer_at": null, "finished_at": null, "hints_requested": null,
@@ -132,42 +132,42 @@ Feature: Export the current user's data
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "1",
+          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "11",
           "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "1",
+          "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "11",
           "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "2",
+          "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "21",
           "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "2",
+          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "21",
           "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "2",
+          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "21",
           "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "1",
+          "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "11",
           "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "1",
+          "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "11",
           "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left",
           "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "2",
+          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "21",
           "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct",
           "expires_at": "9999-12-31T23:59:59Z"
         },
@@ -188,30 +188,30 @@ Feature: Export the current user's data
         {"id": "1", "name": "Our Class"},
         {"id": "2", "name": "Our Team"}
       ],
-      "refresh_token": {"user_id": "2", "refresh_token": "***"},
+      "refresh_token": {"user_id": "11", "refresh_token": "***"},
       "sessions": [
         {
-          "user_id": "2", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
+          "user_id": "11", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
           "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
       "users_answers": [
         {
           "id": "1", "validated": null, "score": null, "attempt_id": null, "item_id": "404",
-          "user_id": "2", "grader_user_id": null, "answer": null, "graded_at": null, "lang_prog": null,
+          "user_id": "11", "answer": null, "graded_at": null, "lang_prog": null,
           "name": null, "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],
       "users_items": [
         {
-          "active_attempt_id": "111", "item_id": "404", "user_id": "2"
+          "active_attempt_id": "111", "item_id": "404", "user_id": "11"
         }
       ]
     }
     """
 
   Scenario: All optional arrays and objects are empty
-    Given I am the user with id "4"
+    Given I am the user with id "31"
     When I send a GET request to "/current-user/full-dump"
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
@@ -220,10 +220,10 @@ Feature: Export the current user's data
     """
     {
       "current_user": {
-        "id": "4", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
+        "group_id": "31", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
         "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
         "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
-        "owned_group_id": "32", "self_group_id": "31", "godfather_user_id": null, "login_id": null, "login_module_prefix": null,
+        "owned_group_id": "32", "login_id": null, "login_module_prefix": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
         "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
         "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
@@ -238,7 +238,7 @@ Feature: Export the current user's data
       "refresh_token": null,
       "sessions": [
         {
-          "user_id": "4", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
+          "user_id": "31", "access_token": "***", "expires_at": "2019-07-17T00:02:28Z",
           "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],

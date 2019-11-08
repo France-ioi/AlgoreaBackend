@@ -1,16 +1,16 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     |
-      | 2  | user  | 11            | 12             | John        | Doe       | 1     |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id |
       | 11 |
       | 12 |
       | 13 |
       | 21 |
       | 22 |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name | grade |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | user  | 11       | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -30,7 +30,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 15 | 22              | 13             | direct             | null                      |
 
   Scenario: Fails when the user is not an owner of the parent group
-    Given I am the user with id "2"
+    Given I am the user with id "11"
     When I send a DELETE request to "/groups/13/members?user_ids=1,2"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -46,7 +46,7 @@ Feature: Remove members from a group (groupRemoveMembers)
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/abc/members?user_ids=1,2"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
@@ -54,7 +54,7 @@ Feature: Remove members from a group (groupRemoveMembers)
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when user_ids is wrong
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/members?user_ids=1,abc,2"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'user_ids')"

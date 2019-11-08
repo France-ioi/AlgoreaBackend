@@ -1,19 +1,6 @@
 Feature: List team descendants of the group (groupTeamDescendantView)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 10    |
-      | 11 | johna | 51            | 52             | John        | Adams     | 1     |
-      | 12 | johnb | 53            | 54             | John        | Baker     | 2     |
-      | 13 | johnc | 55            | 56             | John        | null      | 3     |
-      | 14 | johnd | 57            | 58             | null        | Davis     | -1    |
-      | 15 | johne | 59            | 60             | John        | Edwards   | null  |
-      | 16 | janea | 61            | 62             | Jane        | Adams     | 3     |
-      | 17 | janeb | 63            | 64             | Jane        | Baker     | null  |
-      | 18 | janec | 65            | 66             | Jane        | null      | 4     |
-      | 19 | janed | 67            | 68             | Jane        | Doe       | -2    |
-      | 20 | janee | 69            | 70             | Jane        | Edwards   | null  |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | type      | name           | grade |
       | 1  | Base      | Root 1         | -2    |
       | 3  | Base      | Root 2         | -2    |
@@ -48,6 +35,19 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 66 | UserAdmin | janec-admin    | -2    |
       | 68 | UserAdmin | janed-admin    | -2    |
       | 70 | UserAdmin | janee-admin    | -2    |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name | grade |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  | 10    |
+      | johna | 51       | 52             | John        | Adams     | 1     |
+      | johnb | 53       | 54             | John        | Baker     | 2     |
+      | johnc | 55       | 56             | John        | null      | 3     |
+      | johnd | 57       | 58             | null        | Davis     | -1    |
+      | johne | 59       | 60             | John        | Edwards   | null  |
+      | janea | 61       | 62             | Jane        | Adams     | 3     |
+      | janeb | 63       | 64             | Jane        | Baker     | null  |
+      | janec | 65       | 66             | Jane        | null      | 4     |
+      | janed | 67       | 68             | Jane        | Doe       | -2    |
+      | janee | 69       | 70             | Jane        | Edwards   | null  |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type               |
       | 1               | 11             | direct             |
@@ -164,7 +164,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 22                | 69             | 0       |
 
   Scenario: Get descendant teams
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -177,26 +177,23 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "first_name": "Jane",
             "grade": null,
-            "id": "17",
             "last_name": "Baker",
             "login": "janeb",
-            "self_group_id": 63
+            "group_id": 63
           },
           {
             "first_name": "Jane",
             "grade": 4,
-            "id": "18",
             "last_name": null,
             "login": "janec",
-            "self_group_id": 65
+            "group_id": 65
           },
           {
             "first_name": "Jane",
             "grade": -2,
-            "id": "19",
             "last_name": "Doe",
             "login": "janed",
-            "self_group_id": 67
+            "group_id": 67
           }
         ],
         "name": "First Team",
@@ -214,26 +211,23 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "first_name": "John",
             "grade": 1,
-            "id": "11",
             "last_name": "Adams",
             "login": "johna",
-            "self_group_id": 51
+            "group_id": 51
           },
           {
             "first_name": "John",
             "grade": 2,
-            "id": "12",
             "last_name": "Baker",
             "login": "johnb",
-            "self_group_id": 53
+            "group_id": 53
           },
           {
             "first_name": "John",
             "grade": 3,
-            "id": "13",
             "last_name": null,
             "login": "johnc",
-            "self_group_id": 55
+            "group_id": 55
           }
         ],
         "name": "Super Team",
@@ -248,7 +242,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: Get the first team from the list
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -261,26 +255,23 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "first_name": "Jane",
             "grade": null,
-            "id": "17",
             "last_name": "Baker",
             "login": "janeb",
-            "self_group_id": 63
+            "group_id": 63
           },
           {
             "first_name": "Jane",
             "grade": 4,
-            "id": "18",
             "last_name": null,
             "login": "janec",
-            "self_group_id": 65
+            "group_id": 65
           },
           {
             "first_name": "Jane",
             "grade": -2,
-            "id": "19",
             "last_name": "Doe",
             "login": "janed",
-            "self_group_id": 67
+            "group_id": 67
           }
         ],
         "name": "First Team",
@@ -295,7 +286,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: Get teams skipping the first one
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants?from.name=First%20Team&from.id=16"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -308,26 +299,23 @@ Feature: List team descendants of the group (groupTeamDescendantView)
           {
             "first_name": "John",
             "grade": 1,
-            "id": "11",
             "last_name": "Adams",
             "login": "johna",
-            "self_group_id": 51
+            "group_id": 51
           },
           {
             "first_name": "John",
             "grade": 2,
-            "id": "12",
             "last_name": "Baker",
             "login": "johnb",
-            "self_group_id": 53
+            "group_id": 53
           },
           {
             "first_name": "John",
             "grade": 3,
-            "id": "13",
             "last_name": null,
             "login": "johnc",
-            "self_group_id": 55
+            "group_id": 55
           }
         ],
         "name": "Super Team",
@@ -342,7 +330,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: No teams
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/16/team-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:

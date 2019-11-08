@@ -32,7 +32,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //     * `type_changed_at` = current UTC time
 //
-//     * `inviting_user_id` = `users.id` of the authorized user,
+//     * `inviting_user_id` = `users.group_id` of the authorized user,
 //
 //     * `role` = "member",
 //
@@ -127,17 +127,17 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	var groupsToInviteRows []struct {
-		Login       string
-		SelfGroupID int64
+		Login   string
+		GroupID int64
 	}
-	service.MustNotBeError(srv.Store.Users().Select("login, self_group_id").Where("login IN (?)", requestData.Logins).
+	service.MustNotBeError(srv.Store.Users().Select("login, group_id").Where("login IN (?)", requestData.Logins).
 		Scan(&groupsToInviteRows).Error())
 
 	groupsToInvite := make([]int64, 0, len(groupsToInviteRows))
 	groupIDToLoginMap := make(map[int64]string, len(groupsToInviteRows))
 	for _, row := range groupsToInviteRows {
-		groupsToInvite = append(groupsToInvite, row.SelfGroupID)
-		groupIDToLoginMap[row.SelfGroupID] = row.Login
+		groupsToInvite = append(groupsToInvite, row.GroupID)
+		groupIDToLoginMap[row.GroupID] = row.Login
 	}
 
 	var groupResults database.GroupGroupTransitionResults
@@ -145,7 +145,7 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
 			groupsToInvite = filterOtherTeamsMembersOutForLogins(store, parentGroupID, groupsToInvite, results, groupIDToLoginMap)
 
-			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.ID)
+			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.GroupID)
 			return err
 		})
 	}

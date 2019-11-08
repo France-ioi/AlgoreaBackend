@@ -13,7 +13,7 @@ type UserAnswerStore struct {
 func (s *UserAnswerStore) WithUsers() *UserAnswerStore {
 	return &UserAnswerStore{
 		NewDataStoreWithTable(
-			s.Joins("JOIN users ON users.id = users_answers.user_id"), s.tableName,
+			s.Joins("JOIN users ON users.group_id = users_answers.user_id"), s.tableName,
 		),
 	}
 }
@@ -99,5 +99,5 @@ func (s *UserAnswerStore) Visible(user *User) *DB {
 		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,
 		// otherwise groups_attempts.group_id should be equal to the user's self group
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
-			usersGroupsQuery.SubQuery(), user.SelfGroupID)
+			usersGroupsQuery.SubQuery(), user.GroupID)
 }

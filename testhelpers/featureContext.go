@@ -14,6 +14,7 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
 	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
+	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
 
 	s.Step(`^a server is running as fallback$`, ctx.RunFallbackServer)
 	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
@@ -39,10 +40,10 @@ func FeatureContext(s *godog.Suite) {
 
 	s.Step(`^the table "([^"]*)" should be:$`, ctx.TableShouldBe)
 	s.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
-	s.Step(`^the table "([^"]*)" at ids? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
-	s.Step(`^the table "([^"]*)" should not contain ids? "([^"]*)"$`, ctx.TableShouldNotContainID)
+	s.Step(`^the table "([^"]*)" at (\w+?)s? "([^"]*)" should be:$`, ctx.TableAtIDShouldBe)
+	s.Step(`^the table "([^"]*)" should not contain (\w+?)s? "([^"]*)"$`, ctx.TableShouldNotContainID)
 	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
-	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with ids? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
+	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with (\w+?)s? "([^"]*)"$`, ctx.TableShouldStayUnchangedButTheRowWithID)
 	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
 
 	s.Step(`^the following token "([^"]+)" signed by (.+) is distributed:$`, ctx.SignedTokenIsDistributed)

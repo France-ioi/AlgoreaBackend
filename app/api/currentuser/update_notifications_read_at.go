@@ -23,7 +23,7 @@ import (
 func (srv *Service) updateNotificationsReadAt(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
-	service.MustNotBeError(srv.Store.Users().ByID(user.ID).
+	service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).
 		UpdateColumn("notifications_read_at", database.Now()).Error())
 
 	response := service.Response{Success: true, Message: "updated"}

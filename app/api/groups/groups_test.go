@@ -21,7 +21,7 @@ func TestService_checkThatUserOwnsTheGroup_HandlesError(t *testing.T) {
 		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnError(expectedError)
 
-	user := &database.User{ID: 1}
+	user := &database.User{GroupID: 1}
 	apiErr := checkThatUserOwnsTheGroup(database.NewDataStore(db), user, 123)
 
 	assert.Equal(t, service.ErrUnexpected(expectedError), apiErr)

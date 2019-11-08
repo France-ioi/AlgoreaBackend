@@ -1,25 +1,25 @@
 Feature: Create a group (groupCreate)
 
   Background:
-    Given the database has the following table 'users':
-      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 1               |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name        | type      |
       | 21 | owner       | UserSelf  |
       | 22 | owner-admin | UserAdmin |
+    And the database has the following table 'users':
+      | login | temp_user | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
+      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       | 1               |
-      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       | 1               |
-      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        | 1               |
+      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+      | 21       | 10      | 2019-07-16 21:28:47      | null                        | null                       |
+      | 21       | 11      | null                     | 2019-07-16 21:28:47         | null                       |
+      | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        |
 
   Scenario Outline: Create a group
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {

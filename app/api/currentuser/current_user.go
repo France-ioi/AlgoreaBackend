@@ -65,10 +65,6 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 	user := srv.GetUser(r)
 
-	if user.SelfGroupID == nil {
-		return service.InsufficientAccessRightsError
-	}
-
 	if action == leaveGroupAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).
@@ -94,7 +90,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	}
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, results[*user.SelfGroupID], action)
+	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], action)
 }
 
 func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,
@@ -126,7 +122,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 			createGroupRequestAction:         database.UserCreatesRequest,
 			createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
 			leaveGroupAction:                 database.UserLeavesGroup,
-		}[action], groupID, []int64{*user.SelfGroupID}, user.ID)
+		}[action], groupID, []int64{user.GroupID}, user.GroupID)
 	service.MustNotBeError(err)
 	return apiError, results
 }
@@ -153,7 +149,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	// another team with the same `team_item_id'.
 	if parentGroupInfo.Type == "Team" && parentGroupInfo.TeamItemID != nil {
 		var found bool
-		found, err = store.Groups().TeamsMembersForItem([]int64{*user.SelfGroupID}, *parentGroupInfo.TeamItemID).
+		found, err = store.Groups().TeamsMembersForItem([]int64{user.GroupID}, *parentGroupInfo.TeamItemID).
 			WithWriteLock().
 			Where("groups.id != ?", groupID).HasRows()
 		service.MustNotBeError(err)

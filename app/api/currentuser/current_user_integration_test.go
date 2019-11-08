@@ -139,12 +139,10 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			var apiError service.APIError
 			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
 				apiError = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
-					&database.User{SelfGroupID: ptrInt64(10)}, 1, true)
+					&database.User{GroupID: 10}, 1, true)
 				return nil
 			}))
 			assert.Equal(t, tt.wantAPIError, apiError)
 		})
 	}
 }
-
-func ptrInt64(i int64) *int64 { return &i }

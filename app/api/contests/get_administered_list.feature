@@ -1,13 +1,13 @@
 Feature: Get the contests that the user has administration rights on (contestAdminList)
   Background:
-    Given the database has the following table 'users':
-      | id | login          | self_group_id | owned_group_id | default_language |
-      | 1  | possesseur     | 21            | 22             | fr               |
-      | 2  | owner          | 31            | 32             | en               |
-      | 3  | administrateur | 41            | 42             | fr               |
-      | 4  | admin          | 51            | 52             | en               |
-      | 5  | guest          | 61            | 62             | en               |
-      | 6  | panas          | 71            | 72             | uk               |
+    Given the database has the following users:
+      | login          | group_id | owned_group_id | default_language |
+      | possesseur     | 21       | 22             | fr               |
+      | owner          | 31       | 32             | en               |
+      | administrateur | 41       | 42             | fr               |
+      | admin          | 51       | 52             | en               |
+      | guest          | 61       | 62             | en               |
+      | panas          | 71       | 72             | uk               |
     And the database has the following table 'languages':
       | id | code |
       | 1  | en   |
@@ -16,8 +16,6 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
       | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
@@ -51,26 +49,26 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 70      | 1           | Contest 2  |
       | 70      | 2           | Concours 2 |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 31       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
-      | 31       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 41       | 10      | 2018-05-29 06:38:38         | null                       | null                     | null                          | 4               |
-      | 41       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
-      | 41       | 60      | null                        | 2018-05-29 06:38:38        | null                     | 2018-05-29 06:38:38           | 4               |
-      | 41       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 51       | 10      | null                        | 2018-05-29 06:38:38        | null                     | null                          | 4               |
-      | 51       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 4               |
-      | 51       | 60      | null                        | null                       | 2018-05-29 06:38:38      | 2018-05-29 06:38:38           | 4               |
-      | 51       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 71       | 80      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
-      | 71       | 90      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 4               |
+      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 31       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 41       | 10      | 2018-05-29 06:38:38         | null                       | null                     | null                          |
+      | 41       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 41       | 60      | null                        | 2018-05-29 06:38:38        | null                     | 2018-05-29 06:38:38           |
+      | 41       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 51       | 10      | null                        | 2018-05-29 06:38:38        | null                     | null                          |
+      | 51       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 51       | 60      | null                        | null                       | 2018-05-29 06:38:38      | 2018-05-29 06:38:38           |
+      | 51       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 71       | 80      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 71       | 90      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: User's default language is French (most parents are invisible)
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -84,7 +82,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (most parents are invisible)
-    Given I am the user with id "2"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -98,7 +96,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is French (parents are visible)
-    Given I am the user with id "3"
+    Given I am the user with id "41"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -114,7 +112,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible)
-    Given I am the user with id "4"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -130,7 +128,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: Empty result
-    Given I am the user with id "5"
+    Given I am the user with id "61"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -140,7 +138,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), limit=1
-    Given I am the user with id "4"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -151,7 +149,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), start from the second row, limit=1
-    Given I am the user with id "4"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?from.title&from.id=50&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -163,7 +161,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), inverse order
-    Given I am the user with id "4"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?sort=-title,id"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -179,7 +177,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: Keeps parents with nil titles
-    Given I am the user with id "6"
+    Given I am the user with id "71"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:

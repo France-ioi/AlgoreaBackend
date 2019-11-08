@@ -21,8 +21,8 @@ import (
 //
 //   * The user should have at least partial access to the item.
 //
-//   * If `item_id` and `user_id` are given, the authenticated user should be either the input user
-//   or an owner of a group containing the selfGroup of the input user.
+//   * If `item_id` and `user_id` are given, the authenticated user should have `group_id` equal to the input `user_id`
+//   or be an owner of a group containing the input `user_id`.
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
@@ -217,7 +217,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 		Where("(groups_attempts.group_id IN ?) OR (groups_attempts.group_id IN ?) OR groups_attempts.group_id = ?",
 			groupsOwnedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
-			user.SelfGroupID).
+			user.GroupID).
 		Count(&count).Error())
 	if count == 0 {
 		return service.InsufficientAccessRightsError
@@ -226,12 +226,10 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
-	if userID != user.ID {
+	if userID != user.GroupID {
 		count := 0
-		givenUserSelfGroup := srv.Store.Users().ByID(userID).Select("self_group_id")
-		service.MustNotBeError(givenUserSelfGroup.Error())
 		err := srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("child_group_id=?", givenUserSelfGroup.SubQuery()).
+			Where("child_group_id=?", userID).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

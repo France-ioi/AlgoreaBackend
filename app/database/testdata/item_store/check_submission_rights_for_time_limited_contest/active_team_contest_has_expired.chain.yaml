@@ -1,12 +1,12 @@
-users: [{id: 2, self_group_id: 12, login: 2}]
 groups: [{id: 12}, {id: 21, team_item_id: 114, type: Team}]
+users: [{group_id: 12, login: 2}]
 groups_groups: [{parent_group_id: 21, child_group_id: 12, type: invitationAccepted}]
 groups_ancestors:
   - {ancestor_group_id: 12, child_group_id: 12}
   - {ancestor_group_id: 21, child_group_id: 12}
   - {ancestor_group_id: 21, child_group_id: 21}
 groups_items: [{group_id: 21, item_id: 114, full_access_since: 2019-03-22 08:44:55,
-                cached_full_access_since: 2019-03-22 08:44:55, creator_user_id: 1}]
+                cached_full_access_since: 2019-03-22 08:44:55}]
 groups_contest_items: [{group_id: 21, item_id: 114, additional_time: 01:00:00}]
 contest_participations: [{group_id: 21, item_id: 114, entered_at: 2019-03-22 08:44:55}]
 

@@ -123,7 +123,7 @@ func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int
 		"id":                groupItemID,
 		"item_id":           itemID,
 		"group_id":          groupID,
-		"creator_user_id":   userID,
+		"creator_id":        userID,
 		"full_access_since": database.Now(),
 		"owner_access":      true,
 		"manager_access":    true,
@@ -162,7 +162,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
 //     * gives full access to the item for the current user (creates a new `groups_items` row with: `item_id` = `items.id`,
-//       `group_id` = `self_group_id` of the current user, `creator_user_id` = `users.id` of the current user,
+//       `group_id` = `group_id` of the current user, `creator_id` = `users.group_id` of the current user,
 //       `full_access_since` = now(), `cached_full_access_since` = now(), `cached_full_access` = 1, `owner_access` = 1,
 //       `manager_access` = 1).
 //
@@ -342,8 +342,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemMap["default_language_id"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
-		// user.SelfGroupID is not null since we have successfully passed the validation
-		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.ID, *user.SelfGroupID, itemID)))
+		service.MustNotBeError(s.GroupItems().InsertMap(newItemRequest.groupItemData(s.NewID(), user.GroupID, user.GroupID, itemID)))
 
 		stringMap["id"] = s.NewID()
 		stringMap["item_id"] = itemID

@@ -1,10 +1,6 @@
 Feature: Get group memberships for the current user
   Background:
-    Given the database has the following table 'users':
-      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 3     |
-      | 2  | user  | 0         | 11            | 12             | John        | Doe       | 1     |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | type      | name               | description            |
       | 1  | Class     | Our Class          | Our class group        |
       | 2  | Team      | Our Team           | Our team group         |
@@ -19,6 +15,10 @@ Feature: Get group memberships for the current user
       | 12 | UserAdmin | user admin         |                        |
       | 21 | UserSelf  | owner self         |                        |
       | 22 | UserAdmin | owner admin        |                        |
+    And the database has the following table 'users':
+      | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
+      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | user  | 0         | 11       | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | type               | type_changed_at     |
       | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
@@ -33,7 +33,7 @@ Feature: Get group memberships for the current user
       | 11 | 1               | 22             | direct             | 2017-11-29 06:38:38 |
 
   Scenario: Show all invitations
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -76,7 +76,7 @@ Feature: Get group memberships for the current user
     """
 
   Scenario: Request the first row
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:

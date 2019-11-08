@@ -1,9 +1,9 @@
 Feature: List user descendants of the group (groupUserDescendantView) - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id |
-      | 1  | owner | 21            | 22             |
-      | 2  | user  | 11            | 12             |
+    Given the database has the following users:
+      | login | group_id | owned_group_id |
+      | owner | 21       | 22             |
+      | user  | 11       | 12             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -14,13 +14,13 @@ Feature: List user descendants of the group (groupUserDescendantView) - robustne
       | 22                | 22             | 1       |
 
   Scenario: User is not an admin of the group
-    Given I am the user with id "2"
+    Given I am the user with id "11"
     When I send a GET request to "/groups/13/user-descendants"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Group id is incorrect
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/abc/user-descendants"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
@@ -32,7 +32,7 @@ Feature: List user descendants of the group (groupUserDescendantView) - robustne
     And the response error message should contain "Invalid access token"
 
   Scenario: sort is incorrect
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/user-descendants?sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""

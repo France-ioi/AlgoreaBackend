@@ -1,15 +1,16 @@
 Feature: Get answers with (item_id, user_id) pair
 Background:
-  Given the database has the following table 'users':
-    | id | login | temp_user | self_group_id | owned_group_id | first_name | last_name |
-    | 1  | jdoe  | 0         | 11            | 12             | John       | Doe       |
-    | 2  | other | 0         | 21            | 22             | George     | Bush      |
-  And the database has the following table 'groups':
+  Given the database has the following table 'groups':
     | id | name       | text_id | grade | type      |
-    | 11 | jdoe       |         | -2    | UserAdmin |
+    | 11 | jdoe       |         | -2    | UserSelf  |
     | 12 | jdoe-admin |         | -2    | UserAdmin |
     | 13 | Group B    |         | -2    | Class     |
+    | 21 | jdoe       |         | -2    | UserSelf  |
     | 23 | Group C    |         | -2    | Class     |
+  And the database has the following table 'users':
+    | login | temp_user | group_id | owned_group_id | first_name | last_name |
+    | jdoe  | 0         | 11       | 12             | John       | Doe       |
+    | other | 0         | 21       | 22             | George     | Bush      |
   And the database has the following table 'groups_groups':
     | id | parent_group_id | child_group_id |
     | 61 | 13              | 11             |
@@ -28,22 +29,22 @@ Background:
     | 200 | Category | false          | false    | 1234,2345         | true               |
     | 210 | Category | false          | false    | 1234,2345         | true               |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
-    | 45 | 23       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 46 | 23       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
-    | 47 | 23       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
+    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
+    | 45 | 23       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 46 | 23       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
+    | 47 | 23       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        |
   And the database has the following table 'users_answers':
     | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 1       | 200     | 1          | My answer        | Submission | Current | python    | 2017-05-29 06:37:38 | 100   | true      |
-    | 2  | 1       | 200     | 2          | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 1       | 210     | 3          | My third answer  | Submission | Current | python    | 2017-05-29 06:39:38 | 100   | true      |
+    | 1  | 11      | 200     | 1          | My answer        | Submission | Current | python    | 2017-05-29 06:37:38 | 100   | true      |
+    | 2  | 11      | 200     | 2          | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 3  | 11      | 210     | 3          | My third answer  | Submission | Current | python    | 2017-05-29 06:39:38 | 100   | true      |
 
-  Scenario: Full access on the item+user pair (same user)
-    Given I am the user with id "1"
-    When I send a GET request to "/answers?item_id=200&user_id=1"
+  Scenario: Full access on the item+user_group pair (same user)
+    Given I am the user with id "11"
+    When I send a GET request to "/answers?item_id=200&user_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -79,9 +80,9 @@ Background:
     ]
     """
 
-  Scenario: Full access on the item+user pair (different user)
-    Given I am the user with id "2"
-    When I send a GET request to "/answers?item_id=200&user_id=1"
+  Scenario: Full access on the item+user_group pair (different user)
+    Given I am the user with id "21"
+    When I send a GET request to "/answers?item_id=200&user_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -117,9 +118,9 @@ Background:
     ]
     """
 
-  Scenario: Partial access on the item+user pair (same user)
-    Given I am the user with id "1"
-    When I send a GET request to "/answers?item_id=210&user_id=1"
+  Scenario: Partial access on the item+user_group pair (same user)
+    Given I am the user with id "11"
+    When I send a GET request to "/answers?item_id=210&user_id=11"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -141,9 +142,9 @@ Background:
     ]
     """
 
-  Scenario: Full access on the item+user pair (same user) [with limit]
-    Given I am the user with id "1"
-    When I send a GET request to "/answers?item_id=200&user_id=1&limit=1"
+  Scenario: Full access on the item+user_group pair (same user) [with limit]
+    Given I am the user with id "11"
+    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -165,9 +166,9 @@ Background:
     ]
     """
 
-  Scenario: Full access on the item+user pair (same user) [with limit and reversed order]
-    Given I am the user with id "1"
-    When I send a GET request to "/answers?item_id=200&user_id=1&limit=1&sort=submitted_at"
+  Scenario: Full access on the item+user_group pair (same user) [with limit and reversed order]
+    Given I am the user with id "11"
+    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1&sort=submitted_at"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -190,8 +191,8 @@ Background:
     """
 
   Scenario: Start from the second row
-    Given I am the user with id "2"
-    When I send a GET request to "/answers?item_id=200&user_id=1&from.submitted_at=2017-05-29T06:38:38Z&from.id=2"
+    Given I am the user with id "21"
+    When I send a GET request to "/answers?item_id=200&user_id=11&from.submitted_at=2017-05-29T06:38:38Z&from.id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

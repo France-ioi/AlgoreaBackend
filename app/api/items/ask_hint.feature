@@ -1,11 +1,8 @@
 Feature: Ask for a hint
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id |
-      | 10 | john  | 101           |
-    And the database has the following table 'groups':
-      | id  |
-      | 101 |
+    Given the database has the following users:
+      | login | group_id |
+      | john  | 101      |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
@@ -26,23 +23,23 @@ Feature: Ask for a hint
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
     And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | creator_user_id |
-      | 101      | 50      | 2017-05-29 06:38:38         | 10              |
+      | group_id | item_id | cached_partial_access_since |
+      | 101      | 50      | 2017-05-29 06:38:38         |
     And time is frozen
 
   Scenario: User is able to ask for a hint
-    Given I am the user with id "10"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | hints_cached | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0     |
       | 200 | 101      | 10      | null                   | 0            | 0     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -52,7 +49,7 @@ Feature: Ask for a hint
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -73,7 +70,7 @@ Feature: Ask for a hint
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "10",
+            "idUser": "101",
             "idItemLocal": "50",
             "idAttempt": "100",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -93,18 +90,18 @@ Feature: Ask for a hint
       | 200 | 101      | 10      | 1               | 0            | null                               | done                        | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for a hint with a minimal hint token
-    Given I am the user with id "10"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -114,7 +111,7 @@ Feature: Ask for a hint
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -135,7 +132,7 @@ Feature: Ask for a hint
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "10",
+            "idUser": "101",
             "idItemLocal": "50",
             "idAttempt": "100",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -155,18 +152,18 @@ Feature: Ask for a hint
       | 200 | 101      | 10      | 1               | 0            | null                               | done                        | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for an already given hint
-    Given I am the user with id "10"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -176,7 +173,7 @@ Feature: Ask for a hint
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -197,7 +194,7 @@ Feature: Ask for a hint
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "10",
+            "idUser": "101",
             "idItemLocal": "50",
             "idAttempt": "100",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -217,18 +214,18 @@ Feature: Ask for a hint
       | 200 | 101      | 10      | 1               | 0            | null              | done                        | 1                                                         | null                                                  |
 
   Scenario: Can't parse hints_requested
-    Given I am the user with id "10"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested | order |
       | 100 | 101      | 50      | not an array    | 0     |
       | 200 | 101      | 10      | null            | 0     |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
-      | 10      | 50      | 100               |
+      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -238,7 +235,7 @@ Feature: Ask for a hint
     And the following token "hintRequestToken" signed by the task platform is distributed:
       """
       {
-        "idUser": "10",
+        "idUser": "101",
         "idItemLocal": "50",
         "idAttempt": "100",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -259,7 +256,7 @@ Feature: Ask for a hint
         "data": {
           "task_token": {
             "date": "{{currentTimeInFormat("02-01-2006")}}",
-            "idUser": "10",
+            "idUser": "101",
             "idItemLocal": "50",
             "idAttempt": "100",
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
@@ -279,5 +276,5 @@ Feature: Ask for a hint
       | 200 | 101      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
     And logs should contain:
       """
-      Unable to parse hints_requested ({"idAttempt":100,"idItemLocal":50,"idUser":10}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
+      Unable to parse hints_requested ({"idAttempt":100,"idItemLocal":50,"idUser":101}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
       """

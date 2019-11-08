@@ -19,7 +19,7 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 
 	srv := &Service{Base: service.Base{Store: database.NewDataStore(db)}}
 	monkey.PatchInstanceMethod(reflect.TypeOf(&srv.Base), "GetUser", func(*service.Base, *http.Request) *database.User {
-		return &database.User{ID: 123}
+		return &database.User{GroupID: 123}
 	})
 	result := srv.getInfo(nil, nil)
 	assert.Equal(t, service.InsufficientAccessRightsError, result)

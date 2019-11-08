@@ -33,7 +33,8 @@ func CreateNewTempSession(s *database.SessionStore, userID int64) (accessToken s
 		return
 	}
 
-	logging.Infof("Generated a session token expiring in %d seconds for a temporary user %d", expiresIn, userID)
+	logging.Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+		expiresIn, userID)
 
 	return
 }

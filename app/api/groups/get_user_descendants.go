@@ -73,12 +73,12 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 	query := srv.Store.Groups().
 		Select(`
 			groups.id, groups.name,
-			users.id AS user_id, users.first_name, users.last_name, users.login, users.grade`).
+			users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id AND
 				groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id AND
 				groups_ancestors_active.ancestor_group_id = ?`, groupID).
-		Joins("JOIN users ON users.self_group_id = groups.id").
+		Joins("JOIN users ON users.group_id = groups.id").
 		Where("groups.type = 'UserSelf'")
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
@@ -122,9 +122,6 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 }
 
 type userDescendantUser struct {
-	// The user's `users.id`
-	// required:true
-	ID int64 `sql:"column:user_id" json:"id,string"`
 	// Nullable
 	// required:true
 	FirstName *string `json:"first_name"`

@@ -142,17 +142,17 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	if expectedSessionID != "" {
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
-				"SELECT users.id, users.login, users.is_admin, users.self_group_id, users.owned_group_id, users.access_group_id, "+
+				"SELECT users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id, "+
 					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language, l.id as default_language_id "+
 					"FROM `sessions` "+
-					"JOIN users ON users.id = sessions.user_id "+
+					"JOIN users ON users.group_id = sessions.user_id "+
 					"LEFT JOIN languages l ON users.default_language = l.code "+
 					"WHERE (access_token = ?) AND (expires_at > NOW()) LIMIT 1") +
 			"$").WithArgs(expectedSessionID)
 		if dbError != nil {
 			expectation.WillReturnError(dbError)
 		} else {
-			neededRows := mock.NewRows([]string{"id"})
+			neededRows := mock.NewRows([]string{"group_id"})
 			if userID != 0 {
 				neededRows = neededRows.AddRow(userID)
 			}
@@ -166,7 +166,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		body := "user_id:" + strconv.FormatInt(user.ID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
+		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))

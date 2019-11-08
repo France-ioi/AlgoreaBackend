@@ -22,11 +22,11 @@ import (
 //     * `current_user` (from `users`): all attributes;
 //     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
 //     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
-//     * `joined_groups`: `id` and `name` for every ancestor of user’s `self_group_id`;
+//     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `users_answers`: all attributes;
 //     * `users_items`: all attributes;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes;
-//     * `groups_groups`: where the user’s `self_group_id` is the `child_group_id`, all attributes + `groups.name`.
+//     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -59,7 +59,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "users", nil)
 		var userData []map[string]interface{}
-		service.MustNotBeError(srv.Store.Users().ByID(user.ID).Select(columns).ScanIntoSliceOfMaps(&userData).Error())
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).Select(columns).
+			ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
 	})
 
@@ -67,7 +68,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeComma(w)
 		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"access_token"})
-			service.MustNotBeError(srv.Store.Sessions().Where("user_id = ?", user.ID).
+			service.MustNotBeError(srv.Store.Sessions().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS access_token").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
@@ -75,7 +76,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"refresh_token"})
 			var refreshTokens []map[string]interface{}
-			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_id = ?", user.ID).
+			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS refresh_token").ScanIntoSliceOfMaps(&refreshTokens).Error())
 			if len(refreshTokens) > 0 {
 				writeValue(w, refreshTokens[0])
@@ -105,14 +106,14 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.UserAnswers().Where("user_id = ?", user.ID).
+			service.MustNotBeError(srv.Store.UserAnswers().Where("user_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "users_items", nil)
-			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.ID).
+			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.GroupID).
 				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
@@ -121,7 +122,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", nil)
 			service.MustNotBeError(srv.Store.GroupAttempts().
 				Select(columns).
-				Where("group_id = ?", user.SelfGroupID).
+				Where("group_id = ?", user.GroupID).
 				UnionAll(
 					srv.Store.GroupAttempts().
 						Select(columns).
@@ -139,7 +140,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectArrayElement("groups_groups", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "groups_groups", nil)
 		service.MustNotBeError(srv.Store.GroupGroups().
-			Where("child_group_id = ?", user.SelfGroupID).
+			Where("child_group_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
 			Select(columns + ", `groups`.name").
 			ScanAndHandleMaps(streamerFunc(w)).Error())

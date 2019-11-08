@@ -65,7 +65,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups_groups.id,
 			groups_groups.type_changed_at,
 			groups_groups.type,
-			users.id AS inviting_user__id,
+			users.group_id AS inviting_user__group_id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,
 			users.last_name AS inviting_user__last_name,
@@ -73,10 +73,10 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type`).
-		Joins("LEFT JOIN users ON users.id = groups_groups.inviting_user_id").
+		Joins("LEFT JOIN users ON users.group_id = groups_groups.inviting_user_id").
 		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
 		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'requestRefused')").
-		Where("groups_groups.child_group_id = ?", user.SelfGroupID)
+		Where("groups_groups.child_group_id = ?", user.GroupID)
 
 	if len(r.URL.Query()["within_weeks"]) > 0 {
 		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")

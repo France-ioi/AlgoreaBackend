@@ -11,7 +11,7 @@ func TestGroupStore_OwnedBy(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` " +
 		"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id " +
@@ -29,7 +29,7 @@ func TestGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
 		"JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id AND "+
@@ -49,7 +49,7 @@ func TestGroupStore_TeamGroupForItemAndUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{ID: 1, SelfGroupID: ptrInt64(2), OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
 		"JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id AND "+

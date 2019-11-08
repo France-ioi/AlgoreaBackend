@@ -1,10 +1,6 @@
 Feature: Reject group requests - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     |
-      | 2  | user  | 11            | 12             | John        | Doe       | 1     |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id  |
       | 11  |
       | 13  |
@@ -18,6 +14,10 @@ Feature: Reject group requests - robustness
       | 123 |
       | 131 |
       | 141 |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name | grade |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | user  | 11       | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -52,7 +52,7 @@ Feature: Reject group requests - robustness
       | 15 | 22              | 13             | direct             | null                      |
 
   Scenario: Fails when the user is not an owner of the parent group
-    Given I am the user with id "2"
+    Given I am the user with id "11"
     When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -68,7 +68,7 @@ Feature: Reject group requests - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/abc/requests/reject?group_ids=31,141,21,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
@@ -76,7 +76,7 @@ Feature: Reject group requests - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when group_ids is wrong
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/requests/reject?group_ids=31,abc,11,13,22"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"

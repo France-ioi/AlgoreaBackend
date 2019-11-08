@@ -1,10 +1,6 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id |
-      | 1  | owner | 21            | 22             |
-      | 2  | john  | 31            | 32             |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name        | type      |
       | 10 | Parent      | Club      |
       | 11 | Group A     | Class     |
@@ -18,6 +14,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 34 | item50      | Other     |
       | 35 | item60      | Other     |
       | 36 | item70      | Other     |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id |
+      | owner | 21       | 22             |
+      | john  | 31       | 32             |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 11             | 9999-12-31 23:59:59 |
@@ -66,16 +66,16 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 60 | 00:00:01 | 35                            |
       | 70 | 00:00:03 | 36                            |
     And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since | creator_user_id |
-      | 1  | 10       | 50      | null                        | null                       | null                     | null                          | 3               |
-      | 2  | 11       | 50      | null                        | null                       | null                     | null                          | 3               |
-      | 3  | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          | 3               |
-      | 4  | 11       | 60      | null                        | null                       | null                     | null                          | 3               |
-      | 5  | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          | 3               |
-      | 6  | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          | 3               |
-      | 7  | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           | 3               |
-      | 8  | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 3               |
-      | 9  | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          | 3               |
+      | id | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
+      | 1  | 10       | 50      | null                        | null                       | null                     | null                          |
+      | 2  | 11       | 50      | null                        | null                       | null                     | null                          |
+      | 3  | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
+      | 4  | 11       | 60      | null                        | null                       | null                     | null                          |
+      | 5  | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
+      | 6  | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          |
+      | 7  | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
+      | 8  | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
+      | 9  | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -93,7 +93,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31       | 70      | 2017-05-29 06:38:38 |
 
   Scenario: Updates an existing row
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
@@ -148,7 +148,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Creates a new row
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
@@ -205,7 +205,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Doesn't create a new row when seconds=0
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=0"
     Then the response code should be 200
     And the response should be "updated"
@@ -214,7 +214,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Creates a new row for a user group
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/31/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"

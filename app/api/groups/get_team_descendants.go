@@ -121,11 +121,11 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 	service.MustNotBeError(srv.Store.Users().
 		Select(`
 			member_links.parent_group_id AS linked_group_id,
-			users.self_group_id, users.id, users.first_name, users.last_name, users.login, users.grade`).
+			users.group_id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
 			JOIN groups_groups_active AS member_links ON
 				member_links.type`+database.GroupRelationIsActiveCondition+` AND
-				member_links.child_group_id = users.self_group_id AND
+				member_links.child_group_id = users.group_id AND
 				member_links.parent_group_id IN (?)`, groupIDs).
 		Order("member_links.parent_group_id, member_links.child_group_id").
 		Scan(&membersResult).Error())
@@ -139,11 +139,8 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 }
 
 type teamDescendantMember struct {
-	// User's `id`
 	// required:true
-	ID int64 `json:"id,string"`
-	// required:true
-	SelfGroupID int64 `json:"self_group_id"`
+	GroupID int64 `json:"group_id"`
 	// Nullable
 	// required:true
 	FirstName *string `json:"first_name"`

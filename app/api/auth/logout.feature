@@ -1,9 +1,9 @@
 Feature: Sign the current user out
   Scenario: The user logs out successfully
-    Given the database has the following table 'users':
-      | id | login |
-      | 2  | john  |
-      | 3  | jane  |
+    Given the database has the following users:
+      | group_id | login |
+      | 2        | john  |
+      | 3        | jane  |
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
       | user_id | expires_at          | access_token              |

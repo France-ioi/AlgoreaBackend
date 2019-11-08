@@ -131,7 +131,7 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
 					acceptRequestsAction: database.AdminAcceptsRequest,
 					rejectRequestsAction: database.AdminRefusesRequest,
-				}[action], parentGroupID, groupIDs, user.ID)
+				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})
 	}

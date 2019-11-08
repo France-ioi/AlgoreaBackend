@@ -1,14 +1,16 @@
 Feature: Get answers with attempt_id
 Background:
-  Given the database has the following table 'users':
-    | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name |
-    | 1  | jdoe  | 0         | 11            | 12             | John        | Doe       |
-    | 2  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  |
-  And the database has the following table 'groups':
-    | id | name       | text_id | grade  | type      |
-    | 11 | jdoe       |         | -2     | UserAdmin |
-    | 12 | jdoe-admin |         | -2     | UserAdmin |
-    | 13 | Group B    |         | -2     | Class     |
+  Given the database has the following table 'groups':
+    | id | name        | text_id | grade | type      |
+    | 11 | jdoe        |         | -2    | UserSelf  |
+    | 12 | jdoe-admin  |         | -2    | UserAdmin |
+    | 13 | Group B     |         | -2    | Class     |
+    | 21 | owner       |         | -2    | UserSelf  |
+    | 22 | owner-admin |         | -2    | UserAdmin |
+  And the database has the following table 'users':
+    | login | temp_user | group_id | owned_group_id | first_name  | last_name |
+    | jdoe  | 0         | 11       | 12             | John        | Doe       |
+    | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  |
   And the database has the following table 'groups_groups':
     | id | parent_group_id | child_group_id | type            |
     | 61 | 13              | 11             | requestAccepted |
@@ -26,16 +28,16 @@ Background:
     | 200 | Category | false          | false    | 1234,2345         | true               |
     | 210 | Category | false          | false    | 1234,2345         | true               |
   And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | creator_user_id |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        | 0               |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
-    | 45 | 41       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 0               |
+    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
+    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
+    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
+    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
+    | 45 | 41       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
   And the database has the following table 'users_answers':
     | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 1       | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 2  | 1       | 200     | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 1       | 210     | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 1  | 11      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 2  | 11      | 200     | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 3  | 11      | 210     | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
   And the database has the following table 'groups_attempts':
     | id  | group_id | item_id | order |
     | 100 | 13       | 200     | 0     |
@@ -43,7 +45,7 @@ Background:
     | 102 | 11       | 210     | 1     |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
-    Given I am the user with id "1"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -67,7 +69,7 @@ Background:
     """
 
   Scenario: Full access on the item and the user is an owner of some attempt's group parent
-    Given I am the user with id "2"
+    Given I am the user with id "21"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -91,7 +93,7 @@ Background:
     """
 
   Scenario: Full access on the item and the user's self group is the groups_attempts.group_id
-    Given I am the user with id "1"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=101"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -115,7 +117,7 @@ Background:
     """
 
   Scenario: Partial access on the item and the user's self group is the groups_attempts.group_id
-    Given I am the user with id "1"
+    Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:

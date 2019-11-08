@@ -105,12 +105,11 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
 	var userInfo struct {
-		ID           int64
-		SelfGroupID  int64
+		GroupID      int64
 		OwnedGroupID int64
 	}
 	err := s.WithWriteLock().
-		Where("login_id = ?", userData["login_id"]).Select("id, self_group_id, owned_group_id").
+		Where("login_id = ?", userData["login_id"]).Select("group_id, owned_group_id").
 		Take(&userInfo).Error()
 
 	userData["latest_login_at"] = database.Now()
@@ -124,25 +123,20 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
-		userData["self_group_id"] = selfGroupID
+		userData["group_id"] = selfGroupID
 		userData["owned_group_id"] = ownedGroupID
 
-		var userID int64
-		service.MustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-			userID = s.NewID()
-			userData["id"] = userID
-			return s.Users().InsertMap(userData)
-		}))
-		return userID
+		service.MustNotBeError(s.Users().InsertMap(userData))
+		return selfGroupID
 	}
 
 	found, err := s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
-		Where("child_group_id = ?", userInfo.SelfGroupID).HasRows()
+		Where("child_group_id = ?", userInfo.GroupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]database.ParentChild, 0, 2)
 	if !found {
 		groupsToCreate = append(groupsToCreate,
-			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: userInfo.SelfGroupID})
+			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: userInfo.GroupID})
 	}
 
 	found, err = s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootAdminGroupID).
@@ -155,8 +149,8 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(s.ByID(userInfo.ID).UpdateColumn(userData).Error())
-	return userInfo.ID
+	service.MustNotBeError(s.ByID(userInfo.GroupID).UpdateColumn(userData).Error())
+	return userInfo.GroupID
 }
 
 func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (ownedGroupID, selfGroupID int64) {

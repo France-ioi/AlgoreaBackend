@@ -13,7 +13,8 @@ import (
 
 func TestUserItemStore_SetActiveAttempt(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		users: [{id: 12}]
+		groups: [{id: 121}]
+		users: [{group_id: 121}]
 		items: [{id: 34}]
 		groups_attempts:
 			- {id: 56, group_id: 1, item_id: 34, order: 1}
@@ -22,7 +23,7 @@ func TestUserItemStore_SetActiveAttempt(t *testing.T) {
 
 	userItemStore := database.NewDataStore(db).UserItems()
 	for _, groupAttemptID := range []int64{56, 57} {
-		err := userItemStore.SetActiveAttempt(12, 34, groupAttemptID)
+		err := userItemStore.SetActiveAttempt(121, 34, groupAttemptID)
 		assert.NoError(t, err)
 
 		type userItem struct {
@@ -35,7 +36,7 @@ func TestUserItemStore_SetActiveAttempt(t *testing.T) {
 			userItemStore.Select("user_id, item_id, active_attempt_id").
 				Scan(&insertedUserItem).Error())
 		assert.Equal(t, userItem{
-			UserID:          12,
+			UserID:          121,
 			ItemID:          34,
 			ActiveAttemptID: groupAttemptID,
 		}, insertedUserItem)

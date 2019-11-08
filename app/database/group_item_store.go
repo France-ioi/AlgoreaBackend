@@ -57,5 +57,5 @@ func (s *GroupItemStore) AccessRightsForItemsVisibleToGroup(groupID *int64) *DB 
 // (as full_access, partial_access, grayed_access, access_solutions) and item ids (as item_id)
 // for all the items that are visible to the given user.
 func (s *GroupItemStore) AccessRightsForItemsVisibleToUser(user *User) *DB {
-	return s.AccessRightsForItemsVisibleToGroup(user.SelfGroupID)
+	return s.AccessRightsForItemsVisibleToGroup(&user.GroupID)
 }

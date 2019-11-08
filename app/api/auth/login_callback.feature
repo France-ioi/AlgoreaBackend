@@ -73,8 +73,8 @@ Feature: Login callback
       """
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
     And the table "users" should be:
-      | id                  | self_group_id       | owned_group_id      | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
-      | 3916589616287113937 | 5577006791947779410 | 8674665223082153551 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
+      | group_id            | owned_group_id      | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   |
+      | 5577006791947779410 | 8674665223082153551 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 |
     And the table "groups" should be:
       | id                  | name           | type      | description    | created_at          | opened | send_emails |
       | 2                   | RootSelf       | Base      | null           | 2015-08-10 12:34:55 | false  | false       |
@@ -96,10 +96,10 @@ Feature: Login callback
     And the table "login_states" should be empty
     And the table "sessions" should be:
       | expires_at          | user_id             | issuer       | issued_at           | access_token                |
-      | 2020-07-16 22:02:29 | 3916589616287113937 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
+      | 2020-07-16 22:02:29 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id             | refresh_token                |
-      | 3916589616287113937 | {{refresh_token_from_oauth}} |
+      | 5577006791947779410 | {{refresh_token_from_oauth}} |
 
   Scenario Outline: Update an existing user
     Given the time now is "2019-07-16T22:02:29Z"
@@ -147,16 +147,16 @@ Feature: Login callback
         "badges":null,"client_id":null,"verification":null
       }
       """
-    And the database has the following table 'users':
-      | id | self_group_id | owned_group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
-      | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
-      | 2  | 13            | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database table 'groups' has also the following rows:
       | id | name           | type      | description    | created_at          | opened | send_emails |
       | 11 | mohammed       | UserSelf  | mohammed       | 2019-05-10 10:42:11 | false  | true        |
       | 12 | mohammed-admin | UserAdmin | mohammed-admin | 2019-05-10 10:42:11 | false  | false       |
       | 13 | john           | UserSelf  | john           | 2018-05-10 10:42:11 | false  | false       |
       | 14 | john-admin     | UserAdmin | john-admin     | 2018-05-10 10:42:11 | false  | false       |
+    And the database has the following table 'users':
+      | group_id | owned_group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | 11       | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
+      | 13       | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type   | child_order |
       | 2               | 11             | direct | 1           |
@@ -181,12 +181,12 @@ Feature: Login callback
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the database has the following table 'sessions':
       | expires_at          | user_id | issuer       | issued_at           | access_token         |
-      | 2020-06-16 22:02:49 | 1       | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
-      | 2020-06-16 22:02:49 | 2       | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token         |
-      | 1       | previousrefreshtoken1 |
-      | 2       | previousrefreshtoken2 |
+      | 11      | previousrefreshtoken1 |
+      | 13      | previousrefreshtoken2 |
     And the "Cookie" request header is "login_csrf={{cookie}}"
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
       """
@@ -215,10 +215,10 @@ Feature: Login callback
       }
       """
     And the response header "Set-Cookie" should be "login_csrf=; Path=/; Domain=127.0.0.1; Expires=Mon, 16 Jul 2018 22:02:29 GMT; Max-Age=0; HttpOnly; Secure"
-    And the table "users" should stay unchanged but the row with id "1"
-    And the table "users" at id "1" should be:
-      | id | self_group_id | owned_group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
-      | 1  | 11            | 12             | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 |
+    And the table "users" should stay unchanged but the row with group_id "11"
+    And the table "users" at group_id "11" should be:
+      | group_id | owned_group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language   | free_text   | web_site   | sex   | email_verified   | last_ip   |
+      | 11       | 12             | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | <default_language> | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
@@ -227,13 +227,13 @@ Feature: Login callback
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the table "sessions" should be:
       | expires_at          | user_id | issuer       | issued_at           | access_token                |
-      | 2020-06-16 22:02:49 | 1       | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
-      | 2020-06-16 22:02:49 | 2       | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
-      | 2020-07-16 22:02:49 | 1       | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
+      | 2020-07-16 22:02:49 | 11      | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
       | user_id | refresh_token                |
-      | 1       | {{refresh_token_from_oauth}} |
-      | 2       | previousrefreshtoken2        |
+      | 11      | {{refresh_token_from_oauth}} |
+      | 13      | previousrefreshtoken2        |
   Examples:
     | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified |
     | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           |
@@ -253,9 +253,13 @@ Feature: Login callback
     And the template constant "cookie" is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
     And the template constant "state" is "o5yuy6wmpe607bknrmvrrduy5xe60zd7"
     And the template constant "code_from_oauth" is "somecode"
+    And the database table 'groups' has also the following rows:
+      | id | name           | type      | description    | created_at          | opened | send_emails |
+      | 11 | mohammed       | UserSelf  | mohammed       | 2019-05-10 10:42:11 | false  | true        |
+      | 12 | mohammed-admin | UserAdmin | mohammed-admin | 2019-05-10 10:42:11 | false  | false       |
     And the database has the following table 'users':
-      | id | self_group_id | owned_group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
-      | 1  | 11            | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
+      | group_id | owned_group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
+      | 11       | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | true    |
@@ -294,10 +298,10 @@ Feature: Login callback
       """
     When I send a GET request to "/auth/login-callback?state={{state}}&code={{code_from_oauth}}"
     Then the response code should be 201
-    And the table "users" should stay unchanged but the row with id "1"
-    And the table "users" at id "1" should be:
-      | id | self_group_id | owned_group_id |
-      | 1  | 11            | 12             |
+    And the table "users" should stay unchanged but the row with group_id "11"
+    And the table "users" at group_id "11" should be:
+      | group_id | owned_group_id |
+      | 11       | 12             |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type   |

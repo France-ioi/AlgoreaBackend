@@ -32,7 +32,7 @@ type itemAttemptsViewResponseRow struct {
 		// required: true
 		LastName *string `json:"last_name"`
 
-		ID *int64 `json:"-"`
+		GroupID *int64 `json:"-"`
 	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
 }
 
@@ -95,12 +95,12 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	}
 	user := srv.GetUser(r)
 	query := srv.Store.GroupAttempts().VisibleAndByItemID(user, itemID).
-		Joins("LEFT JOIN users AS creators ON creators.id = groups_attempts.creator_user_id").
+		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_id").
 		Select(`
 			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,
 			groups_attempts.started_at, creators.login AS user_creator__login,
 			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
-			creators.id AS user_creator__id`)
+			creators.group_id AS user_creator__group_id`)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"order": {ColumnName: "groups_attempts.order", FieldType: "int64"},
@@ -113,7 +113,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	for index := range result {
-		if result[index].UserCreator.ID == nil {
+		if result[index].UserCreator.GroupID == nil {
 			result[index].UserCreator = nil
 		}
 	}

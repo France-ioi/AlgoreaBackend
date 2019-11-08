@@ -20,3 +20,4 @@
 - {id: 31, ancestor_group_id: 30, child_group_id: 11}
 - {id: 32, ancestor_group_id: 30, child_group_id: 20}
 - {id: 33, ancestor_group_id: 30, child_group_id: 30, is_self: 1}
+- {id: 34, ancestor_group_id: 111, child_group_id: 111, is_self: 1}

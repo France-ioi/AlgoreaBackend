@@ -1,16 +1,16 @@
 Feature: Add a parent-child relation between two groups
 
   Background:
-    Given the database has the following table 'users':
-      | id | login | temp_user | self_group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | 1  | owner | 0         | 21            | 22             | Jean-Michel | Blanquer  | 1               |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | name    | type      |
       | 11 | Group A | Class     |
       | 13 | Group B | Class     |
       | 14 | Group C | Class     |
       | 21 | Self    | UserSelf  |
       | 22 | Owned   | UserAdmin |
+    And the database has the following table 'users':
+      | login | temp_user | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
+      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type   | child_order |
       | 22              | 11             | direct | 1           |
@@ -28,7 +28,7 @@ Feature: Add a parent-child relation between two groups
       | 22                | 22             | 1       |
 
   Scenario: User is an owner of the two groups and is allowed to create sub-groups
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 201
     And the response body should be, in JSON:

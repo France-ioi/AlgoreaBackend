@@ -31,7 +31,7 @@ type groupAncestor struct {
 
 func TestGroupGroupStore_Transition(t *testing.T) {
 	currentTimePtr := (*database.Time)(ptrTime(time.Now().UTC()))
-	userID := int64(12)
+	userID := int64(111)
 	userIDPtr := &userID
 	groupAncestorsUnchanged := []groupAncestor{
 		{AncestorGroupID: 1, ChildGroupID: 1, IsSelf: true},
@@ -56,6 +56,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 30, ChildGroupID: 11},
 		{AncestorGroupID: 30, ChildGroupID: 20},
 		{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+		{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
 	}
 	groupsGroupsUnchanged := []groupGroup{
 		{ParentGroupID: 20, ChildGroupID: 2, Type: "invitationSent"},
@@ -109,6 +110,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		{AncestorGroupID: 30, ChildGroupID: 11},
 		{AncestorGroupID: 30, ChildGroupID: 20},
 		{AncestorGroupID: 30, ChildGroupID: 30, IsSelf: true},
+		{AncestorGroupID: 111, ChildGroupID: 111, IsSelf: true},
 	}
 
 	tests := []struct {
@@ -431,7 +433,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			err := dataStore.InTransaction(func(store *database.DataStore) error {
 				var err error
 				result, err = store.GroupGroups().Transition(
-					tt.action, 20, tt.relationsToChange, 12,
+					tt.action, 20, tt.relationsToChange, userID,
 				)
 				return err
 			})
@@ -534,7 +536,8 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 		assert.Equal(t, row.ParentGroupID, groupsGroups[index].ParentGroupID, "wrong parent group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.ChildGroupID, groupsGroups[index].ChildGroupID, "wrong child group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.Type, groupsGroups[index].Type, "wrong type for row %#v", groupsGroups[index])
-		assert.Equal(t, row.InvitingUserID, groupsGroups[index].InvitingUserID, "wrong inviting_user_id for row %#v", groupsGroups[index])
+		assert.Equal(t, row.InvitingUserID, groupsGroups[index].InvitingUserID,
+			"wrong inviting_user_id for row %#v", groupsGroups[index])
 		if row.ChildOrder == 0 {
 			assert.Zero(t, groupsGroups[index].ChildOrder)
 		} else {

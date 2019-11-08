@@ -25,9 +25,9 @@ type groupRequestsViewResponseRow struct {
 	// Nullable
 	// required: true
 	JoiningUser *struct {
-		// `users.id`
+		// `users.group_id`
 		// required: true
-		ID *int64 `json:"id,string"`
+		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 		// Nullable
@@ -44,9 +44,9 @@ type groupRequestsViewResponseRow struct {
 	// Nullable
 	// required: true
 	InvitingUser *struct {
-		// `users.id`
+		// `users.group_id`
 		// required: true
-		ID *int64 `json:"id,string"`
+		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 		// Nullable
@@ -156,17 +156,17 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			groups_groups.id,
 			groups_groups.type_changed_at,
 			groups_groups.type,
-			joining_user.id AS joining_user__id,
+			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
 			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.first_name) AS joining_user__first_name,
 			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.last_name) AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
-			inviting_user.id AS inviting_user__id,
+			inviting_user.group_id AS inviting_user__group_id,
 			inviting_user.login AS inviting_user__login,
 			inviting_user.first_name AS inviting_user__first_name,
 			inviting_user.last_name AS inviting_user__last_name`).
-		Joins("LEFT JOIN users AS inviting_user ON inviting_user.id = groups_groups.inviting_user_id").
-		Joins("LEFT JOIN users AS joining_user ON joining_user.self_group_id = groups_groups.child_group_id").
+		Joins("LEFT JOIN users AS inviting_user ON inviting_user.group_id = groups_groups.inviting_user_id").
+		Joins("LEFT JOIN users AS joining_user ON joining_user.group_id = groups_groups.child_group_id").
 		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
 		Where("groups_groups.parent_group_id = ?", groupID)
 
@@ -196,10 +196,10 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	var result []groupRequestsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 	for index := range result {
-		if result[index].InvitingUser.ID == nil {
+		if result[index].InvitingUser.GroupID == nil {
 			result[index].InvitingUser = nil
 		}
-		if result[index].JoiningUser.ID == nil {
+		if result[index].JoiningUser.GroupID == nil {
 			result[index].JoiningUser = nil
 		}
 	}

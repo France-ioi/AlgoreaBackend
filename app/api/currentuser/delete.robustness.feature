@@ -39,8 +39,8 @@ Feature: Delete the current user - robustness
       | 50                | 21             | false   |
       | 50                | 50             | true    |
     And the database has the following table 'users':
-      | id | temp_user | login | self_group_id | owned_group_id | login_id |
-      | 11 | 0         | user  | 21            | 22             | 1234567  |
+      | temp_user | login | group_id | owned_group_id | login_id |
+      | 0         | user  | 21       | 22             | 1234567  |
     And the application config is:
       """
       auth:
@@ -51,13 +51,13 @@ Feature: Delete the current user - robustness
       """
 
   Scenario: User cannot delete himself right now
-    Given I am the user with id "11"
+    Given I am the user with id "21"
     When I send a DELETE request to "/current-user"
     Then the response code should be 403
     And the response error message should contain "You cannot delete yourself right now"
     And logs should contain:
       """
-      A user with id = 11 tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()
+      A user with group_id = 21 tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()
       """
     And the table "users" should stay unchanged
     And the table "groups" should stay unchanged
@@ -65,7 +65,7 @@ Feature: Delete the current user - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Login module fails
-    Given I am the user with id "11"
+    Given I am the user with id "21"
     And the DB time now is "2019-08-10 00:00:00"
     And the login module "unlink_client" endpoint for user id "1234567" returns 500 with encoded body:
       """

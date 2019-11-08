@@ -141,7 +141,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
 	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
 	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
-		Where("user_id = ?", user.ID).
+		Where("user_id = ?", user.GroupID).
 		Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID)
 
 	updateResult := userAnswerScope.Where("score = ? OR score IS NULL", score).
@@ -164,7 +164,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
 					"idAttempt":    requestData.TaskToken.Converted.AttemptID,
 					"idItem":       requestData.TaskToken.Converted.LocalItemID,
-					"idUser":       user.ID,
+					"idUser":       user.GroupID,
 					"idUserAnswer": requestData.ScoreToken.Converted.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,

@@ -117,8 +117,12 @@ func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
 	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{}) {
 	var rows []map[string]interface{}
 	var ids []int64
+
+	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
+	totalRemainingGroupIDs = append(totalRemainingGroupIDs, remainingGroupIDs...)
+	totalRemainingGroupIDs = append(totalRemainingGroupIDs, int64(111))
 	assert.NoError(t, dataStore.Groups().Order("id").Pluck("id", &ids).Error())
-	assert.Equal(t, remainingGroupIDs, ids)
+	assert.Equal(t, totalRemainingGroupIDs, ids)
 	assert.NoError(t, dataStore.GroupGroups().Select("parent_group_id, child_group_id").Order("parent_group_id, child_group_id").
 		ScanIntoSliceOfMaps(&rows).Error())
 	assert.Equal(t, remainingGroupsGroups, rows)
@@ -151,7 +155,11 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Table("groups_login_prefixes").Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
+
+	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
+	totalRemainingGroupIDs = append(totalRemainingGroupIDs, remainingGroupIDs...)
+	totalRemainingGroupIDs = append(totalRemainingGroupIDs, int64(111))
 	assert.NoError(t, dataStore.Table("groups_propagate").Order("id").
 		Pluck("id", &ids).Error())
-	assert.Equal(t, remainingGroupIDs, ids)
+	assert.Equal(t, totalRemainingGroupIDs, ids)
 }

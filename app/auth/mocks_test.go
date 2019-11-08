@@ -14,10 +14,10 @@ import (
 
 func TestMiddlewareMock(t *testing.T) {
 	assert := assertlib.New(t)
-	middleware := MockUserMiddleware(&database.User{ID: 42})
+	middleware := MockUserMiddleware(&database.User{GroupID: 42})
 	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := UserFromContext(r.Context())
-		_, _ = w.Write([]byte(strconv.FormatInt(user.ID, 10)))
+		_, _ = w.Write([]byte(strconv.FormatInt(user.GroupID, 10)))
 	})))
 	defer ts.Close()
 

@@ -1,12 +1,12 @@
-- {id: 11, group_id: 1, item_id: 1, creator_user_id: 1}
-- {id: 12, group_id: 1, item_id: 2, creator_user_id: 1}
-- {id: 13, group_id: 1, item_id: 3, creator_user_id: 1}
+- {id: 11, group_id: 1, item_id: 1}
+- {id: 12, group_id: 1, item_id: 2}
+- {id: 13, group_id: 1, item_id: 3}
 - {id: 14, group_id: 1, item_id: 4, full_access_since: 2017-01-01 12:13:14,
    cached_full_access_since: 2017-01-01 12:13:14, cached_full_access: 1,
    partial_access_since: 2017-01-01 12:13:14, cached_partial_access_since: 2017-01-01 12:13:14,
    cached_partial_access: 1, manager_access: 1, cached_manager_access: 1,
    solutions_access_since: 2017-01-01 12:13:14, cached_solutions_access_since: 2017-01-01 12:13:14,
    cached_access_solutions: 1, cached_grayed_access_since: 2017-01-01 12:13:14,
-   cached_grayed_access: 1, access_reason: some reason, cached_access_reason: some cached reason, creator_user_id: 1}
-- {id: 21, group_id: 2, item_id: 1, creator_user_id: 1}
-- {id: 22, group_id: 2, item_id: 11, creator_user_id: 1}
+   cached_grayed_access: 1, access_reason: some reason, cached_access_reason: some cached reason}
+- {id: 21, group_id: 2, item_id: 1}
+- {id: 22, group_id: 2, item_id: 11}

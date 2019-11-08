@@ -40,7 +40,7 @@ func TestCreateNewTempSession(t *testing.T) {
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 			int32(2*60*60), expectedUserID)))
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -78,10 +78,10 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assert.Contains(t, logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 			int32(2*60*60), expectedUserID)))
 	assert.Equal(t, 1, strings.Count(logs, fmt.Sprintf("level=info msg=%q",
-		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user %d",
+		fmt.Sprintf("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 			int32(2*60*60), expectedUserID))))
 
 	assert.NoError(t, mock.ExpectationsWereMet())

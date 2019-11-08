@@ -1,9 +1,6 @@
 Feature: Accept group requests
   Background:
-    Given the database has the following table 'users':
-      | id | login | self_group_id | owned_group_id | first_name  | last_name | grade |
-      | 1  | owner | 21            | 22             | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id  | type      | team_item_id |
       | 11  | Class     | null         |
       | 13  | Team      | 1234         |
@@ -20,6 +17,9 @@ Feature: Accept group requests
       | 151 | UserSelf  | null         |
       | 161 | UserSelf  | null         |
       | 444 | Team      | 1234         |
+    And the database has the following table 'users':
+      | login | group_id | owned_group_id | first_name  | last_name | grade |
+      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -59,7 +59,7 @@ Feature: Accept group requests
       | 17 | 13              | 161            | requestSent        | null                      |
 
   Scenario: Accept requests
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22,151"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -115,7 +115,7 @@ Feature: Accept group requests
       | 444               | 444            | 1       |
 
   Scenario: Accept requests for a team while skipping members of other teams with the same team_item_id
-    Given I am the user with id "1"
+    Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
       | id | parent_group_id | child_group_id | type               | type_changed_at |
       | 18 | 444             | 31             | joinedByCode       | null            |

@@ -21,18 +21,18 @@ import (
 //                The data to be deleted:
 //
 //                1. [`users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
-//                   having `user_id` = `users.id`;
+//                   having `user_id` = `users.group_id`;
 //                2. [`groups_items`, `groups_attempts`, `groups_login_prefixes`]
-//                   having `group_id` = `users.self_group_id` or `group_id` = `users.owned_group_id`;
+//                   having `group_id` = `users.group_id` or `group_id` = `users.owned_group_id`;
 //                3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
 //
 //                4. `groups_groups` having `parent_group_id` or `child_group_id` equal
-//                   to one of `users.self_group_id`/`users.owned_group_id`;
+//                   to one of `users.group_id`/`users.owned_group_id`;
 //                5. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
-//                   to one of `users.self_group_id`/`users.owned_group_id`;
+//                   to one of `users.group_id`/`users.owned_group_id`;
 //                6. [`groups_propagate`, `groups`] having `id` equal to one of
-//                   `users.self_group_id`/`users.owned_group_id`;
-//                7. `users` having `id` = `users.id`.
+//                   `users.group_id`/`users.owned_group_id`;
+//                7. `users` having `group_id` = `users.group_id`.
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with
@@ -56,14 +56,15 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	if doNotDelete {
 		logging.GetLogEntry(r).
-			Infof("A user with id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()",
-				user.ID)
+			Infof("A user with group_id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()",
+				user.GroupID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
 	}
 
 	var loginID int64
 	if !user.IsTempUser {
-		service.MustNotBeError(srv.Store.Users().ByID(user.ID).PluckFirst("login_id", &loginID).Error())
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).
+			PluckFirst("login_id", &loginID).Error())
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))
 	if !user.IsTempUser {

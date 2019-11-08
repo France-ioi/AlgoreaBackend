@@ -2,13 +2,12 @@ package database
 
 // User represents data associated with the user (from the `users` table)
 type User struct {
-	ID                  int64
+	GroupID             int64
 	Login               string
 	DefaultLanguage     string
 	DefaultLanguageID   int64
 	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
-	SelfGroupID         *int64
 	OwnedGroupID        *int64
 	AccessGroupID       *int64
 	AllowSubgroups      bool
@@ -21,6 +20,14 @@ func (u *User) Clone() *User {
 	if result.NotificationsReadAt != nil {
 		notificationReadDateCopy := *result.NotificationsReadAt
 		result.NotificationsReadAt = &notificationReadDateCopy
+	}
+	if result.OwnedGroupID != nil {
+		ownedGroupIDCopy := *result.OwnedGroupID
+		result.OwnedGroupID = &ownedGroupIDCopy
+	}
+	if result.AccessGroupID != nil {
+		accessGroupIDCopy := *result.AccessGroupID
+		result.AccessGroupID = &accessGroupIDCopy
 	}
 	return &result
 }

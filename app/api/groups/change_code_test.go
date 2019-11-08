@@ -55,7 +55,7 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 func assertMockedChangeCodeRequest(t *testing.T,
 	setMockExpectationsFunc func(sqlmock.Sqlmock)) (*http.Response, sqlmock.Sqlmock, string, error) {
 	response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-		"POST", "/groups/1/code", ``, &database.User{ID: 2, OwnedGroupID: ptrInt64(10)},
+		"POST", "/groups/1/code", ``, &database.User{GroupID: 2, OwnedGroupID: ptrInt64(10)},
 		setMockExpectationsFunc,
 		func(router *chi.Mux, baseService *service.Base) {
 			srv := &Service{Base: *baseService}

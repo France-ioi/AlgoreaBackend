@@ -31,7 +31,7 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err e
 // GetAttemptItemIDIfUserHasAccess returns groups_attempts.item_id if:
 //  1) the user has at least partial access to this item
 //  2) the user is a member of groups_attempts.group_id  (if items.has_attempts = 1)
-//  3) the user's self_group_id = groups_attempts.group_id (if items.has_attempts = 0)
+//  3) the user's group_id = groups_attempts.group_id (if items.has_attempts = 0)
 func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
@@ -40,7 +40,7 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
 		Where("partial_access > 0 OR full_access > 0").
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
-			usersGroupsQuery.SubQuery(), user.SelfGroupID).
+			usersGroupsQuery.SubQuery(), user.GroupID).
 		PluckFirst("items.id", &itemID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, 0, nil
@@ -67,5 +67,5 @@ func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,
 		// otherwise groups_attempts.group_id should be equal to the user's self group
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
-			usersGroupsQuery.SubQuery(), user.SelfGroupID)
+			usersGroupsQuery.SubQuery(), user.GroupID)
 }

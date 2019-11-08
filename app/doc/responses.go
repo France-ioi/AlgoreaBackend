@@ -205,10 +205,6 @@ type itemAnswerGetResponse struct {
 		// Nullable
 		// required:true
 		GradedAt *time.Time `json:"graded_at"`
-		// Nullable
-		// format:integer
-		// required:true
-		GraderUserID *string `json:"grader_user_id"`
 	}
 }
 

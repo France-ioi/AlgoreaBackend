@@ -1,16 +1,6 @@
 Feature: Get current user's team for item (teamGetByItemID) - robustness
   Background:
-    Given the database has the following table 'users':
-      | id | login  | self_group_id |
-      | 1  | owner  | 11            |
-      | 2  | user   | 12            |
-      | 3  | jane   | 13            |
-      | 4  | john   | 14            |
-      | 5  | jack   | 15            |
-      | 6  | james  | 16            |
-      | 7  | jeremy | 17            |
-      | 9  | jacob  | 19            |
-    And the database has the following table 'groups':
+    Given the database has the following table 'groups':
       | id | type     | team_item_id |
       | 11 | UserSelf | null         |
       | 12 | UserSelf | null         |
@@ -22,6 +12,16 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 19 | UserSelf | null         |
       | 20 | Team     | 100          |
       | 21 | Class    | 100          |
+    And the database has the following table 'users':
+      | login  | group_id |
+      | owner  | 11       |
+      | user   | 12       |
+      | jane   | 13       |
+      | john   | 14       |
+      | jack   | 15       |
+      | james  | 16       |
+      | jeremy | 17       |
+      | jacob  | 19       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | type              |
       | 20              | 12             | invitationSent    |
@@ -33,7 +33,7 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 21              | 19             | joinedByCode      |
 
   Scenario: Invalid item_id
-    Given I am the user with id "9"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
@@ -45,22 +45,22 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
     And the response error message should contain "No team for this item"
     Examples:
       | user_id |
-      | 1       |
-      | 2       |
-      | 3       |
-      | 4       |
-      | 5       |
-      | 6       |
-      | 7       |
+      | 11      |
+      | 12      |
+      | 13      |
+      | 14      |
+      | 15      |
+      | 16      |
+      | 17      |
 
   Scenario: Wrong groups.type
-    Given I am the user with id "9"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
 
   Scenario: No team for item
-    Given I am the user with id "9"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/101"
     Then the response code should be 404
     And the response error message should contain "No team for this item"

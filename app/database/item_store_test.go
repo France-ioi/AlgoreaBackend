@@ -93,7 +93,7 @@ func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_, _, _ = NewDataStore(db).Items().CheckSubmissionRights(12, &User{ID: 1, SelfGroupID: ptrInt64(14)})
+		_, _, _ = NewDataStore(db).Items().CheckSubmissionRights(12, &User{GroupID: 14})
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
@@ -104,7 +104,7 @@ func TestItemStore_HasManagerAccess_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_, _ = NewDataStore(db).Items().HasManagerAccess(&User{ID: 1, SelfGroupID: ptrInt64(14)}, 20)
+		_, _ = NewDataStore(db).Items().HasManagerAccess(&User{GroupID: 14}, 20)
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
@@ -120,7 +120,7 @@ func TestItemStore_HasManagerAccess_HandlesDBErrors(t *testing.T) {
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
-		result, err := store.Items().HasManagerAccess(&User{ID: 1, SelfGroupID: ptrInt64(14)}, 20)
+		result, err := store.Items().HasManagerAccess(&User{GroupID: 14}, 20)
 		assert.False(t, result)
 		return err
 	}))
@@ -141,7 +141,7 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		"HAVING (MIN(groups_items.cached_full_access_since) <= NOW() OR MIN(groups_items.cached_solutions_access_since) <= NOW()) " +
 		"LIMIT 1")).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
-	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{ID: 1, SelfGroupID: ptrInt64(2)}).
+	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).
 		PluckFirst("items.id", &id).Error()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(123), id)

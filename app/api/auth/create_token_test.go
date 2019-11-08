@@ -38,7 +38,7 @@ func TestService_createToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	done := make(chan bool)
 	doRequest := func(timeout bool) {
 		response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
-			"POST", "/auth/token", "", &database.User{ID: 2},
+			"POST", "/auth/token", "", &database.User{GroupID: 2},
 			func(mock sqlmock.Sqlmock) {
 				if !timeout {
 					mock.ExpectQuery("^" +

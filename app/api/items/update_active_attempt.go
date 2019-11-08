@@ -23,7 +23,7 @@ func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) 
 	}
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.ID, itemID, groupsAttemptID))
+		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, itemID, groupsAttemptID))
 		groupAttemptStore := store.GroupAttempts()
 		service.MustNotBeError(
 			groupAttemptStore.ByID(groupsAttemptID).

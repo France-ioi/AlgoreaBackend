@@ -67,7 +67,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			groups.type AS group__type`).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
 		Where("groups_groups_active.type IN ('invitationAccepted', 'requestAccepted', 'direct')").
-		Where("groups_groups_active.child_group_id = ?", user.SelfGroupID)
+		Where("groups_groups_active.child_group_id = ?", user.GroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
