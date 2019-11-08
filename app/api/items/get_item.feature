@@ -46,17 +46,17 @@ Feature: Get item view information
       | 54 | 200            | 210           | 2           | Discovery | as_info                  |
       | 55 | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | order | score | submissions | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        |
-      | 101 | 11       | 200     | 1     | 12341 | 11          | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 12342 | 12          | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
-      | 103 | 11       | 220     | 1     | 12344 | 14          | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 14       | 210     | 1     | 12342 | 12          | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 17       | 200     | 1     | 12341 | 11          | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
-      | 106 | 17       | 210     | 1     | 12342 | 12          | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
-      | 107 | 17       | 220     | 1     | 12344 | 14          | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
-      | 108 | 22       | 200     | 1     | 12341 | 11          | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
-      | 109 | 22       | 210     | 1     | 12342 | 12          | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
-      | 110 | 22       | 220     | 1     | 12344 | 14          | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | id  | group_id | item_id | order | score | submissions | validated | finished | has_unlocked_items | hints_cached | started_at          | finished_at         | validated_at        |
+      | 101 | 11       | 200     | 1     | 12341 | 11          | true      | true     | true               | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 12342 | 12          | true      | true     | true               | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 103 | 11       | 220     | 1     | 12344 | 14          | true      | true     | true               | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 14       | 210     | 1     | 12342 | 12          | true      | true     | true               | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 17       | 200     | 1     | 12341 | 11          | true      | true     | true               | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 106 | 17       | 210     | 1     | 12342 | 12          | true      | true     | true               | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 107 | 17       | 220     | 1     | 12344 | 14          | true      | true     | true               | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | 108 | 22       | 200     | 1     | 12341 | 11          | true      | true     | true               | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 109 | 22       | 210     | 1     | 12342 | 12          | true      | true     | true               | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 110 | 22       | 220     | 1     | 12344 | 14          | true      | true     | true               | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 200     | 101               |
@@ -125,7 +125,7 @@ Feature: Get item view information
         "submissions": 11,
         "validated": true,
         "finished": true,
-        "key_obtained": true,
+        "has_unlocked_items": true,
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
@@ -166,7 +166,7 @@ Feature: Get item view information
             "submissions": 14,
             "validated": true,
             "finished": true,
-            "key_obtained": true,
+            "has_unlocked_items": true,
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:44Z",
             "validated_at": "2019-01-31T09:26:44Z",
@@ -207,7 +207,7 @@ Feature: Get item view information
             "submissions": 12,
             "validated": true,
             "finished": true,
-            "key_obtained": true,
+            "has_unlocked_items": true,
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:42Z",
             "validated_at": "2019-01-31T09:26:42Z",
@@ -259,7 +259,7 @@ Feature: Get item view information
         "submissions": 12,
         "validated": true,
         "finished": true,
-        "key_obtained": true,
+        "has_unlocked_items": true,
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:42Z",
         "validated_at": "2019-01-31T09:26:42Z",
@@ -310,7 +310,7 @@ Feature: Get item view information
         "submissions": 12,
         "validated": true,
         "finished": true,
-        "key_obtained": true,
+        "has_unlocked_items": true,
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:42Z",
         "validated_at": "2019-01-31T09:26:42Z",
@@ -365,7 +365,7 @@ Feature: Get item view information
         "submissions": 11,
         "validated": true,
         "finished": true,
-        "key_obtained": true,
+        "has_unlocked_items": true,
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",
@@ -436,7 +436,7 @@ Feature: Get item view information
             "submissions": 12,
             "validated": true,
             "finished": true,
-            "key_obtained": true,
+            "has_unlocked_items": true,
             "hints_cached": 11,
             "started_at": "2019-01-30T09:26:42Z",
             "validated_at": "2019-01-31T09:26:42Z",
@@ -491,7 +491,7 @@ Feature: Get item view information
         "submissions": 11,
         "validated": true,
         "finished": true,
-        "key_obtained": true,
+        "has_unlocked_items": true,
         "hints_cached": 11,
         "started_at": "2019-01-30T09:26:41Z",
         "validated_at": "2019-01-31T09:26:41Z",

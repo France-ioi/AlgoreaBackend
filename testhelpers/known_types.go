@@ -98,9 +98,9 @@ func (resp *getTaskTokenResponse) UnmarshalJSON(raw []byte) error {
 
 type saveGradeResponse struct {
 	Data struct {
-		TaskToken   token.Task `json:"task_token"`
-		Validated   bool       `json:"validated"`
-		KeyObtained bool       `json:"key_obtained"`
+		TaskToken        token.Task `json:"task_token"`
+		Validated        bool       `json:"validated"`
+		HasUnlockedItems bool       `json:"has_unlocked_items"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -110,9 +110,9 @@ type saveGradeResponse struct {
 
 type saveGradeResponseWrapper struct {
 	Data struct {
-		TaskToken   *string `json:"task_token"`
-		Validated   bool    `json:"validated"`
-		KeyObtained bool    `json:"key_obtained"`
+		TaskToken        *string `json:"task_token"`
+		Validated        bool    `json:"validated"`
+		HasUnlockedItems bool    `json:"has_unlocked_items"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -126,7 +126,7 @@ func (resp *saveGradeResponse) UnmarshalJSON(raw []byte) error {
 	resp.Message = wrapper.Message
 	resp.Success = wrapper.Success
 	resp.Data.Validated = wrapper.Data.Validated
-	resp.Data.KeyObtained = wrapper.Data.KeyObtained
+	resp.Data.HasUnlockedItems = wrapper.Data.HasUnlockedItems
 	if wrapper.Data.TaskToken != nil {
 		resp.Data.TaskToken.PublicKey = resp.PublicKey
 		return (&resp.Data.TaskToken).UnmarshalString(*wrapper.Data.TaskToken)

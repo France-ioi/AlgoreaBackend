@@ -26,7 +26,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
 //  This step is repeated until no records are updated.
-// 3. We insert new permissions_granted for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
+// 3. We insert new permissions_granted for each processed row with has_unlocked_items=1 according to corresponding items.unlocked_item_ids.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -192,7 +192,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 }
 
 func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
-	// Unlock items depending on key_obtained
+	// Unlock items depending on has_unlocked_items
 	const selectUnlocksQuery = `
 		SELECT
 			items.id AS item_id,
@@ -202,7 +202,7 @@ func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupIte
 		JOIN items ON groups_attempts.item_id = items.id
 		JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
 		WHERE groups_attempts.ancestors_computation_state = 'processing' AND
-			groups_attempts.key_obtained AND items.unlocked_item_ids IS NOT NULL`
+			groups_attempts.has_unlocked_items AND items.unlocked_item_ids IS NOT NULL`
 	var err error
 	var unlocksResult []struct {
 		ItemID   int64

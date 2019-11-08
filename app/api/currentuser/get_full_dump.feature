@@ -105,7 +105,7 @@ Feature: Export the current user's data
       },
       "groups_attempts": [
         {
-          "id": "111", "finished": 0, "key_obtained": 0, "validated": 0,
+          "id": "111", "finished": 0, "has_unlocked_items": 0, "validated": 0,
           "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "11", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,
@@ -115,7 +115,7 @@ Feature: Export the current user's data
           "started_at": null, "validated_at": null
         },
         {
-          "id": "112", "finished": 0, "key_obtained": 0, "validated": 0,
+          "id": "112", "finished": 0, "has_unlocked_items": 0, "validated": 0,
           "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "2", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,

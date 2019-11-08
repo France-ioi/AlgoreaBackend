@@ -16,14 +16,14 @@ type GetItemRequest struct {
 }
 
 type navigationItemUserActiveAttempt struct {
-	Score       float32        `json:"score"`
-	Validated   bool           `json:"validated"`
-	Finished    bool           `json:"finished"`
-	KeyObtained bool           `json:"key_obtained"`
-	Submissions int32          `json:"submissions"`
-	StartedAt   *database.Time `json:"started_at"`
-	ValidatedAt *database.Time `json:"validated_at"`
-	FinishedAt  *database.Time `json:"finished_at"`
+	Score            float32        `json:"score"`
+	Validated        bool           `json:"validated"`
+	Finished         bool           `json:"finished"`
+	HasUnlockedItems bool           `json:"has_unlocked_items"`
+	Submissions      int32          `json:"submissions"`
+	StartedAt        *database.Time `json:"started_at"`
+	ValidatedAt      *database.Time `json:"validated_at"`
+	FinishedAt       *database.Time `json:"finished_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -137,14 +137,14 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 	}
 	if rawData.UserAttemptID != nil {
 		result.UserActiveAttempt = &navigationItemUserActiveAttempt{
-			Score:       rawData.UserScore,
-			Validated:   rawData.UserValidated,
-			Finished:    rawData.UserFinished,
-			KeyObtained: rawData.UserKeyObtained,
-			Submissions: rawData.UserSubmissions,
-			StartedAt:   rawData.UserStartedAt,
-			ValidatedAt: rawData.UserValidatedAt,
-			FinishedAt:  rawData.UserFinishedAt,
+			Score:            rawData.UserScore,
+			Validated:        rawData.UserValidated,
+			Finished:         rawData.UserFinished,
+			HasUnlockedItems: rawData.UserHasUnlockedItems,
+			Submissions:      rawData.UserSubmissions,
+			StartedAt:        rawData.UserStartedAt,
+			ValidatedAt:      rawData.UserValidatedAt,
+			FinishedAt:       rawData.UserFinishedAt,
 		}
 	}
 	return result
