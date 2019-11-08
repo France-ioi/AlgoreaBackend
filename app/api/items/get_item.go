@@ -53,7 +53,7 @@ type itemUserActiveAttempt struct {
 	// only if `can_view` >= 'content'
 	Score float32 `json:"score"`
 	// only if `can_view` >= 'content'
-	SubmissionsAttempts int32 `json:"submissions_attempts"`
+	Submissions int32 `json:"submissions"`
 	// only if `can_view` >= 'content'
 	Validated bool `json:"validated"`
 	// only if `can_view` >= 'content'
@@ -270,16 +270,16 @@ type rawItem struct {
 	StringEduComment  *string `sql:"column:edu_comment"`
 
 	// from groups_attempts for the active attempt of the current user
-	UserActiveAttemptID     *int64         `sql:"column:attempt_id"`
-	UserScore               float32        `sql:"column:score"`
-	UserSubmissionsAttempts int32          `sql:"column:submissions_attempts"`
-	UserValidated           bool           `sql:"column:validated"`
-	UserFinished            bool           `sql:"column:finished"`
-	UserKeyObtained         bool           `sql:"column:key_obtained"`
-	UserHintsCached         int32          `sql:"column:hints_cached"`
-	UserStartedAt           *database.Time `sql:"column:started_at"`
-	UserValidatedAt         *database.Time `sql:"column:validated_at"`
-	UserFinishedAt          *database.Time `sql:"column:finished_at"`
+	UserActiveAttemptID *int64         `sql:"column:attempt_id"`
+	UserScore           float32        `sql:"column:score"`
+	UserSubmissions     int32          `sql:"column:submissions"`
+	UserValidated       bool           `sql:"column:validated"`
+	UserFinished        bool           `sql:"column:finished"`
+	UserKeyObtained     bool           `sql:"column:key_obtained"`
+	UserHintsCached     int32          `sql:"column:hints_cached"`
+	UserStartedAt       *database.Time `sql:"column:started_at"`
+	UserValidatedAt     *database.Time `sql:"column:validated_at"`
+	UserFinishedAt      *database.Time `sql:"column:finished_at"`
 
 	// items_items
 	Order                  int32 `sql:"column:child_order"`
@@ -360,7 +360,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 
 			groups_attempts.id AS attempt_id,
 			groups_attempts.score AS score,
-			groups_attempts.submissions_attempts AS submissions_attempts,
+			groups_attempts.submissions AS submissions,
 			groups_attempts.validated AS validated,
 			groups_attempts.finished AS finished,
 			groups_attempts.key_obtained AS key_obtained,
@@ -446,16 +446,16 @@ func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *databa
 		return nil
 	}
 	return &itemUserActiveAttempt{
-		AttemptID:           *rawData.UserActiveAttemptID,
-		Score:               rawData.UserScore,
-		SubmissionsAttempts: rawData.UserSubmissionsAttempts,
-		Validated:           rawData.UserValidated,
-		Finished:            rawData.UserFinished,
-		KeyObtained:         rawData.UserKeyObtained,
-		HintsCached:         rawData.UserHintsCached,
-		StartedAt:           rawData.UserStartedAt,
-		ValidatedAt:         rawData.UserValidatedAt,
-		FinishedAt:          rawData.UserFinishedAt,
+		AttemptID:   *rawData.UserActiveAttemptID,
+		Score:       rawData.UserScore,
+		Submissions: rawData.UserSubmissions,
+		Validated:   rawData.UserValidated,
+		Finished:    rawData.UserFinished,
+		KeyObtained: rawData.UserKeyObtained,
+		HintsCached: rawData.UserHintsCached,
+		StartedAt:   rawData.UserStartedAt,
+		ValidatedAt: rawData.UserValidatedAt,
+		FinishedAt:  rawData.UserFinishedAt,
 	}
 }
 

@@ -95,14 +95,14 @@ Feature: Get item for tree navigation
       | 66 | 230     | 2           | Chapitre C  |
       | 67 | 211     | 2           | Tâche 1     |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | order | score | submissions_attempts | validated | finished | key_obtained | started_at          | finished_at         | validated_at        |
-      | 101 | 11       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 11       | 211     | 1     | 12343 | 13                   | true      | true     | true         | 2019-01-30 09:26:43 | 2019-02-01 09:26:43 | 2019-01-31 09:26:43 |
-      | 103 | 11       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 11       | 230     | 1     | 12345 | 15                   | true      | true     | true         | 2019-01-30 09:26:45 | 2019-02-01 09:26:45 | 2019-01-31 09:26:45 |
-      | 106 | 11       | 231     | 1     | 12346 | 16                   | true      | true     | true         | 2019-01-30 09:26:46 | 2019-02-01 09:26:46 | 2019-01-31 09:26:46 |
-      | 107 | 11       | 232     | 1     | 12347 | 17                   | true      | true     | true         | 2019-01-30 09:26:47 | 2019-02-01 09:26:47 | 2019-01-31 09:26:47 |
+      | id  | group_id | item_id | order | score | submissions | validated | finished | key_obtained | started_at          | finished_at         | validated_at        |
+      | 101 | 11       | 200     | 1     | 12341 | 11          | true      | true     | true         | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 12342 | 12          | true      | true     | true         | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 11       | 211     | 1     | 12343 | 13          | true      | true     | true         | 2019-01-30 09:26:43 | 2019-02-01 09:26:43 | 2019-01-31 09:26:43 |
+      | 103 | 11       | 220     | 1     | 12344 | 14          | true      | true     | true         | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 11       | 230     | 1     | 12345 | 15          | true      | true     | true         | 2019-01-30 09:26:45 | 2019-02-01 09:26:45 | 2019-01-31 09:26:45 |
+      | 106 | 11       | 231     | 1     | 12346 | 16          | true      | true     | true         | 2019-01-30 09:26:46 | 2019-02-01 09:26:46 | 2019-01-31 09:26:46 |
+      | 107 | 11       | 232     | 1     | 12347 | 17          | true      | true     | true         | 2019-01-30 09:26:47 | 2019-02-01 09:26:47 | 2019-01-31 09:26:47 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 200     | 101               |
@@ -131,7 +131,7 @@ Feature: Get item for tree navigation
           "validated": true,
           "finished": true,
           "key_obtained": true,
-          "submissions_attempts": 11,
+          "submissions": 11,
           "started_at": "2019-01-30T09:26:41Z",
           "validated_at": "2019-01-31T09:26:41Z",
           "finished_at": "2019-02-01T09:26:41Z"
@@ -154,7 +154,7 @@ Feature: Get item for tree navigation
               "validated": true,
               "finished": true,
               "key_obtained": true,
-              "submissions_attempts": 15,
+              "submissions": 15,
               "started_at": "2019-01-30T09:26:45Z",
               "validated_at": "2019-01-31T09:26:45Z",
               "finished_at": "2019-02-01T09:26:45Z"
@@ -177,7 +177,7 @@ Feature: Get item for tree navigation
                   "validated": true,
                   "finished": true,
                   "key_obtained": true,
-                  "submissions_attempts": 17,
+                  "submissions": 17,
                   "started_at": "2019-01-30T09:26:47Z",
                   "validated_at": "2019-01-31T09:26:47Z",
                   "finished_at": "2019-02-01T09:26:47Z"
@@ -201,7 +201,7 @@ Feature: Get item for tree navigation
                   "validated": true,
                   "finished": true,
                   "key_obtained": true,
-                  "submissions_attempts": 16,
+                  "submissions": 16,
                   "started_at": "2019-01-30T09:26:46Z",
                   "validated_at": "2019-01-31T09:26:46Z",
                   "finished_at": "2019-02-01T09:26:46Z"
@@ -227,7 +227,7 @@ Feature: Get item for tree navigation
               "validated": true,
               "finished": true,
               "key_obtained": true,
-              "submissions_attempts": 14,
+              "submissions": 14,
               "started_at": "2019-01-30T09:26:44Z",
               "validated_at": "2019-01-31T09:26:44Z",
               "finished_at": "2019-02-01T09:26:44Z"
@@ -251,7 +251,7 @@ Feature: Get item for tree navigation
               "validated": true,
               "finished": true,
               "key_obtained": true,
-              "submissions_attempts": 12,
+              "submissions": 12,
               "started_at": "2019-01-30T09:26:42Z",
               "validated_at": "2019-01-31T09:26:42Z",
               "finished_at": "2019-02-01T09:26:42Z"
@@ -274,7 +274,7 @@ Feature: Get item for tree navigation
                   "validated": true,
                   "finished": true,
                   "key_obtained": true,
-                  "submissions_attempts": 13,
+                  "submissions": 13,
                   "started_at": "2019-01-30T09:26:43Z",
                   "validated_at": "2019-01-31T09:26:43Z",
                   "finished_at": "2019-02-01T09:26:43Z"
@@ -308,7 +308,7 @@ Feature: Get item for tree navigation
           "validated": true,
           "finished": true,
           "key_obtained": true,
-          "submissions_attempts": 17,
+          "submissions": 17,
           "started_at": "2019-01-30T09:26:47Z",
           "validated_at": "2019-01-31T09:26:47Z",
           "finished_at": "2019-02-01T09:26:47Z"
@@ -338,7 +338,7 @@ Feature: Get item for tree navigation
           "validated": true,
           "finished": true,
           "key_obtained": true,
-          "submissions_attempts": 15,
+          "submissions": 15,
           "started_at": "2019-01-30T09:26:45Z",
           "validated_at": "2019-01-31T09:26:45Z",
           "finished_at": "2019-02-01T09:26:45Z"
@@ -361,7 +361,7 @@ Feature: Get item for tree navigation
               "validated": true,
               "finished": true,
               "key_obtained": true,
-              "submissions_attempts": 17,
+              "submissions": 17,
               "started_at": "2019-01-30T09:26:47Z",
               "validated_at": "2019-01-31T09:26:47Z",
               "finished_at": "2019-02-01T09:26:47Z"
@@ -385,7 +385,7 @@ Feature: Get item for tree navigation
               "validated": true,
               "finished": true,
               "key_obtained": true,
-              "submissions_attempts": 16,
+              "submissions": 16,
               "started_at": "2019-01-30T09:26:46Z",
               "validated_at": "2019-01-31T09:26:46Z",
               "finished_at": "2019-02-01T09:26:46Z"

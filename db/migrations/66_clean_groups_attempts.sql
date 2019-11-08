@@ -6,7 +6,9 @@ ALTER TABLE `groups_attempts`
     DROP COLUMN `ranked`,
     DROP COLUMN `corrections_read`,
     DROP COLUMN `thread_started_at`,
-    DROP COLUMN `all_lang_prog`;
+    DROP COLUMN `all_lang_prog`,
+
+    RENAME COLUMN `submissions_attempts` TO `submissions`;
 
 
 -- +migrate Down
@@ -17,4 +19,6 @@ ALTER TABLE `groups_attempts`
   ADD COLUMN `precision` int(11) NOT NULL DEFAULT '0' COMMENT 'Precision (based on a formula to be defined) of the user, when working on this item and its descendants.' AFTER `corrections_read`,
   ADD COLUMN `autonomy` int(11) NOT NULL DEFAULT '0' COMMENT 'Autonomy (based on a formula to be defined) of the user, when working on this item and its descendants (how much help / hints he used)' AFTER `precision`,
   ADD COLUMN `thread_started_at` datetime DEFAULT NULL COMMENT 'When the discussion thread was started by this group on the forum' AFTER `latest_activity_at`,
-  ADD COLUMN `all_lang_prog` varchar(200) DEFAULT NULL COMMENT 'List of programming languages used' AFTER `latest_hint_at`;
+  ADD COLUMN `all_lang_prog` varchar(200) DEFAULT NULL COMMENT 'List of programming languages used' AFTER `latest_hint_at`,
+
+  RENAME COLUMN `submissions` TO `submissions_attempts`;
