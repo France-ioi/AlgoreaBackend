@@ -36,9 +36,8 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 	recoverPanics(&err)
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-	err = s.Items().Visible(user).
+	err = s.Items().WhereUserHasViewPermissionOnItems(user, "content").
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
-		Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content")).
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
 			usersGroupsQuery.SubQuery(), user.GroupID).
 		PluckFirst("items.id", &itemID).Error()
@@ -58,8 +57,7 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least partial access to the item
-	itemsQuery := s.Items().Visible(user).Where("items.id = ?", itemID).
-		Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content"))
+	itemsQuery := s.Items().ByID(itemID).WhereUserHasViewPermissionOnItems(user, "content")
 
 	return s.
 		// the user should have at least partial access to the users_answers.item_id

@@ -40,10 +40,11 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 			"SELECT * FROM groups_ancestors_active "+
 			"WHERE groups_ancestors_active.child_group_id = ? "+
 			") AS ancestors "+
-			"ON ancestors.ancestor_group_id = permissions_generated.group_id GROUP BY permissions_generated.item_id "+
-			"HAVING (can_view_generated_value > ?)) "+
+			"ON ancestors.ancestor_group_id = permissions_generated.group_id "+
+			"WHERE (can_view_generated_value >= ?) "+
+			"GROUP BY permissions_generated.item_id) "+
 			"as visible ON visible.item_id = items.id")+"$").
-		WithArgs(2, database.NewDataStore(db).PermissionsGranted().ViewIndexByKind("none")).
+		WithArgs(2, database.NewDataStore(db).PermissionsGranted().ViewIndexByKind("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}

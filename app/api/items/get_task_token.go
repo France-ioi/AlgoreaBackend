@@ -93,8 +93,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		URL               string
 		SupportedLangProg *string
 	}
-	err = srv.Store.Items().Visible(user).Where("id = ?", itemID).
-		Where("can_view_generated_value >= ?", srv.Store.PermissionsGranted().ViewIndexByKind("content")).
+	err = srv.Store.Items().ByID(itemID).WhereUserHasViewPermissionOnItems(user, "content").
 		Where("items.type IN('Task','Course')").
 		Select(`
 			can_view_generated_value = ? AS access_solutions,

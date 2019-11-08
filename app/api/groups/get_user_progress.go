@@ -117,7 +117,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemsVisibleToUserSubQuery := srv.Store.PermissionsGenerated().AccessRightsForItemsVisibleToUser(user).SubQuery()
+	itemsVisibleToUserSubQuery := srv.Store.PermissionsGenerated().VisibleToUser(user).SubQuery()
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.

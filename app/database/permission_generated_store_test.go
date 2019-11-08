@@ -21,13 +21,13 @@ func TestPermissionGeneratedStore_AccessRightsForItemsVisibleToUser(t *testing.T
 			"FROM `permissions_generated` JOIN "+
 			"( SELECT * FROM groups_ancestors_active "+
 			"WHERE groups_ancestors_active.child_group_id = ? ) AS ancestors "+
-			"ON ancestors.ancestor_group_id = permissions_generated.group_id GROUP BY permissions_generated.item_id "+
-			"HAVING (can_view_generated_value > ?)")+"$").
-		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByKind("none")).
+			"ON ancestors.ancestor_group_id = permissions_generated.group_id "+
+			"WHERE (can_view_generated_value >= ?) GROUP BY permissions_generated.item_id")+"$").
+		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByKind("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := NewDataStore(db).PermissionsGenerated().AccessRightsForItemsVisibleToUser(mockUser).Scan(&result).Error()
+	err := NewDataStore(db).PermissionsGenerated().VisibleToUser(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
