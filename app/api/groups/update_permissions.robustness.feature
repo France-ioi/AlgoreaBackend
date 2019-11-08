@@ -55,12 +55,12 @@ Feature: Change item access rights for a group - robustness
       | 25       | 101     | info               | none                     | 0                  |
       | 31       | 102     | none               | content_with_descendants | 0                  |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view           | is_owner | giver_group_id |
-      | 21       | 100     | none     | none                     | 1        | 23             |
-      | 21       | 102     | none     | solution                 | 1        | 23             |
-      | 25       | 100     | content  | none                     | 0        | 23             |
-      | 25       | 101     | info     | none                     | 0        | 23             |
-      | 31       | 102     | none     | content_with_descendants | 0        | 31             |
+      | group_id | item_id | can_view | can_grant_view           | is_owner | giver_group_id | latest_update_on    |
+      | 21       | 100     | none     | none                     | 1        | 23             | 2019-05-30 11:00:00 |
+      | 21       | 102     | none     | solution                 | 1        | 23             | 2019-05-30 11:00:00 |
+      | 25       | 100     | content  | none                     | 0        | 23             | 2019-05-30 11:00:00 |
+      | 25       | 101     | info     | none                     | 0        | 23             | 2019-05-30 11:00:00 |
+      | 31       | 102     | none     | content_with_descendants | 0        | 31             | 2019-05-30 11:00:00 |
 
   Scenario: Invalid group_id
     Given I am the user with id "21"

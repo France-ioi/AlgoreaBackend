@@ -144,6 +144,8 @@ func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.Data
 }
 
 func savePermissionsIntoDB(groupID, itemID, giverGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
+	dbMap["latest_update_on"] = database.Now()
+
 	columnsToUpdate := make([]string, 0, len(dbMap))
 	for key := range dbMap {
 		columnsToUpdate = append(columnsToUpdate, key)
