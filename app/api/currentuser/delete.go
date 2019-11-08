@@ -21,7 +21,7 @@ import (
 //                The data to be deleted:
 //
 //                1. [`users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
-//                   having `user_group_id` = `users.group_id`;
+//                   having `user_id` = `users.group_id`;
 //                2. [`groups_items`, `groups_attempts`, `groups_login_prefixes`]
 //                   having `group_id` = `users.group_id` or `group_id` = `users.owned_group_id`;
 //                3. `groups_items_propagate` having the same `id`s as the rows removed from `groups_items`;
@@ -63,7 +63,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 
 	var loginID int64
 	if !user.IsTempUser {
-		service.MustNotBeError(srv.Store.Users().Where("group_id = ?", user.GroupID).
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).
 			PluckFirst("login_id", &loginID).Error())
 	}
 	service.MustNotBeError(srv.Store.Users().DeleteWithTraps(user))

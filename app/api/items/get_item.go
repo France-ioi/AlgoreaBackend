@@ -403,7 +403,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			access_rights.full_access, access_rights.partial_access, access_rights.grayed_access, access_rights.access_solutions
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_group_id=?", user.GroupID).
+		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND (full_access>0 OR partial_access>0 OR grayed_access>0)",
 			accessRights.SubQuery()).

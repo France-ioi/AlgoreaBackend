@@ -59,7 +59,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	writeJSONObjectElement("current_user", w, func(writer io.Writer) {
 		columns := getColumnsList(srv.Store, databaseName, "users", nil)
 		var userData []map[string]interface{}
-		service.MustNotBeError(srv.Store.Users().Where("group_id = ?", user.GroupID).Select(columns).
+		service.MustNotBeError(srv.Store.Users().ByID(user.GroupID).Select(columns).
 			ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(w, userData[0])
 	})
@@ -68,7 +68,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeComma(w)
 		writeJSONObjectArrayElement("sessions", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "sessions", []string{"access_token"})
-			service.MustNotBeError(srv.Store.Sessions().Where("user_group_id = ?", user.GroupID).
+			service.MustNotBeError(srv.Store.Sessions().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS access_token").ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
@@ -76,7 +76,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeJSONObjectElement("refresh_token", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "refresh_tokens", []string{"refresh_token"})
 			var refreshTokens []map[string]interface{}
-			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_group_id = ?", user.GroupID).
+			service.MustNotBeError(srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS refresh_token").ScanIntoSliceOfMaps(&refreshTokens).Error())
 			if len(refreshTokens) > 0 {
 				writeValue(w, refreshTokens[0])
@@ -106,14 +106,14 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.UserAnswers().Where("user_group_id = ?", user.GroupID).
+			service.MustNotBeError(srv.Store.UserAnswers().Where("user_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)
 		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
 			columns := getColumnsList(srv.Store, databaseName, "users_items", nil)
-			service.MustNotBeError(srv.Store.UserItems().Where("user_group_id = ?", user.GroupID).
+			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.GroupID).
 				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 

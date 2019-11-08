@@ -13,31 +13,31 @@ Feature: Get requests for group_id - robustness
       | 78 | 21                | 21             | 1       |
 
   Scenario: User is not an admin of the group
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/groups/13/requests"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: User doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/groups/13/requests"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Group id is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/abc/requests"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: rejections_within_weeks is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?rejections_within_weeks=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for rejections_within_weeks (should be int64)"
 
   Scenario: sort is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""

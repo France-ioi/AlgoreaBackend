@@ -17,17 +17,17 @@ import (
 // description: Return answers (i.e., history of submissions and current answer)
 //   for a given item and user, or from a given attempt.
 //
-//   * One of (`user_group_id`, `item_id`) pair or `attempt_id` is required.
+//   * One of (`user_id`, `item_id`) pair or `attempt_id` is required.
 //
 //   * The user should have at least partial access to the item.
 //
-//   * If `item_id` and `user_group_id` are given, the authenticated user should have `group_id` equal to the input `user_group_id`
-//   or be an owner of a group containing the input `user_group_id`.
+//   * If `item_id` and `user_id` are given, the authenticated user should have `group_id` equal to the input `user_id`
+//   or be an owner of a group containing the input `user_id`.
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
 // parameters:
-// - name: user_group_id
+// - name: user_id
 //   in: query
 //   type: integer
 // - name: item_id
@@ -86,13 +86,13 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 		        users_answers.submitted_at, users_answers.score, users_answers.validated,
 		        users.login, users.first_name, users.last_name`)
 
-	userGroupID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_group_id")
+	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
 
 	if userIDError != nil || itemIDError != nil { // attempt_id
 		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
 		if attemptIDError != nil {
-			return service.ErrInvalidRequest(fmt.Errorf("either user_group_id & item_id or attempt_id must be present"))
+			return service.ErrInvalidRequest(fmt.Errorf("either user_id & item_id or attempt_id must be present"))
 		}
 
 		if result := srv.checkAccessRightsForGetAnswersByAttemptID(attemptID, user); result != service.NoError {
@@ -101,12 +101,12 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 		// we should create an index on `users_answers`.`attempt_id` for this query
 		dataQuery = dataQuery.Where("attempt_id = ?", attemptID)
-	} else { // user_group_id + item_id
-		if result := srv.checkAccessRightsForGetAnswersByUserGroupIDAndItemID(userGroupID, itemID, user); result != service.NoError {
+	} else { // user_id + item_id
+		if result := srv.checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID, user); result != service.NoError {
 			return result
 		}
 
-		dataQuery = dataQuery.Where("item_id = ? AND user_group_id = ?", itemID, userGroupID)
+		dataQuery = dataQuery.Where("item_id = ? AND user_id = ?", itemID, userID)
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
@@ -225,11 +225,11 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	return service.NoError
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByUserGroupIDAndItemID(userGroupID, itemID int64, user *database.User) service.APIError {
-	if userGroupID != user.GroupID {
+func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
+	if userID != user.GroupID {
 		count := 0
 		err := srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("child_group_id=?", userGroupID).
+			Where("child_group_id=?", userID).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

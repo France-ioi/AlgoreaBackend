@@ -73,7 +73,7 @@ Feature: Get group by groupID (groupView)
       | 82                | 82             | 1       |
 
   Scenario: The user is an owner of the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -98,7 +98,7 @@ Feature: Get group by groupID (groupView)
     """
 
   Scenario: The user is a descendant of the group
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/groups/13"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -120,7 +120,7 @@ Feature: Get group by groupID (groupView)
     """
 
   Scenario Outline: The user is a member of the group
-    Given I am the user with group_id "<user_group_id>"
+    Given I am the user with id "<user_id>"
     When I send a GET request to "/groups/13"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -141,14 +141,14 @@ Feature: Get group by groupID (groupView)
     }
     """
   Examples:
-    | user_group_id |
-    | 51            |
-    | 61            |
-    | 71            |
-    | 81            |
+    | user_id |
+    | 51      |
+    | 61      |
+    | 71      |
+    | 81      |
 
   Scenario: The group has free_access = 1
-    Given I am the user with group_id "41"
+    Given I am the user with id "41"
     When I send a GET request to "/groups/15"
     Then the response code should be 200
     And the response body should be, in JSON:

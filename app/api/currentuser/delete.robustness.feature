@@ -51,7 +51,7 @@ Feature: Delete the current user - robustness
       """
 
   Scenario: User cannot delete himself right now
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/current-user"
     Then the response code should be 403
     And the response error message should contain "You cannot delete yourself right now"
@@ -65,7 +65,7 @@ Feature: Delete the current user - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Login module fails
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the DB time now is "2019-08-10 00:00:00"
     And the login module "unlink_client" endpoint for user id "1234567" returns 500 with encoded body:
       """

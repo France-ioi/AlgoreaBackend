@@ -18,12 +18,12 @@ import (
 
 type userIDsInProgressMap sync.Map
 
-func (m *userIDsInProgressMap) withLock(userGroupID int64, r *http.Request, f func() error) error {
+func (m *userIDsInProgressMap) withLock(userID int64, r *http.Request, f func() error) error {
 	userMutex := make(chan bool)
 	defer close(userMutex)
-	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userGroupID, userMutex)
+	userMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(userID, userMutex)
 	// retry storing our mutex into the map
-	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userGroupID, userMutex) {
+	for ; loaded; userMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(userID, userMutex) {
 		select { // like mutex.Lock(), but with cancel/deadline
 		case <-userMutexInterface.(chan bool): // it is much better than <-time.After(...)
 		case <-r.Context().Done():
@@ -31,7 +31,7 @@ func (m *userIDsInProgressMap) withLock(userGroupID int64, r *http.Request, f fu
 			return r.Context().Err()
 		}
 	}
-	defer (*sync.Map)(m).Delete(userGroupID)
+	defer (*sync.Map)(m).Delete(userID)
 
 	return f()
 }
@@ -66,7 +66,7 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 			sessionStore := store.Sessions()
 			// delete all the user's access tokens keeping the input token only
-			service.MustNotBeError(sessionStore.Delete("user_group_id = ? AND access_token != ?",
+			service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 				user.GroupID, oldAccessToken).Error())
 			var err error
 			newToken, expiresIn, err = auth.CreateNewTempSession(sessionStore, user.GroupID)
@@ -93,7 +93,7 @@ func (srv *Service) createToken(w http.ResponseWriter, r *http.Request) service.
 func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldAccessToken string) (newToken string, expiresIn int32) {
 	var refreshToken string
 	service.MustNotBeError(
-		srv.Store.RefreshTokens().Where("user_group_id = ?", user.GroupID).
+		srv.Store.RefreshTokens().Where("user_id = ?", user.GroupID).
 			PluckFirst("refresh_token", &refreshToken).Error())
 	// oldToken is invalid since its AccessToken is empty, so the lib will refresh it
 	oldToken := &oauth2.Token{RefreshToken: refreshToken}
@@ -103,12 +103,12 @@ func (srv *Service) refreshTokens(ctx context.Context, user *database.User, oldA
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		sessionStore := store.Sessions()
 		// delete all the user's access tokens keeping the input token only
-		service.MustNotBeError(sessionStore.Delete("user_group_id = ? AND access_token != ?",
+		service.MustNotBeError(sessionStore.Delete("user_id = ? AND access_token != ?",
 			user.GroupID, oldAccessToken).Error())
 		// insert the new access token
 		service.MustNotBeError(sessionStore.InsertNewOAuth(user.GroupID, token))
 		if refreshToken != token.RefreshToken {
-			service.MustNotBeError(store.RefreshTokens().Where("user_group_id = ?", user.GroupID).
+			service.MustNotBeError(store.RefreshTokens().Where("user_id = ?", user.GroupID).
 				UpdateColumn("refresh_token", token.RefreshToken).Error())
 		}
 		newToken = token.AccessToken

@@ -20,7 +20,7 @@ Feature: Submit a new answer
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0     |
 
   Scenario: User is able to submit a new answer
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And time is frozen
     And the following token "userTaskToken" signed by the app is distributed:
       """
@@ -63,14 +63,14 @@ Feature: Submit a new answer
       }
       """
     And the table "users_answers" should be:
-      | user_group_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101           | 50      | 100        | Submission | print 1 | 1                                                   |
+      | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101     | 50      | 100        | Submission | print 1 | 1                                                   |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And time is frozen
     And the following token "userTaskToken" signed by the app is distributed:
       """
@@ -117,8 +117,8 @@ Feature: Submit a new answer
       }
       """
     And the table "users_answers" should be:
-      | user_group_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101           | 50      | 100        | Submission | print(2) | 1                                                   |
+      | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101     | 50      | 100        | Submission | print(2) | 1                                                   |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |

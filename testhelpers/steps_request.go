@@ -33,7 +33,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	defer testServer.Close()
 
 	var headers map[string][]string
-	if ctx.userGroupID != 0 {
+	if ctx.userID != 0 {
 		headers = make(map[string][]string, len(ctx.requestHeaders)+1)
 		for key := range ctx.requestHeaders {
 			headers[key] = make([]string, len(ctx.requestHeaders[key]))

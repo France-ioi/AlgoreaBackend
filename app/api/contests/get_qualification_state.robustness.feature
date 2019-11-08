@@ -54,25 +54,25 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/abc/groups/31/qualification-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: Wrong group_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/50/groups/abc/qualification-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: The item is not visible to the current user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is visible, but it doesn't exist
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -81,7 +81,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id |
       | 50 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -90,7 +90,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 50 | 00:00:00 | false        |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -99,7 +99,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/10/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -108,7 +108,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -117,7 +117,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id | duration | has_attempts |
       | 60 | 00:00:00 | true         |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

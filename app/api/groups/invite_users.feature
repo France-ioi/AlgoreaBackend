@@ -35,7 +35,7 @@ Feature: Invite users
       | 22              | 13             | direct | null            |
 
   Scenario: Successfully invite users
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'groups_ancestors' has also the following rows:
       | ancestor_group_id | child_group_id | is_self |
       | 444               | 444            | 1       |
@@ -60,11 +60,11 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type           | role   | inviting_user_group_id | child_order = 0 | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 13              | 21             | invitationSent | member | 21                     | 0               | 1                                                                                          |
-      | 13              | 101            | invitationSent | member | 21                     | 0               | 1                                                                                          |
-      | 13              | 102            | invitationSent | member | 21                     | 0               | 1                                                                                          |
-      | 22              | 13             | direct         | member | null                   | 1               | 0                                                                                          |
+      | parent_group_id | child_group_id | type           | role   | inviting_user_id | child_order = 0 | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
+      | 13              | 21             | invitationSent | member | 21               | 0               | 1                                                                                          |
+      | 13              | 101            | invitationSent | member | 21               | 0               | 1                                                                                          |
+      | 13              | 102            | invitationSent | member | 21               | 0               | 1                                                                                          |
+      | 22              | 13             | direct         | member | null             | 1               | 0                                                                                          |
     And the table "groups_groups" should be:
       | child_order |
       | 0           |
@@ -74,7 +74,7 @@ Feature: Invite users
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id | type               | type_changed_at |
       | 444             | 21             | joinedByCode       | null            |

@@ -16,18 +16,18 @@ Feature: Update the 'current' answer
       | group_id | item_id | cached_partial_access_since |
       | 101      | 50      | 2017-05-29 06:38:38         |
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | attempt_id | type       | submitted_at        |
-      | 100 | 101           | 50      | 200        | Submission | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | attempt_id | type       | submitted_at        |
+      | 100 | 101     | 50      | 200        | Submission | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 100 | 101      | 50      | 0     |
       | 200 | 101      | 50      | 0     |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id = request.attempt_id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 200               |
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -45,18 +45,18 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 200               |
     And the table "users_answers" should be:
-      | user_group_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101           | 50      | 200        | Submission | null    | null       | 0                                                   |
-      | 101           | 50      | 200        | Current    | print 1 | some state | 1                                                   |
+      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101     | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 101     | 50      | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id != request.attempt_id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -75,18 +75,18 @@ Feature: Update the 'current' answer
       """
     And the table "users_items" should stay unchanged
     And the table "users_answers" should be:
-      | user_group_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101           | 50      | 200        | Submission | null    | null       | 0                                                   |
-      | 101           | 50      | 200        | Current    | print 1 | some state | 1                                                   |
+      | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101     | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 101     | 50      | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to update the 'current' answer
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | attempt_id | type    | submitted_at        |
-      | 101 | 101           | 50      | 200        | Current | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | attempt_id | type    | submitted_at        |
+      | 101 | 101     | 50      | 200        | Current | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 200               |
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -104,9 +104,9 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should be:
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 200               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 200               |
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 100 | 101           | 50      | 200        | Submission | null    | null       | 0                                                   |
-      | 101 | 101           | 50      | 200        | Current    | print 1 | some state | 0                                                   |
+      | id  | user_id | item_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 100 | 101     | 50      | 200        | Submission | null    | null       | 0                                                   |
+      | 101 | 101     | 50      | 200        | Current    | print 1 | some state | 0                                                   |

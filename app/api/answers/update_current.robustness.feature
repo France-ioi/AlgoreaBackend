@@ -16,14 +16,14 @@ Feature: Update the 'current' answer
       | group_id | item_id | cached_partial_access_since |
       | 101      | 50      | 2017-05-29 06:38:38         |
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | attempt_id | submitted_at        |
-      | 100 | 101           | 50      | 200        | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | attempt_id | submitted_at        |
+      | 100 | 101     | 50      | 200        | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
 
   Scenario: Missing attempt_id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -47,7 +47,7 @@ Feature: Update the 'current' answer
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing answer
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -71,7 +71,7 @@ Feature: Update the 'current' answer
     And the table "users_answers" should stay unchanged
 
   Scenario: Missing state
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -95,7 +95,7 @@ Feature: Update the 'current' answer
     And the table "users_answers" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/answers/current" with the following body:
       """
       {
@@ -110,7 +110,7 @@ Feature: Update the 'current' answer
     And the table "users_answers" should stay unchanged
 
   Scenario: No access
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a PUT request to "/answers/current" with the following body:
       """
       {

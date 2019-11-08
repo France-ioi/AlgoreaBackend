@@ -118,15 +118,15 @@ type NewItemRequest struct {
 }
 
 // groupItemData creates a map containing the db data to be inserted into the groups_items table
-func (in *NewItemRequest) groupItemData(groupItemID, userGroupID, groupID, itemID int64) map[string]interface{} {
+func (in *NewItemRequest) groupItemData(groupItemID, userID, groupID, itemID int64) map[string]interface{} {
 	return map[string]interface{}{
-		"id":                    groupItemID,
-		"item_id":               itemID,
-		"group_id":              groupID,
-		"creator_user_group_id": userGroupID,
-		"full_access_since":     database.Now(),
-		"owner_access":          true,
-		"manager_access":        true,
+		"id":                groupItemID,
+		"item_id":           itemID,
+		"group_id":          groupID,
+		"creator_id":        userID,
+		"full_access_since": database.Now(),
+		"owner_access":      true,
+		"manager_access":    true,
 		// as the owner gets full access, there is no need to request parents' access to get the actual access level
 		"cached_full_access_since": database.Now(),
 		"cached_full_access":       true,
@@ -162,7 +162,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
 //     * gives full access to the item for the current user (creates a new `groups_items` row with: `item_id` = `items.id`,
-//       `group_id` = `group_id` of the current user, `creator_user_group_id` = `users.group_id` of the current user,
+//       `group_id` = `group_id` of the current user, `creator_id` = `users.group_id` of the current user,
 //       `full_access_since` = now(), `cached_full_access_since` = now(), `cached_full_access` = 1, `owner_access` = 1,
 //       `manager_access` = 1).
 //

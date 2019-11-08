@@ -19,7 +19,7 @@ Feature: Discard the code of the given group
       | 78 | 21                | 21             | 1       |
 
   Scenario: User is an admin of the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/code"
     Then the response code should be 200
     And the response body should be, in JSON:

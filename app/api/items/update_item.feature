@@ -37,7 +37,7 @@ Background:
     | 3  |
 
 Scenario: Valid
-  Given I am the user with group_id "11"
+  Given I am the user with id "11"
   When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -58,7 +58,7 @@ Scenario: Valid
     | 11       | 60      | false          | false                 | true         |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     And the database has the following table 'groups':
       | id    |
       | 12345 |
@@ -131,7 +131,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty full_screen
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -148,7 +148,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid without any fields
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -162,7 +162,7 @@ Scenario: Valid
     And the table "groups_items" should stay unchanged
 
   Scenario: Valid with empty children array
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {

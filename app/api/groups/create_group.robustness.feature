@@ -35,7 +35,7 @@ Feature: Create a group (groupCreate) - robustness
       | 21       | 12      | null                     | null                        | 2019-07-16 21:28:47        |
 
   Scenario: No name
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"type": "Class"}
@@ -55,7 +55,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Empty name
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "", "type": "Class"}
@@ -75,7 +75,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: No type
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name"}
@@ -95,7 +95,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario Outline: Empty or wrong type
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "<type>"}
@@ -125,7 +125,7 @@ Feature: Create a group (groupCreate) - robustness
     | RootTemp  |
 
   Scenario: Zero item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": "0"}
@@ -145,7 +145,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: item_id set for non-team group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class", "item_id": "1"}
@@ -157,7 +157,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Temporary user
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -169,7 +169,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User with empty owned group
-    Given I am the user with group_id "61"
+    Given I am the user with id "61"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Class"}
@@ -181,7 +181,7 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: The item is not visible
-    Given I am the user with group_id "51"
+    Given I am the user with id "51"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": 10}

@@ -21,7 +21,7 @@ Feature: User sends a request to join a group
       | 7  | 14              | 21             | requestSent | 2017-02-21 06:38:38 |
 
   Scenario: Successfully send a request
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/11"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -39,7 +39,7 @@ Feature: User sends a request to join a group
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Try to recreate a request that already exists
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -54,7 +54,7 @@ Feature: User sends a request to join a group
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Automatically accepts the request if the user owns the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'groups_groups' has also the following row:
       | id | parent_group_id | child_group_id | type   | type_changed_at     |
       | 8  | 22              | 11             | direct | 2017-02-21 06:38:38 |

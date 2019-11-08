@@ -86,7 +86,7 @@ func (conn *DB) inTransaction(txFunc func(*DB) error) (err error) {
 }
 
 const transactionRetriesLimit = 30
-const transactionDelayBetweenRetries = 100 * time.Millisecond
+const transactionDelayBetweenRetries = 1000 * time.Millisecond
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64) (err error) {
 	if count > transactionRetriesLimit {

@@ -5,19 +5,19 @@ Feature: Get group invitations for the current user - robustness
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
 
   Scenario: User doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/current-user/group-invitations"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: within_weeks is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-invitations?within_weeks=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for within_weeks (should be int64)"
 
   Scenario: sort is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/group-invitations?sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""

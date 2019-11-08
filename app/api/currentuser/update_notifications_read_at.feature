@@ -6,7 +6,7 @@ Feature: Set users.notifications_read_at to NOW() for the current user
       | 2        | admin | 2017-02-21 06:38:38   |
 
   Scenario: Successfully send a request
-    Given I am the user with group_id "1"
+    Given I am the user with id "1"
     When I send a PUT request to "/current-user/notifications-read-at"
     Then the response should be "updated"
     And the table "users" should stay unchanged but the row with group_id "1"

@@ -7,9 +7,9 @@ type UserItemStore struct {
 
 // SetActiveAttempt inserts a new userID-itemID pair with the given active_attempt_id
 // into `users_items` or updates active_attempt_id for existing one.
-func (s *UserItemStore) SetActiveAttempt(userGroupID, itemID, groupAttemptID int64) error {
+func (s *UserItemStore) SetActiveAttempt(userID, itemID, groupAttemptID int64) error {
 	return s.db.Exec(`
-		INSERT INTO users_items (user_group_id, item_id, active_attempt_id)
+		INSERT INTO users_items (user_id, item_id, active_attempt_id)
 		VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE active_attempt_id = VALUES(active_attempt_id)`,
-		userGroupID, itemID, groupAttemptID).Error
+		userID, itemID, groupAttemptID).Error
 }

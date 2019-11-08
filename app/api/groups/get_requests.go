@@ -165,7 +165,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			inviting_user.login AS inviting_user__login,
 			inviting_user.first_name AS inviting_user__first_name,
 			inviting_user.last_name AS inviting_user__last_name`).
-		Joins("LEFT JOIN users AS inviting_user ON inviting_user.group_id = groups_groups.inviting_user_group_id").
+		Joins("LEFT JOIN users AS inviting_user ON inviting_user.group_id = groups_groups.inviting_user_id").
 		Joins("LEFT JOIN users AS joining_user ON joining_user.group_id = groups_groups.child_group_id").
 		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
 		Where("groups_groups.parent_group_id = ?", groupID)

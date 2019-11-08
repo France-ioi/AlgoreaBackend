@@ -33,22 +33,22 @@ Feature: Save grading result
       | 101      | 60      | 2017-05-29 06:38:38         |
       | 101      | 70      | 2017-05-29 06:38:38         |
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | submitted_at        |
-      | 123 | 101           | 50      | 2017-05-29 06:38:38 |
-      | 124 | 101           | 60      | 2017-05-29 06:38:38 |
-      | 125 | 101           | 70      | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | submitted_at        |
+      | 123 | 101     | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101     | 60      | 2017-05-29 06:38:38 |
+      | 125 | 101     | 70      | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
-      | 101           | 60      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
+      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -100,29 +100,29 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101           | 50      | 100   | 1         | 1                                                |
-      | 124 | 101           | 60      | null  | null      | null                                             |
-      | 125 | 101           | 70      | null  | null      | null                                             |
+      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 50      | 100   | 1         | 1                                                |
+      | 124 | 101     | 60      | null  | null      | null                                             |
+      | 125 | 101     | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_group_id | item_id |
-      | 101           | 50      |
-      | 101           | 60      |
+      | user_id | item_id |
+      | 101     | 50      |
+      | 101     | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 100   | 1           | 1         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
       | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
 
   Scenario: User is able to save the grading result with a low score and idAttempt
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
-      | 101           | 60      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
+      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -173,29 +173,29 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101           | 50      | 99    | 0         | 1                                                |
-      | 124 | 101           | 60      | null  | null      | null                                             |
-      | 125 | 101           | 70      | null  | null      | null                                             |
+      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 50      | 99    | 0         | 1                                                |
+      | 124 | 101     | 60      | null  | null      | null                                             |
+      | 125 | 101     | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_group_id | item_id |
-      | 101           | 50      |
-      | 101           | 60      |
+      | user_id | item_id |
+      | 101     | 50      |
+      | 101     | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 99    | 1           | 0         | 0            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
       | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | best_answer_at      | order |
       | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
-      | 101           | 60      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
+      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -246,29 +246,29 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101           | 50      | null  | null      | null                                             |
-      | 124 | 101           | 60      | 99    | 0         | 1                                                |
-      | 125 | 101           | 70      | null  | null      | null                                             |
+      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 50      | null  | null      | null                                             |
+      | 124 | 101     | 60      | 99    | 0         | 1                                                |
+      | 125 | 101     | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_group_id | item_id |
-      | 101           | 50      |
-      | 101           | 60      |
+      | user_id | item_id |
+      | 101     | 50      |
+      | 101     | 60      |
     And the table "groups_attempts" should be:
       | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
       | 100 | 99    | 1           | 0         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
       | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | 0                                                     | null                                                |
 
   Scenario: Should keep previous score if it is greater
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score | best_answer_at      | order |
       | 100 | 101      | 50      | 20    | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
-      | 101           | 60      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
+      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -319,26 +319,26 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101           | 50      | null  | null      | null                                             |
-      | 124 | 101           | 60      | 5     | 0         | 1                                                |
-      | 125 | 101           | 70      | null  | null      | null                                             |
+      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 50      | null  | null      | null                                             |
+      | 124 | 101     | 60      | 5     | 0         | 1                                                |
+      | 125 | 101     | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_group_id | item_id |
-      | 101           | 50      |
-      | 101           | 60      |
+      | user_id | item_id |
+      | 101     | 50      |
+      | 101     | 60      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should keep previous sValidationDate if it is earlier
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
-      | 101           | 60      | 101               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
+      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -389,18 +389,18 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_group_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101           | 50      | null  | null      | null                                             |
-      | 124 | 101           | 60      | 100   | 1         | 1                                                |
-      | 125 | 101           | 70      | null  | null      | null                                             |
+      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 50      | null  | null      | null                                             |
+      | 124 | 101     | 60      | 100   | 1         | 1                                                |
+      | 125 | 101     | 70      | null  | null      | null                                             |
     And the table "users_items" should be:
-      | user_group_id | item_id |
-      | 101           | 50      |
-      | 101           | 60      |
+      | user_id | item_id |
+      | 101     | 50      |
+      | 101     | 60      |
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -454,7 +454,7 @@ Feature: Save grading result
       """
 
   Scenario: Platform doesn't support tokens
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

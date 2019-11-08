@@ -122,7 +122,7 @@ Feature: Get group children (groupChildrenView)
       | 90              | 51             | requestAccepted    |
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, UserSelf is skipped
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -141,7 +141,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are by default
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -161,7 +161,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are included explicitly
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_include=Base,Class,Team,Club,Friends,Other,UserSelf,UserAdmin"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -181,7 +181,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, some types are excluded
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_exclude=Class,Team,Club,Friends"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -197,7 +197,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by grade, UserSelf is skipped
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?sort=grade&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -216,7 +216,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by type, UserSelf is skipped
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?sort=type&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -235,7 +235,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, limit applied
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -246,7 +246,7 @@ Feature: Get group children (groupChildrenView)
     """
 
   Scenario: User is an owner of the parent group, paging applied, UserSelf is skipped
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?from.name=RootSelf&from.id=30&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:

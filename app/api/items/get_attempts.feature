@@ -44,13 +44,13 @@ Feature: Get groups attempts for current user and item_id
       | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
       | 46 | 23       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | score | order | validated | started_at          | creator_user_group_id |
-      | 150 | 11       | 200     | 100   | 1     | true      | 2018-05-29 06:38:38 | 31                    |
-      | 151 | 11       | 200     | 99    | 0     | false     | 2018-05-29 06:38:38 | null                  |
-      | 250 | 13       | 210     | 99    | 0     | true      | 2019-05-29 06:38:38 | 11                    |
+      | id  | group_id | item_id | score | order | validated | started_at          | creator_id |
+      | 150 | 11       | 200     | 100   | 1     | true      | 2018-05-29 06:38:38 | 31         |
+      | 151 | 11       | 200     | 99    | 0     | false     | 2018-05-29 06:38:38 | null       |
+      | 250 | 13       | 210     | 99    | 0     | true      | 2019-05-29 06:38:38 | 11         |
 
-  Scenario: User has access to the item and the users_answers.user_group_id = authenticated user's group_id (type='invitationAccepted')
-    Given I am the user with group_id "11"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (type='invitationAccepted')
+    Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -79,8 +79,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.user_group_id = authenticated user's group_id (with limit)
-    Given I am the user with group_id "11"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (with limit)
+    Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -97,8 +97,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.user_group_id = authenticated user's group_id (reverse order)
-    Given I am the user with group_id "11"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order)
+    Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -127,8 +127,8 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.user_group_id = authenticated user's group_id (reverse order, start from the second row)
-    Given I am the user with group_id "11"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order, start from the second row)
+    Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order&from.order=1&from.id=150"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -146,7 +146,7 @@ Feature: Get groups attempts for current user and item_id
     """
 
   Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='requestAccepted')
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/items/210/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -168,7 +168,7 @@ Feature: Get groups attempts for current user and item_id
     """
 
   Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='joinedByCode')
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/items/210/attempts"
     Then the response code should be 200
     And the response body should be, in JSON:

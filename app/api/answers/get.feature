@@ -35,16 +35,16 @@ Background:
     | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
     | 46 | 23       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
   And the database has the following table 'users_answers':
-    | id  | user_group_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
-    | 101 | 11            | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
-    | 102 | 11            | 210     | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 |
+    | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
+    | 101 | 11      | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
+    | 102 | 11      | 210     | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 |
   And the database has the following table 'groups_attempts':
     | id  | group_id | item_id | order |
     | 150 | 11       | 200     | 0     |
     | 250 | 13       | 210     | 0     |
 
-  Scenario: User has access to the item and the users_answers.user_group_id = authenticated user's self group
-    Given I am the user with group_id "11"
+  Scenario: User has access to the item and the users_answers.user_id = authenticated user's self group
+    Given I am the user with id "11"
     When I send a GET request to "/answers/101"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -58,14 +58,14 @@ Background:
       "submitted_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "200",
-      "user_group_id": "11",
+      "user_id": "11",
       "graded_at": "2018-05-29T06:38:38Z",
       "validated": true
     }
     """
 
   Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/answers/102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -79,7 +79,7 @@ Background:
       "submitted_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "210",
-      "user_group_id": "11",
+      "user_id": "11",
       "graded_at": "2019-05-29T06:38:38Z",
       "validated": true
     }

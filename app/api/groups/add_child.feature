@@ -28,7 +28,7 @@ Feature: Add a parent-child relation between two groups
       | 22                | 22             | 1       |
 
   Scenario: User is an owner of the two groups and is allowed to create sub-groups
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 201
     And the response body should be, in JSON:

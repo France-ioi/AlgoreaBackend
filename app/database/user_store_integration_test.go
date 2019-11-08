@@ -35,9 +35,9 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	for _, table := range []string{"groups_items", "groups_attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002, 6001, 6002})
 	}
-	assertTableColumn(t, db, "sessions", "user_group_id", []int64{5001})
+	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	for _, table := range []string{"users_threads", "users_answers", "users_items", "filters", "refresh_tokens"} {
-		assertTableColumn(t, db, table, "user_group_id", []int64{5001, 5002})
+		assertTableColumn(t, db, table, "user_id", []int64{5001, 5002})
 	}
 
 	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
@@ -69,9 +69,9 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	for _, table := range []string{"groups_items", "groups_attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002, 6000, 6002})
 	}
-	assertTableColumn(t, db, "sessions", "user_group_id", []int64{5000})
+	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
 	for _, table := range []string{"users_threads", "users_answers", "users_items", "filters", "refresh_tokens"} {
-		assertTableColumn(t, db, table, "user_group_id", []int64{5000, 5002})
+		assertTableColumn(t, db, table, "user_id", []int64{5000, 5002})
 	}
 
 	assertTableColumn(t, db, "groups_propagate", "ancestors_computation_state", []string{"done"})
@@ -93,21 +93,21 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {login: 502, group_id: 5002, owned_group_id: 6002}
 			items: [{id: 1}]`, `
 			sessions:
-				- {user_group_id: 5000, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
-				- {user_group_id: 5001, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
-				- {user_group_id: 5001, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
-			users_threads: [{user_group_id: 5000, thread_id: 1}, {user_group_id: 5001, thread_id: 1}, {user_group_id: 5002, thread_id: 1}]
+				- {user_id: 5000, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 5001, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
+				- {user_id: 5001, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
+			users_threads: [{user_id: 5000, thread_id: 1}, {user_id: 5001, thread_id: 1}, {user_id: 5002, thread_id: 1}]
 			users_answers:
-				- {user_group_id: 5000, item_id: 1, submitted_at: 2019-05-30 11:00:00}
-				- {user_group_id: 5001, item_id: 1, submitted_at: 2019-05-30 11:00:00}
-				- {user_group_id: 5002, item_id: 1, submitted_at: 2019-05-30 11:00:00}
+				- {user_id: 5000, item_id: 1, submitted_at: 2019-05-30 11:00:00}
+				- {user_id: 5001, item_id: 1, submitted_at: 2019-05-30 11:00:00}
+				- {user_id: 5002, item_id: 1, submitted_at: 2019-05-30 11:00:00}
 			users_items:
-				- {user_group_id: 5000, item_id: 1, active_attempt_id: 2000}
-				- {user_group_id: 5001, item_id: 1, active_attempt_id: 2001}
-				- {user_group_id: 5002, item_id: 1, active_attempt_id: 2002}
-			filters: [{user_group_id: 5000}, {user_group_id: 5001}, {user_group_id: 5002}]
-			refresh_tokens: [{user_group_id: 5000, refresh_token: token}, {user_group_id: 5001, refresh_token: token2},
-			                 {user_group_id: 5002, refresh_token: token3}]
+				- {user_id: 5000, item_id: 1, active_attempt_id: 2000}
+				- {user_id: 5001, item_id: 1, active_attempt_id: 2001}
+				- {user_id: 5002, item_id: 1, active_attempt_id: 2002}
+			filters: [{user_id: 5000}, {user_id: 5001}, {user_id: 5002}]
+			refresh_tokens: [{user_id: 5000, refresh_token: token}, {user_id: 5001, refresh_token: token2},
+			                 {user_id: 5002, refresh_token: token3}]
 			groups_items:
 				- {id: 1, group_id: 5000, item_id: 1}
 				- {id: 2, group_id: 5001, item_id: 1}

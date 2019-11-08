@@ -22,7 +22,7 @@ Feature: User accepts an invitation to join a group
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
 
   Scenario: Successfully accept an invitation
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/11/accept"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -47,7 +47,7 @@ Feature: User accepts an invitation to join a group
       | 22                | 22             | 1       |
 
   Scenario: Accept an already accepted invitation
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/14/accept"
     Then the response code should be 200
     And the response body should be, in JSON:

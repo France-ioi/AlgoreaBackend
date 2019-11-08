@@ -22,7 +22,7 @@ Feature: User leaves a group
       | 7  | 14              | 21             | left               | 2017-02-21 06:38:38 |
 
   Scenario: Successfully leave a group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/current-user/group-memberships/11"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -41,7 +41,7 @@ Feature: User leaves a group
     And the table "groups_ancestors" should not contain id "2"
 
   Scenario: Leave a group that already have been left
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/current-user/group-memberships/14"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -56,7 +56,7 @@ Feature: User leaves a group
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Successfully leave a group (lock_user_deletion_until = NOW())
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the DB time now is "2019-08-20 00:00:00"
     When I send a DELETE request to "/current-user/group-memberships/11"
     Then the response code should be 200
