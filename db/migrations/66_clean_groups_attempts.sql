@@ -1,14 +1,14 @@
 -- +migrate Up
 
 ALTER TABLE `groups_attempts`
-    DROP COLUMN `precision`,
-    DROP COLUMN `autonomy`,
-    DROP COLUMN `ranked`,
-    DROP COLUMN `corrections_read`,
-    DROP COLUMN `thread_started_at`,
-    DROP COLUMN `all_lang_prog`,
+  DROP COLUMN `precision`,
+  DROP COLUMN `autonomy`,
+  DROP COLUMN `ranked`,
+  DROP COLUMN `corrections_read`,
+  DROP COLUMN `thread_started_at`,
+  DROP COLUMN `all_lang_prog`,
 
-    RENAME COLUMN `submissions_attempts` TO `submissions`;
+  RENAME COLUMN `submissions_attempts` TO `submissions`;
 
 
 -- +migrate Down
