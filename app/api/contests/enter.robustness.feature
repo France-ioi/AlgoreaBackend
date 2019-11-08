@@ -60,7 +60,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: Wrong group_id
     Given I am the user with id "31"
@@ -69,7 +69,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: The item is not visible to the current user
     Given I am the user with id "31"
@@ -78,7 +78,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: The item is visible, but it doesn't exist
     Given I am the user with id "31"
@@ -87,7 +87,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
@@ -99,7 +99,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: group_id is not a self group of the current user while the item's has_attempts = false
     Given the database has the following table 'items':
@@ -111,7 +111,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: group_id is not a team related to the item while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -123,7 +123,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: group_id is a user self group while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -135,7 +135,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: The current user is not a member of group_id while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -147,7 +147,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
@@ -164,4 +164,4 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "contest_participations" should be empty
+    And the table "groups_attempts" should be empty

@@ -70,9 +70,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       }
     }
     """
-    And the table "contest_participations" should be:
-      | group_id | item_id | entered_at          |
-      | 31       | 50      | 3019-10-10 10:10:10 |
+    And the table "groups_attempts" should be:
+      | group_id | item_id | entered_at          | finished_at | order |
+      | 31       | 50      | 3019-10-10 10:10:10 | null        | 1     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type               | expires_at          |
       | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
@@ -120,9 +120,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       }
     }
     """
-    And the table "contest_participations" should be:
-      | group_id | item_id | entered_at          |
-      | 11       | 60      | 3019-10-10 10:10:10 |
+    And the table "groups_attempts" should be:
+      | group_id | item_id | entered_at          | finished_at | order |
+      | 11       | 60      | 3019-10-10 10:10:10 | null        | 1     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | type               | expires_at          |
       | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
@@ -171,9 +171,9 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       }
     }
     """
-    And the table "contest_participations" should be:
-      | group_id | item_id | entered_at          |
-      | 31       | 50      | 3019-10-10 10:10:10 |
+    And the table "groups_attempts" should be:
+      | group_id | item_id | entered_at          | finished_at | order |
+      | 31       | 50      | 3019-10-10 10:10:10 | null        | 1     |
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And logs should contain:

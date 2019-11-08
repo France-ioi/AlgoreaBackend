@@ -8,5 +8,4 @@ groups_ancestors:
 groups_items: [{group_id: 21, item_id: 114, full_access_since: 2019-03-22 08:44:55,
                 cached_full_access_since: 2019-03-22 08:44:55}]
 groups_contest_items: [{group_id: 21, item_id: 114, additional_time: 01:00:00}]
-contest_participations: [{group_id: 21, item_id: 114, entered_at: 2019-03-22 08:44:55}]
-
+groups_attempts: [{group_id: 21, item_id: 114, entered_at: 2019-03-22 08:44:55, order: 1}]

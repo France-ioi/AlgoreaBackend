@@ -140,31 +140,34 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 			wantReason: errors.New("the contest has not started yet or has already finished")},
 		{name: "user's active contest is OK and it is from another competition, but the user has full access to the time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).ContestParticipations().InsertMap(
+				return database.NewDataStore(db).GroupAttempts().InsertMap(
 					map[string]interface{}{
 						"item_id":    500, // chapter
 						"group_id":   14,
 						"entered_at": database.Now(),
+						"order":      1,
 					})
 			},
 			itemID: 15, userID: 14, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK and it is the task's time-limited chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).ContestParticipations().
+				return database.NewDataStore(db).GroupAttempts().
 					InsertMap(map[string]interface{}{
 						"item_id":    115,
 						"group_id":   15,
 						"entered_at": database.Now(),
+						"order":      1,
 					})
 			},
 			itemID: 15, userID: 15, wantHasAccess: true, wantReason: nil},
 		{name: "user's active contest is OK, but it is not an ancestor of the task and the user doesn't have full access to the task's chapter",
 			initFunc: func(db *database.DB) error {
-				return database.NewDataStore(db).ContestParticipations().
+				return database.NewDataStore(db).GroupAttempts().
 					InsertMap(map[string]interface{}{
 						"item_id":    114,
 						"group_id":   17,
 						"entered_at": database.Now(),
+						"order":      1,
 					})
 			},
 			itemID: 15, userID: 17, wantHasAccess: false,
@@ -220,12 +223,12 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {group_id: 105, item_id: 15}  # ok with team mode
 			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
 			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
-		contest_participations:
-			- {group_id: 103, item_id: 13, entered_at: 2019-03-22 08:44:55, finished_at: 2019-03-22 09:44:55} # finished
-			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55} # ok
-			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55}  # ok with team mode
-			- {group_id: 106, item_id: 14, entered_at: 2019-03-22 08:44:55} # multiple
-			- {group_id: 106, item_id: 15, entered_at: 2019-03-22 08:43:55} # multiple`)
+		groups_attempts:
+			- {group_id: 103, item_id: 13, entered_at: 2019-03-22 08:44:55, finished_at: 2019-03-22 09:44:55, order: 1} # finished
+			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55, order: 1} # ok
+			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55, order: 1}  # ok with team mode
+			- {group_id: 106, item_id: 14, entered_at: 2019-03-22 08:44:55, order: 1} # multiple
+			- {group_id: 106, item_id: 15, entered_at: 2019-03-22 08:43:55, order: 1} # multiple`)
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -293,10 +296,10 @@ func TestItemStore_CloseContest(t *testing.T) {
 			- {ancestor_item_id: 11, child_item_id: 14}
 			- {ancestor_item_id: 11, child_item_id: 15}
 			- {ancestor_item_id: 11, child_item_id: 16}
-		contest_participations:
-			- {group_id: 20, item_id: 11, entered_at: 2018-03-22 08:44:55}
-			- {group_id: 20, item_id: 12, entered_at: 2018-03-22 08:44:55}
-			- {group_id: 21, item_id: 11, entered_at: 2018-03-22 08:44:55}
+		groups_attempts:
+			- {group_id: 20, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
+			- {group_id: 20, item_id: 12, entered_at: 2018-03-22 08:44:55, order: 1}
+			- {group_id: 21, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
 		groups_items:
 			- {group_id: 20, item_id: 11}
 			- {group_id: 20, item_id: 12}
@@ -319,8 +322,9 @@ func TestItemStore_CloseContest(t *testing.T) {
 	}
 	var participations []groupParticipationsInfo
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.ContestParticipations().
+	assert.NoError(t, store.GroupAttempts().
 		Select("group_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) AS finished_at_set").
+		Where("entered_at IS NOT NULL").
 		Order("group_id, item_id").
 		Scan(&participations).Error())
 	assert.Equal(t, []groupParticipationsInfo{
@@ -370,9 +374,9 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		items_ancestors:
 			- {ancestor_item_id: 11, child_item_id: 12}
 			- {ancestor_item_id: 11, child_item_id: 13}
-		contest_participations:
-			- {group_id: 40, item_id: 11, entered_at: 2018-03-22 08:44:55}
-			- {group_id: 40, item_id: 12, entered_at: 2018-03-22 08:44:55}
+		groups_attempts:
+			- {group_id: 40, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
+			- {group_id: 40, item_id: 12, entered_at: 2018-03-22 08:44:55, order: 1}
 		groups_items:
 			- {group_id: 20, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
 				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
@@ -399,8 +403,9 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 	}
 	var participations []contestParticipationsInfo
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.ContestParticipations().
+	assert.NoError(t, store.GroupAttempts().
 		Select("group_id, item_id, (finished_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, finished_at, NOW())) < 3) as finished_at_set").
+		Where("entered_at IS NOT NULL").
 		Order("group_id, item_id").
 		Scan(&participations).Error())
 	assert.Equal(t, []contestParticipationsInfo{

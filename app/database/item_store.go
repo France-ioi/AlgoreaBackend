@@ -309,7 +309,7 @@ func (contest *activeContestInfo) IsOver() bool {
 func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 	// Get info for the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
-	// Note: contest_participations rows should exist to make this function return the info
+	// Note: groups_attempts rows with 'entered_at' should exist to make this function return the info
 	var results []struct {
 		Now                      Time
 		DurationInSeconds        int32
@@ -332,8 +332,9 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		Joins(`
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.child_group_id = ?`, user.GroupID).
-		Joins(`LEFT JOIN contest_participations ON contest_participations.item_id = items.id AND
-			contest_participations.group_id = groups_ancestors_active.ancestor_group_id`).
+		Joins(`LEFT JOIN groups_attempts AS contest_participations ON contest_participations.item_id = items.id AND
+			contest_participations.group_id = groups_ancestors_active.ancestor_group_id AND
+			contest_participations.entered_at IS NOT NULL`).
 		Joins(`
 			LEFT JOIN groups_contest_items ON groups_contest_items.item_id = items.id AND
 				groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id`).
@@ -362,8 +363,10 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 }
 
 func (s *ItemStore) closeContest(itemID int64, user *User) {
-	mustNotBeError(s.ContestParticipations().
+	mustNotBeError(s.GroupAttempts().
 		Where("item_id = ? AND group_id = ?", itemID, user.GroupID).
+		Where("entered_at IS NOT NULL").
+		Where("finished_at IS NULL").
 		UpdateColumn("finished_at", Now()).Error())
 
 	groupItemStore := s.GroupItems()
@@ -390,9 +393,9 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 
 	// Set contest as finished
 	mustNotBeError(s.db.Exec(`
-		UPDATE contest_participations
+		UPDATE groups_attempts
 		SET finished_at = NOW()
-		WHERE group_id = ? AND item_id = ?`, teamGroupID, itemID).Error)
+		WHERE group_id = ? AND item_id = ? AND entered_at IS NOT NULL AND finished_at IS NULL`, teamGroupID, itemID).Error)
 
 	groupItemStore := s.GroupItems()
 	// Remove access

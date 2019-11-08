@@ -71,8 +71,10 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 			WithWriteLock().Take(&itemInfo).Error())
 
 		service.MustNotBeError(store.Exec(`
-			INSERT INTO contest_participations (group_id, item_id, entered_at)
-			VALUES(?, ?, ?)`, qualificationState.groupID, qualificationState.itemID, itemInfo.Now).Error())
+			INSERT INTO groups_attempts (group_id, item_id, entered_at, `+"`order`"+`)
+			SELECT ?, ?, ?, IFNULL((SELECT MAX(`+"`order`"+`) FROM groups_attempts WHERE group_id = ? AND item_id = ? FOR UPDATE), 0) + 1`,
+			qualificationState.groupID, qualificationState.itemID,
+			itemInfo.Now, qualificationState.groupID, qualificationState.itemID).Error())
 
 		if itemInfo.ContestParticipantsGroupID != nil {
 			var totalAdditionalTime int64

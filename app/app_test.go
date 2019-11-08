@@ -683,7 +683,7 @@ func setDBExpectationsForGroupInCreateMissingData(mock sqlmock.Sqlmock, expected
 	}
 	if !expectedGroupToInsert.exists && !expectedGroupToInsert.error {
 		insertMock := mock.ExpectExec("^"+regexp.QuoteMeta(
-			"INSERT INTO `groups` (id, name, text_id, type) VALUES (?, ?, ?, ?)",
+			"INSERT INTO `groups` (`id`, `name`, `text_id`, `type`) VALUES (?, ?, ?, ?)",
 		)+"$").WithArgs(expectedGroupToInsert.id, expectedGroupToInsert.name, expectedGroupToInsert.name, "Base")
 		if !expectedGroupToInsert.errorOnInsert {
 			insertMock.WillReturnResult(sqlmock.NewResult(expectedGroupToInsert.id, 1))

@@ -85,12 +85,12 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 50      | 00:01:00        |
       | 21       | 60      | 00:01:00        |
       | 21       | 70      | 00:01:00        |
-    And the database has the following table 'contest_participations':
-      | group_id | item_id | entered_at          |
-      | 13       | 50      | 2018-05-29 06:38:38 |
-      | 13       | 70      | 2018-05-29 06:38:38 |
-      | 14       | 50      | 2019-05-29 06:38:38 |
-      | 31       | 70      | 2017-05-29 06:38:38 |
+    And the database has the following table 'groups_attempts':
+      | group_id | item_id | entered_at          | order |
+      | 13       | 50      | 2018-05-29 06:38:38 | 1     |
+      | 13       | 70      | 2018-05-29 06:38:38 | 1     |
+      | 14       | 50      | 2019-05-29 06:38:38 | 1     |
+      | 31       | 70      | 2017-05-29 06:38:38 | 1     |
 
   Scenario: Updates an existing row
     Given I am the user with id "21"

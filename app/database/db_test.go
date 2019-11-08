@@ -795,7 +795,7 @@ func TestDB_insertMap(t *testing.T) {
 	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (id, sField, sNullField) VALUES (?, ?, NULL)")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, NULL)")).
 		WithArgs(int64(1), "some value").
 		WillReturnError(expectedError)
 

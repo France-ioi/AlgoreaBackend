@@ -31,11 +31,6 @@ func (s *DataStore) Items() *ItemStore {
 	return &ItemStore{NewDataStoreWithTable(s.DB, "items")}
 }
 
-// ContestParticipations returns a ContestParticipationStore
-func (s *DataStore) ContestParticipations() *ContestParticipationStore {
-	return &ContestParticipationStore{NewDataStoreWithTable(s.DB, "contest_participations")}
-}
-
 // GroupAttempts returns a GroupAttemptStore
 func (s *DataStore) GroupAttempts() *GroupAttemptStore {
 	return &GroupAttemptStore{NewDataStoreWithTable(s.DB, "groups_attempts")}
