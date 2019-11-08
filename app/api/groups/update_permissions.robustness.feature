@@ -63,7 +63,7 @@ Feature: Change item access rights for a group - robustness
       | 31       | 102     | none     | content_with_descendants | 0        | 31             |
 
   Scenario: Invalid group_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/abc/items/102" with the following body:
     """
     {
@@ -76,7 +76,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: Invalid item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/abc" with the following body:
     """
     {
@@ -89,7 +89,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: Invalid can_view
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -112,7 +112,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -125,7 +125,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The user doesn't have enough rights to set can_view
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a PUT request to "/groups/23/items/102" with the following body:
     """
     {
@@ -138,7 +138,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The user doesn't have enough rights to set can_view = info
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a PUT request to "/groups/23/items/103" with the following body:
     """
     {
@@ -151,7 +151,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The item doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/404" with the following body:
     """
     {
@@ -164,7 +164,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The user doesn't own the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/21/items/102" with the following body:
     """
     {
@@ -177,7 +177,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: The group doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/404/items/102" with the following body:
     """
     {
@@ -190,7 +190,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_generated" should stay unchanged
 
   Scenario: There are no item's parents visible to the group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/23/items/103" with the following body:
     """
     {

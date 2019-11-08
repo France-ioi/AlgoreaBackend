@@ -34,15 +34,15 @@ Feature: Save grading result - robustness
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 101           | 50      | 100               |
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 100               |
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | submitted_at        |
-      | 123 | 101           | 50      | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | submitted_at        |
+      | 123 | 101     | 50      | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: Wrong JSON in request
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     When I send a POST request to "/items/save-grade" with the following body:
       """
       []
@@ -54,7 +54,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -90,7 +90,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -126,7 +126,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idUser in score_token doesn't match the user's id
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -162,7 +162,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idAttempt in score_token and task_token don't match
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -198,7 +198,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: idItemLocal in score_token and task_token don't match
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -234,7 +234,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: itemUrl of score_token doesn't match itemUrl of task_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -270,7 +270,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Missing task_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
@@ -295,7 +295,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Invalid task_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "scoreToken" signed by the task platform is distributed:
       """
       {
@@ -321,7 +321,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Invalid score_token
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -346,7 +346,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Scenario: No submission rights
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -382,7 +382,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is missing
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -407,7 +407,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -433,7 +433,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -470,7 +470,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -507,7 +507,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -544,7 +544,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -580,7 +580,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -617,7 +617,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and score is missing
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -653,7 +653,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -690,10 +690,10 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: The answer has been already graded
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the database has the following table 'users_answers':
-      | id  | user_group_id | item_id | score | submitted_at        |
-      | 124 | 101           | 80      | 0     | 2017-05-29 06:38:38 |
+      | id  | user_id | item_id | score | submitted_at        |
+      | 124 | 101     | 80      | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -734,7 +734,7 @@ Feature: Save grading result - robustness
     And the table "groups_attempts" should stay unchanged
 
   Scenario: The answer is not found
-    Given I am the user with group_id "101"
+    Given I am the user with id "101"
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

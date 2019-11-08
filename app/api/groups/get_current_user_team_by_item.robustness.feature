@@ -33,34 +33,34 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | 21              | 19             | joinedByCode      |
 
   Scenario: Invalid item_id
-    Given I am the user with group_id "19"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario Outline: Wrong groups_groups.type
-    Given I am the user with group_id "<user_group_id>"
+    Given I am the user with id "<user_id>"
     When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
     Examples:
-      | user_group_id |
-      | 11            |
-      | 12            |
-      | 13            |
-      | 14            |
-      | 15            |
-      | 16            |
-      | 17            |
+      | user_id |
+      | 11      |
+      | 12      |
+      | 13      |
+      | 14      |
+      | 15      |
+      | 16      |
+      | 17      |
 
   Scenario: Wrong groups.type
-    Given I am the user with group_id "19"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
 
   Scenario: No team for item
-    Given I am the user with group_id "19"
+    Given I am the user with id "19"
     When I send a GET request to "/current-user/teams/by-item/101"
     Then the response code should be 404
     And the response error message should contain "No team for this item"

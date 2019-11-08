@@ -20,7 +20,7 @@ Feature: Update a group (groupEdit) - robustness
       | 77 | 32                | 15             | 0       |
 
   Scenario: Should fail if the user is not an owner of the group
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {}
@@ -31,7 +31,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {}
@@ -42,7 +42,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a PUT request to "/groups/15" with the following body:
     """
     {"name":"Club"}
@@ -53,7 +53,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but required fields are not filled in correctly
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -92,7 +92,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, but no fields provided
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -103,7 +103,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups_groups" should stay unchanged
 
   Scenario: The group id is not a number
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/1_3" with the following body:
     """
     {

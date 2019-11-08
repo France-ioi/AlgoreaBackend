@@ -37,7 +37,7 @@ Feature: Update item - robustness
       | 3  |
 
   Scenario: default_language_id is not a number
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -63,7 +63,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: default_language_id doesn't exist
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -89,7 +89,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: No strings in default_language_id
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -115,7 +115,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Invalid item_id
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a PUT request to "/items/abc" with the following body:
       """
       {
@@ -131,7 +131,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: The user doesn't exist
-    And I am the user with group_id "121"
+    And I am the user with id "121"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -147,7 +147,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: The user doesn't have rights to edit the item
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a PUT request to "/items/60" with the following body:
       """
       {
@@ -163,7 +163,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong full_screen
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -189,7 +189,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong type
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -215,7 +215,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong validation_type
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -241,7 +241,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong validation_min
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -267,7 +267,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong unlocked_item_ids
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -293,7 +293,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Non-existent id in unlocked_item_ids
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -319,7 +319,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: The user doesn't have can_grant_view >= content on unlocked_item_ids
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -345,7 +345,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong contest_entering_condition
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -371,7 +371,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (wrong format)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -397,7 +397,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative hours)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -423,7 +423,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many hours)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -449,7 +449,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative minutes)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -475,7 +475,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many minutes)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -501,7 +501,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (negative seconds)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -527,7 +527,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong duration (too many seconds)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -553,7 +553,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Wrong contest_phase
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -579,7 +579,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Non-unique children item IDs
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -608,7 +608,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Children items are not visible to the user
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -637,7 +637,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: The item is among child items
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -655,7 +655,7 @@ Feature: Update item - robustness
     And the table "permissions_granted" should stay unchanged
 
   Scenario: The item is a descendant of a child item
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {

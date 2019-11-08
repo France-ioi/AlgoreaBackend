@@ -13,7 +13,7 @@ type UserAnswerStore struct {
 func (s *UserAnswerStore) WithUsers() *UserAnswerStore {
 	return &UserAnswerStore{
 		NewDataStoreWithTable(
-			s.Joins("JOIN users ON users.group_id = users_answers.user_group_id"), s.tableName,
+			s.Joins("JOIN users ON users.group_id = users_answers.user_id"), s.tableName,
 		),
 	}
 }
@@ -38,27 +38,27 @@ func (s *UserAnswerStore) WithItems() *UserAnswerStore {
 
 // SubmitNewAnswer inserts a new row with type='Submission', validated=0, submitted_at=NOW()
 // into the `users_answers` table.
-func (s *UserAnswerStore) SubmitNewAnswer(userGroupID, itemID, attemptID int64, answer string) (int64, error) {
+func (s *UserAnswerStore) SubmitNewAnswer(userID, itemID, attemptID int64, answer string) (int64, error) {
 	var userAnswerID int64
 	err := s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		store := NewDataStore(db)
 		userAnswerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO users_answers (id, user_group_id, item_id, attempt_id, answer, submitted_at, validated)
+				INSERT INTO users_answers (id, user_id, item_id, attempt_id, answer, submitted_at, validated)
 				VALUES (?, ?, ?, ?, ?, NOW(), 0)`,
-			userAnswerID, userGroupID, itemID, attemptID, answer).Error
+			userAnswerID, userID, itemID, attemptID, answer).Error
 	})
 	return userAnswerID, err
 }
 
 // GetOrCreateCurrentAnswer returns an id of the current users_answers for given userID, itemID, attemptID
 // or inserts a new row with type='Current' and submitted_at=NOW() into the `users_answers` table.
-func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userGroupID, itemID int64, attemptID *int64) (userAnswerID int64, err error) {
+func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, itemID int64, attemptID *int64) (userAnswerID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
 
 	query := s.WithWriteLock().
-		Where("user_group_id = ?", userGroupID).
+		Where("user_id = ?", userID).
 		Where("item_id = ?", itemID).
 		Where("type = 'Current'")
 	if attemptID == nil {
@@ -72,9 +72,9 @@ func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userGroupID, itemID int64, at
 			store := NewDataStore(db)
 			userAnswerID = store.NewID()
 			return db.Exec(`
-				INSERT INTO users_answers (id, user_group_id, item_id, attempt_id, type, submitted_at)
+				INSERT INTO users_answers (id, user_id, item_id, attempt_id, type, submitted_at)
 				VALUES (?, ?, ?, ?, 'Current', NOW())`,
-				userAnswerID, userGroupID, itemID, attemptID).Error()
+				userAnswerID, userID, itemID, attemptID).Error()
 		})
 	}
 	mustNotBeError(err)

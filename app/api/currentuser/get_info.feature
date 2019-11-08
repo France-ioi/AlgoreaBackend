@@ -6,7 +6,7 @@ Feature: Get user info the current user
       | 3        | 1         | jane  | null                | null           | null       | null      | null       |              | null      | null       | 0               | null  | null | null             | null    | null          | null             | null              | fr               | false             | false            | false       | Never   | null      | null       | false          | null      | false             | 0              | 0                  | true     | true       | null                | null            |
 
   Scenario: All field values are not nulls
-    Given I am the user with group_id "2"
+    Given I am the user with id "2"
     When I send a GET request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -52,7 +52,7 @@ Feature: Get user info the current user
     """
 
   Scenario: All nullable field values are nulls
-    Given I am the user with group_id "3"
+    Given I am the user with id "3"
     When I send a GET request to "/current-user"
     Then the response code should be 200
     And the response body should be, in JSON:

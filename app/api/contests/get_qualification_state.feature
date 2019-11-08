@@ -52,7 +52,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 31       | 50      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -81,7 +81,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from      | can_enter_until     |
       | 31       | 50      | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -108,7 +108,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -156,7 +156,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -203,7 +203,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_enter_from   | can_enter_until     |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -251,7 +251,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -299,7 +299,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -347,7 +347,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -377,7 +377,7 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
     And the response body should be, in JSON:

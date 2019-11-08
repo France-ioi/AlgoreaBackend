@@ -54,8 +54,8 @@ Feature: Update the local user info cache
       | 11       | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 13       | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database has the following table 'sessions':
-      | expires_at          | user_group_id | issuer       | issued_at           | access_token |
-      | 2020-06-16 22:02:49 | 11            | login-module | 2019-06-16 22:02:28 | accesstoken  |
+      | expires_at          | user_id | issuer       | issued_at           | access_token |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | accesstoken  |
     And the login module "account" endpoint for token "accesstoken" returns 200 with body:
       """
       {{<profile_response_name>}}

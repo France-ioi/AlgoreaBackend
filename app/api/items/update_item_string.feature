@@ -32,7 +32,7 @@ Feature: Update item strings
       | 3  |
 
   Scenario: Update the default language string
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -49,7 +49,7 @@ Feature: Update item strings
       | 1  | 50      | 2           | The title | http://mysite.com/image.jpg | The subtitle | The description |
 
   Scenario: Update the specified language string
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/3" with the following body:
       """
       {
@@ -66,7 +66,7 @@ Feature: Update item strings
       | 2  | 50      | 3           | The title | http://mysite.com/image.jpg | The subtitle | The description |
 
   Scenario: Insert the default language string
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/60/strings/default" with the following body:
       """
       {
@@ -83,7 +83,7 @@ Feature: Update item strings
       | 5577006791947779410 | 60      | 3           | The title | http://mysite.com/image.jpg | The subtitle | The description |
 
   Scenario: Insert the specified language string
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/60/strings/2" with the following body:
       """
       {
@@ -101,7 +101,7 @@ Feature: Update item strings
       | 5577006791947779410 | 60      | 2           | The title | http://mysite.com/image.jpg | The subtitle | The description |
 
   Scenario: Valid without any fields
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {

@@ -311,7 +311,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
 
   Scenario: Get progress of the second and the third users (checks sorting, from.*, and limit)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
     And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=210&from.name=janec&from.id=65&limit=2"
@@ -425,7 +425,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
 
 
   Scenario: Get progress of the first user for all the visible items (also checks the limit)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     # here we fixate time_spent even if it depends on NOW()
     And the DB time now is "2019-06-30 20:19:05"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=210,220,310&limit=1"
@@ -587,7 +587,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: No users
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/17/user-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -597,7 +597,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: No visible items
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/user-progress?parent_item_ids=1010"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -607,7 +607,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: The input group_id is a user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/51/user-progress?parent_item_ids=210,220,310"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -617,7 +617,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     """
 
   Scenario: The input group_id is a team
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/14/user-progress?parent_item_ids=210"
     Then the response code should be 200
     And the response body should be, in JSON:

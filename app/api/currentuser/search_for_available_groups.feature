@@ -31,7 +31,7 @@ Feature: Search for groups available to the current user
       | 12 | 1               | 22             | direct             | 2017-11-29 06:38:38 |
 
   Scenario: Search for groups with "the"
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=the"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -65,7 +65,7 @@ Feature: Search for groups available to the current user
     """
 
   Scenario: Search for groups with "the" (limit=2)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=the&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -87,7 +87,7 @@ Feature: Search for groups available to the current user
     """
 
   Scenario: Search for groups with percent signs ("%%%")
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=%25%25%25"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -109,7 +109,7 @@ Feature: Search for groups available to the current user
     """
 
   Scenario: Search for groups with underscore signs
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=___"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -125,7 +125,7 @@ Feature: Search for groups available to the current user
     """
 
   Scenario: Search for groups with pipe signs ("|||")
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=%7C%7C%7C"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -141,7 +141,7 @@ Feature: Search for groups available to the current user
     """
 
   Scenario: Search with percent sign and slashes ("\\\%\\%\")
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/current-user/available-groups?search=%5C%5C%5C%25%5C%5C%25%5C"
     Then the response code should be 200
     And the response body should be, in JSON:

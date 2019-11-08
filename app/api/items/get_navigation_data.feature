@@ -104,17 +104,17 @@ Feature: Get item for tree navigation
       | 106 | 11       | 231     | 1     | 12346 | 16                   | true      | true     | true         | 2019-01-30 09:26:46 | 2019-02-01 09:26:46 | 2019-01-31 09:26:46 |
       | 107 | 11       | 232     | 1     | 12347 | 17                   | true      | true     | true         | 2019-01-30 09:26:47 | 2019-02-01 09:26:47 | 2019-01-31 09:26:47 |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 11            | 200     | 101               |
-      | 11            | 210     | 102               |
-      | 11            | 211     | 105               |
-      | 11            | 220     | 103               |
-      | 11            | 230     | 104               |
-      | 11            | 231     | 106               |
-      | 11            | 232     | 107               |
+      | user_id | item_id | active_attempt_id |
+      | 11      | 200     | 101               |
+      | 11      | 210     | 102               |
+      | 11      | 211     | 105               |
+      | 11      | 220     | 103               |
+      | 11      | 230     | 104               |
+      | 11      | 231     | 106               |
+      | 11      | 232     | 107               |
 
   Scenario: Get tree structure
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -298,7 +298,7 @@ Feature: Get item for tree navigation
       """
 
   Scenario: Should return only one node if the root item doesn't have children
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/232/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -329,7 +329,7 @@ Feature: Get item for tree navigation
       """
 
   Scenario: Should return a subtree having two levels if the root item doesn't have grandchildren
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/230/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -411,7 +411,7 @@ Feature: Get item for tree navigation
       """
 
   Scenario: Should return only one node if the user has only grayed access to the root item
-    Given I am the user with group_id "14"
+    Given I am the user with id "14"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -433,7 +433,7 @@ Feature: Get item for tree navigation
       """
 
   Scenario: Should skip children of grayed nodes
-    Given I am the user with group_id "16"
+    Given I am the user with id "16"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -504,7 +504,7 @@ Feature: Get item for tree navigation
       """
 
   Scenario: Should prefer the user's default language for titles
-    Given I am the user with group_id "18"
+    Given I am the user with id "18"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
     And the response body should be, in JSON:

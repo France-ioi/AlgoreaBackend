@@ -26,7 +26,7 @@ Feature: Add item
       | 3  |
 
   Scenario: Valid
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -71,7 +71,7 @@ Feature: Add item
       | 11       | 5577006791947779410 | solution           | 1                  |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     And the database has the following table 'groups':
       | id    |
       | 12345 |
@@ -174,7 +174,7 @@ Feature: Add item
       | 11       | 5577006791947779410 | solution           | 1                  |
 
   Scenario: Valid with empty full_screen
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
     """
     {

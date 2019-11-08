@@ -26,7 +26,7 @@ Feature: Update a group (groupEdit)
       | 79 | 14              | 22             | requestSent        |
 
   Scenario: User is an owner of the group, all fields are not nulls, updates groups_groups
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -55,7 +55,7 @@ Feature: Update a group (groupEdit)
       | 79 | 14              | 22             | requestSent        |
 
   Scenario: User is an owner of the group, nullable fields are nulls
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -77,7 +77,7 @@ Feature: Update a group (groupEdit)
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | false       | ybabbxnlyo | null          | null            | false        |
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is still true)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -100,7 +100,7 @@ Feature: Update a group (groupEdit)
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access is not changed)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
     {
@@ -122,7 +122,7 @@ Feature: Update a group (groupEdit)
     And the table "groups_groups" should stay unchanged
 
   Scenario: User is an owner of the group, does not update groups_groups (free_access changes from false to true)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
     {

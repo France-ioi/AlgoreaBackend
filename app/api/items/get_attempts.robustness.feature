@@ -5,19 +5,19 @@ Feature: Get groups attempts for current user and item_id - robustness
       | jdoe  | 11       | 12             | John       | Doe       |
 
   Scenario: User doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/items/1/attempts"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/abc/attempts"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: Wrong sorting
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/123/attempts?sort=login"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "login""

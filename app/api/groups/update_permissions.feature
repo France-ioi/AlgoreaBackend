@@ -56,7 +56,7 @@ Feature: Change item access rights for a group
       | 25       | 100     | content  | 23             |
 
   Scenario Outline: Create a new permissions_granted row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated |
       | 21       | 102     | solution           | solution                 | answer              | all                |
@@ -92,7 +92,7 @@ Feature: Change item access rights for a group
     | info     | none                |
 
   Scenario: Update an existing permissions_granted row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated |
       | 21       | 102     | solution           | solution                 | answer              | all                |
@@ -125,7 +125,7 @@ Feature: Change item access rights for a group
       | 25       | 103     | none               | none                     | none                | none               |
 
   Scenario: Create a new permissions_granted row (the group has only partial access on the item's parent)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | transfer                 | transfer            | transfer           | 1                  |
@@ -163,7 +163,7 @@ Feature: Change item access rights for a group
       | 31       | 103     | content            | none                     | none                | none               | 0                  |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has full access to the item itself)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution                 | solution                 | 1                  |
@@ -207,7 +207,7 @@ Feature: Change item access rights for a group
       | 31       | 103     | none               | 0                  |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has partial access to the item itself)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution           | solution                 | 1                  |
@@ -251,7 +251,7 @@ Feature: Change item access rights for a group
       | 31       | 103     | none               | 0                  |
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has grayed access to the item itself)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
       | 21       | 100     | solution           | solution                 | 1                  |

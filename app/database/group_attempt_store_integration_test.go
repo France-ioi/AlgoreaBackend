@@ -53,7 +53,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		name           string
 		fixture        string
 		attemptID      int64
-		userGroupID    int64
+		userID         int64
 		expectedFound  bool
 		expectedItemID int64
 	}{
@@ -62,7 +62,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
 			attemptID:      100,
-			userGroupID:    111,
+			userID:         111,
 			expectedFound:  true,
 			expectedItemID: 50,
 		},
@@ -71,14 +71,14 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:      100,
-			userGroupID:    101,
+			userID:         101,
 			expectedFound:  true,
 			expectedItemID: 50,
 		},
 		{
-			name:        "okay (has_attempts=1, groups_groups.type=requestAccepted)",
-			userGroupID: 101,
-			attemptID:   200,
+			name:      "okay (has_attempts=1, groups_groups.type=requestAccepted)",
+			userID:    101,
+			attemptID: 200,
 			fixture: `
 				groups_attempts:
 					- {id: 200, group_id: 102, item_id: 60, order: 0}`,
@@ -86,9 +86,9 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 60,
 		},
 		{
-			name:        "okay (has_attempts=1, groups_groups.type=joinedByCode)",
-			userGroupID: 101,
-			attemptID:   200,
+			name:      "okay (has_attempts=1, groups_groups.type=joinedByCode)",
+			userID:    101,
+			attemptID: 200,
 			fixture: `
 				groups_attempts:
 					- {id: 200, group_id: 120, item_id: 60, order: 0}`,
@@ -96,9 +96,9 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 60,
 		},
 		{
-			name:        "okay (has_attempts=1, groups_groups.type=invitationAccepted)",
-			userGroupID: 101,
-			attemptID:   200,
+			name:      "okay (has_attempts=1, groups_groups.type=invitationAccepted)",
+			userID:    101,
+			attemptID: 200,
 			fixture: `
 				groups_attempts:
 					- {id: 200, group_id: 110, item_id: 60, order: 0}`,
@@ -108,94 +108,94 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name:          "user not found",
 			fixture:       `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
-			userGroupID:   404,
+			userID:        404,
 			attemptID:     100,
 			expectedFound: false,
 		},
 		{
-			name:        "user doesn't have access to the item",
-			userGroupID: 121,
-			attemptID:   100,
+			name:      "user doesn't have access to the item",
+			userID:    121,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
 			expectedFound: false,
 		},
 		{
 			name:          "no groups_attempts",
-			userGroupID:   101,
+			userID:        101,
 			attemptID:     100,
 			fixture:       ``,
 			expectedFound: false,
 		},
 		{
-			name:        "wrong item in groups_attempts",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "wrong item in groups_attempts",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (invitationSent)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (invitationSent)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (requestSent)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (requestSent)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 104, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (invitationRefused)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (invitationRefused)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 105, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (requestRefused)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (requestRefused)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 106, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (removed)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (removed)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 107, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is not a member of the team (left)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is not a member of the team (left)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 108, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:        "user is a member of the team (direct)",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "user is a member of the team (direct)",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 109, item_id: 60, order: 0}]`,
 			expectedFound:  true,
 			expectedItemID: 60,
 		},
 		{
-			name:        "groups_attempts.group_id is not user's self group",
-			userGroupID: 101,
-			attemptID:   100,
+			name:      "groups_attempts.group_id is not user's self group",
+			userID:    101,
+			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 102, item_id: 50, order: 0}]`,
 			expectedFound: false,
@@ -246,7 +246,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			user := &database.User{}
-			assert.NoError(t, user.LoadByGroupID(store, test.userGroupID))
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			found, itemID, err := store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(test.attemptID, user)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedFound, found)
@@ -260,7 +260,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		name        string
 		fixture     string
 		attemptID   int64
-		userGroupID int64
+		userID      int64
 		itemID      int64
 		expectedIDs []int64
 		expectedErr error
@@ -272,7 +272,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			                - {id: 101, group_id: 111, item_id: 50, order: 1}
 			                - {id: 102, group_id: 111, item_id: 70, order: 0}`,
 			attemptID:   100,
-			userGroupID: 111,
+			userID:      111,
 			expectedIDs: []int64{100, 101},
 			itemID:      50,
 		},
@@ -280,13 +280,13 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			name:        "okay (partial access)",
 			fixture:     `groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:   100,
-			userGroupID: 101,
+			userID:      101,
 			expectedIDs: []int64{100},
 			itemID:      50,
 		},
 		{
 			name:        "okay (has_attempts=1, groups_groups.type=requestAccepted)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   200,
 			fixture:     `groups_attempts: [{id: 200, group_id: 102, item_id: 60, order: 0},{id: 201, group_id: 102, item_id: 60, order: 1}]`,
 			expectedIDs: []int64{200, 201},
@@ -294,7 +294,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		},
 		{
 			name:        "okay (has_attempts=1, groups_groups.type=joinedByCode)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   200,
 			fixture:     `groups_attempts: [{id: 200, group_id: 120, item_id: 60, order: 0},{id: 201, group_id: 120, item_id: 60, order: 1}]`,
 			expectedIDs: []int64{200, 201},
@@ -302,7 +302,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		},
 		{
 			name:        "okay (has_attempts=1, groups_groups.type=invitationAccepted)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   200,
 			fixture:     `groups_attempts: [{id: 200, group_id: 110, item_id: 60, order: 0}]`,
 			expectedIDs: []int64{200},
@@ -311,83 +311,83 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		{
 			name:        "user not found",
 			fixture:     `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
-			userGroupID: 404,
+			userID:      404,
 			attemptID:   100,
 			expectedIDs: []int64(nil),
 		},
 		{
 			name:        "user doesn't have access to the item",
-			userGroupID: 121,
+			userID:      121,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
 			expectedIDs: []int64(nil),
 		},
 		{
 			name:        "no groups_attempts",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     "",
 			expectedIDs: nil,
 		},
 		{
 			name:        "wrong item in groups_attempts",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (invitationSent)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (requestSent)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 104, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (invitationRefused)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 105, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (requestRefused)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 106, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (removed)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 107, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (left)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 108, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "user is not a member of the team (direct)",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 109, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
 			name:        "groups_attempts.group_id is not user's self group",
-			userGroupID: 101,
+			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 102, item_id: 50, order: 0}]`,
 			expectedIDs: nil,
@@ -442,7 +442,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			user := &database.User{}
-			assert.NoError(t, user.LoadByGroupID(store, test.userGroupID))
+			assert.NoError(t, user.LoadByID(store, test.userID))
 			var ids []int64
 			err := store.GroupAttempts().VisibleAndByItemID(user, test.itemID).Pluck("groups_attempts.id", &ids).Error()
 			assert.Equal(t, test.expectedErr, err)

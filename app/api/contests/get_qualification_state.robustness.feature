@@ -46,25 +46,25 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 52                | 52             | 1       |
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/abc/groups/31/qualification-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: Wrong group_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/50/groups/abc/qualification-state"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: The item is not visible to the current user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is visible, but it doesn't exist
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -73,7 +73,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id |
       | 50 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -88,7 +88,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -101,7 +101,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/10/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -114,7 +114,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/31/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -127,7 +127,7 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

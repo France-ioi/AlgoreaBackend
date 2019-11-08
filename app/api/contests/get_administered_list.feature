@@ -68,7 +68,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
       | 71       | 90      | content_with_descendants |
 
   Scenario: User's default language is French (most parents are invisible)
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -82,7 +82,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (most parents are invisible)
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -96,7 +96,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is French (parents are visible)
-    Given I am the user with group_id "41"
+    Given I am the user with id "41"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -112,7 +112,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible)
-    Given I am the user with group_id "51"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -128,7 +128,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: Empty result
-    Given I am the user with group_id "61"
+    Given I am the user with id "61"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -138,7 +138,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), limit=1
-    Given I am the user with group_id "51"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -149,7 +149,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), start from the second row, limit=1
-    Given I am the user with group_id "51"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?from.title&from.id=50&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -161,7 +161,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: User's default language is English  (parents are visible), inverse order
-    Given I am the user with group_id "51"
+    Given I am the user with id "51"
     When I send a GET request to "/contests/administered?sort=-title,id"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -177,7 +177,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
     """
 
   Scenario: Keeps parents with nil titles
-    Given I am the user with group_id "71"
+    Given I am the user with id "71"
     When I send a GET request to "/contests/administered"
     Then the response code should be 200
     And the response body should be, in JSON:

@@ -30,7 +30,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 10 | 21              | 13             | direct             | 2017-01-29 06:38:38 |
 
   Scenario: User tries to create a cycle in the group relations graph
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/13/accept"
     Then the response code should be 422
     And the response body should be, in JSON:
@@ -45,7 +45,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User tries to accept an invitation that doesn't exist
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/11/accept"
     Then the response code should be 404
     And the response body should be, in JSON:
@@ -60,7 +60,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User tries to accept an invitation to join a team while being a member of another team with the same team_item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/15/accept"
     Then the response code should be 422
     And the response body should be, in JSON:
@@ -75,7 +75,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the group id is wrong
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/abc/accept"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
@@ -83,7 +83,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails if the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a POST request to "/current-user/group-invitations/14/accept"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"

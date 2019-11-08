@@ -41,11 +41,11 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
 		var login string
-		var userGroupID int64
+		var userID int64
 		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
-			userGroupID = retryIDStore.NewID()
+			userID = retryIDStore.NewID()
 			return retryIDStore.Groups().InsertMap(map[string]interface{}{
-				"id":          userGroupID,
+				"id":          userID,
 				"type":        "UserSelf",
 				"created_at":  database.Now(),
 				"opened":      false,
@@ -59,23 +59,23 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 				"login":          login,
 				"temp_user":      true,
 				"registered_at":  database.Now(),
-				"group_id":       userGroupID,
+				"group_id":       userID,
 				"owned_group_id": nil,
 				"last_ip":        strings.SplitN(r.RemoteAddr, ":", 2)[0],
 			})
 		}))
 
-		service.MustNotBeError(store.Groups().ByID(userGroupID).UpdateColumn(map[string]interface{}{
+		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
 			"name":        login,
 			"description": login,
 		}).Error())
 
 		domainConfig := domain.ConfigFromContext(r.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
-			[]database.ParentChild{{ParentID: domainConfig.RootTempGroupID, ChildID: userGroupID}}))
+			[]database.ParentChild{{ParentID: domainConfig.RootTempGroupID, ChildID: userID}}))
 
 		var err error
-		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userGroupID)
+		token, expiresIn, err = authlib.CreateNewTempSession(store.Sessions(), userID)
 		return err
 	}))
 

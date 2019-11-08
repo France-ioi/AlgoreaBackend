@@ -54,7 +54,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -108,7 +108,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 01:01:01        |
       | 31       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 03:03:03        |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -164,7 +164,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 201
     And the response body should be, in JSON:

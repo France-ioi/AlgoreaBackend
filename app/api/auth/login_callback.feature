@@ -95,10 +95,10 @@ Feature: Login callback
       | 8674665223082153551 | 8674665223082153551 | true    |
     And the table "login_states" should be empty
     And the table "sessions" should be:
-      | expires_at          | user_group_id       | issuer       | issued_at           | access_token                |
+      | expires_at          | user_id             | issuer       | issued_at           | access_token                |
       | 2020-07-16 22:02:29 | 5577006791947779410 | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
-      | user_group_id       | refresh_token                |
+      | user_id             | refresh_token                |
       | 5577006791947779410 | {{refresh_token_from_oauth}} |
 
   Scenario Outline: Update an existing user
@@ -180,13 +180,13 @@ Feature: Login callback
       | {{cookie}}                       | {{state}}                        | 2019-07-16 22:02:29 |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the database has the following table 'sessions':
-      | expires_at          | user_group_id | issuer       | issued_at           | access_token         |
-      | 2020-06-16 22:02:49 | 11            | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
-      | 2020-06-16 22:02:49 | 13            | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
+      | expires_at          | user_id | issuer       | issued_at           | access_token         |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1 |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2 |
     And the database has the following table 'refresh_tokens':
-      | user_group_id | refresh_token         |
-      | 11            | previousrefreshtoken1 |
-      | 13            | previousrefreshtoken2 |
+      | user_id | refresh_token         |
+      | 11      | previousrefreshtoken1 |
+      | 13      | previousrefreshtoken2 |
     And the "Cookie" request header is "login_csrf={{cookie}}"
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
       """
@@ -226,14 +226,14 @@ Feature: Login callback
       | cookie                           | state                            | expires_at          |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
     And the table "sessions" should be:
-      | expires_at          | user_group_id | issuer       | issued_at           | access_token                |
-      | 2020-06-16 22:02:49 | 11            | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
-      | 2020-06-16 22:02:49 | 13            | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
-      | 2020-07-16 22:02:49 | 11            | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
+      | expires_at          | user_id | issuer       | issued_at           | access_token                |
+      | 2020-06-16 22:02:49 | 11      | login-module | 2019-06-16 22:02:28 | previousaccesstoken1        |
+      | 2020-06-16 22:02:49 | 13      | login-module | 2019-06-16 22:02:28 | previousaccesstoken2        |
+      | 2020-07-16 22:02:49 | 11      | login-module | 2019-07-16 22:02:28 | {{access_token_from_oauth}} |
     And the table "refresh_tokens" should be:
-      | user_group_id | refresh_token                |
-      | 11            | {{refresh_token_from_oauth}} |
-      | 13            | previousrefreshtoken2        |
+      | user_id | refresh_token                |
+      | 11      | {{refresh_token_from_oauth}} |
+      | 13      | previousrefreshtoken2        |
   Examples:
     | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | default_language | free_text    | web_site                  | sex    | email_verified |
     | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | en               | I'm Jane Doe | http://jane.freepages.com | Female | true           |

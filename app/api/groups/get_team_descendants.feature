@@ -164,7 +164,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 22                | 69             | 0       |
 
   Scenario: Get descendant teams
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -242,7 +242,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: Get the first team from the list
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -286,7 +286,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: Get teams skipping the first one
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/1/team-descendants?from.name=First%20Team&from.id=16"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -330,7 +330,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     """
 
   Scenario: No teams
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/16/team-descendants"
     Then the response code should be 200
     And the response body should be, in JSON:

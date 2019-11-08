@@ -39,7 +39,7 @@ Feature: Get item information for breadcrumb - robustness
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty |
       | 52 | 22             | 23            | 1           | 0          |
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "The IDs chain is corrupt"
@@ -55,7 +55,7 @@ Feature: Get item information for breadcrumb - robustness
       | id | parent_item_id | child_item_id | child_order | difficulty |
       | 52 | 21             | 22            | 1           | 0          |
       | 53 | 22             | 23            | 1           | 0          |
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/24/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "The IDs chain is corrupt"
@@ -71,7 +71,7 @@ Feature: Get item information for breadcrumb - robustness
       | 51 | 21             | 22            | 1           | 0          |
       | 52 | 22             | 23            | 1           | 0          |
       | 53 | 23             | 24            | 1           | 0          |
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/21/22/24/23/breadcrumbs"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item ids"
@@ -85,7 +85,7 @@ Feature: Get item information for breadcrumb - robustness
       | id | parent_item_id | child_item_id | child_order | difficulty |
       | 52 | 22             | 23            | 1           | 0          |
       | 53 | 23             | 24            | 1           | 0          |
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/22/23/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "The IDs chain is corrupt"
@@ -99,25 +99,25 @@ Feature: Get item information for breadcrumb - robustness
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order | difficulty |
       | 52 | 22             | 23            | 1           | 0          |
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/21/22/23/breadcrumbs"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights on given item ids"
 
   Scenario: Should fail when the user doesn't exist
-    And I am the user with group_id "404"
+    And I am the user with id "404"
     When I send a GET request to "/items/21/22/23/breadcrumbs"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: Invalid ids
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/11111111111111111111111111111/2222222222222222222222222222/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
 
   Scenario: More than 10 ids
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a GET request to "/items/1/2/3/4/5/6/7/8/9/10/11/breadcrumbs"
     Then the response code should be 400
     And the response error message should contain "No more than 10 ids expected"

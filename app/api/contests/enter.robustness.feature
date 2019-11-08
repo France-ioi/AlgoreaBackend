@@ -46,7 +46,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 52                | 52             | 1       |
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a POST request to "/contests/abc/groups/31"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
@@ -55,7 +55,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_attempts" should be empty
 
   Scenario: Wrong group_id
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a POST request to "/contests/50/groups/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
@@ -64,7 +64,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_attempts" should be empty
 
   Scenario: The item is not visible to the current user
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a POST request to "/contests/50/groups/21"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -73,7 +73,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_attempts" should be empty
 
   Scenario: The item is visible, but it doesn't exist
-    Given I am the user with group_id "31"
+    Given I am the user with id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -89,7 +89,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/50/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -105,7 +105,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/50/groups/21"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -121,7 +121,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/10"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -136,7 +136,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/31"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -152,7 +152,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And I am the user with group_id "21"
+    And I am the user with id "21"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -173,7 +173,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 60      | 9999-01-01 10:21 | 9999-12-31 23:59:59 |
       | 41       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 |
       | 51       | 60      | 2007-01-01 10:21 | 2008-12-31 23:59:59 |
-    And I am the user with group_id "31"
+    And I am the user with id "31"
     When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

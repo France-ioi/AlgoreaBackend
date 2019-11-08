@@ -95,7 +95,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	}
 	user := srv.GetUser(r)
 	query := srv.Store.GroupAttempts().VisibleAndByItemID(user, itemID).
-		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_user_group_id").
+		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_id").
 		Select(`
 			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,
 			groups_attempts.started_at, creators.login AS user_creator__login,

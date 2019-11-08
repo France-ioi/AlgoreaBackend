@@ -319,7 +319,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 
 type activeContestInfo struct {
 	ItemID                   int64
-	UserGroupID              int64
+	UserID                   int64
 	ContestEnteringCondition string
 	IsTeamContest            bool
 
@@ -384,7 +384,7 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 		StartTime:                time.Time(results[0].EnteredAt),
 		EndTime:                  endTime,
 		ItemID:                   results[0].ItemID,
-		UserGroupID:              user.GroupID,
+		UserID:                   user.GroupID,
 		ContestEnteringCondition: results[0].ContestEnteringCondition,
 		IsTeamContest:            results[0].IsTeamContest,
 	}

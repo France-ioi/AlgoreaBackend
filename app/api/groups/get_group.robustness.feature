@@ -10,19 +10,19 @@ Feature: Get group by groupID (groupView) - robustness
       | 14 | Group C | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | true        | null       | null          | null                | false        |
 
   Scenario: Should fail when group_id is invalid
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: Should fail when the user is neither an owner of the group nor a descendant of the group and free_access=0
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Should fail when the user doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/groups/13"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"

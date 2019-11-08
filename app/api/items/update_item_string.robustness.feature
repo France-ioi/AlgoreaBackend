@@ -31,7 +31,7 @@ Feature: Update item strings - robustness
       | 3  |
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -43,7 +43,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Invalid item_id
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/abc/strings/default" with the following body:
       """
       {
@@ -55,7 +55,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The title is too long
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -77,7 +77,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Image URL is too long
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -99,7 +99,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The subtitle is too long
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
@@ -121,7 +121,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Wrong language
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/404" with the following body:
       """
       {
@@ -132,7 +132,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: Invalid language_id
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/abc" with the following body:
       """
       {
@@ -143,7 +143,7 @@ Feature: Update item strings - robustness
     And the table "items_strings" should stay unchanged
 
   Scenario: The user doesn't have rights to manage the item
-    And I am the user with group_id "11"
+    And I am the user with id "11"
     When I send a PUT request to "/items/60/strings/default" with the following body:
       """
       {

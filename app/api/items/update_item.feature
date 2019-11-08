@@ -42,7 +42,7 @@ Background:
     | 3  |
 
   Scenario: Valid
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -64,7 +64,7 @@ Background:
       | 11       | 60      | solution           | true               |
 
   Scenario: Valid (all the fields are set)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     And the database has the following table 'groups':
       | id    |
       | 12345 |
@@ -141,7 +141,7 @@ Background:
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid with empty full_screen
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -158,7 +158,7 @@ Background:
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid without any fields
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {
@@ -172,7 +172,7 @@ Background:
     And the table "permissions_granted" should stay unchanged
 
   Scenario: Valid with empty children array
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
     {

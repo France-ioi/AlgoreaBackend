@@ -182,7 +182,7 @@ DELETE `groups_items` FROM `groups_items` LEFT JOIN `items` ON `items`.`id` = `g
 INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       IFNULL(`groups_items`.`creator_user_group_id`, -1) AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_id`, -1) AS `giver_group_id`,
        IFNULL(NULLIF(GREATEST(
                              IFNULL(`groups_items`.`partial_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`full_access_since`, '1000-01-01 00:00:00'),
@@ -204,7 +204,7 @@ WHERE `groups_items`.`partial_access_since` IS NOT NULL OR
 INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, can_grant_view, can_watch, can_edit, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       IFNULL(`groups_items`.`creator_user_group_id`, -1) AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_id`, -1) AS `giver_group_id`,
        NOW() AS `latest_update_on`,
        'solution' AS `can_view`,
        'solution' AS `can_grant_view`,
@@ -244,7 +244,7 @@ CREATE TABLE `groups_items` (
   `id` bigint(20) NOT NULL,
   `group_id` bigint(20) NOT NULL,
   `item_id` bigint(20) NOT NULL,
-  `creator_user_group_id` bigint(20) DEFAULT NULL COMMENT 'Group of the user who created the entry',
+  `creator_id` bigint(20) DEFAULT NULL COMMENT 'User who created the entry',
   `partial_access_since` datetime DEFAULT NULL COMMENT 'At what date the group obtains partial access to the item',
   `access_reason` varchar(200) DEFAULT NULL COMMENT 'Manual comment about why the current access was given',
   `full_access_since` datetime DEFAULT NULL COMMENT 'At what date the group obtains full access to the item',
@@ -268,7 +268,7 @@ CREATE TABLE `groups_items` (
   KEY `full_access` (`cached_full_access`,`cached_full_access_since`),
   KEY `access_solutions` (`cached_access_solutions`,`cached_solutions_access_since`),
   KEY `partial_access` (`cached_partial_access`,`cached_partial_access_since`),
-  CONSTRAINT `fk_groups_items_creator_user_group_id_users_group_id` FOREIGN KEY (`creator_user_group_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL
+  CONSTRAINT `fk_groups_items_creator_id_users_group_id` FOREIGN KEY (`creator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Access given to a group on a specific item, both directly and inherited from ancestor items.';
 
 CREATE TABLE `groups_items_propagate` (
@@ -375,11 +375,11 @@ ALTER TABLE `items_items`
 UPDATE `items_items` SET `partial_access_propagation` = `content_view_propagation` + 0;
 
 INSERT INTO `groups_items` (
-    `group_id`, `item_id`, `creator_user_group_id`, `solutions_access_since`, `full_access_since`, `partial_access_since`,
+    `group_id`, `item_id`, `creator_id`, `solutions_access_since`, `full_access_since`, `partial_access_since`,
     `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
-       IF(`permissions_granted`.`giver_group_id` = -1, NULL, `permissions_granted`.`giver_group_id`) AS `creator_user_group_id`,
+       IF(`permissions_granted`.`giver_group_id` = -1, NULL, `permissions_granted`.`giver_group_id`) AS `creator_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
            `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
@@ -390,7 +390,7 @@ SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`can_edit` = 'all' AS `manager_access`
 FROM `permissions_granted`
 ON DUPLICATE KEY UPDATE
-    `groups_items`.`creator_user_group_id` = IFNULL(`groups_items`.`creator_user_group_id`, VALUES(`creator_user_group_id`)),
+    `groups_items`.`creator_id` = IFNULL(`groups_items`.`creator_id`, VALUES(`creator_id`)),
     `groups_items`.`solutions_access_since` = IFNULL(`groups_items`.`solutions_access_since`, VALUES(`solutions_access_since`)),
     `groups_items`.`full_access_since` = IFNULL(`groups_items`.`full_access_since`, VALUES(`full_access_since`)),
     `groups_items`.`partial_access_since` = IFNULL(`groups_items`.`partial_access_since`, VALUES(`partial_access_since`)),

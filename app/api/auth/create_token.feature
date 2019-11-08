@@ -12,15 +12,15 @@ Feature: Request a new access token
       | 14       | john        | false     |
     And the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'sessions':
-      | user_group_id | expires_at          | access_token              |
-      | 12            | 2019-07-16 22:02:29 | someaccesstoken           |
-      | 12            | 2019-07-16 22:02:40 | anotheraccesstoken        |
-      | 13            | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 13            | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
+      | user_id | expires_at          | access_token              |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken        |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the database has the following table 'refresh_tokens':
-      | user_group_id | refresh_token       |
-      | 13            | refreshtokenforjane |
-      | 14            | refreshtokenforjohn |
+      | user_id | refresh_token       |
+      | 13      | refreshtokenforjane |
+      | 14      | refreshtokenforjohn |
     And the application config is:
       """
       auth:
@@ -48,11 +48,11 @@ Feature: Request a new access token
       Generated a session token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
-      | user_group_id | expires_at          | access_token              |
-      | 12            | 2019-07-16 22:02:29 | someaccesstoken           |
-      | 12            | 2019-07-17 00:02:28 | newaccesstoken            |
-      | 13            | 2019-07-16 22:02:29 | accesstokenforjane        |
-      | 13            | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
+      | user_id | expires_at          | access_token              |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken           |
+      | 12      | 2019-07-17 00:02:28 | newaccesstoken            |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane        |
+      | 13      | 2019-07-16 22:02:31 | anotheraccesstokenforjane |
     And the table "refresh_tokens" should stay unchanged
 
   Scenario: Request a new access token for a normal user
@@ -78,12 +78,12 @@ Feature: Request a new access token
       }
       """
     And the table "sessions" should be:
-      | user_group_id | expires_at          | access_token          |
-      | 12            | 2019-07-16 22:02:29 | someaccesstoken       |
-      | 12            | 2019-07-16 22:02:40 | anotheraccesstoken    |
-      | 13            | 2019-07-16 22:02:29 | accesstokenforjane    |
-      | 13            | 2020-07-16 22:02:29 | newaccesstokenforjane |
+      | user_id | expires_at          | access_token          |
+      | 12      | 2019-07-16 22:02:29 | someaccesstoken       |
+      | 12      | 2019-07-16 22:02:40 | anotheraccesstoken    |
+      | 13      | 2019-07-16 22:02:29 | accesstokenforjane    |
+      | 13      | 2020-07-16 22:02:29 | newaccesstokenforjane |
     And the table "refresh_tokens" should be:
-      | user_group_id | refresh_token          |
-      | 13            | newrefreshtokenforjane |
-      | 14            | refreshtokenforjohn    |
+      | user_id | refresh_token          |
+      | 13      | newrefreshtokenforjane |
+      | 14      | refreshtokenforjohn    |

@@ -404,7 +404,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			access_rights.can_view_generated_value
     FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_group_id=?", user.GroupID).
+		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND can_view_generated_value > ?",
 			accessRights.SubQuery(), s.PermissionsGranted().ViewIndexByKind("none")).

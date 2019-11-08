@@ -93,7 +93,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 31       | 70      | 2017-05-29 06:38:38 | 1     |
 
   Scenario: Updates an existing row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
@@ -148,7 +148,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Creates a new row
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
@@ -205,7 +205,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Doesn't create a new row when seconds=0
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=0"
     Then the response code should be 200
     And the response should be "updated"
@@ -214,7 +214,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Creates a new row for a user group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a PUT request to "/contests/70/groups/31/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"

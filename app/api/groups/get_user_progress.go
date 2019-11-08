@@ -121,12 +121,12 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
-	var userGroupIDs []interface{}
-	userGroupIDQuery := srv.Store.ActiveGroupAncestors().
+	var userIDs []interface{}
+	userIDQuery := srv.Store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'UserSelf'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
-	userGroupIDQuery, apiError := service.ApplySortingAndPaging(r, userGroupIDQuery, map[string]*service.FieldSortingParams{
+	userIDQuery, apiError := service.ApplySortingAndPaging(r, userIDQuery, map[string]*service.FieldSortingParams{
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "groups.name", FieldType: "string"},
 		"id":   {ColumnName: "groups.id", FieldType: "int64"},
@@ -134,11 +134,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	if apiError != service.NoError {
 		return apiError
 	}
-	userGroupIDQuery = service.NewQueryLimiter().Apply(r, userGroupIDQuery)
-	service.MustNotBeError(userGroupIDQuery.
-		Pluck("groups.id", &userGroupIDs).Error())
+	userIDQuery = service.NewQueryLimiter().Apply(r, userIDQuery)
+	service.MustNotBeError(userIDQuery.
+		Pluck("groups.id", &userIDs).Error())
 
-	if len(userGroupIDs) == 0 {
+	if len(userIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
 		return service.NoError
 	}
@@ -278,11 +278,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				first_validated_attempt_of_team.id,
 				first_validated_attempt_of_user.id
 			)`).
-		Where("groups.id IN (?)", userGroupIDs).
+		Where("groups.id IN (?)", userIDs).
 		Group("groups.id, items.id").
 		Order(gorm.Expr(
-			"FIELD(groups.id"+strings.Repeat(", ?", len(userGroupIDs))+")",
-			userGroupIDs...)).
+			"FIELD(groups.id"+strings.Repeat(", ?", len(userIDs))+")",
+			userIDs...)).
 		Order(gorm.Expr(
 			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).

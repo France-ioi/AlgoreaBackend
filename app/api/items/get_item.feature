@@ -58,16 +58,16 @@ Feature: Get item view information
       | 109 | 22       | 210     | 1     | 12342 | 12                   | true      | true     | true         | 11           | 2019-01-30 09:26:42 | 2019-02-01 09:26:42 | 2019-01-31 09:26:42 |
       | 110 | 22       | 220     | 1     | 12344 | 14                   | true      | true     | true         | 11           | 2019-01-30 09:26:44 | 2019-02-01 09:26:44 | 2019-01-31 09:26:44 |
     And the database has the following table 'users_items':
-      | user_group_id | item_id | active_attempt_id |
-      | 11            | 200     | 101               |
-      | 11            | 210     | 102               |
-      | 11            | 220     | 103               |
-      | 14            | 210     | 104               |
-      | 17            | 200     | 105               |
-      | 17            | 210     | 106               |
-      | 22            | 200     | 108               |
-      | 22            | 210     | 109               |
-      | 22            | 220     | 110               |
+      | user_id | item_id | active_attempt_id |
+      | 11      | 200     | 101               |
+      | 11      | 210     | 102               |
+      | 11      | 220     | 103               |
+      | 14      | 210     | 104               |
+      | 17      | 200     | 105               |
+      | 17      | 210     | 106               |
+      | 22      | 200     | 108               |
+      | 22      | 210     | 109               |
+      | 22      | 220     | 110               |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | solution                 |
@@ -82,7 +82,7 @@ Feature: Get item view information
       | 2  | fr   |
 
   Scenario: Full access on all items
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -222,7 +222,7 @@ Feature: Get item view information
     """
 
   Scenario: Chapter as a root node (full access)
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/items/210"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -277,7 +277,7 @@ Feature: Get item view information
     """
 
   Scenario: Chapter as a root node (without solution access)
-    Given I am the user with group_id "14"
+    Given I am the user with id "14"
     When I send a GET request to "/items/210"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -331,7 +331,7 @@ Feature: Get item view information
     """
 
   Scenario: Full access on all items (with user language)
-    Given I am the user with group_id "17"
+    Given I am the user with id "17"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -460,7 +460,7 @@ Feature: Get item view information
     """
 
   Scenario: Grayed access on children
-    Given I am the user with group_id "22"
+    Given I am the user with id "22"
     When I send a GET request to "/items/200"
     Then the response code should be 200
     And the response body should be, in JSON:

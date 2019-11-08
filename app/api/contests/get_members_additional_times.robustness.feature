@@ -32,55 +32,55 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 21       | 70      | content_with_descendants |
 
   Scenario: Wrong item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/abc/groups/13/members/additional-times"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: No such item
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/90/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No access to the item
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/10/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is not a timed contest
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The user is not a contest admin
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Wrong group_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/abc/members/additional-times"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: The group is not owned by the user
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/12/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No such group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/404/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Wrong sort
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/13/members/additional-times?sort=title"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "title""

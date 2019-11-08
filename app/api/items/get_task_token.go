@@ -114,7 +114,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userItemStore := store.UserItems()
-		err = userItemStore.Where("user_group_id = ?", user.GroupID).Where("item_id = ?", itemID).
+		err = userItemStore.Where("user_id = ?", user.GroupID).Where("item_id = ?", itemID).
 			WithWriteLock().PluckFirst("active_attempt_id", &activeAttemptID).Error()
 
 		// No active attempt set in `users_items` so we should choose or create one

@@ -27,16 +27,16 @@ func TestUserItemStore_SetActiveAttempt(t *testing.T) {
 		assert.NoError(t, err)
 
 		type userItem struct {
-			UserGroupID     int64
+			UserID          int64
 			ItemID          int64
 			ActiveAttemptID int64
 		}
 		var insertedUserItem userItem
 		assert.NoError(t,
-			userItemStore.Select("user_group_id, item_id, active_attempt_id").
+			userItemStore.Select("user_id, item_id, active_attempt_id").
 				Scan(&insertedUserItem).Error())
 		assert.Equal(t, userItem{
-			UserGroupID:     121,
+			UserID:          121,
 			ItemID:          34,
 			ActiveAttemptID: groupAttemptID,
 		}, insertedUserItem)

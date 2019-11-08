@@ -30,7 +30,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       | 7  | 14              | 21             | invitationAccepted | 2017-02-21 06:38:38 |
 
   Scenario: No code
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code"
     Then the response code should be 400
     And the response error message should contain "Missing code"
@@ -39,7 +39,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join with a wrong code
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=abcdef"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -52,7 +52,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join with an expired code
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=3456789abc"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -65,7 +65,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join a group that is not a team
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=dcef123492"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -78,7 +78,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join a closed team
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=75987654ab"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -91,7 +91,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join an already joined group
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=cba9876543"
     Then the response code should be 422
     And the response body should be, in JSON:
@@ -107,7 +107,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Join a team while being a member of another team with the same team_item_id
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=5987654abc"
     Then the response code should be 422
     And the response body should be, in JSON:

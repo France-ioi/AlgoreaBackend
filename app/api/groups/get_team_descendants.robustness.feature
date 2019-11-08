@@ -14,25 +14,25 @@ Feature: List team descendants of the group (groupTeamDescendantView) - robustne
       | 22                | 22             | 1       |
 
   Scenario: User is not an admin of the group
-    Given I am the user with group_id "11"
+    Given I am the user with id "11"
     When I send a GET request to "/groups/13/team-descendants"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Group id is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/abc/team-descendants"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: User not found
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a GET request to "/groups/13/team-descendants"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
   Scenario: sort is incorrect
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a GET request to "/groups/13/team-descendants?sort=myname"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""

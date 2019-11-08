@@ -25,21 +25,21 @@ Feature: Discard the code of the given group - robustness
       | 78 | 21                | 21             | 1       |
 
   Scenario: User is not an admin of the group
-    Given I am the user with group_id "41"
+    Given I am the user with id "41"
     When I send a DELETE request to "/groups/13/code"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups" should stay unchanged
 
   Scenario: User doesn't exist
-    Given I am the user with group_id "404"
+    Given I am the user with id "404"
     When I send a DELETE request to "/groups/13/code"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups" should stay unchanged
 
   Scenario: The group id is not a number
-    Given I am the user with group_id "21"
+    Given I am the user with id "21"
     When I send a DELETE request to "/groups/1_3/code"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"

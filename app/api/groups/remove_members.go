@@ -15,15 +15,15 @@ import (
 // description:
 //   Lets an admin remove users from a group.
 //   On success the service sets `groups_groups.type` to "removed" and `type_changed_at` to current UTC time
-//   for each of `user_group_ids`. It also refreshes the access rights.
+//   for each of `user_ids`. It also refreshes the access rights.
 //
 //
 //   The authenticated user should be an owner of the `group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   Each of the input `user_group_ids` should have the input `group_id` as a parent and the
+//   Each of the input `user_ids` should have the input `group_id` as a parent and the
 //   `groups_groups.type` should be one of "invitationAccepted"/"requestAccepted"/"joinedByCode",
-//   otherwise the `user_group_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
+//   otherwise the `user_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
 //
 //
 //   The response status code on success (200) doesn't depend on per-group results.
@@ -32,7 +32,7 @@ import (
 //   in: path
 //   type: integer
 //   required: true
-// - name: user_group_ids
+// - name: user_ids
 //   in: query
 //   type: array
 //   items:
@@ -54,7 +54,7 @@ import (
 //           type: string
 //           description: "true"
 //         data:
-//           description: "`user_group_id` -> `result`"
+//           description: "`user_id` -> `result`"
 //           type: object
 //           additionalProperties:
 //             type: string
@@ -73,7 +73,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		return service.ErrInvalidRequest(err)
 	}
 
-	userGroupIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_group_ids")
+	userIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -83,14 +83,14 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		return apiErr
 	}
 
-	results := make(database.GroupGroupTransitionResults, len(userGroupIDs))
-	for _, userGroupID := range userGroupIDs {
-		results[userGroupID] = notFound
+	results := make(database.GroupGroupTransitionResults, len(userIDs))
+	for _, userID := range userIDs {
+		results[userID] = notFound
 	}
 
 	var groupsToRemove []int64
 	service.MustNotBeError(srv.Store.Users().Select("group_id").
-		Where("group_id IN (?)", userGroupIDs).Pluck("group_id", &groupsToRemove).Error())
+		Where("group_id IN (?)", userIDs).Pluck("group_id", &groupsToRemove).Error())
 
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToRemove) > 0 {
