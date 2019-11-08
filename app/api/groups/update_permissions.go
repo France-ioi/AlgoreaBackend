@@ -127,17 +127,17 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func checkUserHasRightsToSetCanView(canView string, s *database.DataStore, user *database.User, itemID int64) bool {
-	requiredPermission := canView
-	if requiredPermission == "info" { // no "info" in can_grant_view
-		requiredPermission = "content"
+func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.DataStore, user *database.User, itemID int64) bool {
+	requiredGrantViewPermission := viewPermissionToSet
+	if requiredGrantViewPermission == "info" { // no "info" in can_grant_view
+		requiredGrantViewPermission = "content"
 	}
 	// permissions_generated.can_grant_view_generated should be >= data["can_view"]
 	found, err := s.PermissionsGenerated().
 		MatchingUserAncestors(user).
 		Select("permissions_generated.item_id").
 		Where("permissions_generated.can_grant_view_generated_value >= ?",
-			s.PermissionsGranted().GrantViewIndexByKind(requiredPermission)).
+			s.PermissionsGranted().GrantViewIndexByKind(requiredGrantViewPermission)).
 		Where("permissions_generated.item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	return found
