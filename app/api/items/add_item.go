@@ -117,16 +117,6 @@ type NewItemRequest struct {
 	Children []itemChild `json:"children" validate:"children"`
 }
 
-// permissionsGrantedData creates a map containing the db data to be inserted into the permissions_granted table
-func (in *NewItemRequest) permissionsGrantedData(userGroupID, groupID, itemID int64) map[string]interface{} {
-	return map[string]interface{}{
-		"item_id":        itemID,
-		"group_id":       groupID,
-		"giver_group_id": userGroupID,
-		"is_owner":       true,
-	}
-}
-
 func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.DataStore) bool {
 	if len(in.Children) == 0 {
 		return true
@@ -338,7 +328,13 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemMap["default_language_id"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
-		service.MustNotBeError(s.PermissionsGranted().InsertMap(newItemRequest.permissionsGrantedData(user.GroupID, user.GroupID, itemID)))
+		service.MustNotBeError(s.PermissionsGranted().InsertMap(
+			map[string]interface{}{
+				"item_id":        itemID,
+				"group_id":       user.GroupID,
+				"giver_group_id": user.GroupID,
+				"is_owner":       true,
+			}))
 
 		stringMap["id"] = s.NewID()
 		stringMap["item_id"] = itemID
