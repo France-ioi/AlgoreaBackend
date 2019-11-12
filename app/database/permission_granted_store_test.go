@@ -39,7 +39,7 @@ func TestPermissionGrantedStore_After_HandlesErrorOfComputeAllAccess(t *testing.
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestPermissionGrantedStore_ViewIndexByKind(t *testing.T) {
+func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -60,7 +60,7 @@ func TestPermissionGrantedStore_ViewIndexByKind(t *testing.T) {
 	assert.Panics(t, func() { permissionGrantedStore.ViewIndexByName("unknown") })
 }
 
-func TestPermissionGrantedStore_ViewKindByIndex(t *testing.T) {
+func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -82,7 +82,7 @@ func TestPermissionGrantedStore_ViewKindByIndex(t *testing.T) {
 	assert.Panics(t, func() { permissionGrantedStore.ViewNameByIndex(10) })
 }
 
-func TestPermissionGrantedStore_ViewKindByIndex_Load(t *testing.T) {
+func TestPermissionGrantedStore_ViewNameByIndex_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -95,7 +95,7 @@ func TestPermissionGrantedStore_ViewKindByIndex_Load(t *testing.T) {
 	assert.Equal(t, "solution", permissionGrantedStore.ViewNameByIndex(5))
 }
 
-func TestPermissionGrantedStore_GrantViewIndexByKind(t *testing.T) {
+func TestPermissionGrantedStore_GrantViewIndexByName(t *testing.T) {
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -118,7 +118,7 @@ func TestPermissionGrantedStore_GrantViewIndexByKind(t *testing.T) {
 	assert.Equal(t, 4, permissionGrantedStore.GrantViewIndexByName("solution"))
 }
 
-func TestPermissionGrantedStore_GrantViewIndexByKind_Load(t *testing.T) {
+func TestPermissionGrantedStore_GrantViewIndexByName_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -131,7 +131,7 @@ func TestPermissionGrantedStore_GrantViewIndexByKind_Load(t *testing.T) {
 	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByName("transfer"))
 }
 
-func TestPermissionGrantedStore_EditIndexByKind(t *testing.T) {
+func TestPermissionGrantedStore_EditIndexByName(t *testing.T) {
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -153,7 +153,7 @@ func TestPermissionGrantedStore_EditIndexByKind(t *testing.T) {
 	assert.Panics(t, func() { permissionGrantedStore.EditIndexByName("unknown") })
 }
 
-func TestPermissionGrantedStore_EditIndexByKind_Load(t *testing.T) {
+func TestPermissionGrantedStore_EditIndexByName_Load(t *testing.T) {
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
