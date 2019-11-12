@@ -118,7 +118,7 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		"groups_ancestors_active.child_group_id = ? " +
 		"WHERE (items.id = ?) AND (items.duration IS NOT NULL) " +
 		"GROUP BY items.id " +
-		"HAVING (MAX(permissions_generated.can_view_generated_value) >= ?) " +
+		"HAVING (MAX(can_view_generated_value) >= ?) " +
 		"LIMIT 1")).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
 	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).
