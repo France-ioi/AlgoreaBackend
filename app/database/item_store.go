@@ -75,8 +75,8 @@ func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasA
 	return count == int64(len(idsMap)), nil
 }
 
-// AllItemsAreVisible returns whether all the items are visible to the user
-func (s *ItemStore) AllItemsAreVisible(user *User, itemIDs ...int64) (hasAccess bool, err error) {
+// AreAllVisible returns whether all the items are visible to the user
+func (s *ItemStore) AreAllVisible(user *User, itemIDs ...int64) (hasAccess bool, err error) {
 	var count int64
 	if len(itemIDs) == 0 {
 		return true, nil

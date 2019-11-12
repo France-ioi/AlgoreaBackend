@@ -292,7 +292,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User) 
 		if len(idsMap) != len(children) {
 			return false
 		}
-		hasAccess, err := store.Items().AllItemsAreVisible(user, ids...)
+		hasAccess, err := store.Items().AreAllVisible(user, ids...)
 		service.MustNotBeError(err)
 		return hasAccess
 	})

@@ -508,7 +508,7 @@ func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 	}
 }
 
-func TestItemStore_AllItemsAreVisible(t *testing.T) {
+func TestItemStore_AreAllVisible(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 11}, {id: 12}, {id: 13}]
 		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
@@ -545,7 +545,7 @@ func TestItemStore_AllItemsAreVisible(t *testing.T) {
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				user := &database.User{}
 				assert.NoError(t, user.LoadByID(store, test.userID))
-				allAreVisible, err := store.Items().AllItemsAreVisible(user, test.ids...)
+				allAreVisible, err := store.Items().AreAllVisible(user, test.ids...)
 				assert.Equal(t, test.wantResult, allAreVisible)
 				assert.NoError(t, err)
 				return nil

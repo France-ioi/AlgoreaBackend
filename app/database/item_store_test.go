@@ -158,18 +158,18 @@ func TestItemStore_CanGrantViewContentOnAll_HandlesDBErrors(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemStore_AllItemsAreVisible_MustBeInTransaction(t *testing.T) {
+func TestItemStore_AreAllVisible_MustBeInTransaction(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_, _ = NewDataStore(db).Items().AllItemsAreVisible(&User{GroupID: 14}, 20)
+		_, _ = NewDataStore(db).Items().AreAllVisible(&User{GroupID: 14}, 20)
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemStore_AllItemsAreVisible_HandlesDBErrors(t *testing.T) {
+func TestItemStore_AreAllVisible_HandlesDBErrors(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -179,7 +179,7 @@ func TestItemStore_AllItemsAreVisible_HandlesDBErrors(t *testing.T) {
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, NewDataStore(db).InTransaction(func(store *DataStore) error {
-		result, err := store.Items().AllItemsAreVisible(&User{GroupID: 14}, 20)
+		result, err := store.Items().AreAllVisible(&User{GroupID: 14}, 20)
 		assert.False(t, result)
 		return err
 	}))
