@@ -122,7 +122,7 @@ func (s *ItemStore) ValidateUserAccess(user *User, itemIDs []int64) (bool, error
 		return false, err
 	}
 
-	if err := checkAccess(itemIDs, accessDetails); err != nil {
+	if err := s.checkAccess(itemIDs, accessDetails); err != nil {
 		log.Infof("checkAccess %v %v", itemIDs, accessDetails)
 		log.Infof("User access validation failed: %v", err)
 		return false, nil
@@ -154,22 +154,22 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 // - user has to have full access to all items
 // OR
 // - user has to have full access to all but last, and info access to that last item.
-func checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
+func (s *ItemStore) checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
 	for i, id := range itemIDs {
 		last := i == len(itemIDs)-1
-		if err := checkAccessForID(id, last, accDets); err != nil {
+		if err := s.checkAccessForID(id, last, accDets); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) error {
+func (s *ItemStore) checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) error {
 	for _, res := range accDets {
 		if res.ItemID != id {
 			continue
 		}
-		if res.CanView == "solution" || res.CanView == "content_with_descendants" || res.CanView == "content" {
+		if res.CanView != "" && s.PermissionsGranted().ViewIndexByName(res.CanView) >= s.PermissionsGranted().ViewIndexByName("content") {
 			// OK, user has full access.
 			return nil
 		}

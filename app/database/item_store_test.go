@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckAccess(t *testing.T) {
+func TestItemStore_CheckAccess(t *testing.T) {
 	testCases := []struct {
 		desc              string
 		itemIDs           []int64
@@ -68,10 +68,17 @@ func TestCheckAccess(t *testing.T) {
 			err: nil,
 		},
 	}
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	clearAllPermissionEnums()
+	mockPermissionEnumQueries(dbMock)
+	NewDataStore(db).PermissionsGranted().loadViewKinds()
+
 	for _, tC := range testCases {
 		tC := tC
 		t.Run(tC.desc, func(t *testing.T) {
-			err := checkAccess(tC.itemIDs, tC.itemAccessDetails)
+			err := NewDataStore(db).Items().checkAccess(tC.itemIDs, tC.itemAccessDetails)
 			if err != nil {
 				if tC.err != nil {
 					if want, got := tC.err.Error(), err.Error(); want != got {
@@ -86,6 +93,7 @@ func TestCheckAccess(t *testing.T) {
 			}
 		})
 	}
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
 func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
@@ -102,6 +110,8 @@ func TestItemStore_CheckSubmissionRights_MustBeInTransaction(t *testing.T) {
 func TestItemStore_ContestManagedByUser(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
+	clearAllPermissionEnums()
 
 	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
 		WillReturnRows(dbMock.NewRows([]string{"values"}).
