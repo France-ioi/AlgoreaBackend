@@ -17,18 +17,7 @@ func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
 // for all the items on that the given group has `can_view_generated` >= `viewPermission`.
 // Note that the `groupID` can be nil.
 func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID *int64, viewPermission string) *DB {
-	return s.
-		Select(`
-			item_id,
-			MAX(can_view_generated_value) AS can_view_generated_value`).
-		Joins(`
-			JOIN (
-				SELECT * FROM groups_ancestors_active
-				WHERE groups_ancestors_active.child_group_id = ?
-			) AS ancestors
-			ON ancestors.ancestor_group_id = permissions_generated.group_id`, groupID).
-		WherePermissionIsAtLeast("view", viewPermission).
-		Group("permissions_generated.item_id")
+	return s.WithPermissionForGroup(groupID, "view", viewPermission)
 }
 
 // WithPermissionForGroup returns a composable query for getting access rights

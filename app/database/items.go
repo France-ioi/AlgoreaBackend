@@ -4,8 +4,7 @@ package database
 // on that the given user has `can_view_generated` >= `viewPermission`
 // basing on the given view.
 func (conn *DB) WhereUserHasViewPermissionOnItems(user *User, viewPermission string) *DB {
-	itemsPerms := NewDataStore(newDB(conn.db.New())).PermissionsGenerated().WithViewPermissionForUser(user, viewPermission)
-	return conn.Joins("JOIN ? AS rights ON rights.item_id = items.id", itemsPerms.SubQuery())
+	return conn.WhereUserHasPermissionOnItems(user, "view", viewPermission)
 }
 
 // WhereUserHasPermissionOnItems returns a subview of the items
