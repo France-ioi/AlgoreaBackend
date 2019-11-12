@@ -19,7 +19,7 @@ import (
 //
 //   * One of (`user_id`, `item_id`) pair or `attempt_id` is required.
 //
-//   * The user should have at least partial access to the item.
+//   * The user should have at least 'content' access to the item.
 //
 //   * If `item_id` and `user_id` are given, the authenticated user should have `group_id` equal to the input `user_id`
 //   or be an owner of a group containing the input `user_id`.
@@ -239,7 +239,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if accessDetails[0].IsGrayed() {
+	if accessDetails[0].IsInfo() {
 		return service.ErrForbidden(errors.New("insufficient access rights on the given item id"))
 	}
 

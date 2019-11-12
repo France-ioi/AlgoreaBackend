@@ -30,7 +30,7 @@ func (s *PermissionGrantedStore) After() (err error) {
 	return nil
 }
 
-func (s *PermissionGrantedStore) removePartialAccess(groupID, itemID int64) {
+func (s *PermissionGrantedStore) removeContentAccess(groupID, itemID int64) {
 	mustNotBeError(s.Where("item_id = ?", itemID).Where("group_id = ?", groupID).
 		Where("giver_group_id = -1").Where("can_view = 'content'").
 		Where("is_owner = 0").

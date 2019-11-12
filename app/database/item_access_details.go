@@ -17,8 +17,8 @@ type ItemAccessDetailsWithID struct {
 	ItemAccessDetails
 }
 
-// IsGrayed returns true when can_view_generated = 'info'
-func (accessDetails *ItemAccessDetails) IsGrayed() bool {
+// IsInfo returns true when can_view_generated = 'info'
+func (accessDetails *ItemAccessDetails) IsInfo() bool {
 	return accessDetails.CanView == canViewInfo
 }
 

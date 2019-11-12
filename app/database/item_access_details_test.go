@@ -8,11 +8,11 @@ import (
 
 var canViewValues = []string{"none", "info", "content", "content_with_descendants", "solution"}
 
-func TestItemAccessDetails_IsGrayed(t *testing.T) {
+func TestItemAccessDetails_IsInfo(t *testing.T) {
 	for _, canView := range canViewValues {
 		canView := canView
 		t.Run(canView, func(t *testing.T) {
-			assert.Equal(t, canView == "info", (&ItemAccessDetails{CanView: canView}).IsGrayed())
+			assert.Equal(t, canView == "info", (&ItemAccessDetails{CanView: canView}).IsInfo())
 		})
 	}
 }

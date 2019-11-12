@@ -117,7 +117,7 @@ Background:
     ]
     """
 
-  Scenario: Partial access on the item and the user's self group is the groups_attempts.group_id
+  Scenario: 'Content' access on the item and the user's self group is the groups_attempts.group_id
     Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=102"
     Then the response code should be 200

@@ -155,7 +155,7 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			expectedFound: true,
 		},
 		{
-			name: "okay (partial access)",
+			name: "okay (content access)",
 			fixture: `
 				users_answers: [{id: 200, user_id: 101, item_id: 50, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]
 				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,

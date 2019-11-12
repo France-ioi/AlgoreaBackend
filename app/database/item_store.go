@@ -153,7 +153,7 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 // checkAccess checks if the user has access to all items:
 // - user has to have full access to all items
 // OR
-// - user has to have full access to all but last, and grayed access to that last item.
+// - user has to have full access to all but last, and info access to that last item.
 func checkAccess(itemIDs []int64, accDets []ItemAccessDetailsWithID) error {
 	for i, id := range itemIDs {
 		last := i == len(itemIDs)-1
@@ -174,7 +174,7 @@ func checkAccessForID(id int64, last bool, accDets []ItemAccessDetailsWithID) er
 			return nil
 		}
 		if res.CanView == canViewInfo && last {
-			// OK, user has grayed access on the last item.
+			// OK, user has info access on the last item.
 			return nil
 		}
 		return fmt.Errorf("not enough perm on item_id %d", id)
@@ -267,7 +267,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 	// TODO: handle case where the item is both in a contest and in a non-contest chapter the user has access to
 
 	// ItemID & FullAccess for time-limited ancestors of the item
-	// to which the user has at least grayed access.
+	// to which the user has at least 'info' access.
 	// Note that while an answer is always related to a task,
 	// tasks cannot be time-limited, only chapters can.
 	// So, actually here we select time-limited chapters that are ancestors of the task.
@@ -399,8 +399,8 @@ func (s *ItemStore) closeContest(itemID int64, user *User) {
 
 	permissionGrantedStore := s.PermissionsGranted()
 
-	// TODO: "remove partial access if other access were present" (what did he mean???)
-	permissionGrantedStore.removePartialAccess(user.GroupID, itemID)
+	// TODO: "remove 'content' access if other access were present" (what did he mean???)
+	permissionGrantedStore.removeContentAccess(user.GroupID, itemID)
 	mustNotBeError(permissionGrantedStore.db.Exec(`
 		DELETE permissions_granted
 		FROM permissions_granted
@@ -426,7 +426,7 @@ func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
 
 	permissionGrantedStore := s.PermissionsGranted()
 	// Remove access
-	permissionGrantedStore.removePartialAccess(teamGroupID, itemID)
+	permissionGrantedStore.removeContentAccess(teamGroupID, itemID)
 
 	// we do not need to call PermissionGrantedStore.After() because we do not grant new access here
 	permissionGrantedStore.computeAllAccess()

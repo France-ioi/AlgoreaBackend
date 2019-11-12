@@ -108,7 +108,7 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 
 		parentItem, hasParentItem := idMap[rawData[index].ParentItemID]
 		if !hasParentItem || parentItem.CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
-			continue // The parent item is grayed
+			continue // Only 'info' access to the parent item
 		}
 
 		if parentItemCommonFields, ok := idsToResponseData[rawData[index].ParentItemID]; ok {

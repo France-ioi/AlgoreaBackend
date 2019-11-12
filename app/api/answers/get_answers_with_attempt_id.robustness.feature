@@ -36,7 +36,7 @@ Background:
     | 110 | 13       | 210     | 2     |
     | 120 | 13       | 200     | 0     |
 
-  Scenario: Should fail when the user has only grayed access to the item
+  Scenario: Should fail when the user has only info access to the item
     Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=110"
     Then the response code should be 403

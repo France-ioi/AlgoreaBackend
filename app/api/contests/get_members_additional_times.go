@@ -18,7 +18,7 @@ import (
 //                  * descendant teams linked to the item via `team_item_id` if `items.has_attempts`
 //                  * end-users groups otherwise
 //
-//                having at least grayed access to the item, the service returns their
+//                having at least 'info' access to the item, the service returns their
 //                `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
 //
 //

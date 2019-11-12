@@ -30,7 +30,7 @@ Background:
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | info                     |
 
-  Scenario: Should fail when the user has only grayed access to the item
+  Scenario: Should fail when the user has only info access to the item
     Given I am the user with id "11"
     When I send a GET request to "/answers?item_id=210&user_id=11"
     Then the response code should be 403

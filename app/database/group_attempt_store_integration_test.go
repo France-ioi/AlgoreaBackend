@@ -67,7 +67,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 50,
 		},
 		{
-			name: "okay (partial access)",
+			name: "okay (content access)",
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:      100,
@@ -277,7 +277,7 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			itemID:      50,
 		},
 		{
-			name:        "okay (partial access)",
+			name:        "okay (content access)",
 			fixture:     `groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:   100,
 			userID:      101,

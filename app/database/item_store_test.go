@@ -58,7 +58,7 @@ func TestCheckAccess(t *testing.T) {
 			err: nil,
 		},
 		{
-			desc:    "content access on all but last, last is grayed",
+			desc:    "content access on all but last, info access to the last",
 			itemIDs: []int64{21, 22, 23},
 			itemAccessDetails: []ItemAccessDetailsWithID{
 				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},

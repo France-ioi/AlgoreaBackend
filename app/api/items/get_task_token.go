@@ -36,7 +36,7 @@ import (
 //
 //   Restrictions:
 //
-//     * the user should have at least partial access to the item,
+//     * the user should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
 //     * for items with `has_attempts`=1 the user's team should exist when a new attempt is being created,
 //

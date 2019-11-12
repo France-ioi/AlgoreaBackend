@@ -5,10 +5,10 @@ Feature: Get item for tree navigation
       | 11 | jdoe            |         | -2    | UserAdmin |
       | 12 | jdoe-admin      |         | -2    | UserAdmin |
       | 13 | Group B         |         | -2    | Class     |
-      | 14 | gray_root       |         | -2    | UserAdmin |
-      | 15 | gray_root-admin |         | -2    | UserAdmin |
-      | 16 | gray_mid        |         | -2    | UserAdmin |
-      | 17 | gray_mid-admin  |         | -2    | UserAdmin |
+      | 14 | info_root       |         | -2    | UserAdmin |
+      | 15 | info_root-admin |         | -2    | UserAdmin |
+      | 16 | info_mid        |         | -2    | UserAdmin |
+      | 17 | info_mid-admin  |         | -2    | UserAdmin |
       | 18 | french          |         | -2    | UserAdmin |
       | 19 | french-admin    |         | -2    | UserAdmin |
     And the database has the following table 'languages':
@@ -17,8 +17,8 @@ Feature: Get item for tree navigation
     And the database has the following table 'users':
       | login     | temp_user | group_id | owned_group_id | default_language |
       | jdoe      | 0         | 11       | 12             |                  |
-      | gray_root | 0         | 14       | 15             |                  |
-      | gray_mid  | 0         | 16       | 17             |                  |
+      | info_root | 0         | 14       | 15             |                  |
+      | info_mid  | 0         | 16       | 17             |                  |
       | fr_user   | 0         | 18       | 19             | fr               |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
@@ -410,7 +410,7 @@ Feature: Get item for tree navigation
       }
       """
 
-  Scenario: Should return only one node if the user has only grayed access to the root item
+  Scenario: Should return only one node if the user has only info access to the root item
     Given I am the user with id "14"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
@@ -432,7 +432,7 @@ Feature: Get item for tree navigation
       }
       """
 
-  Scenario: Should skip children of grayed nodes
+  Scenario: Should skip children of nodes with 'info' access
     Given I am the user with id "16"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200

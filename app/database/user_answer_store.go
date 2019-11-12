@@ -83,17 +83,17 @@ func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, itemID int64, attempt
 
 // Visible returns a composable query for getting users_answers with the following access rights
 // restrictions:
-// 1) the user should have at least partial access rights to the users_answers.item_id item,
+// 1) the user should have at least 'content' access rights to the users_answers.item_id item,
 // 2) the user is able to see answers related to his group's attempts, so:
 //   (a) if items.has_attempts = 1, then the user should be a member of the groups_attempts.group_id team
 //   (b) if items.has_attempts = 0, then groups_attempts.group_id should be equal to the user's self group
 func (s *UserAnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-	// the user should have at least partial access to the item
+	// the user should have at least 'content' access to the item
 	itemsQuery := s.Items().WhereUserHasViewPermissionOnItems(user, "content")
 
 	return s.
-		// the user should have at least partial access to the users_answers.item_id
+		// the user should have at least 'content' access to the users_answers.item_id
 		Joins("JOIN ? AS items ON items.id = users_answers.item_id", itemsQuery.SubQuery()).
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = users_answers.item_id AND groups_attempts.id = users_answers.attempt_id").
 		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,

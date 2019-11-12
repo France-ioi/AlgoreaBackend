@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestPermissionGrantedStore_RemovePartialAccess(t *testing.T) {
+func TestPermissionGrantedStore_RemoveContentAccess(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 10}, {id: 11}, {id: 12}]
 		items: [{id: 1234}, {id: 1235}, {id: 1236}]
@@ -26,7 +26,7 @@ func TestPermissionGrantedStore_RemovePartialAccess(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
-	permissionGrantedStore.RemovePartialAccess(10, 1234)
+	permissionGrantedStore.RemoveContentAccess(10, 1234)
 
 	expected := []map[string]interface{}{
 		{"group_id": "10", "item_id": "1234", "can_view": "none"},
@@ -51,7 +51,7 @@ func TestPermissionGrantedStore_RemovePartialAccess(t *testing.T) {
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
 	assert.Equal(t, expectedGenerated, got)
 
-	permissionGrantedStore.RemovePartialAccess(11, 1235)
+	permissionGrantedStore.RemoveContentAccess(11, 1235)
 	assert.NoError(t, permissionGrantedStore.
 		Select("group_id, item_id, can_view").
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
@@ -61,7 +61,7 @@ func TestPermissionGrantedStore_RemovePartialAccess(t *testing.T) {
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
 	assert.Equal(t, expectedGenerated, got)
 
-	permissionGrantedStore.RemovePartialAccess(12, 1236)
+	permissionGrantedStore.RemoveContentAccess(12, 1236)
 	assert.NoError(t, permissionGrantedStore.
 		Select("group_id, item_id, can_view").
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())

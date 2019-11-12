@@ -27,7 +27,7 @@ type updateCurrentRequest struct {
 // summary: Update current answer
 // description: Update user's current answer. Used for auto-saving while working on a task.
 //
-//   * The authenticated user should have at least partial access to the `groups_attempts[attempt_id].item_id`
+//   * The authenticated user should have at least 'content' access to the `groups_attempts[attempt_id].item_id`
 //
 //   * `groups_attempts.group_id` should be the user's selfGroup (if `items.has_attempts=0`) or the user's team (otherwise)
 //   [this extra check just ensures the consistency of data]

@@ -57,7 +57,7 @@ Scenario: Full access on all breadcrumb
   ]
   """
 
-Scenario: Partial access on all breadcrumb
+Scenario: 'Content' access on all breadcrumb
   Given the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated |
     | 13       | 21      | content            |
@@ -79,7 +79,7 @@ Scenario: Partial access on all breadcrumb
     ]
     """
 
-Scenario: Partial access to all items except for last which is grayed
+Scenario: Content access to all items except for last for which we have info access
   Given the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated |
     | 13       | 21      | content            |

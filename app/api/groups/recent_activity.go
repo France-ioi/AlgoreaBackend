@@ -61,7 +61,7 @@ type groupRecentActivityResponseRow struct {
 //
 //
 //   All rows of the result are related to users who are descendants of the `group_id` and items that are
-//   descendants of `item_id` and visible to the authenticated user (at least grayed access).
+//   descendants of `item_id` and visible to the authenticated user (at least 'info' access).
 //
 //
 //   If the `validated` parameter is true, only validated `users_answers` (with `validated`=1) are returned.

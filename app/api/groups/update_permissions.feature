@@ -124,7 +124,7 @@ Feature: Change item access rights for a group
       | 25       | 102     | none               | none                     | none                | none               |
       | 25       | 103     | none               | none                     | none                | none               |
 
-  Scenario: Create a new permissions_granted row (the group has only partial access on the item's parent)
+  Scenario: Create a new permissions_granted row (the group has only 'content' access on the item's parent)
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
@@ -206,7 +206,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | none               | 0                  |
       | 31       | 103     | none               | 0                  |
 
-  Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has partial access to the item itself)
+  Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has 'content' access to the item itself)
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
@@ -250,7 +250,7 @@ Feature: Change item access rights for a group
       | 31       | 102     | none               | 0                  |
       | 31       | 103     | none               | 0                  |
 
-  Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has grayed access to the item itself)
+  Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has info access to the item itself)
     Given I am the user with id "21"
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |

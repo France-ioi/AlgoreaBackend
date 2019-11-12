@@ -94,7 +94,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 31       | 70      | 00:01:00        |
       | 41       | 70      | 00:01:00        |
 
-  Scenario: Partial access for group, solutions access for user, additional time from parent groups
+  Scenario: Content access for group, solutions access for user, additional time from parent groups
     Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
     Then the response code should be 200
@@ -109,7 +109,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Grayed access for group, full access for user
+  Scenario: Info access for group, full access for user
     Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
     Then the response code should be 200

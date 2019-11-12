@@ -15,7 +15,7 @@ import (
 // description: >
 //                Return one group matching the name and satisfying:
 //
-//                  * the group has access to the contest (grayed, partial or full);
+//                  * the group has access to the contest (info, content or content_with_descendants);
 //                  * the authenticated user is an owner of the group;
 //                  * the `groups.name` (matching `login` if a "UserSelf" group) is matching the input `name` parameter (case-insensitive)
 //

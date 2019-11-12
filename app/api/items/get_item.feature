@@ -11,14 +11,14 @@ Feature: Get item view information
       | 16 | nosolution-admin |         | -2    | UserAdmin |
       | 17 | fr               |         | -2    | UserSelf  |
       | 21 | fr-admin         |         | -2    | UserAdmin |
-      | 22 | grayed           |         | -2    | UserSelf  |
-      | 26 | grayed-admin     |         | -2    | UserAdmin |
+      | 22 | info             |         | -2    | UserSelf  |
+      | 26 | info-admin       |         | -2    | UserAdmin |
     And the database has the following table 'users':
       | login      | temp_user | group_id | owned_group_id | default_language |
       | jdoe       | 0         | 11       | 12             |                  |
       | nosolution | 0         | 14       | 16             |                  |
       | fr         | 0         | 17       | 21             | fr               |
-      | grayed     | 0         | 22       | 26             |                  |
+      | info       | 0         | 22       | 26             |                  |
     And the database has the following table 'items':
       | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
       | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
@@ -459,7 +459,7 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Grayed access on children
+  Scenario: Info access on children
     Given I am the user with id "22"
     When I send a GET request to "/items/200"
     Then the response code should be 200

@@ -6,12 +6,12 @@ Background:
     | 12 | jdoe-admin |         | -2    | UserAdmin |
     | 13 | Group B    |         | -2    | Class     |
     | 15 | gra-admin  |         | -2    | UserAdmin |
-    | 14 | grayed     |         | -2    | Class     |
+    | 14 | info       |         | -2    | Class     |
     | 16 | Group C    |         | -2    | Class     |
   And the database has the following table 'users':
-    | login  | temp_user | group_id | owned_group_id |
-    | jdoe   | 0         | 11       | 12             |
-    | grayed | 0         | 14       | 15             |
+    | login | temp_user | group_id | owned_group_id |
+    | jdoe  | 0         | 11       | 12             |
+    | info  | 0         | 14       | 15             |
   And the database has the following table 'groups_groups':
     | id | parent_group_id | child_group_id |
     | 61 | 13              | 11             |
@@ -61,9 +61,9 @@ Background:
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Should fail when the user has only grayed access rights to the root item
+  Scenario: Should fail when the user has only info access rights to the root item
     Given I am the user with id "14"
     When I send a GET request to "/items/190"
     Then the response code should be 403
-    And the response error message should contain "The item is grayed"
+    And the response error message should contain "Only 'info' access to the item"
 

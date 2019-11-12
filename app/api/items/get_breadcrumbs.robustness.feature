@@ -90,7 +90,7 @@ Feature: Get item information for breadcrumb - robustness
     Then the response code should be 400
     And the response error message should contain "The IDs chain is corrupt"
 
-  Scenario: Should fail when the user has greyed access to middle element, partial access to the rest
+  Scenario: Should fail when the user has 'info' access to middle element, 'content' access to the rest
     Given the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 13       | 21      | content            |

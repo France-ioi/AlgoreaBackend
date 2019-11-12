@@ -21,10 +21,10 @@ type itemStringCommon struct {
 	ImageURL *string `json:"image_url"`
 }
 
-type itemStringNotGrayed struct {
-	// Nullable; only if not grayed
+type itemStringNotInfo struct {
+	// Nullable; only if `can_view` >= 'content'
 	Subtitle *string `json:"subtitle"`
-	// Nullable; only if not grayed
+	// Nullable; only if `can_view` >= 'content'
 	Description *string `json:"description"`
 }
 
@@ -36,40 +36,40 @@ type itemStringRootNodeWithSolutionAccess struct {
 // Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
 type itemString struct {
 	*itemStringCommon
-	*itemStringNotGrayed
+	*itemStringNotInfo
 }
 
 // Item-related strings (from `items_strings`) in the user's default language (preferred) or the item's language
 type itemStringRoot struct {
 	*itemStringCommon
-	*itemStringNotGrayed
+	*itemStringNotInfo
 	*itemStringRootNodeWithSolutionAccess
 }
 
 // from `groups_attempts`
 type itemUserActiveAttempt struct {
-	// Nullable; only if not grayed
+	// Nullable; only if `can_view` >= 'content'
 	AttemptID int64 `json:"attempt_id,string"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	Score float32 `json:"score"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	SubmissionsAttempts int32 `json:"submissions_attempts"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	Validated bool `json:"validated"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	Finished bool `json:"finished"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	KeyObtained bool `json:"key_obtained"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	HintsCached int32 `json:"hints_cached"`
-	// Nullable; only if not grayed
+	// Nullable; only if `can_view` >= 'content'
 	// example: 2019-09-11T07:30:56Z
 	StartedAt *database.Time `json:"started_at,string"`
-	// only if not grayed
+	// only if `can_view` >= 'content'
 	// example: 2019-09-11T07:30:56Z
 	// type: string
 	ValidatedAt *database.Time `json:"validated_at,string"`
-	// Nullable; only if not grayed
+	// Nullable; only if `can_view` >= 'content'
 	// example: 2019-09-11T07:30:56Z
 	FinishedAt *database.Time `json:"finished_at,string"`
 }
@@ -194,7 +194,7 @@ type itemResponse struct {
 //
 //              * If the specified item is not visible by the current user, the 'not found' response is returned.
 //
-//              * If the current user has only grayed access on the specified item, the 'forbidden' error is returned.
+//              * If the current user has only 'info' access on the specified item, the 'forbidden' error is returned.
 // parameters:
 // - name: item_id
 //   in: path
@@ -230,7 +230,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	}
 
 	if rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
-		return service.ErrForbidden(errors.New("the item is grayed"))
+		return service.ErrForbidden(errors.New("only 'info' access to the item"))
 	}
 
 	permissionGrantedStore := srv.Store.PermissionsGranted()
@@ -443,7 +443,7 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 			itemStringCommon: constructItemStringCommon(rawData),
 		},
 	}
-	result.String.itemStringNotGrayed = constructStringNotGrayed(rawData, permissionGrantedStore)
+	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
 	result.UserActiveAttempt = constructUserActiveAttempt(rawData, permissionGrantedStore)
 	return result
 }
@@ -456,11 +456,11 @@ func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
 	}
 }
 
-func constructStringNotGrayed(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemStringNotGrayed {
+func constructStringNotInfo(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemStringNotInfo {
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("info") {
 		return nil
 	}
-	return &itemStringNotGrayed{
+	return &itemStringNotInfo{
 		Subtitle:    rawData.StringSubtitle,
 		Description: rawData.StringDescription,
 	}
@@ -513,7 +513,7 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 
 		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
 		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
-		child.String.itemStringNotGrayed = constructStringNotGrayed(&(*rawData)[index], permissionGrantedStore)
+		child.String.itemStringNotInfo = constructStringNotInfo(&(*rawData)[index], permissionGrantedStore)
 		child.UserActiveAttempt = constructUserActiveAttempt(&(*rawData)[index], permissionGrantedStore)
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category

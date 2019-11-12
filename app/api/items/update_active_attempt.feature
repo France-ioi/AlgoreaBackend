@@ -69,7 +69,7 @@ Feature: Update active attempt for an item
       | 100 | 111      | 50      | done                        | 1                                                         |
       | 101 | 111      | 50      | done                        | 0                                                         |
 
-  Scenario: User is able to fetch an active attempt (partial access)
+  Scenario: User is able to fetch an active attempt ('content' access)
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | latest_activity_at  | order |

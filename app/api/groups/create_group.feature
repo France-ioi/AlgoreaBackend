@@ -60,8 +60,8 @@ Feature: Create a group (groupCreate)
     | Class      |                   | null         |
     | Team       |                   | null         |
     | Team       | , "item_id": "10" | 10           | # full access
-    | Team       | , "item_id": "11" | 11           | # partial access
-    | Team       | , "item_id": "12" | 12           | # grayed access
+    | Team       | , "item_id": "11" | 11           | # content access
+    | Team       | , "item_id": "12" | 12           | # info access
     | Club       |                   | null         |
     | Friends    |                   | null         |
     | Other      |                   | null         |
