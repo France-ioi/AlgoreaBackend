@@ -67,6 +67,26 @@ func TestItemStore_CheckAccess(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			desc:    "content access on all but last, no access to the last",
+			itemIDs: []int64{21, 22, 23},
+			itemAccessDetails: []ItemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "none"}},
+			},
+			err: errors.New("not enough perm on item_id 23"),
+		},
+		{
+			desc:    "content access on all but last, no access details for the last",
+			itemIDs: []int64{21, 22, 23},
+			itemAccessDetails: []ItemAccessDetailsWithID{
+				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+				{ItemID: 23},
+			},
+			err: errors.New("not enough perm on item_id 23"),
+		},
 	}
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
