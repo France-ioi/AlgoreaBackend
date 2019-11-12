@@ -44,7 +44,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 			"WHERE (can_view_generated_value >= ?) "+
 			"GROUP BY permissions_generated.item_id) "+
 			"as visible ON visible.item_id = items.id")+"$").
-		WithArgs(2, database.NewDataStore(db).PermissionsGranted().ViewIndexByKind("info")).
+		WithArgs(2, database.NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}

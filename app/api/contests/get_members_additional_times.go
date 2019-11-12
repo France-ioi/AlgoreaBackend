@@ -138,8 +138,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("found_group.id").
-		Having("MAX(permissions_generated.can_view_generated_value) > ?",
-			srv.Store.PermissionsGranted().ViewIndexByKind("none"))
+		HavingMaxPermissionIsGreaterThan("view", "none")
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,

@@ -143,7 +143,7 @@ func TestItemStore_CanGrantViewContentOnAll_HandlesDBErrors(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
-	grantViewKinds = map[string]int{"content": 3}
+	grantViewNames = map[string]int{"content": 3}
 	defer clearAllPermissionEnums()
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery("").WillReturnError(expectedError)

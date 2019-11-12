@@ -51,13 +51,13 @@ func TestPermissionGrantedStore_ViewIndexByKind(t *testing.T) {
 		mutex.Lock()
 		oldLock.Restore()
 		viewIndexes = map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"}
-		viewKinds = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
+		viewNames = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
 	})
 	defer monkey.UnpatchAll()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, 5, permissionGrantedStore.ViewIndexByKind("solution"))
-	assert.Panics(t, func() { permissionGrantedStore.ViewIndexByKind("unknown") })
+	assert.Equal(t, 5, permissionGrantedStore.ViewIndexByName("solution"))
+	assert.Panics(t, func() { permissionGrantedStore.ViewIndexByName("unknown") })
 }
 
 func TestPermissionGrantedStore_ViewKindByIndex(t *testing.T) {
@@ -72,14 +72,14 @@ func TestPermissionGrantedStore_ViewKindByIndex(t *testing.T) {
 		mutex.Lock()
 		oldLock.Restore()
 		viewIndexes = map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"}
-		viewKinds = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
+		viewNames = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
 	})
 	defer monkey.UnpatchAll()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, "solution", permissionGrantedStore.ViewKindByIndex(5))
-	assert.Equal(t, "content_with_descendants", permissionGrantedStore.ViewKindByIndex(4))
-	assert.Panics(t, func() { permissionGrantedStore.ViewKindByIndex(10) })
+	assert.Equal(t, "solution", permissionGrantedStore.ViewNameByIndex(5))
+	assert.Equal(t, "content_with_descendants", permissionGrantedStore.ViewNameByIndex(4))
+	assert.Panics(t, func() { permissionGrantedStore.ViewNameByIndex(10) })
 }
 
 func TestPermissionGrantedStore_ViewKindByIndex_Load(t *testing.T) {
@@ -92,7 +92,7 @@ func TestPermissionGrantedStore_ViewKindByIndex_Load(t *testing.T) {
 	clearAllPermissionEnums()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, "solution", permissionGrantedStore.ViewKindByIndex(5))
+	assert.Equal(t, "solution", permissionGrantedStore.ViewNameByIndex(5))
 }
 
 func TestPermissionGrantedStore_GrantViewIndexByKind(t *testing.T) {
@@ -106,16 +106,16 @@ func TestPermissionGrantedStore_GrantViewIndexByKind(t *testing.T) {
 		oldLock.Unpatch()
 		mutex.Lock()
 		oldLock.Restore()
-		grantViewKinds = map[string]int{"none": 1, "content": 2, "content_with_descendants": 3, "solution": 4, "transfer": 5}
+		grantViewNames = map[string]int{"none": 1, "content": 2, "content_with_descendants": 3, "solution": 4, "transfer": 5}
 		grantViewIndexes = map[int]string{1: "none", 2: "content", 3: "content_with_descendants", 4: "solution", 5: "transfer"}
 	})
 	defer monkey.UnpatchAll()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByKind("transfer"))
-	assert.Equal(t, 3, permissionGrantedStore.GrantViewIndexByKind("content_with_descendants"))
-	assert.Panics(t, func() { permissionGrantedStore.GrantViewIndexByKind("unknown") })
-	assert.Equal(t, 4, permissionGrantedStore.GrantViewIndexByKind("solution"))
+	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByName("transfer"))
+	assert.Equal(t, 3, permissionGrantedStore.GrantViewIndexByName("content_with_descendants"))
+	assert.Panics(t, func() { permissionGrantedStore.GrantViewIndexByName("unknown") })
+	assert.Equal(t, 4, permissionGrantedStore.GrantViewIndexByName("solution"))
 }
 
 func TestPermissionGrantedStore_GrantViewIndexByKind_Load(t *testing.T) {
@@ -128,7 +128,7 @@ func TestPermissionGrantedStore_GrantViewIndexByKind_Load(t *testing.T) {
 	clearAllPermissionEnums()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByKind("transfer"))
+	assert.Equal(t, 5, permissionGrantedStore.GrantViewIndexByName("transfer"))
 }
 
 func TestPermissionGrantedStore_EditIndexByKind(t *testing.T) {
@@ -143,14 +143,14 @@ func TestPermissionGrantedStore_EditIndexByKind(t *testing.T) {
 		mutex.Lock()
 		oldLock.Restore()
 		editIndexes = map[int]string{1: "none", 2: "children", 3: "all", 4: "transfer"}
-		editKinds = map[string]int{"none": 1, "children": 2, "all": 3, "transfer": 4}
+		editNames = map[string]int{"none": 1, "children": 2, "all": 3, "transfer": 4}
 	})
 	defer monkey.UnpatchAll()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, 4, permissionGrantedStore.EditIndexByKind("transfer"))
-	assert.Equal(t, 3, permissionGrantedStore.EditIndexByKind("all"))
-	assert.Panics(t, func() { permissionGrantedStore.EditIndexByKind("unknown") })
+	assert.Equal(t, 4, permissionGrantedStore.EditIndexByName("transfer"))
+	assert.Equal(t, 3, permissionGrantedStore.EditIndexByName("all"))
+	assert.Panics(t, func() { permissionGrantedStore.EditIndexByName("unknown") })
 }
 
 func TestPermissionGrantedStore_EditIndexByKind_Load(t *testing.T) {
@@ -163,7 +163,7 @@ func TestPermissionGrantedStore_EditIndexByKind_Load(t *testing.T) {
 	clearAllPermissionEnums()
 	defer clearAllPermissionEnums()
 
-	assert.Equal(t, 4, permissionGrantedStore.EditIndexByKind("transfer"))
+	assert.Equal(t, 4, permissionGrantedStore.EditIndexByName("transfer"))
 }
 
 func mockPermissionEnumQueries(sqlMock sqlmock.Sqlmock) {
@@ -188,10 +188,10 @@ func mockPermissionEnumQueries(sqlMock sqlmock.Sqlmock) {
 }
 
 func clearAllPermissionEnums() {
-	viewKinds = nil
+	viewNames = nil
 	viewIndexes = nil
-	grantViewKinds = nil
+	grantViewNames = nil
 	grantViewIndexes = nil
-	editKinds = nil
+	editNames = nil
 	editIndexes = nil
 }

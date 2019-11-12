@@ -136,8 +136,7 @@ func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.Data
 	found, err := s.PermissionsGenerated().
 		MatchingUserAncestors(user).
 		Select("permissions_generated.item_id").
-		Where("permissions_generated.can_grant_view_generated_value >= ?",
-			s.PermissionsGranted().GrantViewIndexByKind(requiredGrantViewPermission)).
+		WherePermissionIsAtLeast("grant_view", requiredGrantViewPermission).
 		Where("permissions_generated.item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	return found

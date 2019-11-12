@@ -67,7 +67,7 @@ func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasA
 	err = s.PermissionsGenerated().MatchingUserAncestors(user).
 		WithWriteLock().
 		Where("item_id IN (?)", itemIDs).
-		Where("can_grant_view_generated_value >= ?", s.PermissionsGranted().GrantViewIndexByKind("content")).
+		WherePermissionIsAtLeast("grant_view", "content").
 		Select("COUNT(DISTINCT item_id)").Count(&count).Error()
 	if err != nil {
 		return false, err
@@ -145,7 +145,7 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 	accessDetails := make([]ItemAccessDetailsWithID, len(valuesWithIDs))
 	for i := range valuesWithIDs {
 		accessDetails[i].ItemID = valuesWithIDs[i].ItemID
-		accessDetails[i].CanView = s.PermissionsGranted().ViewKindByIndex(valuesWithIDs[i].CanViewGeneratedValue)
+		accessDetails[i].CanView = s.PermissionsGranted().ViewNameByIndex(valuesWithIDs[i].CanViewGeneratedValue)
 	}
 	return accessDetails, nil
 }
@@ -243,7 +243,7 @@ func (s *ItemStore) CheckSubmissionRights(itemID int64, user *User) (hasAccess b
 	recoverPanics(&err)
 
 	var readOnly bool
-	err = s.Visible(user).Where("can_view_generated_value >= ?", s.PermissionsGranted().ViewIndexByKind("content")).
+	err = s.Visible(user).WherePermissionIsAtLeast("view", "content").
 		Where("id = ?", itemID).
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -278,7 +278,7 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 
 	mustNotBeError(s.Visible(user).
 		Select("items.id AS item_id, can_view_generated_value >= ? AS full_access",
-			s.PermissionsGranted().ViewIndexByKind("content_with_descendants")).
+			s.PermissionsGranted().ViewIndexByName("content_with_descendants")).
 		Joins("JOIN items_ancestors ON items_ancestors.ancestor_item_id = items.id").
 		Where("items_ancestors.child_item_id = ?", itemID).
 		Where("items.duration IS NOT NULL").
@@ -441,6 +441,5 @@ func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND
 				groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Group("items.id").
-		Having("MAX(permissions_generated.can_view_generated_value) >= ?",
-			s.PermissionsGranted().ViewIndexByKind("content_with_descendants"))
+		HavingMaxPermissionIsAtLeast("view", "content_with_descendants")
 }

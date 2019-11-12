@@ -23,7 +23,7 @@ func TestPermissionGeneratedStore_AccessRightsForItemsVisibleToUser(t *testing.T
 			"WHERE groups_ancestors_active.child_group_id = ? ) AS ancestors "+
 			"ON ancestors.ancestor_group_id = permissions_generated.group_id "+
 			"WHERE (can_view_generated_value >= ?) GROUP BY permissions_generated.item_id")+"$").
-		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByKind("info")).
+		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}

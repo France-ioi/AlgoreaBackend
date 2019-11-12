@@ -98,7 +98,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id").
-		Having(`MAX(permissions_generated.can_view_generated_value) > ?`, srv.Store.PermissionsGranted().ViewIndexByKind("none")).
+		HavingMaxPermissionIsGreaterThan("view", "none").
 		Order("groups.id")
 
 	if isTeamOnly {

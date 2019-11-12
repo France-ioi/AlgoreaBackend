@@ -13,11 +13,11 @@ type PermissionGrantedStore struct {
 
 var (
 	enumsMutex       sync.RWMutex
-	viewKinds        map[string]int
+	viewNames        map[string]int
 	viewIndexes      map[int]string
-	grantViewKinds   map[string]int
+	grantViewNames   map[string]int
 	grantViewIndexes map[int]string
-	editKinds        map[string]int
+	editNames        map[string]int
 	editIndexes      map[int]string
 )
 
@@ -37,11 +37,16 @@ func (s *PermissionGrantedStore) removePartialAccess(groupID, itemID int64) {
 		UpdateColumn("can_view", "none").Error())
 }
 
-// ViewIndexByKind returns the index of the given view kind in the 'can_view' enum
-func (s *PermissionGrantedStore) ViewIndexByKind(kind string) int {
-	getterFunc := func() int { return requireIndexByKind(viewKinds, kind, "can_view") }
+// PermissionIndexByKindAndName returns the index of the given permission in the enum
+func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string) int {
+	permissionMap := map[string]*map[string]int{
+		"view":       &viewNames,
+		"grant_view": &grantViewNames,
+		"edit":       &editNames,
+	}[kind]
+	getterFunc := func() int { return requireIndexByName(*permissionMap, name, "can_"+kind) }
 	enumsMutex.RLock()
-	if len(viewKinds) != 0 {
+	if len(*permissionMap) != 0 {
 		defer enumsMutex.RUnlock()
 		return getterFunc()
 	}
@@ -49,7 +54,7 @@ func (s *PermissionGrantedStore) ViewIndexByKind(kind string) int {
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
-	if len(viewKinds) != 0 {
+	if len(*permissionMap) != 0 {
 		return getterFunc()
 	}
 
@@ -57,11 +62,21 @@ func (s *PermissionGrantedStore) ViewIndexByKind(kind string) int {
 	return getterFunc()
 }
 
-// ViewKindByIndex returns the view kind with the given index from the 'can_view' enum
-func (s *PermissionGrantedStore) ViewKindByIndex(index int) string {
-	getterFunc := func() string { return requireKindByIndex(viewIndexes, index, "can_view") }
+// ViewIndexByName returns the index of the given view kind in the 'can_view' enum
+func (s *PermissionGrantedStore) ViewIndexByName(name string) int {
+	return s.PermissionIndexByKindAndName("view", name)
+}
+
+// PermissionNameByKindAndIndex returns the permission name of the given kind with the given index from the enum
+func (s *PermissionGrantedStore) PermissionNameByKindAndIndex(kind string, index int) string {
+	permissionMap := map[string]*map[int]string{
+		"view":       &viewIndexes,
+		"grant_view": &grantViewIndexes,
+		"edit":       &editIndexes,
+	}[kind]
+	getterFunc := func() string { return requireNameByIndex(*permissionMap, index, "can_"+kind) }
 	enumsMutex.RLock()
-	if len(viewIndexes) != 0 {
+	if len(*permissionMap) != 0 {
 		defer enumsMutex.RUnlock()
 		return getterFunc()
 	}
@@ -69,23 +84,29 @@ func (s *PermissionGrantedStore) ViewKindByIndex(index int) string {
 
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
-	if len(viewIndexes) != 0 {
+	if len(*permissionMap) != 0 {
 		return getterFunc()
 	}
 
 	s.loadViewKinds()
 	return getterFunc()
+}
+
+// ViewNameByIndex returns the view permission name with the given index from the 'can_view' enum
+func (s *PermissionGrantedStore) ViewNameByIndex(index int) string {
+	return s.PermissionNameByKindAndIndex("view", index)
 }
 
 func (s *PermissionGrantedStore) loadViewKinds() {
-	viewKinds, viewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_view")
-	grantViewKinds, grantViewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_grant_view")
-	editKinds, editIndexes = s.loadKindsIntoMaps("permissions_granted", "can_edit")
+	viewNames, viewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_view")
+	grantViewNames, grantViewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_grant_view")
+	editNames, editIndexes = s.loadKindsIntoMaps("permissions_granted", "can_edit")
 }
 
 func (s *PermissionGrantedStore) loadKindsIntoMaps(tableName, columnName string) (kindsMap map[string]int, indexesMap map[int]string) {
 	var valuesString string
-	mustNotBeError(s.Table("information_schema.COLUMNS").
+	mustNotBeError(NewDataStore(newDB(s.db.New())).Table("information_schema.COLUMNS").
+		Set("gorm:query_option", "").
 		Where("TABLE_SCHEMA = DATABASE()").
 		Where("TABLE_NAME = ?", tableName).
 		Where("COLUMN_NAME = ?", columnName).
@@ -102,56 +123,26 @@ func (s *PermissionGrantedStore) loadKindsIntoMaps(tableName, columnName string)
 	return kindsMap, indexesMap
 }
 
-// GrantViewIndexByKind returns the index of the given "grant view" kind in the 'can_grant_view' enum
-func (s *PermissionGrantedStore) GrantViewIndexByKind(kind string) int {
-	getterFunc := func() int { return requireIndexByKind(grantViewKinds, kind, "can_grant_view") }
-	enumsMutex.RLock()
-	if len(grantViewKinds) != 0 {
-		defer enumsMutex.RUnlock()
-		return getterFunc()
-	}
-	enumsMutex.RUnlock()
-
-	enumsMutex.Lock()
-	defer enumsMutex.Unlock()
-	if len(grantViewKinds) != 0 {
-		return getterFunc()
-	}
-
-	s.loadViewKinds()
-	return getterFunc()
+// GrantViewIndexByName returns the index of the given "grant view" permission name in the 'can_grant_view' enum
+func (s *PermissionGrantedStore) GrantViewIndexByName(name string) int {
+	return s.PermissionIndexByKindAndName("grant_view", name)
 }
 
-// EditIndexByKind returns the index of the given "edit" kind in the 'can_edit' enum
-func (s *PermissionGrantedStore) EditIndexByKind(kind string) int {
-	getterFunc := func() int { return requireIndexByKind(editKinds, kind, "can_edit") }
-	enumsMutex.RLock()
-	if len(editKinds) != 0 {
-		defer enumsMutex.RUnlock()
-		return getterFunc()
-	}
-	enumsMutex.RUnlock()
-
-	enumsMutex.Lock()
-	defer enumsMutex.Unlock()
-	if len(editKinds) != 0 {
-		return getterFunc()
-	}
-
-	s.loadViewKinds()
-	return getterFunc()
+// EditIndexByName returns the index of the given "edit" permission name in the 'can_edit' enum
+func (s *PermissionGrantedStore) EditIndexByName(name string) int {
+	return s.PermissionIndexByKindAndName("edit", name)
 }
 
-func requireIndexByKind(m map[string]int, kind, name string) int {
-	if index, ok := m[kind]; ok {
+func requireIndexByName(m map[string]int, name, kind string) int {
+	if index, ok := m[name]; ok {
 		return index
 	}
-	panic(fmt.Errorf("unknown kind %s for %s", kind, name))
+	panic(fmt.Errorf("unknown permission %s for %s", name, kind))
 }
 
-func requireKindByIndex(m map[int]string, index int, name string) string {
-	if kind, ok := m[index]; ok {
-		return kind
+func requireNameByIndex(m map[int]string, index int, kind string) string {
+	if name, ok := m[index]; ok {
+		return name
 	}
-	panic(fmt.Errorf("wrong index %d for %s", index, name))
+	panic(fmt.Errorf("wrong index %d for %s", index, kind))
 }

@@ -107,7 +107,7 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 		}
 
 		parentItem, hasParentItem := idMap[rawData[index].ParentItemID]
-		if !hasParentItem || parentItem.CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByKind("info") {
+		if !hasParentItem || parentItem.CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
 			continue // The parent item is grayed
 		}
 
@@ -131,7 +131,7 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 		HasUnlockedItems:  rawData.HasUnlockedItems,
 		String:            navigationItemString{Title: rawData.Title},
 		AccessRights: navigationItemAccessRights{
-			CanView: srv.Store.PermissionsGranted().ViewKindByIndex(rawData.CanViewGeneratedValue),
+			CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 		},
 	}
 	if rawData.ItemGrandparentID == nil {

@@ -229,7 +229,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByKind("info") {
+	if rawData[0].CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
 		return service.ErrForbidden(errors.New("the item is grayed"))
 	}
 
@@ -407,7 +407,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND can_view_generated_value > ?",
-			accessRights.SubQuery(), s.PermissionsGranted().ViewIndexByKind("none")).
+			accessRights.SubQuery(), s.PermissionsGranted().ViewIndexByName("none")).
 		Order("child_order")
 
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -415,7 +415,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 }
 
 func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem, permissionGrantedStore *database.PermissionGrantedStore) {
-	if (*rawData)[0].CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("solution") {
+	if (*rawData)[0].CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
 		response.String.itemStringRootNodeWithSolutionAccess = &itemStringRootNodeWithSolutionAccess{
 			EduComment: (*rawData)[0].StringEduComment,
 		}
@@ -457,7 +457,7 @@ func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
 }
 
 func constructStringNotGrayed(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemStringNotGrayed {
-	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("info") {
+	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("info") {
 		return nil
 	}
 	return &itemStringNotGrayed{
@@ -467,7 +467,7 @@ func constructStringNotGrayed(rawData *rawItem, permissionGrantedStore *database
 }
 
 func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemUserActiveAttempt {
-	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByKind("info") || rawData.UserActiveAttemptID == nil {
+	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("info") || rawData.UserActiveAttemptID == nil {
 		return nil
 	}
 	return &itemUserActiveAttempt{

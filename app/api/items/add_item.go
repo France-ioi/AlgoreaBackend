@@ -236,7 +236,7 @@ func constructParentItemIDValidator(store *database.DataStore, user *database.Us
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		hasAccess, err := store.PermissionsGenerated().MatchingUserAncestors(user).WithWriteLock().
 			Where("item_id = ?", fl.Field().Interface().(int64)).
-			Where("can_edit_generated_value >= ?", store.PermissionsGranted().EditIndexByKind("children")).
+			WherePermissionIsAtLeast("edit", "children").
 			HasRows()
 		service.MustNotBeError(err)
 		return hasAccess
