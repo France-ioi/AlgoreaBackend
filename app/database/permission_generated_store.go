@@ -16,7 +16,7 @@ func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items on that the given group has `can_view_generated` >= `viewPermission`.
 // Note that the `groupID` can be nil.
-func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID *int64, viewPermission string) *DB {
+func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID int64, viewPermission string) *DB {
 	return s.WithPermissionForGroup(groupID, "view", viewPermission)
 }
 
@@ -24,7 +24,7 @@ func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID *int64, vi
 // (as *_generated_value) and item ids (as item_id)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
 // Note that the `groupID` can be nil.
-func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID *int64, permissionKind, neededPermission string) *DB {
+func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permissionKind, neededPermission string) *DB {
 	return s.
 		Select(`
 			item_id,
@@ -43,7 +43,7 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID *int64, permis
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items that are visible to the given group.
 // Note that the `groupID` can be nil.
-func (s *PermissionGeneratedStore) VisibleToGroup(groupID *int64) *DB {
+func (s *PermissionGeneratedStore) VisibleToGroup(groupID int64) *DB {
 	return s.WithViewPermissionForGroup(groupID, "info")
 }
 
@@ -51,19 +51,19 @@ func (s *PermissionGeneratedStore) VisibleToGroup(groupID *int64) *DB {
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items that are visible to the given user.
 func (s *PermissionGeneratedStore) VisibleToUser(user *User) *DB {
-	return s.VisibleToGroup(&user.GroupID)
+	return s.VisibleToGroup(user.GroupID)
 }
 
 // WithViewPermissionForUser returns a composable query for getting access rights
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items on that the given user has `can_view_generated` >= `viewPermission`.
 func (s *PermissionGeneratedStore) WithViewPermissionForUser(user *User, viewPermission string) *DB {
-	return s.WithViewPermissionForGroup(&user.GroupID, viewPermission)
+	return s.WithViewPermissionForGroup(user.GroupID, viewPermission)
 }
 
 // WithPermissionForUser returns a composable query for getting access rights
 // (as *_generated_value) and item ids (as item_id)
 // for all the items on that the given user has 'permissionKind' >= `neededPermission`.
 func (s *PermissionGeneratedStore) WithPermissionForUser(user *User, permissionKind, neededPermission string) *DB {
-	return s.WithPermissionForGroup(&user.GroupID, permissionKind, neededPermission)
+	return s.WithPermissionForGroup(user.GroupID, permissionKind, neededPermission)
 }
