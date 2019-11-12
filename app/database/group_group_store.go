@@ -151,11 +151,11 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 
-		// triggers delete from groups_ancestors (all except self-links) and groups_propagate,
+		// triggers/cascading delete from groups_ancestors (all except self-links) and groups_propagate,
 		// but the `before_delete_groups_groups` trigger inserts into groups_propagate again :(
 		const deleteGroupsQuery = `
 			DELETE ` + "`groups`" + `, group_children, group_parents, groups_attempts,
-						 permissions_granted, permissions_generated, groups_login_prefixes, filters
+						 groups_login_prefixes, filters
 			FROM ` + "`groups`" + `
 			LEFT JOIN groups_groups AS group_children
 				ON group_children.parent_group_id = groups.id
@@ -163,10 +163,6 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 				ON group_parents.child_group_id = groups.id
 			LEFT JOIN groups_attempts
 				ON groups_attempts.group_id = groups.id
-			LEFT JOIN permissions_granted
-				ON permissions_granted.group_id = groups.id
-			LEFT JOIN permissions_generated
-				ON permissions_generated.group_id = groups.id
 			LEFT JOIN groups_login_prefixes
 				ON groups_login_prefixes.group_id = groups.id
 			LEFT JOIN filters
