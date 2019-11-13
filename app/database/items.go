@@ -13,7 +13,7 @@ func (conn *DB) WhereUserHasViewPermissionOnItems(user *User, viewPermission str
 func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, neededPermission string) *DB {
 	itemsPerms := NewDataStore(newDB(conn.db.New())).PermissionsGenerated().
 		WithPermissionForUser(user, permissionKind, neededPermission)
-	return conn.Joins("JOIN ? AS rights ON rights.item_id = items.id", itemsPerms.SubQuery())
+	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
 }
 
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
