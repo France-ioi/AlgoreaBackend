@@ -47,63 +47,50 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtDeleteProcessedChildren.Close()) }()
 
-	// computation for group-item pairs marked as 'self' in permissions_propagate (so normally all of them)
+	// computation for group-item pairs marked as 'self' in permissions_propagate (so all of them)
 	const queryUpdatePermissionsGenerated = `
 		INSERT INTO permissions_generated
 			(group_id, item_id, can_view_generated, can_grant_view_generated, can_watch_generated, can_edit_generated, is_owner_generated)
 		SELECT
 			permissions_propagate.group_id,
 			permissions_propagate.item_id,
-			IF(granted.is_owner, 'solution', GREATEST(
-				IFNULL(granted.can_view_value, 1),
-				IFNULL(new_data.can_view_value, 1)
+			IF(MAX(permissions_granted.is_owner), 'solution', GREATEST(
+				IFNULL(MAX(permissions_granted.can_view_value), 1),
+				IFNULL(MAX(
+					CASE
+					WHEN parent.can_view_generated IS NULL OR parent.can_view_generated IN ('none', 'info') THEN 1 /* none */
+					WHEN parent.can_view_generated = 'content' OR items_items.descendants_and_solution_view_propagation IS NULL OR
+					     items_items.descendants_and_solution_view_propagation = 'none' THEN
+						CASE items_items.content_view_propagation
+						WHEN 'as_info' THEN 2 /* info */
+						WHEN 'as_content' THEN 3 /* content */
+						ELSE 1 /* none */
+						END
+					WHEN items_items.descendants_and_solution_view_propagation = 'descendants' THEN 4 /* content_with_descendants */
+					ELSE parent.can_view_generated_value
+					END), 1)
 			)) AS can_view_generated,
-			IF(granted.is_owner, 'transfer', GREATEST(
-				IFNULL(granted.can_grant_view_value, 1),
-				IFNULL(new_data.can_grant_view_value, 1)
+			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+				IFNULL(MAX(permissions_granted.can_grant_view_value), 1),
+				IFNULL(MAX(IF(items_items.grant_view_propagation, LEAST(parent.can_grant_view_generated_value, 4 /* solution */), 1)), 1)
 			)) AS can_grant_view_generated,
-			IF(granted.is_owner, 'transfer', GREATEST(
-				IFNULL(granted.can_watch_value, 1),
-				IFNULL(new_data.can_watch_value, 1)
+			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+				IFNULL(MAX(permissions_granted.can_watch_value), 1),
+				IFNULL(MAX(IF(items_items.watch_propagation, LEAST(parent.can_watch_generated_value, 3 /* answer */), 1)), 1)
 			)) AS can_watch_generated,
-			IF(granted.is_owner, 'transfer', GREATEST(
-				IFNULL(granted.can_edit_value, 1),
-				IFNULL(new_data.can_edit_value, 1)
+			IF(MAX(permissions_granted.is_owner), 'transfer', GREATEST(
+				IFNULL(MAX(permissions_granted.can_edit_value), 1),
+				IFNULL(MAX(IF(items_items.edit_propagation, LEAST(parent.can_edit_generated_value, 3 /* all */), 1)), 1)
 			)) AS can_edit_generated,
-			IFNULL(granted.is_owner, 0) AS is_owner_generated
+			IFNULL(MAX(permissions_granted.is_owner), 0) AS is_owner_generated
 		FROM permissions_propagate
-		LEFT JOIN LATERAL (
-			SELECT
-				MAX(LEAST(
-					IF(LEAST(items_items.descendants_and_solution_view_propagation_value+2, parent.can_view_generated_value) = 3,
-						items_items.content_view_propagation_value,
-						IF(parent.can_view_generated = 'info', 1, parent.can_view_generated_value)),
-					items_items.descendants_and_solution_view_propagation_value+2)) AS can_view_value,
-				MAX(IF(items_items.grant_view_propagation, LEAST(parent.can_grant_view_generated_value, 4), 1)) AS can_grant_view_value,
-				MAX(IF(items_items.watch_propagation, LEAST(parent.can_watch_generated_value, 3), 1)) AS can_watch_value,
-				MAX(IF(items_items.edit_propagation, LEAST(parent.can_edit_generated_value, 3), 1)) AS can_edit_value
-			FROM items_items
-			JOIN permissions_generated AS parent
-				ON parent.item_id = items_items.parent_item_id 
-			JOIN items AS parent_item
-				ON parent_item.id = items_items.parent_item_id
-			WHERE
-				parent.group_id = permissions_propagate.group_id AND items_items.child_item_id = permissions_propagate.item_id
-			GROUP BY permissions_propagate.group_id, permissions_propagate.item_id
-		) AS new_data ON 1
-		LEFT JOIN LATERAL (
-			SELECT
-				MAX(can_view_value) AS can_view_value,
-				MAX(can_grant_view_value) AS can_grant_view_value,
-				MAX(can_watch_value) AS can_watch_value,
-				MAX(can_edit_value) AS can_edit_value,
-				MAX(is_owner) AS is_owner
-			FROM permissions_granted
-			WHERE permissions_granted.group_id = permissions_propagate.group_id AND
-				permissions_granted.item_id = permissions_propagate.item_id
-			GROUP BY permissions_granted.group_id, permissions_granted.item_id
-		) AS granted ON 1
-		WHERE propagate_access = 'self'
+		LEFT JOIN items_items ON items_items.child_item_id = permissions_propagate.item_id
+		LEFT JOIN permissions_generated AS parent
+		  ON parent.item_id = items_items.parent_item_id AND parent.group_id = permissions_propagate.group_id
+		LEFT JOIN permissions_granted
+		  ON permissions_granted.group_id = permissions_propagate.group_id AND
+		    permissions_granted.item_id = permissions_propagate.item_id
+		GROUP BY permissions_propagate.group_id, permissions_propagate.item_id
 		ON DUPLICATE KEY UPDATE
 			can_view_generated = VALUES(can_view_generated),
 			can_grant_view_generated = VALUES(can_grant_view_generated),
@@ -114,11 +101,10 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtUpdatePermissionsGenerated.Close()) }()
 
-	// marking 'self' permissions_propagate as 'children'
+	// marking 'self' permissions_propagate (so all of them) as 'children'
 	const queryMarkSelfAsChildren = `
 		UPDATE permissions_propagate
-		SET propagate_access = 'children'
-		WHERE propagate_access = 'self'`
+		SET propagate_access = 'children'`
 	stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
