@@ -15,7 +15,6 @@ func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
 // WithViewPermissionForGroup returns a composable query for getting access rights
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items on that the given group has `can_view_generated` >= `viewPermission`.
-// Note that the `groupID` can be nil.
 func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID int64, viewPermission string) *DB {
 	return s.WithPermissionForGroup(groupID, "view", viewPermission)
 }
@@ -23,7 +22,6 @@ func (s *PermissionGeneratedStore) WithViewPermissionForGroup(groupID int64, vie
 // WithPermissionForGroup returns a composable query for getting access rights
 // (as *_generated_value) and item ids (as item_id)
 // for all the items on that the given group has 'permissionKind' >= `neededPermission`.
-// Note that the `groupID` can be nil.
 func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permissionKind, neededPermission string) *DB {
 	return s.
 		Select(`
@@ -42,7 +40,6 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permiss
 // VisibleToGroup returns a composable query for getting access rights
 // (as can_view_generated_value) and item ids (as item_id)
 // for all the items that are visible to the given group.
-// Note that the `groupID` can be nil.
 func (s *PermissionGeneratedStore) VisibleToGroup(groupID int64) *DB {
 	return s.WithViewPermissionForGroup(groupID, "info")
 }
