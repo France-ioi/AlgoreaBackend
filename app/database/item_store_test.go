@@ -1,93 +1,95 @@
 package database
 
 import (
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var accessTestCases = []struct {
+	desc              string
+	itemIDs           []int64
+	itemAccessDetails []ItemAccessDetailsWithID
+	err               error
+}{
+	{
+		desc:              "empty IDs",
+		itemIDs:           nil,
+		itemAccessDetails: nil,
+		err:               nil,
+	},
+	{
+		desc:              "empty access results",
+		itemIDs:           []int64{21, 22, 23},
+		itemAccessDetails: nil,
+		err:               fmt.Errorf("not visible item_id 21"),
+	},
+	{
+		desc:    "missing access result on one of the items",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+			{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+		},
+		err: fmt.Errorf("not visible item_id 22"),
+	},
+	{
+		desc:    "no access on one of the items",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+			{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "none"}},
+			{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+		},
+		err: fmt.Errorf("not enough perm on item_id 22"),
+	},
+	{
+		desc:    "full access on all items",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+			{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+			{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
+		},
+		err: nil,
+	},
+	{
+		desc:    "content access on all but last, info access to the last",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+			{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+			{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "info"}},
+		},
+		err: nil,
+	},
+	{
+		desc:    "content access on all but last, no access to the last",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+			{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+			{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "none"}},
+		},
+		err: errors.New("not enough perm on item_id 23"),
+	},
+	{
+		desc:    "content access on all but last, no access details for the last",
+		itemIDs: []int64{21, 22, 23},
+		itemAccessDetails: []ItemAccessDetailsWithID{
+			{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+			{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
+		},
+		err: errors.New("not visible item_id 23"),
+	},
+}
+
 func TestItemStore_CheckAccess(t *testing.T) {
-	testCases := []struct {
-		desc              string
-		itemIDs           []int64
-		itemAccessDetails []ItemAccessDetailsWithID
-		err               error
-	}{
-		{
-			desc:              "empty IDs",
-			itemIDs:           nil,
-			itemAccessDetails: nil,
-			err:               nil,
-		},
-		{
-			desc:              "empty access results",
-			itemIDs:           []int64{21, 22, 23},
-			itemAccessDetails: nil,
-			err:               fmt.Errorf("not visible item_id 21"),
-		},
-		{
-			desc:    "missing access result on one of the items",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-			},
-			err: fmt.Errorf("not visible item_id 23"),
-		},
-		{
-			desc:    "no access on one of the items",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-				{ItemID: 22},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-			},
-			err: fmt.Errorf("not enough perm on item_id 22"),
-		},
-		{
-			desc:    "full access on all items",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "content_with_descendants"}},
-			},
-			err: nil,
-		},
-		{
-			desc:    "content access on all but last, info access to the last",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "info"}},
-			},
-			err: nil,
-		},
-		{
-			desc:    "content access on all but last, no access to the last",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 23, ItemAccessDetails: ItemAccessDetails{CanView: "none"}},
-			},
-			err: errors.New("not enough perm on item_id 23"),
-		},
-		{
-			desc:    "content access on all but last, no access details for the last",
-			itemIDs: []int64{21, 22, 23},
-			itemAccessDetails: []ItemAccessDetailsWithID{
-				{ItemID: 21, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 22, ItemAccessDetails: ItemAccessDetails{CanView: "content"}},
-				{ItemID: 23},
-			},
-			err: errors.New("not enough perm on item_id 23"),
-		},
-	}
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -95,7 +97,7 @@ func TestItemStore_CheckAccess(t *testing.T) {
 	mockPermissionEnumQueries(dbMock)
 	NewDataStore(db).PermissionsGranted().loadViewKinds()
 
-	for _, tC := range testCases {
+	for _, tC := range accessTestCases {
 		tC := tC
 		t.Run(tC.desc, func(t *testing.T) {
 			err := NewDataStore(db).Items().checkAccess(tC.itemIDs, tC.itemAccessDetails)
@@ -113,6 +115,64 @@ func TestItemStore_CheckAccess(t *testing.T) {
 			}
 		})
 	}
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_ValidateUserAccess(t *testing.T) {
+	for _, tC := range accessTestCases {
+		tC := tC
+		t.Run(tC.desc, func(t *testing.T) {
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+			clearAllPermissionEnums()
+			mockPermissionEnumQueries(dbMock)
+			permissionStore := NewDataStore(db).PermissionsGranted()
+			permissionStore.loadViewKinds()
+
+			dbRows := dbMock.NewRows([]string{"item_id", "can_view_generated_value"})
+			for _, row := range tC.itemAccessDetails {
+				dbRows = dbRows.AddRow(row.ItemID, permissionStore.ViewIndexByName(row.CanView))
+			}
+			args := make([]driver.Value, 0, len(tC.itemIDs)+1)
+			args = append(args, 123)
+			for _, id := range tC.itemIDs {
+				args = append(args, id)
+			}
+			questionMarks := "NULL"
+			if len(tC.itemIDs) > 0 {
+				questionMarks = "?"
+				if len(tC.itemIDs) > 1 {
+					questionMarks += strings.Repeat(",?", len(tC.itemIDs)-1)
+				}
+			}
+			dbMock.ExpectQuery("^" + regexp.QuoteMeta(
+				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
+					"FROM `permissions_generated` "+
+					"JOIN ("+
+					"SELECT * FROM `groups_ancestors` WHERE (`groups_ancestors`.child_group_id = ?) AND "+
+					"(NOW() < `groups_ancestors`.expires_at)) AS ancestors "+
+					"ON permissions_generated.group_id = ancestors.ancestor_group_id "+
+					"WHERE (permissions_generated.item_id IN ("+questionMarks+")) GROUP BY item_id") + "$").
+				WithArgs(args...).
+				WillReturnRows(dbRows)
+			result, err := permissionStore.Items().ValidateUserAccess(&User{GroupID: 123}, tC.itemIDs)
+			assert.NoError(t, err)
+			assert.Equal(t, tC.err == nil, result)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestItemStore_ValidateUserAccess_FailsOnDBError(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	clearAllPermissionEnums()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	result, err := NewDataStore(db).Items().ValidateUserAccess(&User{GroupID: 123}, []int64{1, 2, 3})
+	assert.Equal(t, expectedError, err)
+	assert.False(t, result)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
