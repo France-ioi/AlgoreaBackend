@@ -24,6 +24,7 @@ CREATE TABLE `permissions_granted` (
     `can_edit_value` TINYINT(3) UNSIGNED AS (`can_edit` + 0) NOT NULL
         COMMENT 'can_edit as an integer (to use comparison operators)',
     PRIMARY KEY (`group_id`,`item_id`,`giver_group_id`),
+    INDEX `group_id_item_id` (`group_id`, `item_id`),
     CONSTRAINT `fk_permissions_granted_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_permissions_granted_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
 ) COMMENT 'Raw permissions given to a group on an item' ENGINE=InnoDB DEFAULT CHARSET=utf8;
