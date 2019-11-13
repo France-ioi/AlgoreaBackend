@@ -94,7 +94,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 		}
 
 		// at least one of the item's parents should be visible to the group
-		itemsVisibleToGroupSubQuery := s.PermissionsGenerated().VisibleToGroup(groupID).SubQuery()
+		itemsVisibleToGroupSubQuery := s.Permissions().VisibleToGroup(groupID).SubQuery()
 
 		found, err = s.ItemItems().
 			Joins("JOIN ? AS visible ON visible.item_id = items_items.parent_item_id", itemsVisibleToGroupSubQuery).
@@ -133,11 +133,11 @@ func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.Data
 		requiredGrantViewPermission = "content"
 	}
 	// permissions_generated.can_grant_view_generated should be >= data["can_view"]
-	found, err := s.PermissionsGenerated().
+	found, err := s.Permissions().
 		MatchingUserAncestors(user).
-		Select("permissions_generated.item_id").
+		Select("permissions.item_id").
 		WherePermissionIsAtLeast("grant_view", requiredGrantViewPermission).
-		Where("permissions_generated.item_id = ?", itemID).HasRows()
+		Where("permissions.item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	return found
 }

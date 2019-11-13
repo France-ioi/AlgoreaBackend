@@ -224,7 +224,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 // The validator checks that the user has rights to manage the parent item's children (can_edit >= children).
 func constructParentItemIDValidator(store *database.DataStore, user *database.User) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		hasAccess, err := store.PermissionsGenerated().MatchingUserAncestors(user).WithWriteLock().
+		hasAccess, err := store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Where("item_id = ?", fl.Field().Interface().(int64)).
 			WherePermissionIsAtLeast("edit", "children").
 			HasRows()

@@ -121,7 +121,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemsVisibleToUserSubQuery := srv.Store.PermissionsGenerated().VisibleToUser(user).SubQuery()
+	itemsVisibleToUserSubQuery := srv.Store.Permissions().VisibleToUser(user).SubQuery()
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
 	// There should not be many of them

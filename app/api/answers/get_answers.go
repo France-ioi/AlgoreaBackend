@@ -202,7 +202,7 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
-	itemsUserCanAccess := srv.Store.PermissionsGenerated().WithViewPermissionForUser(user, "content")
+	itemsUserCanAccess := srv.Store.Permissions().WithViewPermissionForUser(user, "content")
 
 	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("child_group_id")
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")

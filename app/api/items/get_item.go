@@ -304,7 +304,7 @@ type rawItem struct {
 func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []rawItem {
 	var result []rawItem
 
-	accessRights := s.PermissionsGenerated().WithViewPermissionForUser(user, "info")
+	accessRights := s.Permissions().WithViewPermissionForUser(user, "info")
 
 	commonColumns := `items.id AS id,
 		items.type,

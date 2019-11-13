@@ -29,7 +29,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
-	permissionGeneratedStore := database.NewDataStore(db).PermissionsGenerated()
+	permissionGeneratedStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=1").
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=2").
@@ -101,7 +101,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
-	permissionGeneratedStore := database.NewDataStore(db).PermissionsGenerated()
+	permissionGeneratedStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=1").
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=2").
@@ -177,7 +177,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 			defer func() { _ = db.Close() }()
 
 			permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
-			permissionGeneratedStore := database.NewDataStore(db).PermissionsGenerated()
+			permissionGeneratedStore := database.NewDataStore(db).Permissions()
 			assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=1").
 				UpdateColumn("can_view", access).Error())
 			assert.NoError(t, permissionGrantedStore.Where("group_id=1 AND item_id=2").

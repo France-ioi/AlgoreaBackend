@@ -417,7 +417,7 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		{GroupID: 50, ItemID: 11, CanView: "content"},
 		{GroupID: 50, ItemID: 12, CanView: "content"},
 	}, permissions)
-	assert.NoError(t, store.PermissionsGenerated().
+	assert.NoError(t, store.Permissions().
 		Select("group_id, item_id, can_view_generated AS can_view").
 		Order("group_id, item_id").
 		Scan(&permissions).Error())

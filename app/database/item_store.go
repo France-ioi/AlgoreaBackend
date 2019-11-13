@@ -56,7 +56,7 @@ func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasA
 	for _, itemID := range itemIDs {
 		idsMap[itemID] = true
 	}
-	err = s.PermissionsGenerated().MatchingUserAncestors(user).
+	err = s.Permissions().MatchingUserAncestors(user).
 		WithWriteLock().
 		Where("item_id IN (?)", itemIDs).
 		WherePermissionIsAtLeast("grant_view", "content").
@@ -78,7 +78,7 @@ func (s *ItemStore) AreAllVisible(user *User, itemIDs ...int64) (hasAccess bool,
 	for _, itemID := range itemIDs {
 		idsMap[itemID] = true
 	}
-	err = s.PermissionsGenerated().MatchingUserAncestors(user).
+	err = s.Permissions().MatchingUserAncestors(user).
 		WithWriteLock().
 		Where("item_id IN (?)", itemIDs).
 		Where("can_view_generated != 'none'").
@@ -128,7 +128,7 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 		ItemID                int64
 		CanViewGeneratedValue int
 	}
-	db := s.PermissionsGenerated().WithViewPermissionForUser(user, "info").
+	db := s.Permissions().WithViewPermissionForUser(user, "info").
 		Where("item_id IN (?)", itemIDs).
 		Scan(&valuesWithIDs)
 	if err := db.Error(); err != nil {

@@ -70,7 +70,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		}
 
 		var found bool
-		found, err = store.PermissionsGenerated().MatchingUserAncestors(user).WithWriteLock().
+		found, err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
 			Where("item_id = ?", itemID).
 			WherePermissionIsAtLeast("edit", "all").
 			HasRows()

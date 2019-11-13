@@ -45,7 +45,7 @@ func TestPermissionGrantedStore_RemoveContentAccess(t *testing.T) {
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())
 	assert.Equal(t, expected, got)
 
-	permissionGeneratedStore := permissionGrantedStore.PermissionsGenerated()
+	permissionGeneratedStore := permissionGrantedStore.Permissions()
 	assert.NoError(t, permissionGeneratedStore.
 		Select("group_id, item_id, can_view_generated").
 		Order("group_id, item_id").ScanIntoSliceOfMaps(&got).Error())

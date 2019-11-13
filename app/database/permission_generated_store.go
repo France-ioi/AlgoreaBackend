@@ -9,7 +9,7 @@ type PermissionGeneratedStore struct {
 func (s *PermissionGeneratedStore) MatchingUserAncestors(user *User) *DB {
 	db := s.GroupAncestors().UserAncestors(user)
 	userAncestors := db.SubQuery()
-	return s.Joins("JOIN ? AS ancestors ON permissions_generated.group_id = ancestors.ancestor_group_id", userAncestors)
+	return s.Joins("JOIN ? AS ancestors ON permissions.group_id = ancestors.ancestor_group_id", userAncestors)
 }
 
 // WithViewPermissionForGroup returns a composable query for getting access rights
@@ -34,9 +34,9 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permiss
 				SELECT * FROM groups_ancestors_active
 				WHERE groups_ancestors_active.child_group_id = ?
 			) AS ancestors
-			ON ancestors.ancestor_group_id = permissions_generated.group_id`, groupID).
+			ON ancestors.ancestor_group_id = permissions.group_id`, groupID).
 		WherePermissionIsAtLeast(permissionKind, neededPermission).
-		Group("permissions_generated.item_id")
+		Group("permissions.item_id")
 }
 
 // VisibleToGroup returns a composable query for getting access rights

@@ -91,7 +91,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		if input.ItemID != nil {
 			hasRows, itemErr := store.Raw("SELECT 1 FROM ? AS access_rights",
-				store.PermissionsGenerated().VisibleToUser(user).Where("item_id = ?", *input.ItemID).
+				store.Permissions().VisibleToUser(user).Where("item_id = ?", *input.ItemID).
 					WithWriteLock().SubQuery()).HasRows()
 			service.MustNotBeError(itemErr)
 			if !hasRows {

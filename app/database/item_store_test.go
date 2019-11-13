@@ -147,13 +147,13 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 			}
 			dbMock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
-					"FROM `permissions_generated` "+
+					"FROM permissions_generated AS permissions "+
 					"JOIN ( "+
 					"SELECT * FROM groups_ancestors_active WHERE groups_ancestors_active.child_group_id = ? "+
 					") AS ancestors "+
-					"ON ancestors.ancestor_group_id = permissions_generated.group_id "+
+					"ON ancestors.ancestor_group_id = permissions.group_id "+
 					"WHERE (can_view_generated_value >= ?) AND (item_id IN ("+questionMarks+")) "+
-					"GROUP BY permissions_generated.item_id") + "$").
+					"GROUP BY permissions.item_id") + "$").
 				WithArgs(args...).
 				WillReturnRows(dbRows)
 			result, err := permissionStore.Items().ValidateUserAccess(&User{GroupID: 123}, tC.itemIDs)

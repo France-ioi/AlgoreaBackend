@@ -29,7 +29,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		}))
 	}, 30)
 
-	permissionsGeneratedStore := dataStore.PermissionsGenerated()
+	permissionsGeneratedStore := dataStore.Permissions()
 	var result []groupItemsResultRow
 
 	allDone := []groupItemsResultRow{

@@ -18,35 +18,35 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		function  func(store *DataStore) *DB
 		wantTable string
 	}{
-		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "groups"},
-		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "groups_ancestors"},
-		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "groups_ancestors_active"},
-		{"GroupAttempts", func(store *DataStore) *DB { return store.GroupAttempts().Where("") }, "groups_attempts"},
-		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "groups_groups"},
-		{"ActiveGroupGroups", func(store *DataStore) *DB { return store.ActiveGroupGroups().Where("") }, "groups_groups_active"},
-		{"GroupContestItems", func(store *DataStore) *DB { return store.GroupContestItems().Where("") }, "groups_contest_items"},
-		{"PermissionsGenerated", func(store *DataStore) *DB { return store.PermissionsGenerated().Where("") }, "permissions_generated"},
-		{"PermissionsGranted", func(store *DataStore) *DB { return store.PermissionsGranted().Where("") }, "permissions_granted"},
-		{"Items", func(store *DataStore) *DB { return store.Items().Where("") }, "items"},
-		{"ItemAncestors", func(store *DataStore) *DB { return store.ItemAncestors().Where("") }, "items_ancestors"},
-		{"ItemItems", func(store *DataStore) *DB { return store.ItemItems().Where("") }, "items_items"},
-		{"ItemStrings", func(store *DataStore) *DB { return store.ItemStrings().Where("") }, "items_strings"},
-		{"Languages", func(store *DataStore) *DB { return store.Languages().Where("") }, "languages"},
-		{"LoginStates", func(store *DataStore) *DB { return store.LoginStates().Where("") }, "login_states"},
-		{"Platforms", func(store *DataStore) *DB { return store.Platforms().Where("") }, "platforms"},
-		{"RefreshTokens", func(store *DataStore) *DB { return store.RefreshTokens().Where("") }, "refresh_tokens"},
-		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "sessions"},
-		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "users"},
-		{"UserAnswers", func(store *DataStore) *DB { return store.UserAnswers().Where("") }, "users_answers"},
-		{"UserItems", func(store *DataStore) *DB { return store.UserItems().Where("") }, "users_items"},
+		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "`groups`"},
+		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "`groups_ancestors`"},
+		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "`groups_ancestors_active`"},
+		{"GroupAttempts", func(store *DataStore) *DB { return store.GroupAttempts().Where("") }, "`groups_attempts`"},
+		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "`groups_groups`"},
+		{"ActiveGroupGroups", func(store *DataStore) *DB { return store.ActiveGroupGroups().Where("") }, "`groups_groups_active`"},
+		{"GroupContestItems", func(store *DataStore) *DB { return store.GroupContestItems().Where("") }, "`groups_contest_items`"},
+		{"Permissions", func(store *DataStore) *DB { return store.Permissions().Where("") }, "permissions_generated AS permissions"},
+		{"PermissionsGranted", func(store *DataStore) *DB { return store.PermissionsGranted().Where("") }, "`permissions_granted`"},
+		{"Items", func(store *DataStore) *DB { return store.Items().Where("") }, "`items`"},
+		{"ItemAncestors", func(store *DataStore) *DB { return store.ItemAncestors().Where("") }, "`items_ancestors`"},
+		{"ItemItems", func(store *DataStore) *DB { return store.ItemItems().Where("") }, "`items_items`"},
+		{"ItemStrings", func(store *DataStore) *DB { return store.ItemStrings().Where("") }, "`items_strings`"},
+		{"Languages", func(store *DataStore) *DB { return store.Languages().Where("") }, "`languages`"},
+		{"LoginStates", func(store *DataStore) *DB { return store.LoginStates().Where("") }, "`login_states`"},
+		{"Platforms", func(store *DataStore) *DB { return store.Platforms().Where("") }, "`platforms`"},
+		{"RefreshTokens", func(store *DataStore) *DB { return store.RefreshTokens().Where("") }, "`refresh_tokens`"},
+		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "`sessions`"},
+		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
+		{"UserAnswers", func(store *DataStore) *DB { return store.UserAnswers().Where("") }, "`users_answers`"},
+		{"UserItems", func(store *DataStore) *DB { return store.UserItems().Where("") }, "`users_items`"},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
-			mock.ExpectQuery("SELECT \\* FROM `" + tt.wantTable + "`"). // nolint:gosec
-											WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
+			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable). // nolint:gosec
+										WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
 
 			var result []interface{}
 			assert.NoError(t, tt.function(NewDataStore(db)).Scan(&result).Error())
@@ -68,7 +68,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
 		{"ActiveGroupGroups", func(store *DataStore) interface{} { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
 		{"GroupContestItems", func(store *DataStore) interface{} { return store.GroupContestItems() }, &GroupContestItemStore{}},
-		{"PermissionsGenerated", func(store *DataStore) interface{} { return store.PermissionsGenerated() }, &PermissionGeneratedStore{}},
+		{"Permissions", func(store *DataStore) interface{} { return store.Permissions() }, &PermissionGeneratedStore{}},
 		{"PermissionsGranted", func(store *DataStore) interface{} { return store.PermissionsGranted() }, &PermissionGrantedStore{}},
 		{"Items", func(store *DataStore) interface{} { return store.Items() }, &ItemStore{}},
 		{"ItemAncestors", func(store *DataStore) interface{} { return store.ItemAncestors() }, &ItemAncestorStore{}},
