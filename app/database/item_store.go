@@ -45,14 +45,6 @@ func (s *ItemStore) VisibleGrandChildrenOfID(user *User, itemID int64) *DB {
 		Where("ii2.parent_item_id = ?", itemID)
 }
 
-// AccessRights returns a composable query for getting
-// (item_id, can_view_generated_value) for the given user
-func (s *ItemStore) AccessRights(user *User) *DB {
-	return s.PermissionsGenerated().MatchingUserAncestors(user).
-		Select("item_id, MAX(can_view_generated_value) AS can_view_generated_value").
-		Group("item_id")
-}
-
 // CanGrantViewContentOnAll returns whether the user can grant 'content' view right on all the listed items (can_grant_view >= content)
 func (s *ItemStore) CanGrantViewContentOnAll(user *User, itemIDs ...int64) (hasAccess bool, err error) {
 	var count int64
@@ -136,8 +128,8 @@ func (s *ItemStore) GetAccessDetailsForIDs(user *User, itemIDs []int64) ([]ItemA
 		ItemID                int64
 		CanViewGeneratedValue int
 	}
-	db := s.AccessRights(user).
-		Where("permissions_generated.item_id IN (?)", itemIDs).
+	db := s.PermissionsGenerated().WithViewPermissionForUser(user, "info").
+		Where("item_id IN (?)", itemIDs).
 		Scan(&valuesWithIDs)
 	if err := db.Error(); err != nil {
 		return nil, err

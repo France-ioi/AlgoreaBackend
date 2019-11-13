@@ -5,7 +5,6 @@ package database_test
 import (
 	"errors"
 	"reflect"
-	"regexp"
 	"testing"
 	"time"
 
@@ -54,29 +53,6 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			assert.Equal(t, testCase.expected, result)
 		})
 	}
-}
-
-func TestItemStore_AccessRights(t *testing.T) {
-	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mockUser := &database.User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
-
-	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
-			"FROM `permissions_generated` "+
-			"JOIN ("+
-			"SELECT * FROM `groups_ancestors` "+
-			"WHERE (`groups_ancestors`.child_group_id = ?) AND (NOW() < `groups_ancestors`.expires_at)"+
-			") AS ancestors "+
-			"ON permissions_generated.group_id = ancestors.ancestor_group_id GROUP BY item_id") + "$").
-		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"id"}))
-
-	var result []interface{}
-	err := database.NewDataStore(db).Items().AccessRights(mockUser).Scan(&result).Error()
-	assert.NoError(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
@@ -585,13 +561,10 @@ func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
 				ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"},
 			}}},
 		{name: "not visible", ids: []int64{12}, userID: 100,
-			wantResult: []database.ItemAccessDetailsWithID{{
-				ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "none"},
-			}}},
+			wantResult: []database.ItemAccessDetailsWithID{}},
 		{name: "one of two items is not visible", ids: []int64{11, 12}, userID: 100,
 			wantResult: []database.ItemAccessDetailsWithID{
 				{ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"}},
-				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "none"}},
 			}},
 		{name: "no permissions_generated row", ids: []int64{11}, userID: 110, wantResult: []database.ItemAccessDetailsWithID{}},
 		{name: "can_view_generated = content_with_descendants", ids: []int64{12}, userID: 110,

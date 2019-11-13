@@ -133,8 +133,8 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 			for _, row := range tC.itemAccessDetails {
 				dbRows = dbRows.AddRow(row.ItemID, permissionStore.ViewIndexByName(row.CanView))
 			}
-			args := make([]driver.Value, 0, len(tC.itemIDs)+1)
-			args = append(args, 123)
+			args := make([]driver.Value, 0, len(tC.itemIDs)+2)
+			args = append(args, 123, permissionStore.ViewIndexByName("info"))
 			for _, id := range tC.itemIDs {
 				args = append(args, id)
 			}
@@ -148,11 +148,12 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 			dbMock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
 					"FROM `permissions_generated` "+
-					"JOIN ("+
-					"SELECT * FROM `groups_ancestors` WHERE (`groups_ancestors`.child_group_id = ?) AND "+
-					"(NOW() < `groups_ancestors`.expires_at)) AS ancestors "+
-					"ON permissions_generated.group_id = ancestors.ancestor_group_id "+
-					"WHERE (permissions_generated.item_id IN ("+questionMarks+")) GROUP BY item_id") + "$").
+					"JOIN ( "+
+					"SELECT * FROM groups_ancestors_active WHERE groups_ancestors_active.child_group_id = ? "+
+					") AS ancestors "+
+					"ON ancestors.ancestor_group_id = permissions_generated.group_id "+
+					"WHERE (can_view_generated_value >= ?) AND (item_id IN ("+questionMarks+")) "+
+					"GROUP BY permissions_generated.item_id") + "$").
 				WithArgs(args...).
 				WillReturnRows(dbRows)
 			result, err := permissionStore.Items().ValidateUserAccess(&User{GroupID: 123}, tC.itemIDs)
@@ -167,9 +168,10 @@ func TestItemStore_ValidateUserAccess_FailsOnDBError(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	clearAllPermissionEnums()
+	mockPermissionEnumQueries(dbMock)
 
 	expectedError := errors.New("some error")
-	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	dbMock.ExpectQuery("SELECT item_id").WillReturnError(expectedError)
 	result, err := NewDataStore(db).Items().ValidateUserAccess(&User{GroupID: 123}, []int64{1, 2, 3})
 	assert.Equal(t, expectedError, err)
 	assert.False(t, result)
@@ -280,9 +282,11 @@ func TestItemStore_AreAllVisible_HandlesDBErrors(t *testing.T) {
 func TestItemStore_GetAccessDetailsForIDs_HandlesDBErrors(t *testing.T) {
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+	clearAllPermissionEnums()
+	mockPermissionEnumQueries(dbMock)
 
 	expectedError := errors.New("some error")
-	dbMock.ExpectQuery("").WillReturnError(expectedError)
+	dbMock.ExpectQuery("SELECT item_id").WillReturnError(expectedError)
 
 	result, err := NewDataStore(db).Items().GetAccessDetailsForIDs(&User{GroupID: 14}, []int64{20})
 	assert.Nil(t, result)

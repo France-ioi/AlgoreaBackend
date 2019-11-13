@@ -304,8 +304,7 @@ type rawItem struct {
 func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []rawItem {
 	var result []rawItem
 
-	accessRights := s.AccessRights(user)
-	service.MustNotBeError(accessRights.Error())
+	accessRights := s.PermissionsGenerated().WithViewPermissionForUser(user, "info")
 
 	commonColumns := `items.id AS id,
 		items.type,
@@ -406,8 +405,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
-		Joins("JOIN ? access_rights on access_rights.item_id=items.id AND can_view_generated_value > ?",
-			accessRights.SubQuery(), s.PermissionsGranted().ViewIndexByName("none")).
+		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
 		Order("child_order")
 
 	service.MustNotBeError(query.Scan(&result).Error())
