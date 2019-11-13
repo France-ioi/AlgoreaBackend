@@ -12,9 +12,9 @@ import (
 )
 
 type groupItemsResultRow struct {
-	GroupID         int64
-	ItemID          int64
-	PropagateAccess string
+	GroupID     int64
+	ItemID      int64
+	PropagateTo string
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
@@ -33,15 +33,15 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 	var result []groupItemsResultRow
 
 	allDone := []groupItemsResultRow{
-		{GroupID: 1, ItemID: 1, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 2, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 3, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 4, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 11, PropagateAccess: "done"},
-		{GroupID: 1, ItemID: 12, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 1, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 11, PropagateAccess: "done"},
-		{GroupID: 2, ItemID: 12, PropagateAccess: "done"},
+		{GroupID: 1, ItemID: 1, PropagateTo: "done"},
+		{GroupID: 1, ItemID: 2, PropagateTo: "done"},
+		{GroupID: 1, ItemID: 3, PropagateTo: "done"},
+		{GroupID: 1, ItemID: 4, PropagateTo: "done"},
+		{GroupID: 1, ItemID: 11, PropagateTo: "done"},
+		{GroupID: 1, ItemID: 12, PropagateTo: "done"},
+		{GroupID: 2, ItemID: 1, PropagateTo: "done"},
+		{GroupID: 2, ItemID: 11, PropagateTo: "done"},
+		{GroupID: 2, ItemID: 12, PropagateTo: "done"},
 	}
 
 	assert.NoError(t, permissionsGeneratedStore.Joins("LEFT JOIN permissions_propagate USING(group_id, item_id)").
@@ -49,7 +49,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		Select(`
 			group_id,
 			item_id,
-			IF(permissions_propagate.group_id IS NULL, 'done', permissions_propagate.propagate_access) AS propagate_access`).
+			IF(permissions_propagate.group_id IS NULL, 'done', permissions_propagate.propagate_to) AS propagate_to`).
 		Scan(&result).Error())
 	assert.Equal(t, allDone, result)
 }

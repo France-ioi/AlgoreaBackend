@@ -4,7 +4,7 @@ import "database/sql"
 
 // computeAllAccess recomputes fields of permissions_generated.
 //
-// It starts from group-item pairs marked with propagate_access = 'self' in `permissions_propagate`.
+// It starts from group-item pairs marked with propagate_to = 'self' in `permissions_propagate`.
 //
 // 1. can_view_generated, can_grant_view_generated, can_watch_generated, can_edit_generated, is_owner_generated are updated.
 //
@@ -23,26 +23,26 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	var stmtMarkChildrenOfChildrenAsSelf, stmtDeleteProcessedChildren, stmtUpdatePermissionsGenerated, stmtMarkSelfAsChildren *sql.Stmt
 	var err error
 
-	// marking group-item pairs whose parents are marked with propagate_access='children' as 'self'
+	// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
 	const queryMarkChildrenOfChildrenAsSelf = `
-		INSERT INTO permissions_propagate (group_id, item_id, propagate_access)
+		INSERT INTO permissions_propagate (group_id, item_id, propagate_to)
 		SELECT
 			parents.group_id,
 			items_items.child_item_id,
-			'self' as propagate_access
+			'self' as propagate_to
 		FROM items_items
 		JOIN permissions_generated AS parents
 			ON parents.item_id = items_items.parent_item_id
 		JOIN permissions_propagate AS parents_propagate
 			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id AND
-				 parents_propagate.propagate_access = 'children'
-		ON DUPLICATE KEY UPDATE propagate_access='self'`
+				 parents_propagate.propagate_to = 'children'
+		ON DUPLICATE KEY UPDATE propagate_to='self'`
 	stmtMarkChildrenOfChildrenAsSelf, err = s.db.CommonDB().Prepare(queryMarkChildrenOfChildrenAsSelf)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkChildrenOfChildrenAsSelf.Close()) }()
 
 	// deleting 'children' groups_items_propagate
-	const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_access = 'children'`
+	const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_to = 'children'`
 	stmtDeleteProcessedChildren, err = s.db.CommonDB().Prepare(queryDeleteProcessedChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtDeleteProcessedChildren.Close()) }()
@@ -104,7 +104,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	// marking 'self' permissions_propagate (so all of them) as 'children'
 	const queryMarkSelfAsChildren = `
 		UPDATE permissions_propagate
-		SET propagate_access = 'children'`
+		SET propagate_to = 'children'`
 	stmtMarkSelfAsChildren, err = s.db.CommonDB().Prepare(queryMarkSelfAsChildren)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(stmtMarkSelfAsChildren.Close()) }()
