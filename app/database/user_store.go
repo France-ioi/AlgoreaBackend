@@ -93,22 +93,20 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64, ownedGroupsIDs []*int64) {
 		allGroups = append(allGroups, &id)
 	}
 	allGroups = append(allGroups, ownedGroupsIDs...)
-	for _, table := range [...]string{
-		"users_threads", "users_answers", "users_items", "filters", "sessions", "refresh_tokens",
-	} {
-		executeDeleteQuery(db, table, "WHERE user_id IN (?)", userIDs)
-	}
-	for _, table := range [...]string{"permissions_granted", "permissions_generated", "groups_attempts", "groups_login_prefixes"} {
+	executeDeleteQuery(db, "users_threads", "WHERE user_id IN (?)", userIDs)
+	for _, table := range [...]string{"groups_attempts", "groups_login_prefixes"} {
 		executeDeleteQuery(db, table, "WHERE group_id IN (?)", allGroups)
 	}
 	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", allGroups)
 	executeDeleteQuery(db, "groups_groups", "WHERE child_group_id IN (?)", allGroups)
 	executeDeleteQuery(db, "groups_ancestors", "WHERE ancestor_group_id IN (?)", allGroups)
 	executeDeleteQuery(db, "groups_ancestors", "WHERE child_group_id IN (?)", allGroups)
+	// deleting from `groups` triggers deletion from
+	// `permissions_granted`, `permissions_generated", `groups_attempts`, `groups_login_prefixes`
+	// `users`, `users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`
 	for _, table := range [...]string{"groups_propagate", "groups"} {
 		executeDeleteQuery(db, table, "WHERE id IN (?)", allGroups)
 	}
-	executeDeleteQuery(db, "users", "WHERE group_id IN (?)", userIDs)
 }
 
 func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) {
