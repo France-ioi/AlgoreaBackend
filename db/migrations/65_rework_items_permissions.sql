@@ -99,8 +99,8 @@ END
 ALTER TABLE `items_items`
     ADD COLUMN `content_view_propagation` ENUM('none', 'as_info', 'as_content') NOT NULL DEFAULT 'none'
         COMMENT 'Defines how a can_view=”content” permission propagates' AFTER `partial_access_propagation`,
-    ADD COLUMN `descendants_and_solution_view_propagation` ENUM('none', 'descendants', 'descendants_and_solution')
-        NOT NULL DEFAULT 'none'
+    ADD COLUMN `upper_view_levels_propagation` ENUM('use_content_view_propagation', 'content_with_descendants', 'as_is')
+        NOT NULL DEFAULT 'use_content_view_propagation'
         COMMENT 'Defines how can_view="content_with_descendants"|"solution" permissions propagate',
     ADD COLUMN `grant_view_propagation` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'Whether can_grant_view propagates (as the same value, with “solution” as the upper limit)',
@@ -110,9 +110,9 @@ ALTER TABLE `items_items`
         COMMENT 'Whether can_edit propagates (as the same value, with “all” as the upper limit)',
     ADD COLUMN `content_view_propagation_value` TINYINT(3) UNSIGNED AS (`content_view_propagation`) NOT NULL
         COMMENT 'content_view_propagation as an integer (to use comparison operators)',
-    ADD COLUMN `descendants_and_solution_view_propagation_value` TINYINT(3) UNSIGNED
-        AS (`descendants_and_solution_view_propagation`) NOT NULL
-        COMMENT 'descendants_and_solution_view_propagation as an integer (to use comparison operators)';
+    ADD COLUMN `upper_view_levels_propagation_value` TINYINT(3) UNSIGNED
+        AS (`upper_view_levels_propagation`) NOT NULL
+        COMMENT 'upper_view_levels_propagation as an integer (to use comparison operators)';
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin
@@ -222,7 +222,7 @@ ON DUPLICATE KEY UPDATE
     `permissions_granted`.`can_edit` = 'all';
 
 UPDATE `items_items` SET `content_view_propagation` = `partial_access_propagation`+0,
-                         `descendants_and_solution_view_propagation` = 'descendants_and_solution',
+                         `upper_view_levels_propagation` = 'as_is',
                          `grant_view_propagation` = 1,
                          `watch_propagation` = 1,
                          `edit_propagation` = 1;
@@ -404,9 +404,9 @@ DROP TABLE `permissions_propagate`;
 
 ALTER TABLE `items_items`
     DROP COLUMN `content_view_propagation`,
-    DROP COLUMN `descendants_and_solution_view_propagation`,
+    DROP COLUMN `upper_view_levels_propagation`,
     DROP COLUMN `grant_view_propagation`,
     DROP COLUMN `watch_propagation`,
     DROP COLUMN `edit_propagation`,
     DROP COLUMN `content_view_propagation_value`,
-    DROP COLUMN `descendants_and_solution_view_propagation_value`;
+    DROP COLUMN `upper_view_levels_propagation_value`;
