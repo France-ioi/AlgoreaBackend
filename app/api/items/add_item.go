@@ -33,11 +33,9 @@ type item struct {
 	// default: false
 	NoScore bool `json:"no_score"`
 	// Nullable
-	TextID *string `json:"text_id"`
-	// Nullable
-	CustomChapter          *bool `json:"custom_chapter"`
-	DisplayDetailsInParent bool  `json:"display_details_in_parent"`
-	ReadOnly               bool  `json:"read_only"`
+	TextID                 *string `json:"text_id"`
+	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
+	ReadOnly               bool    `json:"read_only"`
 	// enum: forceYes,forceNo,default,
 	FullScreen     string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
 	ShowDifficulty bool   `json:"show_difficulty"`

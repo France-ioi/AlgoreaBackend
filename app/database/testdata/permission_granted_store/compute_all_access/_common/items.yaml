@@ -1,6 +1,6 @@
 - {id: 1}
 - {id: 2}
 - {id: 3}
-- {id: 4, custom_chapter: 1} # should be skipped
+- {id: 4}
 - {id: 11}
 - {id: 12}
