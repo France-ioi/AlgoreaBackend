@@ -1,6 +1,9 @@
 -- +migrate Up
 
 ALTER TABLE `items`
+    -- update comment
+    MODIFY COLUMN `hints_allowed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether hints are allowed for tasks accessed through this chapter (currently unused)',
+
     DROP COLUMN `show_difficulty`,
     DROP COLUMN `show_source`,
     DROP COLUMN `validation_min`,
@@ -12,6 +15,9 @@ ALTER TABLE `items`
 -- +migrate Down
 
 ALTER TABLE `items`
+
+  MODIFY COLUMN `hints_allowed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether hints are allowed for tasks accessed through this chapter',
+
   ADD COLUMN `show_difficulty` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Display an indication about the difficulty of each child relative to the other children' AFTER `full_screen`,
   ADD COLUMN `show_source` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'If false, we hide any information about the origin of tasks for this item and its descendants. Intended to be used during contests, so that users can''t find the solution online.' AFTER `show_difficulty`,
   ADD COLUMN `validation_min` int(11) DEFAULT NULL COMMENT 'Minimum score to obtain so that the item is considered as validated.' AFTER `validation_type`,
