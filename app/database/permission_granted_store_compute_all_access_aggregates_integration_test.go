@@ -247,51 +247,51 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T) {
 	for _, testcase := range []struct {
-		canView                               string
-		contentViewPropagation                string
-		descendantsAndSolutionViewPropagation string
-		expectedCanView                       string
+		canView                    string
+		contentViewPropagation     string
+		upperViewLevelsPropagation string
+		expectedCanView            string
 	}{
 		{canView: "none", contentViewPropagation: "as_content",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "none"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "none"},
 		{canView: "info", contentViewPropagation: "as_content",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "none"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "none"},
 		{canView: "content", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "none"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "none"},
 		{canView: "content", contentViewPropagation: "as_info",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "info"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "info"},
 		{canView: "content", contentViewPropagation: "as_content",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "content"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "content"},
 		{canView: "content_with_descendants", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "none",
-			expectedCanView:                       "none"},
+			upperViewLevelsPropagation: "use_content_view_propagation",
+			expectedCanView:            "none"},
 		{canView: "content_with_descendants", contentViewPropagation: "as_info",
-			descendantsAndSolutionViewPropagation: "none",
-			expectedCanView:                       "info"},
+			upperViewLevelsPropagation: "use_content_view_propagation",
+			expectedCanView:            "info"},
 		{canView: "content_with_descendants", contentViewPropagation: "as_content",
-			descendantsAndSolutionViewPropagation: "none",
-			expectedCanView:                       "content"},
+			upperViewLevelsPropagation: "use_content_view_propagation",
+			expectedCanView:            "content"},
 		{canView: "content_with_descendants", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "descendants",
-			expectedCanView:                       "content_with_descendants"},
+			upperViewLevelsPropagation: "as_content_with_descendants",
+			expectedCanView:            "content_with_descendants"},
 		{canView: "content_with_descendants", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution",
-			expectedCanView:                       "content_with_descendants"},
+			upperViewLevelsPropagation: "as_is",
+			expectedCanView:            "content_with_descendants"},
 		{canView: "solution", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "none", expectedCanView: "none"},
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "none"},
 		{canView: "solution", contentViewPropagation: "as_info",
-			descendantsAndSolutionViewPropagation: "none", expectedCanView: "info"},
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "info"},
 		{canView: "solution", contentViewPropagation: "as_content",
-			descendantsAndSolutionViewPropagation: "none", expectedCanView: "content"},
+			upperViewLevelsPropagation: "use_content_view_propagation", expectedCanView: "content"},
 		{canView: "solution", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "descendants", expectedCanView: "content_with_descendants"},
+			upperViewLevelsPropagation: "as_content_with_descendants", expectedCanView: "content_with_descendants"},
 		{canView: "solution", contentViewPropagation: "none",
-			descendantsAndSolutionViewPropagation: "descendants_and_solution", expectedCanView: "solution"},
+			upperViewLevelsPropagation: "as_is", expectedCanView: "solution"},
 	} {
 		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {
@@ -301,7 +301,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 				items_items:
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,
 						content_view_propagation: ` + testcase.contentViewPropagation + `,
-						descendants_and_solution_view_propagation: ` + testcase.descendantsAndSolutionViewPropagation + `}
+						upper_view_levels_propagation: ` + testcase.upperViewLevelsPropagation + `}
 				permissions_granted: [{group_id: 1, item_id: 1, giver_group_id: 1, can_view: ` + testcase.canView + `}]`)
 			permissionStore := database.NewDataStore(db).Permissions()
 			assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
@@ -322,9 +322,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 		groups: [{id: 1}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 4, child_order: 1, content_view_propagation: as_content,
-				descendants_and_solution_view_propagation: none}
+				upper_view_levels_propagation: use_content_view_propagation}
 			- {parent_item_id: 2, child_item_id: 4, child_order: 2, content_view_propagation: as_info,
-				descendants_and_solution_view_propagation: descendants_and_solution}
+				upper_view_levels_propagation: as_is}
 		permissions_granted:
 			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: info}
 			- {group_id: 1, item_id: 2, giver_group_id: 1, can_view: content_with_descendants}`)
@@ -345,7 +345,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 		groups: [{id: 1}, {id: 2}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, content_view_propagation: as_content,
-				descendants_and_solution_view_propagation: descendants_and_solution}
+				upper_view_levels_propagation: as_is}
 		permissions_granted:
 			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: content}
 			- {group_id: 1, item_id: 2, giver_group_id: 1, can_view: content_with_descendants}
