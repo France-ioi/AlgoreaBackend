@@ -37,11 +37,9 @@ type item struct {
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
 	// enum: forceYes,forceNo,default,
-	FullScreen     string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
-	ShowDifficulty bool   `json:"show_difficulty"`
-	ShowSource     bool   `json:"show_source"`
-	HintsAllowed   bool   `json:"hints_allowed"`
-	FixedRanks     bool   `json:"fixed_ranks"`
+	FullScreen   string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
+	HintsAllowed bool   `json:"hints_allowed"`
+	FixedRanks   bool   `json:"fixed_ranks"`
 
 	// enum: None,All,AllButOne,Categories,One,Manual
 	// default: All
