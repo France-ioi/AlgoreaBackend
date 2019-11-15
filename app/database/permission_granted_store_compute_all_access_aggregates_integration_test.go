@@ -379,6 +379,24 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t
 	assert.Equal(t, "content_with_descendants", result)
 }
 
+func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForOwners(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{id: 1}]
+		groups: [{id: 1}]
+		permissions_granted:
+			- {group_id: 1, item_id: 1, giver_group_id: -1, can_view: content}
+			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: content_with_descendants, is_owner: 1}`)
+	permissionStore := database.NewDataStore(db).Permissions()
+	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
+		ds.PermissionsGranted().ComputeAllAccess()
+		return nil
+	}))
+	var result string
+	assert.NoError(t, permissionStore.Where("group_id = 1 AND item_id = 1").
+		PluckFirst("can_view_generated", &result).Error())
+	assert.Equal(t, "solution", result)
+}
+
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
