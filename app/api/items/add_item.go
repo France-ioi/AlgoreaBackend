@@ -62,14 +62,9 @@ type item struct {
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration *string `json:"duration" validate:"duration"`
-	// Nullable
-	// enum: Running,Analysis,Closed
-	ContestPhase  *string `json:"contest_phase" validate:"oneof=Running Analysis Closed"`
+	Duration      *string `json:"duration" validate:"duration"`
 	ShowUserInfos bool    `json:"show_user_infos"`
-	// Nullable
-	Level   *int32 `json:"level"`
-	UsesAPI bool   `json:"uses_api"`
+	UsesAPI       bool    `json:"uses_api"`
 	// Nullable
 	GroupCodeEnter *bool `json:"group_code_enter"`
 }

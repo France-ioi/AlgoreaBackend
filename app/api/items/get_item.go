@@ -162,9 +162,6 @@ type itemResponse struct {
 	FullScreen string `json:"full_screen"`
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
-	// required: true
-	// enum: Running,Analysis,Closed
-	ContestPhase string `json:"contest_phase"`
 
 	// Nullable
 	// required: true
@@ -260,7 +257,6 @@ type rawItem struct {
 	ReadOnly        bool
 	FullScreen      string
 	ShowUserInfos   bool
-	ContestPhase    string
 	URL             *string // only if not a chapter
 	UsesAPI         bool    // only if not a chapter
 	HintsAllowed    bool    // only if not a chapter
@@ -319,7 +315,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.read_only,
 		items.full_screen,
 		items.show_user_infos,
-		items.contest_phase,
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
@@ -330,7 +325,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		NULL AS read_only,
 		NULL AS full_screen,
 		NULL AS show_user_infos,
-		NULL AS contest_phase,
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
@@ -383,7 +377,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.read_only,
 			items.full_screen,
 			items.show_user_infos,
-			items.contest_phase,
 			items.url,
 			items.uses_api,
 			items.hints_allowed,
@@ -416,7 +409,6 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem, p
 	response.ReadOnly = (*rawData)[0].ReadOnly
 	response.FullScreen = (*rawData)[0].FullScreen
 	response.ShowUserInfos = (*rawData)[0].ShowUserInfos
-	response.ContestPhase = (*rawData)[0].ContestPhase
 }
 
 func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemResponse {

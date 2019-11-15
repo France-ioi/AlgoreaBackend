@@ -50,8 +50,8 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | Running       | null  | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
       | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -112,8 +112,6 @@ Feature: Add item
         "has_attempts": true,
         "duration": "01:02:03",
         "show_user_infos": true,
-        "contest_phase": "Analysis",
-        "level": 345,
         "no_score": true,
         "group_code_enter": true,
         "language_id": "3",
@@ -139,8 +137,8 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | no_score | group_code_enter |
-      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | 12,34             | 34               | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | Analysis      | 345   | 1        | 1                |
+      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
+      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | 12,34             | 34               | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | 1        | 1                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
       | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -192,8 +190,8 @@ Feature: Add item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | contest_phase | level | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | Running       | null  | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url | subtitle | description |
       | 8674665223082153551 | 5577006791947779410 | 3           | my title | null      | null     | null        |

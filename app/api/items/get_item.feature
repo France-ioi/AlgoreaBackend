@@ -20,10 +20,10 @@ Feature: Get item view information
       | fr         | 0         | 17       | 21             | fr               |
       | info       | 0         | 22       | 26             |                  |
     And the database has the following table 'items':
-      | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
-      | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true            | Running       | http://someurl | true     | true          |
-      | 210 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | true             | true              | true      | forceYes    | true            | Running       | null           | true     | true          |
-      | 220 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | true             | true              | true      | forceYes    | true            | Running       | null           | true     | true          |
+      | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
+      | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true            | http://someurl | true     | true          |
+      | 210 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:31 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
+      | 220 | Chapter  | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:32 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
       | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
@@ -106,7 +106,6 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "contest_phase": "Running",
       "url": "http://someurl",
       "uses_api": true,
       "hints_allowed": true,
@@ -244,7 +243,6 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "contest_phase": "Running",
 
       "string": {
         "language_id": "1",
@@ -297,7 +295,6 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "contest_phase": "Running",
 
       "string": {
         "language_id": "1",
@@ -349,7 +346,6 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "contest_phase": "Running",
       "url": "http://someurl",
       "uses_api": true,
       "hints_allowed": true,
@@ -476,7 +472,6 @@ Feature: Get item view information
       "read_only": true,
       "full_screen": "forceYes",
       "show_user_infos": true,
-      "contest_phase": "Running",
       "url": "http://someurl",
       "uses_api": true,
       "hints_allowed": true,
