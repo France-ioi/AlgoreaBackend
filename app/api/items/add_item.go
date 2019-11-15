@@ -46,8 +46,6 @@ type item struct {
 	ValidationType string `json:"validation_type" validate:"oneof=None All AllButOne Categories One Manual"`
 
 	// Nullable
-	ValidationMin *int32 `json:"validation_min"`
-	// Nullable
 	//
 	// An optional comma-separated list of items' IDs to unlock (the current user should have `can_grant_view` >= 'content' on each)
 	UnlockedItemIDs *string `json:"unlocked_item_ids" validate:"unlocked_item_ids"`

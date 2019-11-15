@@ -428,38 +428,6 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: Wrong validation_min
-    Given I am the user with id "11"
-    When I send a POST request to "/items" with the following body:
-      """
-      {
-        "type": "Chapter",
-        "validation_min": "Wrong",
-        "language_id": "3",
-        "title": "my title",
-        "parent_item_id": "21",
-        "order": 100
-      }
-      """
-    Then the response code should be 400
-    And the response body should be, in JSON:
-      """
-      {
-        "success": false,
-        "message": "Bad Request",
-        "error_text": "Invalid input data",
-        "errors":{
-          "validation_min": ["expected type 'int32', got unconvertible type 'string'"]
-        }
-      }
-      """
-    And the table "items" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "items_strings" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
-    And the table "permissions_generated" should stay unchanged
-
   Scenario: Wrong unlocked_item_ids
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
