@@ -59,13 +59,13 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 				IFNULL(MAX(
 					CASE
 					WHEN parent.can_view_generated IS NULL OR parent.can_view_generated IN ('none', 'info') THEN 1 /* none */
-					WHEN parent.can_view_generated = 'content' OR items_items.descendants_and_solution_view_propagation = 'none' THEN
+					WHEN parent.can_view_generated = 'content' OR items_items.upper_view_levels_propagation = 'use_content_view_propagation' THEN
 						CASE items_items.content_view_propagation
 						WHEN 'as_info' THEN 2 /* info */
 						WHEN 'as_content' THEN 3 /* content */
 						ELSE 1 /* none */
 						END
-					WHEN items_items.descendants_and_solution_view_propagation = 'descendants' THEN 4 /* content_with_descendants */
+					WHEN items_items.upper_view_levels_propagation = 'as_content_with_descendants' THEN 4 /* content_with_descendants */
 					ELSE parent.can_view_generated_value
 					END), 1)
 			)) AS can_view_generated,
