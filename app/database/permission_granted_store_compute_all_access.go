@@ -83,12 +83,10 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			)) AS can_edit_generated,
 			IFNULL(MAX(permissions_granted.is_owner), 0) AS is_owner_generated
 		FROM permissions_propagate
+		LEFT JOIN permissions_granted USING (group_id, item_id)
 		LEFT JOIN items_items ON items_items.child_item_id = permissions_propagate.item_id
 		LEFT JOIN permissions_generated AS parent
 		  ON parent.item_id = items_items.parent_item_id AND parent.group_id = permissions_propagate.group_id
-		LEFT JOIN permissions_granted
-		  ON permissions_granted.group_id = permissions_propagate.group_id AND
-		    permissions_granted.item_id = permissions_propagate.item_id
 		GROUP BY permissions_propagate.group_id, permissions_propagate.item_id
 		ON DUPLICATE KEY UPDATE
 			can_view_generated = VALUES(can_view_generated),
