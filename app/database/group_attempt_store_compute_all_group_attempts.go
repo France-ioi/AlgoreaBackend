@@ -26,7 +26,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
 //  This step is repeated until no records are updated.
-// 3. We insert new groups_items for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
+// 3. We insert new permissions_granted for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -35,10 +35,10 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(computeAllGroupAttemptsLockName, computeAllGroupAttemptsLockTimeout, func(ds *DataStore) error {
-		userItemStore := ds.UserItems()
+		groupAttemptStore := ds.GroupAttempts()
 
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
-		mustNotBeError(userItemStore.db.Exec(
+		mustNotBeError(ds.db.Exec(
 			`UPDATE groups_attempts AS ancestors
 			JOIN items_ancestors ON (
 				ancestors.item_id = items_ancestors.ancestor_item_id AND
@@ -82,14 +82,14 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 						USING(id)
 					SET ancestors_computation_state = 'processing'`
 
-				markAsProcessingStatement, err = userItemStore.db.CommonDB().Prepare(markAsProcessingQuery)
+				markAsProcessingStatement, err = ds.db.CommonDB().Prepare(markAsProcessingQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(markAsProcessingStatement.Close()) }()
 			}
 			_, err = markAsProcessingStatement.Exec()
 			mustNotBeError(err)
 
-			userItemStore.collectItemsToUnlock(groupItemsToUnlock)
+			groupAttemptStore.collectItemsToUnlock(groupItemsToUnlock)
 
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
 			//  - latest_activity_at as the max of children's
@@ -166,7 +166,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							), target_groups_attempts.validated_at),
 						target_groups_attempts.ancestors_computation_state = 'done'
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
-				updateStatement, err = userItemStore.db.CommonDB().Prepare(updateQuery)
+				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
 			}
@@ -180,18 +180,18 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 			hasChanges = rowsAffected > 0
 		}
 
-		groupsUnlocked = userItemStore.unlockGroupItems(groupItemsToUnlock)
+		groupsUnlocked = groupAttemptStore.unlockItems(groupItemsToUnlock)
 		return nil
 	}))
 
 	// If items have been unlocked, need to recompute access
 	if groupsUnlocked > 0 {
-		return s.GroupItems().After()
+		return s.PermissionsGranted().After()
 	}
 	return nil
 }
 
-func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
+func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
 	// Unlock items depending on key_obtained
 	const selectUnlocksQuery = `
 		SELECT
@@ -227,22 +227,22 @@ func (s *UserItemStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPai
 	}
 }
 
-func (s *UserItemStore) unlockGroupItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
+func (s *GroupAttemptStore) unlockItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
 	if len(groupItemsToUnlock) == 0 {
 		return 0
 	}
 	query := `
-		INSERT INTO groups_items
-			(group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access)
-		VALUES (?, ?, NOW(), NOW(), 1)`
+		INSERT INTO permissions_granted
+			(group_id, item_id, giver_group_id, can_view, latest_update_on)
+		VALUES (?, ?, -1, 'content', NOW())` // Which giver_group_id should we use here???
 	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
-	valuesTemplate := ", (?, ?, NOW(), NOW(), 1)"
+	valuesTemplate := ", (?, ?, -1, 'content', NOW())"
 	for item := range groupItemsToUnlock {
 		values = append(values, item.groupID, item.itemID)
 	}
 
 	query += strings.Repeat(valuesTemplate, len(groupItemsToUnlock)-1) +
-		" ON DUPLICATE KEY UPDATE partial_access_since = NOW(), cached_partial_access_since = NOW(), cached_partial_access = 1"
+		" ON DUPLICATE KEY UPDATE can_view = 'content', latest_update_on = NOW()"
 	result := s.db.Exec(query, values...)
 	mustNotBeError(result.Error)
 	return result.RowsAffected

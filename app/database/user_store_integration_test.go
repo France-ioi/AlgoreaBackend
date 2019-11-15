@@ -31,8 +31,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 5002, 6001, 6002, 7000})
 	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001, 5002, 6001, 6002})
 	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "groups_items_propagate", "id", []int64(nil))
-	for _, table := range []string{"groups_items", "groups_attempts", "groups_login_prefixes"} {
+	for _, table := range []string{"permissions_granted", "permissions_generated", "groups_attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002, 6001, 6002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
@@ -65,8 +64,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5000, 5002, 6000, 6002, 7000})
 	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5000, 5002, 6000, 6002})
 	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "groups_items_propagate", "id", []int64(nil))
-	for _, table := range []string{"groups_items", "groups_attempts", "groups_login_prefixes"} {
+	for _, table := range []string{"permissions_generated", "permissions_granted", "groups_attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002, 6000, 6002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
@@ -108,13 +106,20 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 			filters: [{user_id: 5000}, {user_id: 5001}, {user_id: 5002}]
 			refresh_tokens: [{user_id: 5000, refresh_token: token}, {user_id: 5001, refresh_token: token2},
 			                 {user_id: 5002, refresh_token: token3}]
-			groups_items:
-				- {id: 1, group_id: 5000, item_id: 1}
-				- {id: 2, group_id: 5001, item_id: 1}
-				- {id: 3, group_id: 5002, item_id: 1}
-				- {id: 4, group_id: 6000, item_id: 1}
-				- {id: 5, group_id: 6001, item_id: 1}
-				- {id: 6, group_id: 6002, item_id: 1}
+			permissions_generated:
+				- {group_id: 5000, item_id: 1}
+				- {group_id: 5001, item_id: 1}
+				- {group_id: 5002, item_id: 1}
+				- {group_id: 6000, item_id: 1}
+				- {group_id: 6001, item_id: 1}
+				- {group_id: 6002, item_id: 1}
+			permissions_granted:
+				- {group_id: 5000, item_id: 1, giver_group_id: 2}
+				- {group_id: 5001, item_id: 1, giver_group_id: 2}
+				- {group_id: 5002, item_id: 1, giver_group_id: 2}
+				- {group_id: 6000, item_id: 1, giver_group_id: 2}
+				- {group_id: 6001, item_id: 1, giver_group_id: 2}
+				- {group_id: 6002, item_id: 1, giver_group_id: 2}
 			groups_login_prefixes: [{group_id: 5000, prefix: 5000, id: 1}, {group_id: 5001, prefix: 5001, id: 2},
 			                        {group_id: 5002, prefix: 5002, id: 3}, {group_id: 6000, prefix: 6000, id: 4},
 			                        {group_id: 6001, prefix: 6001, id: 5}, {group_id: 6002, prefix: 6002, id: 6}]
@@ -135,7 +140,7 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 	store := database.NewDataStore(db)
 	store.GroupGroups().CreateNewAncestors()
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-		trStore.GroupItems().ComputeAllAccess()
+		trStore.PermissionsGranted().ComputeAllAccess()
 		return nil
 	}))
 	return db

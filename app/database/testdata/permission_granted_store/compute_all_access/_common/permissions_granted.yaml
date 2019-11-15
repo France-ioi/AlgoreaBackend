@@ -1,0 +1,6 @@
+- {group_id: 1, item_id: 1, giver_group_id: 1}
+- {group_id: 1, item_id: 2, giver_group_id: 1}
+- {group_id: 1, item_id: 3, giver_group_id: 1}
+- {group_id: 1, item_id: 4, can_view: solution, giver_group_id: 1}
+- {group_id: 2, item_id: 1, giver_group_id: 1}
+- {group_id: 2, item_id: 11, giver_group_id: 1}

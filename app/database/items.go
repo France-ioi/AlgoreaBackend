@@ -1,8 +1,24 @@
 package database
 
+// WhereUserHasViewPermissionOnItems returns a subview of the items
+// on that the given user has `can_view_generated` >= `viewPermission`
+// basing on the given view.
+func (conn *DB) WhereUserHasViewPermissionOnItems(user *User, viewPermission string) *DB {
+	return conn.WhereUserHasPermissionOnItems(user, "view", viewPermission)
+}
+
+// WhereUserHasPermissionOnItems returns a subview of the items
+// on that the given user has `can_view_generated` >= `viewPermission`
+// basing on the given view.
+func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, neededPermission string) *DB {
+	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
+		WithPermissionForUser(user, permissionKind, neededPermission)
+	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
+}
+
 // WhereItemsAreVisible returns a subview of the visible items for the given user basing on the given view
 func (conn *DB) WhereItemsAreVisible(user *User) *DB {
-	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).GroupItems().AccessRightsForItemsVisibleToUser(user)
+	visibleItemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().VisibleToUser(user)
 	return conn.Joins("JOIN ? as visible ON visible.item_id = items.id", visibleItemsPerms.SubQuery())
 }
 

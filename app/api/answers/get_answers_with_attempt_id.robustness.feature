@@ -25,18 +25,18 @@ Background:
     | 190 | Category | false          | false    | 1234,2345         | true               |
     | 200 | Category | false          | false    | 1234,2345         | true               |
     | 210 | Category | false          | false    | 1234,2345         | true               |
-  And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-    | 42 | 13       | 190     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2037-05-29 06:38:38        |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        |
-    | 44 | 13       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        |
+  And the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated       |
+    | 13       | 190     | none                     |
+    | 13       | 200     | content_with_descendants |
+    | 13       | 210     | info                     |
   And the database has the following table 'groups_attempts':
     | id  | group_id | item_id | order |
     | 100 | 13       | 190     | 1     |
     | 110 | 13       | 210     | 2     |
     | 120 | 13       | 200     | 0     |
 
-  Scenario: Should fail when the user has only grayed access to the item
+  Scenario: Should fail when the user has only info access to the item
     Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=110"
     Then the response code should be 403

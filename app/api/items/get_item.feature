@@ -11,14 +11,14 @@ Feature: Get item view information
       | 16 | nosolution-admin |         | -2    | UserAdmin |
       | 17 | fr               |         | -2    | UserSelf  |
       | 21 | fr-admin         |         | -2    | UserAdmin |
-      | 22 | grayed           |         | -2    | UserSelf  |
-      | 26 | grayed-admin     |         | -2    | UserAdmin |
+      | 22 | info             |         | -2    | UserSelf  |
+      | 26 | info-admin       |         | -2    | UserAdmin |
     And the database has the following table 'users':
       | login      | temp_user | group_id | owned_group_id | default_language |
       | jdoe       | 0         | 11       | 12             |                  |
       | nosolution | 0         | 14       | 16             |                  |
       | fr         | 0         | 17       | 21             | fr               |
-      | grayed     | 0         | 22       | 26             |                  |
+      | info       | 0         | 22       | 26             |                  |
     And the database has the following table 'items':
       | id  | type     | no_score | unlocked_item_ids | display_details_in_parent | validation_type | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_source | validation_min | show_user_infos | contest_phase | url            | uses_api | hints_allowed |
       | 200 | Category | true     | 1234,2345         | true                      | All             | 100              | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true        | 100            | true            | Running       | http://someurl | true     | true          |
@@ -42,9 +42,9 @@ Feature: Get item view information
       | 76 | 13                | 17             | 0       |
       | 77 | 26                | 22             | 0       |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | category  | partial_access_propagation |
-      | 54 | 200            | 210           | 2           | Discovery | AsGrayed                   |
-      | 55 | 200            | 220           | 1           | Discovery | AsGrayed                   |
+      | id | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
+      | 54 | 200            | 210           | 2           | Discovery | as_info                  |
+      | 55 | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order | score | submissions_attempts | validated | finished | key_obtained | hints_cached | started_at          | finished_at         | validated_at        |
       | 101 | 11       | 200     | 1     | 12341 | 11                   | true      | true     | true         | 11           | 2019-01-30 09:26:41 | 2019-02-01 09:26:41 | 2019-01-31 09:26:41 |
@@ -68,15 +68,15 @@ Feature: Get item view information
       | 22      | 200     | 108               |
       | 22      | 210     | 109               |
       | 22      | 220     | 110               |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since | cached_solutions_access_since |
-      | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
-      | 44 | 13       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
-      | 45 | 13       | 220     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
-      | 46 | 15       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2037-05-29 06:38:38           |
-      | 47 | 26       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
-      | 48 | 26       | 210     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
-      | 49 | 26       | 220     | 2037-05-29 06:38:38      | 2037-05-29 06:38:38         | 2017-05-29 06:38:38        | 2017-05-29 06:38:38           |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 13       | 200     | solution                 |
+      | 13       | 210     | solution                 |
+      | 13       | 220     | solution                 |
+      | 15       | 210     | content_with_descendants |
+      | 26       | 200     | solution                 |
+      | 26       | 210     | info                     |
+      | 26       | 220     | info                     |
     And the database has the following table 'languages':
       | id | code |
       | 2  | fr   |
@@ -140,7 +140,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -181,7 +181,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -389,7 +389,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -419,7 +419,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -459,7 +459,7 @@ Feature: Get item view information
     }
     """
 
-  Scenario: Grayed access on children
+  Scenario: Info access on children
     Given I am the user with id "22"
     When I send a GET request to "/items/200"
     Then the response code should be 200
@@ -518,7 +518,7 @@ Feature: Get item view information
           "id": "220",
           "order": 1,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,
@@ -546,7 +546,7 @@ Feature: Get item view information
 
           "order": 2,
           "category": "Discovery",
-          "partial_access_propagation": "AsGrayed",
+          "content_view_propagation": "as_info",
 
           "type": "Chapter",
           "display_details_in_parent": true,

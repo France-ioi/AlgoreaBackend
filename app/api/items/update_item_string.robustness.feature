@@ -10,16 +10,17 @@ Feature: Update item strings - robustness
       | jdoe  | 0         | 11       | 12             |
     And the database has the following table 'items':
       | id | default_language_id |
+      | 21 | 2                   |
       | 50 | 2                   |
       | 60 | 3                   |
     And the database has the following table 'items_strings':
       | item_id | language_id | title  | image_url                  | subtitle        | description        |
       | 50      | 2           | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | Item 2 Description |
       | 50      | 3           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | manager_access | owner_access |
-      | 40 | 11       | 50      | false          | true         |
-      | 41 | 11       | 21      | true           | false        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
+      | 11       | 21      | solution           | none               | false              |
+      | 11       | 50      | solution           | all                | true               |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -150,4 +151,4 @@ Feature: Update item strings - robustness
       }
       """
     Then the response code should be 403
-    And the response error message should contain "No access rights to manage the item"
+    And the response error message should contain "No access rights to edit the item"

@@ -36,7 +36,7 @@ import (
 //
 //   Restrictions:
 //
-//     * the user should have at least partial access to the item,
+//     * the user should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
 //     * for items with `has_attempts`=1 the user's team should exist when a new attempt is being created,
 //
@@ -93,10 +93,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		URL               string
 		SupportedLangProg *string
 	}
-	err = srv.Store.Items().Visible(user).Where("id = ?", itemID).
-		Where("partial_access > 0 OR full_access > 0").
+	err = srv.Store.Items().ByID(itemID).WhereUserHasViewPermissionOnItems(user, "content").
 		Where("items.type IN('Task','Course')").
-		Select("access_solutions, has_attempts, hints_allowed, text_id, url, supported_lang_prog").
+		Select(`
+			can_view_generated_value = ? AS access_solutions,
+			has_attempts, hints_allowed, text_id, url, supported_lang_prog`,
+			srv.Store.PermissionsGranted().ViewIndexByName("solution")).
 		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError

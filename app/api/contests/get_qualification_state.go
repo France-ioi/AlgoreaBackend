@@ -78,7 +78,7 @@ type contestGetQualificationStateResponse struct {
 //                  * `item_id` should be a timed contest;
 //                  * `group_id` should be either the current user's self group (if the item's `has_attempts` is false) or
 //                     a team with `team_item_id` = `item_id` (otherwise);
-//                  * the authenticated user should have at least grayed access to the item;
+//                  * the authenticated user should have at least 'info' access to the item;
 //                  * the authenticated user should be a member of the `group_id` (if it is a team).
 //
 //                Otherwise, the "Forbidden" response is returned.

@@ -19,7 +19,7 @@ import (
 //
 //   * One of (`user_id`, `item_id`) pair or `attempt_id` is required.
 //
-//   * The user should have at least partial access to the item.
+//   * The user should have at least 'content' access to the item.
 //
 //   * If `item_id` and `user_id` are given, the authenticated user should have `group_id` equal to the input `user_id`
 //   or be an owner of a group containing the input `user_id`.
@@ -202,15 +202,10 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, user *database.User) service.APIError {
 	var count int64
-	itemsUserCanAccess := srv.Store.Items().AccessRights(user).
-		Having("full_access>0 OR partial_access>0")
-	service.MustNotBeError(itemsUserCanAccess.Error())
+	itemsUserCanAccess := srv.Store.Permissions().WithViewPermissionForUser(user, "content")
 
 	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("child_group_id")
-	service.MustNotBeError(groupsOwnedByUser.Error())
-
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-	service.MustNotBeError(groupsWhereUserIsMember.Error())
 
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
 		Joins("JOIN ? rights ON rights.item_id = groups_attempts.item_id", itemsUserCanAccess.SubQuery()).
@@ -244,7 +239,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id"))
 	}
 
-	if accessDetails[0].IsGrayed() {
+	if accessDetails[0].IsInfo() {
 		return service.ErrForbidden(errors.New("insufficient access rights on the given item id"))
 	}
 

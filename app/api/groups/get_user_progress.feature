@@ -254,44 +254,44 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 410            | 417           | 6           |
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-      | 21       | 211     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 20       | 212     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 21       | 213     | 2017-05-29 06:38:38      | null                        | null                       |
-      | 20       | 214     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 21       | 215     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 20       | 216     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 21       | 217     | null                     | 2037-05-29 06:38:38         | null                       |
-      | 20       | 218     | 2037-05-29 06:38:38      | null                        | null                       |
-      | 21       | 219     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 20       | 221     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 21       | 222     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 20       | 223     | 2017-05-29 06:38:38      | null                        | null                       |
-      | 21       | 224     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 20       | 225     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 21       | 226     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 20       | 227     | null                     | 2037-05-29 06:38:38         | null                       |
-      | 21       | 228     | 2037-05-29 06:38:38      | null                        | null                       |
-      | 20       | 229     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 21       | 311     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 20       | 312     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 21       | 313     | 2017-05-29 06:38:38      | null                        | null                       |
-      | 20       | 314     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 21       | 315     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 20       | 316     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 21       | 317     | null                     | 2037-05-29 06:38:38         | null                       |
-      | 20       | 318     | 2037-05-29 06:38:38      | null                        | null                       |
-      | 21       | 319     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 20       | 411     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 21       | 412     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 20       | 413     | 2017-05-29 06:38:38      | null                        | null                       |
-      | 21       | 414     | null                     | null                        | 2017-05-29 06:38:38        |
-      | 20       | 415     | null                     | 2017-05-29 06:38:38         | null                       |
-      | 21       | 416     | null                     | null                        | 2037-05-29 06:38:38        |
-      | 20       | 417     | null                     | 2037-05-29 06:38:38         | null                       |
-      | 21       | 418     | 2037-05-29 06:38:38      | null                        | null                       |
-      | 20       | 419     | null                     | null                        | 2037-05-29 06:38:38        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 21       | 211     | info                     |
+      | 20       | 212     | content                  |
+      | 21       | 213     | content_with_descendants |
+      | 20       | 214     | info                     |
+      | 21       | 215     | content                  |
+      | 20       | 216     | none                     |
+      | 21       | 217     | none                     |
+      | 20       | 218     | none                     |
+      | 21       | 219     | none                     |
+      | 20       | 221     | info                     |
+      | 21       | 222     | content                  |
+      | 20       | 223     | content_with_descendants |
+      | 21       | 224     | info                     |
+      | 20       | 225     | content                  |
+      | 21       | 226     | none                     |
+      | 20       | 227     | none                     |
+      | 21       | 228     | none                     |
+      | 20       | 229     | none                     |
+      | 21       | 311     | info                     |
+      | 20       | 312     | content                  |
+      | 21       | 313     | content_with_descendants |
+      | 20       | 314     | info                     |
+      | 21       | 315     | content                  |
+      | 20       | 316     | none                     |
+      | 21       | 317     | none                     |
+      | 20       | 318     | none                     |
+      | 21       | 319     | none                     |
+      | 20       | 411     | info                     |
+      | 21       | 412     | content                  |
+      | 20       | 413     | content_with_descendants |
+      | 21       | 414     | info                     |
+      | 20       | 415     | content                  |
+      | 21       | 416     | none                     |
+      | 20       | 417     | none                     |
+      | 21       | 418     | none                     |
+      | 20       | 419     | none                     |
     And the database has the following table 'groups_attempts':
       | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        | latest_activity_at  |
       | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)

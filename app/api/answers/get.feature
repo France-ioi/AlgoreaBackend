@@ -30,10 +30,10 @@ Background:
     | id  | has_attempts |
     | 200 | 0            |
     | 210 | 1            |
-  And the database has the following table 'groups_items':
-    | id | group_id | item_id | cached_full_access_since | cached_partial_access_since |
-    | 43 | 13       | 200     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
-    | 46 | 23       | 210     | 2017-05-29 06:38:38      | 2017-05-29 06:38:38         |
+  And the database has the following table 'permissions_generated':
+    | group_id | item_id | can_view_generated       |
+    | 13       | 200     | content_with_descendants |
+    | 23       | 210     | content_with_descendants |
   And the database has the following table 'users_answers':
     | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
     | 101 | 11      | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |

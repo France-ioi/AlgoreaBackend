@@ -34,18 +34,17 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 
 	mockUser := &database.User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
-	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MIN(cached_full_access_since) <= NOW() AS full_access, "+
-			"MIN(cached_partial_access_since) <= NOW() AS partial_access, MIN(cached_grayed_access_since) <= NOW() AS grayed_access, "+
-			"MIN(cached_solutions_access_since) <= NOW() AS access_solutions "+
-			"FROM `groups_items` JOIN ( "+
+	mock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
+			"FROM permissions_generated AS permissions JOIN ( "+
 			"SELECT * FROM groups_ancestors_active "+
 			"WHERE groups_ancestors_active.child_group_id = ? "+
 			") AS ancestors "+
-			"ON ancestors.ancestor_group_id = groups_items.group_id GROUP BY groups_items.item_id "+
-			"HAVING (full_access > 0 OR partial_access > 0 OR grayed_access > 0)) "+
-			"as visible ON visible.item_id = items.id") + "$").
-		WithArgs(2).
+			"ON ancestors.ancestor_group_id = permissions.group_id "+
+			"WHERE (can_view_generated_value >= ?) "+
+			"GROUP BY permissions.item_id) "+
+			"as visible ON visible.item_id = items.id")+"$").
+		WithArgs(2, database.NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}

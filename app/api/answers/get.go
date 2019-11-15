@@ -13,7 +13,7 @@ import (
 // summary: Get an answer
 // description: Return the answer identified by the given `answer_id`.
 //
-//   * The user should have at least partial access rights to the `users_answers.item_id` item
+//   * The user should have at least 'content' access rights to the `users_answers.item_id` item
 //
 //   * The user should be able to see answers related to his group's attempts, so
 //      (a) if `items.has_attempts = 1`, then the user should be a member of the groups_attempts.group_id team,

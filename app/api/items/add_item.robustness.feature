@@ -14,11 +14,15 @@ Feature: Add item - robustness
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id |
       | 1  | 4                | 21            |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_manager_access | owner_access |
-      | 41 | 11       | 21      | true                  | false        |
-      | 42 | 11       | 22      | false                 | false        |
-      | 43 | 11       | 4       | true                  | false        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 11       | 4       | solution           | children           |
+      | 11       | 21      | solution           | children           |
+      | 11       | 22      | none               | none               |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | giver_group_id | can_edit |
+      | 11       | 4       | solution | 11             | children |
+      | 11       | 21      | solution | 11             | children |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -53,7 +57,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Missing language_id
     Given I am the user with id "11"
@@ -82,7 +87,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Missing title
     Given I am the user with id "11"
@@ -111,7 +117,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Missing parent_item_id
     Given I am the user with id "11"
@@ -140,7 +147,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: language_id is not a number
     Given I am the user with id "11"
@@ -170,7 +178,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: language_id doesn't exist
     Given I am the user with id "11"
@@ -200,7 +209,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: parent_item_id is not a number
     Given I am the user with id "11"
@@ -231,7 +241,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Non-existing parent
     Given I am the user with id "11"
@@ -253,7 +264,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["should exist and the user should have manager/owner access to it"]
+          "parent_item_id": ["should exist and the user should be able to manage its children"]
         }
       }
       """
@@ -261,7 +272,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Not enough perm on parent
     Given I am the user with id "11"
@@ -283,7 +295,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "parent_item_id": ["should exist and the user should have manager/owner access to it"]
+          "parent_item_id": ["should exist and the user should be able to manage its children"]
         }
       }
       """
@@ -291,7 +303,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: The user doesn't exist
     And I am the user with id "121"
@@ -311,7 +324,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong full_screen
     Given I am the user with id "11"
@@ -342,7 +356,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong type
     Given I am the user with id "11"
@@ -372,7 +387,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong validation_type
     Given I am the user with id "11"
@@ -403,7 +419,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong validation_min
     Given I am the user with id "11"
@@ -434,7 +451,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong unlocked_item_ids
     Given I am the user with id "11"
@@ -457,7 +475,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -465,7 +483,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Non-existent id in unlocked_item_ids
     Given I am the user with id "11"
@@ -488,7 +507,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -496,9 +515,10 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
-  Scenario: unlocked_item_ids not owned/managed by the user
+  Scenario: the user doesn't have can_edit >= children on unlocked_item_ids
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -519,7 +539,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "unlocked_item_ids": ["all the IDs should exist and the user should have manager/owner access to them"]
+          "unlocked_item_ids": ["all the IDs should exist and the user should have `can_grant_view` \u003e= 'content' permission on each"]
         }
       }
       """
@@ -527,7 +547,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong contest_entering_condition
     Given I am the user with id "11"
@@ -558,7 +579,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (wrong format)
     Given I am the user with id "11"
@@ -589,7 +611,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (negative hours)
     Given I am the user with id "11"
@@ -620,7 +643,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (too many hours)
     Given I am the user with id "11"
@@ -651,7 +675,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (negative minutes)
     Given I am the user with id "11"
@@ -682,7 +707,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (too many minutes)
     Given I am the user with id "11"
@@ -713,7 +739,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (negative seconds)
     Given I am the user with id "11"
@@ -744,7 +771,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong duration (too many seconds)
     Given I am the user with id "11"
@@ -775,7 +803,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Wrong contest_phase
     Given I am the user with id "11"
@@ -806,7 +835,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: Non-unique children item IDs
     Given I am the user with id "11"
@@ -832,7 +862,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["children IDs should be unique and the user should have manager/owner access to them"]
+          "children": ["children IDs should be unique and each should be visible to the user"]
         }
       }
       """
@@ -840,9 +870,10 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
-  Scenario: User doesn't have manager/owner access to children items
+  Scenario: Children items are not visible to the user
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -866,7 +897,7 @@ Feature: Add item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "children": ["children IDs should be unique and the user should have manager/owner access to them"]
+          "children": ["children IDs should be unique and each should be visible to the user"]
         }
       }
       """
@@ -874,7 +905,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: The parent is a child item
     Given I am the user with id "11"
@@ -897,7 +929,8 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
 
   Scenario: The parent is a descendant of a child item
     Given I am the user with id "11"
@@ -920,4 +953,5 @@ Feature: Add item - robustness
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "items_strings" should stay unchanged
-    And the table "groups_items" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged

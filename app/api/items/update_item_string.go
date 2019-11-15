@@ -51,10 +51,13 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		}
 
 		var found bool
-		found, err = store.Items().HasManagerAccess(user, itemID)
+		found, err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
+			Where("item_id = ?", itemID).
+			WherePermissionIsAtLeast("edit", "all").
+			HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrForbidden(errors.New("no access rights to manage the item"))
+			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
 			return apiError.Error // rollback
 		}
 

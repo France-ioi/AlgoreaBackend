@@ -11,9 +11,12 @@ Feature: Add item
     And the database has the following table 'items':
       | id | teams_editable | no_score |
       | 21 | false          | false    |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_manager_access |
-      | 41 | 11       | 21      | true                  |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 11       | 21      | solution           | children           |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | can_edit | giver_group_id | latest_update_on    |
+      | 11       | 21      | solution | children | 11             | 2019-05-30 11:00:00 |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -51,16 +54,21 @@ Feature: Add item
       | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         | default     | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
-      | 6129484611666145821 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | id                  | parent_item_id | child_item_id       | child_order |
-      | 4037200794235010051 | 21             | 5577006791947779410 | 100         |
+      | 6129484611666145821 | 21             | 5577006791947779410 | 100         |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
-    And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+    And the table "permissions_granted" at group_id "11" should be:
+      | group_id | item_id             | giver_group_id | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11       | 21                  | 11             | 0        | 0                                                       |
+      | 11       | 5577006791947779410 | 11             | 1        | 1                                                       |
+    And the table "permissions_generated" should be:
+      | group_id | item_id             | can_view_generated | is_owner_generated |
+      | 11       | 21                  | solution           | 0                  |
+      | 11       | 5577006791947779410 | solution           | 1                  |
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
@@ -74,10 +82,14 @@ Feature: Add item
       | id |
       | 12 |
       | 34 |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_manager_access | owner_access |
-      | 42 | 11       | 12      | true                  | false        |
-      | 43 | 11       | 34      | false                 | true         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
+      | 11       | 12      | solution           | content                  | 0                  |
+      | 11       | 34      | solution           | content                  | 1                  |
+    And the database has the following table 'permissions_granted':
+      | group_id | item_id | can_view | is_owner | giver_group_id | latest_update_on    |
+      | 11       | 12      | solution | 0        | 11             | 2019-05-30 11:00:00 |
+      | 11       | 34      | solution | 1        | 11             | 2019-05-30 11:00:00 |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -135,12 +147,12 @@ Feature: Add item
       | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1              | 1                         | 1        | 1         | forceYes    | 1               | 1           | 1             | 1           | AllButOne       | 1234           | 12,34             | 34               | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | Analysis      | 345   | 1        | 1                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
-      | 6129484611666145821 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
-      | id                  | parent_item_id      | child_item_id       | child_order |
-      | 3916589616287113937 | 5577006791947779410 | 12                  | 0           |
-      | 4037200794235010051 | 21                  | 5577006791947779410 | 100         |
-      | 6334824724549167320 | 5577006791947779410 | 34                  | 1           |
+      | parent_item_id      | child_item_id       | child_order |
+      | 21                  | 5577006791947779410 | 100         |
+      | 5577006791947779410 | 12                  | 0           |
+      | 5577006791947779410 | 34                  | 1           |
     And the table "items_ancestors" should be:
       | ancestor_item_id    | child_item_id       |
       | 21                  | 12                  |
@@ -148,9 +160,18 @@ Feature: Add item
       | 21                  | 5577006791947779410 |
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
-    And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+    And the table "permissions_granted" at group_id "11" should be:
+      | group_id | item_id             | giver_group_id | can_view | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 | is_owner |
+      | 11       | 12                  | 11             | solution | 0                                                       | 0        |
+      | 11       | 21                  | 11             | solution | 0                                                       | 0        |
+      | 11       | 34                  | 11             | solution | 0                                                       | 1        |
+      | 11       | 5577006791947779410 | 11             | none     | 1                                                       | 1        |
+    And the table "permissions_generated" should be:
+      | group_id | item_id             | can_view_generated | is_owner_generated |
+      | 11       | 12                  | solution           | 0                  |
+      | 11       | 21                  | solution           | 0                  |
+      | 11       | 34                  | solution           | 1                  |
+      | 11       | 5577006791947779410 | solution           | 1                  |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -179,13 +200,18 @@ Feature: Add item
       | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0              | 0                         | 1        | 0         |             | 0               | 0           | 0             | 0           | All             | null           | null              | 100              | None                       | 0              | 0                     | 0            | null     | 0               | Running       | null  | 0        | 0                |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url | subtitle | description |
-      | 6129484611666145821 | 5577006791947779410 | 3           | my title | null      | null     | null        |
+      | 8674665223082153551 | 5577006791947779410 | 3           | my title | null      | null     | null        |
     And the table "items_items" should be:
       | id                  | parent_item_id | child_item_id       | child_order |
-      | 4037200794235010051 | 21             | 5577006791947779410 | 100         |
+      | 6129484611666145821 | 21             | 5577006791947779410 | 100         |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
-    And the table "groups_items" at id "8674665223082153551" should be:
-      | id                  | group_id | item_id             | creator_id | ABS(TIMESTAMPDIFF(SECOND, full_access_since, NOW())) < 3 | owner_access | cached_manager_access | ABS(TIMESTAMPDIFF(SECOND, cached_full_access_since, NOW())) < 3 | cached_full_access |
-      | 8674665223082153551 | 11       | 5577006791947779410 | 11         | 1                                                        | 1            | 1                     | 1                                                               | 1                  |
+    And the table "permissions_granted" at group_id "11" should be:
+      | group_id | item_id             | giver_group_id | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11       | 21                  | 11             | 0        | 0                                                       |
+      | 11       | 5577006791947779410 | 11             | 1        | 1                                                       |
+    And the table "permissions_generated" should be:
+      | group_id | item_id             | can_view_generated | is_owner_generated |
+      | 11       | 21                  | solution           | 0                  |
+      | 11       | 5577006791947779410 | solution           | 1                  |

@@ -5,10 +5,10 @@ Feature: Get item for tree navigation
       | 11 | jdoe            |         | -2    | UserAdmin |
       | 12 | jdoe-admin      |         | -2    | UserAdmin |
       | 13 | Group B         |         | -2    | Class     |
-      | 14 | gray_root       |         | -2    | UserAdmin |
-      | 15 | gray_root-admin |         | -2    | UserAdmin |
-      | 16 | gray_mid        |         | -2    | UserAdmin |
-      | 17 | gray_mid-admin  |         | -2    | UserAdmin |
+      | 14 | info_root       |         | -2    | UserAdmin |
+      | 15 | info_root-admin |         | -2    | UserAdmin |
+      | 16 | info_mid        |         | -2    | UserAdmin |
+      | 17 | info_mid-admin  |         | -2    | UserAdmin |
       | 18 | french          |         | -2    | UserAdmin |
       | 19 | french-admin    |         | -2    | UserAdmin |
     And the database has the following table 'languages':
@@ -17,8 +17,8 @@ Feature: Get item for tree navigation
     And the database has the following table 'users':
       | login     | temp_user | group_id | owned_group_id | default_language |
       | jdoe      | 0         | 11       | 12             |                  |
-      | gray_root | 0         | 14       | 15             |                  |
-      | gray_mid  | 0         | 16       | 17             |                  |
+      | info_root | 0         | 14       | 15             |                  |
+      | info_mid  | 0         | 16       | 17             |                  |
       | fr_user   | 0         | 18       | 19             | fr               |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
@@ -42,45 +42,45 @@ Feature: Get item for tree navigation
       | 231 | Task     | false          | false    | 1234,2345         | true               |
       | 232 | Task     | false          | false    | 1234,2345         | true               |
       | 250 | Task     | false          | false    | 1234,2345         | true               |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_full_access_since | cached_partial_access_since | cached_grayed_access_since |
-      | 43 | 13       | 200     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 44 | 13       | 210     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 45 | 13       | 220     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 46 | 13       | 230     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 47 | 13       | 211     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 48 | 13       | 231     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 49 | 13       | 232     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 42 | 13       | 250     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 50 | 14       | 200     | 3019-03-22 08:00:00      | 3019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 51 | 14       | 210     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 52 | 14       | 220     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 53 | 14       | 230     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 54 | 14       | 211     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 55 | 14       | 231     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 56 | 14       | 232     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 60 | 16       | 200     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 61 | 16       | 210     | 3019-03-22 08:00:00      | 3019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 62 | 16       | 220     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 63 | 16       | 230     | 3019-03-22 08:00:00      | 3019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 64 | 16       | 211     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 65 | 16       | 231     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 66 | 16       | 232     | 2019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 70 | 18       | 200     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 71 | 18       | 210     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 72 | 18       | 220     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 73 | 18       | 230     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 74 | 18       | 211     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 75 | 18       | 231     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
-      | 76 | 18       | 232     | 3019-03-22 08:00:00      | 2019-03-22 08:00:00         | 2019-03-22 08:00:00        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 13       | 200     | content_with_descendants |
+      | 13       | 210     | content_with_descendants |
+      | 13       | 220     | content_with_descendants |
+      | 13       | 230     | content_with_descendants |
+      | 13       | 211     | content_with_descendants |
+      | 13       | 231     | content_with_descendants |
+      | 13       | 232     | content_with_descendants |
+      | 13       | 250     | content_with_descendants |
+      | 14       | 200     | info                     |
+      | 14       | 210     | content_with_descendants |
+      | 14       | 220     | content_with_descendants |
+      | 14       | 230     | content_with_descendants |
+      | 14       | 211     | content_with_descendants |
+      | 14       | 231     | content_with_descendants |
+      | 14       | 232     | content_with_descendants |
+      | 16       | 200     | content_with_descendants |
+      | 16       | 210     | info                     |
+      | 16       | 220     | content_with_descendants |
+      | 16       | 230     | info                     |
+      | 16       | 211     | content_with_descendants |
+      | 16       | 231     | content_with_descendants |
+      | 16       | 232     | content_with_descendants |
+      | 18       | 200     | content                  |
+      | 18       | 210     | content                  |
+      | 18       | 220     | content                  |
+      | 18       | 230     | content                  |
+      | 18       | 211     | content                  |
+      | 18       | 231     | content                  |
+      | 18       | 232     | content                  |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | partial_access_propagation | difficulty |
-      | 54 | 200            | 210           | 3           | None                       | 0          |
-      | 55 | 200            | 220           | 2           | AsGrayed                   | 0          |
-      | 56 | 200            | 230           | 1           | AsPartial                  | 0          |
-      | 57 | 210            | 211           | 1           | None                       | 0          |
-      | 58 | 230            | 231           | 2           | None                       | 0          |
-      | 59 | 230            | 232           | 1           | None                       | 0          |
+      | id | parent_item_id | child_item_id | child_order | content_view_propagation | difficulty |
+      | 54 | 200            | 210           | 3           | none                     | 0          |
+      | 55 | 200            | 220           | 2           | as_info                  | 0          |
+      | 56 | 200            | 230           | 1           | as_content               | 0          |
+      | 57 | 210            | 211           | 1           | none                     | 0          |
+      | 58 | 230            | 231           | 2           | none                     | 0          |
+      | 59 | 230            | 232           | 1           | none                     | 0          |
     And the database has the following table 'items_strings':
       | id | item_id | language_id | title       |
       | 53 | 200     | 1           | Category 1  |
@@ -138,15 +138,13 @@ Feature: Get item for tree navigation
           "finished_at": "2019-02-01T09:26:41Z"
         },
         "access_rights": {
-          "partial_access": true,
-          "full_access": true,
-          "gray_access": true
+          "can_view": "content_with_descendants"
         },
         "children": [
           {
             "id": "230",
             "order": 1,
-            "partial_access_propagation": "AsPartial",
+            "content_view_propagation": "as_content",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -164,15 +162,13 @@ Feature: Get item for tree navigation
               "finished_at": "2019-02-01T09:26:45Z"
             },
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": [
               {
                 "id": "232",
                 "order": 1,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -190,16 +186,14 @@ Feature: Get item for tree navigation
                   "finished_at": "2019-02-01T09:26:47Z"
                 },
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": true,
-                  "gray_access": true
+                  "can_view": "content_with_descendants"
                 },
                 "children": null
               },
               {
                 "id": "231",
                 "order": 2,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -217,9 +211,7 @@ Feature: Get item for tree navigation
                   "finished_at": "2019-02-01T09:26:46Z"
                 },
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": true,
-                  "gray_access": true
+                  "can_view": "content_with_descendants"
                 },
                 "children": null
               }
@@ -228,7 +220,7 @@ Feature: Get item for tree navigation
           {
             "id": "220",
             "order": 2,
-            "partial_access_propagation": "AsGrayed",
+            "content_view_propagation": "as_info",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -246,16 +238,14 @@ Feature: Get item for tree navigation
               "finished_at": "2019-02-01T09:26:44Z"
             },
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": []
           },
           {
             "id": "210",
             "order": 3,
-            "partial_access_propagation": "None",
+            "content_view_propagation": "none",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -273,15 +263,13 @@ Feature: Get item for tree navigation
               "finished_at": "2019-02-01T09:26:42Z"
             },
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": [
               {
                 "id": "211",
                 "order": 1,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -299,9 +287,7 @@ Feature: Get item for tree navigation
                   "finished_at": "2019-02-01T09:26:43Z"
                 },
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": true,
-                  "gray_access": true
+                  "can_view": "content_with_descendants"
                 },
                 "children": null
               }
@@ -336,9 +322,7 @@ Feature: Get item for tree navigation
           "finished_at": "2019-02-01T09:26:47Z"
         },
         "access_rights": {
-          "partial_access": true,
-          "full_access": true,
-          "gray_access": true
+          "can_view": "content_with_descendants"
         },
         "children": []
       }
@@ -369,15 +353,13 @@ Feature: Get item for tree navigation
           "finished_at": "2019-02-01T09:26:45Z"
         },
         "access_rights": {
-          "partial_access": true,
-          "full_access": true,
-          "gray_access": true
+          "can_view": "content_with_descendants"
         },
         "children": [
           {
             "id": "232",
             "order": 1,
-            "partial_access_propagation": "None",
+            "content_view_propagation": "none",
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -395,16 +377,14 @@ Feature: Get item for tree navigation
               "finished_at": "2019-02-01T09:26:47Z"
             },
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": []
           },
           {
             "id": "231",
             "order": 2,
-            "partial_access_propagation": "None",
+            "content_view_propagation": "none",
             "type": "Task",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -422,9 +402,7 @@ Feature: Get item for tree navigation
               "finished_at": "2019-02-01T09:26:46Z"
             },
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": []
           }
@@ -432,7 +410,7 @@ Feature: Get item for tree navigation
       }
       """
 
-  Scenario: Should return only one node if the user has only grayed access to the root item
+  Scenario: Should return only one node if the user has only info access to the root item
     Given I am the user with id "14"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
@@ -448,15 +426,13 @@ Feature: Get item for tree navigation
         },
         "user_active_attempt": null,
         "access_rights": {
-          "partial_access": false,
-          "full_access": false,
-          "gray_access": true
+          "can_view": "info"
         },
         "children": []
       }
       """
 
-  Scenario: Should skip children of grayed nodes
+  Scenario: Should skip children of nodes with 'info' access
     Given I am the user with id "16"
     When I send a GET request to "/items/200/as-nav-tree"
     Then the response code should be 200
@@ -472,15 +448,13 @@ Feature: Get item for tree navigation
         },
         "user_active_attempt": null,
         "access_rights": {
-          "partial_access": true,
-          "full_access": true,
-          "gray_access": true
+          "can_view": "content_with_descendants"
         },
         "children": [
           {
             "id": "230",
             "order": 1,
-            "partial_access_propagation": "AsPartial",
+            "content_view_propagation": "as_content",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -489,16 +463,14 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": false,
-              "full_access": false,
-              "gray_access": true
+              "can_view": "info"
             },
             "children": []
           },
           {
             "id": "220",
             "order": 2,
-            "partial_access_propagation": "AsGrayed",
+            "content_view_propagation": "as_info",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -507,16 +479,14 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": true,
-              "full_access": true,
-              "gray_access": true
+              "can_view": "content_with_descendants"
             },
             "children": []
           },
           {
             "id": "210",
             "order": 3,
-            "partial_access_propagation": "None",
+            "content_view_propagation": "none",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -525,9 +495,7 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": false,
-              "full_access": false,
-              "gray_access": true
+              "can_view": "info"
             },
             "children": []
           }
@@ -551,15 +519,13 @@ Feature: Get item for tree navigation
         },
         "user_active_attempt": null,
         "access_rights": {
-          "partial_access": true,
-          "full_access": false,
-          "gray_access": true
+          "can_view": "content"
         },
         "children": [
           {
             "id": "230",
             "order": 1,
-            "partial_access_propagation": "AsPartial",
+            "content_view_propagation": "as_content",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -568,15 +534,13 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": true,
-              "full_access": false,
-              "gray_access": true
+              "can_view": "content"
             },
             "children": [
               {
                 "id": "232",
                 "order": 1,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -585,16 +549,14 @@ Feature: Get item for tree navigation
                 },
                 "user_active_attempt": null,
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": false,
-                  "gray_access": true
+                  "can_view": "content"
                 },
                 "children": null
               },
               {
                 "id": "231",
                 "order": 2,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -603,9 +565,7 @@ Feature: Get item for tree navigation
                 },
                 "user_active_attempt": null,
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": false,
-                  "gray_access": true
+                  "can_view": "content"
                 },
                 "children": null
               }
@@ -614,7 +574,7 @@ Feature: Get item for tree navigation
           {
             "id": "220",
             "order": 2,
-            "partial_access_propagation": "AsGrayed",
+            "content_view_propagation": "as_info",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -623,16 +583,14 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": true,
-              "full_access": false,
-              "gray_access": true
+              "can_view": "content"
             },
             "children": []
           },
           {
             "id": "210",
             "order": 3,
-            "partial_access_propagation": "None",
+            "content_view_propagation": "none",
             "type": "Chapter",
             "transparent_folder": true,
             "has_unlocked_items": true,
@@ -641,15 +599,13 @@ Feature: Get item for tree navigation
             },
             "user_active_attempt": null,
             "access_rights": {
-              "partial_access": true,
-              "full_access": false,
-              "gray_access": true
+              "can_view": "content"
             },
             "children": [
               {
                 "id": "211",
                 "order": 1,
-                "partial_access_propagation": "None",
+                "content_view_propagation": "none",
                 "type": "Task",
                 "transparent_folder": true,
                 "has_unlocked_items": true,
@@ -658,9 +614,7 @@ Feature: Get item for tree navigation
                 },
                 "user_active_attempt": null,
                 "access_rights": {
-                  "partial_access": true,
-                  "full_access": false,
-                  "gray_access": true
+                  "can_view": "content"
                 },
                 "children": null
               }

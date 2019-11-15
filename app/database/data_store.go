@@ -66,9 +66,14 @@ func (s *DataStore) GroupContestItems() *GroupContestItemStore {
 	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}
 }
 
-// GroupItems returns a GroupItemStore
-func (s *DataStore) GroupItems() *GroupItemStore {
-	return &GroupItemStore{NewDataStoreWithTable(s.DB, "groups_items")}
+// Permissions returns a PermissionGeneratedStore
+func (s *DataStore) Permissions() *PermissionGeneratedStore {
+	return &PermissionGeneratedStore{NewDataStoreWithTable(s.DB, "permissions_generated AS permissions")}
+}
+
+// PermissionsGranted returns a PermissionGrantedStore
+func (s *DataStore) PermissionsGranted() *PermissionGrantedStore {
+	return &PermissionGrantedStore{NewDataStoreWithTable(s.DB, "permissions_granted")}
 }
 
 // ItemAncestors returns a ItemAncestorStore
@@ -170,4 +175,10 @@ func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func
 // into the store's table
 func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
 	return s.DB.insertMap(s.tableName, dataMap)
+}
+
+// InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
+// into the store's table (like InsertMap does). If it is a duplicate, the listed columns will be updated.
+func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColumns []string) error {
+	return s.DB.insertOrUpdateMap(s.tableName, dataMap, updateColumns)
 }

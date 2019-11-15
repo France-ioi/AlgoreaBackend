@@ -29,16 +29,15 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID int64) (newID int64, err e
 }
 
 // GetAttemptItemIDIfUserHasAccess returns groups_attempts.item_id if:
-//  1) the user has at least partial access to this item
+//  1) the user has at least 'content' access to this item
 //  2) the user is a member of groups_attempts.group_id  (if items.has_attempts = 1)
 //  3) the user's group_id = groups_attempts.group_id (if items.has_attempts = 0)
 func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-	err = s.Items().Visible(user).
+	err = s.Items().WhereUserHasViewPermissionOnItems(user, "content").
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
-		Where("partial_access > 0 OR full_access > 0").
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
 			usersGroupsQuery.SubQuery(), user.GroupID).
 		PluckFirst("items.id", &itemID).Error()
@@ -51,18 +50,17 @@ func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, use
 
 // VisibleAndByItemID returns a composable query for getting groups_attempts with the following access rights
 // restrictions:
-// 1) the user should have at least partial access rights to the groups_attempts.item_id item,
+// 1) the user should have at least 'content' access rights to the groups_attempts.item_id item,
 // 2) the user is able to see answers related to his group's attempts, so:
 //   (a) if items.has_attempts = 1, then the user should be a member of the groups_attempts.group_id team
 //   (b) if items.has_attempts = 0, then groups_attempts.group_id should be equal to the user's self group
 func (s *GroupAttemptStore) VisibleAndByItemID(user *User, itemID int64) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
-	// the user should have at least partial access to the item
-	itemsQuery := s.Items().Visible(user).Where("items.id = ?", itemID).
-		Where("partial_access > 0 OR full_access > 0")
+	// the user should have at least 'content' access to the item
+	itemsQuery := s.Items().ByID(itemID).WhereUserHasViewPermissionOnItems(user, "content")
 
 	return s.
-		// the user should have at least partial access to the users_answers.item_id
+		// the user should have at least 'content' access to the users_answers.item_id
 		Joins("JOIN ? AS items ON items.id = groups_attempts.item_id", itemsQuery.SubQuery()).
 		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,
 		// otherwise groups_attempts.group_id should be equal to the user's self group

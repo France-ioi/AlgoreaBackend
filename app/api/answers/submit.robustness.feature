@@ -12,9 +12,9 @@ Feature: Submit a new answer - robustness
     And the database has the following table 'items':
       | id | read_only |
       | 50 | 1         |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 101      | 50      | content            |
 
   Scenario: Wrong JSON in request
     Given I am the user with id "101"

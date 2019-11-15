@@ -38,7 +38,7 @@ type createGroupRequest struct {
 //
 //     * Otherwise, checks that the authenticated user
 //
-//       * has grayed, partial or full access to the item (otherwise returns the "forbidden" response)
+//       * has 'info', 'content' or 'content_with_descendants' access to the item (otherwise returns the "forbidden" response)
 //
 //       * sets this `item_id` as `team_item_id` of the new group.
 //
@@ -91,7 +91,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		if input.ItemID != nil {
 			hasRows, itemErr := store.Raw("SELECT 1 FROM ? AS access_rights",
-				store.GroupItems().AccessRightsForItemsVisibleToUser(user).Where("item_id = ?", *input.ItemID).
+				store.Permissions().VisibleToUser(user).Where("item_id = ?", *input.ItemID).
 					WithWriteLock().SubQuery()).HasRows()
 			service.MustNotBeError(itemErr)
 			if !hasRows {

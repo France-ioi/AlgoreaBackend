@@ -5,7 +5,6 @@ package database_test
 import (
 	"errors"
 	"reflect"
-	"regexp"
 	"testing"
 	"time"
 
@@ -54,32 +53,6 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			assert.Equal(t, testCase.expected, result)
 		})
 	}
-}
-
-func TestItemStore_AccessRights(t *testing.T) {
-	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mockUser := &database.User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
-
-	mock.ExpectQuery("^" + regexp.QuoteMeta(
-		"SELECT item_id, MIN(cached_full_access_since) <= NOW() AS full_access, "+
-			"MIN(cached_partial_access_since) <= NOW() AS partial_access, "+
-			"MIN(cached_grayed_access_since) <= NOW() AS grayed_access, "+
-			"MIN(cached_solutions_access_since) <= NOW() AS access_solutions "+
-			"FROM `groups_items` "+
-			"JOIN ("+
-			"SELECT * FROM `groups_ancestors` "+
-			"WHERE (`groups_ancestors`.child_group_id = ?) AND (NOW() < `groups_ancestors`.expires_at)"+
-			") AS ancestors "+
-			"ON groups_items.group_id = ancestors.ancestor_group_id GROUP BY item_id") + "$").
-		WithArgs(2).
-		WillReturnRows(mock.NewRows([]string{"id"}))
-
-	var result []interface{}
-	err := database.NewDataStore(db).Items().AccessRights(mockUser).Scan(&result).Error()
-	assert.NoError(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
@@ -287,27 +260,38 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 
 func TestItemStore_CloseContest(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		groups: [{id: 20}]
+		groups: [{id: 20}, {id: 21}]
 		users: [{login: 1, group_id: 20}]
-		items: [{id: 11}, {id: 12}, {id: 13}, {id: 14}, {id: 15}, {id: 16}]
+		items: [{id: 11}, {id: 12}, {id: 13}, {id: 14}, {id: 15}, {id: 16}, {id: 17}]
 		items_ancestors:
 			- {ancestor_item_id: 11, child_item_id: 12}
 			- {ancestor_item_id: 11, child_item_id: 13}
 			- {ancestor_item_id: 11, child_item_id: 14}
 			- {ancestor_item_id: 11, child_item_id: 15}
 			- {ancestor_item_id: 11, child_item_id: 16}
+			- {ancestor_item_id: 11, child_item_id: 17}
 		groups_attempts:
 			- {group_id: 20, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
 			- {group_id: 20, item_id: 12, entered_at: 2018-03-22 08:44:55, order: 1}
 			- {group_id: 21, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
-		groups_items:
-			- {group_id: 20, item_id: 11}
-			- {group_id: 20, item_id: 12}
-			- {group_id: 20, item_id: 13, cached_full_access_since: 2030-03-22 08:44:55} # no full access
-			- {group_id: 20, item_id: 14, cached_full_access_since: 2018-03-22 08:44:55} # full access
-			- {group_id: 20, item_id: 15, owner_access: 1}
-			- {group_id: 20, item_id: 16, manager_access: 1}
-			- {group_id: 21, item_id: 12}`)
+		permissions_generated:
+			- {group_id: 20, item_id: 11, can_view_generated: content}
+			- {group_id: 20, item_id: 12, can_view_generated: info}
+			- {group_id: 20, item_id: 13, can_view_generated: content}
+			- {group_id: 20, item_id: 14, can_view_generated: content_with_descendants} # full access
+			- {group_id: 20, item_id: 15, can_view_generated: content, is_owner_generated: 1}
+			- {group_id: 20, item_id: 16, can_view_generated: solution}
+			- {group_id: 20, item_id: 17, can_view_generated: content}
+			- {group_id: 21, item_id: 12}
+		permissions_granted:
+			- {group_id: 20, item_id: 11, can_view: content, can_edit: children, giver_group_id: -1}
+			- {group_id: 20, item_id: 12, can_view: info, giver_group_id: -1}
+			- {group_id: 20, item_id: 13, can_view: content, giver_group_id: -1}
+			- {group_id: 20, item_id: 14, can_view: content_with_descendants, giver_group_id: -1}
+			- {group_id: 20, item_id: 15, can_view: content, is_owner: 1, giver_group_id: -1}
+			- {group_id: 20, item_id: 16, can_view: solution, giver_group_id: -1}
+			- {group_id: 20, item_id: 17, can_view: content, giver_group_id: 20}
+			- {group_id: 21, item_id: 12, giver_group_id: -1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{}
 		assert.NoError(t, user.LoadByID(store, 20))
@@ -338,7 +322,7 @@ func TestItemStore_CloseContest(t *testing.T) {
 		ItemID  int64
 	}
 	var groupItems []groupItemInfo
-	assert.NoError(t, store.GroupItems().Select("group_id, item_id").
+	assert.NoError(t, store.PermissionsGranted().Select("group_id, item_id").
 		Order("group_id, item_id").
 		Scan(&groupItems).Error())
 	assert.Equal(t, []groupItemInfo{
@@ -346,6 +330,7 @@ func TestItemStore_CloseContest(t *testing.T) {
 		{GroupID: 20, ItemID: 14},
 		{GroupID: 20, ItemID: 15},
 		{GroupID: 20, ItemID: 16},
+		{GroupID: 20, ItemID: 17},
 		{GroupID: 21, ItemID: 12},
 	}, groupItems)
 }
@@ -377,19 +362,20 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		groups_attempts:
 			- {group_id: 40, item_id: 11, entered_at: 2018-03-22 08:44:55, order: 1}
 			- {group_id: 40, item_id: 12, entered_at: 2018-03-22 08:44:55, order: 1}
-		groups_items:
-			- {group_id: 20, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
-				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
-			- {group_id: 40, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
-				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
-			- {group_id: 20, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
-				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
-			- {group_id: 40, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
-				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
-			- {group_id: 50, item_id: 11, cached_partial_access_since: 2018-03-22 08:44:55,
-				partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}
-			- {group_id: 50, item_id: 12, cached_partial_access_since: 2018-03-22 08:44:55,
-			   partial_access_since: 2018-03-22 08:44:55, cached_partial_access: 1}`)
+		permissions_generated:
+			- {group_id: 20, item_id: 11, can_view_generated: content}
+			- {group_id: 40, item_id: 11, can_view_generated: content}
+			- {group_id: 20, item_id: 12, can_view_generated: content}
+			- {group_id: 40, item_id: 12, can_view_generated: content}
+			- {group_id: 50, item_id: 11, can_view_generated: content}
+			- {group_id: 50, item_id: 12, can_view_generated: content}
+		permissions_granted:
+			- {group_id: 20, item_id: 11, can_view: content, giver_group_id: -1}
+			- {group_id: 40, item_id: 11, can_view: content, giver_group_id: -1}
+			- {group_id: 20, item_id: 12, can_view: content, giver_group_id: -1}
+			- {group_id: 40, item_id: 12, can_view: content, giver_group_id: -1}
+			- {group_id: 50, item_id: 11, can_view: content, giver_group_id: -1}
+			- {group_id: 50, item_id: 12, can_view: content, giver_group_id: -1}`)
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		user := &database.User{GroupID: 10}
 		store.Items().CloseTeamContest(11, user)
@@ -413,65 +399,49 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 		{GroupID: 40, ItemID: 12, FinishedAtSet: false},
 	}, participations)
 
-	type groupItemInfo struct {
-		GroupID                  int64
-		ItemID                   int64
-		PartialAccessSince       *database.Time
-		CachedPartialAccessSince *database.Time
-		CachedPartialAccess      bool
+	type permissionsInfo struct {
+		GroupID int64
+		ItemID  int64
+		CanView string
 	}
-	var groupItems []groupItemInfo
-	assert.NoError(t, store.GroupItems().
-		Select("group_id, item_id, partial_access_since, cached_partial_access_since, cached_partial_access").
+	var permissions []permissionsInfo
+	assert.NoError(t, store.PermissionsGranted().
+		Select("group_id, item_id, can_view").
 		Order("group_id, item_id").
-		Scan(&groupItems).Error())
-	expectedDate := (*database.Time)(ptrTime(time.Date(2018, 3, 22, 8, 44, 55, 0, time.UTC)))
-	assert.Equal(t, []groupItemInfo{
-		{GroupID: 20, ItemID: 11, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
-		{GroupID: 20, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
-		{GroupID: 40, ItemID: 11, PartialAccessSince: nil, CachedPartialAccessSince: nil, CachedPartialAccess: false},
-		{GroupID: 40, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
-		{GroupID: 50, ItemID: 11, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
-		{GroupID: 50, ItemID: 12, PartialAccessSince: expectedDate, CachedPartialAccessSince: expectedDate, CachedPartialAccess: true},
-	}, groupItems)
+		Scan(&permissions).Error())
+	assert.Equal(t, []permissionsInfo{
+		{GroupID: 20, ItemID: 11, CanView: "content"},
+		{GroupID: 20, ItemID: 12, CanView: "content"},
+		{GroupID: 40, ItemID: 11, CanView: "none"},
+		{GroupID: 40, ItemID: 12, CanView: "content"},
+		{GroupID: 50, ItemID: 11, CanView: "content"},
+		{GroupID: 50, ItemID: 12, CanView: "content"},
+	}, permissions)
+	assert.NoError(t, store.Permissions().
+		Select("group_id, item_id, can_view_generated AS can_view").
+		Order("group_id, item_id").
+		Scan(&permissions).Error())
+	assert.Equal(t, []permissionsInfo{
+		{GroupID: 20, ItemID: 11, CanView: "content"},
+		{GroupID: 20, ItemID: 12, CanView: "content"},
+		{GroupID: 40, ItemID: 11, CanView: "none"},
+		{GroupID: 40, ItemID: 12, CanView: "content"},
+		{GroupID: 50, ItemID: 11, CanView: "content"},
+		{GroupID: 50, ItemID: 12, CanView: "content"},
+	}, permissions)
 }
 
-func TestItemStore_Visible_ProvidesAccessSolutions(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 11}, {id: 12}, {id: 13}]
-		groups: [{id: 10}, {id: 40}]
-		users: [{group_id: 10}]
-		groups_groups:
-			- {parent_group_id: 40, child_group_id: 10}
-		groups_ancestors:
-			- {ancestor_group_id: 10, child_group_id: 10}
-			- {ancestor_group_id: 40, child_group_id: 10}
-			- {ancestor_group_id: 40, child_group_id: 40}
-		groups_items:
-			- {group_id: 40, item_id: 11, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2018-03-22 08:44:55}
-			- {group_id: 10, item_id: 11, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2019-03-22 08:44:55}
-			- {group_id: 10, item_id: 12, cached_full_access_since: 2018-03-22 08:44:55, cached_solutions_access_since: 2019-04-22 08:44:55}
-			- {group_id: 10, item_id: 13, cached_full_access_since: 2018-03-22 08:44:55}`)
-	type resultType struct {
-		ID              int64
-		AccessSolutions bool
-	}
-	var result []resultType
-
-	assert.NoError(t, database.NewDataStore(db).Items().
-		Visible(&database.User{GroupID: 10}).
-		Select("id, access_solutions").Order("id").Scan(&result).Error())
-	assert.Equal(t, []resultType{
-		{ID: 11, AccessSolutions: true},
-		{ID: 12, AccessSolutions: true},
-		{ID: 13, AccessSolutions: false},
-	}, result)
+type itemsTest struct {
+	name       string
+	ids        []int64
+	userID     int64
+	wantResult bool
 }
 
-func TestItemStore_HasManagerAccess(t *testing.T) {
+func TestItemStore_CanGrantViewContentOnAll(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 11}, {id: 12}, {id: 13}]
-		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}]
+		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
 		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
 		groups_groups:
 			- {parent_group_id: 400, child_group_id: 100}
@@ -480,26 +450,21 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 			- {ancestor_group_id: 110, child_group_id: 110}
 			- {ancestor_group_id: 400, child_group_id: 100}
 			- {ancestor_group_id: 400, child_group_id: 400}
-		groups_items:
-			- {group_id: 400, item_id: 11, cached_manager_access: 1}
-			- {group_id: 100, item_id: 11, owner_access: 1}
+		permissions_generated:
+			- {group_id: 400, item_id: 11, can_grant_view_generated: content}
+			- {group_id: 100, item_id: 11, can_grant_view_generated: transfer}
 			- {group_id: 100, item_id: 12}
 			- {group_id: 100, item_id: 13}
-			- {group_id: 110, item_id: 12, owner_access: 1}
-			- {group_id: 110, item_id: 13, cached_manager_access: 1}`)
+			- {group_id: 110, item_id: 12, can_grant_view_generated: transfer}
+			- {group_id: 110, item_id: 13, can_grant_view_generated: content}`)
 
-	tests := []struct {
-		name       string
-		ids        []int64
-		userID     int64
-		wantResult bool
-	}{
-		{name: "two groups_items rows for one item", ids: []int64{11}, userID: 100, wantResult: true},
-		{name: "no manager/owner access", ids: []int64{12}, userID: 100, wantResult: false},
-		{name: "access to a part of items", ids: []int64{11, 12}, userID: 100, wantResult: false},
-		{name: "no manager/owner access for another user", ids: []int64{11}, userID: 110, wantResult: false},
-		{name: "owner access", ids: []int64{12}, userID: 110, wantResult: true},
-		{name: "manager access", ids: []int64{13}, userID: 110, wantResult: true},
+	tests := []itemsTest{
+		{name: "two permissions_granted rows for one item", ids: []int64{11}, userID: 100, wantResult: true},
+		{name: "cannot grant view", ids: []int64{12}, userID: 100, wantResult: false},
+		{name: "can grant view for a part of items", ids: []int64{11, 12}, userID: 100, wantResult: false},
+		{name: "another user cannot grant view", ids: []int64{11}, userID: 110, wantResult: false},
+		{name: "can_grant_view_generated = transfer", ids: []int64{12}, userID: 110, wantResult: true},
+		{name: "can_grant_view_generated = content", ids: []int64{13}, userID: 110, wantResult: true},
 		{name: "two items", ids: []int64{12, 13}, userID: 110, wantResult: true},
 		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 110, wantResult: true},
 		{name: "empty ids list", ids: []int64{}, userID: 110, wantResult: true},
@@ -510,12 +475,127 @@ func TestItemStore_HasManagerAccess(t *testing.T) {
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				user := &database.User{}
 				assert.NoError(t, user.LoadByID(store, test.userID))
-				hasAccess, err := store.Items().
-					HasManagerAccess(user, test.ids...)
+				canGrant, err := store.Items().CanGrantViewContentOnAll(user, test.ids...)
 				assert.NoError(t, err)
-				assert.Equal(t, test.wantResult, hasAccess)
+				assert.Equal(t, test.wantResult, canGrant)
 				return nil
 			}))
+		})
+	}
+}
+
+func TestItemStore_AreAllVisible(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{id: 11}, {id: 12}, {id: 13}]
+		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
+		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
+		groups_groups:
+			- {parent_group_id: 400, child_group_id: 100}
+		groups_ancestors:
+			- {ancestor_group_id: 100, child_group_id: 100}
+			- {ancestor_group_id: 110, child_group_id: 110}
+			- {ancestor_group_id: 400, child_group_id: 100}
+			- {ancestor_group_id: 400, child_group_id: 400}
+		permissions_generated:
+			- {group_id: 400, item_id: 11, can_view_generated: info}
+			- {group_id: 100, item_id: 11, can_view_generated: content}
+			- {group_id: 100, item_id: 12}
+			- {group_id: 100, item_id: 13}
+			- {group_id: 110, item_id: 12, can_view_generated: content_with_descendants}
+			- {group_id: 110, item_id: 13, can_view_generated: solution}`)
+
+	tests := []itemsTest{
+		{name: "two permissions_granted rows for one item", ids: []int64{11}, userID: 100, wantResult: true},
+		{name: "not visible", ids: []int64{12}, userID: 100, wantResult: false},
+		{name: "one of two items is not visible", ids: []int64{11, 12}, userID: 100, wantResult: false},
+		{name: "not visible for another user", ids: []int64{11}, userID: 110, wantResult: false},
+		{name: "can_view_generated = content_with_descendants", ids: []int64{12}, userID: 110, wantResult: true},
+		{name: "can_view_generated = solution", ids: []int64{13}, userID: 110, wantResult: true},
+		{name: "empty ids list", ids: []int64{}, userID: 110, wantResult: true},
+		{name: "two items", ids: []int64{12, 13}, userID: 110, wantResult: true},
+		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 110, wantResult: true},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				user := &database.User{}
+				assert.NoError(t, user.LoadByID(store, test.userID))
+				allAreVisible, err := store.Items().AreAllVisible(user, test.ids...)
+				assert.Equal(t, test.wantResult, allAreVisible)
+				assert.NoError(t, err)
+				return nil
+			}))
+		})
+	}
+}
+
+func TestItemStore_GetAccessDetailsForIDs(t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		items: [{id: 11}, {id: 12}, {id: 13}]
+		groups: [{id: 10}, {id: 11}, {id: 40}, {id: 100}, {id: 110}, {id: 400}]
+		users: [{login: 1, group_id: 100}, {login: 2, group_id: 110}]
+		groups_groups:
+			- {parent_group_id: 400, child_group_id: 100}
+		groups_ancestors:
+			- {ancestor_group_id: 100, child_group_id: 100}
+			- {ancestor_group_id: 110, child_group_id: 110}
+			- {ancestor_group_id: 400, child_group_id: 100}
+			- {ancestor_group_id: 400, child_group_id: 400}
+		permissions_generated:
+			- {group_id: 400, item_id: 11, can_view_generated: info}
+			- {group_id: 100, item_id: 11, can_view_generated: content}
+			- {group_id: 100, item_id: 12}
+			- {group_id: 100, item_id: 13}
+			- {group_id: 110, item_id: 12, can_view_generated: content_with_descendants}
+			- {group_id: 110, item_id: 13, can_view_generated: solution}`)
+
+	tests := []struct {
+		name       string
+		ids        []int64
+		userID     int64
+		wantResult []database.ItemAccessDetailsWithID
+	}{
+		{name: "two permissions_granted rows for one item", ids: []int64{11}, userID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"},
+			}}},
+		{name: "not visible", ids: []int64{12}, userID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{}},
+		{name: "one of two items is not visible", ids: []int64{11, 12}, userID: 100,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 11, ItemAccessDetails: database.ItemAccessDetails{CanView: "content"}},
+			}},
+		{name: "no permissions_generated row", ids: []int64{11}, userID: 110, wantResult: []database.ItemAccessDetailsWithID{}},
+		{name: "can_view_generated = content_with_descendants", ids: []int64{12}, userID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"},
+			}}},
+		{name: "can_view_generated = solution", ids: []int64{13}, userID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{{
+				ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"},
+			}}},
+		{name: "empty ids list", ids: []int64{}, userID: 110, wantResult: []database.ItemAccessDetailsWithID{}},
+		{name: "two items", ids: []int64{12, 13}, userID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"}},
+			}},
+		{name: "two items (not unique)", ids: []int64{12, 13, 12, 13}, userID: 110,
+			wantResult: []database.ItemAccessDetailsWithID{
+				{ItemID: 12, ItemAccessDetails: database.ItemAccessDetails{CanView: "content_with_descendants"}},
+				{ItemID: 13, ItemAccessDetails: database.ItemAccessDetails{CanView: "solution"}},
+			}},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			store := database.NewDataStore(db)
+			user := &database.User{}
+			assert.NoError(t, user.LoadByID(store, test.userID))
+			accessDetails, err := store.Items().GetAccessDetailsForIDs(user, test.ids)
+			assert.Equal(t, test.wantResult, accessDetails)
+			assert.NoError(t, err)
 		})
 	}
 }

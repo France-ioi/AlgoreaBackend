@@ -27,9 +27,7 @@ type navigationItemUserActiveAttempt struct {
 }
 
 type navigationItemAccessRights struct {
-	FullAccess    bool `json:"full_access"`
-	PartialAccess bool `json:"partial_access"`
-	GrayAccess    bool `json:"gray_access"`
+	CanView string `json:"can_view"`
 }
 
 type navigationItemString struct {
@@ -58,8 +56,8 @@ type navigationDataResponse struct {
 type navigationItemChild struct {
 	*navigationItemCommonFields
 
-	Order                    int32  `json:"order"`
-	PartialAccessPropagation string `json:"partial_access_propagation"`
+	Order                  int32  `json:"order"`
+	ContentViewPropagation string `json:"content_view_propagation"`
 }
 
 // Bind binds req.ID to URLParam("item_id")
@@ -109,16 +107,15 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 		}
 
 		parentItem, hasParentItem := idMap[rawData[index].ParentItemID]
-		if !hasParentItem ||
-			(!parentItem.FullAccess && !parentItem.PartialAccess) {
-			continue // The parent item is grayed
+		if !hasParentItem || parentItem.CanViewGeneratedValue == srv.Store.PermissionsGranted().ViewIndexByName("info") {
+			continue // Only 'info' access to the parent item
 		}
 
 		if parentItemCommonFields, ok := idsToResponseData[rawData[index].ParentItemID]; ok {
 			child := navigationItemChild{
 				navigationItemCommonFields: srv.fillNavigationCommonFieldsWithDBData(&rawData[index]),
 				Order:                      rawData[index].Order,
-				PartialAccessPropagation:   rawData[index].PartialAccessPropagation,
+				ContentViewPropagation:     rawData[index].ContentViewPropagation,
 			}
 			idsToResponseData[child.ID] = child.navigationItemCommonFields
 			parentItemCommonFields.Children = append(parentItemCommonFields.Children, child)
@@ -134,9 +131,7 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 		HasUnlockedItems:  rawData.HasUnlockedItems,
 		String:            navigationItemString{Title: rawData.Title},
 		AccessRights: navigationItemAccessRights{
-			FullAccess:    rawData.FullAccess,
-			PartialAccess: rawData.PartialAccess,
-			GrayAccess:    rawData.GrayedAccess,
+			CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 		},
 	}
 	if rawData.ItemGrandparentID == nil {

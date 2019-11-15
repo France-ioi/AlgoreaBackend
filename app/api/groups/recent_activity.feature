@@ -24,9 +24,9 @@ Feature: Get recent activity for group_id and item_id
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
       | 200 | Category | false          | false    | 1234,2345         | true               |
-    And the database has the following table 'groups_items':
-      | id | group_id | item_id | cached_grayed_access_since |
-      | 43 | 21       | 200     | 2019-03-22 06:38:38        |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 21       | 200     | info               |
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id |
       | 1  | 200              | 200           |

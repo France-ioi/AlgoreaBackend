@@ -65,21 +65,21 @@ Feature: Get group by name (contestGetGroupByName)
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 60               | 70            |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since | cached_grayed_access_since | cached_full_access_since | cached_solutions_access_since |
-      | 10       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 11       | 50      | null                        | null                       | null                     | null                          |
-      | 11       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 11       | 70      | null                        | null                       | 2017-05-29 06:38:38      | null                          |
-      | 13       | 50      | 2017-05-29 06:38:38         | null                       | null                     | null                          |
-      | 13       | 60      | null                        | 2017-05-29 06:38:38        | null                     | null                          |
-      | 15       | 60      | null                        | 2018-05-29 06:38:38        | null                     | null                          |
-      | 21       | 50      | null                        | null                       | null                     | 2018-05-29 06:38:38           |
-      | 21       | 60      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 21       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 50      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 31       | 70      | null                        | null                       | 2018-05-29 06:38:38      | null                          |
-      | 41       | 70      | 2018-05-29 06:38:38         | null                       | null                     | null                          |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 11       | 50      | none                     |
+      | 11       | 60      | info                     |
+      | 11       | 70      | content_with_descendants |
+      | 13       | 50      | content                  |
+      | 13       | 60      | info                     |
+      | 15       | 60      | info                     |
+      | 21       | 50      | solution                 |
+      | 21       | 60      | content_with_descendants |
+      | 21       | 70      | content_with_descendants |
+      | 31       | 50      | content_with_descendants |
+      | 31       | 70      | content_with_descendants |
+      | 41       | 70      | content                  |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
@@ -94,7 +94,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 31       | 70      | 00:01:00        |
       | 41       | 70      | 00:01:00        |
 
-  Scenario: Partial access for group, solutions access for user, additional time from parent groups
+  Scenario: Content access for group, solutions access for user, additional time from parent groups
     Given I am the user with id "21"
     When I send a GET request to "/contests/50/groups/by-name?name=Group%20B"
     Then the response code should be 200
@@ -109,7 +109,7 @@ Feature: Get group by name (contestGetGroupByName)
     }
     """
 
-  Scenario: Grayed access for group, full access for user
+  Scenario: Info access for group, full access for user
     Given I am the user with id "21"
     When I send a GET request to "/contests/60/groups/by-name?name=Group%20B"
     Then the response code should be 200

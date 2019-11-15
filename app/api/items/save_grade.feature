@@ -27,11 +27,11 @@ Feature: Save grading result
       | ancestor_item_id | child_item_id |
       | 10               | 50            |
       | 10               | 60            |
-    And the database has the following table 'groups_items':
-      | group_id | item_id | cached_partial_access_since |
-      | 101      | 50      | 2017-05-29 06:38:38         |
-      | 101      | 60      | 2017-05-29 06:38:38         |
-      | 101      | 70      | 2017-05-29 06:38:38         |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 101      | 50      | content            |
+      | 101      | 60      | content            |
+      | 101      | 70      | content            |
     And the database has the following table 'users_answers':
       | id  | user_id | item_id | submitted_at        |
       | 123 | 101     | 50      | 2017-05-29 06:38:38 |
