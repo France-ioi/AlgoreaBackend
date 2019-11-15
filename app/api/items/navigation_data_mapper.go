@@ -8,9 +8,8 @@ import (
 // rawNavigationItem represents one row of a navigation subtree returned from the DB
 type rawNavigationItem struct {
 	// items
-	ID                int64
-	Type              string
-	TransparentFolder bool
+	ID   int64
+	Type string
 	// whether items.item_unlocked_ids is empty
 	HasUnlockedItems       bool
 	ContentViewPropagation string
@@ -45,7 +44,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
-	commonAttributes := "items.id, items.type, items.transparent_folder, items.unlocked_item_ids, items.default_language_id, " +
+	commonAttributes := "items.id, items.type, items.unlocked_item_ids, items.default_language_id, " +
 		"can_view_generated_value"
 	itemQ := items.VisibleByID(user, rootID).Select(
 		commonAttributes + ", NULL AS parent_item_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS content_view_propagation")
@@ -61,7 +60,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	service.MustNotBeError(itemThreeGenQ.Error())
 
 	query := dataStore.Raw(`
-		SELECT items.id, items.type, items.transparent_folder,
+		SELECT items.id, items.type,
 			COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			groups_attempts.id AS attempt_id,
