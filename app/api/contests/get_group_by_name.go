@@ -28,7 +28,7 @@ import (
 //
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
-//                  * the authenticated user should have `cached_access_solutions` or `cached_full_access` on the input item.
+//                  * the authenticated user should have at least `content_with_descendants` access on the input item.
 //
 //                Otherwise, the "Forbidden" response is returned.
 //

@@ -38,7 +38,7 @@ type createGroupRequest struct {
 //
 //     * Otherwise, checks that the authenticated user
 //
-//       * has 'info', 'content' or 'content_with_descendants' access to the item (otherwise returns the "forbidden" response)
+//       * has at least `info` access on the item (otherwise returns the "forbidden" response)
 //
 //       * sets this `item_id` as `team_item_id` of the new group.
 //
