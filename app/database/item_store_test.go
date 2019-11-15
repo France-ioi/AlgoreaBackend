@@ -95,7 +95,7 @@ func TestItemStore_CheckAccess(t *testing.T) {
 
 	clearAllPermissionEnums()
 	mockPermissionEnumQueries(dbMock)
-	NewDataStore(db).PermissionsGranted().loadViewKinds()
+	NewDataStore(db).PermissionsGranted().loadAllPermissionEnums()
 
 	for _, tC := range accessTestCases {
 		tC := tC
@@ -127,7 +127,7 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 			clearAllPermissionEnums()
 			mockPermissionEnumQueries(dbMock)
 			permissionStore := NewDataStore(db).PermissionsGranted()
-			permissionStore.loadViewKinds()
+			permissionStore.loadAllPermissionEnums()
 
 			dbRows := dbMock.NewRows([]string{"item_id", "can_view_generated_value"})
 			for _, row := range tC.itemAccessDetails {

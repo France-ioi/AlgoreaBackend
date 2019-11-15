@@ -44,20 +44,24 @@ func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string)
 		"edit":       &editNames,
 	}[kind]
 	getterFunc := func() int { return requireIndexByName(*permissionMap, name, "can_"+kind) }
+
+	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
-	if len(*permissionMap) != 0 {
+	if len(*permissionMap) != 0 { // the enums have been loaded, so return the value
 		defer enumsMutex.RUnlock()
 		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
+	// Lock for writing to load the enums from the DB
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
+	// Check if the enums have been loaded while we were waiting for the lock
 	if len(*permissionMap) != 0 {
-		return getterFunc()
+		return getterFunc() // the enums have been loaded, so return the value
 	}
 
-	s.loadViewKinds()
+	s.loadAllPermissionEnums()
 	return getterFunc()
 }
 
@@ -74,20 +78,24 @@ func (s *PermissionGrantedStore) PermissionNameByKindAndIndex(kind string, index
 		"edit":       &editIndexes,
 	}[kind]
 	getterFunc := func() string { return requireNameByIndex(*permissionMap, index, "can_"+kind) }
+
+	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
-	if len(*permissionMap) != 0 {
+	if len(*permissionMap) != 0 { // the enums have been loaded, so return the value
 		defer enumsMutex.RUnlock()
 		return getterFunc()
 	}
 	enumsMutex.RUnlock()
 
+	// Lock for writing to load the enums from the DB
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
+	// Check if the enums have been loaded while we were waiting for the lock
 	if len(*permissionMap) != 0 {
-		return getterFunc()
+		return getterFunc() // the enums have been loaded, so return the value
 	}
 
-	s.loadViewKinds()
+	s.loadAllPermissionEnums()
 	return getterFunc()
 }
 
@@ -96,13 +104,13 @@ func (s *PermissionGrantedStore) ViewNameByIndex(index int) string {
 	return s.PermissionNameByKindAndIndex("view", index)
 }
 
-func (s *PermissionGrantedStore) loadViewKinds() {
-	viewNames, viewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_view")
-	grantViewNames, grantViewIndexes = s.loadKindsIntoMaps("permissions_granted", "can_grant_view")
-	editNames, editIndexes = s.loadKindsIntoMaps("permissions_granted", "can_edit")
+func (s *PermissionGrantedStore) loadAllPermissionEnums() {
+	viewNames, viewIndexes = s.loadPermissionEnum("permissions_granted", "can_view")
+	grantViewNames, grantViewIndexes = s.loadPermissionEnum("permissions_granted", "can_grant_view")
+	editNames, editIndexes = s.loadPermissionEnum("permissions_granted", "can_edit")
 }
 
-func (s *PermissionGrantedStore) loadKindsIntoMaps(tableName, columnName string) (kindsMap map[string]int, indexesMap map[int]string) {
+func (s *PermissionGrantedStore) loadPermissionEnum(tableName, columnName string) (kindsMap map[string]int, indexesMap map[int]string) {
 	var valuesString string
 	mustNotBeError(NewDataStore(newDB(s.db.New())).Table("information_schema.COLUMNS").
 		Set("gorm:query_option", "").

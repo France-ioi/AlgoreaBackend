@@ -8,17 +8,17 @@ func (conn *DB) WherePermissionIsAtLeast(permissionKind, permissionName string) 
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
 }
 
-// HavingMaxPermissionIsAtLeast returns a composable query filtered by `MAX(can_*_generated_value)` >= indexOf(`permissionName`)
+// HavingMaxPermissionAtLeast returns a composable query filtered by `MAX(can_*_generated_value)` >= indexOf(`permissionName`)
 // depending on the given permission kind
-func (conn *DB) HavingMaxPermissionIsAtLeast(permissionKind, permissionName string) *DB {
+func (conn *DB) HavingMaxPermissionAtLeast(permissionKind, permissionName string) *DB {
 	return newDB(conn.db.
 		Having("MAX("+permissionColumnByKind(permissionKind)+") >= ?",
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))
 }
 
-// HavingMaxPermissionIsGreaterThan returns a composable query filtered by `MAX(can_*_generated_value)` > indexOf(`permissionName`)
+// HavingMaxPermissionGreaterThan returns a composable query filtered by `MAX(can_*_generated_value)` > indexOf(`permissionName`)
 // depending on the given permission kind
-func (conn *DB) HavingMaxPermissionIsGreaterThan(permissionKind, permissionName string) *DB {
+func (conn *DB) HavingMaxPermissionGreaterThan(permissionKind, permissionName string) *DB {
 	return newDB(conn.db.
 		Having("MAX("+permissionColumnByKind(permissionKind)+") > ?",
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, permissionName)))

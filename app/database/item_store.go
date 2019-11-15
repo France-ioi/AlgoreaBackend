@@ -433,5 +433,5 @@ func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
 			JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND
 				groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Group("items.id").
-		HavingMaxPermissionIsAtLeast("view", "content_with_descendants")
+		HavingMaxPermissionAtLeast("view", "content_with_descendants")
 }
