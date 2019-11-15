@@ -149,21 +149,15 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							children_stats.tasks_solved, target_groups_attempts.tasks_solved),
 						target_groups_attempts.children_validated = IF(children_stats.id IS NOT NULL,
 							children_stats.children_validated, target_groups_attempts.children_validated),
-						target_groups_attempts.validated = IF(children_stats.id IS NOT NULL,
-							CASE
-								WHEN target_groups_attempts.validated = 1 THEN 1
-								WHEN items.validation_type = 'Categories' THEN children_stats.children_non_validated_categories = 0
-								WHEN items.validation_type = 'All' THEN children_stats.children_non_validated = 0
-								WHEN items.validation_type = 'AllButOne' THEN children_stats.children_non_validated < 2
-								WHEN items.validation_type = 'One' THEN children_stats.children_validated > 0
-								ELSE 0
-							END, target_groups_attempts.validated),
-						target_groups_attempts.validated_at = IF(children_stats.id IS NOT NULL,
-							IFNULL(
-								target_groups_attempts.validated_at,
-								IF(items.validation_type = 'Categories',
-									children_stats.max_validated_at_categories, children_stats.max_validated_at)
-							), target_groups_attempts.validated_at),
+						target_groups_attempts.validated_at = IFNULL(target_groups_attempts.validated_at, CASE
+							WHEN children_stats.id IS NULL THEN NULL
+							WHEN items.validation_type = 'Categories' AND children_stats.children_non_validated_categories = 0
+							  THEN children_stats.max_validated_at_categories
+							WHEN items.validation_type = 'All' AND children_stats.children_non_validated = 0 THEN children_stats.max_validated_at
+							WHEN items.validation_type = 'AllButOne' AND children_stats.children_non_validated < 2 THEN children_stats.max_validated_at
+							WHEN items.validation_type = 'One' AND children_stats.children_validated > 0 THEN children_stats.max_validated_at
+							ELSE NULL
+							END),
 						target_groups_attempts.ancestors_computation_state = 'done'
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
