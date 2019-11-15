@@ -11,9 +11,13 @@ Feature: Feature: Get user's answer by user_answer_id
       | id  | has_attempts |
       | 200 | 0            |
       | 210 | 1            |
+    And the database has the following table 'permissions_generated':
+      | item_id | group_id | can_view_generated |
+      | 200     | 11       | info               |
     And the database has the following table 'users_answers':
       | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
       | 101 | 11      | 200     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
+      | 102 | 11      | 210     | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
 
   Scenario: Wrong answer_id
     Given I am the user with id "11"
@@ -30,6 +34,12 @@ Feature: Feature: Get user's answer by user_answer_id
   Scenario: User doesn't have sufficient access rights to the answer
     Given I am the user with id "11"
     When I send a GET request to "/answers/101"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: No access rights to the answer
+    Given I am the user with id "11"
+    When I send a GET request to "/answers/102"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 

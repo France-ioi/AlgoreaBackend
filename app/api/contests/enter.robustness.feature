@@ -81,6 +81,21 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "groups_attempts" should be empty
 
+  Scenario: The item is not visible (can_view = none)
+    Given the database has the following table 'items':
+      | id | duration |
+      | 50 | 00:00:01 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 31       | 50      | none               |
+    And I am the user with id "31"
+    When I send a POST request to "/contests/50/groups/31"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_attempts" should be empty
+
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
       | id |

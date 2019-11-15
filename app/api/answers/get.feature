@@ -32,7 +32,7 @@ Background:
     | 210 | 1            |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
-    | 13       | 200     | content_with_descendants |
+    | 13       | 200     | content                  |
     | 23       | 210     | content_with_descendants |
   And the database has the following table 'users_answers':
     | id  | user_id | item_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |

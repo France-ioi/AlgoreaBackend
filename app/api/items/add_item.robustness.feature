@@ -8,6 +8,7 @@ Feature: Add item - robustness
       | 4  | false          | false    |
       | 21 | false          | false    |
       | 22 | false          | false    |
+      | 23 | false          | false    |
     And the database has the following table 'items_items':
       | id | parent_item_id | child_item_id | child_order |
       | 1  | 4              | 21            | 0           |
@@ -23,6 +24,7 @@ Feature: Add item - robustness
       | group_id | item_id | can_view | giver_group_id | can_edit |
       | 11       | 4       | solution | 11             | children |
       | 11       | 21      | solution | 11             | children |
+      | 11       | 23      | solution | 11             | none     |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -275,7 +277,7 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: Not enough perm on parent
+  Scenario Outline: Not enough perm on parent
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """
@@ -283,7 +285,7 @@ Feature: Add item - robustness
         "type": "Course",
         "language_id": "3",
         "title": "my title",
-        "parent_item_id": "22",
+        "parent_item_id": "<parent_item>",
         "order": 100
       }
       """
@@ -305,6 +307,10 @@ Feature: Add item - robustness
     And the table "items_strings" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
+  Examples:
+    | parent_item |
+    | 22          |
+    | 23          |
 
   Scenario: The user doesn't exist
     And I am the user with id "121"
@@ -518,7 +524,7 @@ Feature: Add item - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: the user doesn't have can_edit >= children on unlocked_item_ids
+  Scenario: the user doesn't have can_grant_view >= content on unlocked_item_ids
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:
       """

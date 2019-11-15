@@ -57,15 +57,24 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
-  Scenario: The item is not visible to the current user
+  Scenario: The item is not visible to the current user (can_view = none)
     Given I am the user with id "21"
+    And the database has the following table 'items':
+      | id | duration |
+      | 50 | 00:00:01 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 21       | 50      | none               |
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is visible, but it doesn't exist
-    Given I am the user with id "31"
-    When I send a GET request to "/contests/50/groups/31/qualification-state"
+  Scenario: The item is not visible to the current user (no permissions)
+    Given I am the user with id "21"
+    And the database has the following table 'items':
+      | id | duration |
+      | 50 | 00:00:01 |
+    When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
@@ -73,6 +82,9 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
     Given the database has the following table 'items':
       | id |
       | 50 |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated |
+      | 21       | 50      | info               |
     And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 403

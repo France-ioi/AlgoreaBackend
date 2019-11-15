@@ -29,15 +29,17 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 10 | 00:00:02 | 0            |
       | 70 | 00:00:03 | 0            |
       | 80 | 00:00:04 | 1            |
+      | 90 | 00:00:04 | 1            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 50      | content                  |
       | 13       | 60      | info                     |
       | 13       | 70      | content_with_descendants |
-      | 21       | 50      | none                     |
+      | 21       | 50      | content                  |
       | 21       | 60      | content_with_descendants |
       | 21       | 70      | content_with_descendants |
       | 21       | 80      | content_with_descendants |
+      | 21       | 90      | info                     |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | additional_time |
       | 13       | 50      | 01:00:00        |
@@ -107,9 +109,17 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
     And the table "permissions_generated" should stay unchanged
     And the table "groups_contest_items" should stay unchanged
 
-  Scenario: The user is not a contest admin
+  Scenario: The user is not a contest admin (can_view = content)
     Given I am the user with id "21"
     When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_generated" should stay unchanged
+    And the table "groups_contest_items" should stay unchanged
+
+  Scenario: The user is not a contest admin (can_view = info)
+    Given I am the user with id "21"
+    When I send a PUT request to "/contests/90/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
