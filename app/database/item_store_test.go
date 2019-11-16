@@ -146,7 +146,11 @@ func TestItemStore_ValidateUserAccess(t *testing.T) {
 				}
 			}
 			dbMock.ExpectQuery("^" + regexp.QuoteMeta(
-				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
+				"SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
+					"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
+					"MAX(can_watch_generated_value) AS can_watch_generated_value, "+
+					"MAX(can_edit_generated_value) AS can_edit_generated_value, "+
+					"MAX(is_owner_generated) AS is_owner_generated "+
 					"FROM permissions_generated AS permissions "+
 					"JOIN ( "+
 					"SELECT * FROM groups_ancestors_active WHERE groups_ancestors_active.child_group_id = ? "+
@@ -194,16 +198,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	clearAllPermissionEnums()
+	mockPermissionEnumQueries(dbMock)
 
-	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
-		WillReturnRows(dbMock.NewRows([]string{"values"}).
-			AddRow("'none','info','content','content_with_descendants','solution'"))
-	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
-		WillReturnRows(dbMock.NewRows([]string{"values"}).
-			AddRow("'none','content','content_with_descendants','solution','transfer'"))
-	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)")).
-		WillReturnRows(dbMock.NewRows([]string{"values"}).
-			AddRow("'none','children','all','transfer'"))
 	dbMock.ExpectQuery(regexp.QuoteMeta("SELECT items.id FROM `items` " +
 		"JOIN permissions_generated ON permissions_generated.item_id = items.id " +
 		"JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_generated.group_id AND " +
