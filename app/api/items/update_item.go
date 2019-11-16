@@ -59,7 +59,8 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		registerChildrenValidator(formData, store, user)
+		var childrenPermissions []permission
+		registerChildrenValidator(formData, store, user, &childrenPermissions)
 		registerItemValidators(formData, store, user)
 		registerDefaultLanguageIDValidator(formData, store, itemID)
 
@@ -91,11 +92,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 				}
 
 				service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-					parentChildSpec := make([]*insertItemItemsSpec, 0, len(input.Children))
-					for _, child := range input.Children {
-						parentChildSpec = append(parentChildSpec,
-							&insertItemItemsSpec{ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order})
-					}
+					parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, retryStore, itemID)
 					insertItemItems(retryStore, parentChildSpec)
 					return nil
 				}))
