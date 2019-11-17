@@ -19,6 +19,13 @@ INSERT INTO `permissions_granted` (`group_id`, `item_id`, `giver_group_id`, `can
     FROM `items`
     WHERE `custom_chapter`;
 
+UPDATE `items_items` JOIN `items` ON `items`.`id` = `items_items`.`parent_item_id` AND `items`.`custom_chapter`
+    SET `items_items`.`content_view_propagation` = 'none',
+        `items_items`.`upper_view_levels_propagation` = 'use_content_view_propagation',
+        `items_items`.`grant_view_propagation` = 0,
+        `items_items`.`watch_propagation` = 0,
+        `items_items`.`edit_propagation` = 0;
+
 ALTER TABLE `items` DROP COLUMN `custom_chapter`;
 
 -- +migrate Down
