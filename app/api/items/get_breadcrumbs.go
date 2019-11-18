@@ -23,8 +23,8 @@ import (
 //   Restrictions:
 //     * the list of item IDs should be a valid path from a root item (`type`=’Root’), otherwise the 'bad request'
 //       error is returned)
-//     * the user should have 'content' or 'content_with_descendants' access for each listed item except the last one through that path,
-//       and at least 'info' access for the last item, otherwise the 'forbidden' error is returned.
+//     * the user should have at least 'content' access on each listed item except the last one through that path,
+//       and at least 'info' access on the last item, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: ids
 //   in: path

@@ -38,6 +38,7 @@ Feature: Create a group (groupCreate) - robustness
       | 21       | 10      | content_with_descendants |
       | 21       | 11      | content                  |
       | 21       | 12      | info                     |
+      | 51       | 11      | none                     |
 
   Scenario: No name
     Given I am the user with id "21"
@@ -185,11 +186,23 @@ Feature: Create a group (groupCreate) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: The item is not visible
+  Scenario: The item is not visible (no permissions)
     Given I am the user with id "51"
     When I send a POST request to "/groups" with the following body:
     """
     {"name": "some name", "type": "Team", "item_id": 10}
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: The item is not visible (can_view = none)
+    Given I am the user with id "51"
+    When I send a POST request to "/groups" with the following body:
+    """
+    {"name": "some name", "type": "Team", "item_id": 11}
     """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

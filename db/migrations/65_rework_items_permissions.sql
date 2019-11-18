@@ -99,7 +99,7 @@ END
 ALTER TABLE `items_items`
     ADD COLUMN `content_view_propagation` ENUM('none', 'as_info', 'as_content') NOT NULL DEFAULT 'none'
         COMMENT 'Defines how a can_view=”content” permission propagates' AFTER `partial_access_propagation`,
-    ADD COLUMN `upper_view_levels_propagation` ENUM('use_content_view_propagation', 'content_with_descendants', 'as_is')
+    ADD COLUMN `upper_view_levels_propagation` ENUM('use_content_view_propagation', 'as_content_with_descendants', 'as_is')
         NOT NULL DEFAULT 'use_content_view_propagation'
         COMMENT 'Defines how can_view="content_with_descendants"|"solution" permissions propagate',
     ADD COLUMN `grant_view_propagation` TINYINT(1) NOT NULL DEFAULT 0

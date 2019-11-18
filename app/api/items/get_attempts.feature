@@ -41,7 +41,8 @@ Feature: Get groups attempts for current user and item_id
       | 210 | 1            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
-      | 13       | 200     | content_with_descendants |
+      | 13       | 200     | content                  |
+      | 13       | 210     | info                     |
       | 23       | 210     | content_with_descendants |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score | order | validated | started_at          | creator_id |
@@ -95,6 +96,15 @@ Feature: Get groups attempts for current user and item_id
         "validated": false
       }
     ]
+    """
+
+  Scenario: User doesn't have access to the item
+    Given I am the user with id "11"
+    When I send a GET request to "/items/210/attempts?limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    []
     """
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order)

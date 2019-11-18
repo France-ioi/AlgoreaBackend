@@ -19,7 +19,7 @@ Feature: Update item strings - robustness
       | 50      | 3           | Item 3 | http://myurl.com/item3.jpg | Item 3 Subtitle | Item 3 Description |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
-      | 11       | 21      | solution           | none               | false              |
+      | 11       | 21      | solution           | children           | false              |
       | 11       | 50      | solution           | all                | true               |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
@@ -145,6 +145,17 @@ Feature: Update item strings - robustness
   Scenario: The user doesn't have rights to manage the item
     And I am the user with id "11"
     When I send a PUT request to "/items/60/strings/default" with the following body:
+      """
+      {
+        "title": "The title"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "No access rights to edit the item"
+
+  Scenario: The user doesn't have rights to manage the item (can_edit = children)
+    And I am the user with id "11"
+    When I send a PUT request to "/items/21/strings/default" with the following body:
       """
       {
         "title": "The title"

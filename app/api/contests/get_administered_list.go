@@ -38,7 +38,8 @@ type contestAdminListRow struct {
 // summary: Get the contests that the user has administration rights on
 // description: >
 //                For all items that are timed contests and for that the user is a contest admin
-//                (has `solutions` or `full` access), returns item info (`id`, `title`, `team_only_contest`, parents' `title`-s).
+//                (has `can_view` >= 'content_with_descendants'), returns item info
+//                (`id`, `title`, `team_only_contest`, parents' `title`-s).
 //                Only parents visible by the user are listed.
 //
 //

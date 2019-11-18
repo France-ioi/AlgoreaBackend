@@ -43,7 +43,8 @@ type itemAttemptsViewResponseRow struct {
 //              teams (if `items.has_attempts` = 1) while solving the task given in `item_id`.
 //
 //
-//              The task item should be visible to the current user, otherwise an empty list is returned.
+//              The current user should have at least 'content' permission on the task item,
+//              otherwise an empty list is returned.
 // parameters:
 // - name: item_id
 //   in: path

@@ -20,7 +20,7 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
       | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter  | 1            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
-      | 101      | 50      | content            |
+      | 101      | 50      | info               |
       | 101      | 60      | content            |
       | 101      | 70      | content            |
       | 101      | 80      | content            |
@@ -48,6 +48,15 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
   Scenario: No access to the item (no item)
     Given I am the user with id "101"
     When I send a GET request to "/items/404/task-token"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "users_answers" should stay unchanged
+    And the table "users_items" should stay unchanged
+    And the table "groups_attempts" should stay unchanged
+
+  Scenario: No access to the item (info access)
+    Given I am the user with id "101"
+    When I send a GET request to "/items/50/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_answers" should stay unchanged
