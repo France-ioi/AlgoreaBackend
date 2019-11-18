@@ -1,16 +1,16 @@
 -- +migrate Up
 
 ALTER TABLE `items`
-    -- update comment
-    MODIFY COLUMN `hints_allowed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether hints are allowed for tasks accessed through this chapter (currently unused)',
+  -- update comment
+  MODIFY COLUMN `hints_allowed` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether hints are allowed for tasks accessed through this chapter (currently unused)',
 
-    DROP COLUMN `show_difficulty`,
-    DROP COLUMN `show_source`,
-    DROP COLUMN `validation_min`,
-    DROP COLUMN `contest_phase`,
-    DROP COLUMN `level`,
-    DROP COLUMN `preparation_state`,
-    DROP COLUMN `transparent_folder`;
+  DROP COLUMN `show_difficulty`,
+  DROP COLUMN `show_source`,
+  DROP COLUMN `validation_min`,
+  DROP COLUMN `contest_phase`,
+  DROP COLUMN `level`,
+  DROP COLUMN `preparation_state`,
+  DROP COLUMN `transparent_folder`;
 
 -- +migrate Down
 
