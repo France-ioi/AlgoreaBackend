@@ -106,7 +106,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
 		"order": {ColumnName: "groups_attempts.order", FieldType: "int64"},
 		"id":    {ColumnName: "groups_attempts.id", FieldType: "int64"},
-	}, "order")
+	}, "order,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

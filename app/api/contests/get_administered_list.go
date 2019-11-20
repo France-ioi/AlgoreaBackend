@@ -101,7 +101,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			FieldType:             "string",
 		},
 		"id": {ColumnName: "items.id", FieldType: "int64"},
-	}, "title,id")
+	}, "title,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}
