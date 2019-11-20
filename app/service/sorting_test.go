@@ -17,9 +17,10 @@ import (
 
 func TestApplySorting(t *testing.T) {
 	type args struct {
-		urlParameters  string
-		acceptedFields map[string]*FieldSortingParams
-		defaultRules   string
+		urlParameters      string
+		acceptedFields     map[string]*FieldSortingParams
+		defaultRules       string
+		skipSortParameters bool
 	}
 	tests := []struct {
 		name             string
@@ -49,6 +50,18 @@ func TestApplySorting(t *testing.T) {
 				},
 			},
 			wantSQL:      "SELECT id FROM `users` ORDER BY name ASC, id DESC",
+			wantAPIError: NoError},
+		{name: "sorting (request rules are skipped)",
+			args: args{
+				urlParameters: "?sort=name,-id",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				skipSortParameters: true,
+				defaultRules:       "id",
+			},
+			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC",
 			wantAPIError: NoError},
 		{name: "sorting (custom column name for ordering)",
 			args: args{
@@ -179,7 +192,7 @@ func TestApplySorting(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, nil)
 			query := db.Table("users").Select("id")
 
-			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules)
+			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules, tt.args.skipSortParameters)
 			assert.Equal(t, tt.wantAPIError, gotAPIError)
 
 			if gotAPIError == NoError {
