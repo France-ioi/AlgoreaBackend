@@ -168,7 +168,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user) [with limit and reversed order]
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1&sort=submitted_at"
+    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1&sort=submitted_at,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
