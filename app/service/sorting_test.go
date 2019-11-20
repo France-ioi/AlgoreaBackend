@@ -81,27 +81,6 @@ func TestApplySorting(t *testing.T) {
 				defaultRules: "-name,id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`))},
-		{name: "add id field",
-			args: args{
-				urlParameters: "",
-				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "name", FieldType: "string"},
-				},
-				defaultRules: "-name",
-			},
-			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, id ASC",
-			wantSQLArguments: nil,
-			wantAPIError:     NoError},
-		{name: "no rules (adds id)",
-			args: args{
-				urlParameters: "",
-				acceptedFields: map[string]*FieldSortingParams{
-					"name": {ColumnName: "name", FieldType: "string"},
-					"id":   {ColumnName: "id", FieldType: "int64"},
-				},
-			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC",
-			wantAPIError: NoError},
 		{name: "sorting + paging",
 			args: args{
 				urlParameters: "?from.id=1&from.name=Joe&from.flag=1",
@@ -152,6 +131,7 @@ func TestApplySorting(t *testing.T) {
 			args: args{
 				urlParameters: "?from.field=Joe&from.version=2&from.name=Jane",
 				acceptedFields: map[string]*FieldSortingParams{
+					"id":   {ColumnName: "id", FieldType: "int64"},
 					"name": {ColumnName: "name", FieldType: "string"},
 				},
 				defaultRules: "id",
@@ -162,8 +142,9 @@ func TestApplySorting(t *testing.T) {
 				urlParameters: "?from.submitted_at=" + url.QueryEscape("2006-01-02T15:04:05+03:00") + "&from.id=1",
 				acceptedFields: map[string]*FieldSortingParams{
 					"submitted_at": {ColumnName: "submitted_at", FieldType: "time"},
+					"id":           {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "submitted_at",
+				defaultRules: "submitted_at,id",
 			},
 			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
 				"ORDER BY submitted_at ASC, id ASC",
