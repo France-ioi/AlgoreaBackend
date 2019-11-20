@@ -198,7 +198,7 @@ Feature: Get group children (groupChildrenView)
 
   Scenario: User is an owner of the parent group, rows are sorted by grade, UserSelf is skipped
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/children?sort=grade&types_exclude=UserSelf"
+    When I send a GET request to "/groups/13/children?sort=grade,id&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -217,7 +217,7 @@ Feature: Get group children (groupChildrenView)
 
   Scenario: User is an owner of the parent group, rows are sorted by type, UserSelf is skipped
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/children?sort=type&types_exclude=UserSelf"
+    When I send a GET request to "/groups/13/children?sort=type,id&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
