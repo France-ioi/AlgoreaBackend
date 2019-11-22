@@ -26,7 +26,9 @@ import (
 //     * `users_answers`: all attributes;
 //     * `users_items`: all attributes;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes;
-//     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`.
+//     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
+//     * `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
+//     * `group_membership_changes`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`.
 //
 //   In case of unexpected error (e.g. a DB error), the response will be a malformed JSON like
 //   ```{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}```
@@ -146,6 +148,28 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
+	if full {
+		writeComma(w)
+		writeJSONObjectArrayElement("group_membership_changes", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "group_membership_changes", nil)
+			service.MustNotBeError(srv.Store.GroupMembershipChanges().
+				Where("member_id = ?", user.GroupID).
+				Joins("JOIN `groups` ON `groups`.id = group_id").
+				Select(columns + ", `groups`.name").
+				ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
+
+		writeComma(w)
+		writeJSONObjectArrayElement("group_pending_requests", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "group_pending_requests", nil)
+			service.MustNotBeError(srv.Store.GroupPendingRequests().
+				Where("member_id = ?", user.GroupID).
+				Joins("JOIN `groups` ON `groups`.id = group_id").
+				Select(columns + ", `groups`.name").
+				ScanAndHandleMaps(streamerFunc(w)).Error())
+		})
+	}
+
 	_, err = w.Write([]byte("}"))
 	service.MustNotBeError(err)
 
@@ -219,5 +243,5 @@ func writeValue(w io.Writer, value interface{}) {
 
 func isDateColumnName(name string) bool {
 	return strings.HasSuffix(name, "_at") || strings.HasSuffix(name, "_since") ||
-		strings.HasSuffix(name, "_until")
+		strings.HasSuffix(name, "_until") || name == "at"
 }

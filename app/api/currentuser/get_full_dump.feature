@@ -151,6 +151,24 @@ Feature: Export the current user's data
           "name": "Secret group", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
+      "group_membership_changes": [
+        {
+          "action": "join_request_refused", "at": "2019-07-10T00:02:28Z", "group_id": "4", "initiator_id": "11",
+          "member_id": "11", "name": "Our Friends"
+        },
+        {
+          "action": "removed", "at": "2019-07-10T03:02:28Z", "group_id": "7", "initiator_id": "31",
+          "member_id": "11", "name": "Another Team"
+        },
+        {
+          "action": "left", "at": "2019-07-10T04:02:28Z", "group_id": "8", "initiator_id": "11",
+          "member_id": "11", "name": "Another Club"
+        }
+      ],
+      "group_pending_requests": [
+        {"group_id": "1", "member_id": "11", "name": "Our Class", "type": "invitation", "at": "2019-08-10T00:00:00Z"},
+        {"group_id": "3", "member_id": "11", "name": "Our Club", "type": "join_request", "at": "2019-08-11T00:00:00Z"}
+      ],
       "joined_groups": [
         {"id": "2", "name": "Our Team"},
         {"id": "5", "name": "Other people"},
@@ -207,6 +225,8 @@ Feature: Export the current user's data
       },
       "groups_attempts": [],
       "groups_groups": [],
+      "group_membership_changes": [],
+      "group_pending_requests": [],
       "joined_groups": [],
       "owned_groups": [],
       "refresh_token": null,

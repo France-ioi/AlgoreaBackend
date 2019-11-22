@@ -17,6 +17,18 @@ Feature: Remove a direct parent-child relation between two groups
       | 22              | 11             |
       | 22              | 13             |
       | 22              | 14             |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type       |
+      | 13       | 11        | invitation |
+      | 22       | 11        | invitation |
+      | 22       | 13        | invitation |
+      | 22       | 14        | invitation |
+    And the database has the following table 'group_membership_changes':
+      | group_id | member_id |
+      | 13       | 11        |
+      | 22       | 11        |
+      | 22       | 13        |
+      | 22       | 14        |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -45,6 +57,8 @@ Feature: Remove a direct parent-child relation between two groups
       | 22              | 11             | member |
       | 22              | 13             | member |
       | 22              | 14             | member |
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -72,6 +86,14 @@ Feature: Remove a direct parent-child relation between two groups
       | parent_group_id | child_group_id | role   |
       | 22              | 11             | member |
       | 22              | 14             | member |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id |
+      | 22       | 11        |
+      | 22       | 14        |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id |
+      | 22       | 11        |
+      | 22       | 14        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
