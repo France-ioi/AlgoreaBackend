@@ -93,6 +93,7 @@ Feature: Login callback
       | 3                   | 8674665223082153551 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
+    And the table "group_membership_changes" should be empty
     And the table "login_states" should be empty
     And the table "sessions" should be:
       | expires_at          | user_id             | issuer       | issued_at           | access_token                |
@@ -222,6 +223,7 @@ Feature: Login callback
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "login_states" should be:
       | cookie                           | state                            | expires_at          |
       | 55555555555555555555555555555555 | 66666666666666666666666666666666 | 2019-09-16 22:02:29 |
@@ -315,6 +317,7 @@ Feature: Login callback
       | 3                 | 12             | false   |
       | 11                | 11             | true    |
       | 12                | 12             | true    |
+    And the table "group_membership_changes" should be empty
 
   Scenario: Sets insecure cookies for HTTP
     Given the time now is "2019-07-16T22:02:29Z"
