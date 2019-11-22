@@ -108,4 +108,6 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged

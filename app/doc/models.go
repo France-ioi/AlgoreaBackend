@@ -31,19 +31,19 @@ type userCreateTmpResponse struct {
 
 // swagger:model groupsMembershipHistoryResponseRow
 type groupsMembershipHistoryResponseRow struct {
-	// `groups_groups.id`
+	// `group_membership_changes.at`
 	// required: true
-	ID int64 `json:"id"`
-	// `groups_groups.type_changed_at`
+	At time.Time `json:"at"`
+	// `group_membership_changes.action`
 	// required: true
-	TypeChangedAt time.Time `json:"type_changed_at"`
-	// `groups_groups.type`
-	// required: true
-	// enum: invitationSent,requestSent,invitationAccepted,requestAccepted,invitationRefused,joinedByCode,requestRefused,removed,left
-	Type string `json:"type"`
+	// enum: invitation_created,join_request_created,invitation_accepted,join_request_accepted,invitation_refused,joined_by_code,join_request_refused,join_request_withdrawn,invitation_withdrawn,removed,left,expired
+	Action string `json:"action"`
 
 	// required: true
 	Group struct {
+		// `groups.id`
+		// required: true
+		ID int64 `json:"id"`
 		// required: true
 		Name string `json:"name"`
 		// required: true
@@ -54,21 +54,21 @@ type groupsMembershipHistoryResponseRow struct {
 
 // swagger:model invitationsViewResponseRow
 type invitationsViewResponseRow struct {
-	// `groups_groups.id`
+	// `group_membership_changes.group_id`
 	// required: true
-	ID int64 `json:"id"`
+	GroupID int64 `json:"group_id"`
 	// `groups_groups.type_changed_at`
 	// required: true
-	TypeChangedAt time.Time `json:"type_changed_at"`
-	// `groups_groups.type`
+	At time.Time `json:"at"`
+	// `group_membership_changes.action`
 	// required: true
-	// enum: invitationSent,requestSent,requestRefused
-	Type string `json:"type"`
+	// enum: invitation_created,join_request_created,join_request_refused
+	Action string `json:"action"`
 
 	// the user that invited (Nullable: only for invitations)
 	// required: true
 	InvitingUser *struct {
-		// `users.id`
+		// `users.group_id`
 		// required: true
 		ID int64 `json:"id"`
 		// required: true
@@ -102,13 +102,13 @@ type membershipsViewResponseRow struct {
 	// `groups_groups.id`
 	// required: true
 	ID int64 `json:"id"`
-	// `groups_groups.type_changed_at`
+	// `MAX(group_membership_changes.at); Nullable`
 	// required: true
-	TypeChangedAt time.Time `json:"type_changed_at"`
-	// `groups_groups.type`
+	MemberSince *time.Time `json:"member_since"`
+	// `group_membership_changes.action` of the latest change
 	// required: true
-	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
-	Type string `json:"type"`
+	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
+	Action string `json:"action"`
 
 	// required: true
 	Group struct {

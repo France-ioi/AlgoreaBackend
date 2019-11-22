@@ -54,86 +54,86 @@ Feature: Get group memberships history for the current user
     """
     [
       {
-        "id": "9",
         "group": {
+          "id": "8",
           "name": "Another Club",
           "type": "Club"
         },
-        "type_changed_at": "2017-09-29T06:38:38Z",
-        "type": "left"
+        "at": "2017-09-29T06:38:38Z",
+        "action": "left"
       },
       {
-        "id": "8",
         "group": {
+          "id": "7",
           "name": "Another Team",
           "type": "Team"
         },
-        "type_changed_at": "2017-08-29T06:38:38Z",
-        "type": "removed"
+        "at": "2017-08-29T06:38:38Z",
+        "action": "removed"
       },
       {
-        "id": "7",
         "group": {
+          "id": "6",
           "name": "Another Class",
           "type": "Class"
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "requestAccepted"
+        "at": "2017-07-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
-        "id": "6",
         "group": {
+          "id": "5",
           "name": "Other people",
           "type": "Other"
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "at": "2017-06-29T06:38:38Z",
+        "action": "invitation_accepted"
       }
     ]
     """
 
   Scenario: Show all the history in reverse order (with notifications_read_at set)
     Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-memberships-history?sort=type_changed_at,id"
+    When I send a GET request to "/current-user/group-memberships-history?sort=at,group_id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "6",
         "group": {
+          "id": "5",
           "name": "Other people",
           "type": "Other"
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "at": "2017-06-29T06:38:38Z",
+        "action": "invitation_accepted"
       },
       {
-        "id": "7",
         "group": {
+          "id": "6",
           "name": "Another Class",
           "type": "Class"
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "requestAccepted"
+        "at": "2017-07-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
-        "id": "8",
         "group": {
+          "id": "7",
           "name": "Another Team",
           "type": "Team"
         },
-        "type_changed_at": "2017-08-29T06:38:38Z",
-        "type": "removed"
+        "at": "2017-08-29T06:38:38Z",
+        "action": "removed"
       },
       {
-        "id": "9",
         "group": {
+          "id": "8",
           "name": "Another Club",
           "type": "Club"
         },
-        "type_changed_at": "2017-09-29T06:38:38Z",
-        "type": "left"
+        "at": "2017-09-29T06:38:38Z",
+        "action": "left"
       }
     ]
     """
@@ -146,76 +146,76 @@ Feature: Get group memberships history for the current user
     """
     [
       {
-        "id": "19",
         "group": {
+          "id": "8",
           "name": "Another Club",
           "type": "Club"
         },
-        "type_changed_at": "2016-09-29T06:38:38Z",
-        "type": "left"
+        "at": "2016-09-29T06:38:38Z",
+        "action": "left"
       },
       {
-        "id": "18",
         "group": {
+          "id": "7",
           "name": "Another Team",
           "type": "Team"
         },
-        "type_changed_at": "2016-08-29T06:38:38Z",
-        "type": "removed"
+        "at": "2016-08-29T06:38:38Z",
+        "action": "removed"
       },
       {
-        "id": "17",
         "group": {
+          "id": "6",
           "name": "Another Class",
           "type": "Class"
         },
-        "type_changed_at": "2016-07-29T06:38:38Z",
-        "type": "requestAccepted"
+        "at": "2016-07-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
-        "id": "16",
         "group": {
+          "id": "5",
           "name": "Other people",
           "type": "Other"
         },
-        "type_changed_at": "2016-06-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "at": "2016-06-29T06:38:38Z",
+        "action": "invitation_accepted"
       },
       {
-        "id": "15",
         "group": {
+          "id": "4",
           "name": "Our Friends",
           "type": "Friends"
         },
-        "type_changed_at": "2016-05-29T06:38:38Z",
-        "type": "requestRefused"
+        "at": "2016-05-29T06:38:38Z",
+        "action": "join_request_refused"
       },
       {
-        "id": "14",
         "group": {
+          "id": "3",
           "name": "Our Club",
           "type": "Club"
         },
-        "type_changed_at": "2016-04-29T06:38:38Z",
-        "type": "requestSent"
+        "at": "2016-04-29T06:38:38Z",
+        "action": "join_request_created"
       },
       {
-        "id": "13",
         "group": {
+          "id": "2",
           "name": "Our Team",
           "type": "Team"
         },
-        "type_changed_at": "2016-03-29T06:38:38Z",
-        "type": "invitationRefused"
+        "at": "2016-03-29T06:38:38Z",
+        "action": "invitation_refused"
       },
       {
-        "id": "12",
         "group": {
+          "id": "1",
           "name": "Our Class",
           "type": "Class"
         },
-        "type_changed_at": "2016-02-28T06:38:38Z",
-        "type": "invitationSent"
+        "at": "2016-02-28T06:38:38Z",
+        "action": "invitation_created"
       }
     ]
     """
@@ -228,32 +228,32 @@ Feature: Get group memberships history for the current user
     """
     [
       {
-        "id": "9",
         "group": {
+          "id": "8",
           "name": "Another Club",
           "type": "Club"
         },
-        "type_changed_at": "2017-09-29T06:38:38Z",
-        "type": "left"
+        "at": "2017-09-29T06:38:38Z",
+        "action": "left"
       }
     ]
     """
 
   Scenario: Request the first row starting from some date
     Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-memberships-history?limit=1&from.type_changed_at=2017-07-29T06:38:38Z&from.id=7"
+    When I send a GET request to "/current-user/group-memberships-history?limit=1&from.at=2017-07-29T06:38:38Z&from.group_id=7"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "6",
         "group": {
+          "id": "5",
           "name": "Other people",
           "type": "Other"
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "at": "2017-06-29T06:38:38Z",
+        "action": "invitation_accepted"
       }
     ]
     """

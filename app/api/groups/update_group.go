@@ -96,7 +96,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		dbMap := formData.ConstructMapForDB()
 		if errInTransaction := refuseSentGroupRequestsIfNeeded(
-			groupStore, groupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
+			groupStore, groupID, user.GroupID, dbMap, currentGroupData[0].FreeAccess); errInTransaction != nil {
 			return errInTransaction // rollback
 		}
 
@@ -122,18 +122,24 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 	return service.NoError
 }
 
-// refuseSentGroupRequestsIfNeeded automatically switches all requests to join this group
-// from requestSent to requestRefused
-// if free_access is changed from true to false
+// refuseSentGroupRequestsIfNeeded automatically refuses all requests to join this group
+// (removes them from group_pending_requests and inserts appropriate group_membership_changes
+// with `action` = 'join_request_refused') if free_access is changed from true to false
 func refuseSentGroupRequestsIfNeeded(
-	store *database.GroupStore, groupID int64, dbMap map[string]interface{}, previousFreeAccessValue bool) error {
+	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{}, previousFreeAccessValue bool) error {
 	// if free_access is going to be changed from true to false
 	if newFreeAccess, ok := dbMap["free_access"]; ok && !newFreeAccess.(bool) && previousFreeAccessValue {
+		service.MustNotBeError(store.Exec(`
+			INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)
+			SELECT group_id, member_id, 'join_request_refused', NOW(), ?
+			FROM group_pending_requests
+			WHERE group_id = ? AND type = 'join_request'
+			FOR UPDATE`, initiatorID, groupID).Error())
 		// refuse sent group requests
-		return store.GroupGroups().
-			Where("type = \"requestSent\"").
-			Where("parent_group_id = ?", groupID).
-			UpdateColumn("type", "requestRefused").Error()
+		return store.GroupPendingRequests().
+			Where("type = 'join_request'").
+			Where("group_id = ?", groupID).
+			Delete().Error()
 	}
 	return nil
 }

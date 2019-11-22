@@ -90,8 +90,8 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "invitation_accepted"
       },
       {
         "id": "10",
@@ -102,8 +102,8 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "requestAccepted"
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
         "id": "13",
@@ -114,8 +114,8 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "type_changed_at": "2017-03-29T06:38:38Z",
-        "type": "direct"
+        "member_since": "2017-03-29T06:38:38Z",
+        "action": "added_directly"
       }
     ]
     """
@@ -136,8 +136,8 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "invitation_accepted"
       },
       {
         "id": "13",
@@ -148,8 +148,8 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "type_changed_at": "2017-03-29T06:38:38Z",
-        "type": "direct"
+        "member_since": "2017-03-29T06:38:38Z",
+        "action": "added_directly"
       },
       {
         "id": "10",
@@ -160,8 +160,8 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "requestAccepted"
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "join_request_accepted"
       }
     ]
     """
@@ -182,8 +182,8 @@ Feature: Get members of group_id
           "login": "zuck",
           "grade": 9
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "requestAccepted"
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
         "id": "13",
@@ -194,8 +194,8 @@ Feature: Get members of group_id
           "login": "lp",
           "grade": 6
         },
-        "type_changed_at": "2017-03-29T06:38:38Z",
-        "type": "direct"
+        "member_since": "2017-03-29T06:38:38Z",
+        "action": "added_directly"
       },
       {
         "id": "9",
@@ -206,8 +206,8 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "invitation_accepted"
       }
     ]
     """
@@ -228,8 +228,8 @@ Feature: Get members of group_id
           "login": "billg",
           "grade": 5
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "invitation_accepted"
       }
     ]
     """
@@ -244,8 +244,8 @@ Feature: Get members of group_id
       {
         "id": "15",
         "user": null,
-        "type_changed_at": "2016-10-29T06:38:38Z",
-        "type": "direct"
+        "member_since": "2016-10-29T06:38:38Z",
+        "action": "added_directly"
       }
     ]
     """

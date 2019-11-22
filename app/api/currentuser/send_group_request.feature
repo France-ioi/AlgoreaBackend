@@ -53,7 +53,7 @@ Feature: User sends a request to join a group
       "data": {"changed": false}
     }
     """
-    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Automatically accepts the request if the user owns the group

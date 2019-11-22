@@ -33,7 +33,7 @@ Feature: User rejects an invitation to join a group - robustness
       "error_text": "No such relation"
     }
     """
-    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the group id is wrong
@@ -41,7 +41,7 @@ Feature: User rejects an invitation to join a group - robustness
     When I send a POST request to "/current-user/group-invitations/abc/reject"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
-    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails if the user doesn't exist

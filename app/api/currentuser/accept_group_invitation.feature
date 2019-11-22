@@ -39,6 +39,10 @@ Feature: User accepts an invitation to join a group
     And the table "groups_groups" at parent_group_id "11" should be:
       | parent_group_id | child_group_id |
       | 11              | 21             |
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action              | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 11       | 21        | invitation_accepted | 21           | 1                                         |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

@@ -14,30 +14,32 @@ import (
 //
 //   #### The user doesn't own the group
 //
-//     On success the service creates a new row in `groups_groups` with `parent_group_id` = user's self group id,
-//     `child_group_id` = `group_id`, `groups_groups.type` = `requestSent` and `type_changed_at` equal to current UTC time.
+//     On success the service creates a new row in `group_pending_requests` with
+//     `group_id` = `{group_id}`, `member_id` = user's self group id, `type` = 'join_request'
+//     and `at` equal to current UTC time and a new row in `group_membership_changes` for the same pair of groups
+//     with `action` = 'join_request_created' and `at` equal to current UTC time.
 //
 //     * `groups.free_access` should be 1, otherwise the 'forbidden' response is returned.
 //
 //     * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //       the unprocessable entity error is returned.
 //
-//     * If there is already a row in `groups_groups` with
-//       `type` = 'invitationSent'/'invitationAccepted'/'requestAccepted'/'joinedByCode'/'direct',
+//     * If there is already a row in `group_pending_requests` with
+//       `type` != 'join_request' or a row in `groups_groups` for the same group-user pair,
 //       the unprocessable entity error is returned.
 //
-//     * If `groups_groups.type` is `requestSent` already, the "unchanged" (201) response is returned.
+//     * If there is already a row in `group_pending_requests` with `type` = 'join_request',
+//       the "unchanged" (201) response is returned.
 //
 //   #### The user owns the group
 //
-//     On success the service creates a new row in `groups_groups` with `parent_group_id` = user's self group id,
-//     `child_group_id` = `group_id`, `groups_groups.type` = `requestAccepted` and `type_changed_at` equal to current UTC time.
+//     On success the service creates a new row in `groups_groups` with `parent_group_id` = `group_id`
+//     and `child_group_id` = user's self group id + a new row in `group_membership_changes`
+//     for the same group pair with `action` = `join_request_accepted` and `at` equal to current UTC time.
+//     A pending request/invitation gets removed from `group_pending_requests`.
 //
-//     * If there is already a row in `groups_groups` with
-//       `type` = 'invitationAccepted'/'joinedByCode'/'direct',
-//       the unprocessable entity error is returned.
-//
-//     * If `groups_groups.type` is `requestAccepted` already, the "unchanged" (201) response is returned.
+//     * If there is already a row in `groups_groups` or a row in `group_pending_request` with
+//       `type` != 'invitation'/'join_request', the unprocessable entity error is returned.
 //
 //     On success, the service propagates group ancestors in this case.
 //

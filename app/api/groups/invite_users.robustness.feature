@@ -34,6 +34,8 @@ Feature: Invite users - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
@@ -47,6 +49,8 @@ Feature: Invite users - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
@@ -60,6 +64,8 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are wrong
@@ -73,6 +79,8 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal number into Go struct field .logins of type string"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are not present
@@ -85,6 +93,8 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when logins are empty
@@ -98,6 +108,8 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when too many logins
@@ -123,4 +135,6 @@ Feature: Invite users - robustness
     Then the response code should be 400
     And the response error message should contain "There should be no more than 100 logins"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged

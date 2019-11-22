@@ -11,17 +11,19 @@ import (
 // summary: Accept a group invitation
 // description:
 //   Let a user approve an invitation to join a group.
-//   On success the service sets `groups_groups.type` to `invitationAccepted` and `type_changed_at` to current UTC time.
-//   It also refreshes the access rights.
+//   On success the service creates a new `groups_groups` row
+//   with `parent_group_id` = `group_id` and `child_group_id` = `user.group_id`,
+//   and a new `group_membership_changes` row with `action` = 'invitation_accepted'
+//   (the `at` field of both rows is set to current UTC time).
+//   The invitation gets removed from `group_pending_requests`.
+//   The service also refreshes the access rights.
 //
 //   * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //     the unprocessable entity error is returned.
 //
-//   * There should be a row in `groups_groups` with the `group_id` as a parent
-//     and the authenticated user’s selfGroup’s `id` as a child with `type`=`invitationSent`/`invitationAccepted`.
+//   * There should be a row in `group_pending_requests` with the `{group_id}` as a parent as `group_id`
+//     and the authenticated user’s `group_id` as `member_id` with `type`='invitation'.
 //     Otherwise the unprocessable entity error is returned.
-//
-//   * If `groups_groups.type` is `invitationAccepted` already, the "unchanged" (200) response is returned.
 //
 //
 //   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.

@@ -54,6 +54,8 @@ Feature: Accept group requests - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the user doesn't exist
@@ -62,6 +64,8 @@ Feature: Accept group requests - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the parent group id is wrong
@@ -70,6 +74,8 @@ Feature: Accept group requests - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when group_ids is wrong
@@ -78,4 +84,6 @@ Feature: Accept group requests - robustness
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged

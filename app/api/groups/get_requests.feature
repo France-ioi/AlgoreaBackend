@@ -68,25 +68,15 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": "4",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "member_id": "22",
+        "inviting_user": null,
         "joining_user": null,
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "3",
-        "inviting_user": {
-          "first_name": "Jean-Michel",
-          "group_id": "21",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "member_id": "31",
+        "inviting_user": null,
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
@@ -94,11 +84,11 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       },
       {
-        "id": "2",
+        "member_id": "11",
         "inviting_user": null,
         "joining_user": {
           "first_name": null,
@@ -107,11 +97,11 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[2][type_changed_at]"))}}",
-        "type": "invitationRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
+        "action": "invitation_refused"
       },
       {
-        "id": "1",
+        "member_id": "21",
         "inviting_user": {
           "first_name": "John",
           "group_id": "11",
@@ -125,21 +115,21 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       }
     ]
     """
 
-  Scenario: User is an admin of the group (sort by type)
+  Scenario: User is an admin of the group (sort by action)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=type,id"
+    When I send a GET request to "/groups/13/requests?sort=action,member_id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "1",
+        "member_id": "21",
         "inviting_user": {
           "first_name": "John",
           "group_id": "11",
@@ -153,29 +143,11 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       },
       {
-        "id": "3",
-        "inviting_user": {
-          "first_name": "Jean-Michel",
-          "group_id": "21",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
-        "joining_user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
-      },
-      {
-        "id": "2",
+        "member_id": "11",
         "inviting_user": null,
         "joining_user": {
           "first_name": null,
@@ -184,51 +156,49 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[2][type_changed_at]"))}}",
-        "type": "invitationRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
+        "action": "invitation_refused"
       },
       {
-        "id": "4",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
+        "member_id": "31",
+        "inviting_user": null,
+        "joining_user": {
+          "first_name": "Jane",
+          "grade": 2,
+          "group_id": "31",
           "last_name": "Doe",
-          "login": "user"
+          "login": "jane"
         },
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
+      },
+      {
+        "member_id": "22",
+        "inviting_user": null,
         "joining_user": null,
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       }
     ]
     """
 
   Scenario: User is an admin of the group (sort by joining user's login)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=joining_user.login,id"
+    When I send a GET request to "/groups/13/requests?sort=joining_user.login,member_id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "4",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "member_id": "22",
+        "inviting_user": null,
         "joining_user": null,
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "3",
-        "inviting_user": {
-          "first_name": "Jean-Michel",
-          "group_id": "21",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "member_id": "31",
+        "inviting_user": null,
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
@@ -236,11 +206,11 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       },
       {
-        "id": "1",
+        "member_id": "21",
         "inviting_user": {
           "first_name": "John",
           "group_id": "11",
@@ -254,11 +224,11 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       },
       {
-        "id": "2",
+        "member_id": "11",
         "inviting_user": null,
         "joining_user": {
           "first_name": null,
@@ -267,8 +237,8 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "user"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[2][type_changed_at]"))}}",
-        "type": "invitationRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[2][at]"))}}",
+        "action": "invitation_refused"
       }
     ]
     """
@@ -281,16 +251,11 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": "4",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "member_id": "22",
+        "inviting_user": null,
         "joining_user": null,
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       }
     ]
     """
@@ -303,25 +268,15 @@ Feature: Get requests for group_id
     """
     [
       {
-        "id": "4",
-        "inviting_user": {
-          "first_name": "John",
-          "group_id": "11",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "member_id": "22",
+        "inviting_user": null,
         "joining_user": null,
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "3",
-        "inviting_user": {
-          "first_name": "Jean-Michel",
-          "group_id": "21",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "member_id": "31",
+        "inviting_user": null,
         "joining_user": {
           "first_name": "Jane",
           "grade": 2,
@@ -329,11 +284,11 @@ Feature: Get requests for group_id
           "last_name": "Doe",
           "login": "jane"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       },
       {
-        "id": "1",
+        "member_id": "21",
         "inviting_user": {
           "first_name": "John",
           "group_id": "11",
@@ -347,8 +302,8 @@ Feature: Get requests for group_id
           "last_name": null,
           "login": "owner"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       }
     ]
     """

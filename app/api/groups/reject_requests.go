@@ -11,16 +11,19 @@ import (
 // summary: Reject requests to join a group
 // description:
 //   Lets an admin reject requests to join a group.
-//   On success the service sets `groups_groups.type` to "requestRefused" and `type_changed_at` to current UTC time
+//   On success the service removes rows with `type` = 'join_request' from `group_pending_requests` and
+//   creates new rows with `action` = 'join_request_refused' and `at` = current UTC time in `group_membership_changes`
 //   for each of `group_ids`.
 //
 //
 //   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   The input `group_ids` should have the input `parent_group_id` as a parent group and the
-//   `groups_groups.type` should be "requestSent", otherwise the `group_id` gets skipped with
-//   `unchanged` (if `type` = "requestRefused") or `invalid` as the result.
+//   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
+//   in `group_pending_requests` for each of the input `group_ids`, otherwise the `group_id` gets skipped with
+//   `invalid` as the result.
+//
+//
 //   The response status code on success (200) doesn't depend on per-group results.
 // parameters:
 // - name: parent_group_id

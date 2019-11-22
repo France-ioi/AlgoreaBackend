@@ -28,7 +28,7 @@ Feature: Update a group (groupEdit)
       | 13       | 24        | join_request |
       | 14       | 22        | join_request |
 
-  Scenario: User is an owner of the group, all fields are not nulls, updates groups_groups
+  Scenario: User is an owner of the group, all fields are not nulls, updates group_pending_requests
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -81,7 +81,7 @@ Feature: Update a group (groupEdit)
       | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | false       | ybabbxnlyo | null          | null            | false        |
 
-  Scenario: User is an owner of the group, does not update groups_groups (free_access is still true)
+  Scenario: User is an owner of the group, does not update group_pending_requests (free_access is still true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -103,8 +103,10 @@ Feature: Update a group (groupEdit)
       | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | true        | ybabbxnlyo | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is an owner of the group, does not update groups_groups (free_access is not changed)
+  Scenario: User is an owner of the group, does not update group_pending_requests (free_access is not changed)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -125,8 +127,10 @@ Feature: Update a group (groupEdit)
       | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | true        | ybabbxnlyo | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is an owner of the group, does not update groups_groups (free_access changes from false to true)
+  Scenario: User is an owner of the group, does not update group_pending_requests (free_access changes from false to true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """
@@ -140,3 +144,5 @@ Feature: Update a group (groupEdit)
       | id | name    | grade | description | created_at          | type      | redirect_path | opened | free_access | code | code_lifetime | code_expires_at | open_contest |
       | 14 | Group C | -4    | Admin Group | 2019-04-06 09:26:40 | UserAdmin | null          | true   | true        | null | null          | null            | false        |
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should stay unchanged

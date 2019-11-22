@@ -53,50 +53,45 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "4",
-        "inviting_user": {
-          "group_id": "21",
-          "first_name": "Jean-Michel",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "group_id": "3",
+        "inviting_user": null,
         "group": {
           "id": "3",
           "name": "Our Club",
           "description": "Our club group",
           "type": "Club"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       },
       {
-        "id": "2",
-        "inviting_user": null,
+        "group_id": "1",
+        "inviting_user": {
+          "id": "11",
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
+        },
         "group": {
           "id": "1",
           "name": "Our Class",
           "description": "Our class group",
           "type": "Class"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       }
     ]
     """
@@ -109,21 +104,16 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       }
     ]
     """
@@ -136,38 +126,28 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "4",
-        "inviting_user": {
-          "group_id": "21",
-          "first_name": "Jean-Michel",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "group_id": "3",
+        "inviting_user": null,
         "group": {
           "id": "3",
           "name": "Our Club",
           "description": "Our club group",
           "type": "Club"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       }
     ]
     """

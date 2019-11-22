@@ -49,6 +49,8 @@ Feature: User sends a request to join a group - robustness
     }
     """
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User tries to send a request while a conflicting relation exists
@@ -64,6 +66,8 @@ Feature: User sends a request to join a group - robustness
     }
     """
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User tries to send a request to join a team while being a member of another team with the same team_item_id
@@ -78,6 +82,8 @@ Feature: User sends a request to join a group - robustness
       "error_text": "You are already on a team for this item"
     }
     """
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
@@ -94,6 +100,8 @@ Feature: User sends a request to join a group - robustness
     }
     """
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails when the group id is wrong
@@ -102,6 +110,8 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Fails if the user doesn't exist
