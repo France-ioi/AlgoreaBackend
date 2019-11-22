@@ -22,7 +22,6 @@ func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups_active
 			ON groups_groups_active.parent_group_id = groups.id AND
-				groups_groups_active.type`+GroupRelationIsActiveCondition+` AND
 				groups_groups_active.child_group_id = ?`, user.GroupID).
 		Where("groups.team_item_id = ?", itemID).
 		Where("groups.type = 'Team'").
@@ -38,7 +37,6 @@ func (s *GroupStore) TeamGroupForItemAndUser(itemID int64, user *User) *DB {
 	return s.
 		Joins(`JOIN groups_groups_active
 			ON groups_groups_active.parent_group_id = groups.id AND
-				groups_groups_active.type`+GroupRelationIsActiveCondition+` AND
 				groups_groups_active.child_group_id = ?`, user.GroupID).
 		Joins(`LEFT JOIN items_ancestors
 			ON items_ancestors.ancestor_item_id = groups.team_item_id`).
@@ -55,8 +53,7 @@ func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64
 	return s.
 		Joins(`
 			JOIN groups_groups_active
-				ON groups_groups_active.parent_group_id = groups.id AND
-					groups_groups_active.type`+GroupRelationIsActiveCondition).
+				ON groups_groups_active.parent_group_id = groups.id`).
 		Where("groups.type = 'Team'").
 		Where("groups_groups_active.child_group_id IN (?)", groupsToCheck).
 		Where("groups.team_item_id = ?", teamItemID)

@@ -19,13 +19,13 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | jane  | 41       | 42             | Jane        | null      |
       | jack  | 51       | 52             | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 10              | 31             | invitationAccepted |
-      | 10              | 41             | requestAccepted    |
-      | 10              | 51             | joinedByCode       |
-      | 11              | 31             | invitationAccepted |
-      | 11              | 41             | requestAccepted    |
-      | 11              | 51             | joinedByCode       |
+      | parent_group_id | child_group_id |
+      | 10              | 31             |
+      | 10              | 41             |
+      | 10              | 51             |
+      | 11              | 31             |
+      | 11              | 41             |
+      | 11              | 51             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |

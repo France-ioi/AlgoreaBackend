@@ -33,8 +33,7 @@ import (
 //     * the authenticated user should be an owner of both `parent_group_id` and `child_group_id,
 //     * the parent group should not be of type "UserSelf" or "Team",
 //     * the child group should not be of types "Base", "UserAdmin, or "UserSelf"
-//       (since there are more appropriate services for removing users from groups: groupLeave and groupRemoveMembers),
-//     * the relation should be direct (`type` = "direct").
+//       (since there are more appropriate services for removing users from groups: groupLeave and groupRemoveMembers).
 // parameters:
 // - name: parent_group_id
 //   in: path
@@ -88,12 +87,12 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 			return apiErr.Error // rollback
 		}
 
-		// Check that the relation exists and it is a direct relation
+		// Check that the relation exists
 		var result []struct{}
 		service.MustNotBeError(s.GroupGroups().WithWriteLock().
 			Where("parent_group_id = ?", parentGroupID).
 			Where("child_group_id = ?", childGroupID).
-			Where("type = 'direct'").Take(&result).Error())
+			Take(&result).Error())
 		if len(result) == 0 {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback

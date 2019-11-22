@@ -16,8 +16,11 @@ import (
 // summary: Join a team using a code
 // description:
 //   Lets a user to join a team group by a code.
-//   On success the service inserts a row into `groups_groups` (or updates an existing one)
-//   with `type`=`requestAccepted` and `type_changed_at` = current UTC time.
+//   On success the service inserts a row into `groups_groups`
+//   with `parent_group_id` = `id` of the team found by the code and `child_group_id` = `group_id` of the user
+//   and another row into `group_membership_changes`
+//   with `group_id` = `id` of the team, `member_id` = `group_id` of the user, `action`=`joined_by_code`,
+//   and `at` = current UTC time.
 //   It also refreshes the access rights.
 //
 //   * If there is no team with `free_access` = 1, `code_expires_at` > NOW() (or NULL), and `code` = `code`,
@@ -27,8 +30,7 @@ import (
 //     the unprocessable entity error is returned.
 //
 //   * If there is already a row in `groups_groups` with the found team as a parent
-//     and the authenticated user’s selfGroup’s id as a child with `type`=`invitationAccepted`/`requestAccepted`/`direct`,
-//     the unprocessable entity error is returned.
+//     and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
 //
 //
 //   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` of the team.

@@ -1,7 +1,7 @@
 groups: [{id: 17}, {id: 26}]
 items: [{id: 114, duration: 00:00:01, has_attempts: 1}]
 users: [{group_id: 17, login: 7}]
-groups_groups: [{parent_group_id: 26, child_group_id: 17, type: requestAccepted}]
+groups_groups: [{parent_group_id: 26, child_group_id: 17}]
 groups_ancestors:
   - {ancestor_group_id: 17, child_group_id: 17}
   - {ancestor_group_id: 26, child_group_id: 17}

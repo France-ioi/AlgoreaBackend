@@ -142,7 +142,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				WHERE user_groups.type = 'UserSelf' AND groups_ancestors_active.ancestor_group_id = groups.id
 			) AS user_count`).
 		Where("groups.id IN(?)",
-			srv.Store.GroupGroups().WhereGroupRelationIsActual().Table("groups_groups USE INDEX(parent_type)").
+			srv.Store.ActiveGroupGroups().
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)

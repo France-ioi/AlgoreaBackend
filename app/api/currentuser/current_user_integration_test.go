@@ -28,7 +28,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: UserSelf}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10, type: "joinedByCode"}]`,
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			wantAPIError: service.NoError,
 		},
 		{
@@ -39,7 +39,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: UserSelf}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}]`,
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			wantAPIError: service.NoError,
 		},
 		{
@@ -60,11 +60,10 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {id: 14, type: UserSelf}
 					- {id: 15, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationSent"}
-					- {parent_group_id: 4, child_group_id: 10, type: "invitationAccepted"}
-					- {parent_group_id: 5, child_group_id: 10, type: "requestAccepted"}
-					- {parent_group_id: 6, child_group_id: 10, type: "joinedByCode"}
-					- {parent_group_id: 7, child_group_id: 10, type: "direct"}`,
+					- {parent_group_id: 4, child_group_id: 10}
+					- {parent_group_id: 5, child_group_id: 10}
+					- {parent_group_id: 6, child_group_id: 10}
+					- {parent_group_id: 7, child_group_id: 10}`,
 			wantAPIError: service.NoError,
 		},
 		{
@@ -78,54 +77,21 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {id: 5, type: Team, team_item_id: 2345}
 					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}
-					- {parent_group_id: 3, child_group_id: 10, type: "requestAccepted"}
-					- {parent_group_id: 4, child_group_id: 10, type: "joinedByCode"}
-					- {parent_group_id: 5, child_group_id: 10, type: "direct"}`,
+					- {parent_group_id: 2, child_group_id: 10}
+					- {parent_group_id: 3, child_group_id: 10}
+					- {parent_group_id: 4, child_group_id: 10}
+					- {parent_group_id: 5, child_group_id: 10}`,
 			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (invitationAccepted)",
+			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id",
 			fixture: `
 				groups:
 					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 10, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
-		},
-		{
-			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (requestAccepted)",
-			fixture: `
-				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 10, type: UserSelf}
-				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "requestAccepted"}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
-		},
-		{
-			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (joinedByCode)",
-			fixture: `
-				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 10, type: UserSelf}
-				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "joinedByCode"}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
-		},
-		{
-			name: "parent group is a team with team_item_id and the user is on a team with the same team_item_id (direct)",
-			fixture: `
-				groups:
-					- {id: 1, free_access: 1, type: "Team", team_item_id: 1234}
-					- {id: 2, type: Team, team_item_id: 1234}
-					- {id: 10, type: UserSelf}
-				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "direct"}`,
+					- {parent_group_id: 2, child_group_id: 10}`,
 			wantAPIError: service.ErrUnprocessableEntity(errors.New("you are already on a team for this item")),
 		},
 	}

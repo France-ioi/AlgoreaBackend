@@ -51,8 +51,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //   * Pending invitations stay unchanged (result = "unchanged).
 //
-//   * Group members (`groups_groups.type` = "invitationAccepted"/"requestAccepted"/"direct")
-//     are skipped (result = "invalid").
+//   * Group members (already having `groups_groups`) are skipped (result = "invalid").
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise

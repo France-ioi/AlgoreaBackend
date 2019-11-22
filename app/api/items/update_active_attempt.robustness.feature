@@ -17,15 +17,9 @@ Feature: Update active attempt for an item - robustness
       | jane  | 111      |
       | guest | 121      |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type              |
-      | 102             | 101            | requestAccepted   |
-      | 103             | 101            | invitationSent    |
-      | 104             | 101            | requestSent       |
-      | 105             | 101            | invitationRefused |
-      | 106             | 101            | requestRefused    |
-      | 107             | 101            | removed           |
-      | 108             | 101            | left              |
-      | 109             | 101            | direct            |
+      | parent_group_id | child_group_id |
+      | 102             | 101            |
+      | 109             | 101            |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |

@@ -97,29 +97,23 @@ Feature: Get group children (groupChildrenView)
       | 90                | 53             | 0       |
       | 90                | 90             | 1       |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 13              | 21             | invitationAccepted |
-      | 13              | 23             | direct             |
-      | 13              | 24             | direct             |
-      | 14              | 22             | direct             |
-      | 13              | 25             | direct             |
-      | 13              | 26             | direct             |
-      | 13              | 27             | direct             |
-      | 13              | 28             | direct             |
-      | 13              | 29             | requestAccepted    |
-      | 13              | 30             | direct             |
-      | 13              | 31             | direct             |
-      | 13              | 42             | invitationSent     |
-      | 13              | 43             | requestSent        |
-      | 13              | 44             | invitationRefused  |
-      | 13              | 45             | requestRefused     |
-      | 13              | 46             | left               |
-      | 13              | 47             | removed            |
-      | 23              | 51             | invitationAccepted |
-      | 23              | 90             | direct             |
-      | 25              | 53             | joinedByCode       |
-      | 27              | 53             | invitationAccepted |
-      | 90              | 51             | requestAccepted    |
+      | parent_group_id | child_group_id |
+      | 13              | 21             |
+      | 13              | 23             |
+      | 13              | 24             |
+      | 14              | 22             |
+      | 13              | 25             |
+      | 13              | 26             |
+      | 13              | 27             |
+      | 13              | 28             |
+      | 13              | 29             |
+      | 13              | 30             |
+      | 13              | 31             |
+      | 23              | 51             |
+      | 23              | 90             |
+      | 25              | 53             |
+      | 27              | 53             |
+      | 90              | 51             |
 
   Scenario: User is an owner of the parent group, rows are sorted by name by default, UserSelf is skipped
     Given I am the user with id "21"

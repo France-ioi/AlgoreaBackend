@@ -11,14 +11,14 @@ Feature: Delete the current user - robustness
       | 22 | UserAdmin | user-admin | null                     |
       | 50 | Class     | Our class  | 2019-08-10               |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 1               | 2              | direct             |
-      | 1               | 3              | direct             |
-      | 1               | 50             | direct             |
-      | 2               | 4              | direct             |
-      | 2               | 21             | direct             |
-      | 3               | 22             | direct             |
-      | 50              | 21             | invitationAccepted |
+      | parent_group_id | child_group_id |
+      | 1               | 2              |
+      | 1               | 3              |
+      | 1               | 50             |
+      | 2               | 4              |
+      | 2               | 21             |
+      | 3               | 22             |
+      | 50              | 21             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -83,11 +83,11 @@ Feature: Delete the current user - robustness
       | 4  | Base  | RootTemp  | null                     |
       | 50 | Class | Our class | 2019-08-10               |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type   |
-      | 1               | 2              | direct |
-      | 1               | 3              | direct |
-      | 1               | 50             | direct |
-      | 2               | 4              | direct |
+      | parent_group_id | child_group_id |
+      | 1               | 2              |
+      | 1               | 3              |
+      | 1               | 50             |
+      | 2               | 4              |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |

@@ -19,18 +19,18 @@ Feature: Get group by name (contestGetGroupByName)
       | john  | 31       | 32             |
       | jane  | 41       | 42             |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 10              | 11             | direct             |
-      | 10              | 13             | direct             |
-      | 11              | 13             | direct             |
-      | 11              | 15             | direct             |
-      | 14              | 14             | direct             |
-      | 15              | 31             | invitationAccepted |
-      | 15              | 41             | requestAccepted    |
-      | 22              | 13             | direct             |
-      | 22              | 14             | direct             |
-      | 22              | 15             | direct             |
-      | 22              | 31             | direct             |
+      | parent_group_id | child_group_id |
+      | 10              | 11             |
+      | 10              | 13             |
+      | 11              | 13             |
+      | 11              | 15             |
+      | 14              | 14             |
+      | 15              | 31             |
+      | 15              | 41             |
+      | 22              | 13             |
+      | 22              | 14             |
+      | 22              | 15             |
+      | 22              | 31             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |

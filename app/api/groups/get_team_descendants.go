@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -104,7 +103,6 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		Joins(`
 			JOIN groups_groups_active AS parent_links
 			ON parent_links.parent_group_id = groups.id AND
-				parent_links.type = 'direct' AND
 				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
 			JOIN groups_ancestors_active AS parent_ancestors
@@ -124,7 +122,6 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 			users.group_id, users.first_name, users.last_name, users.login, users.grade`).
 		Joins(`
 			JOIN groups_groups_active AS member_links ON
-				member_links.type`+database.GroupRelationIsActiveCondition+` AND
 				member_links.child_group_id = users.group_id AND
 				member_links.parent_group_id IN (?)`, groupIDs).
 		Order("member_links.parent_group_id, member_links.child_group_id").

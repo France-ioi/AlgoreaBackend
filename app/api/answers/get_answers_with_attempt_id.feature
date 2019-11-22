@@ -13,8 +13,8 @@ Background:
     | jdoe  | 0         | 11       | 12             | John        | Doe       |
     | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id | type            |
-    | 61 | 13              | 11             | requestAccepted |
+    | id | parent_group_id | child_group_id |
+    | 61 | 13              | 11             |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |

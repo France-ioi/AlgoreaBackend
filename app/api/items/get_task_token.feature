@@ -10,8 +10,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | john  | 101      |
       | jane  | 111      |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 102             | 101            | invitationAccepted |
+      | parent_group_id | child_group_id |
+      | 102             | 101            |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |

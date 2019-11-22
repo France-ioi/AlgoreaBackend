@@ -12,11 +12,11 @@ Feature: Remove a direct parent-child relation between two groups
       | login | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | owner | 21       | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type   |
-      | 13              | 11             | direct |
-      | 22              | 11             | direct |
-      | 22              | 13             | direct |
-      | 22              | 14             | direct |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 22              | 11             |
+      | 22              | 13             |
+      | 22              | 14             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -41,10 +41,10 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type   | role   |
-      | 22              | 11             | direct | member |
-      | 22              | 13             | direct | member |
-      | 22              | 14             | direct | member |
+      | parent_group_id | child_group_id | role   |
+      | 22              | 11             | member |
+      | 22              | 13             | member |
+      | 22              | 14             | member |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -69,9 +69,9 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type   | role   |
-      | 22              | 11             | direct | member |
-      | 22              | 14             | direct | member |
+      | parent_group_id | child_group_id | role   |
+      | 22              | 11             | member |
+      | 22              | 14             | member |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

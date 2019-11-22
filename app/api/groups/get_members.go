@@ -47,8 +47,7 @@ type groupsMembersViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group members
-//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
-//   `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id`).
 //   Rows related to users contain basic user info.
 //
 //

@@ -17,9 +17,8 @@ Feature: User leaves a group
       | 4  | 21                | 21             | 1       |
       | 5  | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at     |
-      | 1  | 11              | 21             | invitationAccepted | 2017-04-29 06:38:38 |
-      | 7  | 14              | 21             | left               | 2017-02-21 06:38:38 |
+      | id | parent_group_id | child_group_id |
+      | 1  | 11              | 21             |
 
   Scenario: Successfully leave a group
     Given I am the user with id "21"
@@ -34,26 +33,12 @@ Feature: User leaves a group
     }
     """
     And the table "groups_groups" should stay unchanged but the row with id "1"
-    And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 1  | 11              | 21             | left | 1                                                                                          |
+    And the table "groups_groups" should be empty
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 11       | 21        | left   | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged but the row with id "2"
     And the table "groups_ancestors" should not contain id "2"
-
-  Scenario: Leave a group that already have been left
-    Given I am the user with id "21"
-    When I send a DELETE request to "/current-user/group-memberships/14"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "success": true,
-      "message": "unchanged",
-      "data": {"changed": false}
-    }
-    """
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
 
   Scenario: Successfully leave a group (lock_user_deletion_until = NOW())
     Given I am the user with id "21"
@@ -69,9 +54,10 @@ Feature: User leaves a group
     }
     """
     And the table "groups_groups" should stay unchanged but the row with id "1"
-    And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 1  | 11              | 21             | left | 1                                                                                          |
+    And the table "groups_groups" should be empty
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action | initiator_id | ABS(TIMESTAMPDIFF(SECOND, "2019-08-20 00:00:00", NOW())) < 3 |
+      | 11       | 21        | left   | 21           | 1                                                            |
     And the table "groups_ancestors" should stay unchanged but the row with id "2"
     And the table "groups_ancestors" should not contain id "2"
 

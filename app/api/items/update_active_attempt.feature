@@ -12,11 +12,11 @@ Feature: Update active attempt for an item
       | jane  | 111      |
       | jack  | 121      |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 102             | 101            | invitationAccepted |
-      | 102             | 121            | joinedByCode       |
-      | 103             | 101            | requestAccepted    |
-      | 104             | 101            | direct             |
+      | parent_group_id | child_group_id |
+      | 102             | 101            |
+      | 102             | 121            |
+      | 103             | 101            |
+      | 104             | 101            |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |

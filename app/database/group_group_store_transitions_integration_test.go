@@ -520,7 +520,7 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 
 func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupStore, expected []groupGroup) {
 	var groupsGroups []groupGroup
-	assert.NoError(t, groupGroupStore.Select("parent_group_id, child_group_id, inviting_user_id, child_order, type, type_changed_at").
+	assert.NoError(t, groupGroupStore.Select("parent_group_id, child_group_id, child_order").
 		Order("parent_group_id, child_group_id").Scan(&groupsGroups).Error())
 
 	assert.Len(t, groupsGroups, len(expected))
@@ -535,23 +535,12 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 	for index, row := range expected {
 		assert.Equal(t, row.ParentGroupID, groupsGroups[index].ParentGroupID, "wrong parent group id for row %#v", groupsGroups[index])
 		assert.Equal(t, row.ChildGroupID, groupsGroups[index].ChildGroupID, "wrong child group id for row %#v", groupsGroups[index])
-		assert.Equal(t, row.Type, groupsGroups[index].Type, "wrong type for row %#v", groupsGroups[index])
-		assert.Equal(t, row.InvitingUserID, groupsGroups[index].InvitingUserID,
-			"wrong inviting_user_id for row %#v", groupsGroups[index])
 		if row.ChildOrder == 0 {
 			assert.Zero(t, groupsGroups[index].ChildOrder)
 		} else {
 			assert.False(t, usedChildOrders[groupsGroups[index].ChildOrder])
 			usedChildOrders[groupsGroups[index].ChildOrder] = true
 		}
-		if row.TypeChangedAt == nil {
-			assert.Nil(t, groupsGroups[index].TypeChangedAt)
-		} else {
-			assert.NotNil(t, groupsGroups[index].TypeChangedAt, "TypeChangedAt should not be nil in row %#v", groupsGroups[index])
-			if groupsGroups[index].TypeChangedAt != nil {
-				assert.True(t, (*time.Time)(groupsGroups[index].TypeChangedAt).Sub(time.Now().UTC())/time.Second < 5)
-				assert.True(t, time.Now().UTC().Sub(time.Time(*groupsGroups[index].TypeChangedAt))/time.Second > -5)
-			}
 		}
 	}
 }

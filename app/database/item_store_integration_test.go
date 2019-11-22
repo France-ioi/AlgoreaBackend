@@ -345,10 +345,9 @@ func TestItemStore_CloseTeamContest(t *testing.T) {
 			- {login: 3, group_id: 30}
 			- {login: 4, group_id: 50}
 		groups_groups:
-			- {parent_group_id: 40, child_group_id: 10, type: invitationAccepted}
-			- {parent_group_id: 40, child_group_id: 20, type: requestRefused}
-			- {parent_group_id: 40, child_group_id: 30, type: requestAccepted}
-			- {parent_group_id: 40, child_group_id: 50, type: joinedByCode}
+			- {parent_group_id: 40, child_group_id: 10}
+			- {parent_group_id: 40, child_group_id: 30}
+			- {parent_group_id: 40, child_group_id: 50}
 		groups_ancestors:
 			- {ancestor_group_id: 10, child_group_id: 10}
 			- {ancestor_group_id: 20, child_group_id: 20}

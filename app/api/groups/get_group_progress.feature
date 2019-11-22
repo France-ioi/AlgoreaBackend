@@ -49,40 +49,33 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | janed | 67       | 68             |
       | janee | 69       | 70             |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 1               | 11             | direct             |
-      | 1               | 14             | direct             | # direct child of group_id with type = 'Team' (ignored)
-      | 1               | 17             | direct             |
-      | 1               | 51             | direct             | # direct child of group_id with type = 'UserSelf' (ignored)
-      | 3               | 13             | direct             |
-      | 11              | 14             | direct             |
-      | 11              | 17             | direct             |
-      | 11              | 18             | direct             |
-      | 11              | 59             | requestAccepted    |
-      | 13              | 15             | direct             |
-      | 13              | 69             | invitationAccepted |
-      | 14              | 51             | requestAccepted    |
-      | 14              | 53             | joinedByCode       |
-      | 14              | 55             | invitationAccepted |
-      | 15              | 57             | direct             |
-      | 15              | 59             | requestAccepted    |
-      | 15              | 61             | joinedByCode       |
-      | 15              | 63             | invitationRefused  |
-      | 15              | 65             | left               |
-      | 15              | 67             | invitationSent     |
-      | 15              | 69             | requestSent        |
-      | 16              | 51             | invitationRefused  |
-      | 16              | 53             | requestRefused     |
-      | 16              | 55             | removed            |
-      | 16              | 63             | direct             |
-      | 16              | 65             | requestAccepted    |
-      | 16              | 67             | invitationAccepted |
-      | 17              | 14             | direct             |
-      | 17              | 18             | direct             |
-      | 17              | 59             | requestAccepted    |
-      | 20              | 21             | direct             |
-      | 22              | 1              | direct             |
-      | 22              | 3              | direct             |
+      | parent_group_id | child_group_id |
+      | 1               | 11             |
+      | 1               | 14             | # direct child of group_id with type = 'Team' (ignored)
+      | 1               | 17             |
+      | 1               | 51             | # direct child of group_id with type = 'UserSelf' (ignored)
+      | 3               | 13             |
+      | 11              | 14             |
+      | 11              | 17             |
+      | 11              | 18             |
+      | 11              | 59             |
+      | 13              | 15             |
+      | 13              | 69             |
+      | 14              | 51             |
+      | 14              | 53             |
+      | 14              | 55             |
+      | 15              | 57             |
+      | 15              | 59             |
+      | 15              | 61             |
+      | 16              | 63             |
+      | 16              | 65             |
+      | 16              | 67             |
+      | 17              | 14             |
+      | 17              | 18             |
+      | 17              | 59             |
+      | 20              | 21             |
+      | 22              | 1              |
+      | 22              | 3              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |

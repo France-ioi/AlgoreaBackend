@@ -113,8 +113,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 						 groups.team_item_id = ?)`, itemID, itemID).
 			Joins(`
 				LEFT JOIN groups_groups_active
-					ON groups_groups_active.type IN ('requestAccepted', 'invitationAccepted') AND
-						groups_groups_active.parent_group_id = team.id`).
+					ON groups_groups_active.parent_group_id = team.id`).
 			Joins(`
 				LEFT JOIN `+"`groups`"+` AS user_group
 					ON user_group.id = groups_groups_active.child_group_id AND user_group.type = 'UserSelf' AND

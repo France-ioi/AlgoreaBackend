@@ -17,10 +17,10 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
-    And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type           | type_changed_at     |
-      | 1  | 11              | 21             | invitationSent | 2017-04-29 06:38:38 |
-      | 7  | 14              | 21             | requestSent    | 2017-02-21 06:38:38 |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 11       | 21        | invitation   |
+      | 14       | 21        | join_request |
 
   Scenario: Successfully join an group
     Given I am the user with id "21"
@@ -36,9 +36,14 @@ Feature: Join a group using a code (groupsJoinByCode)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type         | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 11              | 21             | joinedByCode | 1                                                                                          |
-      | 14              | 21             | requestSent  | 0                                                                                          |
+      | parent_group_id | child_group_id |
+      | 11              | 21             |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type         |
+      | 14       | 21        | join_request |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 11       | 21        | joined_by_code | 21           | 1                                         |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -65,10 +70,15 @@ Feature: Join a group using a code (groupsJoinByCode)
       | id | type | code       | code_lifetime | free_access | TIMESTAMPDIFF(SECOND, code_expires_at, ADDTIME(NOW(), "12:34:56")) < 3 |
       | 12 | Team | abc3456789 | 12:34:56      | true        | 1                                                                      |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type           | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 11              | 21             | invitationSent | 0                                                                                          |
-      | 12              | 21             | joinedByCode   | 1                                                                                          |
-      | 14              | 21             | requestSent    | 0                                                                                          |
+      | parent_group_id | child_group_id |
+      | 12              | 21             |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type         |
+      | 11       | 21        | invitation   |
+      | 14       | 21        | join_request |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 12       | 21        | joined_by_code | 21           | 1                                         |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -92,9 +102,14 @@ Feature: Join a group using a code (groupsJoinByCode)
     """
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type           | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 11              | 21             | invitationSent | 0                                                                                          |
-      | 14              | 21             | joinedByCode   | 1                                                                                          |
+      | parent_group_id | child_group_id |
+      | 14              | 21             |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type       |
+      | 11       | 21        | invitation |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action         | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 14       | 21        | joined_by_code | 21           | 1                                         |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

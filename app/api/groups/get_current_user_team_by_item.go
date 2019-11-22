@@ -19,8 +19,7 @@ import (
 //
 //     * has `team_item_id` equal to the input `item_id`,
 //
-//     * is a direct parent (i.e. via `groups_groups` with `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode")
-//       of the authenticated user’s `selfGroup`,
+//     * is a direct parent (i.e. via `groups_groups`) of the authenticated user’s `selfGroup`,
 //
 //     * is of type "Team".
 //

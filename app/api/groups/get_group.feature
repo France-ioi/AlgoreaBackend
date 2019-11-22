@@ -30,14 +30,13 @@ Feature: Get group by groupID (groupView)
       | dirk  | 71       | 72             |
       | chuck | 81       | 82             |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 11              | 31             | invitationAccepted |
-      | 13              | 11             | direct             |
-      | 13              | 31             | requestRefused     |
-      | 13              | 51             | requestAccepted    |
-      | 13              | 61             | invitationAccepted |
-      | 13              | 71             | direct             |
-      | 13              | 81             | joinedByCode       |
+      | parent_group_id | child_group_id |
+      | 11              | 31             |
+      | 13              | 11             |
+      | 13              | 51             |
+      | 13              | 61             |
+      | 13              | 71             |
+      | 13              | 81             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

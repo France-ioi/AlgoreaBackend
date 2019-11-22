@@ -3,6 +3,7 @@ Feature: User rejects an invitation to join a group - robustness
     Given the database has the following table 'groups':
       | id |
       | 11 |
+      | 13 |
       | 14 |
       | 21 |
       | 22 |
@@ -15,10 +16,10 @@ Feature: User rejects an invitation to join a group - robustness
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
-    And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type           | type_changed_at     |
-      | 1  | 11              | 21             | requestSent    | 2017-04-29 06:38:38 |
-      | 2  | 13              | 21             | invitationSent | 2017-03-29 06:38:38 |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 11       | 21        | join_request |
+      | 13       | 21        | invitation   |
 
   Scenario: User tries to reject an invitation that doesn't exist
     Given I am the user with id "21"

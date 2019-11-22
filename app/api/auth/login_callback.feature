@@ -82,9 +82,9 @@ Feature: Login callback
       | 5577006791947779410 | mohammed       | UserSelf  | mohammed       | 2019-07-16 22:02:28 | false  | false       |
       | 8674665223082153551 | mohammed-admin | UserAdmin | mohammed-admin | 2019-07-16 22:02:28 | false  | false       |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id      | type   | child_order |
-      | 2               | 5577006791947779410 | direct | 1           |
-      | 3               | 8674665223082153551 | direct | 1           |
+      | parent_group_id | child_group_id      | child_order |
+      | 2               | 5577006791947779410 | 1           |
+      | 3               | 8674665223082153551 | 1           |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
@@ -158,11 +158,11 @@ Feature: Login callback
       | 11       | 12             | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
       | 13       | 14             | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type   | child_order |
-      | 2               | 11             | direct | 1           |
-      | 2               | 13             | direct | 1           |
-      | 3               | 12             | direct | 2           |
-      | 3               | 14             | direct | 2           |
+      | parent_group_id | child_group_id | child_order |
+      | 2               | 11             | 1           |
+      | 2               | 13             | 1           |
+      | 3               | 12             | 2           |
+      | 3               | 14             | 2           |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
@@ -304,9 +304,9 @@ Feature: Login callback
       | 11       | 12             |
     And the table "groups" should stay unchanged
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type   |
-      | 2               | 11             | direct |
-      | 3               | 12             | direct |
+      | parent_group_id | child_group_id |
+      | 2               | 11             |
+      | 3               | 12             |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |

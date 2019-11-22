@@ -15,10 +15,9 @@ Feature: User rejects an invitation to join a group
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
-    And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type              | type_changed_at     |
-      | 1  | 11              | 21             | invitationSent    | 2017-04-29 06:38:38 |
-      | 7  | 14              | 21             | invitationRefused | 2017-02-21 06:38:38 |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type       |
+      | 11       | 21        | invitation |
 
   Scenario: Successfully reject an invitation
     Given I am the user with id "21"
@@ -32,24 +31,8 @@ Feature: User rejects an invitation to join a group
       "data": {"changed": true}
     }
     """
-    And the table "groups_groups" should stay unchanged but the row with id "1"
-    And the table "groups_groups" at id "1" should be:
-      | id | parent_group_id | child_group_id | type              | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 1  | 11              | 21             | invitationRefused | 1                                                                                          |
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action             | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 11       | 21        | invitation_refused | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Reject an already rejected invitation
-    Given I am the user with id "21"
-    When I send a POST request to "/current-user/group-invitations/14/reject"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    {
-      "success": true,
-      "message": "unchanged",
-      "data": {"changed": false}
-    }
-    """
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-

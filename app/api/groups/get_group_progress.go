@@ -145,7 +145,6 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 	var ancestorGroupIDs []interface{}
 	ancestorGroupIDQuery := srv.Store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
-		Where("groups_groups_active.type = 'direct'").
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'UserSelf')`)
@@ -175,7 +174,6 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			JOIN groups_ancestors_active
 			ON groups_ancestors_active.ancestor_group_id IN (?) AND
 				groups_ancestors_active.child_group_id = parent.id`, ancestorGroupIDs).
-		WhereActiveGroupRelationIsActual().
 		Group("child.id")
 
 	teams := srv.Store.Table("`groups` FORCE INDEX(type)").

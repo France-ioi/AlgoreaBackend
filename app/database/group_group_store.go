@@ -8,8 +8,7 @@ import (
 )
 
 // GroupGroupStore implements database operations on `groups_groups`
-// (which stores parent-child relationships between groups.
-// The relationship is only effective when the 'direct'  type is set.)
+// (which stores parent-child relationships between groups).
 type GroupGroupStore struct {
 	*DataStore
 }
@@ -18,9 +17,7 @@ type GroupGroupStore struct {
 // i.e. groups of which he is a direct member
 func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	result := s.Where(QuoteName(s.tableName)+".child_group_id = ?", user.GroupID)
-	if s.tableName == "groups_groups_active" {
-		result = result.WhereActiveGroupRelationIsActual()
-	} else {
+	if s.tableName != "groups_groups_active" {
 		result = result.WhereGroupRelationIsActual()
 	}
 	return result

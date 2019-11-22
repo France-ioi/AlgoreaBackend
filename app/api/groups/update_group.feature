@@ -7,6 +7,7 @@ Feature: Update a group (groupEdit)
       | 14 | Group C     | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | false       | null       | null          | null                | false        |
       | 21 | owner       | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
       | 22 | owner-admin | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | 24 | other       | -4    | other           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
       | 31 | user        | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
       | 32 | user-admin  | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
     And the database has the following table 'users':
@@ -18,12 +19,14 @@ Feature: Update a group (groupEdit)
       | 76 | 13                | 11             | 0       |
       | 77 | 22                | 14             | 0       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               |
-      | 75 | 13              | 21             | invitationSent     |
-      | 76 | 13              | 22             | requestSent        |
-      | 77 | 13              | 23             | invitationAccepted |
-      | 78 | 13              | 24             | requestSent        |
-      | 79 | 14              | 22             | requestSent        |
+      | id | parent_group_id | child_group_id |
+      | 77 | 13              | 23             |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 13       | 21        | invitation   |
+      | 13       | 22        | join_request |
+      | 13       | 24        | join_request |
+      | 14       | 22        | join_request |
 
   Scenario: User is an owner of the group, all fields are not nulls, updates groups_groups
     Given I am the user with id "21"
@@ -46,13 +49,15 @@ Feature: Update a group (groupEdit)
     And the table "groups" at id "13" should be:
       | id | name   | grade | description    | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
       | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | 1234/5678     | false  | false       | ybabbxnlyo | 99:59:59      | 2019-12-31 23:59:59 | false        |
-    And the table "groups_groups" should be:
-      | id | parent_group_id | child_group_id | type               |
-      | 75 | 13              | 21             | invitationSent     |
-      | 76 | 13              | 22             | requestRefused     |
-      | 77 | 13              | 23             | invitationAccepted |
-      | 78 | 13              | 24             | requestRefused     |
-      | 79 | 14              | 22             | requestSent        |
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type         |
+      | 13       | 21        | invitation   |
+      | 14       | 22        | join_request |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action               | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 22        | join_request_refused | 1                                         |
+      | 13       | 24        | join_request_refused | 1                                         |
 
   Scenario: User is an owner of the group, nullable fields are nulls
     Given I am the user with id "21"
