@@ -1,14 +1,15 @@
 Feature: Delete the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name       |
-      | 1  | Base      | Root       |
-      | 2  | Base      | RootSelf   |
-      | 3  | Base      | RootAdmin  |
-      | 4  | Base      | RootTemp   |
-      | 21 | UserSelf  | user       |
-      | 22 | UserAdmin | user-admin |
-      | 31 | UserSelf  | tmp-1234   |
+      | id  | type      | name       |
+      | 1   | Base      | Root       |
+      | 2   | Base      | RootSelf   |
+      | 3   | Base      | RootAdmin  |
+      | 4   | Base      | RootTemp   |
+      | 21  | UserSelf  | user       |
+      | 22  | UserAdmin | user-admin |
+      | 31  | UserSelf  | tmp-1234   |
+      | 100 | Class     | Some class |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 2              |
@@ -17,6 +18,14 @@ Feature: Delete the current user
       | 2               | 21             |
       | 3               | 22             |
       | 4               | 31             |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | at                  |
+      | 100      | 21        | 2019-05-30 11:00:00 |
+      | 100      | 31        | 2019-05-30 11:00:00 |
+    And the database has the following table 'group_membership_changes':
+      | group_id | member_id | at                  |
+      | 100      | 21        | 2019-05-30 11:00:00 |
+      | 100      | 31        | 2019-05-30 11:00:00 |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -37,6 +46,7 @@ Feature: Delete the current user
       | 21                | 21             | true    |
       | 22                | 22             | true    |
       | 31                | 31             | true    |
+      | 100               | 100            | true    |
     And the database has the following table 'users':
       | temp_user | login    | group_id | owned_group_id | login_id |
       | 0         | user     | 21       | 22             | 1234567  |
@@ -69,18 +79,25 @@ Feature: Delete the current user
       | temp_user | login    | group_id | owned_group_id |
       | 1         | tmp-1234 | 31       | null           |
     And the table "groups" should be:
-      | id | type     | name      |
-      | 1  | Base     | Root      |
-      | 2  | Base     | RootSelf  |
-      | 3  | Base     | RootAdmin |
-      | 4  | Base     | RootTemp  |
-      | 31 | UserSelf | tmp-1234  |
+      | id  | type     | name       |
+      | 1   | Base     | Root       |
+      | 2   | Base     | RootSelf   |
+      | 3   | Base     | RootAdmin  |
+      | 4   | Base     | RootTemp   |
+      | 31  | UserSelf | tmp-1234   |
+      | 100 | Class    | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
       | 1               | 3              |
       | 2               | 4              |
       | 4               | 31             |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id |
+      | 100      | 31        |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id |
+      | 100      | 31        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -95,6 +112,7 @@ Feature: Delete the current user
       | 4                 | 4              | true    |
       | 4                 | 31             | true    |
       | 31                | 31             | true    |
+      | 100               | 100            | true    |
 
   Scenario: Temporary user
     Given I am the user with id "31"
@@ -111,13 +129,14 @@ Feature: Delete the current user
       | temp_user | login | group_id | owned_group_id |
       | 0         | user  | 21       | 22             |
     And the table "groups" should be:
-      | id | type      | name       |
-      | 1  | Base      | Root       |
-      | 2  | Base      | RootSelf   |
-      | 3  | Base      | RootAdmin  |
-      | 4  | Base      | RootTemp   |
-      | 21 | UserSelf  | user       |
-      | 22 | UserAdmin | user-admin |
+      | id  | type      | name       |
+      | 1   | Base      | Root       |
+      | 2   | Base      | RootSelf   |
+      | 3   | Base      | RootAdmin  |
+      | 4   | Base      | RootTemp   |
+      | 21  | UserSelf  | user       |
+      | 22  | UserAdmin | user-admin |
+      | 100 | Class     | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
@@ -125,6 +144,12 @@ Feature: Delete the current user
       | 2               | 4              |
       | 2               | 21             |
       | 3               | 22             |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id |
+      | 100      | 21        |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id |
+      | 100      | 21        |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -141,3 +166,4 @@ Feature: Delete the current user
       | 4                 | 4              | true    |
       | 21                | 21             | true    |
       | 22                | 22             | true    |
+      | 100               | 100            | true    |

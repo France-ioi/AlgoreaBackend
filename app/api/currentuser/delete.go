@@ -27,11 +27,13 @@ import (
 //
 //                3. `groups_groups` having `parent_group_id` or `child_group_id` equal
 //                   to one of `users.group_id`/`users.owned_group_id`;
-//                4. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
+//                4. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
 //                   to one of `users.group_id`/`users.owned_group_id`;
-//                5. [`groups_propagate`, `groups`] having `id` equal to one of
+//                5. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
+//                   to one of `users.group_id`/`users.owned_group_id`;
+//                6. [`groups_propagate`, `groups`] having `id` equal to one of
 //                   `users.group_id`/`users.owned_group_id`;
-//                6. `users` having `group_id` = `users.group_id`.
+//                7. `users` having `group_id` = `users.group_id`.
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with

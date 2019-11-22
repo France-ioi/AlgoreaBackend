@@ -102,6 +102,7 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64, ownedGroupsIDs []*int64) {
 	executeDeleteQuery(db, "groups_ancestors", "WHERE ancestor_group_id IN (?)", allGroups)
 	executeDeleteQuery(db, "groups_ancestors", "WHERE child_group_id IN (?)", allGroups)
 	// deleting from `groups` triggers deletion from
+	// `group_pending_requests`, `group_membership_changes`,
 	// `permissions_granted`, `permissions_generated", `groups_attempts`, `groups_login_prefixes`
 	// `users`, `users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`
 	for _, table := range [...]string{"groups_propagate", "groups"} {
