@@ -24,6 +24,8 @@ DELETE `groups_groups` FROM `groups_groups`
     LEFT JOIN `groups` ON `groups`.`id` = `groups_groups`.`child_group_id`
     WHERE `groups`.`id` IS NULL;
 
+DELETE FROM `groups_groups` WHERE `type` = 'removed' AND `type_changed_at` IS NULL;
+
 INSERT INTO `group_membership_changes`
     SELECT `parent_group_id`, `child_group_id`, `type_changed_at`,
            CASE `type`
