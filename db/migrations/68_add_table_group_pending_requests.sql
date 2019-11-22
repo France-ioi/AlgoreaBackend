@@ -107,25 +107,23 @@ SET `type_changed_at` = (
 );
 
 UPDATE `groups_groups`
-SET `type` = (
-    SELECT IF(`action` = 'addedDirectly', 'direct', `action`)
+SET `type` = IFNULL(
+    (SELECT CASE `group_membership_changes`.`action`
+               WHEN 'invitation_created' THEN 'invitationSent'
+               WHEN 'invitation_refused' THEN 'invitationRefused'
+               WHEN 'invitation_accepted' THEN 'invitationAccepted'
+               WHEN 'join_request_created' THEN 'requestSent'
+               WHEN 'join_request_refused' THEN 'requestRefused'
+               WHEN 'join_request_accepted' THEN 'requestAccepted'
+               WHEN 'joined_by_code' THEN 'joinedByCode'
+               WHEN 'added_directly' THEN 'direct'
+               ELSE `group_membership_changes`.`action`
+            END
     FROM `group_membership_changes`
     WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
       AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
-      AND CASE `groups_groups`.`type`
-        WHEN 'invitationSent' THEN 'invitation_created'
-        WHEN 'invitationRefused' THEN 'invitation_refused'
-        WHEN 'invitationAccepted' THEN 'invitation_accepted'
-        WHEN 'requestSent' THEN 'join_request_created'
-        WHEN 'requestRefused' THEN 'join_request_refused'
-        WHEN 'requestAccepted' THEN 'join_request_accepted'
-        WHEN 'joinedByCode' THEN 'joined_by_code'
-        WHEN 'direct' THEN 'added_directly'
-        ELSE `groups_groups`.`type`
-      END = `group_membership_changes`.`action`
     ORDER BY `at` DESC
-    LIMIT 1
-);
+    LIMIT 1), `type`);
 
 INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `type_changed_at`, `type`)
     WITH `last_actions` AS (
