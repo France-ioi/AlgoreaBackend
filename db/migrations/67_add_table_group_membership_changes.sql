@@ -16,6 +16,14 @@ CREATE TABLE `group_membership_changes` (
     CONSTRAINT `fk_group_membership_changes_initiator_id_users_group_id` FOREIGN KEY (`initiator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL
 ) COMMENT 'Stores the history of group membership changes' ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DELETE `groups_groups` FROM `groups_groups`
+    LEFT JOIN `groups` ON `groups`.`id` = `groups_groups`.`parent_group_id`
+    WHERE `groups`.`id` IS NULL;
+
+DELETE `groups_groups` FROM `groups_groups`
+    LEFT JOIN `groups` ON `groups`.`id` = `groups_groups`.`child_group_id`
+    WHERE `groups`.`id` IS NULL;
+
 INSERT INTO `group_membership_changes`
     SELECT `parent_group_id`, `child_group_id`, `type_changed_at`,
            CASE `type`
