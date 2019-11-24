@@ -8,7 +8,7 @@ CREATE TABLE `group_pending_requests` (
     INDEX `group_id_member_id_at_desc` (`group_id`, `member_id`, `at` DESC),
     CONSTRAINT `fk_group_pending_requests_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_group_pending_requests_member_id_groups_id` FOREIGN KEY (`member_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE
-) COMMENT 'Stores requests that require an action from a user (group owner/manager or member)' ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) COMMENT 'Requests that require an action from a user (group owner/manager or member)' ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `group_pending_requests`
     SELECT `parent_group_id`, `child_group_id`,
