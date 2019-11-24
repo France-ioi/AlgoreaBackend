@@ -9,7 +9,6 @@ CREATE TABLE `group_membership_changes` (
     `initiator_id` BIGINT(20) DEFAULT NULL COMMENT 'The user who initiated the action (if any), typically the group owner/manager or the member himself',
     PRIMARY KEY (`group_id`, `member_id`, `at`),
     INDEX `group_id_member_id` (`group_id`, `member_id`),
-    INDEX `action` (`action`),
     INDEX `group_id_member_id_at_desc` (`group_id`, `member_id`, `at` DESC),
     CONSTRAINT `fk_group_membership_changes_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_group_membership_changes_member_id_groups_id` FOREIGN KEY (`member_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
