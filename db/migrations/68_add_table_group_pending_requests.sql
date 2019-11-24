@@ -86,8 +86,27 @@ END
 -- +migrate StatementEnd
 
 UPDATE `groups_groups`
+SET `type` = IFNULL(
+        (SELECT CASE `group_membership_changes`.`action`
+                    WHEN 'invitation_created' THEN 'invitationSent'
+                    WHEN 'invitation_refused' THEN 'invitationRefused'
+                    WHEN 'invitation_accepted' THEN 'invitationAccepted'
+                    WHEN 'join_request_created' THEN 'requestSent'
+                    WHEN 'join_request_refused' THEN 'requestRefused'
+                    WHEN 'join_request_accepted' THEN 'requestAccepted'
+                    WHEN 'joined_by_code' THEN 'joinedByCode'
+                    WHEN 'added_directly' THEN 'direct'
+                    ELSE `group_membership_changes`.`action`
+                    END
+         FROM `group_membership_changes`
+         WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
+           AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
+         ORDER BY `at` DESC
+         LIMIT 1), `type`);
+
+UPDATE `groups_groups`
 SET `type_changed_at` = (
-    SELECT CAST(`at` AS DATETIME)
+    SELECT `at`
     FROM `group_membership_changes`
     WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
       AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
@@ -106,30 +125,11 @@ SET `type_changed_at` = (
     LIMIT 1
 );
 
-UPDATE `groups_groups`
-SET `type` = IFNULL(
-    (SELECT CASE `group_membership_changes`.`action`
-               WHEN 'invitation_created' THEN 'invitationSent'
-               WHEN 'invitation_refused' THEN 'invitationRefused'
-               WHEN 'invitation_accepted' THEN 'invitationAccepted'
-               WHEN 'join_request_created' THEN 'requestSent'
-               WHEN 'join_request_refused' THEN 'requestRefused'
-               WHEN 'join_request_accepted' THEN 'requestAccepted'
-               WHEN 'joined_by_code' THEN 'joinedByCode'
-               WHEN 'added_directly' THEN 'direct'
-               ELSE `group_membership_changes`.`action`
-            END
-    FROM `group_membership_changes`
-    WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
-      AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
-    ORDER BY `at` DESC
-    LIMIT 1), `type`);
-
 INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `type_changed_at`, `type`)
     WITH `last_actions` AS (
         SELECT `group_id`, `member_id`, MAX(`at`) AS `at` FROM `group_membership_changes` GROUP BY `group_id`, `member_id`
     )
-    SELECT `group_id`, `member_id`, CAST(`last_actions`.`at` AS DATETIME),
+    SELECT `group_id`, `member_id`, `last_actions`.`at`,
            IF(`group_pending_requests`.`type` = 'invitation', 'invitationSent', 'requestSent')
     FROM `group_pending_requests`
     LEFT JOIN `last_actions` USING (`group_id`, `member_id`)

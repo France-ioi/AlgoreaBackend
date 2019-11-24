@@ -82,7 +82,7 @@ INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `type_changed_
     WITH `last_actions` AS (
         SELECT `group_id`, `member_id`, MAX(`at`) AS `at` FROM `group_membership_changes` GROUP BY `group_id`, `member_id`
     )
-    SELECT `group_id`, `member_id`, CAST(`at` AS DATETIME),
+    SELECT `group_id`, `member_id`, `at`,
            CASE `action`
                WHEN 'invitation_refused' THEN 'invitationRefused'
                WHEN 'join_request_refused' THEN 'requestRefused'
@@ -90,7 +90,7 @@ INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `type_changed_
            END,
            IF(`action` IN ('invitation_refused', 'left'), NULL, `initiator_id`)
     FROM `group_membership_changes`
-    JOIN `last_actions` USING (`group_id`, `member_id`, `at`)
+    LEFT JOIN `last_actions` USING (`group_id`, `member_id`, `at`)
     WHERE `action` IN ('invitation_refused', 'join_request_refused', 'removed', 'left');
 
 DROP TABLE `group_membership_changes`;
