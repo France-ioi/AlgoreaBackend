@@ -87,6 +87,9 @@ type insertItemItemsSpec struct {
 	EditPropagation            bool
 }
 
+// constructItemsItemsForChildren constructs items_items rows to be inserted by itemCreate/itemEdit services.
+// `items_items.content_view_propagation` is set to 'as_info'
+// while values of other `items_items.*_propagation` columns depend on the user's permissions on each child item.
 func constructItemsItemsForChildren(childrenPermissions []permission, children []itemChild,
 	store *database.DataStore, itemID int64) []*insertItemItemsSpec {
 	childrenPermissionsMap := make(map[int64]*permission, len(childrenPermissions))
@@ -121,6 +124,8 @@ func constructItemsItemsForChildren(childrenPermissions []permission, children [
 	return parentChildSpec
 }
 
+// insertItemsItems is used by itemCreate/itemEdit services to insert data constructed by
+// constructItemsItemsForChildren() into the DB
 func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 	if len(spec) == 0 {
 		return
