@@ -37,7 +37,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		"tasks_with_help":    2,
 		"tasks_solved":       3,
 		"children_validated": 4,
-		"validated":          1,
+		"validated_at":       "2019-05-30 11:00:00",
 	}).Error())
 	assert.NoError(t, groupAttemptStore.Where("id IN (13, 15)").Updates(map[string]interface{}{
 		"latest_activity_at": currentDate,
@@ -52,7 +52,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		"tasks_with_help":    10,
 		"tasks_solved":       11,
 		"children_validated": 12,
-		"validated":          1,
+		"validated_at":       "2019-05-30 11:00:00",
 	}).Error())
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
