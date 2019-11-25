@@ -233,7 +233,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 		mustNotBeError(dataStore.Raw("(? FOR UPDATE) UNION (? FOR UPDATE)",
 			dataStore.GroupGroups().
-				Select("child_group_id, 'added_directly' AS `type`").
+				Select("child_group_id, 'added_directly' AS `action`").
 				Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
 			dataStore.GroupPendingRequests().
 				Select(`
