@@ -1,7 +1,7 @@
 -- +migrate Up
 
 -- fix wrong computation of validated_at for chapters where it was not supposed to be set (cannot be reverted in the down-migration)
-UPDATE `groups_attempts` SET `validated_at` = NULL where `validated` = 0;
+UPDATE `groups_attempts` SET `validated_at` = NULL WHERE NOT `validated` = 0;
 
 ALTER TABLE `groups_attempts`
   -- change comment
@@ -18,6 +18,6 @@ ALTER TABLE `groups_attempts`
 ALTER TABLE `groups_attempts`
   MODIFY COLUMN `validated_at` datetime DEFAULT NULL COMMENT 'When the item was validated, within this attempt.',
   DROP COLUMN `validated`,
-  ADD COLUMN `validated` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether this item is validated, within this attempt (different items have different critetria for validation)' AFTER `children_validated`;
+  ADD COLUMN `validated` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Whether this item is validated, within this attempt (different items have different criteria for validation)' AFTER `children_validated`;
 
-UPDATE `groups_attempts` SET `validated` = 1 where `validated_at` IS NOT NULL;
+UPDATE `groups_attempts` SET `validated` = 1 WHERE `validated_at` IS NOT NULL;
