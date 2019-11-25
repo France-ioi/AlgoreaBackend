@@ -109,7 +109,7 @@ Feature: Get groups attempts for current user and item_id
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?sort=-order"
+    When I send a GET request to "/items/200/attempts?sort=-order,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -139,7 +139,7 @@ Feature: Get groups attempts for current user and item_id
 
   Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order, start from the second row)
     Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?sort=-order&from.order=1&from.id=150"
+    When I send a GET request to "/items/200/attempts?sort=-order,id&from.order=1&from.id=150"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

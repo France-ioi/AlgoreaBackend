@@ -187,7 +187,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			"joining_user.login": {ColumnName: "joining_user.login"},
 			"type_changed_at":    {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
 			"id":                 {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-type_changed_at")
+		"-type_changed_at,id", false)
 
 	if apiError != service.NoError {
 		return apiError

@@ -116,7 +116,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
 			"id": {ColumnName: "groups.id", FieldType: "int64"}},
-		"id")
+		"id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

@@ -156,7 +156,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		map[string]*service.FieldSortingParams{
 			"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
 			"id":           {ColumnName: "users_answers.id", FieldType: "int64"}},
-		"-submitted_at")
+		"-submitted_at,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

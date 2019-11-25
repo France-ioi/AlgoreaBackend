@@ -42,13 +42,12 @@ func (d sortingDirection) conditionSign() string {
 	return "<"
 }
 
-const idFieldName = "id"
-
 // ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting rules
-// taking into the account the URL parameters 'from.*'
+// taking into the account the URL parameters 'from.*'.
+// When the `skipSortParameter` is true, the 'sort' request parameter is ignored.
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
-	defaultRules string) (*database.DB, APIError) {
-	sortingRules, acceptedFields := prepareSortingRulesAndAcceptedFields(r, acceptedFields, defaultRules)
+	defaultRules string, skipSortParameter bool) (*database.DB, APIError) {
+	sortingRules := prepareSortingRulesAndAcceptedFields(r, defaultRules, skipSortParameter)
 
 	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields)
 	if err != nil {
@@ -66,28 +65,15 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields m
 }
 
 // prepareSortingRulesAndAcceptedFields builds sorting rules and a map of accepted fields.
-// It adds the 'id' field into a copy of the given map of accepted fields if this field is not listed.
 // If urlQuery["sort"] is not present, the default sorting rules are used.
-// If sorting rules are empty, the "id" (ORDER BY id ASC) rule is used.
-func prepareSortingRulesAndAcceptedFields(r *http.Request, acceptedFields map[string]*FieldSortingParams,
-	defaultRules string) (sortingRules string, newAcceptedFields map[string]*FieldSortingParams) {
-	newAcceptedFields = make(map[string]*FieldSortingParams, len(acceptedFields)+1)
-	for field, params := range acceptedFields {
-		newAcceptedFields[field] = params
-	}
-	if _, ok := newAcceptedFields[idFieldName]; !ok {
-		newAcceptedFields[idFieldName] = &FieldSortingParams{ColumnName: "id", FieldType: "int64"}
-	}
+func prepareSortingRulesAndAcceptedFields(r *http.Request, defaultRules string, skipSortParameter bool) (sortingRules string) {
 	urlQuery := r.URL.Query()
-	if len(urlQuery["sort"]) > 0 {
+	if !skipSortParameter && len(urlQuery["sort"]) > 0 {
 		sortingRules = urlQuery["sort"][0]
 	} else {
 		sortingRules = defaultRules
 	}
-	if sortingRules == "" {
-		sortingRules = idFieldName
-	}
-	return sortingRules, newAcceptedFields
+	return sortingRules
 }
 
 // parseSortingRules returns a slice with used fields and a map fieldName -> direction
@@ -107,10 +93,6 @@ func parseSortingRules(sortingRules string,
 		}
 		fieldsDirections[fieldName] = direction
 		usedFields = append(usedFields, fieldName)
-	}
-	if fieldsDirections[idFieldName] == 0 {
-		fieldsDirections[idFieldName] = 1
-		usedFields = append(usedFields, idFieldName)
 	}
 	return
 }

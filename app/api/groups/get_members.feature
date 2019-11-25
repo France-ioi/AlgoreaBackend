@@ -109,7 +109,7 @@ Feature: Get members of group_id
 
   Scenario: User is an admin of the group (sort by user's grade)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/members?sort=user.grade"
+    When I send a GET request to "/groups/13/members?sort=user.grade,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -155,7 +155,7 @@ Feature: Get members of group_id
 
   Scenario: User is an admin of the group (sort by user's login in descending order)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/members?sort=-user.login"
+    When I send a GET request to "/groups/13/members?sort=-user.login,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

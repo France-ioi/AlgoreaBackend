@@ -101,7 +101,7 @@ Feature: Get requests for group_id
 
   Scenario: User is an admin of the group (sort by type)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=type"
+    When I send a GET request to "/groups/13/requests?sort=type,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -172,7 +172,7 @@ Feature: Get requests for group_id
 
   Scenario: User is an admin of the group (sort by joining user's login)
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/requests?sort=joining_user.login"
+    When I send a GET request to "/groups/13/requests?sort=joining_user.login,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
