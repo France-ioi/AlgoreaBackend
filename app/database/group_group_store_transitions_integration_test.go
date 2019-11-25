@@ -122,7 +122,7 @@ var userID = int64(111)
 var userIDPtr = &userID
 
 func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action database.GroupGroupTransitionAction,
-	expectedGroupGroupType database.GroupGroupType, acceptDirectRelations bool) transitionTest {
+	expectedGroupMembershipAction database.GroupMembershipAction, acceptDirectRelations bool) transitionTest {
 	resultForDirectRelations := database.Invalid
 	if acceptDirectRelations {
 		resultForDirectRelations = database.Unchanged
@@ -150,16 +150,16 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 		},
 		wantGroupAncestors: allPossibleGroupsAncestors,
 		wantGroupMembershipChanges: []groupMembershipChange{
-			{GroupID: 20, MemberID: 1, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
-			{GroupID: 20, MemberID: 2, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
-			{GroupID: 20, MemberID: 3, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 1, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 2, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 3, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
 		shouldRunListeners: true,
 	}
 }
 
 func testTransitionAcceptingPendingRequest(name string, action database.GroupGroupTransitionAction,
-	acceptedID int64, pendingType, expectedGroupGroupType database.GroupGroupType) transitionTest {
+	acceptedID int64, pendingType, expectedGroupMembershipAction database.GroupMembershipAction) transitionTest {
 	return transitionTest{
 		name:                       name,
 		action:                     action,
@@ -179,14 +179,14 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 				{AncestorGroupID: 30, ChildGroupID: acceptedID},
 			}),
 		wantGroupMembershipChanges: []groupMembershipChange{
-			{GroupID: 20, MemberID: acceptedID, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: acceptedID, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
 		shouldRunListeners: true,
 	}
 }
 
 func testTransitionRemovingUserFromGroup(name string, action database.GroupGroupTransitionAction,
-	expectedGroupGroupType database.GroupGroupType) transitionTest {
+	expectedGroupMembershipAction database.GroupMembershipAction) transitionTest {
 	return transitionTest{
 		name:              name,
 		action:            action,
@@ -203,10 +203,10 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 				"30_4": nil, "30_5": nil, "30_10": nil, "30_11": nil,
 			}, nil),
 		wantGroupMembershipChanges: []groupMembershipChange{
-			{GroupID: 20, MemberID: 4, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
-			{GroupID: 20, MemberID: 5, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
-			{GroupID: 20, MemberID: 10, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
-			{GroupID: 20, MemberID: 11, Action: string(expectedGroupGroupType), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 4, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 5, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 10, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
+			{GroupID: 20, MemberID: 11, Action: string(expectedGroupMembershipAction), At: currentTimePtr, InitiatorID: userIDPtr},
 		},
 		shouldRunListeners: true,
 	}
@@ -260,7 +260,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: false,
 		},
 		testTransitionAcceptingPendingRequest(
-			"UserAcceptsInvitation", database.UserAcceptsInvitation, 2, database.InvitationSent, database.InvitationAccepted),
+			"UserAcceptsInvitation", database.UserAcceptsInvitation, 2, database.InvitationCreated, database.InvitationAccepted),
 		{
 			name:                       "UserAcceptsInvitation (should not do anything when all transitions cause cycles)",
 			action:                     database.UserAcceptsInvitation,
@@ -273,7 +273,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners:         false,
 		},
 		testTransitionAcceptingPendingRequest(
-			"AdminAcceptsRequest", database.AdminAcceptsRequest, 3, database.RequestSent, database.RequestAccepted),
+			"AdminAcceptsRequest", database.AdminAcceptsRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted),
 		{
 			name:              "UserRefusesInvitation",
 			action:            database.UserRefusesInvitation,
@@ -341,9 +341,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: false,
 		},
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"AdminAddsDirectRelation", database.AdminAddsDirectRelation, database.Direct, true),
+			"AdminAddsDirectRelation", database.AdminAddsDirectRelation, database.AddedDirectly, true),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"UserCreatesAcceptedRequest", database.UserCreatesAcceptedRequest, database.RequestAccepted, false),
+			"UserCreatesAcceptedRequest", database.UserCreatesAcceptedRequest, database.JoinRequestAccepted, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, false),
 		{

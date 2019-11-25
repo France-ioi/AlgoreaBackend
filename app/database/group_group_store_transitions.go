@@ -4,63 +4,63 @@ import (
 	"strings"
 )
 
-// GroupGroupType represents a type of relation between two groups
-type GroupGroupType string
+// GroupMembershipAction represents an action that changes relation between two groups
+type GroupMembershipAction string
 
 const (
-	// InvitationSent means there is a pending group admin's invitation for user to join a group
-	InvitationSent GroupGroupType = "invitation_created"
-	// RequestSent means there is a pending user's request to join a group
-	RequestSent GroupGroupType = "join_request_created"
-	// InvitationAccepted means a user is a member of a group since he has accepted an invitation
-	InvitationAccepted GroupGroupType = "invitation_accepted"
-	// RequestAccepted means a user is a member of a group since a group admin has accepted his request
-	RequestAccepted GroupGroupType = "join_request_accepted"
+	// InvitationCreated means a pending group admin's invitation for user to join a group was created
+	InvitationCreated GroupMembershipAction = "invitation_created"
+	// JoinRequestCreated means a pending user's request to join a group was created
+	JoinRequestCreated GroupMembershipAction = "join_request_created"
+	// InvitationAccepted means a user became a member of a group by accepting an invitation
+	InvitationAccepted GroupMembershipAction = "invitation_accepted"
+	// JoinRequestAccepted means a user became a member of a group since a group admin accepted his request
+	JoinRequestAccepted GroupMembershipAction = "join_request_accepted"
 	// InvitationRefused means a user refused an invitation to join a group
-	InvitationRefused GroupGroupType = "invitation_refused"
+	InvitationRefused GroupMembershipAction = "invitation_refused"
 	// InvitationWithdrawn means an admin withdrew his invitation to join a group
-	InvitationWithdrawn GroupGroupType = "invitation_withdrawn"
+	InvitationWithdrawn GroupMembershipAction = "invitation_withdrawn"
 	// JoinedByCode means a user joined a group by the group's code
-	JoinedByCode GroupGroupType = "joined_by_code"
-	// RequestRefused means an admin refused a user's request to join a group
-	RequestRefused GroupGroupType = "join_request_refused"
-	// RequestWithdrawn means a user withdrew his request to join a group
-	RequestWithdrawn GroupGroupType = "join_request_withdrawn"
+	JoinedByCode GroupMembershipAction = "joined_by_code"
+	// JoinRequestRefused means an admin refused a user's request to join a group
+	JoinRequestRefused GroupMembershipAction = "join_request_refused"
+	// JoinRequestWithdrawn means a user withdrew his request to join a group
+	JoinRequestWithdrawn GroupMembershipAction = "join_request_withdrawn"
 	// Removed means a user was removed from a group
-	Removed GroupGroupType = "removed"
+	Removed GroupMembershipAction = "removed"
 	// Left means a user left a group
-	Left GroupGroupType = "left"
-	// Direct means a direct relation between groups
-	Direct GroupGroupType = "added_directly"
-	// NoRelation means there is no row for the group pair in the groups_groups table
-	NoRelation GroupGroupType = ""
+	Left GroupMembershipAction = "left"
+	// AddedDirectly means a user was added into a group directly
+	AddedDirectly GroupMembershipAction = "added_directly"
+	// NoRelation means there is no row for the group pair in the groups_groups/group_pending_requests tables
+	NoRelation GroupMembershipAction = ""
 )
 
-func (groupType GroupGroupType) isActive() bool {
-	switch groupType {
-	case InvitationAccepted, RequestAccepted, JoinedByCode, Direct:
+func (groupMembershipAction GroupMembershipAction) isActive() bool {
+	switch groupMembershipAction {
+	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, AddedDirectly:
 		return true
 	}
 	return false
 }
 
-func (groupType GroupGroupType) isPending() bool {
-	switch groupType {
-	case InvitationSent, RequestSent:
+func (groupMembershipAction GroupMembershipAction) isPending() bool {
+	switch groupMembershipAction {
+	case InvitationCreated, JoinRequestCreated:
 		return true
 	}
 	return false
 }
 
-// PendingType converts the GroupGroupType into `group_pending_requests.type`
-func (groupType GroupGroupType) PendingType() string {
-	switch groupType {
-	case InvitationSent:
+// PendingType converts the GroupMembershipAction into `group_pending_requests.type`
+func (groupMembershipAction GroupMembershipAction) PendingType() string {
+	switch groupMembershipAction {
+	case InvitationCreated:
 		return "invitation"
-	case RequestSent:
+	case JoinRequestCreated:
 		return "join_request"
 	}
-	panic("groupType should be of pending kind in PendingType()")
+	panic("groupMembershipAction should be of pending kind in PendingType()")
 }
 
 // GroupGroupTransitionAction represents a groups_groups relation transition action
@@ -102,99 +102,99 @@ const (
 )
 
 type groupGroupTransitionRule struct {
-	// Transitions defines all possible transitions for the action. The format is "FromType->ToType".
-	// Relations that have "from" type not listed here are considered as invalid for the action.
-	Transitions map[GroupGroupType]GroupGroupType
+	// Transitions defines all possible transitions for the action. The format is "FromAction->ToAction".
+	// Relations that have "from" action not listed here are considered as invalid.
+	Transitions map[GroupMembershipAction]GroupMembershipAction
 }
 
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
 	AdminCreatesInvitation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:     InvitationSent,
-			InvitationSent: InvitationSent,
-			RequestSent:    RequestAccepted,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:         InvitationCreated,
+			InvitationCreated:  InvitationCreated,
+			JoinRequestCreated: JoinRequestAccepted,
 		},
 	},
 	UserCreatesRequest: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:  RequestSent,
-			RequestSent: RequestSent,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:         JoinRequestCreated,
+			JoinRequestCreated: JoinRequestCreated,
 		},
 	},
 	UserCreatesAcceptedRequest: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:     RequestAccepted,
-			RequestSent:    RequestAccepted,
-			InvitationSent: RequestAccepted,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:         JoinRequestAccepted,
+			JoinRequestCreated: JoinRequestAccepted,
+			InvitationCreated:  JoinRequestAccepted,
 		},
 	},
 	UserJoinsGroupByCode: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:     JoinedByCode,
-			RequestSent:    JoinedByCode,
-			InvitationSent: JoinedByCode,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:         JoinedByCode,
+			JoinRequestCreated: JoinedByCode,
+			InvitationCreated:  JoinedByCode,
 		},
 	},
 	UserAcceptsInvitation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			InvitationSent: InvitationAccepted,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			InvitationCreated: InvitationAccepted,
 		},
 	},
 	AdminAcceptsRequest: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			RequestSent: RequestAccepted,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			JoinRequestCreated: JoinRequestAccepted,
 		},
 	},
 	UserRefusesInvitation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			InvitationSent: InvitationRefused,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			InvitationCreated: InvitationRefused,
 		},
 	},
 	AdminRefusesRequest: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			RequestSent: RequestRefused,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			JoinRequestCreated: JoinRequestRefused,
 		},
 	},
 	AdminRemovesUser: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			Direct: Removed,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			AddedDirectly: Removed,
 		},
 	},
 	AdminCancelsInvitation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			InvitationSent: InvitationWithdrawn,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			InvitationCreated: InvitationWithdrawn,
 		},
 	},
 	UserLeavesGroup: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			InvitationAccepted: Left,
-			RequestAccepted:    Left,
-			JoinedByCode:       Left,
-			Direct:             Left,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			InvitationAccepted:  Left,
+			JoinRequestAccepted: Left,
+			JoinedByCode:        Left,
+			AddedDirectly:       Left,
 		},
 	},
 	UserCancelsRequest: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			RequestSent: RequestWithdrawn,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			JoinRequestCreated: JoinRequestWithdrawn,
 		},
 	},
 	// This one is here for consistency purpose only.
 	// GroupGroupStore.CreateRelation() is more effective when we need to create just one relation.
 	AdminAddsDirectRelation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			NoRelation:         Direct,
-			InvitationSent:     Direct,
-			RequestSent:        Direct,
-			InvitationAccepted: Direct,
-			RequestAccepted:    Direct,
-			JoinedByCode:       Direct,
-			Direct:             Direct,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			NoRelation:          AddedDirectly,
+			InvitationCreated:   AddedDirectly,
+			JoinRequestCreated:  AddedDirectly,
+			InvitationAccepted:  AddedDirectly,
+			JoinRequestAccepted: AddedDirectly,
+			JoinedByCode:        AddedDirectly,
+			AddedDirectly:       AddedDirectly,
 		},
 	},
 	AdminRemovesDirectRelation: {
-		Transitions: map[GroupGroupType]GroupGroupType{
-			Direct:     NoRelation,
-			NoRelation: NoRelation,
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			AddedDirectly: NoRelation,
+			NoRelation:    NoRelation,
 		},
 	},
 }
@@ -225,11 +225,11 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	results := GroupGroupTransitionResults(make(map[int64]GroupGroupTransitionResult, len(childGroupIDs)))
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(dataStore *DataStore) error {
-		type idWithType struct {
+		type idWithAction struct {
 			ChildGroupID int64
-			Type         GroupGroupType
+			Action       GroupMembershipAction
 		}
-		var oldTypes []idWithType
+		var oldActions []idWithAction
 
 		mustNotBeError(dataStore.Raw("(? FOR UPDATE) UNION (? FOR UPDATE)",
 			dataStore.GroupGroups().
@@ -244,16 +244,16 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 						ELSE type
 					END`).
 				Where("group_id = ? AND member_id IN (?)", parentGroupID, childGroupIDs).QueryExpr()).
-			Scan(&oldTypes).Error())
+			Scan(&oldActions).Error())
 
-		oldTypesMap := make(map[int64]GroupGroupType, len(childGroupIDs))
-		for _, oldType := range oldTypes {
-			oldTypesMap[oldType.ChildGroupID] = oldType.Type
+		oldActionsMap := make(map[int64]GroupMembershipAction, len(childGroupIDs))
+		for _, oldAction := range oldActions {
+			oldActionsMap[oldAction.ChildGroupID] = oldAction.Action
 		}
 
 		idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
 			idsToDeleteRelation, idsChanged := buildTransitionsPlan(
-			parentGroupID, childGroupIDs, results, oldTypesMap, action)
+			parentGroupID, childGroupIDs, results, oldActionsMap, action)
 
 		performCyclesChecking(dataStore, idsToCheckCycle, parentGroupID, results, idsToInsertPending, idsToInsertRelation,
 			idsToDeletePending, idsToDeleteRelation, idsChanged)
@@ -309,7 +309,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	return results, nil
 }
 
-func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupGroupType, parentGroupID int64) {
+func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupMembershipAction, parentGroupID int64) {
 	if len(idsToInsertPending) > 0 {
 		insertQuery := "INSERT INTO group_pending_requests (group_id, member_id, `type`)"
 		valuesTemplate := "(?, ?, ?)"
@@ -317,14 +317,15 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
 		values := make([]interface{}, 0, len(idsToInsertPending)*3)
-		for id, groupGroupType := range idsToInsertPending {
-			values = append(values, parentGroupID, id, groupGroupType.PendingType())
+		for id, groupMembershipAction := range idsToInsertPending {
+			values = append(values, parentGroupID, id, groupMembershipAction.PendingType())
 		}
 		mustNotBeError(dataStore.db.Exec(insertQuery, values...).Error)
 	}
 }
 
-func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]GroupGroupType, parentGroupID, performedByUserID int64) {
+func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]GroupMembershipAction,
+	parentGroupID, performedByUserID int64) {
 	if len(idsChanged) > 0 {
 		insertQuery := "INSERT INTO group_membership_changes (group_id, member_id, action, at, initiator_id)"
 		valuesTemplate := "(?, ?, ?, NOW(3), ?)"
@@ -334,8 +335,8 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 			valuesTemplate // #nosec
 		mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 			values := make([]interface{}, 0, len(idsChanged)*paramsCount)
-			for id, toType := range idsChanged {
-				values = append(values, parentGroupID, id, toType, performedByUserID)
+			for id, toAction := range idsChanged {
+				values = append(values, parentGroupID, id, toAction, performedByUserID)
 			}
 			return dataStore.db.Exec(insertQuery, values...).Error
 		}))
@@ -343,8 +344,8 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 }
 
 func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentGroupID int64,
-	results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupGroupType, idsToInsertRelation,
-	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupGroupType) {
+	results GroupGroupTransitionResults, idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation,
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
 	if len(idsToCheckCycle) > 0 {
 		idsToCheckCycleSlice := make([]int64, 0, len(idsToCheckCycle))
 		for id := range idsToCheckCycle {
@@ -370,50 +371,50 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 }
 
 func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results GroupGroupTransitionResults,
-	oldTypesMap map[int64]GroupGroupType, action GroupGroupTransitionAction,
-) (idsToInsertPending map[int64]GroupGroupType, idsToInsertRelation, idsToCheckCycle,
-	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupGroupType) {
+	oldActionsMap map[int64]GroupMembershipAction, action GroupGroupTransitionAction,
+) (idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle,
+	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
 	idsToCheckCycle = make(map[int64]bool, len(childGroupIDs))
 	idsToDeletePending = make(map[int64]bool, len(childGroupIDs))
 	idsToDeleteRelation = make(map[int64]bool, len(childGroupIDs))
-	idsToInsertPending = make(map[int64]GroupGroupType, len(childGroupIDs))
+	idsToInsertPending = make(map[int64]GroupMembershipAction, len(childGroupIDs))
 	idsToInsertRelation = make(map[int64]bool, len(childGroupIDs))
-	idsChanged = make(map[int64]GroupGroupType, len(childGroupIDs))
+	idsChanged = make(map[int64]GroupMembershipAction, len(childGroupIDs))
 	for _, id := range childGroupIDs {
 		results[id] = Invalid
 		if id == parentGroupID {
 			continue
 		}
-		oldType := oldTypesMap[id]
-		if toType, toTypeOK := groupGroupTransitionRules[action].Transitions[oldType]; toTypeOK {
-			buildOneTransition(id, oldType, toType, results, idsToInsertPending, idsToInsertRelation, idsToCheckCycle,
+		oldAction := oldActionsMap[id]
+		if toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldAction]; toActionOK {
+			buildOneTransition(id, oldAction, toAction, results, idsToInsertPending, idsToInsertRelation, idsToCheckCycle,
 				idsToDeletePending, idsToDeleteRelation, idsChanged)
 		}
 	}
 	return idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending, idsToDeleteRelation, idsChanged
 }
 
-func buildOneTransition(id int64, oldType, toType GroupGroupType,
+func buildOneTransition(id int64, oldAction, toAction GroupMembershipAction,
 	results GroupGroupTransitionResults,
-	idsToInsertPending map[int64]GroupGroupType, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
-	idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupGroupType) {
-	if toType != oldType {
-		if toType != NoRelation {
-			idsChanged[id] = toType
+	idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
+	idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
+	if toAction != oldAction {
+		if toAction != NoRelation {
+			idsChanged[id] = toAction
 		}
 		results[id] = Success
-		if oldType.isActive() {
+		if oldAction.isActive() {
 			idsToDeleteRelation[id] = true
 		} else {
 			idsToDeletePending[id] = true
 		}
 		switch {
-		case toType.isActive():
+		case toAction.isActive():
 			idsToInsertRelation[id] = true
-		case toType.isPending():
-			idsToInsertPending[id] = toType
+		case toAction.isPending():
+			idsToInsertPending[id] = toAction
 		}
-		if toType.isActive() || toType.isPending() {
+		if toAction.isActive() || toAction.isPending() {
 			idsToCheckCycle[id] = true
 		}
 	} else {
