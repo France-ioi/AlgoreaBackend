@@ -26,7 +26,11 @@ func (s *PermissionGeneratedStore) WithPermissionForGroup(groupID int64, permiss
 	return s.
 		Select(`
 			item_id,
-			MAX(can_view_generated_value) AS can_view_generated_value`).
+			MAX(can_view_generated_value) AS can_view_generated_value,
+			MAX(can_grant_view_generated_value) AS can_grant_view_generated_value,
+			MAX(can_watch_generated_value) AS can_watch_generated_value,
+			MAX(can_edit_generated_value) AS can_edit_generated_value,
+			MAX(is_owner_generated) AS is_owner_generated`).
 		Joins(`
 			JOIN (
 				SELECT * FROM groups_ancestors_active

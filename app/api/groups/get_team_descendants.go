@@ -82,7 +82,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		map[string]*service.FieldSortingParams{
 			"name": {ColumnName: "groups.name", FieldType: "string"},
 			"id":   {ColumnName: "groups.id", FieldType: "int64"}},
-		"name")
+		"name,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

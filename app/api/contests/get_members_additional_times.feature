@@ -186,7 +186,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Non-team contest (only the first row, inverse order)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/11/members/additional-times?limit=1&sort=-name"
+    When I send a GET request to "/contests/50/groups/11/members/additional-times?limit=1&sort=-name,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

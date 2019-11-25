@@ -33,15 +33,15 @@ Feature: Get item for tree navigation
       | 76 | 16                | 16             | 1       |
       | 77 | 18                | 18             | 1       |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
-      | 200 | Category | false          | false    | 1234,2345         | true               |
-      | 210 | Chapter  | false          | false    | 1234,2345         | true               |
-      | 220 | Chapter  | false          | false    | 1234,2345         | true               |
-      | 230 | Chapter  | false          | false    | 1234,2345         | true               |
-      | 211 | Task     | false          | false    | 1234,2345         | true               |
-      | 231 | Task     | false          | false    | 1234,2345         | true               |
-      | 232 | Task     | false          | false    | 1234,2345         | true               |
-      | 250 | Task     | false          | false    | 1234,2345         | true               |
+      | id  | type     | teams_editable | no_score | unlocked_item_ids |
+      | 200 | Category | false          | false    | 1234,2345         |
+      | 210 | Chapter  | false          | false    | 1234,2345         |
+      | 220 | Chapter  | false          | false    | 1234,2345         |
+      | 230 | Chapter  | false          | false    | 1234,2345         |
+      | 211 | Task     | false          | false    | 1234,2345         |
+      | 231 | Task     | false          | false    | 1234,2345         |
+      | 232 | Task     | false          | false    | 1234,2345         |
+      | 250 | Task     | false          | false    | 1234,2345         |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | content_with_descendants |
@@ -122,7 +122,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
@@ -146,7 +145,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter C"
@@ -170,7 +168,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Task 3"
@@ -195,7 +192,6 @@ Feature: Get item for tree navigation
                 "order": 2,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Task 2"
@@ -222,7 +218,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
@@ -247,7 +242,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter A"
@@ -271,7 +265,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Task 1"
@@ -306,7 +299,6 @@ Feature: Get item for tree navigation
       {
         "id": "232",
         "type": "Task",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Task 3"
@@ -337,7 +329,6 @@ Feature: Get item for tree navigation
       {
         "id": "230",
         "type": "Chapter",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Chapter C"
@@ -361,7 +352,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "none",
             "type": "Task",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Task 3"
@@ -386,7 +376,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "none",
             "type": "Task",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Task 2"
@@ -419,7 +408,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
@@ -441,7 +429,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
@@ -456,7 +443,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter C"
@@ -472,7 +458,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
@@ -488,7 +473,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter A"
@@ -512,7 +496,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "transparent_folder": true,
         "has_unlocked_items": true,
         "string": {
           "title": "Catégorie 1"
@@ -527,7 +510,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapitre C"
@@ -542,7 +524,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Task 3"
@@ -558,7 +539,6 @@ Feature: Get item for tree navigation
                 "order": 2,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Task 2"
@@ -576,7 +556,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
@@ -592,7 +571,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "transparent_folder": true,
             "has_unlocked_items": true,
             "string": {
               "title": "Chapitre A"
@@ -607,7 +585,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "transparent_folder": true,
                 "has_unlocked_items": true,
                 "string": {
                   "title": "Tâche 1"

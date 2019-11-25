@@ -17,6 +17,8 @@ var (
 	viewIndexes      map[int]string
 	grantViewNames   map[string]int
 	grantViewIndexes map[int]string
+	watchNames       map[string]int
+	watchIndexes     map[int]string
 	editNames        map[string]int
 	editIndexes      map[int]string
 )
@@ -41,28 +43,12 @@ func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string)
 	permissionMap := map[string]*map[string]int{
 		"view":       &viewNames,
 		"grant_view": &grantViewNames,
+		"watch":      &watchNames,
 		"edit":       &editNames,
 	}[kind]
-	getterFunc := func() int { return requireIndexByName(*permissionMap, name, "can_"+kind) }
+	getterFunc := func() interface{} { return requireIndexByName(*permissionMap, name, "can_"+kind) }
 
-	// Lock for reading to check if the enums have been already loaded
-	enumsMutex.RLock()
-	if len(*permissionMap) != 0 { // the enums have been loaded, so return the value
-		defer enumsMutex.RUnlock()
-		return getterFunc()
-	}
-	enumsMutex.RUnlock()
-
-	// Lock for writing to load the enums from the DB
-	enumsMutex.Lock()
-	defer enumsMutex.Unlock()
-	// Check if the enums have been loaded while we were waiting for the lock
-	if len(*permissionMap) != 0 {
-		return getterFunc() // the enums have been loaded, so return the value
-	}
-
-	s.loadAllPermissionEnums()
-	return getterFunc()
+	return s.getUnderLock(getterFunc).(int)
 }
 
 // ViewIndexByName returns the index of the given view kind in the 'can_view' enum
@@ -75,13 +61,18 @@ func (s *PermissionGrantedStore) PermissionNameByKindAndIndex(kind string, index
 	permissionMap := map[string]*map[int]string{
 		"view":       &viewIndexes,
 		"grant_view": &grantViewIndexes,
+		"watch":      &watchIndexes,
 		"edit":       &editIndexes,
 	}[kind]
-	getterFunc := func() string { return requireNameByIndex(*permissionMap, index, "can_"+kind) }
+	getterFunc := func() interface{} { return requireNameByIndex(*permissionMap, index, "can_"+kind) }
 
+	return s.getUnderLock(getterFunc).(string)
+}
+
+func (s *PermissionGrantedStore) getUnderLock(getterFunc func() interface{}) interface{} {
 	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
-	if len(*permissionMap) != 0 { // the enums have been loaded, so return the value
+	if len(viewIndexes) != 0 { // the enums have been loaded, so return the value
 		defer enumsMutex.RUnlock()
 		return getterFunc()
 	}
@@ -91,7 +82,7 @@ func (s *PermissionGrantedStore) PermissionNameByKindAndIndex(kind string, index
 	enumsMutex.Lock()
 	defer enumsMutex.Unlock()
 	// Check if the enums have been loaded while we were waiting for the lock
-	if len(*permissionMap) != 0 {
+	if len(viewIndexes) != 0 {
 		return getterFunc() // the enums have been loaded, so return the value
 	}
 
@@ -105,17 +96,18 @@ func (s *PermissionGrantedStore) ViewNameByIndex(index int) string {
 }
 
 func (s *PermissionGrantedStore) loadAllPermissionEnums() {
-	viewNames, viewIndexes = s.loadPermissionEnum("permissions_granted", "can_view")
-	grantViewNames, grantViewIndexes = s.loadPermissionEnum("permissions_granted", "can_grant_view")
-	editNames, editIndexes = s.loadPermissionEnum("permissions_granted", "can_edit")
+	viewNames, viewIndexes = s.loadPermissionEnum("can_view")
+	grantViewNames, grantViewIndexes = s.loadPermissionEnum("can_grant_view")
+	watchNames, watchIndexes = s.loadPermissionEnum("can_watch")
+	editNames, editIndexes = s.loadPermissionEnum("can_edit")
 }
 
-func (s *PermissionGrantedStore) loadPermissionEnum(tableName, columnName string) (kindsMap map[string]int, indexesMap map[int]string) {
+func (s *PermissionGrantedStore) loadPermissionEnum(columnName string) (kindsMap map[string]int, indexesMap map[int]string) {
 	var valuesString string
 	mustNotBeError(NewDataStore(newDB(s.db.New())).Table("information_schema.COLUMNS").
 		Set("gorm:query_option", "").
 		Where("TABLE_SCHEMA = DATABASE()").
-		Where("TABLE_NAME = ?", tableName).
+		Where("TABLE_NAME = 'permissions_granted'").
 		Where("COLUMN_NAME = ?", columnName).
 		PluckFirst("SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6)", &valuesString).Error())
 	values := strings.Split(valuesString, ",")

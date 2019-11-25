@@ -161,15 +161,7 @@ type itemResponse struct {
 	// enum: forceYes,,forceNo,default
 	FullScreen string `json:"full_screen"`
 	// required: true
-	ShowSource bool `json:"show_source"`
-	// Nullable
-	// required: true
-	ValidationMin *int32 `json:"validation_min"`
-	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
-	// required: true
-	// enum: Running,Analysis,Closed
-	ContestPhase string `json:"contest_phase"`
 
 	// Nullable
 	// required: true
@@ -264,10 +256,7 @@ type rawItem struct {
 	TitleBarVisible bool
 	ReadOnly        bool
 	FullScreen      string
-	ShowSource      bool
-	ValidationMin   *int32
 	ShowUserInfos   bool
-	ContestPhase    string
 	URL             *string // only if not a chapter
 	UsesAPI         bool    // only if not a chapter
 	HintsAllowed    bool    // only if not a chapter
@@ -325,10 +314,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		commonColumns + `items.title_bar_visible,
 		items.read_only,
 		items.full_screen,
-		items.show_source,
-		items.validation_min,
 		items.show_user_infos,
-		items.contest_phase,
 		items.url,
 		IF(items.type <> 'Chapter', items.uses_api, NULL) AS uses_api,
 		IF(items.type <> 'Chapter', items.hints_allowed, NULL) AS hints_allowed,
@@ -338,10 +324,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		commonColumns+`NULL AS title_bar_visible,
 		NULL AS read_only,
 		NULL AS full_screen,
-		NULL AS show_source,
-		NULL AS validation_min,
 		NULL AS show_user_infos,
-		NULL AS contest_phase,
 		NULL AS url,
 		NULL AS uses_api,
 		NULL AS hints_allowed,
@@ -393,10 +376,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		` items.title_bar_visible,
 			items.read_only,
 			items.full_screen,
-			items.show_source,
-			items.validation_min,
 			items.show_user_infos,
-			items.contest_phase,
 			items.url,
 			items.uses_api,
 			items.hints_allowed,
@@ -428,10 +408,7 @@ func setItemResponseRootNodeFields(response *itemResponse, rawData *[]rawItem, p
 	response.TitleBarVisible = (*rawData)[0].TitleBarVisible
 	response.ReadOnly = (*rawData)[0].ReadOnly
 	response.FullScreen = (*rawData)[0].FullScreen
-	response.ShowSource = (*rawData)[0].ShowSource
-	response.ValidationMin = (*rawData)[0].ValidationMin
 	response.ShowUserInfos = (*rawData)[0].ShowUserInfos
-	response.ContestPhase = (*rawData)[0].ContestPhase
 }
 
 func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemResponse {

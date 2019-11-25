@@ -24,10 +24,10 @@ Background:
     | 75 | 22                | 11             | 0       |
     | 76 | 23                | 21             | 0       |
   And the database has the following table 'items':
-    | id  | type     | teams_editable | no_score | unlocked_item_ids | transparent_folder |
-    | 190 | Category | false          | false    | 1234,2345         | true               |
-    | 200 | Category | false          | false    | 1234,2345         | true               |
-    | 210 | Category | false          | false    | 1234,2345         | true               |
+    | id  | type     | teams_editable | no_score | unlocked_item_ids |
+    | 190 | Category | false          | false    | 1234,2345         |
+    | 200 | Category | false          | false    | 1234,2345         |
+    | 210 | Category | false          | false    | 1234,2345         |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 190     | none                     |
@@ -168,7 +168,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user) [with limit and reversed order]
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1&sort=submitted_at"
+    When I send a GET request to "/answers?item_id=200&user_id=11&limit=1&sort=submitted_at,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

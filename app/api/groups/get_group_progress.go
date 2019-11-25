@@ -153,7 +153,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		// Note that we require the 'from.name' request parameter although the service does not return group names
 		"name": {ColumnName: "group_child.name", FieldType: "string"},
 		"id":   {ColumnName: "group_child.id", FieldType: "int64"},
-	}, "name,id")
+	}, "name,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

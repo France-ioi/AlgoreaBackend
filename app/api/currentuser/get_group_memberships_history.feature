@@ -94,7 +94,7 @@ Feature: Get group memberships history for the current user
 
   Scenario: Show all the history in reverse order (with notifications_read_at set)
     Given I am the user with id "21"
-    When I send a GET request to "/current-user/group-memberships-history?sort=type_changed_at"
+    When I send a GET request to "/current-user/group-memberships-history?sort=type_changed_at,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
