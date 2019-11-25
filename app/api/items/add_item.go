@@ -2,7 +2,6 @@ package items
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -17,13 +16,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
-
-type itemChild struct {
-	// required: true
-	ItemID int64 `json:"item_id,string" sql:"column:child_item_id" validate:"set,child_item_id"`
-	// default: 0
-	Order int32 `json:"order" sql:"column:child_order"`
-}
 
 type item struct {
 	// Nullable
@@ -175,7 +167,8 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 	apiError := service.NoError
 	var itemID int64
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		registerAddItemValidators(formData, store, user)
+		var childrenPermissions []permission
+		registerAddItemValidators(formData, store, user, &childrenPermissions)
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -190,7 +183,7 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 			}
 
 			// insertion
-			itemID, err = srv.insertItem(lockedStore, user, formData, &input)
+			itemID, err = srv.insertItem(lockedStore, user, formData, &input, childrenPermissions)
 			return err
 		})
 		return err
@@ -258,7 +251,7 @@ func constructUnlockedItemIDsValidator(store *database.DataStore, user *database
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
-func constructChildrenValidator(store *database.DataStore, user *database.User) validator.Func {
+func constructChildrenValidator(store *database.DataStore, user *database.User, childrenPermissions *[]permission) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
 		children := fl.Field().Interface().([]itemChild)
 
@@ -271,20 +264,22 @@ func constructChildrenValidator(store *database.DataStore, user *database.User) 
 		if len(idsMap) != len(children) {
 			return false
 		}
-		hasAccess, err := store.Items().AreAllVisible(user, ids...)
-		service.MustNotBeError(err)
-		return hasAccess
+
+		service.MustNotBeError(store.Permissions().VisibleToUser(user).Where("item_id IN (?)", ids).
+			Scan(childrenPermissions).Error())
+		return len(*childrenPermissions) == len(ids)
 	})
 }
 
-func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
+func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
+	childrenPermissions *[]permission) {
 	formData.RegisterValidation("parent_item_id", constructParentItemIDValidator(store, user))
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
 
 	registerLanguageIDValidator(formData, store)
 
-	registerChildrenValidator(formData, store, user)
+	registerChildrenValidator(formData, store, user, childrenPermissions)
 	registerItemValidators(formData, store, user)
 }
 
@@ -299,14 +294,15 @@ func registerItemValidators(formData *formdata.FormData, store *database.DataSto
 		"all the IDs should exist and the user should have `can_grant_view` >= 'content' permission on each")
 }
 
-func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User) {
-	formData.RegisterValidation("children", constructChildrenValidator(store, user))
+func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
+	childrenPermissions *[]permission) {
+	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenPermissions))
 	formData.RegisterTranslation("children",
 		"children IDs should be unique and each should be visible to the user")
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest) (itemID int64, err error) {
+	newItemRequest *NewItemRequest, childrenPermissions []permission) (itemID int64, err error) {
 	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
@@ -332,37 +328,15 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 
 		parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
 		parentChildSpec = append(parentChildSpec,
-			&insertItemItemsSpec{ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order})
-		for _, child := range newItemRequest.Children {
-			parentChildSpec = append(parentChildSpec,
-				&insertItemItemsSpec{ParentItemID: itemID, ChildItemID: child.ItemID, Order: child.Order})
-		}
+			&insertItemItemsSpec{
+				ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
+				ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
+				GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
+			})
+		parentChildSpec = append(parentChildSpec,
+			constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
 		insertItemItems(s, parentChildSpec)
 		return store.ItemItems().After()
 	})
 	return itemID, err
-}
-
-type insertItemItemsSpec struct {
-	ParentItemID int64
-	ChildItemID  int64
-	Order        int32
-}
-
-func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
-	if len(spec) == 0 {
-		return
-	}
-
-	var values = make([]interface{}, 0, len(spec)*4)
-
-	for index := range spec {
-		values = append(values, store.NewID(), spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order)
-	}
-
-	valuesMarks := strings.Repeat("(?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?)"
-	// nolint:gosec
-	query := fmt.Sprintf("INSERT INTO `items_items` (`id`, `parent_item_id`, `child_item_id`, `child_order`) VALUES %s",
-		valuesMarks)
-	service.MustNotBeError(store.Exec(query, values...).Error())
 }

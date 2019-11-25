@@ -79,13 +79,13 @@ Background:
       | language_id | item_id |
       | 3           | 50      |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
-      | 11       | 112     | solution           | content                  | false              |
-      | 11       | 134     | solution           | transfer                 | true               |
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11       | 112     | solution           | content                  | answer              | all                | false              |
+      | 11       | 134     | solution           | transfer                 | transfer            | transfer           | true               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | is_owner | giver_group_id |
-      | 11       | 112     | solution | content        | false    | 11             |
-      | 11       | 134     | none     | none           | true     | 11             |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | giver_group_id |
+      | 11       | 112     | solution | content        | answer    | all      | false    | 11             |
+      | 11       | 134     | none     | none           | none      | none     | true     | 11             |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -123,10 +123,10 @@ Background:
       | 50 | Course | http://myurl.com/ | 3                   | 0              | 0        | Task number 1 | 1                 | 0                         | 1        | 0         | forceYes    | 0             | 0           | AllButOne       | 112,134           | 34               | All                        | 0              | 2345                  | 0            | 01:02:03 | 0               | 0                |
     And the table "items_strings" should stay unchanged
     And the table "items_items" should be:
-      | parent_item_id | child_item_id |
-      | 21             | 60            |
-      | 50             | 112           |
-      | 50             | 134           |
+      | parent_item_id | child_item_id | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
+      | 21             | 60            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
+      | 50             | 112           | as_info                  | as_is                         | 0                      | 0                 | 0                |
+      | 50             | 134           | as_info                  | as_is                         | 1                      | 1                 | 1                |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
       | 21               | 60            |

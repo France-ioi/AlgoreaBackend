@@ -106,6 +106,8 @@ func TestPermissionGrantedStore_GrantViewIndexByName(t *testing.T) {
 		oldLock.Unpatch()
 		mutex.Lock()
 		oldLock.Restore()
+		viewNames = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
+		viewIndexes = map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"}
 		grantViewNames = map[string]int{"none": 1, "content": 2, "content_with_descendants": 3, "solution": 4, "transfer": 5}
 		grantViewIndexes = map[int]string{1: "none", 2: "content", 3: "content_with_descendants", 4: "solution", 5: "transfer"}
 	})
@@ -142,6 +144,8 @@ func TestPermissionGrantedStore_EditIndexByName(t *testing.T) {
 		oldLock.Unpatch()
 		mutex.Lock()
 		oldLock.Restore()
+		viewNames = map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5}
+		viewIndexes = map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"}
 		editIndexes = map[int]string{1: "none", 2: "children", 3: "all", 4: "transfer"}
 		editNames = map[string]int{"none": 1, "children": 2, "all": 3, "transfer": 4}
 	})
@@ -167,22 +171,28 @@ func TestPermissionGrantedStore_EditIndexByName_Load(t *testing.T) {
 }
 
 func mockPermissionEnumQueries(sqlMock sqlmock.Sqlmock) {
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+	sqlMock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_view").
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = 'permissions_granted') AND (COLUMN_NAME = ?) LIMIT 1") + "$").
+		WithArgs("can_view").
 		WillReturnRows(sqlMock.NewRows([]string{"value"}).
 			AddRow("'none','info','content','content_with_descendants','solution'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+	sqlMock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_grant_view").
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = 'permissions_granted') AND (COLUMN_NAME = ?) LIMIT 1") + "$").
+		WithArgs("can_grant_view").
 		WillReturnRows(sqlMock.NewRows([]string{"value"}).
 			AddRow("'none','content','content_with_descendants','solution','transfer'"))
-	sqlMock.ExpectQuery("^"+regexp.QuoteMeta(
+	sqlMock.ExpectQuery("^" + regexp.QuoteMeta(
 		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
-			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?) AND (COLUMN_NAME = ?) LIMIT 1")+"$").
-		WithArgs("permissions_granted", "can_edit").
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = 'permissions_granted') AND (COLUMN_NAME = ?) LIMIT 1") + "$").
+		WithArgs("can_watch").
+		WillReturnRows(sqlMock.NewRows([]string{"value"}).
+			AddRow("'none','result','answer','transfer'"))
+	sqlMock.ExpectQuery("^" + regexp.QuoteMeta(
+		"SELECT SUBSTRING(COLUMN_TYPE, 6, LENGTH(COLUMN_TYPE)-6) FROM `information_schema`.`COLUMNS`  "+
+			"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = 'permissions_granted') AND (COLUMN_NAME = ?) LIMIT 1") + "$").
+		WithArgs("can_edit").
 		WillReturnRows(sqlMock.NewRows([]string{"value"}).
 			AddRow("'none','children','all','transfer'"))
 }

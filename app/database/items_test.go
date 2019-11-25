@@ -35,7 +35,11 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 	mockUser := &database.User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
 
 	mock.ExpectQuery("^"+regexp.QuoteMeta(
-		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value "+
+		"SELECT `items`.* FROM `items` JOIN (SELECT item_id, MAX(can_view_generated_value) AS can_view_generated_value, "+
+			"MAX(can_grant_view_generated_value) AS can_grant_view_generated_value, "+
+			"MAX(can_watch_generated_value) AS can_watch_generated_value, "+
+			"MAX(can_edit_generated_value) AS can_edit_generated_value, "+
+			"MAX(is_owner_generated) AS is_owner_generated "+
 			"FROM permissions_generated AS permissions JOIN ( "+
 			"SELECT * FROM groups_ancestors_active "+
 			"WHERE groups_ancestors_active.child_group_id = ? "+
