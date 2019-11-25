@@ -43,7 +43,8 @@ func (d sortingDirection) conditionSign() string {
 }
 
 // ApplySortingAndPaging applies ordering and paging according to given accepted fields and sorting rules
-// taking into the account the URL parameters 'from.*'
+// taking into the account the URL parameters 'from.*'.
+// When the `skipSortParameter` is true, the 'sort' request parameter is ignored.
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
 	defaultRules string, skipSortParameter bool) (*database.DB, APIError) {
 	sortingRules := prepareSortingRulesAndAcceptedFields(r, defaultRules, skipSortParameter)
