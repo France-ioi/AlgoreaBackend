@@ -24,7 +24,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
 //  Then, if an object has children, we update
-//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
+//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new permissions_granted for each processed row with key_obtained=1 according to corresponding items.unlocked_item_ids.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
@@ -96,6 +96,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's per-item maximums
 			//  - children_validated as the number of children items with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
+			//    (an item should have at least one validated child to become validated itself by the propagation)
 			if updateStatement == nil {
 				const updateQuery = `
 					UPDATE groups_attempts AS target_groups_attempts
