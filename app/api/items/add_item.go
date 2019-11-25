@@ -37,18 +37,14 @@ type item struct {
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
 	// enum: forceYes,forceNo,default,
-	FullScreen     string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
-	ShowDifficulty bool   `json:"show_difficulty"`
-	ShowSource     bool   `json:"show_source"`
-	HintsAllowed   bool   `json:"hints_allowed"`
-	FixedRanks     bool   `json:"fixed_ranks"`
+	FullScreen   string `json:"full_screen" validate:"omitempty,oneof=forceYes forceNo default"`
+	HintsAllowed bool   `json:"hints_allowed"`
+	FixedRanks   bool   `json:"fixed_ranks"`
 
 	// enum: None,All,AllButOne,Categories,One,Manual
 	// default: All
 	ValidationType string `json:"validation_type" validate:"oneof=None All AllButOne Categories One Manual"`
 
-	// Nullable
-	ValidationMin *int32 `json:"validation_min"`
 	// Nullable
 	//
 	// An optional comma-separated list of items' IDs to unlock (the current user should have `can_grant_view` >= 'content' on each)
@@ -66,14 +62,9 @@ type item struct {
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration *string `json:"duration" validate:"duration"`
-	// Nullable
-	// enum: Running,Analysis,Closed
-	ContestPhase  *string `json:"contest_phase" validate:"oneof=Running Analysis Closed"`
+	Duration      *string `json:"duration" validate:"duration"`
 	ShowUserInfos bool    `json:"show_user_infos"`
-	// Nullable
-	Level   *int32 `json:"level"`
-	UsesAPI bool   `json:"uses_api"`
+	UsesAPI       bool    `json:"uses_api"`
 	// Nullable
 	GroupCodeEnter *bool `json:"group_code_enter"`
 }
