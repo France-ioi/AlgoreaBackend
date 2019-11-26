@@ -49,14 +49,15 @@ Feature: Get members of group_id
       | 92                | 92             | 1       |
       | 22                | 11             | 0       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 9  | 13              | 51             |
-      | 10 | 13              | 61             |
-      | 13 | 13              | 91             |
-      | 5  | 14              | 11             |
-      | 6  | 14              | 31             |
-      | 7  | 14              | 21             |
-      | 15 | 22              | 13             |
+      | id | parent_group_id | child_group_id | expires_at          |
+      | 9  | 13              | 51             | 9999-12-31 23:59:59 |
+      | 10 | 13              | 61             | 9999-12-31 23:59:59 |
+      | 13 | 13              | 91             | 9999-12-31 23:59:59 |
+      | 5  | 14              | 11             | 9999-12-31 23:59:59 |
+      | 6  | 14              | 31             | 9999-12-31 23:59:59 |
+      | 7  | 14              | 21             | 2019-05-30 11:00:00 |
+      | 8  | 14              | 41             | 9999-12-31 23:59:59 |
+      | 15 | 22              | 13             | 9999-12-31 23:59:59 |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  | initiator_id |
       | 13       | 11        | invitation_refused    | 2017-11-29 06:38:38 | 31           |
