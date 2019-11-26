@@ -47,7 +47,7 @@ type groupsMembersViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group members
-//   (rows from the `groups_groups` table with `parent_group_id` = `group_id`).
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and NOW() < `groups_groups.expires_at`).
 //   Rows related to users contain basic user info.
 //
 //
