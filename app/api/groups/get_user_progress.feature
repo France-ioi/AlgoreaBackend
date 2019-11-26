@@ -293,22 +293,22 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 21       | 418     | none                     |
       | 20       | 419     | none                     |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated_at        | latest_activity_at  |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 2017-05-29 06:38:58 | null                | # min(validated_at) for 51, 211 comes from this line (from a team)
-      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4                    | 2017-05-31 06:58:38 | null                | # hints_cached & submissions_attempts for 51, 211 come from this line (the best attempt is made by a team)
-      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20                   | null                | null                |
-      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | null                | null                |
-      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | null                | null                |
-      | 16       | 212     | 0     | 2018-12-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 0            | 0                    | null                | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
-      | 67       | 212     | 0     | 2019-01-01 00:00:00 | 20    | 2017-06-30 06:38:38 | 1            | 2                    | null                | 2019-06-01 00:00:00 | # hints_cached & submissions_attempts for 67, 212 come from this line (the best attempt is made by a user)
-      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 6            | 7                    | null                | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
-      | 67       | 213     | 0     | 2018-11-01 00:00:00 | 0     | null                | 0            | 0                    | null                | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
-      | 67       | 214     | 0     | 2017-05-29 06:38:38 | 15    | 2017-05-29 06:38:48 | 10           | 11                   | 2017-05-29 06:38:48 | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | null                | null                |
-      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | null                | null                |
-      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0                    | null                | null                |
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | null                | null                |
+      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions | validated_at         | latest_activity_at  |
+      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100         | 2017-05-30 06:38:38  | 2018-05-30 06:38:38 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3           | 2017-05-29 06:38:58  | null                | # min(validated_at) for 51, 211 comes from this line (from a team)
+      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-31 06:58:38  | null                | # hints_cached & submissions for 51, 211 come from this line (the best attempt is made by a team)
+      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20          | null                 | null                |
+      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | null                 | null                |
+      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | null                 | null                |
+      | 16       | 212     | 0     | 2018-12-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 0            | 0           | null                 | 2019-06-01 00:00:00 | # started_at for 67, 212 & 63, 212 comes from this line (the first attempt is started by a team)
+      | 67       | 212     | 0     | 2019-01-01 00:00:00 | 20    | 2017-06-30 06:38:38 | 1            | 2           | null                 | 2019-06-01 00:00:00 | # hints_cached & submissions for 67, 212 come from this line (the best attempt is made by a user)
+      | 67       | 212     | 1     | 2019-01-01 00:00:00 | 10    | 2017-05-30 06:38:38 | 6            | 7           | null                 | 2019-07-01 00:00:00 | # latest_activity_at for 67, 212 comes from this line (the last activity is made by a user)
+      | 67       | 213     | 0     | 2018-11-01 00:00:00 | 0     | null                | 0            | 0           | null                 | 2018-11-01 00:00:00 | # started_at for 67, 213 comes from this line (the first attempt is started by a user)
+      | 67       | 214     | 0     | 2017-05-29 06:38:38 | 15    | 2017-05-29 06:38:48 | 10           | 11          | 2017-05-29 06:38:48  | 2017-05-30 06:38:48 | # min(validated_at) for 67, 214 comes from this line (from a user)
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | null                 | null                |
+      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | null                 | null                |
+      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0           | null                 | null                |
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | null                 | null                |
 
   Scenario: Get progress of the second and the third users (checks sorting, from.*, and limit)
     Given I am the user with id "21"
@@ -325,7 +325,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -335,7 +335,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": "2019-07-01T00:00:00Z",
         "score": 20,
-        "submissions_attempts": 2,
+        "submissions": 2,
         "time_spent": 18303545,
         "validated": false
       },
@@ -345,7 +345,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": "2018-11-01T00:00:00Z",
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 20895545,
         "validated": false
       },
@@ -355,7 +355,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": "2017-05-30T06:38:48Z",
         "score": 15,
-        "submissions_attempts": 11,
+        "submissions": 11,
         "time_spent": 10,
         "validated": true
       },
@@ -365,7 +365,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -376,7 +376,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "hints_requested": 3,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 20,
         "validated": true
       },
@@ -386,7 +386,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -396,7 +396,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -406,7 +406,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -416,7 +416,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }
@@ -439,7 +439,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -449,7 +449,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": "2019-06-01T00:00:00Z",
         "score": 10,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 18303545,
         "validated": false
       },
@@ -459,7 +459,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -469,7 +469,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -479,7 +479,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -489,7 +489,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -499,7 +499,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "222",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -509,7 +509,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "223",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -519,7 +519,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "224",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -529,7 +529,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "225",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -539,7 +539,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -549,7 +549,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "312",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -559,7 +559,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "313",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -569,7 +569,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "314",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -579,7 +579,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "315",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }
@@ -629,7 +629,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 20,
         "validated": true
       },
@@ -639,7 +639,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -649,7 +649,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -659,7 +659,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -669,7 +669,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -679,7 +679,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 20,
         "validated": true
       },
@@ -689,7 +689,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -699,7 +699,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -709,7 +709,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -719,7 +719,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -729,7 +729,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "211",
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 20,
         "validated": true
       },
@@ -739,7 +739,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -749,7 +749,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -759,7 +759,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -769,7 +769,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }

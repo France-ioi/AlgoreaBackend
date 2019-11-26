@@ -37,7 +37,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return apiError
 	}
 
-	var validated, keyObtained, ok bool
+	var validated, hasUnlockedItems, ok bool
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
@@ -49,7 +49,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
 		}
 
-		validated, keyObtained, ok = saveGradingResultsIntoDB(store, user, &requestData)
+		validated, hasUnlockedItems, ok = saveGradingResultsIntoDB(store, user, &requestData)
 		return nil
 	})
 	if apiError != service.NoError {
@@ -69,22 +69,22 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"task_token":   newTaskToken,
-		"validated":    validated,
-		"key_obtained": keyObtained,
+		"task_token":         newTaskToken,
+		"validated":          validated,
+		"has_unlocked_items": hasUnlockedItems,
 	})))
 	return service.NoError
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed) (validated, keyObtained, ok bool) {
+	requestData *saveGradeRequestParsed) (validated, hasUnlockedItems, ok bool) {
 	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
 	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
-		return validated, keyObtained, false
+		return validated, hasUnlockedItems, false
 	}
 
 	// Build query to update users_items
@@ -113,14 +113,14 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 			todo, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
 	}
 	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
-		keyObtained = true
+		hasUnlockedItems = true
 		if !validated {
 			// If validated, as the ancestor's recomputation will happen anyway
 			// Update ancestors_computation_state only if we hadn't obtained the key before
 			columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
-			values = append(values, gorm.Expr("IF(key_obtained = 0, 'todo', ancestors_computation_state)"))
+			values = append(values, gorm.Expr("IF(has_unlocked_items = 0, 'todo', ancestors_computation_state)"))
 		}
-		columnsToUpdate = append(columnsToUpdate, "key_obtained")
+		columnsToUpdate = append(columnsToUpdate, "has_unlocked_items")
 		values = append(values, 1)
 	}
 	if score > 0 {
@@ -134,7 +134,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE id = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
-	return validated, keyObtained, true
+	return validated, hasUnlockedItems, true
 }
 
 func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,

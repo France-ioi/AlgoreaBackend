@@ -16,8 +16,8 @@ Feature: Submit a new answer
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | order |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2                    | 0     |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | order |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 0     |
 
   Scenario: User is able to submit a new answer
     Given I am the user with id "101"
@@ -66,8 +66,8 @@ Feature: Submit a new answer
       | user_id | item_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 101     | 50      | 100        | Submission | print 1 | 1                                                   |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |
 
   Scenario: User is able to submit a new answer (with all fields filled in the token)
     Given I am the user with id "101"
@@ -120,5 +120,5 @@ Feature: Submit a new answer
       | user_id | item_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 101     | 50      | 100        | Submission | print(2) | 1                                                   |
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions_attempts | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
-      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3                    | 1                                                         |
+      | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
+      | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |

@@ -49,7 +49,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_WarnsWhenIdIsNotInteg
 
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
-		"key_obtained", 1,
+		"has_unlocked_items", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
@@ -73,13 +73,13 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_WarnsWhenIdIsNotInteg
 func testUnlocks(db *database.DB, t *testing.T) {
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
-		"key_obtained", 1,
+		"has_unlocked_items", 1,
 	).Error())
 	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn(
-		"key_obtained", 1,
+		"has_unlocked_items", 1,
 	).Error())
 	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn(
-		"key_obtained", 1,
+		"has_unlocked_items", 1,
 	).Error())
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
