@@ -33,11 +33,11 @@ type groupGroupProgressResponseRow struct {
 	// required:true
 	AvgHintsRequested float32 `json:"avg_hints_requested"`
 	// Average number of submissions made by each "end-member".
-	// The number of submissions made by an "end-member" is the `groups_attempts.submissions_attempts`.
+	// The number of submissions made by an "end-member" is the `groups_attempts.submissions`.
 	// of the attempt with the best score
 	// (if several with the same score, we use the first attempt chronologically on `best_answer_at`).
 	// required:true
-	AvgSubmissionsAttempts float32 `json:"avg_submissions_attempts"`
+	AvgSubmissions float32 `json:"avg_submissions"`
 	// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
 	//
 	//   1) if no attempts yet: 0
@@ -196,7 +196,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			IFNULL(attempt_with_best_score.score, 0) AS score,
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_cached,
-			IFNULL(attempt_with_best_score.submissions_attempts, 0) AS submissions_attempts,
+			IFNULL(attempt_with_best_score.submissions, 0) AS submissions,
 			IF(attempt_with_best_score.group_id IS NULL,
 				0,
 				(
@@ -212,7 +212,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score, validated, hints_cached, submissions_attempts, group_id
+				SELECT score, validated, hints_cached, submissions, group_id
 				FROM groups_attempts
 				WHERE group_id = end_members.id AND item_id = items.id
 				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
@@ -228,7 +228,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				AVG(member_stats.score) AS average_score,
 				AVG(member_stats.validated) AS validation_rate,
 				AVG(member_stats.hints_cached) AS avg_hints_requested,
-				AVG(member_stats.submissions_attempts) AS avg_submissions_attempts,
+				AVG(member_stats.submissions) AS avg_submissions,
 				AVG(member_stats.time_spent) AS avg_time_spent`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs).

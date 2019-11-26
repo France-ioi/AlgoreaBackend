@@ -34,7 +34,7 @@ type groupTeamProgressResponseRow struct {
 	// Number of submissions for the attempt with the best score (if multiple, take the first one, chronologically).
 	// If there are no attempts, the number of submissions is 0.
 	// required:true
-	SubmissionsAttempts int32 `json:"submissions_attempts"`
+	Submissions int32 `json:"submissions"`
 	// Time spent by the team (in seconds):
 	//
 	//   1) if no attempts yet: 0
@@ -152,7 +152,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
 			(SELECT MAX(latest_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
-			IFNULL(attempt_with_best_score.submissions_attempts, 0) AS submissions_attempts,
+			IFNULL(attempt_with_best_score.submissions, 0) AS submissions,
 			IF(attempt_with_best_score.group_id IS NULL,
 				0,
 				(
@@ -167,7 +167,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`JOIN items ON items.id IN ?`, itemsQuery.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score, validated, hints_cached, submissions_attempts, group_id FROM groups_attempts
+				SELECT score, validated, hints_cached, submissions, group_id FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id
 				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
 			) AS attempt_with_best_score ON 1`).

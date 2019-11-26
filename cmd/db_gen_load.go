@@ -281,7 +281,7 @@ func init() { // nolint:gochecknoinits,gocyclo
 					groupsGroupsQuery := "INSERT INTO groups_groups (idGroupParent, idGroupChild, sType) VALUES "
 					groupsGroupsQueryValues := make([]string, 0, batchSize+teamsNumber)
 					groupsAttemptsQuery := "INSERT INTO groups_attempts (idGroup, idItem, sStartDate, iScore, iMinusScore, sBestAnswerDate, " +
-						"nbHintsCached, nbSubmissionsAttempts, bValidated, sValidationDate) VALUES "
+						"nbHintsCached, nbSubmissions, bValidated, sValidationDate) VALUES "
 					groupsAttemptsQueryValues := make([]string, 0, 36*batchSize)
 					teams := make([]int64, teamsNumber)
 					for j := 0; j < teamsNumber; j++ {

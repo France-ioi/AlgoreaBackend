@@ -89,8 +89,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			groupAttemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
 
 		return groupAttemptsScope.UpdateColumn(map[string]interface{}{
-			"submissions_attempts": gorm.Expr("submissions_attempts + 1"),
-			"latest_activity_at":   database.Now(),
+			"submissions":        gorm.Expr("submissions + 1"),
+			"latest_activity_at": database.Now(),
 		}).Error()
 	})
 

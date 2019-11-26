@@ -283,32 +283,32 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 21       | 418     | none                     |
       | 20       | 419     | none                     |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 |
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 0         | null                |
-      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4                    | 1         | null                | # hints_cached & submissions_attempts for 14,211 come from this line
-      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20                   | 0         | null                |
-      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 59       | 212     | 0     | 2019-01-01 00:00:00 | 10    | null                | 0            | 0                    | 0         | null                |
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0                    | 1         | null                |
-      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 2     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 2     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 14       | 211     | 6     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 3     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 3     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 14       | 211     | 7     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 4     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 4     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 14       | 211     | 8     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 5     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 5     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 14       | 211     | 9     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 211     | 6     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
-      | 15       | 212     | 6     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                |
+      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions | validated | validated_at        |
+      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100         | 0         | 2017-05-30 06:38:38 |
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3           | 0         | null                |
+      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4           | 1         | null                | # hints_cached & submissions for 14,211 come from this line
+      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20          | 0         | null                |
+      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 59       | 212     | 0     | 2019-01-01 00:00:00 | 10    | null                | 0            | 0           | 0         | null                |
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0           | 1         | null                |
+      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 2     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 2     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 14       | 211     | 6     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 3     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 3     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 14       | 211     | 7     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 4     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 4     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 14       | 211     | 8     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 5     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 5     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 14       | 211     | 9     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 211     | 6     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
+      | 15       | 212     | 6     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                |
 
   Scenario: Get progress of groups
     Given I am the user with id "21"
@@ -322,7 +322,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 25,
         "avg_hints_requested": 1.5,
-        "avg_submissions_attempts": 2,
+        "avg_submissions": 2,
         "avg_time_spent": 43200,
         "group_id": "17",
         "item_id": "211",
@@ -331,7 +331,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 5,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 6473372.5,
         "group_id": "17",
         "item_id": "212",
@@ -340,7 +340,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "213",
@@ -349,7 +349,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "214",
@@ -358,7 +358,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "215",
@@ -367,7 +367,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "221",
@@ -376,7 +376,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "222",
@@ -385,7 +385,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "223",
@@ -394,7 +394,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "224",
@@ -403,7 +403,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "225",
@@ -412,7 +412,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "311",
@@ -421,7 +421,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "312",
@@ -430,7 +430,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "313",
@@ -439,7 +439,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "314",
@@ -448,7 +448,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "315",
@@ -459,7 +459,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 25,
         "avg_hints_requested": 1.5,
-        "avg_submissions_attempts": 2,
+        "avg_submissions": 2,
         "avg_time_spent": 43200,
         "group_id": "11",
         "item_id": "211",
@@ -468,7 +468,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 5,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 6473372.5,
         "group_id": "11",
         "item_id": "212",
@@ -477,7 +477,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "213",
@@ -486,7 +486,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "214",
@@ -495,7 +495,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "215",
@@ -504,7 +504,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "221",
@@ -513,7 +513,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "222",
@@ -522,7 +522,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "223",
@@ -531,7 +531,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "224",
@@ -540,7 +540,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "225",
@@ -549,7 +549,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "311",
@@ -558,7 +558,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "312",
@@ -567,7 +567,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "313",
@@ -576,7 +576,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "314",
@@ -585,7 +585,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "315",
@@ -606,7 +606,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 25,
         "avg_hints_requested": 1.5,
-        "avg_submissions_attempts": 2,
+        "avg_submissions": 2,
         "avg_time_spent": 43200,
         "group_id": "17",
         "item_id": "211",
@@ -615,7 +615,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 5,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 6473372.5,
         "group_id": "17",
         "item_id": "212",
@@ -624,7 +624,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "213",
@@ -633,7 +633,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "214",
@@ -642,7 +642,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "215",
@@ -651,7 +651,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "221",
@@ -660,7 +660,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "222",
@@ -669,7 +669,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "223",
@@ -678,7 +678,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "224",
@@ -687,7 +687,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "225",
@@ -696,7 +696,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "311",
@@ -705,7 +705,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "312",
@@ -714,7 +714,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "313",
@@ -723,7 +723,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "314",
@@ -732,7 +732,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "17",
         "item_id": "315",
@@ -753,7 +753,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 25,
         "avg_hints_requested": 1.5,
-        "avg_submissions_attempts": 2,
+        "avg_submissions": 2,
         "avg_time_spent": 43200,
         "group_id": "11",
         "item_id": "211",
@@ -762,7 +762,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 5,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 6473372.5,
         "group_id": "11",
         "item_id": "212",
@@ -771,7 +771,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "213",
@@ -780,7 +780,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "214",
@@ -789,7 +789,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "215",
@@ -798,7 +798,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "221",
@@ -807,7 +807,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "222",
@@ -816,7 +816,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "223",
@@ -825,7 +825,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "224",
@@ -834,7 +834,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "225",
@@ -843,7 +843,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "311",
@@ -852,7 +852,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "312",
@@ -861,7 +861,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "313",
@@ -870,7 +870,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "314",
@@ -879,7 +879,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       {
         "average_score": 0,
         "avg_hints_requested": 0,
-        "avg_submissions_attempts": 0,
+        "avg_submissions": 0,
         "avg_time_spent": 0,
         "group_id": "11",
         "item_id": "315",

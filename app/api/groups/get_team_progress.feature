@@ -280,18 +280,18 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 21       | 418     | none                     |
       | 20       | 419     | none                     |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions_attempts | validated | validated_at        | latest_activity_at  |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100                  | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 |
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3                    | 0         | null                | null                |
-      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4                    | 1         | null                | null                | # hints_cached & submissions_attempts for 14,211 come from this line
-      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20                   | 1         | null                | null                |
-      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
-      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
-      | 16       | 212     | 0     | 2019-01-01 00:00:00 | 10    | null                | 0            | 0                    | 0         | null                | 2019-06-01 00:00:00 |
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
-      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
-      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0                    | 1         | null                | null                |
-      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0                    | 0         | null                | null                |
+      | group_id | item_id | order | started_at          | score | best_answer_at      | hints_cached | submissions | validated | validated_at        | latest_activity_at  |
+      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0     | 2017-05-29 06:38:38 | 100          | 100         | 0         | 2017-05-30 06:38:38 | 2018-05-30 06:38:38 |
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40    | 2017-05-29 06:38:38 | 2            | 3           | 0         | null                | null                |
+      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50    | 2017-05-29 06:38:38 | 3            | 4           | 1         | null                | null                | # hints_cached & submissions for 14,211 come from this line
+      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50    | 2017-05-30 06:38:38 | 10           | 20          | 1         | null                | null                |
+      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                | null                |
+      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                | null                |
+      | 16       | 212     | 0     | 2019-01-01 00:00:00 | 10    | null                | 0            | 0           | 0         | null                | 2019-06-01 00:00:00 |
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                | null                |
+      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                | null                |
+      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100   | null                | 0            | 0           | 1         | null                | null                |
+      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0     | null                | 0            | 0           | 0         | null                | null                |
 
   Scenario: Get progress of teams
     Given I am the user with id "21"
@@ -308,7 +308,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -318,7 +318,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "212",
         "latest_activity_at": "2019-06-01T00:00:00Z",
         "score": 10,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 15625145,
         "validated": false
       },
@@ -328,7 +328,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -338,7 +338,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -348,7 +348,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -358,7 +358,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -368,7 +368,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "222",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -378,7 +378,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "223",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -388,7 +388,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "224",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -398,7 +398,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "225",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -408,7 +408,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -418,7 +418,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "312",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -428,7 +428,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "313",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -438,7 +438,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "314",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -448,7 +448,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "315",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -460,7 +460,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "hints_requested": 3,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 86400,
         "validated": true
       },
@@ -470,7 +470,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -480,7 +480,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -490,7 +490,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -500,7 +500,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -510,7 +510,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -520,7 +520,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "222",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -530,7 +530,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "223",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -540,7 +540,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "224",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -550,7 +550,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "225",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -560,7 +560,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -570,7 +570,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "312",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -580,7 +580,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "313",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -590,7 +590,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "314",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -600,7 +600,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "315",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }
@@ -622,7 +622,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "latest_activity_at": null,
         "score": 0,
         "hints_requested": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -632,7 +632,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "212",
         "latest_activity_at": "2019-06-01T00:00:00Z",
         "score": 10,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 15625145,
         "validated": false
       },
@@ -642,7 +642,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -652,7 +652,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -662,7 +662,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -672,7 +672,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -682,7 +682,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "222",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -692,7 +692,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "223",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -702,7 +702,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "224",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -712,7 +712,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "225",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -722,7 +722,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -732,7 +732,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "312",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -742,7 +742,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "313",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -752,7 +752,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "314",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -762,7 +762,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "315",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }
@@ -784,7 +784,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "latest_activity_at": "2018-05-30T06:38:38Z",
         "score": 50,
         "hints_requested": 3,
-        "submissions_attempts": 4,
+        "submissions": 4,
         "time_spent": 86400,
         "validated": true
       },
@@ -794,7 +794,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "212",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -804,7 +804,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "213",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -814,7 +814,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "214",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -824,7 +824,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "215",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -834,7 +834,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "221",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -844,7 +844,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "222",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -854,7 +854,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "223",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -864,7 +864,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "224",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -874,7 +874,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "225",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -884,7 +884,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "311",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -894,7 +894,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "312",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -904,7 +904,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "313",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -914,7 +914,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "314",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       },
@@ -924,7 +924,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
         "item_id": "315",
         "latest_activity_at": null,
         "score": 0,
-        "submissions_attempts": 0,
+        "submissions": 0,
         "time_spent": 0,
         "validated": false
       }

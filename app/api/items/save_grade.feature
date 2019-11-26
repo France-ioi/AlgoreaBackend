@@ -92,7 +92,7 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": true,
+          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -109,9 +109,9 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 100   | 1           | 1         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
-      | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
+      | id  | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 100   | 1           | 1         | 1                  | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
+      | 101 | 0     | 0           | 0         | 0                  | done                        | null                                                      | null                                                    | null                                                  | null                                                |
 
   Scenario: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
@@ -165,7 +165,7 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": false,
+          "has_unlocked_items": false,
           "validated": false
         },
         "message": "created",
@@ -182,9 +182,9 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 99    | 1           | 0         | 0            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
-      | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | null                                                  | null                                                |
+      | id  | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 99    | 1           | 0         | 0                  | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
+      | 101 | 0     | 0           | 0         | 0                  | done                        | null                                                      | null                                                    | null                                                  | null                                                |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"
@@ -238,7 +238,7 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": true,
+          "has_unlocked_items": true,
           "validated": false
         },
         "message": "created",
@@ -255,9 +255,9 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | key_obtained | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 99    | 1           | 0         | 1            | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
-      | 101 | 0     | 0           | 0         | 0            | done                        | null                                                      | null                                                    | 0                                                     | null                                                |
+      | id  | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 99    | 1           | 0         | 1                  | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
+      | 101 | 0     | 0           | 0         | 0                  | done                        | null                                                      | null                                                    | 0                                                     | null                                                |
 
   Scenario: Should keep previous score if it is greater
     Given I am the user with id "101"
@@ -311,7 +311,7 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": false,
+          "has_unlocked_items": false,
           "validated": false
         },
         "message": "created",
@@ -381,7 +381,7 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": true,
+          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -445,7 +445,7 @@ Feature: Save grading result
             "bAccessSolutions": true,
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": true,
+          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -498,7 +498,7 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "key_obtained": true,
+          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
