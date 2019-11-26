@@ -38,6 +38,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 		groupAttemptStore := ds.GroupAttempts()
 
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
+		// (this query can take more than 50 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.db.Exec(
 			`UPDATE groups_attempts AS ancestors
 			JOIN items_ancestors ON (
