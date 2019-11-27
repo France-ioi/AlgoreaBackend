@@ -37,12 +37,6 @@ Feature: Export the current user's data
       | 12 | 12              | 1              |
       | 13 | 12              | 2              |
       | 14 | 10              | 11             |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
-      | 2        | 11         | memberships           | 1                      | 0                 |
-      | 5        | 11         | memberships_and_group | 0                      | 1                 |
-      | 6        | 9          | memberships           | 1                      | 1                 |
-      | 9        | 8          | none                  | 0                      | 0                 |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         | at                  |
       | 1        | 11        | invitation   | 2019-08-10 00:00:00 |
@@ -157,24 +151,6 @@ Feature: Export the current user's data
           "name": "Secret group", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
-      "group_managers": [
-        {
-          "can_grant_group_access": 1,
-          "can_manage": "memberships",
-          "can_watch_members": 0,
-          "group_id": "2",
-          "manager_id": "11",
-          "name": "Our Team"
-        },
-        {
-          "can_grant_group_access": 0,
-          "can_manage": "memberships_and_group",
-          "can_watch_members": 1,
-          "group_id": "5",
-          "manager_id": "11",
-          "name": "Other people"
-        }
-      ],
       "group_membership_changes": [
         {
           "action": "left", "at": "2019-07-10T04:02:28Z", "group_id": "8", "initiator_id": "11",
@@ -249,7 +225,6 @@ Feature: Export the current user's data
       },
       "groups_attempts": [],
       "groups_groups": [],
-      "group_managers": [],
       "group_membership_changes": [],
       "group_pending_requests": [],
       "joined_groups": [],

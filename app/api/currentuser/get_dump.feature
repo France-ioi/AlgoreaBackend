@@ -32,12 +32,6 @@ Feature: Export the short version of the current user's data
       | 10 | 9               | 11             |
       | 12 | 12              | 1              |
       | 13 | 12              | 2              |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
-      | 2        | 11         | memberships           | 1                      | 0                 |
-      | 5        | 11         | memberships_and_group | 0                      | 1                 |
-      | 6        | 9          | memberships           | 1                      | 1                 |
-      | 9        | 8          | none                  | 0                      | 0                 |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 11        | invitation   |
@@ -123,24 +117,6 @@ Feature: Export the short version of the current user's data
           "name": "Some other friends", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
-      "group_managers": [
-        {
-          "can_grant_group_access": 1,
-          "can_manage": "memberships",
-          "can_watch_members": 0,
-          "group_id": "2",
-          "manager_id": "11",
-          "name": "Our Team"
-        },
-        {
-          "can_grant_group_access": 0,
-          "can_manage": "memberships_and_group",
-          "can_watch_members": 1,
-          "group_id": "5",
-          "manager_id": "11",
-          "name": "Other people"
-        }
-      ],
       "joined_groups": [
         {"id": "2", "name": "Our Team"},
         {"id": "5", "name": "Other people"},
@@ -176,7 +152,6 @@ Feature: Export the short version of the current user's data
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
       "groups_groups": [],
-      "group_managers": [],
       "joined_groups": [],
       "owned_groups": []
     }

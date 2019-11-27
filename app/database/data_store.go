@@ -76,11 +76,6 @@ func (s *DataStore) GroupContestItems() *GroupContestItemStore {
 	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}
 }
 
-// GroupManagers returns a GroupManagerStore
-func (s *DataStore) GroupManagers() *GroupManagerStore {
-	return &GroupManagerStore{NewDataStoreWithTable(s.DB, "group_managers")}
-}
-
 // Permissions returns a PermissionGeneratedStore
 func (s *DataStore) Permissions() *PermissionGeneratedStore {
 	return &PermissionGeneratedStore{NewDataStoreWithTable(s.DB, "permissions_generated AS permissions")}

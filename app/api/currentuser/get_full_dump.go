@@ -27,7 +27,6 @@ import (
 //     * `users_items`: all attributes;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
-//     * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
 //     * `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
 //     * `group_membership_changes`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`.
 //
@@ -145,16 +144,6 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		service.MustNotBeError(srv.Store.GroupGroups().
 			Where("child_group_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
-			Select(columns + ", `groups`.name").
-			ScanAndHandleMaps(streamerFunc(w)).Error())
-	})
-
-	writeComma(w)
-	writeJSONObjectArrayElement("group_managers", w, func(writer io.Writer) {
-		columns := getColumnsList(srv.Store, databaseName, "group_managers", nil)
-		service.MustNotBeError(srv.Store.GroupManagers().
-			Where("manager_id = ?", user.GroupID).
-			Joins("JOIN `groups` ON `groups`.id = group_id").
 			Select(columns + ", `groups`.name").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
