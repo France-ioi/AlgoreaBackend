@@ -65,11 +65,11 @@ type groupViewResponse struct {
 //   Returns general information about the group from the `groups` table.
 //
 //
-//   The authenticated user should be an owner of `group_id` OR a descendant of the group OR  the group's `free_access`=1,
+//   The authenticated user should be a manager of `group_id` OR a descendant of the group OR  the group's `free_access`=1,
 //   otherwise the 'forbidden' error is returned.
 //
 //
-//   Note: `code*` fields are omitted when the user is not an owner of the group.
+//   Note: `code*` fields are omitted when the user is not a manager of the group.
 // parameters:
 // - name: group_id
 //   in: path
