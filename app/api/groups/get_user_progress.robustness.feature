@@ -4,13 +4,18 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | login | group_id | owned_group_id |
       | owner | 21       | 22             |
       | user  | 11       | 12             |
+    And the database has the following table 'groups':
+      | id |
+      | 13 |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id  | type     |
@@ -26,7 +31,7 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 200            | 220           | 1           |
       | 210            | 211           | 0           |
 
-  Scenario: User is not an admin of the group
+  Scenario: User is not a manager of the group
     Given I am the user with id "11"
     When I send a GET request to "/groups/13/user-progress?parent_item_ids=210,220,310"
     Then the response code should be 403

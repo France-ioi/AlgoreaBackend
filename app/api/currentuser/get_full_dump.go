@@ -21,7 +21,7 @@ import (
 //
 //     * `current_user` (from `users`): all attributes;
 //     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
-//     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
+//     * `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `users_answers`: all attributes;
 //     * `users_items`: all attributes;
@@ -90,9 +90,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	}
 
 	writeComma(w)
-	writeJSONObjectArrayElement("owned_groups", w, func(writer io.Writer) {
-		service.MustNotBeError(srv.Store.GroupAncestors().OwnedByUser(user).
-			Where("child_group_id != ancestor_group_id").
+	writeJSONObjectArrayElement("managed_groups", w, func(writer io.Writer) {
+		service.MustNotBeError(srv.Store.GroupAncestors().ManagedByUser(user).
 			Joins("JOIN `groups` ON `groups`.id = child_group_id").
 			Order("`groups`.`id`").
 			Select("`groups`.id, `groups`.name").ScanAndHandleMaps(streamerFunc(w)).Error())

@@ -38,7 +38,7 @@ type groupChildrenViewResponseRow struct {
 // description: Returns children of the group having types
 //   specified by `types_include` and `types_exclude` parameters.
 //
-//   * The authenticated user should own the parent group.
+//   * The authenticated user should be a manager of the parent group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -126,7 +126,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 

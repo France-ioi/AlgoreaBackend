@@ -30,7 +30,6 @@ Feature: Accept group requests
       | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
@@ -44,8 +43,10 @@ Feature: Accept group requests
       | 9  | 13              | 121            |
       | 10 | 13              | 111            |
       | 13 | 13              | 123            |
-      | 15 | 22              | 13             |
       | 16 | 13              | 151            |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
@@ -106,14 +107,7 @@ Feature: Accept group requests
       | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 31             | 0       |
-      | 22                | 111            | 0       |
-      | 22                | 121            | 0       |
-      | 22                | 123            | 0       |
-      | 22                | 141            | 0       |
-      | 22                | 151            | 0       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
       | 121               | 121            | 1       |

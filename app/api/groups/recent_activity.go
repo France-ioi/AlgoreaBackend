@@ -67,7 +67,7 @@ type groupRecentActivityResponseRow struct {
 //   If the `validated` parameter is true, only validated `users_answers` (with `validated`=1) are returned.
 //
 //
-//   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -132,7 +132,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 

@@ -60,7 +60,7 @@ Background:
     Then the response code should be 404
     And the response error message should contain "Insufficient access rights on the given item id"
 
-  Scenario: Should fail when the authenticated user is not an admin of the selfGroup of the input user (via owned_group_id)
+  Scenario: Should fail when the authenticated user is not a manager of the selfGroup of the input user (via group_managers)
     Given I am the user with id "11"
     When I send a GET request to "/answers?item_id=200&user_id=2"
     Then the response code should be 403

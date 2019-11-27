@@ -15,6 +15,10 @@ Feature: Get members of group_id
       | id |
       | 13 |
       | 14 |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
+      | 22       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -28,11 +32,7 @@ Feature: Get members of group_id
       | 14                | 21             | 0       |
       | 14                | 31             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 61             | 0       |
-      | 22                | 91             | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |
@@ -47,7 +47,6 @@ Feature: Get members of group_id
       | 82                | 82             | 1       |
       | 91                | 91             | 1       |
       | 92                | 92             | 1       |
-      | 22                | 11             | 0       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | expires_at          |
       | 9  | 13              | 51             | 9999-12-31 23:59:59 |
@@ -75,7 +74,7 @@ Feature: Get members of group_id
       | 14       | 22        | join_request_refused  | 2016-11-29 06:38:38 | 11           |
       | 22       | 13        | added_directly        | 2016-10-29 06:38:38 | null         |
 
-  Scenario: User is an admin of the group (default sort)
+  Scenario: User is a manager of the group (default sort)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/members"
     Then the response code should be 200
@@ -121,7 +120,7 @@ Feature: Get members of group_id
     ]
     """
 
-  Scenario: User is an admin of the group (sort by user's grade)
+  Scenario: User is a manager of the group (sort by user's grade)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/members?sort=user.grade,id"
     Then the response code should be 200
@@ -167,7 +166,7 @@ Feature: Get members of group_id
     ]
     """
 
-  Scenario: User is an admin of the group (sort by user's login in descending order)
+  Scenario: User is a manager of the group (sort by user's login in descending order)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/members?sort=-user.login,id"
     Then the response code should be 200
@@ -213,7 +212,7 @@ Feature: Get members of group_id
     ]
     """
 
-  Scenario: User is an admin of the group; request the first row
+  Scenario: User is a manager of the group; request the first row
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/members?limit=1"
     Then the response code should be 200

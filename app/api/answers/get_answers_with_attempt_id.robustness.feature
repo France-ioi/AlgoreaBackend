@@ -60,7 +60,7 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: Should fail when the authenticated user is not a member of the group and not an owner of the group attached to the attempt
+  Scenario: Should fail when the authenticated user is not a member of the group and not a manager of the group attached to the attempt
     Given I am the user with id "21"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 403

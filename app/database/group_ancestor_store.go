@@ -16,10 +16,14 @@ func (s *GroupAncestorStore) UserAncestors(user *User) *DB {
 	return result
 }
 
-// OwnedByUser returns a composable query for getting all the groups_ancestors rows for groups
-// that are descendants of the user's owned group using a User object
-func (s *GroupAncestorStore) OwnedByUser(user *User) *DB {
-	result := s.Where(QuoteName(s.tableName)+".ancestor_group_id=?", user.OwnedGroupID)
+// ManagedByUser returns a composable query for getting all the groups_ancestors rows for groups
+// that are descendants of groups managed by the user
+func (s *GroupAncestorStore) ManagedByUser(user *User) *DB {
+	result := s.
+		Joins(`
+			JOIN group_managers
+				ON group_managers.group_id = `+QuoteName(s.tableName)+`.ancestor_group_id AND
+					group_managers.manager_id = ?`, user.GroupID)
 	if s.tableName != groupsAncestorsActive {
 		result = result.Where("NOW() < " + QuoteName(s.tableName) + ".expires_at")
 	}

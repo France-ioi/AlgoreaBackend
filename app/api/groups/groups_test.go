@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-func TestService_checkThatUserOwnsTheGroup_HandlesError(t *testing.T) {
+func TestService_checkThatUserCanManageTheGroup_HandlesError(t *testing.T) {
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -22,7 +22,7 @@ func TestService_checkThatUserOwnsTheGroup_HandlesError(t *testing.T) {
 		WillReturnError(expectedError)
 
 	user := &database.User{GroupID: 1}
-	apiErr := checkThatUserOwnsTheGroup(database.NewDataStore(db), user, 123)
+	apiErr := checkThatUserCanManageTheGroup(database.NewDataStore(db), user, 123)
 
 	assert.Equal(t, service.ErrUnexpected(expectedError), apiErr)
 	assert.NoError(t, mock.ExpectationsWereMet())

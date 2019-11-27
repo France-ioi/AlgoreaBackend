@@ -30,12 +30,10 @@ Feature: Export the short version of the current user's data
       | 6  | 5               | 11             |
       | 7  | 6               | 11             |
       | 10 | 9               | 11             |
-      | 12 | 12              | 1              |
-      | 13 | 12              | 2              |
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
-      | 2        | 11         | memberships           | 1                      | 0                 |
-      | 5        | 11         | memberships_and_group | 0                      | 1                 |
+      | 1        | 11         | memberships           | 1                      | 0                 |
+      | 2        | 11         | memberships_and_group | 0                      | 1                 |
       | 6        | 9          | memberships           | 1                      | 1                 |
       | 9        | 8          | none                  | 0                      | 0                 |
     And the database has the following table 'group_pending_requests':
@@ -64,8 +62,6 @@ Feature: Export the short version of the current user's data
       | 9                 | 9              | true    |
       | 9                 | 11             | false   |
       | 11                | 11             | true    |
-      | 12                | 1              | false   |
-      | 12                | 2              | false   |
       | 12                | 12             | true    |
     And the database has the following table 'items':
       | id  |
@@ -128,17 +124,17 @@ Feature: Export the short version of the current user's data
           "can_grant_group_access": 1,
           "can_manage": "memberships",
           "can_watch_members": 0,
-          "group_id": "2",
+          "group_id": "1",
           "manager_id": "11",
-          "name": "Our Team"
+          "name": "Our Class"
         },
         {
           "can_grant_group_access": 0,
           "can_manage": "memberships_and_group",
           "can_watch_members": 1,
-          "group_id": "5",
+          "group_id": "2",
           "manager_id": "11",
-          "name": "Other people"
+          "name": "Our Team"
         }
       ],
       "joined_groups": [
@@ -147,9 +143,10 @@ Feature: Export the short version of the current user's data
         {"id": "6", "name": "Another Class"},
         {"id": "9", "name": "Some other friends"}
       ],
-      "owned_groups": [
+      "managed_groups": [
         {"id": "1", "name": "Our Class"},
-        {"id": "2", "name": "Our Team"}
+        {"id": "2", "name": "Our Team"},
+        {"id": "11", "name": "user self"}
       ]
     }
     """
@@ -178,6 +175,6 @@ Feature: Export the short version of the current user's data
       "groups_groups": [],
       "group_managers": [],
       "joined_groups": [],
-      "owned_groups": []
+      "managed_groups": []
     }
     """

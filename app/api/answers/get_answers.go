@@ -204,13 +204,13 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	var count int64
 	itemsUserCanAccess := srv.Store.Permissions().WithViewPermissionForUser(user, "content")
 
-	groupsOwnedByUser := srv.Store.GroupAncestors().OwnedByUser(user).Select("child_group_id")
+	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("child_group_id")
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
 		Joins("JOIN ? rights ON rights.item_id = groups_attempts.item_id", itemsUserCanAccess.SubQuery()).
 		Where("(groups_attempts.group_id IN ?) OR (groups_attempts.group_id IN ?) OR groups_attempts.group_id = ?",
-			groupsOwnedByUser.SubQuery(),
+			groupsManagedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
 			user.GroupID).
 		Count(&count).Error())
@@ -223,7 +223,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
 	if userID != user.GroupID {
 		count := 0
-		err := srv.Store.GroupAncestors().OwnedByUser(user).
+		err := srv.Store.GroupAncestors().ManagedByUser(user).
 			Where("child_group_id=?", userID).
 			Count(&count).Error()
 		service.MustNotBeError(err)
