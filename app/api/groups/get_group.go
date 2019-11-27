@@ -49,7 +49,7 @@ type groupViewResponse struct {
 	// required:true
 	OpenContest bool `json:"open_contest"`
 	// required:true
-	CurrentUserIsOwner bool `json:"current_user_is_owner"`
+	CurrentUserIsManager bool `json:"current_user_is_manager"`
 	// `True` when there is an active group->user relation in `groups_groups`
 	// required:true
 	CurrentUserIsMember bool `json:"current_user_is_member"`
@@ -98,9 +98,15 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	query := srv.Store.Groups().
 		Joins(`
-			LEFT JOIN groups_ancestors_active
-				ON groups_ancestors_active.child_group_id = groups.id AND
-					groups_ancestors_active.ancestor_group_id = ?`, user.OwnedGroupID).
+			LEFT JOIN (
+				SELECT 1 AS found
+				FROM group_managers
+				JOIN groups_ancestors_active
+					ON groups_ancestors_active.ancestor_group_id = group_managers.group_id AND
+						groups_ancestors_active.child_group_id = ?
+				WHERE group_managers.manager_id = ?
+				LIMIT 1
+			) AS manager_access ON 1`, groupID, user.GroupID).
 		Joins(`
 			LEFT JOIN groups_ancestors_active AS groups_descendants
 				ON groups_descendants.ancestor_group_id = groups.id AND
@@ -108,16 +114,18 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = groups.id AND groups_groups_active.child_group_id = ?`, user.GroupID).
-		Where("groups_ancestors_active.id IS NOT NULL OR groups_descendants.id IS NOT NULL OR groups.free_access").
-		Where("groups.id = ?", groupID).Select(
-		`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
+		Where("manager_access.found OR groups_descendants.id IS NOT NULL OR groups.free_access").
+		Where("groups.id = ?", groupID).
+		Select(
+			`groups.id, groups.name, groups.grade, groups.description, groups.created_at,
 			groups.type, groups.redirect_path, groups.opened, groups.free_access,
-			IF(groups_ancestors_active.id IS NOT NULL, groups.code, NULL) AS code,
-			IF(groups_ancestors_active.id IS NOT NULL, groups.code_lifetime, NULL) AS code_lifetime,
-			IF(groups_ancestors_active.id IS NOT NULL, groups.code_expires_at, NULL) AS code_expires_at,
+			IF(manager_access.found, groups.code, NULL) AS code,
+			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
+			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
 			groups.open_contest,
-			groups_ancestors_active.id IS NOT NULL AS current_user_is_owner,
-			groups_groups_active.id IS NOT NULL AS current_user_is_member`).Limit(1)
+			manager_access.found AS current_user_is_manager,
+			groups_groups_active.id IS NOT NULL AS current_user_is_member`).
+		Limit(1)
 
 	var result groupViewResponse
 	err = query.Scan(&result).Error()
@@ -126,7 +134,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	}
 	service.MustNotBeError(err)
 
-	if !result.CurrentUserIsOwner {
+	if !result.CurrentUserIsManager {
 		result.GroupViewResponseCodePart = nil
 	}
 
