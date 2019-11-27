@@ -17,7 +17,7 @@ Feature: Create a group (groupCreate) - robustness
       | john   | 0         | 51       | 52             |
       | weird  | 0         | 61       | null           |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type |
+      | parent_group_id | child_group_id |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |

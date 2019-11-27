@@ -16,11 +16,11 @@ type groupsMembersViewResponseRow struct {
 	ID int64 `json:"id,string"`
 	// Nullable
 	// required: true
-	TypeChangedAt *database.Time `json:"type_changed_at"`
-	// `groups_groups.type`
-	// enum: invitationAccepted,requestAccepted,joinedByCode,direct
+	MemberSince *database.Time `json:"member_since"`
+	// the latest `group_membership_changes.action`
+	// enum: invitation_accepted,join_request_accepted,joined_by_code,added_directly
 	// required: true
-	Type string `json:"type"`
+	Action string `json:"action"`
 	// Nullable
 	// required: true
 	User *struct {
@@ -47,8 +47,7 @@ type groupsMembersViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group members
-//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
-//   `type` = "invitationAccepted"/"requestAccepted"/"joinedByCode"/"direct").
+//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and NOW() < `groups_groups.expires_at`).
 //   Rows related to users contain basic user info.
 //
 //
@@ -60,13 +59,13 @@ type groupsMembersViewResponseRow struct {
 //   required: true
 // - name: sort
 //   in: query
-//   default: [-type_changed_at,id]
+//   default: [-member_since,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [type_changed_at,-type_changed_at,user.login,-user.login,user.grade,-user.grade,id,-id]
-// - name: from.type_changed_at
-//   description: Start the page from the member next to the member with `groups_groups.type_changed_at` = `from.type_changed_at`
+//     enum: [member_since,-member_since,user.login,-user.login,user.grade,-user.grade,id,-id]
+// - name: from.member_since
+//   description: Start the page from the member next to the member with `groups_groups.member_since` = `from.member_since`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
@@ -121,25 +120,33 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 	query := srv.Store.GroupGroups().
 		Select(`
 			groups_groups.id,
-			groups_groups.type_changed_at,
-			groups_groups.type,
+			latest_change.at AS member_since,
+			latest_change.action,
 			users.group_id AS user__group_id,
 			users.login AS user__login,
 			users.first_name AS user__first_name,
 			users.last_name AS user__last_name,
 			users.grade AS user__grade`).
 		Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
+		Joins(`
+			LEFT JOIN LATERAL (
+				SELECT at, action FROM group_membership_changes
+				WHERE group_membership_changes.group_id = groups_groups.parent_group_id AND
+					group_membership_changes.member_id = groups_groups.child_group_id
+				ORDER BY at DESC
+				LIMIT 1
+			) AS latest_change ON 1`).
 		WhereGroupRelationIsActual().
 		Where("groups_groups.parent_group_id = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"user.login":      {ColumnName: "users.login"},
-			"user.grade":      {ColumnName: "users.grade"},
-			"type_changed_at": {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
-			"id":              {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-type_changed_at,id", false)
+			"user.login":   {ColumnName: "users.login"},
+			"user.grade":   {ColumnName: "users.grade"},
+			"member_since": {ColumnName: "member_since", FieldType: "time"},
+			"id":           {ColumnName: "groups_groups.id", FieldType: "int64"}},
+		"-member_since,id", false)
 
 	if apiError != service.NoError {
 		return apiError

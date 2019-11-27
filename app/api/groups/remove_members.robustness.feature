@@ -24,10 +24,10 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 22                | 21             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at           |
-      | 1  | 13              | 21             | invitationAccepted | {{relativeTime("-170h")}} |
-      | 2  | 13              | 11             | requestAccepted    | {{relativeTime("-169h")}} |
-      | 15 | 22              | 13             | direct             | null                      |
+      | id | parent_group_id | child_group_id |
+      | 1  | 13              | 21             |
+      | 2  | 13              | 11             |
+      | 15 | 22              | 13             |
 
   Scenario: Fails when the user is not an owner of the parent group
     Given I am the user with id "11"

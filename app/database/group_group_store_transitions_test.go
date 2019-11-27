@@ -41,3 +41,9 @@ func TestGroupGroupStore_transition_UsesNamedLock(t *testing.T) {
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestMembershipAction_PendingType(t *testing.T) {
+	assert.Equal(t, "invitation", InvitationCreated.PendingType())
+	assert.Equal(t, "join_request", JoinRequestCreated.PendingType())
+	assert.Panics(t, func() { JoinRequestAccepted.PendingType() })
+}

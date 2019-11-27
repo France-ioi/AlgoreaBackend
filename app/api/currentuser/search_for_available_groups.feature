@@ -17,18 +17,16 @@ Feature: Search for groups available to the current user
       | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at     |
-      | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
-      | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
-      | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |
-      | 5  | 4               | 21             | requestRefused     | 2017-05-29 06:38:38 |
-      | 6  | 5               | 21             | invitationAccepted | 2017-06-29 06:38:38 |
-      | 7  | 6               | 21             | requestAccepted    | 2017-07-29 06:38:38 |
-      | 8  | 7               | 21             | removed            | 2017-08-29 06:38:38 |
-      | 9  | 8               | 21             | left               | 2017-09-29 06:38:38 |
-      | 10 | 9               | 21             | direct             | 2017-10-29 06:38:38 |
-      | 11 | 10              | 21             | joinedByCode       | 2017-10-29 06:38:38 |
-      | 12 | 1               | 22             | direct             | 2017-11-29 06:38:38 |
+      | id | parent_group_id | child_group_id |
+      | 6  | 5               | 21             |
+      | 7  | 6               | 21             |
+      | 10 | 9               | 21             |
+      | 11 | 10              | 21             |
+      | 12 | 1               | 22             |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 1        | 21        | invitation   |
+      | 3        | 21        | join_request |
 
   Scenario: Search for groups with "the"
     Given I am the user with id "21"

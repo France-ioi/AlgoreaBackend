@@ -12,10 +12,10 @@ Feature: Add a parent-child relation between two groups
       | login | temp_user | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type   | child_order |
-      | 22              | 11             | direct | 1           |
-      | 22              | 13             | direct | 1           |
-      | 22              | 14             | direct | 1           |
+      | parent_group_id | child_group_id | child_order |
+      | 22              | 11             | 1           |
+      | 22              | 13             | 1           |
+      | 22              | 14             | 1           |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -39,11 +39,11 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | type   | role   |
-      | 13              | 11             | 1           | direct | member |
-      | 22              | 11             | 1           | direct | member |
-      | 22              | 13             | 1           | direct | member |
-      | 22              | 14             | 1           | direct | member |
+      | parent_group_id | child_group_id | child_order | role   |
+      | 13              | 11             | 1           | member |
+      | 22              | 11             | 1           | member |
+      | 22              | 13             | 1           | member |
+      | 22              | 14             | 1           | member |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -65,12 +65,12 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | type   | role   |
-      | 13              | 11             | 1           | direct | member |
-      | 13              | 14             | 2           | direct | member |
-      | 22              | 11             | 1           | direct | member |
-      | 22              | 13             | 1           | direct | member |
-      | 22              | 14             | 1           | direct | member |
+      | parent_group_id | child_group_id | child_order | role   |
+      | 13              | 11             | 1           | member |
+      | 13              | 14             | 2           | member |
+      | 22              | 11             | 1           | member |
+      | 22              | 13             | 1           | member |
+      | 22              | 14             | 1           | member |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -93,9 +93,9 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | type   | role   |
-      | 13              | 11             | 3           | direct | member |
-      | 13              | 14             | 2           | direct | member |
-      | 22              | 11             | 1           | direct | member |
-      | 22              | 13             | 1           | direct | member |
-      | 22              | 14             | 1           | direct | member |
+      | parent_group_id | child_group_id | child_order | role   |
+      | 13              | 11             | 3           | member |
+      | 13              | 14             | 2           | member |
+      | 22              | 11             | 1           | member |
+      | 22              | 13             | 1           | member |
+      | 22              | 14             | 1           | member |

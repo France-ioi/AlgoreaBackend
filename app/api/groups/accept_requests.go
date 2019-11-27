@@ -11,21 +11,24 @@ import (
 // summary: Accept requests to join a group
 // description:
 //   Lets an admin approve requests to join a group.
-//   On success the service sets `groups_groups.type` to "requestAccepted" and `type_changed_at` to current UTC time
-//   for each of `group_ids`.
-//   It also refreshes the access rights.
+//   On success the service creates new `groups_groups` rows
+//   with `parent_group_id` = `{parent_group_id}` and new `group_membership_changes` with
+//   `group_id` = `{parent_group_id}`, `action` = 'join_request_accepted`, `at` = current UTC time
+//   for each of `group_ids`
+//   The appropriate pending requests get removed from `group_pending_requests`.
+//   The service also refreshes the access rights.
 //
 //
-//   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be an owner of the `{parent_group_id}`, otherwise the 'forbidden' error is returned.
 //
 //
-//   If the `parent_group_id` corresponds to a team with `team_item_id` set, the service skips users
+//   If the `{parent_group_id}` corresponds to a team with `team_item_id` set, the service skips users
 //   who are members of other teams with the same `team_item_id` (result = "in_another_team").
 //
 //
-//   The input `group_id` should have the input `parent_group_id` as a parent group and the
-//   `groups_groups.type` should be "requestSent", otherwise the `group_id` gets skipped with
-//   `unchanged` (if `type` = "requestAccepted") or `invalid` as the result.
+//   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
+//   in `group_pending_requests` for each of the input `group_ids`, otherwise the `group_id` gets skipped with
+//   `invalid` as the result.
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise

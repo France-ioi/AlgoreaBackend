@@ -136,18 +136,12 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	assert.NoError(t, groupGroupStore.Exec("TRUNCATE TABLE groups_ancestors").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=2").
-		UpdateColumn("type", "invitationSent").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=3").
-		UpdateColumn("type", "requestSent").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=1 AND child_group_id=4").
-		UpdateColumn("type", "invitationRefused").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=3").
-		UpdateColumn("type", "requestRefused").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=2 AND child_group_id=4").
-		UpdateColumn("type", "removed").Error())
-	assert.NoError(t, groupGroupStore.Where("parent_group_id=3 AND child_group_id=4").
-		UpdateColumn("type", "left").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=2").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=3").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=4").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=2 AND child_group_id=3").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=2 AND child_group_id=4").Error())
+	assert.NoError(t, groupGroupStore.Delete("parent_group_id=3 AND child_group_id=4").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
 		ds.GroupGroups().CreateNewAncestors()

@@ -13,13 +13,13 @@ Feature: Get current user's team for item (teamGetByItemID)
       | jane  | 13       |
       | john  | 14       |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 20              | 12             | invitationAccepted |
-      | 20              | 13             | requestAccepted    |
-      | 20              | 14             | joinedByCode       |
-      | 21              | 12             | invitationAccepted |
-      | 21              | 13             | requestAccepted    |
-      | 21              | 14             | joinedByCode       |
+      | parent_group_id | child_group_id |
+      | 20              | 12             |
+      | 20              | 13             |
+      | 20              | 14             |
+      | 21              | 12             |
+      | 21              | 13             |
+      | 21              | 14             |
 
   Scenario: The user joined the team by invitation
     Given I am the user with id "12"

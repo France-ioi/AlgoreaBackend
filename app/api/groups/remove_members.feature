@@ -26,6 +26,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 112 |
       | 121 |
       | 122 |
+      | 131 |
       | 132 |
     And the database has the following table 'users':
       | login  | group_id | owned_group_id |
@@ -47,6 +48,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13                | 61             | 0       |
       | 13                | 91             | 0       |
       | 13                | 111            | 0       |
+      | 13                | 131            | 0       |
       | 14                | 14             | 1       |
       | 14                | 41             | 0       |
       | 21                | 21             | 1       |
@@ -56,6 +58,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 22                | 61             | 0       |
       | 22                | 91             | 0       |
       | 22                | 111            | 0       |
+      | 22                | 131            | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |
@@ -76,22 +79,23 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 112               | 112            | 1       |
       | 121               | 121            | 1       |
       | 122               | 122            | 1       |
+      | 131               | 131            | 1       |
       | 132               | 132            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at           |
-      | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
-      | 2  | 13              | 31             | invitationRefused  | {{relativeTime("-169h")}} |
-      | 3  | 13              | 41             | requestSent        | {{relativeTime("-168h")}} |
-      | 6  | 14              | 41             | invitationAccepted | null                      |
-      | 7  | 14              | 51             | requestSent        | null                      |
-      | 9  | 13              | 51             | invitationAccepted | 2017-05-29 06:38:38       |
-      | 10 | 13              | 61             | requestAccepted    | null                      |
-      | 11 | 13              | 71             | removed            | null                      |
-      | 12 | 13              | 81             | left               | null                      |
-      | 13 | 13              | 91             | direct             | null                      |
-      | 14 | 13              | 101            | requestSent        | null                      |
-      | 15 | 13              | 111            | joinedByCode       | null                      |
-      | 16 | 22              | 13             | direct             | null                      |
+      | id | parent_group_id | child_group_id |
+      | 6  | 14              | 41             |
+      | 9  | 13              | 51             |
+      | 10 | 13              | 61             |
+      | 13 | 13              | 91             |
+      | 15 | 13              | 111            |
+      | 16 | 13              | 131            |
+      | 17 | 22              | 13             |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 13       | 21        | invitation   |
+      | 13       | 41        | join_request |
+      | 13       | 101       | join_request |
+      | 14       | 51        | join_request |
 
   Scenario: Remove members
     Given I am the user with id "21"
@@ -104,9 +108,9 @@ Feature: Remove members from a group (groupRemoveMembers)
         "41":  "invalid",
         "51":  "success",
         "61":  "success",
-        "71":  "unchanged",
+        "71":  "invalid",
         "81":  "invalid",
-        "91":  "invalid",
+        "91":  "success",
         "101": "invalid",
         "111": "success",
         "121": "invalid",
@@ -118,30 +122,27 @@ Feature: Remove members from a group (groupRemoveMembers)
     }
     """
     And the table "groups_groups" should be:
-      | id | parent_group_id | child_group_id | type               | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 1  | 13              | 21             | invitationSent     | 0                                                                                          |
-      | 2  | 13              | 31             | invitationRefused  | 0                                                                                          |
-      | 3  | 13              | 41             | requestSent        | 0                                                                                          |
-      | 6  | 14              | 41             | invitationAccepted | 0                                                                                          |
-      | 7  | 14              | 51             | requestSent        | 0                                                                                          |
-      | 9  | 13              | 51             | removed            | 1                                                                                          |
-      | 10 | 13              | 61             | removed            | 1                                                                                          |
-      | 11 | 13              | 71             | removed            | 0                                                                                          |
-      | 12 | 13              | 81             | left               | 0                                                                                          |
-      | 13 | 13              | 91             | direct             | 0                                                                                          |
-      | 14 | 13              | 101            | requestSent        | 0                                                                                          |
-      | 15 | 13              | 111            | removed            | 1                                                                                          |
-      | 16 | 22              | 13             | direct             | 0                                                                                          |
+      | id | parent_group_id | child_group_id |
+      | 6  | 14              | 41             |
+      | 16 | 13              | 131            |
+      | 17 | 22              | 13             |
+    And the table "group_pending_requests" should stay unchanged
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action  | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 51        | removed | 21           | 1                                         |
+      | 13       | 61        | removed | 21           | 1                                         |
+      | 13       | 91        | removed | 21           | 1                                         |
+      | 13       | 111       | removed | 21           | 1                                         |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
-      | 13                | 91             | 0       |
+      | 13                | 131            | 0       |
       | 14                | 14             | 1       |
       | 14                | 41             | 0       |
       | 21                | 21             | 1       |
       | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 91             | 0       |
+      | 22                | 131            | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |
@@ -162,4 +163,5 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 112               | 112            | 1       |
       | 121               | 121            | 1       |
       | 122               | 122            | 1       |
+      | 131               | 131            | 1       |
       | 132               | 132            | 1       |

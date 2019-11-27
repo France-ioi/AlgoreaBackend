@@ -13,29 +13,29 @@ import (
 // summary: List current invitations and requests to groups
 // description:
 //   Returns the list of invitations that the current user received and requests sent by him
-//   (`groups_groups.type` is “invitationSent” or “requestSent” or “requestRefused”)
-//   with `groups_groups.type_changed_at` within `within_weeks` back from now (if `within_weeks` is present).
+//   (`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
+//   with `group_membership_changes.at` within `within_weeks` back from now (if `within_weeks` is present).
 // parameters:
 // - name: within_weeks
 //   in: query
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-type_changed_at,id]
+//   default: [-at,group_id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [type_changed_at,-type_changed_at,id,-id]
-// - name: from.type_changed_at
-//   description: Start the page from the request/invitation next to one with `type_changed_at` = `from.type_changed_at`
-//                and `groups_groups.id` = `from.id`
-//                (`from.id` is required when `from.type_changed_at` is present)
+//     enum: [at,-at,group_id,-group_id]
+// - name: from.at
+//   description: Start the page from the request/invitation next to one with `at` = `from.at`
+//                and `group_membership_changes.group_id` = `from.group_id`
+//                (`from.group_id` is required when `from.at` is present)
 //   in: query
 //   type: string
-// - name: from.id
-//   description: Start the page from the request/invitation next to one with `type_changed_at`=`from.type_changed_at`
-//                and `groups_groups.id`=`from.id`
-//                (`from.type_changed_at` is required when from.id is present)
+// - name: from.group_id
+//   description: Start the page from the request/invitation next to one with `at`=`from.at`
+//                and `group_id`=`from.group_id`
+//                (`from.at` is required when from.group_id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -60,12 +60,12 @@ import (
 func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	query := srv.Store.GroupGroups().
+	query := srv.Store.GroupMembershipChanges().
 		Select(`
-			groups_groups.id,
-			groups_groups.type_changed_at,
-			groups_groups.type,
-			users.group_id AS inviting_user__group_id,
+			group_membership_changes.group_id,
+			group_membership_changes.at,
+			action,
+			users.group_id AS inviting_user__id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,
 			users.last_name AS inviting_user__last_name,
@@ -73,25 +73,36 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type`).
-		Joins("LEFT JOIN users ON users.group_id = groups_groups.inviting_user_id").
-		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
-		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'requestRefused')").
-		Where("groups_groups.child_group_id = ?", user.GroupID)
+		Joins("LEFT JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
+		Joins("JOIN `groups` ON `groups`.id = group_membership_changes.group_id").
+		Joins(`
+			LEFT JOIN group_pending_requests
+				ON group_pending_requests.group_id = group_membership_changes.group_id AND
+					group_pending_requests.member_id = group_membership_changes.member_id AND
+					IF(group_pending_requests.type = 'invitation', 'invitation_created', 'join_request_created') =
+						group_membership_changes.action AND
+					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
+					 WHERE latest_change.group_id = group_pending_requests.group_id AND
+						latest_change.member_id = group_pending_requests.member_id AND
+						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
+		Where("action IN ('invitation_created', 'join_request_created', 'join_request_refused')").
+		Where("action = 'join_request_refused' OR group_pending_requests.group_id IS NOT NULL").
+		Where("group_membership_changes.member_id = ?", user.GroupID)
 
 	if len(r.URL.Query()["within_weeks"]) > 0 {
 		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
-		query = query.Where("NOW() - INTERVAL ? WEEK < groups_groups.type_changed_at", withinWeeks)
+		query = query.Where("NOW() - INTERVAL ? WEEK < group_membership_changes.at", withinWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"type_changed_at": {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
-			"id":              {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-type_changed_at,id", false)
+			"at":       {ColumnName: "group_membership_changes.at", FieldType: "time"},
+			"group_id": {ColumnName: "group_membership_changes.group_id", FieldType: "int64"}},
+		"-at,group_id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

@@ -14,16 +14,16 @@ import (
 // summary: Remove members from a group
 // description:
 //   Lets an admin remove users from a group.
-//   On success the service sets `groups_groups.type` to "removed" and `type_changed_at` to current UTC time
+//   On success the service removes relations from `groups_groups` and creates `group_membership_changes` rows
+//   with `action` = 'removed and `at` = current UTC time
 //   for each of `user_ids`. It also refreshes the access rights.
 //
 //
 //   The authenticated user should be an owner of the `group_id`, otherwise the 'forbidden' error is returned.
 //
 //
-//   Each of the input `user_ids` should have the input `group_id` as a parent and the
-//   `groups_groups.type` should be one of "invitationAccepted"/"requestAccepted"/"joinedByCode",
-//   otherwise the `user_id` gets skipped with `unchanged` (if `type` = "removed") or `invalid` as the result.
+//   Each of the input `user_ids` should have the input `group_id` as a parent in `groups_groups`,
+//   otherwise the `user_id` gets skipped with `invalid` as the result.
 //
 //
 //   The response status code on success (200) doesn't depend on per-group results.

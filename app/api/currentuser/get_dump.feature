@@ -25,19 +25,23 @@ Feature: Export the short version of the current user's data
       | 11      | refreshTokenFor1 |
       | 31      | refreshTokenFor2 |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at     | inviting_user_id |
-      | 2  | 1               | 11             | invitationSent     | 2019-07-09 21:02:28 | null             |
-      | 3  | 2               | 11             | invitationAccepted | 2019-07-09 22:02:28 | 11               |
-      | 4  | 3               | 11             | requestSent        | 2019-07-09 23:02:28 | 11               |
-      | 5  | 4               | 11             | requestRefused     | 2019-07-10 00:02:28 | 31               |
-      | 6  | 5               | 11             | invitationAccepted | 2019-07-10 01:02:28 | 31               |
-      | 7  | 6               | 11             | requestAccepted    | 2019-07-10 02:02:28 | 31               |
-      | 8  | 7               | 11             | removed            | 2019-07-10 03:02:28 | 11               |
-      | 9  | 8               | 11             | left               | 2019-07-10 04:02:28 | 11               |
-      | 10 | 9               | 11             | direct             | 2019-07-10 05:02:28 | 31               |
-      | 11 | 1               | 12             | invitationSent     | 2019-07-09 20:02:28 | 31               |
-      | 12 | 12              | 1              | direct             | null                | null             |
-      | 13 | 12              | 2              | direct             | null                | null             |
+      | id | parent_group_id | child_group_id |
+      | 3  | 2               | 11             |
+      | 6  | 5               | 11             |
+      | 7  | 6               | 11             |
+      | 10 | 9               | 11             |
+      | 12 | 12              | 1              |
+      | 13 | 12              | 2              |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 1        | 11        | invitation   |
+      | 3        | 11        | join_request |
+      | 1        | 12        | invitation   |
+    And the database has the following table 'group_membership_changes':
+      | group_id | member_id | action               | at                  | initiator_id |
+      | 4        | 11        | join_request_refused | 2019-07-10 00:02:28 | 11           |
+      | 7        | 11        | removed              | 2019-07-10 03:02:28 | 31           |
+      | 8        | 11        | left                 | 2019-07-10 04:02:28 | 11           |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -97,49 +101,20 @@ Feature: Export the short version of the current user's data
       },
       "groups_groups": [
         {
-          "id": "2", "child_order": 0, "child_group_id": "11", "parent_group_id": "1", "inviting_user_id": null,
-          "name": "Our Class", "role": "member", "type_changed_at": "2019-07-09T21:02:28Z", "type": "invitationSent",
-          "expires_at": "9999-12-31T23:59:59Z"
+          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
+          "name": "Our Team", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2", "inviting_user_id": "11",
-          "name": "Our Team", "role": "member", "type_changed_at": "2019-07-09T22:02:28Z", "type": "invitationAccepted",
-          "expires_at": "9999-12-31T23:59:59Z"
+          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
+          "name": "Other people", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "4", "child_order": 0, "child_group_id": "11", "parent_group_id": "3", "inviting_user_id": "11",
-          "name": "Our Club", "role": "member", "type_changed_at": "2019-07-09T23:02:28Z", "type": "requestSent",
-          "expires_at": "9999-12-31T23:59:59Z"
+          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
+          "name": "Another Class", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
-          "id": "5", "child_order": 0, "child_group_id": "11", "parent_group_id": "4", "inviting_user_id": "31",
-          "name": "Our Friends", "role": "member", "type_changed_at": "2019-07-10T00:02:28Z", "type": "requestRefused",
-          "expires_at": "9999-12-31T23:59:59Z"
-        },
-        {
-          "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5", "inviting_user_id": "31",
-          "name": "Other people", "role": "member", "type_changed_at": "2019-07-10T01:02:28Z", "type": "invitationAccepted",
-          "expires_at": "9999-12-31T23:59:59Z"
-        },
-        {
-          "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6", "inviting_user_id": "31",
-          "name": "Another Class", "role": "member", "type_changed_at": "2019-07-10T02:02:28Z", "type": "requestAccepted",
-          "expires_at": "9999-12-31T23:59:59Z"
-        },
-        {
-          "id": "8", "child_order": 0, "child_group_id": "11", "parent_group_id": "7", "inviting_user_id": "11",
-          "name": "Another Team", "role": "member", "type_changed_at": "2019-07-10T03:02:28Z", "type": "removed",
-          "expires_at": "9999-12-31T23:59:59Z"
-        },
-        {
-          "id": "9", "child_order": 0, "child_group_id": "11", "parent_group_id": "8", "inviting_user_id": "11",
-          "name": "Another Club", "role": "member", "type_changed_at": "2019-07-10T04:02:28Z", "type": "left",
-          "expires_at": "9999-12-31T23:59:59Z"
-        },
-        {
-          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9", "inviting_user_id": "31",
-          "name": "Some other friends", "role": "member", "type_changed_at": "2019-07-10T05:02:28Z", "type": "direct",
-          "expires_at": "9999-12-31T23:59:59Z"
+          "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
+          "name": "Some other friends", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
       "joined_groups": [

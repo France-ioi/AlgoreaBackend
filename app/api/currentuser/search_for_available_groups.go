@@ -98,7 +98,12 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	skipGroups := srv.Store.GroupGroups().
 		Select("groups_groups.parent_group_id").
 		Where("groups_groups.child_group_id = ?", user.GroupID).
-		Where("groups_groups.type IN ('requestSent', 'invitationSent', 'requestAccepted', 'invitationAccepted', 'direct', 'joinedByCode')").
+		SubQuery()
+
+	skipPending := srv.Store.GroupPendingRequests().
+		Select("group_pending_requests.group_id").
+		Where("group_pending_requests.member_id = ?", user.GroupID).
+		Where("group_pending_requests.type IN ('join_request', 'invitation')").
 		SubQuery()
 
 	escapedSearchString := escapeLikeString(searchString, '|')
@@ -110,6 +115,7 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			groups.description`).
 		Where("groups.free_access").
 		Where("groups.id NOT IN ?", skipGroups).
+		Where("groups.id NOT IN ?", skipPending).
 		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)

@@ -1,6 +1,6 @@
 groups: [{id: 13}, {id: 22}]
 users: [{group_id: 13, login: 3}]
-groups_groups: [{parent_group_id: 22, child_group_id: 13, type: invitationAccepted}]
+groups_groups: [{parent_group_id: 22, child_group_id: 13}]
 groups_ancestors:
   - {ancestor_group_id: 13, child_group_id: 13}
   - {ancestor_group_id: 22, child_group_id: 13}

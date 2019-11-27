@@ -21,18 +21,29 @@ Feature: Get group invitations for the current user
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at           | inviting_user_id |
-      | 2  | 1               | 21             | invitationSent     | {{relativeTime("-169h")}} | null             |
-      | 3  | 2               | 21             | invitationRefused  | {{relativeTime("-168h")}} | 21               |
-      | 4  | 3               | 21             | requestSent        | {{relativeTime("-167h")}} | 21               |
-      | 5  | 4               | 21             | requestRefused     | {{relativeTime("-166h")}} | 11               |
-      | 6  | 5               | 21             | invitationAccepted | {{relativeTime("-165h")}} | 11               |
-      | 7  | 6               | 21             | requestAccepted    | {{relativeTime("-164h")}} | 11               |
-      | 8  | 7               | 21             | removed            | {{relativeTime("-163h")}} | 21               |
-      | 9  | 8               | 21             | left               | {{relativeTime("-162h")}} | 21               |
-      | 10 | 9               | 21             | direct             | {{relativeTime("-161h")}} | 11               |
-      | 11 | 1               | 22             | invitationSent     | {{relativeTime("-170h")}} | 11               |
-      | 12 | 10              | 21             | joinedByCode       | {{relativeTime("-180h")}} | null             |
+      | id | parent_group_id | child_group_id |
+      | 6  | 5               | 21             |
+      | 7  | 6               | 21             |
+      | 10 | 9               | 21             |
+      | 12 | 10              | 21             |
+    And the database has the following table 'group_membership_changes':
+      | group_id | member_id | action                | at                        | initiator_id |
+      | 1        | 21        | invitation_created    | {{relativeTime("-169h")}} | 11           |
+      | 2        | 21        | invitation_refused    | {{relativeTime("-168h")}} | 21           |
+      | 3        | 21        | join_request_created  | {{relativeTime("-167h")}} | 21           |
+      | 4        | 21        | join_request_refused  | {{relativeTime("-166h")}} | 11           |
+      | 5        | 21        | invitation_accepted   | {{relativeTime("-165h")}} | 11           |
+      | 6        | 21        | join_request_accepted | {{relativeTime("-164h")}} | 11           |
+      | 7        | 21        | removed               | {{relativeTime("-163h")}} | 21           |
+      | 8        | 21        | left                  | {{relativeTime("-162h")}} | 21           |
+      | 9        | 21        | added_directly        | {{relativeTime("-161h")}} | 11           |
+      | 1        | 22        | invitation_created    | {{relativeTime("-170h")}} | 11           |
+      | 10       | 21        | joined_by_code        | {{relativeTime("-180h")}} | null         |
+    And the database has the following table 'group_pending_requests':
+      | group_id | member_id | type         |
+      | 1        | 21        | invitation   |
+      | 3        | 21        | join_request |
+      | 1        | 22        | invitation   |
 
   Scenario: Show all invitations
     Given I am the user with id "21"
@@ -42,50 +53,45 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "4",
-        "inviting_user": {
-          "group_id": "21",
-          "first_name": "Jean-Michel",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "group_id": "3",
+        "inviting_user": null,
         "group": {
           "id": "3",
           "name": "Our Club",
           "description": "Our club group",
           "type": "Club"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       },
       {
-        "id": "2",
-        "inviting_user": null,
+        "group_id": "1",
+        "inviting_user": {
+          "id": "11",
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
+        },
         "group": {
           "id": "1",
           "name": "Our Class",
           "description": "Our class group",
           "type": "Class"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[1][type_changed_at]"))}}",
-        "type": "invitationSent"
+        "at": "{{timeToRFC(db("group_membership_changes[1][at]"))}}",
+        "action": "invitation_created"
       }
     ]
     """
@@ -98,21 +104,16 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       }
     ]
     """
@@ -125,38 +126,28 @@ Feature: Get group invitations for the current user
     """
     [
       {
-        "id": "5",
-        "inviting_user": {
-          "group_id": "11",
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "user"
-        },
+        "group_id": "4",
+        "inviting_user": null,
         "group": {
           "id": "4",
           "name": "Our Friends",
           "description": "Group for our friends",
           "type": "Friends"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[4][type_changed_at]"))}}",
-        "type": "requestRefused"
+        "at": "{{timeToRFC(db("group_membership_changes[4][at]"))}}",
+        "action": "join_request_refused"
       },
       {
-        "id": "4",
-        "inviting_user": {
-          "group_id": "21",
-          "first_name": "Jean-Michel",
-          "last_name": "Blanquer",
-          "login": "owner"
-        },
+        "group_id": "3",
+        "inviting_user": null,
         "group": {
           "id": "3",
           "name": "Our Club",
           "description": "Our club group",
           "type": "Club"
         },
-        "type_changed_at": "{{timeToRFC(db("groups_groups[3][type_changed_at]"))}}",
-        "type": "requestSent"
+        "at": "{{timeToRFC(db("group_membership_changes[3][at]"))}}",
+        "action": "join_request_created"
       }
     ]
     """

@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
@@ -105,7 +104,6 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Select("parent_links.child_group_id AS linked_group_id, groups.id, groups.name").
 		Joins(`
 			JOIN groups_groups_active AS parent_links ON parent_links.parent_group_id = groups.id AND
-				parent_links.type`+database.GroupRelationIsActiveCondition+` AND
 				parent_links.child_group_id IN (?)`, groupIDs).
 		Joins(`
 			JOIN groups_ancestors_active AS parent_ancestors ON parent_ancestors.child_group_id = groups.id AND

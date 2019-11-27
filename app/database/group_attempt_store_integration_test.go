@@ -76,32 +76,12 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 50,
 		},
 		{
-			name:      "okay (has_attempts=1, groups_groups.type=requestAccepted)",
+			name:      "okay (has_attempts=1)",
 			userID:    101,
 			attemptID: 200,
 			fixture: `
 				groups_attempts:
 					- {id: 200, group_id: 102, item_id: 60, order: 0}`,
-			expectedFound:  true,
-			expectedItemID: 60,
-		},
-		{
-			name:      "okay (has_attempts=1, groups_groups.type=joinedByCode)",
-			userID:    101,
-			attemptID: 200,
-			fixture: `
-				groups_attempts:
-					- {id: 200, group_id: 120, item_id: 60, order: 0}`,
-			expectedFound:  true,
-			expectedItemID: 60,
-		},
-		{
-			name:      "okay (has_attempts=1, groups_groups.type=invitationAccepted)",
-			userID:    101,
-			attemptID: 200,
-			fixture: `
-				groups_attempts:
-					- {id: 200, group_id: 110, item_id: 60, order: 0}`,
 			expectedFound:  true,
 			expectedItemID: 60,
 		},
@@ -136,61 +116,12 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedFound: false,
 		},
 		{
-			name:      "user is not a member of the team (invitationSent)",
+			name:      "user is not a member of the team",
 			userID:    101,
 			attemptID: 100,
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedFound: false,
-		},
-		{
-			name:      "user is not a member of the team (requestSent)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 104, item_id: 60, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "user is not a member of the team (invitationRefused)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 105, item_id: 60, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "user is not a member of the team (requestRefused)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 106, item_id: 60, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "user is not a member of the team (removed)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 107, item_id: 60, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "user is not a member of the team (left)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 108, item_id: 60, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:      "user is a member of the team (direct)",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 109, item_id: 60, order: 0}]`,
-			expectedFound:  true,
-			expectedItemID: 60,
 		},
 		{
 			name:      "groups_attempts.group_id is not user's self group",
@@ -211,28 +142,13 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 					- {login: "jane", group_id: 111}
 					- {login: "guest", group_id: 121}
 				groups_groups:
-					- {parent_group_id: 102, child_group_id: 101, type: requestAccepted}
-					- {parent_group_id: 103, child_group_id: 101, type: invitationSent}
-					- {parent_group_id: 104, child_group_id: 101, type: requestSent}
-					- {parent_group_id: 105, child_group_id: 101, type: invitationRefused}
-					- {parent_group_id: 106, child_group_id: 101, type: requestRefused}
-					- {parent_group_id: 107, child_group_id: 101, type: removed}
-					- {parent_group_id: 108, child_group_id: 101, type: left}
-					- {parent_group_id: 109, child_group_id: 101, type: direct}
-					- {parent_group_id: 110, child_group_id: 101, type: invitationAccepted}
-					- {parent_group_id: 120, child_group_id: 101, type: joinedByCode}
+					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
 					- {ancestor_group_id: 101, child_group_id: 101, is_self: 1}
 					- {ancestor_group_id: 102, child_group_id: 101, is_self: 0}
 					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
 					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
-					- {ancestor_group_id: 109, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 109, child_group_id: 109, is_self: 1}
-					- {ancestor_group_id: 110, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 110, child_group_id: 110, is_self: 1}
-					- {ancestor_group_id: 120, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 120, child_group_id: 120, is_self: 1}
 				items:
 					- {id: 10, has_attempts: 0}
 					- {id: 50, has_attempts: 0}
@@ -285,27 +201,11 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			itemID:      50,
 		},
 		{
-			name:        "okay (has_attempts=1, groups_groups.type=requestAccepted)",
+			name:        "okay (has_attempts=1)",
 			userID:      101,
 			attemptID:   200,
 			fixture:     `groups_attempts: [{id: 200, group_id: 102, item_id: 60, order: 0},{id: 201, group_id: 102, item_id: 60, order: 1}]`,
 			expectedIDs: []int64{200, 201},
-			itemID:      60,
-		},
-		{
-			name:        "okay (has_attempts=1, groups_groups.type=joinedByCode)",
-			userID:      101,
-			attemptID:   200,
-			fixture:     `groups_attempts: [{id: 200, group_id: 120, item_id: 60, order: 0},{id: 201, group_id: 120, item_id: 60, order: 1}]`,
-			expectedIDs: []int64{200, 201},
-			itemID:      60,
-		},
-		{
-			name:        "okay (has_attempts=1, groups_groups.type=invitationAccepted)",
-			userID:      101,
-			attemptID:   200,
-			fixture:     `groups_attempts: [{id: 200, group_id: 110, item_id: 60, order: 0}]`,
-			expectedIDs: []int64{200},
 			itemID:      60,
 		},
 		{
@@ -337,52 +237,10 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 			expectedIDs: nil,
 		},
 		{
-			name:        "user is not a member of the team (invitationSent)",
+			name:        "user is not a member of the team",
 			userID:      101,
 			attemptID:   100,
 			fixture:     `groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (requestSent)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 104, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (invitationRefused)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 105, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (requestRefused)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 106, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (removed)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 107, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (left)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 108, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team (direct)",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 109, item_id: 60, order: 0}]`,
 			expectedIDs: nil,
 		},
 		{
@@ -397,34 +255,20 @@ func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
-				groups: [{id: 101}, {id: 111}, {id: 121}]`, `
+				groups: [{id: 101}, {id: 103}, {id: 111}, {id: 121}]`, `
 				users:
 					- {login: "john", group_id: 101}
 					- {login: "jane", group_id: 111}
 					- {login: "guest", group_id: 121}
 				groups_groups:
-					- {parent_group_id: 102, child_group_id: 101, type: requestAccepted}
-					- {parent_group_id: 103, child_group_id: 101, type: invitationSent}
-					- {parent_group_id: 104, child_group_id: 101, type: requestSent}
-					- {parent_group_id: 105, child_group_id: 101, type: invitationRefused}
-					- {parent_group_id: 106, child_group_id: 101, type: requestRefused}
-					- {parent_group_id: 107, child_group_id: 101, type: removed}
-					- {parent_group_id: 108, child_group_id: 101, type: left}
-					- {parent_group_id: 109, child_group_id: 101, type: direct}
-					- {parent_group_id: 110, child_group_id: 101, type: invitationAccepted}
-					- {parent_group_id: 120, child_group_id: 101, type: joinedByCode}
+					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
 					- {ancestor_group_id: 101, child_group_id: 101, is_self: 1}
 					- {ancestor_group_id: 102, child_group_id: 101, is_self: 0}
 					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
+					- {ancestor_group_id: 103, child_group_id: 103, is_self: 1}
 					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
-					- {ancestor_group_id: 109, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 109, child_group_id: 109, is_self: 1}
-					- {ancestor_group_id: 110, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 110, child_group_id: 110, is_self: 1}
-					- {ancestor_group_id: 120, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 120, child_group_id: 120, is_self: 1}
 				items:
 					- {id: 10, has_attempts: 0}
 					- {id: 50, has_attempts: 0}

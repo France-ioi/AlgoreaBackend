@@ -31,8 +31,8 @@ Feature: Invite users
       | 112               | 112            | 1       |
       | 113               | 113            | 1       |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type   | type_changed_at |
-      | 22              | 13             | direct | null            |
+      | parent_group_id | child_group_id |
+      | 22              | 13             |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
@@ -60,26 +60,27 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type           | role   | inviting_user_id | child_order = 0 | (type_changed_at IS NOT NULL) AND (ABS(TIMESTAMPDIFF(SECOND, type_changed_at, NOW())) < 3) |
-      | 13              | 21             | invitationSent | member | 21               | 0               | 1                                                                                          |
-      | 13              | 101            | invitationSent | member | 21               | 0               | 1                                                                                          |
-      | 13              | 102            | invitationSent | member | 21               | 0               | 1                                                                                          |
-      | 22              | 13             | direct         | member | null             | 1               | 0                                                                                          |
-    And the table "groups_groups" should be:
-      | child_order |
-      | 0           |
-      | 1           |
-      | 2           |
-      | 3           |
+      | parent_group_id | child_group_id | role   | child_order = 0 |
+      | 22              | 13             | member | 1               |
+    And the table "group_pending_requests" should be:
+      | group_id | member_id | type       | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 21        | invitation | 1                                         |
+      | 13       | 101       | invitation | 1                                         |
+      | 13       | 102       | invitation | 1                                         |
+    And the table "group_membership_changes" should be:
+      | group_id | member_id | action             | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
+      | 13       | 21        | invitation_created | 21           | 1                                         |
+      | 13       | 101       | invitation_created | 21           | 1                                         |
+      | 13       | 102       | invitation_created | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
     Given I am the user with id "21"
     And the database table 'groups_groups' has also the following rows:
-      | parent_group_id | child_group_id | type               | type_changed_at |
-      | 444             | 21             | joinedByCode       | null            |
-      | 444             | 101            | invitationAccepted | null            |
-      | 444             | 102            | requestAccepted    | null            |
+      | parent_group_id | child_group_id |
+      | 444             | 21             |
+      | 444             | 101            |
+      | 444             | 102            |
     And the database table 'groups_ancestors' has also the following rows:
       | ancestor_group_id | child_group_id | is_self |
       | 444               | 21             | 0       |
@@ -107,4 +108,6 @@ Feature: Invite users
       }
       """
     And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
     And the table "groups_ancestors" should stay unchanged

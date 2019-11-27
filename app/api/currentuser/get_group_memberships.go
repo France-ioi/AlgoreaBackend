@@ -12,26 +12,25 @@ import (
 // ---
 // summary: List groups that the current user has joined
 // description:
-//   Returns the list of groups memberships of the current user
-//   (`groups_groups.type` is “requestAccepted”, “invitationAccepted” or “direct”).
+//   Returns the list of groups memberships of the current user.
 // parameters:
 // - name: sort
 //   in: query
-//   default: [-type_changed_at,id]
+//   default: [-member_since,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [type_changed_at,-type_changed_at,id,-id]
-// - name: from.type_changed_at
-//   description: Start the page from the membership next to one with `type_changed_at` = `from.type_changed_at`
+//     enum: [member_since,-member_since,id,-id]
+// - name: from.member_since
+//   description: Start the page from the membership next to one with `member_since` = `from.member_since`
 //                and `groups_groups.id` = `from.id`
-//                (`from.id` is required when `from.type_changed_at` is present)
+//                (`from.id` is required when `from.member_since` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the membership next to one with `type_changed_at`=`from.type_changed_at`
+//   description: Start the page from the membership next to one with `member_since`=`from.member_since`
 //                and `groups_groups.id`=`from.id`
-//                (`from.type_changed_at` is required when from.id is present)
+//                (`from.member_since` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -59,22 +58,28 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 	query := srv.Store.ActiveGroupGroups().
 		Select(`
 			groups_groups_active.id,
-			groups_groups_active.type_changed_at,
-			groups_groups_active.type,
+			latest_change.at AS member_since,
+			IFNULL(latest_change.action, 'added_directly') AS action,
 			groups.id AS group__id,
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type`).
 		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
-		Where("groups_groups_active.type IN ('invitationAccepted', 'requestAccepted', 'direct')").
+		Joins(`
+			LEFT JOIN LATERAL (
+				SELECT at, action FROM group_membership_changes
+				WHERE group_id = groups_groups_active.parent_group_id AND member_id = groups_groups_active.child_group_id
+				ORDER BY at DESC
+				LIMIT 1
+			) AS latest_change ON 1`).
 		Where("groups_groups_active.child_group_id = ?", user.GroupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"type_changed_at": {ColumnName: "groups_groups_active.type_changed_at", FieldType: "time"},
-			"id":              {ColumnName: "groups_groups_active.id", FieldType: "int64"}},
-		"-type_changed_at,id", false)
+			"member_since": {ColumnName: "member_since", FieldType: "time"},
+			"id":           {ColumnName: "groups_groups_active.id", FieldType: "int64"}},
+		"-member_since,id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

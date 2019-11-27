@@ -11,16 +11,16 @@ import (
 
 // swagger:model groupRequestsViewResponseRow
 type groupRequestsViewResponseRow struct {
-	// `groups_groups.id`
+	// `group_membership_changes.member_id`
 	// required: true
-	ID int64 `json:"id,string"`
+	MemberID int64 `json:"member_id,string"`
 	// Nullable
 	// required: true
-	TypeChangedAt *database.Time `json:"type_changed_at"`
-	// `groups_groups.type`
-	// enum: invitationSent,requestSent,invitationRefused,requestRefused
+	At *database.Time `json:"at"`
+	// `group_membership_changes.action`
+	// enum: invitation_created,join_request_created,invitation_refused,join_request_refused
 	// required: true
-	Type string `json:"type"`
+	Action string `json:"action"`
 
 	// Nullable
 	// required: true
@@ -64,19 +64,19 @@ type groupRequestsViewResponseRow struct {
 // description: >
 //
 //   Returns a list of group requests and invitations
-//   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and
-//   `type` = "invitationSent"/"requestSent"/"invitationRefused"/"requestRefused")
+//   (rows from the `group_membership_changes` table with `group_id` = `{group_id}` and
+//   `action` = "invitation_created"/"join_request_created"/"invitation_refused"/"join_request_refused")
 //   with basic info on joining (invited/requesting) users and inviting users.
 //
 //
 //   When `old_rejections_weeks` is given, only those rejected invitations/requests
-//   (`groups_groups.type` is "invitationRefused" or "requestRefused") are shown
-//   whose `type_changed_at` has changed in the last `old_rejections_weeks` weeks.
+//   (`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
+//   that are created in the last `old_rejections_weeks` weeks.
 //   Otherwise all rejected invitations/requests are shown.
 //
 //
 //   Invited user’s `first_name` and `last_name` are nulls
-//   if `groups_groups.type` = "invitationSent" or "invitationRefused".
+//   if `group_membership_changes.action` = "invitation_created" or "invitation_refused".
 //
 //
 //   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
@@ -90,14 +90,14 @@ type groupRequestsViewResponseRow struct {
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-type_changed_at,id]
+//   default: [-at,member_id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [type_changed_at,-type_changed_at,joining_user.login,-joining_user.login,type,-type,id,-id]
-// - name: from.type_changed_at
+//     enum: [at,-at,joining_user.login,-joining_user.login,action,-action,member_id,-member_id]
+// - name: from.at
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `groups_groups.type_changed_at` = `from.type_changed_at`
+//                `group_membership_changes.at` = `from.at`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
@@ -107,14 +107,15 @@ type groupRequestsViewResponseRow struct {
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
-// - name: from.type
+// - name: from.action
 //   description: Start the page from the request/invitation next to the request/invitation with
-//                `groups_groups.type` = `from.type`, sorted numerically.
+//                `group_membership_changes.action` = `from.action`, sorted numerically.
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: string
-// - name: from.id
-//   description: Start the page from the request/invitation next to the request/invitation with `groups_groups.id`=`from.id`
+// - name: from.member_id
+//   description: Start the page from the request/invitation next to the request/invitation with
+//                `group_membership_changes.member_id`=`from.member_id`
 //                (depending on the `sort` parameter, some other `from.*` parameters may be required)
 //   in: query
 //   type: integer
@@ -151,24 +152,37 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return apiError
 	}
 
-	query := srv.Store.GroupGroups().
+	query := srv.Store.GroupMembershipChanges().
 		Select(`
-			groups_groups.id,
-			groups_groups.type_changed_at,
-			groups_groups.type,
+			group_membership_changes.member_id,
+			group_membership_changes.at,
+			action,
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
-			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.first_name) AS joining_user__first_name,
-			IF(groups_groups.type IN ('invitationSent', 'invitationRefused'), NULL, joining_user.last_name) AS joining_user__last_name,
+			IF(action IN ('invitation_created', 'invitation_refused'), NULL, joining_user.first_name) AS joining_user__first_name,
+			IF(action IN ('invitation_created', 'invitation_refused'), NULL, joining_user.last_name) AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
 			inviting_user.group_id AS inviting_user__group_id,
 			inviting_user.login AS inviting_user__login,
 			inviting_user.first_name AS inviting_user__first_name,
 			inviting_user.last_name AS inviting_user__last_name`).
-		Joins("LEFT JOIN users AS inviting_user ON inviting_user.group_id = groups_groups.inviting_user_id").
-		Joins("LEFT JOIN users AS joining_user ON joining_user.group_id = groups_groups.child_group_id").
-		Where("groups_groups.type IN ('invitationSent', 'requestSent', 'invitationRefused', 'requestRefused')").
-		Where("groups_groups.parent_group_id = ?", groupID)
+		Joins(`
+			LEFT JOIN users AS inviting_user
+				ON inviting_user.group_id = initiator_id AND action = 'invitation_created'`).
+		Joins(`LEFT JOIN users AS joining_user ON joining_user.group_id = member_id`).
+		Joins(`
+			LEFT JOIN group_pending_requests
+				ON group_pending_requests.group_id = group_membership_changes.group_id AND
+					group_pending_requests.member_id = group_membership_changes.member_id AND
+					IF(group_pending_requests.type = 'invitation', 'invitation_created', 'join_request_created') =
+						group_membership_changes.action AND
+					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
+					 WHERE latest_change.group_id = group_pending_requests.group_id AND
+						latest_change.member_id = group_pending_requests.member_id AND
+						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
+		Where("action IN ('join_request_refused', 'invitation_refused') OR group_pending_requests.group_id IS NOT NULL").
+		Where("action IN ('invitation_created', 'join_request_created', 'invitation_refused', 'join_request_refused')").
+		Where("group_membership_changes.group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
 		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
@@ -176,18 +190,18 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 			return service.ErrInvalidRequest(err)
 		}
 		query = query.Where(`
-			groups_groups.type IN ('invitationSent', 'requestSent') OR
-			NOW() - INTERVAL ? WEEK < groups_groups.type_changed_at`, oldRejectionsWeeks)
+			group_membership_changes.action IN ('invitation_created', 'join_request_created') OR
+			NOW() - INTERVAL ? WEEK < group_membership_changes.at`, oldRejectionsWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"type":               {ColumnName: "groups_groups.type"},
+			"action":             {ColumnName: "group_membership_changes.action"},
 			"joining_user.login": {ColumnName: "joining_user.login"},
-			"type_changed_at":    {ColumnName: "groups_groups.type_changed_at", FieldType: "time"},
-			"id":                 {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-type_changed_at,id", false)
+			"at":                 {ColumnName: "group_membership_changes.at", FieldType: "time"},
+			"member_id":          {ColumnName: "group_membership_changes.member_id", FieldType: "int64"}},
+		"-at,member_id", false)
 
 	if apiError != service.NoError {
 		return apiError

@@ -20,10 +20,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | jane  | 41       | 42             | Jane        | null      |
       | jack  | 51       | 52             | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 11              | 31             | invitationAccepted |
-      | 11              | 41             | requestAccepted    |
-      | 11              | 51             | joinedByCode       |
+      | parent_group_id | child_group_id |
+      | 11              | 31             |
+      | 11              | 41             |
+      | 11              | 51             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -72,11 +72,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | entered_at          | finished_at | order |
       | 31       | 50      | 3019-10-10 10:10:10 | null        | 1     |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type               | expires_at          |
-      | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
-      | 11              | 41             | requestAccepted    | 9999-12-31 23:59:59 |
-      | 11              | 51             | joinedByCode       | 9999-12-31 23:59:59 |
-      | 99              | 31             | direct             | 3019-10-10 13:13:13 |
+      | parent_group_id | child_group_id | expires_at          |
+      | 11              | 31             | 9999-12-31 23:59:59 |
+      | 11              | 41             | 9999-12-31 23:59:59 |
+      | 11              | 51             | 9999-12-31 23:59:59 |
+      | 99              | 31             | 3019-10-10 13:13:13 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
@@ -126,11 +126,11 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | entered_at          | finished_at | order |
       | 11       | 60      | 3019-10-10 10:10:10 | null        | 1     |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | type               | expires_at          |
-      | 11              | 31             | invitationAccepted | 9999-12-31 23:59:59 |
-      | 11              | 41             | requestAccepted    | 9999-12-31 23:59:59 |
-      | 11              | 51             | joinedByCode       | 9999-12-31 23:59:59 |
-      | 98              | 11             | direct             | 3019-10-10 16:16:16 |
+      | parent_group_id | child_group_id | expires_at          |
+      | 11              | 31             | 9999-12-31 23:59:59 |
+      | 11              | 41             | 9999-12-31 23:59:59 |
+      | 11              | 51             | 9999-12-31 23:59:59 |
+      | 98              | 11             | 3019-10-10 16:16:16 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |

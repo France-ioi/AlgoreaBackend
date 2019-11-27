@@ -29,7 +29,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: UserSelf}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10, type: "joinedByCode"}]`,
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
 		},
@@ -41,7 +41,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 2, type: Team, team_item_id: 1234}
 					- {id: 3, type: "Team", "team_item_id": 1234}
 					- {id: 10, type: UserSelf}
-				groups_groups: [{parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}]`,
+				groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
 			groupsToInvite: []int64{10},
 			want:           []int64{10},
 		},
@@ -63,16 +63,10 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 14, type: UserSelf}
 					- {id: 15, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationSent"}
-					- {parent_group_id: 3, child_group_id: 11, type: "requestSent"}
-					- {parent_group_id: 2, child_group_id: 12, type: "invitationRefused"}
-					- {parent_group_id: 3, child_group_id: 13, type: "requestRefused"}
-					- {parent_group_id: 2, child_group_id: 14, type: "removed"}
-					- {parent_group_id: 3, child_group_id: 15, type: "left"}
-					- {parent_group_id: 4, child_group_id: 10, type: "invitationAccepted"}
-					- {parent_group_id: 5, child_group_id: 11, type: "requestAccepted"}
-					- {parent_group_id: 6, child_group_id: 12, type: "joinedByCode"}
-					- {parent_group_id: 7, child_group_id: 13, type: "direct"}`,
+					- {parent_group_id: 4, child_group_id: 10}
+					- {parent_group_id: 5, child_group_id: 11}
+					- {parent_group_id: 6, child_group_id: 12}
+					- {parent_group_id: 7, child_group_id: 13}`,
 			groupsToInvite: []int64{10, 11, 12, 13, 14, 15},
 			want:           []int64{10, 11, 12, 13, 14, 15},
 		},
@@ -88,10 +82,10 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 12, type: UserSelf}
 					- {id: 13, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}
-					- {parent_group_id: 3, child_group_id: 11, type: "requestAccepted"}
-					- {parent_group_id: 2, child_group_id: 12, type: "joinedByCode"}
-					- {parent_group_id: 3, child_group_id: 13, type: "direct"}`,
+					- {parent_group_id: 2, child_group_id: 10}
+					- {parent_group_id: 3, child_group_id: 11}
+					- {parent_group_id: 2, child_group_id: 12}
+					- {parent_group_id: 3, child_group_id: 13}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{10, 11, 12, 13},
 		},
@@ -107,10 +101,10 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 					- {id: 12, type: UserSelf}
 					- {id: 13, type: UserSelf}
 				groups_groups:
-					- {parent_group_id: 2, child_group_id: 10, type: "invitationAccepted"}
-					- {parent_group_id: 3, child_group_id: 11, type: "requestAccepted"}
-					- {parent_group_id: 2, child_group_id: 12, type: "joinedByCode"}
-					- {parent_group_id: 3, child_group_id: 13, type: "direct"}`,
+					- {parent_group_id: 2, child_group_id: 10}
+					- {parent_group_id: 3, child_group_id: 11}
+					- {parent_group_id: 2, child_group_id: 12}
+					- {parent_group_id: 3, child_group_id: 13}`,
 			groupsToInvite: []int64{10, 11, 12, 13},
 			want:           []int64{},
 			wantWrongIDs:   []int64{10, 11, 12, 13},

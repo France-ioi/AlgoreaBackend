@@ -150,7 +150,6 @@ func setAdditionalTimeForGroupInContest(
 		?`,
 		// For each of groups participating in the contest ...
 		store.GroupGroups().
-			Where("groups_groups.type"+database.GroupRelationIsActiveCondition).
 			Where("groups_groups.parent_group_id = ?", participantsGroupID).
 			// ... that are descendants of `groupID` (so affected by the change) ...
 			Joins(`
@@ -190,8 +189,7 @@ func setAdditionalTimeForGroupInContest(
 			contest_participations.entered_at,
 			INTERVAL (? + total_additional_times.total_additional_time) SECOND
 		)
-		WHERE groups_groups.type`+database.GroupRelationIsActiveCondition+` AND
-			groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
+		WHERE groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
 	service.MustNotBeError(result.Error())
 	if result.RowsAffected() > 0 {
 		service.MustNotBeError(store.GroupGroups().After())

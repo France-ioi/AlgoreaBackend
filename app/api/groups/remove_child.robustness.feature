@@ -21,21 +21,20 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | owner   | 21       | 22             | Jean-Michel | Blanquer  |
       | teacher | 23       | 24             | John        | Smith     |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 13              | 11             | direct             |
-      | 13              | 14             | requestSent        |
-      | 13              | 55             | invitationAccepted |
-      | 15              | 55             | requestAccepted    |
-      | 22              | 11             | direct             |
-      | 22              | 13             | direct             |
-      | 22              | 14             | direct             |
-      | 22              | 51             | direct             |
-      | 22              | 52             | direct             |
-      | 22              | 53             | direct             |
-      | 22              | 54             | direct             |
-      | 22              | 55             | direct             |
-      | 24              | 11             | direct             |
-      | 55              | 14             | direct             |
+      | parent_group_id | child_group_id |
+      | 13              | 11             |
+      | 13              | 55             |
+      | 15              | 55             |
+      | 22              | 11             |
+      | 22              | 13             |
+      | 22              | 14             |
+      | 22              | 51             |
+      | 22              | 52             |
+      | 22              | 53             |
+      | 22              | 54             |
+      | 22              | 55             |
+      | 24              | 11             |
+      | 55              | 14             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -181,14 +180,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
   Scenario: Relation doesn't exist
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/14/relations/11"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Relation is not direct
-    Given I am the user with id "21"
-    When I send a DELETE request to "/groups/13/relations/14"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

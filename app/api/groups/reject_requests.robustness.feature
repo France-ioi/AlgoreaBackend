@@ -35,21 +35,11 @@ Feature: Reject group requests - robustness
       | 122               | 122            | 1       |
       | 123               | 123            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at           |
-      | 1  | 13              | 21             | invitationSent     | {{relativeTime("-170h")}} |
-      | 2  | 13              | 11             | invitationRefused  | {{relativeTime("-169h")}} |
-      | 3  | 13              | 31             | requestSent        | {{relativeTime("-168h")}} |
-      | 5  | 14              | 11             | invitationSent     | null                      |
-      | 6  | 14              | 31             | invitationRefused  | null                      |
-      | 7  | 14              | 21             | requestSent        | null                      |
-      | 8  | 14              | 22             | requestRefused     | null                      |
-      | 9  | 13              | 121            | invitationAccepted | 2017-05-29 06:38:38       |
-      | 10 | 13              | 111            | requestAccepted    | null                      |
-      | 11 | 13              | 131            | removed            | null                      |
-      | 12 | 13              | 122            | left               | null                      |
-      | 13 | 13              | 123            | direct             | null                      |
-      | 14 | 13              | 141            | requestSent        | null                      |
-      | 15 | 22              | 13             | direct             | null                      |
+      | id | parent_group_id | child_group_id |
+      | 9  | 13              | 121            |
+      | 10 | 13              | 111            |
+      | 13 | 13              | 123            |
+      | 15 | 22              | 13             |
 
   Scenario: Fails when the user is not an owner of the parent group
     Given I am the user with id "11"

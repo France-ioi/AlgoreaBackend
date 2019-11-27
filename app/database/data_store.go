@@ -61,6 +61,16 @@ func (s *DataStore) ActiveGroupGroups() *GroupGroupStore {
 	return &GroupGroupStore{NewDataStoreWithTable(s.DB, "groups_groups_active")}
 }
 
+// GroupMembershipChanges returns a GroupMembershipChangeStore
+func (s *DataStore) GroupMembershipChanges() *GroupMembershipChangeStore {
+	return &GroupMembershipChangeStore{NewDataStoreWithTable(s.DB, "group_membership_changes")}
+}
+
+// GroupPendingRequests returns a GroupPendingRequestStore
+func (s *DataStore) GroupPendingRequests() *GroupPendingRequestStore {
+	return &GroupPendingRequestStore{NewDataStoreWithTable(s.DB, "group_pending_requests")}
+}
+
 // GroupContestItems returns a GroupContestItemStore
 func (s *DataStore) GroupContestItems() *GroupContestItemStore {
 	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}

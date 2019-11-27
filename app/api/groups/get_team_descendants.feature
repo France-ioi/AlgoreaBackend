@@ -49,36 +49,29 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | janed | 67       | 68             | Jane        | Doe       | -2    |
       | janee | 69       | 70             | Jane        | Edwards   | null  |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type               |
-      | 1               | 11             | direct             |
-      | 3               | 13             | direct             |
-      | 11              | 14             | direct             |
-      | 11              | 16             | direct             |
-      | 11              | 17             | direct             |
-      | 11              | 18             | direct             |
-      | 11              | 59             | requestAccepted    |
-      | 13              | 14             | direct             |
-      | 13              | 15             | direct             |
-      | 13              | 69             | invitationAccepted |
-      | 14              | 51             | requestAccepted    |
-      | 14              | 53             | joinedByCode       |
-      | 14              | 55             | invitationAccepted |
-      | 15              | 57             | direct             |
-      | 15              | 59             | requestAccepted    |
-      | 15              | 61             | invitationAccepted |
-      | 15              | 63             | invitationRefused  |
-      | 15              | 65             | left               |
-      | 15              | 67             | invitationSent     |
-      | 15              | 69             | requestSent        |
-      | 16              | 51             | invitationRefused  |
-      | 16              | 53             | requestRefused     |
-      | 16              | 55             | removed            |
-      | 16              | 63             | direct             |
-      | 16              | 65             | requestAccepted    |
-      | 16              | 67             | invitationAccepted |
-      | 20              | 21             | direct             |
-      | 22              | 1              | direct             |
-      | 22              | 3              | direct             |
+      | parent_group_id | child_group_id |
+      | 1               | 11             |
+      | 3               | 13             |
+      | 11              | 14             |
+      | 11              | 16             |
+      | 11              | 17             |
+      | 11              | 18             |
+      | 11              | 59             |
+      | 13              | 14             |
+      | 13              | 15             |
+      | 13              | 69             |
+      | 14              | 51             |
+      | 14              | 53             |
+      | 14              | 55             |
+      | 15              | 57             |
+      | 15              | 59             |
+      | 15              | 61             |
+      | 16              | 63             |
+      | 16              | 65             |
+      | 16              | 67             |
+      | 20              | 21             |
+      | 22              | 1              |
+      | 22              | 3              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |

@@ -47,8 +47,8 @@ Feature: Create a group (groupCreate)
       | id                  | name      | type         | team_item_id   | TIMESTAMPDIFF(SECOND, NOW(), created_at) < 3 |
       | 5577006791947779410 | some name | <group_type> | <want_item_id> | true                                         |
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id      | child_order | type   | role  |
-      | 22              | 5577006791947779410 | 1           | direct | owner |
+      | parent_group_id | child_group_id      | child_order | role  |
+      | 22              | 5577006791947779410 | 1           | owner |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 21                  | 21                  | 1       |

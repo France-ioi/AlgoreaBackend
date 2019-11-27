@@ -26,20 +26,22 @@ const maxAllowedLoginsToInvite = 100
 // summary: Invite users to a group
 // description:
 //   Lets an admin invite users, based on list of their logins, to join a group.
-//   On success the service creates new rows in `groups_groups` with
+//   On success the service creates new rows in `group_pending_requests` with
 //
-//     * `type` = "invitationSent"
+//     * `type` = "invitation"
 //
-//     * `type_changed_at` = current UTC time
+//     * `at` = current UTC time
 //
-//     * `inviting_user_id` = `users.group_id` of the authorized user,
+//   and `group_membership_changes` with
 //
-//     * `role` = "member",
+//     * `action` = "invitation_created"
 //
-//     * correct `child_order`, so that the row becomes the last child of the parent group.
+//     * `at` = current UTC time.
+//
+//     * `initiator_id` = `users.group_id` of the authorized user.
 //
 //
-//   It also refreshes the access rights.
+//   It also refreshes the access rights when needed.
 //
 //
 //   * Logins not corresponding to valid users are ignored (result = "not_found").
@@ -51,8 +53,7 @@ const maxAllowedLoginsToInvite = 100
 //
 //   * Pending invitations stay unchanged (result = "unchanged).
 //
-//   * Group members (`groups_groups.type` = "invitationAccepted"/"requestAccepted"/"direct")
-//     are skipped (result = "invalid").
+//   * Group members (already having `groups_groups`) are skipped (result = "invalid").
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise

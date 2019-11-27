@@ -20,36 +20,30 @@ Feature: Get group memberships for the current user
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
       | user  | 0         | 11       | 12             | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type               | type_changed_at     |
-      | 2  | 1               | 21             | invitationSent     | 2017-02-28 06:38:38 |
-      | 3  | 2               | 21             | invitationRefused  | 2017-03-29 06:38:38 |
-      | 4  | 3               | 21             | requestSent        | 2017-04-29 06:38:38 |
-      | 5  | 4               | 21             | requestRefused     | 2017-05-29 06:38:38 |
-      | 6  | 5               | 21             | invitationAccepted | 2017-06-29 06:38:38 |
-      | 7  | 6               | 21             | requestAccepted    | 2017-07-29 06:38:38 |
-      | 8  | 7               | 21             | removed            | 2017-08-29 06:38:38 |
-      | 9  | 8               | 21             | left               | 2017-09-29 06:38:38 |
-      | 10 | 9               | 21             | direct             | 2017-10-29 06:38:38 |
-      | 11 | 1               | 22             | direct             | 2017-11-29 06:38:38 |
+      | id | parent_group_id | child_group_id |
+      | 6  | 5               | 21             |
+      | 7  | 6               | 21             |
+      | 10 | 9               | 21             |
+      | 11 | 1               | 22             |
+    And the database has the following table 'group_membership_changes':
+      | group_id | member_id | action                | at                  |
+      | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |
+      | 2        | 21        | invitation_refused    | 2017-03-29 06:38:38 |
+      | 3        | 21        | join_request_created  | 2017-04-29 06:38:38 |
+      | 4        | 21        | join_request_refused  | 2017-05-29 06:38:38 |
+      | 5        | 21        | invitation_accepted   | 2017-06-29 06:38:38 |
+      | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38 |
+      | 7        | 21        | removed               | 2017-08-29 06:38:38 |
+      | 8        | 21        | left                  | 2017-09-29 06:38:38 |
+      | 1        | 22        | added_directly        | 2017-11-29 06:38:38 |
 
-  Scenario: Show all invitations
+  Scenario: Show all memberships
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
-      {
-        "id": "10",
-        "group": {
-          "id": "9",
-          "name": "Some other friends",
-          "description": "Another friends group",
-          "type": "Friends"
-        },
-        "type_changed_at": "2017-10-29T06:38:38Z",
-        "type": "direct"
-      },
       {
         "id": "7",
         "group": {
@@ -58,8 +52,8 @@ Feature: Get group memberships for the current user
           "description": "Another class group",
           "type": "Class"
         },
-        "type_changed_at": "2017-07-29T06:38:38Z",
-        "type": "requestAccepted"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "join_request_accepted"
       },
       {
         "id": "6",
@@ -69,8 +63,19 @@ Feature: Get group memberships for the current user
           "description": "Group for other people",
           "type": "Other"
         },
-        "type_changed_at": "2017-06-29T06:38:38Z",
-        "type": "invitationAccepted"
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "invitation_accepted"
+      },
+      {
+        "id": "10",
+        "group": {
+          "id": "9",
+          "name": "Some other friends",
+          "description": "Another friends group",
+          "type": "Friends"
+        },
+        "action": "added_directly",
+        "member_since": null
       }
     ]
     """
@@ -83,15 +88,15 @@ Feature: Get group memberships for the current user
     """
     [
       {
-        "id": "10",
+        "id": "7",
         "group": {
-          "id": "9",
-          "name": "Some other friends",
-          "description": "Another friends group",
-          "type": "Friends"
+          "id": "6",
+          "name": "Another Class",
+          "description": "Another class group",
+          "type": "Class"
         },
-        "type_changed_at": "2017-10-29T06:38:38Z",
-        "type": "direct"
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "join_request_accepted"
       }
     ]
     """

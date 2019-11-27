@@ -7,8 +7,8 @@ Feature: Update the 'current' answer
       | ancestor_group_id | child_group_id | is_self |
       | 101               | 101            | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id | type   | type_changed_at |
-      | 15 | 22              | 13             | direct | null            |
+      | id | parent_group_id | child_group_id |
+      | 15 | 22              | 13             |
     And the database has the following table 'items':
       | id |
       | 50 |

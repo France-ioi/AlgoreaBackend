@@ -20,15 +20,13 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 		{
 			tableName: "groups_groups",
 			expectedQuery: "SELECT * FROM `groups_groups` " +
-				"WHERE (`groups_groups`.child_group_id = ?) AND " +
-				"(groups_groups.type" + GroupRelationIsActiveCondition + " AND NOW() < groups_groups.expires_at)",
+				"WHERE (`groups_groups`.child_group_id = ?) AND (NOW() < groups_groups.expires_at)",
 			storeFunc: func(db *DB) *GroupGroupStore { return NewDataStore(db).GroupGroups() },
 		},
 		{
 			tableName: "groups_groups_active",
 			expectedQuery: "SELECT * FROM `groups_groups_active` " +
-				"WHERE (`groups_groups_active`.child_group_id = ?) AND " +
-				"(groups_groups_active.type" + GroupRelationIsActiveCondition + ")",
+				"WHERE (`groups_groups_active`.child_group_id = ?)",
 			storeFunc: func(db *DB) *GroupGroupStore { return NewDataStore(db).ActiveGroupGroups() },
 		},
 	} {

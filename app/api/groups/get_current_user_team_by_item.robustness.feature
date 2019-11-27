@@ -23,14 +23,8 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
       | jeremy | 17       |
       | jacob  | 19       |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id | type              |
-      | 20              | 12             | invitationSent    |
-      | 20              | 13             | requestSent       |
-      | 20              | 14             | invitationRefused |
-      | 20              | 15             | requestRefused    |
-      | 20              | 16             | removed           |
-      | 20              | 17             | left              |
-      | 21              | 19             | joinedByCode      |
+      | parent_group_id | child_group_id |
+      | 21              | 19             |
 
   Scenario: Invalid item_id
     Given I am the user with id "19"
@@ -38,20 +32,11 @@ Feature: Get current user's team for item (teamGetByItemID) - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario Outline: Wrong groups_groups.type
-    Given I am the user with id "<user_id>"
+  Scenario: Not a team member
+    Given I am the user with id "11"
     When I send a GET request to "/current-user/teams/by-item/100"
     Then the response code should be 404
     And the response error message should contain "No team for this item"
-    Examples:
-      | user_id |
-      | 11      |
-      | 12      |
-      | 13      |
-      | 14      |
-      | 15      |
-      | 16      |
-      | 17      |
 
   Scenario: Wrong groups.type
     Given I am the user with id "19"

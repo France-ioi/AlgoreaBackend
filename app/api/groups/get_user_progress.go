@@ -178,8 +178,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN groups_groups_active AS team_links
-			ON team_links.type`+database.GroupRelationIsActiveCondition+` AND
-				team_links.child_group_id = groups.id`).
+			ON team_links.child_group_id = groups.id`).
 		Joins(`
 			JOIN `+"`groups`"+` AS teams
 			ON teams.type = 'Team' AND

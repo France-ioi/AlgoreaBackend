@@ -28,7 +28,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	groupsAcceptedCondition := ""
 	if objectName == groups {
-		groupsAcceptedCondition = " AND (groups_groups.type" + GroupRelationIsActiveCondition + ") AND NOW() < groups_groups.expires_at"
+		groupsAcceptedCondition = " AND NOW() < groups_groups.expires_at"
 	}
 
 	relationsTable := objectName + "_" + objectName
@@ -123,7 +123,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			`+objectName+`_propagate.ancestors_computation_state = 'processing'`) // #nosec
 	if objectName == groups {
 		insertQueries[2] += `
-				AND (groups_groups_join.type` + GroupRelationIsActiveCondition + `) AND NOT groups_ancestors_select.is_self
+				AND NOT groups_ancestors_select.is_self
 			ON DUPLICATE KEY UPDATE
 				expires_at = GREATEST(groups_ancestors.expires_at, LEAST(groups_ancestors_select.expires_at, groups_groups_join.expires_at))`
 		insertQueries = append(insertQueries, `
