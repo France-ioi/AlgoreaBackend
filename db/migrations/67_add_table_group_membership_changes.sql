@@ -8,8 +8,11 @@ CREATE TABLE `group_membership_changes` (
                   'left', 'removed', 'joined_by_code', 'added_directly', 'expired'),
     `initiator_id` BIGINT(20) DEFAULT NULL COMMENT 'The user who initiated the action (if any), typically the group owner/manager or the member himself',
     PRIMARY KEY (`group_id`, `member_id`, `at`),
-    INDEX `group_id_member_id` (`group_id`, `member_id`),
     INDEX `group_id_member_id_at_desc` (`group_id`, `member_id`, `at` DESC),
+    INDEX `group_id_at_desc_member_id` (`group_id`, `at` DESC, `member_id`),
+    INDEX `member_id_at_desc_group_id` (`member_id`, `at` DESC, `group_id`),
+    INDEX `group_id_at_member_id` (`group_id`, `at`, `member_id`),
+    INDEX `member_id_at_group_id` (`member_id`, `at`, `group_id`),
     CONSTRAINT `fk_group_membership_changes_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_group_membership_changes_member_id_groups_id` FOREIGN KEY (`member_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_group_membership_changes_initiator_id_users_group_id` FOREIGN KEY (`initiator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL
