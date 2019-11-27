@@ -43,7 +43,7 @@ func testGroupAttemptStoreComputeAllGroupAttemptsValidated(t *testing.T, fixture
 	assert.Equal(t, expectedResults, result)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysValidated(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedStaysValidated(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -59,21 +59,21 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysValidated(t *t
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testGroupAttemptStoreComputeAllGroupAttemptsValidated(t,
-				[]string{"groups_attempts_propagation/_common"},
+				[]string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/one"},
 				tt.name,
 				func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-					assert.NoError(t, groupAttemptStore.Where("id=12").UpdateColumn("validated", true).Error())
+					assert.NoError(t, groupAttemptStore.Where("id IN(12, 13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				},
 				buildExpectedValidatedResultRows(map[int64]bool{
-					11: false, 12: true,
+					11: false, 12: true, 13: true,
 					// another user
-					22: tt.name == "Categories" || tt.name == "AllButOne",
+					22: false,
 				}))
 		})
 	}
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysNonValidatedFor(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedStaysNonValidatedFor(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -88,7 +88,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysNonValidatedFo
 				[]string{"groups_attempts_propagation/_common"},
 				tt.name,
 				func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-					assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated", true).Error())
+					assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				},
 				buildExpectedValidatedResultRows(map[int64]bool{
 					11: true, 12: false,
@@ -97,20 +97,20 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedStaysNonValidatedFo
 	}
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
 	t *testing.T) {
 	testGroupAttemptStoreComputeAllGroupAttemptsValidated(t,
 		[]string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/one"},
 		"One",
 		func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-			assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated", true).Error())
+			assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 		},
 		buildExpectedValidatedResultRows(map[int64]bool{
 			11: false, 12: true, 13: true,
 		}))
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
+func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
 	t *testing.T) {
 	testGroupAttemptStoreComputeAllGroupAttemptsValidated(t,
 		[]string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/one"},
@@ -121,7 +121,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidatedWithValidationTypeO
 		}))
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidated(t *testing.T) {
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Validated(t *testing.T) {
 	tests := []struct {
 		name            string
 		fixtures        []string
@@ -130,56 +130,76 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidated(t *testing.T) {
 		expectedResults []validatedResultRow
 	}{
 		{
-			name:           "user_item with ValidationType=AllButOne stays non-validated when there are two non-validated children",
+			name:           "for ValidationType=AllButOne stays non-validated when there are two non-validated children",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: false, 12: false, 13: true, 14: false,
 			}),
 		},
 		{
-			name:           "user_item with ValidationType=AllButOne becomes validated when there are less than two non-validated children",
+			name:           "for ValidationType=AllButOne stays non-validated when there is just one child and it is not validated",
+			fixtures:       []string{"groups_attempts_propagation/_common"},
+			validationType: "AllButOne",
+			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
+				11: false, 12: false,
+			}),
+		},
+		{
+			name:           "for ValidationType=AllButOne becomes validated when there are less than two non-validated children",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id IN (11, 13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (11, 13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: false,
 			}),
 		},
 		{
-			name:           "user_item with ValidationType=All stays non-validated when there is at least one non-validated child",
+			name:           "for ValidationType=All stays non-validated when there is at least one non-validated child",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: false, 13: true, 14: false,
 			}),
 		},
 		{
-			name:           "user_item with ValidationType=All becomes validated when all its children are validated",
+			name:           "for ValidationType=All stays non-validated when there are no children",
+			fixtures:       []string{"groups_attempts_propagation/_common"},
+			validationType: "All",
+			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
+				assert.NoError(t, groupAttemptStore.ItemItems().Delete("parent_item_id=2").Error())
+				assert.NoError(t, groupAttemptStore.Delete("item_id=1").Error())
+			},
+			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
+				12: false,
+			}),
+		},
+		{
+			name:           "for ValidationType=All becomes validated when all its children are validated",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id IN (11,13,14)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (11,13,14)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
 				11: true, 12: true, 13: true, 14: true,
 			}),
 		},
 		{
-			name: "user_item with ValidationType=Categories stays non-validated when " +
+			name: "for ValidationType=Categories stays non-validated when " +
 				"there is at least one non-validated child item with Category=Validation",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				assert.NoError(t, groupAttemptStore.ItemItems().Where("id IN (23,24)").
 					UpdateColumn("category", "Validation").Error())
 			},
@@ -188,14 +208,14 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidated(t *testing.T) {
 			}),
 		},
 		{
-			name: "user_item with ValidationType=Categories becomes validated when all its children " +
+			name: "for ValidationType=Categories becomes validated when all its children " +
 				"having Category=Validation are validated (should ignore items with NoScore=1",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
 				itemStore := groupAttemptStore.Items()
 				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
-				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (11,13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				assert.NoError(t, groupAttemptStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
@@ -203,12 +223,26 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_bValidated(t *testing.T) {
 			}),
 		},
 		{
-			name: "user_item with ValidationType=Categories becomes validated when all its children" +
+			name: "for ValidationType=Categories stays non-validated when there are no children " +
+				"having Category=Validation (should ignore items with NoScore=1",
+			fixtures:       []string{"groups_attempts_propagation/_common"},
+			validationType: "Categories",
+			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
+				itemStore := groupAttemptStore.Items()
+				assert.NoError(t, itemStore.Where("id=1").UpdateColumn("no_score", true).Error())
+				assert.NoError(t, groupAttemptStore.ItemItems().Where("id=21").UpdateColumn("category", "Validation").Error())
+			},
+			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{
+				11: false, 12: false,
+			}),
+		},
+		{
+			name: "for ValidationType=Categories becomes validated when all its children" +
 				"having Category=Validation are validated",
 			fixtures:       []string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-				assert.NoError(t, groupAttemptStore.Where("id IN (13,14)").UpdateColumn("validated", true).Error())
+				assert.NoError(t, groupAttemptStore.Where("id IN (13,14)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				assert.NoError(t, groupAttemptStore.ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[int64]bool{

@@ -120,7 +120,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 	}, result)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation(
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
 	t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
 	defer func() { _ = db.Close() }()
@@ -146,11 +146,48 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
 		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
+		// another user
+		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+	}, result)
+}
+
+func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
+	t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/validated_at")
+	defer func() { _ = db.Close() }()
+
+	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+
+	expectedDate := time.Now().Round(time.Second).UTC()
+	oldDate := expectedDate.AddDate(-1, -1, -1)
+
+	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=16").UpdateColumn("validated_at", expectedDate).Error())
+	assert.NoError(
+		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
+			Error())
+	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
+
+	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.GroupAttempts().ComputeAllGroupAttempts()
+	})
+	assert.NoError(t, err)
+
+	var result []validationDateResultRow
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.Equal(t, []validationDateResultRow{
+		{ID: 11, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
+		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 16, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		// another user
 		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
 	}, result)
@@ -169,6 +206,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 
 	itemStore := database.NewDataStore(db).Items()
 	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn("validated_at", oldDate).Error())
+	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn("validated_at", oldDate).Error())
 	assert.NoError(t, groupAttemptStore.Where("id=15").UpdateColumn("validated_at", oldDatePlusOneDay).Error()) // should be ignored
 	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
@@ -192,7 +230,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
 		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 14, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
 		{ID: 15, ValidatedAt: (*database.Time)(&oldDatePlusOneDay), AncestorsComputationState: "done"},
 		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
 		// another user

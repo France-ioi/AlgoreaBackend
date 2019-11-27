@@ -107,10 +107,10 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate,
-			"ancestors_computation_state", "validated", "validated_at",
+			"ancestors_computation_state", "validated_at",
 		)
 		values = append(values,
-			todo, 1, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
+			todo, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
 	}
 	if shouldUnlockItems(store, requestData.TaskToken.Converted.LocalItemID, score, gotFullScore) {
 		hasUnlockedItems = true

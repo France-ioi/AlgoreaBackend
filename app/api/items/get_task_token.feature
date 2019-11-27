@@ -62,8 +62,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | user_id | item_id | active_attempt_id   |
       | 111     | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 111      | 50      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id                  | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 5577006791947779410 | 111      | 50      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, only full access)
     Given I am the user with id "101"
@@ -94,8 +94,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | user_id | item_id | active_attempt_id   |
       | 101     | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 101      | 50      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id                  | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 5577006791947779410 | 101      | 50      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
     Given I am the user with id "101"
@@ -126,8 +126,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | user_id | item_id | active_attempt_id   |
       | 101     | 60      | 5577006791947779410 |
     And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 102      | 60      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id                  | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 5577006791947779410 | 102      | 60      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with id "101"
@@ -162,8 +162,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       """
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id  | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
     Given I am the user with id "101"
@@ -202,8 +202,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 101     | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 101      | 50      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 2  | 101      | 50      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
     Given I am the user with id "101"
@@ -242,8 +242,8 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 101     | 60      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 102      | 60      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 2  | 102      | 60      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: Keeps previous started_at values
     Given I am the user with id "101"
@@ -278,5 +278,5 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 101     | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | validated | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
-      | 2  | 101      | 50      | 0     | 0           | 0         | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
+      | id | group_id | item_id | score | tasks_tried | has_unlocked_items | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
+      | 2  | 101      | 50      | 0     | 0           | 0                  | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |

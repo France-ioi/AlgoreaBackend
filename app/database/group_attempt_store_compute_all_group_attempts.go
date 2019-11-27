@@ -24,7 +24,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  its item_id is an ancestor of the original row's item_id).
 // 2. We process all objects that were marked as 'todo' and that have no children not marked as 'done'.
 //  Then, if an object has children, we update
-//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated, validated_at.
+//    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated_at.
 //  This step is repeated until no records are updated.
 // 3. We insert new permissions_granted for each processed row with has_unlocked_items=1 according to corresponding items.unlocked_item_ids.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
@@ -38,6 +38,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 		groupAttemptStore := ds.GroupAttempts()
 
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
+		// (this query can take more than 50 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.db.Exec(
 			`UPDATE groups_attempts AS ancestors
 			JOIN items_ancestors ON (
@@ -96,6 +97,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's per-item maximums
 			//  - children_validated as the number of children items with validated == 1
 			//  - validated, depending on the items_items.category and items.validation_type
+			//    (an item should have at least one validated child to become validated itself by the propagation)
 			if updateStatement == nil {
 				const updateQuery = `
 					UPDATE groups_attempts AS target_groups_attempts
@@ -149,21 +151,15 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							children_stats.tasks_solved, target_groups_attempts.tasks_solved),
 						target_groups_attempts.children_validated = IF(children_stats.id IS NOT NULL,
 							children_stats.children_validated, target_groups_attempts.children_validated),
-						target_groups_attempts.validated = IF(children_stats.id IS NOT NULL,
-							CASE
-								WHEN target_groups_attempts.validated = 1 THEN 1
-								WHEN items.validation_type = 'Categories' THEN children_stats.children_non_validated_categories = 0
-								WHEN items.validation_type = 'All' THEN children_stats.children_non_validated = 0
-								WHEN items.validation_type = 'AllButOne' THEN children_stats.children_non_validated < 2
-								WHEN items.validation_type = 'One' THEN children_stats.children_validated > 0
-								ELSE 0
-							END, target_groups_attempts.validated),
-						target_groups_attempts.validated_at = IF(children_stats.id IS NOT NULL,
-							IFNULL(
-								target_groups_attempts.validated_at,
-								IF(items.validation_type = 'Categories',
-									children_stats.max_validated_at_categories, children_stats.max_validated_at)
-							), target_groups_attempts.validated_at),
+						target_groups_attempts.validated_at = IFNULL(target_groups_attempts.validated_at, CASE
+							WHEN children_stats.id IS NULL THEN NULL
+							WHEN items.validation_type = 'Categories' AND children_stats.children_non_validated_categories = 0
+							  THEN children_stats.max_validated_at_categories
+							WHEN items.validation_type = 'All' AND children_stats.children_non_validated = 0 THEN children_stats.max_validated_at
+							WHEN items.validation_type = 'AllButOne' AND children_stats.children_non_validated < 2 THEN children_stats.max_validated_at
+							WHEN items.validation_type = 'One' AND children_stats.children_validated > 0 THEN children_stats.max_validated_at
+							ELSE NULL
+							END),
 						target_groups_attempts.ancestors_computation_state = 'done'
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
