@@ -153,16 +153,16 @@ Feature: Export the current user's data
       ],
       "group_membership_changes": [
         {
-          "action": "join_request_refused", "at": "2019-07-10T00:02:28Z", "group_id": "4", "initiator_id": "11",
-          "member_id": "11", "name": "Our Friends"
+          "action": "left", "at": "2019-07-10T04:02:28Z", "group_id": "8", "initiator_id": "11",
+          "member_id": "11", "name": "Another Club"
         },
         {
           "action": "removed", "at": "2019-07-10T03:02:28Z", "group_id": "7", "initiator_id": "31",
           "member_id": "11", "name": "Another Team"
         },
         {
-          "action": "left", "at": "2019-07-10T04:02:28Z", "group_id": "8", "initiator_id": "11",
-          "member_id": "11", "name": "Another Club"
+          "action": "join_request_refused", "at": "2019-07-10T00:02:28Z", "group_id": "4", "initiator_id": "11",
+          "member_id": "11", "name": "Our Friends"
         }
       ],
       "group_pending_requests": [

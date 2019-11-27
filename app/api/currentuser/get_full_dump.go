@@ -156,6 +156,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 				Where("member_id = ?", user.GroupID).
 				Joins("JOIN `groups` ON `groups`.id = group_id").
 				Select(columns + ", `groups`.name").
+				Order("at DESC, group_id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
