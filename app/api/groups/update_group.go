@@ -41,7 +41,7 @@ type groupUpdateInput struct {
 // ---
 // summary: Update group information
 // description: Edit group information.
-//   Requires the user to be the owner of the group.
+//   Requires the user to be a manager of the group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -84,7 +84,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			FreeAccess bool
 		}
 
-		if errInTransaction := groupStore.OwnedBy(user).
+		if errInTransaction := groupStore.ManagedBy(user).
 			Select("groups.free_access").WithWriteLock().
 			Where("groups.id = ?", groupID).Limit(1).Scan(&currentGroupData).Error(); errInTransaction != nil {
 			return errInTransaction // rollback

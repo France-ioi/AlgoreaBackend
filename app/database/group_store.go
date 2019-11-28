@@ -5,13 +5,17 @@ type GroupStore struct {
 	*DataStore
 }
 
-// OwnedBy returns a composable query for getting all the groups
-// that are descendants of the user's owned group using a User object
-func (s *GroupStore) OwnedBy(user *User) *DB {
-	return s.Joins(`
-		JOIN groups_ancestors_active
-			ON groups_ancestors_active.child_group_id = groups.id`).
-		Where("groups_ancestors_active.ancestor_group_id=?", user.OwnedGroupID)
+// ManagedBy returns a composable query for getting all the groups
+// that are descendants of groups managed by the user (the result may contain duplicates)
+func (s *GroupStore) ManagedBy(user *User) *DB {
+	return s.
+		Joins(`
+			JOIN groups_ancestors_active
+				ON groups_ancestors_active.child_group_id = groups.id`).
+		Joins(`
+			JOIN group_managers
+				ON group_managers.group_id = groups_ancestors_active.ancestor_group_id AND
+					group_managers.manager_id = ?`, user.GroupID)
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that

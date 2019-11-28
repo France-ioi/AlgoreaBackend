@@ -18,6 +18,11 @@ Feature: Get group by name (contestGetGroupByName)
       | owner | 21       | 22             |
       | john  | 31       | 32             |
       | jane  | 41       | 42             |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 11       | 21         |
+      | 14       | 21         |
+      | 31       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -46,12 +51,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 15                | 31             | 0       |
       | 15                | 41             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 31             | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |

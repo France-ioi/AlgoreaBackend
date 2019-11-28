@@ -67,7 +67,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	var groupType string
-	err := srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).
+	err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		PluckFirst("groups.type", &groupType).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError

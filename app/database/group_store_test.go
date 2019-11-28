@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGroupStore_OwnedBy(t *testing.T) {
+func TestGroupStore_ManagedBy(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -15,12 +15,13 @@ func TestGroupStore_OwnedBy(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` " +
 		"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id " +
-		"WHERE (groups_ancestors_active.ancestor_group_id=?)")).
-		WithArgs(3).
+		"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id " +
+		"AND group_managers.manager_id = ?")).
+		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := NewDataStore(db).Groups().OwnedBy(mockUser).Scan(&result).Error()
+	err := NewDataStore(db).Groups().ManagedBy(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

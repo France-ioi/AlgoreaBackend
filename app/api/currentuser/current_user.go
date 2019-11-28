@@ -100,7 +100,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 
 	if action == createGroupRequestAction {
 		var found bool
-		found, err = store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
+		found, err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
 			action = createAcceptedGroupRequestAction

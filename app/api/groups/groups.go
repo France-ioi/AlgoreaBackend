@@ -71,10 +71,11 @@ func checkThatUserHasRightsForDirectRelation(
 		Type string
 	}
 
-	err := groupStore.OwnedBy(user).
+	err := groupStore.ManagedBy(user).
 		WithWriteLock().
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
+		Group("groups.id").
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 

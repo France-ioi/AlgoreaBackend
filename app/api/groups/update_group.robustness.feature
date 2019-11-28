@@ -13,13 +13,17 @@ Feature: Update a group (groupEdit) - robustness
       | login | temp_user | group_id | owned_group_id | first_name  | last_name |
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  |
       | user  | 0         | 31       | 32             | John        | Doe       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 22                | 13             | 0       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 32                | 15             | 0       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 22                | 13             | 0       |
+      | 13                | 11             | 0       |
+      | 13                | 13             | 1       |
+      | 15                | 15             | 1       |
 
-  Scenario: Should fail if the user is not an owner of the group
+  Scenario: Should fail if the user is not a manager of the group
     Given I am the user with id "31"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -41,18 +45,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: Should fail if the user is an owner of the group, but the group itself doesn't exist
-    Given I am the user with id "31"
-    When I send a PUT request to "/groups/15" with the following body:
-    """
-    {"name":"Club"}
-    """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-
-  Scenario: User is an owner of the group, but required fields are not filled in correctly
+  Scenario: User is a manager of the group, but required fields are not filled in correctly
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -91,7 +84,7 @@ Feature: Update a group (groupEdit) - robustness
     And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
 
-  Scenario: User is an owner of the group, but no fields provided
+  Scenario: User is a manager of the group, but no fields provided
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """

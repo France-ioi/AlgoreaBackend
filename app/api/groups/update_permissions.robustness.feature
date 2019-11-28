@@ -14,11 +14,13 @@ Feature: Change item access rights for a group - robustness
       | owner | 21       | 22             | Jean-Michel | Blanquer  |
       | user  | 23       | 24             | John        | Doe       |
       | admin | 31       | 32             | Allie       | Grater    |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 23       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
-      | 22                | 23             | 0       |
       | 23                | 23             | 1       |
       | 24                | 24             | 1       |
       | 25                | 23             | 0       |
@@ -163,7 +165,7 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: The user doesn't own the group
+  Scenario: The user is not a manager of the group
     Given I am the user with id "21"
     When I send a PUT request to "/groups/21/items/102" with the following body:
     """

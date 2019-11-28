@@ -62,8 +62,10 @@ func TestService_updateGroup_ErrorOnReadInTransaction(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"WHERE (groups_ancestors_active.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnError(errors.New("error"))
+			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+			"AND group_managers.manager_id = ? "+
+			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(2, 1).WillReturnError(errors.New("error"))
 		mock.ExpectRollback()
 	})
 }
@@ -73,8 +75,10 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"WHERE (groups_ancestors_active.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
+			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+			"AND group_managers.manager_id = ? "+
+			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").
 			WithArgs(2, 1).WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()
@@ -86,8 +90,10 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"WHERE (groups_ancestors_active.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
+			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+			"AND group_managers.manager_id = ? "+
+			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(true))
 		mock.ExpectExec("INSERT INTO group_membership_changes .+").WithArgs(2, 1).
 			WillReturnResult(sqlmock.NewResult(-1, 1))
 		mock.ExpectExec("DELETE FROM `group_pending_requests` .+").WithArgs(1).
@@ -101,8 +107,10 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(regexp.QuoteMeta("SELECT groups.free_access FROM `groups` "+
 			"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id "+
-			"WHERE (groups_ancestors_active.ancestor_group_id=?) AND (groups.id = ?) LIMIT 1 FOR UPDATE")).
-			WithArgs(ptrInt64(11), 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(false))
+			"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id "+
+			"AND group_managers.manager_id = ? "+
+			"WHERE (groups.id = ?) LIMIT 1 FOR UPDATE")).
+			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"free_access"}).AddRow(false))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))
 		mock.ExpectRollback()

@@ -9,12 +9,14 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     And the database has the following table 'users':
       | login | group_id | owned_group_id |
       | owner | 21       | 22             |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id | duration |
@@ -67,7 +69,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
-  Scenario: The group is not owned by the user
+  Scenario: The user is not a manager of the group
     Given I am the user with id "21"
     When I send a GET request to "/contests/70/groups/12/members/additional-times"
     Then the response code should be 403
