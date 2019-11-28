@@ -94,6 +94,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		service.MustNotBeError(srv.Store.GroupAncestors().ManagedByUser(user).
 			Joins("JOIN `groups` ON `groups`.id = child_group_id").
 			Order("`groups`.`id`").
+			Group("`groups`.`id`").
 			Select("`groups`.id, `groups`.name").ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
