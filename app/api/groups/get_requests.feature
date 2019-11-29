@@ -15,11 +15,14 @@ Feature: Get requests for group_id
       | 123 |
       | 124 |
       | 131 |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 22                | 13             | 0       |
+      | 75 | 11                | 11             | 1       |
       | 76 | 13                | 11             | 0       |
-      | 77 | 22                | 11             | 0       |
+      | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
@@ -60,7 +63,7 @@ Feature: Get requests for group_id
       | 13       | 123       | added_directly        | 2017-05-20 06:38:38       | 11           |
       | 13       | 124       | joined_by_code        | 2017-05-19 06:38:38       | 11           |
 
-  Scenario: User is an admin of the group (default sort)
+  Scenario: User is a manager of the group (default sort)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests"
     Then the response code should be 200
@@ -121,7 +124,7 @@ Feature: Get requests for group_id
     ]
     """
 
-  Scenario: User is an admin of the group (sort by action)
+  Scenario: User is a manager of the group (sort by action)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?sort=action,member_id"
     Then the response code should be 200
@@ -182,7 +185,7 @@ Feature: Get requests for group_id
     ]
     """
 
-  Scenario: User is an admin of the group (sort by joining user's login)
+  Scenario: User is a manager of the group (sort by joining user's login)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?sort=joining_user.login,member_id"
     Then the response code should be 200
@@ -243,7 +246,7 @@ Feature: Get requests for group_id
     ]
     """
 
-  Scenario: User is an admin of the group; request the first row
+  Scenario: User is a manager of the group; request the first row
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?limit=1"
     Then the response code should be 200
@@ -260,7 +263,7 @@ Feature: Get requests for group_id
     ]
     """
 
-  Scenario: User is an admin of the group; filter out old rejections
+  Scenario: User is a manager of the group; filter out old rejections
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/requests?rejections_within_weeks=1"
     Then the response code should be 200

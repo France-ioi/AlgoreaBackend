@@ -13,7 +13,7 @@ import (
 // summary: List user descendants of the group
 // description: Return all users (`type` = "UserSelf") among the descendants of the given group
 //
-//   * The authenticated user should own the parent group.
+//   * The authenticated user should be a manager of the parent group.
 // parameters:
 // - name: group_id
 //   in: path
@@ -65,7 +65,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 

@@ -18,6 +18,9 @@ Feature: Accept group requests - robustness
       | login | group_id | owned_group_id | first_name  | last_name | grade |
       | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | 12             | John        | Doe       | 1     |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -27,7 +30,6 @@ Feature: Accept group requests - robustness
       | 13                | 123            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
@@ -39,7 +41,6 @@ Feature: Accept group requests - robustness
       | 9  | 13              | 121            |
       | 10 | 13              | 111            |
       | 13 | 13              | 123            |
-      | 15 | 22              | 13             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
@@ -48,7 +49,7 @@ Feature: Accept group requests - robustness
       | 14       | 11        | invitation   |
       | 14       | 21        | join_request |
 
-  Scenario: Fails when the user is not an owner of the parent group
+  Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22"
     Then the response code should be 403

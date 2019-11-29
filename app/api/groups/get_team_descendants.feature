@@ -48,6 +48,9 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | janec | 65       | 66             | Jane        | null      | 4     |
       | janed | 67       | 68             | Jane        | Doe       | -2    |
       | janee | 69       | 70             | Jane        | Edwards   | null  |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 1        | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
@@ -70,8 +73,6 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 16              | 65             |
       | 16              | 67             |
       | 20              | 21             |
-      | 22              | 1              |
-      | 22              | 3              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
@@ -136,25 +137,7 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 1              | 0       |
-      | 22                | 11             | 0       |
-      | 22                | 12             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
-      | 22                | 16             | 0       |
-      | 22                | 17             | 0       |
-      | 22                | 18             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 53             | 0       |
-      | 22                | 55             | 0       |
-      | 22                | 59             | 0       |
-      | 22                | 61             | 0       |
-      | 22                | 63             | 0       |
-      | 22                | 65             | 0       |
-      | 22                | 67             | 0       |
-      | 22                | 69             | 0       |
 
   Scenario: Get descendant teams
     Given I am the user with id "21"

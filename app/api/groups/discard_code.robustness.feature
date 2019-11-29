@@ -19,12 +19,10 @@ Feature: Discard the code of the given group - robustness
       | jane  | 0         | 31       | 32             | Jane        | Doe       | en               |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 22                | 13             | 0       |
       | 76 | 13                | 11             | 0       |
-      | 77 | 22                | 11             | 0       |
       | 78 | 21                | 21             | 1       |
 
-  Scenario: User is not an admin of the group
+  Scenario: User is not a manager of the group
     Given I am the user with id "41"
     When I send a DELETE request to "/groups/13/code"
     Then the response code should be 403

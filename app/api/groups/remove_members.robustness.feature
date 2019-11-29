@@ -29,7 +29,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 2  | 13              | 11             |
       | 15 | 22              | 13             |
 
-  Scenario: Fails when the user is not an owner of the parent group
+  Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
     When I send a DELETE request to "/groups/13/members?user_ids=1,2"
     Then the response code should be 403

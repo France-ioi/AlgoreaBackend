@@ -5,11 +5,17 @@ Feature: Get recent activity for group_id and item_id - robustness
       | someone | 0         | 21       | 22             | Bill        | Clinton   |
       | user    | 0         | 11       | 12             | John        | Doe       |
       | owner   | 0         | 23       | 24             | Jean-Michel | Blanquer  |
+    And the database has the following table 'groups':
+      | id |
+      | 13 |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 23         |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 24                | 13             | 0       |
       | 76 | 13                | 11             | 0       |
-      | 77 | 22                | 11             | 0       |
+      | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
       | 79 | 23                | 23             | 1       |
     And the database has the following table 'users_answers':
@@ -39,7 +45,7 @@ Feature: Get recent activity for group_id and item_id - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
-  Scenario: Should fail when user is not an admin of the group
+  Scenario: Should fail when user is not a manager of the group
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200"
     Then the response code should be 403

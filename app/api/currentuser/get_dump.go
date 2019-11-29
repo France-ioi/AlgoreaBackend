@@ -14,7 +14,7 @@ import (
 //   The content returned is just the dump of raw entries of tables related to the user
 //
 //     * `current_user` (from `users`): all attributes;
-//     * `owned_groups`: `id` and `name` for every descendant of user’s `owned_group_id`;
+//     * `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
 //     * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;

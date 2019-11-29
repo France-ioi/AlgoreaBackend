@@ -16,7 +16,7 @@ import (
 //                Return one group matching the name and satisfying:
 //
 //                  * the group has access to the contest (info, content or content_with_descendants);
-//                  * the authenticated user is an owner of the group;
+//                  * the authenticated user is a manager of the group;
 //                  * the `groups.name` (matching `login` if a "UserSelf" group) is matching the input `name` parameter (case-insensitive)
 //
 //                If there are several groups or users matching, returns the first one (by `id`).
@@ -78,7 +78,9 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	}
 	service.MustNotBeError(err)
 
-	query := srv.Store.Groups().OwnedBy(user).
+	groupsManagedByUserSubQuery := srv.Store.GroupAncestors().ManagedByUser(user).
+		Select("groups_ancestors.child_group_id").SubQuery()
+	query := srv.Store.Groups().
 		Joins(`
 			JOIN groups_ancestors_active AS found_group_ancestors
 				ON found_group_ancestors.child_group_id = groups.id`).
@@ -91,6 +93,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		Joins(`
 			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = groups.id AND
 				main_group_contest_item.item_id = ?`, itemID).
+		Where("groups.id IN ?", groupsManagedByUserSubQuery).
 		Select(`
 				groups.id AS group_id,
 				groups.name,

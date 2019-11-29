@@ -22,7 +22,7 @@ type updatePermissionsInput struct {
 // description: Let an admin of a group give/withdraw access rights on an item (identified by `item_id`)
 //   to a user (identified by `group_id` of his self group).
 //
-//   * The user giving the access must be an owner of one of the ancestors of the group.
+//   * The user giving the access must be a manager of one of the ancestors of the group.
 //
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
@@ -85,8 +85,8 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 			}
 		}
 
-		// the authorized user should own the group
-		found, err = s.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
+		// the authorized user should be a manager of the group
+		found, err = s.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiErr = service.InsufficientAccessRightsError

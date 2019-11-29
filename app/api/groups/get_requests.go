@@ -79,7 +79,7 @@ type groupRequestsViewResponseRow struct {
 //   if `group_membership_changes.action` = "invitation_created" or "invitation_refused".
 //
 //
-//   The authenticated user should be an owner of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -148,7 +148,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserOwnsTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 

@@ -18,11 +18,13 @@ Feature: Invite users
       | john  | 101      | 111            | John        | Doe       |
       | jane  | 102      | 112            | Jane        | Doe       |
       | Jane  | 103      | 113            | Jane        | Smith     |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
       | 101               | 101            | 1       |
       | 102               | 102            | 1       |
@@ -30,9 +32,6 @@ Feature: Invite users
       | 111               | 111            | 1       |
       | 112               | 112            | 1       |
       | 113               | 113            | 1       |
-    And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 22              | 13             |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
@@ -59,9 +58,7 @@ Feature: Invite users
         "success": true
       }
       """
-    And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | role   | child_order = 0 |
-      | 22              | 13             | member | 1               |
+    And the table "groups_groups" should be empty
     And the table "group_pending_requests" should be:
       | group_id | member_id | type       | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 21        | invitation | 1                                         |

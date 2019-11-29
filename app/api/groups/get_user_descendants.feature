@@ -18,6 +18,9 @@ Feature: List user descendants of the group (groupUserDescendantView)
     And the database has the following table 'users':
       | login | group_id | owned_group_id | first_name  | last_name | grade |
       | owner | 21       | 22             | Jean-Michel | Blanquer  | 10    |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 1        | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
@@ -56,18 +59,9 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 1              | 0       |
-      | 22                | 11             | 0       |
-      | 22                | 12             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
-      | 22                | 16             | 0       |
-      | 22                | 17             | 0       |
-      | 22                | 18             | 0       |
       | 22                | 22             | 1       |
 
-  Scenario: One group with 4 grand children (different parents; one connected as "direct", one as "invitationAccepted", one as "requestAccepted", one as "joinedByCode")
+  Scenario: One group with 4 grand children (different parents)
     Given the database table 'groups' has also the following rows:
       | id | type      | name        | grade |
       | 51 | UserSelf  | johna       | -2    |

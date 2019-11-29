@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
+func TestGroupAncestorStore_ManagedByUser(t *testing.T) {
 	for _, test := range []struct {
 		tableName     string
 		expectedQuery string
@@ -15,14 +15,21 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 	}{
 		{
 			tableName: "groups_ancestors",
-			expectedQuery: "SELECT * FROM `groups_ancestors` " +
-				"WHERE (`groups_ancestors`.ancestor_group_id=?) AND (NOW() < `groups_ancestors`.expires_at)",
+			expectedQuery: "SELECT `groups_ancestors`.* FROM `groups_ancestors` " +
+				"JOIN group_managers ON group_managers.group_id = `groups_ancestors`.ancestor_group_id " +
+				"JOIN groups_ancestors_active AS user_ancestors " +
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND " +
+				"user_ancestors.child_group_id = ? " +
+				"WHERE (NOW() < `groups_ancestors`.expires_at)",
 			storeFunc: func(db *DB) *GroupAncestorStore { return NewDataStore(db).GroupAncestors() },
 		},
 		{
 			tableName: "groups_ancestors_active",
-			expectedQuery: "SELECT * FROM `groups_ancestors_active` " +
-				"WHERE (`groups_ancestors_active`.ancestor_group_id=?)",
+			expectedQuery: "SELECT `groups_ancestors_active`.* FROM `groups_ancestors_active` " +
+				"JOIN group_managers ON group_managers.group_id = `groups_ancestors_active`.ancestor_group_id " +
+				"JOIN groups_ancestors_active AS user_ancestors " +
+				"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND " +
+				"user_ancestors.child_group_id = ?",
 			storeFunc: func(db *DB) *GroupAncestorStore { return NewDataStore(db).ActiveGroupAncestors() },
 		},
 	} {
@@ -32,11 +39,11 @@ func TestGroupAncestorStore_OwnedByUser(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(11), DefaultLanguageID: 0}
-			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).WithArgs(11).
+			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).WithArgs(2).
 				WillReturnRows(mock.NewRows([]string{"id"}))
 
 			var result []interface{}
-			err := test.storeFunc(db).OwnedByUser(mockUser).Scan(&result).Error()
+			err := test.storeFunc(db).ManagedByUser(mockUser).Scan(&result).Error()
 
 			assert.NoError(t, err)
 			assert.NoError(t, mock.ExpectationsWereMet())

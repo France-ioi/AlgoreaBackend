@@ -48,6 +48,10 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | janec | 65       | 66             |
       | janed | 67       | 68             |
       | janee | 69       | 70             |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 1        | 21         |
+      | 3        | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 11             |
@@ -74,8 +78,6 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 17              | 18             |
       | 17              | 59             |
       | 20              | 21             |
-      | 22              | 1              |
-      | 22              | 3              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
@@ -132,24 +134,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 1              | 0       |
-      | 22                | 3              | 0       |
-      | 22                | 11             | 0       |
-      | 22                | 12             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
-      | 22                | 17             | 0       |
-      | 22                | 18             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 53             | 0       |
-      | 22                | 55             | 0       |
-      | 22                | 59             | 0       |
-      | 22                | 61             | 0       |
-      | 22                | 63             | 0       |
-      | 22                | 65             | 0       |
-      | 22                | 69             | 0       |
     And the database has the following table 'items':
       | id  | type     |
       | 200 | Category |

@@ -20,6 +20,7 @@ Background:
     | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
+    | 75 | 21                | 21             | 1       |
   And the database has the following table 'items':
     | id  | type     | teams_editable | no_score | unlocked_item_ids |
     | 190 | Category | false          | false    | 1234,2345         |
@@ -60,7 +61,7 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: Should fail when the authenticated user is not a member of the group and not an owner of the group attached to the attempt
+  Scenario: Should fail when the authenticated user is not a member of the group and not a manager of the group attached to the attempt
     Given I am the user with id "21"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 403

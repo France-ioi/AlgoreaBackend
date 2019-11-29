@@ -11,6 +11,11 @@ Feature: Remove a direct parent-child relation between two groups
     And the database has the following table 'users':
       | login | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | owner | 21       | 22             | Jean-Michel | Blanquer  | 1               |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
+      | 14       | 21         |
+      | 22       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |

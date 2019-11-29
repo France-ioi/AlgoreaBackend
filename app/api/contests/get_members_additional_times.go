@@ -30,7 +30,7 @@ import (
 //                Restrictions:
 //                  * `item_id` should be a timed contest;
 //                  * the authenticated user should have `solutions` or `full` access on the input item;
-//                  * the authenticated user should own the `group_id`.
+//                  * the authenticated user should be a manager of the `group_id`.
 // parameters:
 // - name: item_id
 //   description: "`id` of a timed contest"
@@ -96,7 +96,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 	service.MustNotBeError(err)
 
-	ok, err := srv.Store.Groups().OwnedBy(user).Where("groups.id = ?", groupID).HasRows()
+	ok, err := srv.Store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	if !ok {
 		return service.InsufficientAccessRightsError

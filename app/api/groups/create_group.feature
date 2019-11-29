@@ -46,14 +46,14 @@ Feature: Create a group (groupCreate)
     And the table "groups" at id "5577006791947779410" should be:
       | id                  | name      | type         | team_item_id   | TIMESTAMPDIFF(SECOND, NOW(), created_at) < 3 |
       | 5577006791947779410 | some name | <group_type> | <want_item_id> | true                                         |
-    And the table "groups_groups" should be:
-      | parent_group_id | child_group_id      | child_order | role  |
-      | 22              | 5577006791947779410 | 1           | owner |
+    And the table "group_managers" should be:
+      | manager_id | group_id            | can_manage            | can_grant_group_access | can_watch_members |
+      | 21         | 5577006791947779410 | memberships_and_group | 1                      | 1                 |
+    And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 21                  | 21                  | 1       |
       | 22                  | 22                  | 1       |
-      | 22                  | 5577006791947779410 | 0       |
       | 5577006791947779410 | 5577006791947779410 | 1       |
   Examples:
     | group_type | item_spec         | want_item_id |

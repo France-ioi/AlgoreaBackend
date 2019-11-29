@@ -12,7 +12,7 @@ import (
 // description: >
 //   Lets a user create a request to join a group. There are two possible cases:
 //
-//   #### The user doesn't own the group
+//   #### The user is not a manager of the group
 //
 //     On success the service creates a new row in `group_pending_requests` with
 //     `group_id` = `{group_id}`, `member_id` = user's self group id, `type` = 'join_request'
@@ -31,7 +31,7 @@ import (
 //     * If there is already a row in `group_pending_requests` with `type` = 'join_request',
 //       the "unchanged" (201) response is returned.
 //
-//   #### The user owns the group
+//   #### The user is a manager of the group
 //
 //     On success the service creates a new row in `groups_groups` with `parent_group_id` = `group_id`
 //     and `child_group_id` = user's self group id + a new row in `group_membership_changes`

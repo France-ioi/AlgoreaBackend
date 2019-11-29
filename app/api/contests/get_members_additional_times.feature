@@ -20,6 +20,16 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | owner | 21       | 22             |
       | john  | 31       | 32             |
       | jane  | 41       | 42             |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 11       | 21         |
+      | 13       | 21         |
+      | 14       | 21         |
+      | 15       | 21         |
+      | 16       | 21         |
+      | 17       | 21         |
+      | 31       | 21         |
+      | 41       | 21         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 11             |
@@ -32,12 +42,6 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 14              | 14             |
       | 15              | 31             |
       | 15              | 41             |
-      | 22              | 13             |
-      | 22              | 14             |
-      | 22              | 15             |
-      | 22              | 16             |
-      | 22              | 17             |
-      | 22              | 31             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |
@@ -64,15 +68,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 16                | 16             | 1       |
       | 17                | 17             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
-      | 22                | 16             | 0       |
-      | 22                | 17             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 31             | 0       |
-      | 22                | 41             | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |

@@ -13,6 +13,9 @@ Feature: User sends a request to join a group - robustness
     And the database has the following table 'users':
       | group_id | owned_group_id | login |
       | 21       | 22             | john  |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 17       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -24,7 +27,6 @@ Feature: User sends a request to join a group - robustness
       | 17                | 17             | 1       |
       | 21                | 13             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 17             | 0       |
       | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |

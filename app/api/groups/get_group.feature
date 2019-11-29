@@ -51,13 +51,7 @@ Feature: Get group by groupID (groupView)
       | 14                | 14             | 1       |
       | 15                | 15             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 61             | 0       |
-      | 22                | 71             | 0       |
-      | 22                | 81             | 0       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |
@@ -70,8 +64,11 @@ Feature: Get group by groupID (groupView)
       | 72                | 72             | 1       |
       | 81                | 81             | 1       |
       | 82                | 82             | 1       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
 
-  Scenario: The user is an owner of the group
+  Scenario: The user is a manager of the group
     Given I am the user with id "21"
     When I send a GET request to "/groups/13"
     Then the response code should be 200
@@ -91,7 +88,32 @@ Feature: Get group by groupID (groupView)
       "code_lifetime": "01:00:00",
       "code_expires_at": "2017-10-14T05:39:48Z",
       "open_contest": true,
-      "current_user_is_owner": true,
+      "current_user_is_manager": true,
+      "current_user_is_member": false
+    }
+    """
+
+  Scenario: The user is a manager of the group's ancestor
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/11"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "11",
+      "name": "Group A",
+      "grade": -3,
+      "description": "Group A is here",
+      "created_at": "2019-02-06T09:26:40Z",
+      "type": "Class",
+      "redirect_path": "182529188317717510/1672978871462145361",
+      "opened": true,
+      "free_access": false,
+      "code": "ybqybxnlyo",
+      "code_lifetime": "01:00:00",
+      "code_expires_at": "2017-10-13T05:39:48Z",
+      "open_contest": true,
+      "current_user_is_manager": true,
       "current_user_is_member": false
     }
     """
@@ -113,7 +135,7 @@ Feature: Get group by groupID (groupView)
       "opened": true,
       "free_access": false,
       "open_contest": true,
-      "current_user_is_owner": false,
+      "current_user_is_manager": false,
       "current_user_is_member": false
     }
     """
@@ -135,7 +157,7 @@ Feature: Get group by groupID (groupView)
       "opened": true,
       "free_access": false,
       "open_contest": true,
-      "current_user_is_owner": false,
+      "current_user_is_manager": false,
       "current_user_is_member": true
     }
     """
@@ -163,7 +185,7 @@ Feature: Get group by groupID (groupView)
       "opened": false,
       "free_access": true,
       "open_contest": false,
-      "current_user_is_owner": false,
+      "current_user_is_manager": false,
       "current_user_is_member": false
     }
     """

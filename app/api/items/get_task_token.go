@@ -159,7 +159,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		// update users_items.active_attempt_id
 		service.MustNotBeError(userItemStore.SetActiveAttempt(user.GroupID, itemID, *activeAttemptID))
 
-		// propagate compute users_items
+		// propagate groups_attempts
 		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 
 		return nil

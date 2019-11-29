@@ -5,13 +5,23 @@ type GroupStore struct {
 	*DataStore
 }
 
-// OwnedBy returns a composable query for getting all the groups
-// that are descendants of the user's owned group using a User object
-func (s *GroupStore) OwnedBy(user *User) *DB {
-	return s.Joins(`
-		JOIN groups_ancestors_active
-			ON groups_ancestors_active.child_group_id = groups.id`).
-		Where("groups_ancestors_active.ancestor_group_id=?", user.OwnedGroupID)
+// ManagedBy returns a composable query for getting all the groups the user can manage.
+//
+// The `groups` in the result may be duplicated since
+// there can be different paths to a managed group through the `group_managers` table and
+// the group ancestry graph.
+func (s *GroupStore) ManagedBy(user *User) *DB {
+	return s.
+		Joins(`
+			JOIN groups_ancestors_active
+				ON groups_ancestors_active.child_group_id = groups.id`).
+		Joins(`
+			JOIN group_managers
+				ON group_managers.group_id = groups_ancestors_active.ancestor_group_id`).
+		Joins(`
+			JOIN groups_ancestors_active AS user_ancestors
+				ON user_ancestors.ancestor_group_id = group_managers.manager_id AND
+					user_ancestors.child_group_id = ?`, user.GroupID)
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that
@@ -57,4 +67,23 @@ func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64
 		Where("groups.type = 'Team'").
 		Where("groups_groups_active.child_group_id IN (?)", groupsToCheck).
 		Where("groups.team_item_id = ?", teamItemID)
+}
+
+// CreateNew creates a new group with given name, type, and team_item_id.
+// It also runs GroupGroupStore.createNewAncestors().
+func (s *GroupStore) CreateNew(name, groupType *string, teamItemID *int64) (groupID int64, err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
+		groupID = retryStore.NewID()
+		return retryStore.Groups().InsertMap(map[string]interface{}{
+			"id":           groupID,
+			"name":         name,
+			"type":         groupType,
+			"team_item_id": teamItemID,
+			"created_at":   Now(),
+		})
+	}))
+	s.GroupGroups().createNewAncestors()
+	return groupID, nil
 }

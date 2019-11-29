@@ -20,20 +20,23 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | login   | group_id | owned_group_id | first_name  | last_name |
       | owner   | 21       | 22             | Jean-Michel | Blanquer  |
       | teacher | 23       | 24             | John        | Smith     |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
+      | 14       | 21         |
+      | 22       | 21         |
+      | 51       | 21         |
+      | 52       | 21         |
+      | 53       | 21         |
+      | 54       | 21         |
+      | 55       | 21         |
+      | 23       | 11         |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 13              | 11             |
       | 13              | 55             |
       | 15              | 55             |
-      | 22              | 11             |
       | 22              | 13             |
-      | 22              | 14             |
-      | 22              | 51             |
-      | 22              | 52             |
-      | 22              | 53             |
-      | 22              | 54             |
-      | 22              | 55             |
-      | 24              | 11             |
       | 55              | 14             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
@@ -47,15 +50,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 21                | 21             | 1       |
       | 22                | 11             | 0       |
       | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 15             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 51             | 0       |
-      | 22                | 52             | 0       |
-      | 22                | 53             | 0       |
-      | 22                | 54             | 0       |
-      | 22                | 55             | 0       |
-      | 24                | 11             | 0       |
       | 24                | 24             | 1       |
       | 51                | 51             | 1       |
       | 52                | 52             | 1       |
@@ -97,7 +92,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User is an owner of the child group, but is not an owner of the parent group
+  Scenario: User is a manager of the child group, but is not a manager of the parent group
     Given I am the user with id "23"
     When I send a DELETE request to "/groups/13/relations/11"
     Then the response code should be 403

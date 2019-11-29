@@ -5,11 +5,17 @@ Feature: Get recent activity for group_id and item_id
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | fr               |
       | user  | 0         | 11       | 12             | John        | Doe       | en               |
       | jane  | 0         | 31       | 32             | Jane        | Doe       | en               |
+    And the database has the following table 'groups':
+      | id |
+      | 13 |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 22                | 13             | 0       |
+      | 75 | 11                | 11             | 1       |
       | 76 | 13                | 11             | 0       |
-      | 77 | 22                | 11             | 0       |
+      | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
     And the database has the following table 'users_answers':
       | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
@@ -38,7 +44,7 @@ Feature: Get recent activity for group_id and item_id
       | id | code |
       | 2  | fr   |
 
-  Scenario: User is an admin of the group and there are visible descendants of the item
+  Scenario: User is a manager of the group and there are visible descendants of the item
     This spec also checks:
       1) that answers having type!="Submission" are filtered out,
       2) answers ordering,
@@ -106,7 +112,7 @@ Feature: Get recent activity for group_id and item_id
     ]
     """
 
-  Scenario: User is an admin of the group and there are visible descendants of the item; request the first row
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the first row
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&limit=1"
     Then the response code should be 200
@@ -134,7 +140,7 @@ Feature: Get recent activity for group_id and item_id
     ]
     """
 
-  Scenario: User is an admin of the group and there are visible descendants of the item; request the second and the third rows
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z&from.id=3"
     Then the response code should be 200
@@ -180,7 +186,7 @@ Feature: Get recent activity for group_id and item_id
     ]
     """
 
-  Scenario: User is an admin of the group and there are visible descendants of the item; request the third row
+  Scenario: User is a manager of the group and there are visible descendants of the item; request the third row
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-29T06:38:38Z&from.id=1"
     Then the response code should be 200
@@ -208,7 +214,7 @@ Feature: Get recent activity for group_id and item_id
     ]
     """
 
-  Scenario: User is an admin of the group and there are visible descendants of the item; request validated answers only
+  Scenario: User is a manager of the group and there are visible descendants of the item; request validated answers only
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&validated=1"
     Then the response code should be 200

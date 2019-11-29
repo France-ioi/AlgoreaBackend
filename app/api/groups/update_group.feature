@@ -13,11 +13,17 @@ Feature: Update a group (groupEdit)
     And the database has the following table 'users':
       | login | temp_user | group_id | owned_group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | fr               |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
+      | 14       | 21         |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 22                | 13             | 0       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 22                | 14             | 0       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 11             | 0       |
+      | 13                | 13             | 1       |
+      | 14                | 14             | 1       |
+      | 21                | 21             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 77 | 13              | 23             |
@@ -28,7 +34,7 @@ Feature: Update a group (groupEdit)
       | 13       | 24        | join_request |
       | 14       | 22        | join_request |
 
-  Scenario: User is an owner of the group, all fields are not nulls, updates group_pending_requests
+  Scenario: User is a manager of the group, all fields are not nulls, updates group_pending_requests
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -59,7 +65,7 @@ Feature: Update a group (groupEdit)
       | 13       | 22        | join_request_refused | 1                                         |
       | 13       | 24        | join_request_refused | 1                                         |
 
-  Scenario: User is an owner of the group, nullable fields are nulls
+  Scenario: User is a manager of the group, nullable fields are nulls
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -81,7 +87,7 @@ Feature: Update a group (groupEdit)
       | id | name   | grade | description | created_at          | type  | redirect_path | opened | free_access | code       | code_lifetime | code_expires_at | open_contest |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null          | false  | false       | ybabbxnlyo | null          | null            | false        |
 
-  Scenario: User is an owner of the group, does not update group_pending_requests (free_access is still true)
+  Scenario: User is a manager of the group, does not update group_pending_requests (free_access is still true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -106,7 +112,7 @@ Feature: Update a group (groupEdit)
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is an owner of the group, does not update group_pending_requests (free_access is not changed)
+  Scenario: User is a manager of the group, does not update group_pending_requests (free_access is not changed)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/13" with the following body:
     """
@@ -130,7 +136,7 @@ Feature: Update a group (groupEdit)
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
 
-  Scenario: User is an owner of the group, does not update group_pending_requests (free_access changes from false to true)
+  Scenario: User is a manager of the group, does not update group_pending_requests (free_access changes from false to true)
     Given I am the user with id "21"
     When I send a PUT request to "/groups/14" with the following body:
     """

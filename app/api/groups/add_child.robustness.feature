@@ -13,18 +13,29 @@ Feature: Add a parent-child relation between two groups - robustness
       | 19 | Team          | Team      |
       | 21 | owner         | UserSelf  |
       | 22 | owner-admin   | UserAdmin |
-      | 23 | teacher       | UserSelf  |
-      | 24 | teacher-admin | UserAdmin |
       | 25 | student       | UserSelf  |
       | 26 | student-admin | UserAdmin |
       | 27 | admin         | UserSelf  |
       | 28 | admin-admin   | UserAdmin |
+      | 77 | Group C       | Class     |
     And the database has the following table 'users':
       | login   | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
       | owner   | 21       | 22             | Jean-Michel | Blanquer  | 0               |
-      | teacher | 23       | 24             | John        | Smith     | 1               |
       | student | 25       | 26             | Jane        | Doe       | 1               |
       | admin   | 27       | 28             | John        | Doe       | 1               |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 11       | 21         |
+      | 11       | 25         |
+      | 13       | 21         |
+      | 11       | 27         |
+      | 13       | 27         |
+      | 14       | 27         |
+      | 15       | 27         |
+      | 16       | 27         |
+      | 17       | 27         |
+      | 18       | 27         |
+      | 19       | 27         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -37,24 +48,10 @@ Feature: Add a parent-child relation between two groups - robustness
       | 18                | 18             | 1       |
       | 19                | 19             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 23                | 23             | 1       |
-      | 24                | 13             | 0       |
-      | 24                | 24             | 1       |
       | 25                | 25             | 1       |
-      | 26                | 11             | 0       |
       | 26                | 26             | 1       |
       | 27                | 27             | 1       |
-      | 28                | 11             | 0       |
-      | 28                | 13             | 0       |
-      | 28                | 14             | 0       |
-      | 28                | 15             | 0       |
-      | 28                | 16             | 0       |
-      | 28                | 17             | 0       |
-      | 28                | 18             | 0       |
-      | 28                | 19             | 0       |
       | 28                | 28             | 1       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | child_order |
@@ -76,7 +73,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User is an owner of the two groups, but is not allowed to create subgroups
+  Scenario: User is a manager of the two groups, but is not allowed to create subgroups
     Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 403
@@ -85,8 +82,8 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_ancestors" should stay unchanged
 
   Scenario: User is an owner of the parent group, but is not an owner of the child group
-    Given I am the user with id "23"
-    When I send a POST request to "/groups/13/relations/11"
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/13/relations/77"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

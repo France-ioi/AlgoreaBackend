@@ -12,6 +12,9 @@ Background:
     | login | temp_user | group_id | owned_group_id | first_name  | last_name |
     | jdoe  | 0         | 11       | 12             | John        | Doe       |
     | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  |
+  And the database has the following table 'group_managers':
+    | group_id | manager_id |
+    | 13       | 21         |
   And the database has the following table 'groups_groups':
     | id | parent_group_id | child_group_id |
     | 61 | 13              | 11             |
@@ -21,7 +24,7 @@ Background:
     | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
-    | 75 | 22                | 13             | 0       |
+    | 75 | 21                | 21             | 1       |
     | 77 | 41                | 21             | 0       |
   And the database has the following table 'items':
     | id  | type     | teams_editable | no_score | unlocked_item_ids |
@@ -69,7 +72,7 @@ Background:
     ]
     """
 
-  Scenario: Full access on the item and the user is an owner of some attempt's group parent
+  Scenario: Full access on the item and the user is a manager of attempt's group
     Given I am the user with id "21"
     When I send a GET request to "/answers?attempt_id=100"
     Then the response code should be 200

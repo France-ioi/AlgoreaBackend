@@ -32,6 +32,9 @@ Feature: Get group children (groupChildrenView)
       | owner | 21       | 22             | Jean-Michel | Blanquer  |
       | john  | 51       | 52             | John        | Doe       |
       | jane  | 53       | 54             | Jane        | Doe       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -53,22 +56,7 @@ Feature: Get group children (groupChildrenView)
       | 14                | 14             | 1       |
       | 14                | 22             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 13             | 0       |
-      | 22                | 14             | 0       |
-      | 22                | 21             | 0       |
       | 22                | 22             | 1       |
-      | 22                | 23             | 0       |
-      | 22                | 24             | 0       |
-      | 22                | 25             | 0       |
-      | 22                | 26             | 0       |
-      | 22                | 27             | 0       |
-      | 22                | 28             | 0       |
-      | 22                | 29             | 0       |
-      | 22                | 30             | 0       |
-      | 22                | 31             | 0       |
-      | 22                | 51             | 0       |
-      | 22                | 53             | 0       |
-      | 22                | 90             | 0       |
       | 23                | 23             | 1       |
       | 23                | 51             | 0       |
       | 23                | 53             | 0       |
@@ -115,7 +103,7 @@ Feature: Get group children (groupChildrenView)
       | 27              | 53             |
       | 90              | 51             |
 
-  Scenario: User is an owner of the parent group, rows are sorted by name by default, UserSelf is skipped
+  Scenario: User is a manager of the parent group, rows are sorted by name by default, UserSelf is skipped
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_exclude=UserSelf"
     Then the response code should be 200
@@ -134,7 +122,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are by default
+  Scenario: User is a manager of the parent group, rows are sorted by name by default, all the types are by default
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children"
     Then the response code should be 200
@@ -154,7 +142,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by name by default, all the types are included explicitly
+  Scenario: User is a manager of the parent group, rows are sorted by name by default, all the types are included explicitly
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_include=Base,Class,Team,Club,Friends,Other,UserSelf,UserAdmin"
     Then the response code should be 200
@@ -174,7 +162,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by name by default, some types are excluded
+  Scenario: User is a manager of the parent group, rows are sorted by name by default, some types are excluded
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?types_exclude=Class,Team,Club,Friends"
     Then the response code should be 200
@@ -190,7 +178,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by grade, UserSelf is skipped
+  Scenario: User is a manager of the parent group, rows are sorted by grade, UserSelf is skipped
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?sort=grade,id&types_exclude=UserSelf"
     Then the response code should be 200
@@ -209,7 +197,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by type, UserSelf is skipped
+  Scenario: User is a manager of the parent group, rows are sorted by type, UserSelf is skipped
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?sort=type,id&types_exclude=UserSelf"
     Then the response code should be 200
@@ -228,7 +216,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, rows are sorted by name by default, limit applied
+  Scenario: User is a manager of the parent group, rows are sorted by name by default, limit applied
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?limit=1"
     Then the response code should be 200
@@ -239,7 +227,7 @@ Feature: Get group children (groupChildrenView)
     ]
     """
 
-  Scenario: User is an owner of the parent group, paging applied, UserSelf is skipped
+  Scenario: User is a manager of the parent group, paging applied, UserSelf is skipped
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/children?from.name=RootSelf&from.id=30&types_exclude=UserSelf"
     Then the response code should be 200

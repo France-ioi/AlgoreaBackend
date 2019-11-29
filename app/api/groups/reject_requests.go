@@ -16,7 +16,7 @@ import (
 //   for each of `group_ids`.
 //
 //
-//   The authenticated user should be an owner of the `parent_group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `parent_group_id`, otherwise the 'forbidden' error is returned.
 //
 //
 //   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`

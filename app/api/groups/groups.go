@@ -50,10 +50,10 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/current-user/teams/by-item/{item_id}", service.AppHandler(srv.getCurrentUserTeamByItem).ServeHTTP)
 }
 
-func checkThatUserOwnsTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
 	var count int64
-	if err := store.GroupAncestors().OwnedByUser(user).
-		Where("child_group_id = ?", groupID).Count(&count).Error(); err != nil {
+	if err := store.GroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors.child_group_id = ?", groupID).Count(&count).Error(); err != nil {
 		return service.ErrUnexpected(err)
 	}
 	if count == 0 {
@@ -71,10 +71,11 @@ func checkThatUserHasRightsForDirectRelation(
 		Type string
 	}
 
-	err := groupStore.OwnedBy(user).
+	err := groupStore.ManagedBy(user).
 		WithWriteLock().
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
+		Group("groups.id").
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
@@ -115,7 +116,7 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserOwnsTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	if apiErr := checkThatUserCanManageTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 

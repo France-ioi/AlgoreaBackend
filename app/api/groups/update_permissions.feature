@@ -14,12 +14,14 @@ Feature: Change item access rights for a group
       | owner | 21       | 22             | Jean-Michel | Blanquer  |
       | user  | 23       | 24             | John        | Doe       |
       | jane  | 31       | 32             | Jane        | Doe       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 23       | 21         |
+      | 31       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
-      | 22                | 23             | 0       |
-      | 22                | 31             | 0       |
       | 23                | 23             | 1       |
       | 24                | 24             | 1       |
       | 25                | 23             | 0       |

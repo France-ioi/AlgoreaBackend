@@ -58,12 +58,9 @@ Feature: User sends a request to join a group
 
   Scenario: Automatically accepts the request if the user owns the group
     Given I am the user with id "21"
-    And the database table 'groups_groups' has also the following row:
-      | id | parent_group_id | child_group_id |
-      | 8  | 22              | 11             |
-    And the database table 'groups_ancestors' has also the following row:
-      | ancestor_group_id | child_group_id | is_self |
-      | 22                | 11             | 0       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id |
+      | 11       | 21         |
     When I send a POST request to "/current-user/group-requests/11"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -77,7 +74,6 @@ Feature: User sends a request to join a group
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 11              | 21             |
-      | 22              | 11             |
     And the table "group_pending_requests" should be:
       | group_id | member_id | type         | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 14       | 21        | join_request | 0                                         |
@@ -91,6 +87,4 @@ Feature: User sends a request to join a group
       | 14                | 14             | 1       |
       | 14                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 21             | 0       |
       | 22                | 22             | 1       |

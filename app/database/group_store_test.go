@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGroupStore_OwnedBy(t *testing.T) {
+func TestGroupStore_ManagedBy(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -15,12 +15,15 @@ func TestGroupStore_OwnedBy(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` " +
 		"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id " +
-		"WHERE (groups_ancestors_active.ancestor_group_id=?)")).
-		WithArgs(3).
+		"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id " +
+		"JOIN groups_ancestors_active AS user_ancestors " +
+		"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND " +
+		"user_ancestors.child_group_id = ?")).
+		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := NewDataStore(db).Groups().OwnedBy(mockUser).Scan(&result).Error()
+	err := NewDataStore(db).Groups().ManagedBy(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -78,5 +81,15 @@ func TestGroupStore_TeamsMembersForItem(t *testing.T) {
 	var result []interface{}
 	err := NewDataStore(db).Groups().TeamsMembersForItem([]int64{1, 2, 3}, 1234).Scan(&result).Error()
 	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	groupStore := NewDataStore(db).Groups()
+	assert.PanicsWithValue(t, ErrNoTransaction,
+		func() { _, _ = groupStore.CreateNew(nil, nil, nil) })
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
