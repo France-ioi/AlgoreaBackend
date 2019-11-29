@@ -81,3 +81,13 @@ func TestGroupStore_TeamsMembersForItem(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	groupStore := NewDataStore(db).Groups()
+	assert.PanicsWithValue(t, ErrNoTransaction,
+		func() { _, _ = groupStore.CreateNew(nil, nil, nil) })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

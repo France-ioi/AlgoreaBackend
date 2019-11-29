@@ -42,7 +42,7 @@ type createGroupRequest struct {
 //
 //       * sets this `item_id` as `team_item_id` of the new group.
 //
-//   Also, the service sets the authenticated user as an owner of the group (with `role` = "owner").
+//   Also, the service sets the authenticated user as a manager of the group with the highest level of permissions.
 //   After everything, it propagates group ancestors.
 //
 //
@@ -99,18 +99,14 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 				return apiError.Error // rollback
 			}
 		}
-		service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-			groupID = retryStore.NewID()
-			return retryStore.Groups().InsertMap(map[string]interface{}{
-				"id":           groupID,
-				"name":         input.Name,
-				"type":         input.Type,
-				"team_item_id": input.ItemID,
-				"created_at":   database.Now(),
-			})
-		}))
-		return store.GroupGroups().CreateRelationsWithoutChecking([]database.ParentChild{
-			{ParentID: *user.OwnedGroupID, ChildID: groupID, Role: "owner"},
+		groupID, err = store.Groups().CreateNew(input.Name, input.Type, input.ItemID)
+		service.MustNotBeError(err)
+		return store.GroupManagers().InsertMap(map[string]interface{}{
+			"group_id":               groupID,
+			"manager_id":             user.GroupID,
+			"can_manage":             "memberships_and_group",
+			"can_grant_group_access": 1,
+			"can_watch_members":      1,
 		})
 	})
 

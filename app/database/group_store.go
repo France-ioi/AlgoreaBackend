@@ -62,3 +62,22 @@ func (s *GroupStore) TeamsMembersForItem(groupsToCheck []int64, teamItemID int64
 		Where("groups_groups_active.child_group_id IN (?)", groupsToCheck).
 		Where("groups.team_item_id = ?", teamItemID)
 }
+
+// CreateNew creates a new group with given name, type, and team_item_id.
+// It also runs GroupGroupStore.createNewAncestors().
+func (s *GroupStore) CreateNew(name, groupType *string, teamItemID *int64) (groupID int64, err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
+		groupID = retryStore.NewID()
+		return retryStore.Groups().InsertMap(map[string]interface{}{
+			"id":           groupID,
+			"name":         name,
+			"type":         groupType,
+			"team_item_id": teamItemID,
+			"created_at":   Now(),
+		})
+	}))
+	s.GroupGroups().createNewAncestors()
+	return groupID, nil
+}
