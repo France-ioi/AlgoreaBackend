@@ -6,7 +6,7 @@ type GroupStore struct {
 }
 
 // ManagedBy returns a composable query for getting all the groups
-// that are descendants of groups managed by the user (the result may contain duplicates)
+// that are descendants of groups managed by the user
 func (s *GroupStore) ManagedBy(user *User) *DB {
 	return s.
 		Joins(`

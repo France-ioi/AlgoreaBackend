@@ -17,7 +17,7 @@ func (s *GroupAncestorStore) UserAncestors(user *User) *DB {
 }
 
 // ManagedByUser returns a composable query for getting all the groups_ancestors rows for groups
-// that are descendants of groups managed by the user (the result may contain duplicates)
+// that are descendants of groups managed by the user
 func (s *GroupAncestorStore) ManagedByUser(user *User) *DB {
 	result := s.
 		Joins(`
