@@ -25,8 +25,7 @@ import (
 // summary: Register a hint request
 // description: >
 //
-//   Saves the hint request into `users_items` and `groups_attempts`,
-//   and generates a new task token.
+//   Saves the hint request into `groups_attempts` and generates a new task token.
 //
 //
 //   Restrictions:
