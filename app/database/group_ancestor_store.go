@@ -22,8 +22,11 @@ func (s *GroupAncestorStore) ManagedByUser(user *User) *DB {
 	result := s.
 		Joins(`
 			JOIN group_managers
-				ON group_managers.group_id = `+QuoteName(s.tableName)+`.ancestor_group_id AND
-					group_managers.manager_id = ?`, user.GroupID)
+				ON group_managers.group_id = `+QuoteName(s.tableName)+`.ancestor_group_id`).
+		Joins(`
+			JOIN groups_ancestors_active AS user_ancestors
+				ON user_ancestors.ancestor_group_id = group_managers.manager_id AND
+					user_ancestors.child_group_id = ?`, user.GroupID)
 	if s.tableName != groupsAncestorsActive {
 		result = result.Where("NOW() < " + QuoteName(s.tableName) + ".expires_at")
 	}

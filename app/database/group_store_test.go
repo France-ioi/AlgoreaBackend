@@ -16,7 +16,9 @@ func TestGroupStore_ManagedBy(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` " +
 		"JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id " +
 		"JOIN group_managers ON group_managers.group_id = groups_ancestors_active.ancestor_group_id " +
-		"AND group_managers.manager_id = ?")).
+		"JOIN groups_ancestors_active AS user_ancestors " +
+		"ON user_ancestors.ancestor_group_id = group_managers.manager_id AND " +
+		"user_ancestors.child_group_id = ?")).
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 

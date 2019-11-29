@@ -20,6 +20,7 @@ Background:
     | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
+    | 75 | 21                | 21             | 1       |
   And the database has the following table 'items':
     | id  | type     | teams_editable | no_score | unlocked_item_ids |
     | 190 | Category | false          | false    | 1234,2345         |

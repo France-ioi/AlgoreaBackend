@@ -204,7 +204,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	var count int64
 	itemsUserCanAccess := srv.Store.Permissions().WithViewPermissionForUser(user, "content")
 
-	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("child_group_id")
+	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
@@ -224,7 +224,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, item
 	if userID != user.GroupID {
 		count := 0
 		err := srv.Store.GroupAncestors().ManagedByUser(user).
-			Where("child_group_id=?", userID).
+			Where("groups_ancestors.child_group_id=?", userID).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

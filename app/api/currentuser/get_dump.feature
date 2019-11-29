@@ -146,6 +146,7 @@ Feature: Export the short version of the current user's data
       "managed_groups": [
         {"id": "1", "name": "Our Class"},
         {"id": "2", "name": "Our Team"},
+        {"id": "6", "name": "Another Class"},
         {"id": "11", "name": "user self"}
       ]
     }

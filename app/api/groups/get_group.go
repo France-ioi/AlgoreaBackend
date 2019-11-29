@@ -98,15 +98,10 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 
 	query := srv.Store.Groups().
 		Joins(`
-			LEFT JOIN (
-				SELECT 1 AS found
-				FROM group_managers
-				JOIN groups_ancestors_active
-					ON groups_ancestors_active.ancestor_group_id = group_managers.group_id AND
-						groups_ancestors_active.child_group_id = ?
-				WHERE group_managers.manager_id = ?
-				LIMIT 1
-			) AS manager_access ON 1`, groupID, user.GroupID).
+			LEFT JOIN ? AS manager_access ON 1`,
+			srv.Store.GroupAncestors().ManagedByUser(user).
+				Where("groups_ancestors.child_group_id = ?", groupID).
+				Select("1 AS found").Limit(1).SubQuery()).
 		Joins(`
 			LEFT JOIN groups_ancestors_active AS groups_descendants
 				ON groups_descendants.ancestor_group_id = groups.id AND

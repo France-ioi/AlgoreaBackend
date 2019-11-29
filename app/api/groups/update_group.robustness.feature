@@ -22,6 +22,8 @@ Feature: Update a group (groupEdit) - robustness
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
       | 15                | 15             | 1       |
+      | 21                | 21             | 1       |
+      | 31                | 31             | 1       |
 
   Scenario: Should fail if the user is not a manager of the group
     Given I am the user with id "31"

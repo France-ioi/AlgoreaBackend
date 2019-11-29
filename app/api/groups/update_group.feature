@@ -23,6 +23,7 @@ Feature: Update a group (groupEdit)
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
+      | 21                | 21             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 77 | 13              | 23             |

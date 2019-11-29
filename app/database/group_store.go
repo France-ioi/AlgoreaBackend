@@ -14,8 +14,11 @@ func (s *GroupStore) ManagedBy(user *User) *DB {
 				ON groups_ancestors_active.child_group_id = groups.id`).
 		Joins(`
 			JOIN group_managers
-				ON group_managers.group_id = groups_ancestors_active.ancestor_group_id AND
-					group_managers.manager_id = ?`, user.GroupID)
+				ON group_managers.group_id = groups_ancestors_active.ancestor_group_id`).
+		Joins(`
+			JOIN groups_ancestors_active AS user_ancestors
+				ON user_ancestors.ancestor_group_id = group_managers.manager_id AND
+					user_ancestors.child_group_id = ?`, user.GroupID)
 }
 
 // TeamGroupForTeamItemAndUser returns a composable query for getting a team that

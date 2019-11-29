@@ -78,7 +78,8 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	}
 	service.MustNotBeError(err)
 
-	groupsManagedByUserSubQuery := srv.Store.GroupAncestors().ManagedByUser(user).Select("child_group_id").SubQuery()
+	groupsManagedByUserSubQuery := srv.Store.GroupAncestors().ManagedByUser(user).
+		Select("groups_ancestors.child_group_id").SubQuery()
 	query := srv.Store.Groups().
 		Joins(`
 			JOIN groups_ancestors_active AS found_group_ancestors

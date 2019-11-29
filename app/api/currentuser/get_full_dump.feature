@@ -199,6 +199,7 @@ Feature: Export the current user's data
       "managed_groups": [
         {"id": "1", "name": "Our Class"},
         {"id": "2", "name": "Our Team"},
+        {"id": "6", "name": "Another Class"},
         {"id": "11", "name": "user self"}
       ],
       "refresh_token": {"user_id": "11", "refresh_token": "***"},
