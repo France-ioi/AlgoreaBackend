@@ -16,8 +16,15 @@ func (s *GroupAncestorStore) UserAncestors(user *User) *DB {
 	return result
 }
 
-// ManagedByUser returns a composable query for getting all the groups_ancestors rows for groups
-// that are descendants of groups managed by the user
+// ManagedByUser returns a composable query for getting all the groups_ancestors rows
+// linking manager groups (as ancestor_group_id) to managed groups (as child_group_id)
+// where the manager groups are ancestors of the given user.
+// Basically the groups_ancestors.child_group_id are the groups the user can manage.
+//
+// The result may contain duplicated
+// `groups_ancestors.ancestor_group_id`-`groups_ancestors.child_group_id` pairs since
+// there can be different paths to a managed group through the `group_managers` table and
+// the group ancestry graph.
 func (s *GroupAncestorStore) ManagedByUser(user *User) *DB {
 	result := s.
 		Joins(`

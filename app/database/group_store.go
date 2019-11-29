@@ -5,8 +5,11 @@ type GroupStore struct {
 	*DataStore
 }
 
-// ManagedBy returns a composable query for getting all the groups
-// that are descendants of groups managed by the user
+// ManagedBy returns a composable query for getting all the groups the user can manage.
+//
+// The `groups` in the result may be duplicated since
+// there can be different paths to a managed group through the `group_managers` table and
+// the group ancestry graph.
 func (s *GroupStore) ManagedBy(user *User) *DB {
 	return s.
 		Joins(`
