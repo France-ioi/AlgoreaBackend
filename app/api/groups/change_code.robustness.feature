@@ -22,9 +22,9 @@ Feature: Change the code of the given group - robustness
       | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 11                | 11             | 0       |
+      | 75 | 11                | 11             | 1       |
       | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 0       |
+      | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
 
   Scenario: User is not a manager of the group
