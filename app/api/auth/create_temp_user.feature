@@ -12,11 +12,11 @@ Feature: Create a temporary user
           rootTempGroup: 4
       """
     And the database has the following table 'groups':
-      | id | name       | type      | text_id   |
-      | 1  | Root       | Base      | Root      |
-      | 2  | RootSelf   | Base      | RootSelf  |
-      | 3  | RootAdmin  | Base      | RootAdmin |
-      | 4  | RootTemp   | UserSelf  | RootTemp  |
+      | id | name      | type     | text_id   |
+      | 1  | Root      | Base     | Root      |
+      | 2  | RootSelf  | Base     | RootSelf  |
+      | 3  | RootAdmin | Base     | RootAdmin |
+      | 4  | RootTemp  | UserSelf | RootTemp  |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | child_order |
       | 1  | 1               | 2              | 1           |

@@ -21,8 +21,8 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 210 | Chapter  |
       | 211 | Task     |
     And the database has the following table 'permissions_generated':
-      | group_id | item_id | can_view_generated       |
-      | 21       | 211     | info                     |
+      | group_id | item_id | can_view_generated |
+      | 21       | 211     | info               |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
