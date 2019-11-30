@@ -26,7 +26,7 @@ DELETE FROM `groups_groups`
 
 DROP TEMPORARY TABLE root_admin_groups;
 
-# Delete `groups` with `type` = 'UserAdmin'
+# Delete `groups` matching any `owned_group_id`
 DELETE `filters` FROM `filters` JOIN `users` ON `users`.`owned_group_id` = `filters`.`group_id`;
 DELETE `groups_ancestors` FROM `groups_ancestors`
     JOIN `users` ON `users`.`owned_group_id` = `groups_ancestors`.`ancestor_group_id`;
