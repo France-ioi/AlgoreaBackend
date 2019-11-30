@@ -7,10 +7,9 @@ Feature: Add a parent-child relation between two groups
       | 13 | Group B | Class     |
       | 14 | Group C | Class     |
       | 21 | Self    | UserSelf  |
-      | 22 | Owned   | UserAdmin |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 1               |
+      | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 11       | 21         |
@@ -22,7 +21,6 @@ Feature: Add a parent-child relation between two groups
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
 
   Scenario: User is an owner of the two groups and is allowed to create sub-groups
     Given I am the user with id "21"
@@ -45,7 +43,6 @@ Feature: Add a parent-child relation between two groups
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     When I send a POST request to "/groups/13/relations/14"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -67,7 +64,6 @@ Feature: Add a parent-child relation between two groups
       | 13                | 14             | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 201
     And the response body should be, in JSON:

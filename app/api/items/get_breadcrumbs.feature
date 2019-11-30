@@ -2,17 +2,16 @@ Feature: Get item information for breadcrumb
 
 Background:
   Given the database has the following table 'groups':
-    | id | name       | text_id | grade | type      |
-    | 11 | jdoe       |         | -2    | UserAdmin |
-    | 12 | jdoe-admin |         | -2    | UserAdmin |
-    | 13 | Group B    |         | -2    | Class     |
+    | id | name    | text_id | grade | type     |
+    | 11 | jdoe    |         | -2    | UserSelf |
+    | 13 | Group B |         | -2    | Class    |
   And the database has the following table 'languages':
     | id | code |
     | 1  | en   |
     | 2  | fr   |
   And the database has the following table 'users':
-    | login | group_id | owned_group_id | default_language |
-    | jdoe  | 11       | 12             | fr               |
+    | login | group_id | default_language |
+    | jdoe  | 11       | fr               |
   And the database has the following table 'items':
     | id | type     | default_language_id |
     | 21 | Root     | 1                   |
@@ -31,7 +30,6 @@ Background:
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
-    | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
 

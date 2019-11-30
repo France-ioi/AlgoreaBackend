@@ -55,13 +55,12 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 		service.MustNotBeError(store.RetryOnDuplicateKeyError("login", "login", func(retryLoginStore *database.DataStore) error {
 			login = fmt.Sprintf("tmp-%d", rand.Int31n(99999999-10000000+1)+10000000)
 			return retryLoginStore.Users().InsertMap(map[string]interface{}{
-				"login_id":       0,
-				"login":          login,
-				"temp_user":      true,
-				"registered_at":  database.Now(),
-				"group_id":       userID,
-				"owned_group_id": nil,
-				"last_ip":        strings.SplitN(r.RemoteAddr, ":", 2)[0],
+				"login_id":      0,
+				"login":         login,
+				"temp_user":     true,
+				"registered_at": database.Now(),
+				"group_id":      userID,
+				"last_ip":       strings.SplitN(r.RemoteAddr, ":", 2)[0],
 			})
 		}))
 

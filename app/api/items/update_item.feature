@@ -2,12 +2,11 @@ Feature: Update item
 
 Background:
   Given the database has the following table 'groups':
-    | id | name       | type      |
-    | 11 | jdoe       | UserSelf  |
-    | 12 | jdoe-admin | UserAdmin |
+    | id | name | type     |
+    | 11 | jdoe | UserSelf |
   And the database has the following table 'users':
-    | login | temp_user | group_id | owned_group_id |
-    | jdoe  | 0         | 11       | 12             |
+    | login | temp_user | group_id |
+    | jdoe  | 0         | 11       |
   And the database has the following table 'items':
     | id | type    | url                  | default_language_id | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | unlocked_item_ids | score_min_unlock | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | group_code_enter |
     | 21 | Chapter | http://someurl1.com/ | 2                   | 1        | Task 1  | 0                 | 1                         | 0        | 1         | forceNo     | 1             | 1           | One             | 1                 | 99               | Half                       | 1              | 10                    | 1            | 01:20:30 | 1               | 1                |
@@ -35,7 +34,6 @@ Background:
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
-    | 72 | 12                | 12             | 1       |
   And the database has the following table 'languages':
     | id |
     | 2  |
@@ -65,12 +63,6 @@ Background:
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
-    And the database has the following table 'groups':
-      | id    |
-      | 12345 |
-    And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 73 | 12                | 12345          | 0       |
     And the database has the following table 'items':
       | id  |
       | 112 |

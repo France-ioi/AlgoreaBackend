@@ -104,13 +104,9 @@ func (srv *Service) loginCallback(w http.ResponseWriter, r *http.Request) servic
 }
 
 func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.Configuration) int64 {
-	var userInfo struct {
-		GroupID      int64
-		OwnedGroupID int64
-	}
+	var groupID int64
 	err := s.WithWriteLock().
-		Where("login_id = ?", userData["login_id"]).Select("group_id, owned_group_id").
-		Take(&userInfo).Error()
+		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
 
 	userData["latest_login_at"] = database.Now()
 	userData["latest_activity_at"] = database.Now()
@@ -120,40 +116,32 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 
 	if gorm.IsRecordNotFoundError(err) {
-		ownedGroupID, selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
 		userData["group_id"] = selfGroupID
-		userData["owned_group_id"] = ownedGroupID
 
 		service.MustNotBeError(s.Users().InsertMap(userData))
 		return selfGroupID
 	}
 
 	found, err := s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootSelfGroupID).
-		Where("child_group_id = ?", userInfo.GroupID).HasRows()
+		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	groupsToCreate := make([]database.ParentChild, 0, 2)
 	if !found {
 		groupsToCreate = append(groupsToCreate,
-			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: userInfo.GroupID})
+			database.ParentChild{ParentID: domainConfig.RootSelfGroupID, ChildID: groupID})
 	}
 
-	found, err = s.GroupGroups().Where("parent_group_id = ?", domainConfig.RootAdminGroupID).
-		Where("child_group_id = ?", userInfo.OwnedGroupID).HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		groupsToCreate = append(groupsToCreate,
-			database.ParentChild{ParentID: domainConfig.RootAdminGroupID, ChildID: userInfo.OwnedGroupID})
-	}
 	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(s.ByID(userInfo.GroupID).UpdateColumn(userData).Error())
-	return userInfo.GroupID
+	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
+	return groupID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (ownedGroupID, selfGroupID int64) {
+func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.Configuration) (selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
@@ -166,24 +154,10 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 			"send_emails": false,
 		})
 	}))
-	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
-		ownedGroupID = retryIDStore.NewID()
-		adminGroupName := login + "-admin"
-		return retryIDStore.Groups().InsertMap(map[string]interface{}{
-			"id":          ownedGroupID,
-			"name":        adminGroupName,
-			"type":        "UserAdmin",
-			"description": adminGroupName,
-			"created_at":  database.Now(),
-			"opened":      false,
-			"send_emails": false,
-		})
-	}))
 
 	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]database.ParentChild{
 		{ParentID: domainConfig.RootSelfGroupID, ChildID: selfGroupID},
-		{ParentID: domainConfig.RootAdminGroupID, ChildID: ownedGroupID},
 	}))
 
-	return ownedGroupID, selfGroupID
+	return selfGroupID
 }

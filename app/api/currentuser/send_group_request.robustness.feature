@@ -9,10 +9,9 @@ Feature: User sends a request to join a group - robustness
       | 16 | 1           | Team      | 1234         |
       | 17 | 0           | Team      | 1234         |
       | 21 | 0           | UserSelf  | null         |
-      | 22 | 0           | UserAdmin | null         |
     And the database has the following table 'users':
-      | group_id | owned_group_id | login |
-      | 21       | 22             | john  |
+      | group_id | login |
+      | 21       | john  |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 17       | 21         |
@@ -27,12 +26,10 @@ Feature: User sends a request to join a group - robustness
       | 17                | 17             | 1       |
       | 21                | 13             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 8  | 16              | 21             |
       | 9  | 21              | 13             |
-      | 10 | 22              | 17             |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | invitation   |

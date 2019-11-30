@@ -8,7 +8,6 @@ type User struct {
 	DefaultLanguageID   int64
 	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
-	OwnedGroupID        *int64
 	AccessGroupID       *int64
 	AllowSubgroups      bool
 	NotificationsReadAt *Time
@@ -20,10 +19,6 @@ func (u *User) Clone() *User {
 	if result.NotificationsReadAt != nil {
 		notificationReadDateCopy := *result.NotificationsReadAt
 		result.NotificationsReadAt = &notificationReadDateCopy
-	}
-	if result.OwnedGroupID != nil {
-		ownedGroupIDCopy := *result.OwnedGroupID
-		result.OwnedGroupID = &ownedGroupIDCopy
 	}
 	if result.AccessGroupID != nil {
 		accessGroupIDCopy := *result.AccessGroupID

@@ -11,7 +11,7 @@ func TestPermissionGeneratedStore_AccessRightsForItemsVisibleToUser(t *testing.T
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, DefaultLanguageID: 4}
 
 	clearAllPermissionEnums()
 	mockPermissionEnumQueries(mock)
@@ -41,7 +41,7 @@ func TestPermissionGeneratedStore_WithViewPermissionForUser(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mockUser := &User{GroupID: 2, OwnedGroupID: ptrInt64(3), DefaultLanguageID: 4}
+	mockUser := &User{GroupID: 2, DefaultLanguageID: 4}
 
 	mockPermissionEnumQueries(mock)
 	defer clearAllPermissionEnums()

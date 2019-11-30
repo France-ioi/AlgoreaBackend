@@ -2,16 +2,14 @@ Feature: Create a group (groupCreate)
 
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      |
-      | 21 | owner       | UserSelf  |
-      | 22 | owner-admin | UserAdmin |
+      | id | name  | type     |
+      | 21 | owner | UserSelf |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 1               |
+      | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id |
       | 10 |
@@ -53,7 +51,6 @@ Feature: Create a group (groupCreate)
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 21                  | 21                  | 1       |
-      | 22                  | 22                  | 1       |
       | 5577006791947779410 | 5577006791947779410 | 1       |
   Examples:
     | group_type | item_spec         | want_item_id |

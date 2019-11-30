@@ -1,23 +1,21 @@
 Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      |
-      | 10 | Parent      | Club      |
-      | 11 | Group A     | Class     |
-      | 13 | Group B     | Other     |
-      | 14 | Group B     | Friends   |
-      | 21 | owner       | UserSelf  |
-      | 22 | owner-admin | UserAdmin |
-      | 31 | john        | UserSelf  |
-      | 32 | john-admin  | UserAdmin |
-      | 33 | item10      | Other     |
-      | 34 | item50      | Other     |
-      | 35 | item60      | Other     |
-      | 36 | item70      | Other     |
+      | id | name    | type     |
+      | 10 | Parent  | Club     |
+      | 11 | Group A | Class    |
+      | 13 | Group B | Other    |
+      | 14 | Group B | Friends  |
+      | 21 | owner   | UserSelf |
+      | 31 | john    | UserSelf |
+      | 33 | item10  | Other    |
+      | 34 | item50  | Other    |
+      | 35 | item60  | Other    |
+      | 36 | item70  | Other    |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id |
-      | owner | 21       | 22             |
-      | john  | 31       | 32             |
+      | login | group_id |
+      | owner | 21       |
+      | john  | 31       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -46,9 +44,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13                | 14             | 0       | 9999-12-31 23:59:59 |
       | 14                | 14             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
-      | 22                | 22             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
-      | 32                | 32             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
       | 34                | 13             | 0       | 9999-12-31 23:59:59 |
       | 34                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -129,9 +125,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13                | 14             | 0       | 9999-12-31 23:59:59 |
       | 14                | 14             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
-      | 22                | 22             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
-      | 32                | 32             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
       | 34                | 34             | 1       | 9999-12-31 23:59:59 |
       | 35                | 35             | 1       | 9999-12-31 23:59:59 |
@@ -179,9 +173,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13                | 14             | 0       | 9999-12-31 23:59:59 |
       | 14                | 14             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
-      | 22                | 22             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
-      | 32                | 32             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
       | 34                | 13             | 0       | 9999-12-31 23:59:59 |
       | 34                | 14             | 0       | 9999-12-31 23:59:59 |
@@ -239,9 +231,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 13                | 14             | 0       | 9999-12-31 23:59:59 |
       | 14                | 14             | 1       | 9999-12-31 23:59:59 |
       | 21                | 21             | 1       | 9999-12-31 23:59:59 |
-      | 22                | 22             | 1       | 9999-12-31 23:59:59 |
       | 31                | 31             | 1       | 9999-12-31 23:59:59 |
-      | 32                | 32             | 1       | 9999-12-31 23:59:59 |
       | 33                | 33             | 1       | 9999-12-31 23:59:59 |
       | 34                | 13             | 0       | 9999-12-31 23:59:59 |
       | 34                | 14             | 0       | 9999-12-31 23:59:59 |

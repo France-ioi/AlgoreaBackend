@@ -25,18 +25,18 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	assert.NoError(t, store.Users().DeleteTemporaryWithTraps())
 
 	assertTableColumn(t, db, "users", "group_id", []int64{5001, 5002})
-	assertTableColumn(t, db, "groups", "id", []int64{1, 5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001, 5002, 6001, 6002})
-	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5001, 5002, 6001, 6002})
-	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5002, 6001, 6002, 7000})
-	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5002, 6001, 6002})
-	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5002, 6001, 6002, 7000})
+	assertTableColumn(t, db, "groups", "id", []int64{1, 5001, 5002, 7000})
+	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5001, 5002, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5001, 5002, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5001, 5002, 7000})
+	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5001, 5002})
+	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5001, 5002, 7000})
+	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5001, 5002})
+	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5002, 7000})
+	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5002})
+	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5002, 7000})
 	for _, table := range []string{"permissions_granted", "permissions_generated", "groups_attempts", "groups_login_prefixes"} {
-		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002, 6001, 6002})
+		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	for _, table := range []string{"users_threads", "users_answers", "users_items", "filters", "refresh_tokens"} {
@@ -59,21 +59,21 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.Users().DeleteWithTraps(
-		&database.User{GroupID: 5001, OwnedGroupID: ptrInt64(6001)}))
+		&database.User{GroupID: 5001}))
 
 	assertTableColumn(t, db, "users", "group_id", []int64{5000, 5002})
-	assertTableColumn(t, db, "groups", "id", []int64{1, 5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5000, 5002, 6000, 6002})
-	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5000, 5002, 6000, 6002})
-	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5000, 5002, 6000, 6002, 7000})
-	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5000, 5002, 6000, 6002})
-	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5000, 5002, 6000, 6002, 7000})
+	assertTableColumn(t, db, "groups", "id", []int64{1, 5000, 5002, 7000})
+	assertTableColumn(t, db, "groups_propagate", "id", []int64{1, 5000, 5002, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "ancestor_group_id", []int64{1, 5000, 5002, 7000})
+	assertTableColumn(t, db, "groups_ancestors", "child_group_id", []int64{1, 5000, 5002, 7000})
+	assertTableColumn(t, db, "groups_groups", "parent_group_id", []int64{1, 5000, 5002})
+	assertTableColumn(t, db, "groups_groups", "child_group_id", []int64{5000, 5002, 7000})
+	assertTableColumn(t, db, "group_pending_requests", "group_id", []int64{1, 5000, 5002})
+	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5000, 5002, 7000})
+	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5000, 5002})
+	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5000, 5002, 7000})
 	for _, table := range []string{"permissions_generated", "permissions_granted", "groups_attempts", "groups_login_prefixes"} {
-		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002, 6000, 6002})
+		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
 	for _, table := range []string{"users_threads", "users_answers", "users_items", "filters", "refresh_tokens"} {
@@ -88,15 +88,14 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
 	db := testhelpers.SetupDBWithFixtureString(`
-			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}, {id: 6000}, {id: 6001}, {id: 6002}]`, `
-			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 6000}, {id: 6001}, {id: 6002}, {id: 7000}]
+			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}]`, `
+			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 7000}]
 			groups_attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 0}, {id: 2001, group_id: 5001, item_id: 1, order: 0},
-			                  {id: 2002, group_id: 5002, item_id: 1, order: 0}, {id: 2003, group_id: 6000, item_id: 1, order: 0},
-			                  {id: 2004, group_id: 6001, item_id: 1, order: 0}, {id: 2005, group_id: 6002, item_id: 1, order: 0}]
+			                  {id: 2002, group_id: 5002, item_id: 1, order: 0}]
 			users:
-				- {temp_user: 1, login: 500, group_id: 5000, owned_group_id: 6000} # should be deleted
-				- {login: 501, temp_user: 1, group_id: 5001, owned_group_id: 6001}
-				- {login: 502, group_id: 5002, owned_group_id: 6002}
+				- {temp_user: 1, login: 500, group_id: 5000} # should be deleted
+				- {login: 501, temp_user: 1, group_id: 5001}
+				- {login: 502, group_id: 5002}
 			items: [{id: 1}]`, `
 			sessions:
 				- {user_id: 5000, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
@@ -118,46 +117,30 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {group_id: 5000, item_id: 1}
 				- {group_id: 5001, item_id: 1}
 				- {group_id: 5002, item_id: 1}
-				- {group_id: 6000, item_id: 1}
-				- {group_id: 6001, item_id: 1}
-				- {group_id: 6002, item_id: 1}
 			permissions_granted:
 				- {group_id: 5000, item_id: 1, giver_group_id: 2}
 				- {group_id: 5001, item_id: 1, giver_group_id: 2}
 				- {group_id: 5002, item_id: 1, giver_group_id: 2}
-				- {group_id: 6000, item_id: 1, giver_group_id: 2}
-				- {group_id: 6001, item_id: 1, giver_group_id: 2}
-				- {group_id: 6002, item_id: 1, giver_group_id: 2}
 			groups_login_prefixes: [{group_id: 5000, prefix: 5000, id: 1}, {group_id: 5001, prefix: 5001, id: 2},
-			                        {group_id: 5002, prefix: 5002, id: 3}, {group_id: 6000, prefix: 6000, id: 4},
-			                        {group_id: 6001, prefix: 6001, id: 5}, {group_id: 6002, prefix: 6002, id: 6}]
+			                        {group_id: 5002, prefix: 5002, id: 3}]
 			groups_groups: [{parent_group_id: 5000, child_group_id: 7000}, {parent_group_id: 5001, child_group_id: 7000},
-			                {parent_group_id: 5002, child_group_id: 7000}, {parent_group_id: 6000, child_group_id: 7000},
-			                {parent_group_id: 6001, child_group_id: 7000}, {parent_group_id: 6002, child_group_id: 7000},
+			                {parent_group_id: 5002, child_group_id: 7000},
 			                {parent_group_id: 1, child_group_id: 5000}, {parent_group_id: 1, child_group_id: 5001},
-			                {parent_group_id: 1, child_group_id: 5002}, {parent_group_id: 1, child_group_id: 6000},
-			                {parent_group_id: 1, child_group_id: 6001}, {parent_group_id: 1, child_group_id: 6002}]
+			                {parent_group_id: 1, child_group_id: 5002}]
 			group_pending_requests: [{group_id: 5000, member_id: 7000}, {group_id: 5001, member_id: 7000},
-			                         {group_id: 5002, member_id: 7000}, {group_id: 6000, member_id: 7000},
-			                         {group_id: 6001, member_id: 7000}, {group_id: 6002, member_id: 7000},
+			                         {group_id: 5002, member_id: 7000},
 			                         {group_id: 1, member_id: 5000}, {group_id: 1, member_id: 5001},
-			                         {group_id: 1, member_id: 5002}, {group_id: 1, member_id: 6000},
-			                         {group_id: 1, member_id: 6001}, {group_id: 1, member_id: 6002}]
+			                         {group_id: 1, member_id: 5002}]
 			group_membership_changes: [{group_id: 5000, member_id: 7000, at: "2019-05-30 11:00:00"},
 			                           {group_id: 5001, member_id: 7000, at: "2019-05-30 11:00:00"},
 			                           {group_id: 5002, member_id: 7000, at: "2019-05-30 11:00:00"},
-			                           {group_id: 6000, member_id: 7000},
-			                           {group_id: 6001, member_id: 7000}, {group_id: 6002, member_id: 7000},
 			                           {group_id: 1, member_id: 5000}, {group_id: 1, member_id: 5001},
-			                           {group_id: 1, member_id: 5002}, {group_id: 1, member_id: 6000},
-			                           {group_id: 1, member_id: 6001}, {group_id: 1, member_id: 6002}]
+			                           {group_id: 1, member_id: 5002}]
 			groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1},
 			                   {ancestor_group_id: 5000, child_group_id: 7000}, {ancestor_group_id: 5001, child_group_id: 7000},
-			                   {ancestor_group_id: 5002, child_group_id: 7000}, {ancestor_group_id: 6000, child_group_id: 7000},
-			                   {ancestor_group_id: 6001, child_group_id: 7000}, {ancestor_group_id: 6002, child_group_id: 7000},
+			                   {ancestor_group_id: 5002, child_group_id: 7000},
 			                   {ancestor_group_id: 1, child_group_id: 5000}, {ancestor_group_id: 1, child_group_id: 5001},
-			                   {ancestor_group_id: 1, child_group_id: 5002}, {ancestor_group_id: 1, child_group_id: 6000},
-			                   {ancestor_group_id: 1, child_group_id: 6001}, {ancestor_group_id: 1, child_group_id: 6002},
+			                   {ancestor_group_id: 1, child_group_id: 5002},
 			                   {ancestor_group_id: 1, child_group_id: 7000}]`)
 	store := database.NewDataStore(db)
 	store.GroupGroups().CreateNewAncestors()

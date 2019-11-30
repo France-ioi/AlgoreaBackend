@@ -1,14 +1,13 @@
 Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name        |
-      | 12 | Group A     |
-      | 13 | Group B     |
-      | 21 | owner       |
-      | 22 | owner-admin |
+      | id | name    |
+      | 12 | Group A |
+      | 13 | Group B |
+      | 21 | owner   |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id |
-      | owner | 21       | 22             |
+      | login | group_id |
+      | owner | 21       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -17,7 +16,6 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id | duration |
       | 50 | 00:00:00 |

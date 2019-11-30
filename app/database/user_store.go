@@ -21,13 +21,10 @@ const deleteWithTrapsBatchSize = 1000
 // 1. [`users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
 //    having `user_id` = `users.group_id`;
 // 2. [`permissions_granted`, `permissions_generated`, `groups_attempts`, `groups_login_prefixes`]
-//    having `group_id` = `users.group_id` or `group_id` = `users.owned_group_id`;
-// 3. `groups_groups` having `parent_group_id` or `child_group_id` equal
-//    to one of `users.group_id`/`users.owned_group_id`;
-// 4. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
-//    to one of `users.group_id`/`users.owned_group_id`;
-// 5. [`groups_propagate`, `groups`] having `id` equal to one of
-//    `users.group_id`/`users.owned_group_id`.
+//    having `group_id` = `users.group_id`;
+// 3. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
+// 4. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
+// 5. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`.
 func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 	defer recoverPanics(&err)
 
@@ -43,7 +40,7 @@ func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
 // DeleteWithTraps deletes a given user. It also removes linked rows in the same way as DeleteTemporaryWithTraps.
 func (s *UserStore) DeleteWithTraps(user *User) (err error) {
 	return s.InTransaction(func(store *DataStore) error {
-		deleteOneBatchOfUsers(store.DB, []int64{user.GroupID}, []*int64{user.OwnedGroupID})
+		deleteOneBatchOfUsers(store.DB, []int64{user.GroupID})
 		store.GroupGroups().createNewAncestors()
 		return nil
 	})
@@ -68,45 +65,38 @@ func (s *UserStore) deleteWithTraps(userScope *DB) int {
 	userScope.mustBeInTransaction()
 
 	userIDs := make([]int64, 0, deleteWithTrapsBatchSize)
-	ownedGroupsIDs := make([]*int64, 0, deleteWithTrapsBatchSize) // can be NULL
 
 	mustNotBeError(
-		userScope.WithWriteLock().Select("group_id, owned_group_id").Limit(deleteWithTrapsBatchSize).
-			ScanIntoSlices(&userIDs, &ownedGroupsIDs).Error())
+		userScope.WithWriteLock().Select("group_id").Limit(deleteWithTrapsBatchSize).
+			ScanIntoSlices(&userIDs).Error())
 
 	if len(userIDs) == 0 {
 		return 0
 	}
 
-	deleteOneBatchOfUsers(userScope, userIDs, ownedGroupsIDs)
+	deleteOneBatchOfUsers(userScope, userIDs)
 	s.GroupGroups().createNewAncestors()
 
 	return len(userIDs)
 }
 
-func deleteOneBatchOfUsers(db *DB, userIDs []int64, ownedGroupsIDs []*int64) {
+func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 	db.mustBeInTransaction()
 
-	allGroups := make([]*int64, 0, len(userIDs)+len(ownedGroupsIDs))
-	for _, id := range userIDs {
-		id := id
-		allGroups = append(allGroups, &id)
-	}
-	allGroups = append(allGroups, ownedGroupsIDs...)
 	executeDeleteQuery(db, "users_threads", "WHERE user_id IN (?)", userIDs)
 	for _, table := range [...]string{"groups_attempts", "groups_login_prefixes"} {
-		executeDeleteQuery(db, table, "WHERE group_id IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE group_id IN (?)", userIDs)
 	}
-	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", allGroups)
-	executeDeleteQuery(db, "groups_groups", "WHERE child_group_id IN (?)", allGroups)
-	executeDeleteQuery(db, "groups_ancestors", "WHERE ancestor_group_id IN (?)", allGroups)
-	executeDeleteQuery(db, "groups_ancestors", "WHERE child_group_id IN (?)", allGroups)
+	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", userIDs)
+	executeDeleteQuery(db, "groups_groups", "WHERE child_group_id IN (?)", userIDs)
+	executeDeleteQuery(db, "groups_ancestors", "WHERE ancestor_group_id IN (?)", userIDs)
+	executeDeleteQuery(db, "groups_ancestors", "WHERE child_group_id IN (?)", userIDs)
 	// deleting from `groups` triggers deletion from
 	// `group_pending_requests`, `group_membership_changes`,
 	// `permissions_granted`, `permissions_generated", `groups_attempts`, `groups_login_prefixes`
 	// `users`, `users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`
 	for _, table := range [...]string{"groups_propagate", "groups"} {
-		executeDeleteQuery(db, table, "WHERE id IN (?)", allGroups)
+		executeDeleteQuery(db, table, "WHERE id IN (?)", userIDs)
 	}
 }
 

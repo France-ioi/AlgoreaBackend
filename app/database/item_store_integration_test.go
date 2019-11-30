@@ -36,7 +36,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
-			user := &database.User{GroupID: 11, OwnedGroupID: ptrInt64(12), DefaultLanguageID: 2}
+			user := &database.User{GroupID: 11, DefaultLanguageID: 2}
 			dataStore := database.NewDataStore(db)
 			itemStore := dataStore.Items()
 

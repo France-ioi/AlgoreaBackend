@@ -6,13 +6,11 @@ Feature: User leaves a group - robustness
       | 14 | null                     |
       | 15 | 2037-04-29               |
       | 21 | null                     |
-      | 22 | null                     |
       | 31 | null                     |
-      | 32 | null                     |
     And the database has the following table 'users':
-      | group_id | owned_group_id | login |
-      | 21       | 22             | john  |
-      | 31       | 32             | jane  |
+      | group_id | login |
+      | 21       | john  |
+      | 31       | jane  |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -21,9 +19,7 @@ Feature: User leaves a group - robustness
       | 15                | 15             | 1       |
       | 15                | 31             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 2  | 14              | 21             |

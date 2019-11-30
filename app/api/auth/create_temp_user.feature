@@ -40,8 +40,8 @@ Feature: Create a temporary user
       Generated a session token expiring in 7200 seconds for a temporary user with group_id = 5577006791947779410
       """
     And the table "users" at group_id "5577006791947779410" should be:
-      | group_id            | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | owned_group_id | last_ip   |
-      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | null           | 127.0.0.1 |
+      | group_id            | login_id | login        | temp_user | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
+      | 5577006791947779410 | 0        | tmp-49727887 | true      | true                                                 | 127.0.0.1 |
     And the table "groups" should stay unchanged but the row with id "5577006791947779410"
     And the table "groups" at id "5577006791947779410" should be:
       | id                  | name         | type     | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | opened | send_emails |

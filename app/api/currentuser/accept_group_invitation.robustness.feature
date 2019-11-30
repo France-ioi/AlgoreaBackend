@@ -1,16 +1,15 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type      | team_item_id |
-      | 11 | Class     | null         |
-      | 13 | Friends   | null         |
-      | 14 | Team      | 1234         |
-      | 15 | Team      | 1234         |
-      | 21 | UserSelf  | null         |
-      | 22 | UserAdmin | null         |
+      | id | type     | team_item_id |
+      | 11 | Class    | null         |
+      | 13 | Friends  | null         |
+      | 14 | Team     | 1234         |
+      | 15 | Team     | 1234         |
+      | 21 | UserSelf | null         |
     And the database has the following table 'users':
-      | group_id | owned_group_id | login |
-      | 21       | 22             | john  |
+      | group_id | login |
+      | 21       | john  |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -20,7 +19,6 @@ Feature: User accepts an invitation to join a group - robustness
       | 14                | 21             | 0       |
       | 21                | 13             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 7  | 14              | 21             |

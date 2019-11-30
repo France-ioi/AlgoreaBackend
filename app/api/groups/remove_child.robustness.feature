@@ -8,24 +8,21 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 14 | Group C       | Class     |
       | 15 | Team          | Team      |
       | 21 | owner         | UserSelf  |
-      | 22 | owner-admin   | UserAdmin |
+      | 22 | Group         | Class     |
       | 23 | teacher       | UserSelf  |
-      | 24 | teacher-admin | UserAdmin |
-      | 51 | UserAdmin     | UserAdmin |
       | 52 | Root          | Base      |
       | 53 | RootSelf      | Base      |
       | 54 | RootAdmin     | Base      |
       | 55 | UserSelf      | UserSelf  |
     And the database has the following table 'users':
-      | login   | group_id | owned_group_id | first_name  | last_name |
-      | owner   | 21       | 22             | Jean-Michel | Blanquer  |
-      | teacher | 23       | 24             | John        | Smith     |
+      | login   | group_id | first_name  | last_name |
+      | owner   | 21       | Jean-Michel | Blanquer  |
+      | teacher | 23       | John        | Smith     |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
       | 14       | 21         |
       | 22       | 21         |
-      | 51       | 21         |
       | 52       | 21         |
       | 53       | 21         |
       | 54       | 21         |
@@ -51,8 +48,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 22                | 11             | 0       |
       | 22                | 13             | 0       |
       | 22                | 22             | 1       |
-      | 24                | 24             | 1       |
-      | 51                | 51             | 1       |
       | 52                | 52             | 1       |
       | 53                | 53             | 1       |
       | 54                | 54             | 1       |
@@ -105,14 +100,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     When I send a DELETE request to "/groups/13/relations/11"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Child group is UserAdmin
-    Given I am the user with id "21"
-    When I send a DELETE request to "/groups/13/relations/51"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 

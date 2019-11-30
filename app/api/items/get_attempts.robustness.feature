@@ -1,8 +1,8 @@
 Feature: Get groups attempts for current user and item_id - robustness
   Background:
     Given the database has the following users:
-      | login | group_id | owned_group_id | first_name | last_name |
-      | jdoe  | 11       | 12             | John       | Doe       |
+      | login | group_id | first_name | last_name |
+      | jdoe  | 11       | John       | Doe       |
 
   Scenario: User doesn't exist
     Given I am the user with id "404"

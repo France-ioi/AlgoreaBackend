@@ -1,25 +1,24 @@
 Feature: Accept group requests
   Background:
     Given the database has the following table 'groups':
-      | id  | type      | team_item_id |
-      | 11  | Class     | null         |
-      | 13  | Team      | 1234         |
-      | 14  | Friends   | null         |
-      | 21  | UserSelf  | null         |
-      | 22  | UserAdmin | null         |
-      | 31  | UserSelf  | null         |
-      | 111 | UserSelf  | null         |
-      | 121 | UserSelf  | null         |
-      | 122 | UserSelf  | null         |
-      | 123 | UserSelf  | null         |
-      | 131 | UserSelf  | null         |
-      | 141 | UserSelf  | null         |
-      | 151 | UserSelf  | null         |
-      | 161 | UserSelf  | null         |
-      | 444 | Team      | 1234         |
+      | id  | type     | team_item_id |
+      | 11  | Class    | null         |
+      | 13  | Team     | 1234         |
+      | 14  | Friends  | null         |
+      | 21  | UserSelf | null         |
+      | 31  | UserSelf | null         |
+      | 111 | UserSelf | null         |
+      | 121 | UserSelf | null         |
+      | 122 | UserSelf | null         |
+      | 123 | UserSelf | null         |
+      | 131 | UserSelf | null         |
+      | 141 | UserSelf | null         |
+      | 151 | UserSelf | null         |
+      | 161 | UserSelf | null         |
+      | 444 | Team     | 1234         |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -30,7 +29,6 @@ Feature: Accept group requests
       | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
       | 121               | 121            | 1       |
@@ -58,7 +56,7 @@ Feature: Accept group requests
 
   Scenario: Accept requests
     Given I am the user with id "21"
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22,151"
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -69,7 +67,7 @@ Feature: Accept group requests
         "11": "invalid",
         "13": "invalid",
         "21": "invalid",
-        "22": "invalid",
+        "122": "invalid",
         "151": "invalid"
       },
       "message": "updated",
@@ -107,7 +105,6 @@ Feature: Accept group requests
       | 13                | 151            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
       | 121               | 121            | 1       |
@@ -132,7 +129,7 @@ Feature: Accept group requests
       | 444               | 141            | 0       |
       | 444               | 161            | 0       |
       | 444               | 444            | 1       |
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22,151,161"
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151,161"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
@@ -143,7 +140,7 @@ Feature: Accept group requests
           "11": "invalid",
           "13": "invalid",
           "21": "invalid",
-          "22": "invalid",
+          "122": "invalid",
           "151": "invalid",
           "161": "in_another_team"
         },

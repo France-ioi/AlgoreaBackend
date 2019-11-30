@@ -1,32 +1,27 @@
 Feature: Get item for tree navigation
   Background:
     Given the database has the following table 'groups':
-      | id | name            | text_id | grade | type      |
-      | 11 | jdoe            |         | -2    | UserAdmin |
-      | 12 | jdoe-admin      |         | -2    | UserAdmin |
-      | 13 | Group B         |         | -2    | Class     |
-      | 14 | info_root       |         | -2    | UserAdmin |
-      | 15 | info_root-admin |         | -2    | UserAdmin |
-      | 16 | info_mid        |         | -2    | UserAdmin |
-      | 17 | info_mid-admin  |         | -2    | UserAdmin |
-      | 18 | french          |         | -2    | UserAdmin |
-      | 19 | french-admin    |         | -2    | UserAdmin |
+      | id | name      | text_id | grade | type     |
+      | 11 | jdoe      |         | -2    | UserSelf |
+      | 13 | Group B   |         | -2    | Class    |
+      | 14 | info_root |         | -2    | UserSelf |
+      | 16 | info_mid  |         | -2    | UserSelf |
+      | 18 | french    |         | -2    | UserSelf |
     And the database has the following table 'languages':
       | id | code |
       | 2  | fr   |
     And the database has the following table 'users':
-      | login     | temp_user | group_id | owned_group_id | default_language |
-      | jdoe      | 0         | 11       | 12             |                  |
-      | info_root | 0         | 14       | 15             |                  |
-      | info_mid  | 0         | 16       | 17             |                  |
-      | fr_user   | 0         | 18       | 19             | fr               |
+      | login     | temp_user | group_id | default_language |
+      | jdoe      | 0         | 11       |                  |
+      | info_root | 0         | 14       |                  |
+      | info_mid  | 0         | 16       |                  |
+      | fr_user   | 0         | 18       | fr               |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 61 | 13              | 11             |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
-      | 72 | 12                | 12             | 1       |
       | 73 | 13                | 13             | 1       |
       | 74 | 13                | 11             | 0       |
       | 75 | 14                | 14             | 1       |

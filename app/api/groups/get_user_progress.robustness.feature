@@ -1,9 +1,9 @@
 Feature: Display the current progress of users on a subset of items (groupUserProgress) - robustness
   Background:
     Given the database has the following users:
-      | login | group_id | owned_group_id |
-      | owner | 21       | 22             |
-      | user  | 11       | 12             |
+      | login | group_id |
+      | owner | 21       |
+      | user  | 11       |
     And the database has the following table 'groups':
       | id |
       | 13 |
@@ -13,10 +13,8 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id  | type     |
       | 200 | Category |

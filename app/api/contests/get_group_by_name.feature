@@ -1,23 +1,21 @@
 Feature: Get group by name (contestGetGroupByName)
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      | team_item_id |
-      | 10 | Parent      | Club      | null         |
-      | 11 | Group A     | Friends   | null         |
-      | 13 | Group B     | Team      | 60           |
-      | 14 | Group B     | Other     | null         |
-      | 15 | Team        | Team      | 60           |
-      | 21 | owner       | UserSelf  | null         |
-      | 22 | owner-admin | UserAdmin | null         |
-      | 31 | john        | UserSelf  | null         |
-      | 32 | john-admin  | UserAdmin | null         |
-      | 41 | jane        | UserSelf  | null         |
-      | 42 | jane-admin  | UserAdmin | null         |
+      | id | name    | type     | team_item_id |
+      | 10 | Parent  | Club     | null         |
+      | 11 | Group A | Friends  | null         |
+      | 13 | Group B | Team     | 60           |
+      | 14 | Group B | Other    | null         |
+      | 15 | Team    | Team     | 60           |
+      | 21 | owner   | UserSelf | null         |
+      | 31 | john    | UserSelf | null         |
+      | 41 | jane    | UserSelf | null         |
+      | 50 | Group D | Class    | null         |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id |
-      | owner | 21       | 22             |
-      | john  | 31       | 32             |
-      | jane  | 41       | 42             |
+      | login | group_id |
+      | owner | 21       |
+      | john  | 31       |
+      | jane  | 41       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 11       | 21         |
@@ -32,10 +30,10 @@ Feature: Get group by name (contestGetGroupByName)
       | 14              | 14             |
       | 15              | 31             |
       | 15              | 41             |
-      | 22              | 13             |
-      | 22              | 14             |
-      | 22              | 15             |
-      | 22              | 31             |
+      | 50              | 13             |
+      | 50              | 14             |
+      | 50              | 15             |
+      | 50              | 31             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 10                | 10             | 1       |
@@ -51,7 +49,7 @@ Feature: Get group by name (contestGetGroupByName)
       | 15                | 31             | 0       |
       | 15                | 41             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
+      | 50                | 50             | 1       |
       | 31                | 31             | 1       |
       | 32                | 32             | 1       |
       | 41                | 41             | 1       |

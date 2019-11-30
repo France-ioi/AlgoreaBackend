@@ -2,15 +2,15 @@ Feature: Remove a direct parent-child relation between two groups
 
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type      |
-      | 11 | Group A | Class     |
-      | 13 | Group B | Class     |
-      | 14 | Group C | Class     |
-      | 21 | Self    | UserSelf  |
-      | 22 | Owned   | UserAdmin |
+      | id | name    | type     |
+      | 11 | Group A | Class    |
+      | 13 | Group B | Class    |
+      | 14 | Group C | Class    |
+      | 21 | Self    | UserSelf |
+      | 22 | Group   | Class    |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 1               |
+      | login | group_id | first_name  | last_name | allow_subgroups |
+      | owner | 21       | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |

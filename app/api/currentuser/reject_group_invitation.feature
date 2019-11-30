@@ -5,16 +5,14 @@ Feature: User rejects an invitation to join a group
       | 11 |
       | 14 |
       | 21 |
-      | 22 |
     And the database has the following table 'users':
-      | group_id | owned_group_id |
-      | 21       | 22             |
+      | group_id |
+      | 21       |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type       |
       | 11       | 21        | invitation |

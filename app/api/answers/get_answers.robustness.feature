@@ -1,12 +1,11 @@
 Feature: Get item answers - robustness
 Background:
   Given the database has the following table 'groups':
-    | id | name       | type      |
-    | 1  | jdoe       | UserSelf  |
-    | 2  | jdoe-admin | UserAdmin |
+    | id | name | type     |
+    | 1  | jdoe | UserSelf |
   And the database has the following table 'users':
-    | login | temp_user | group_id | owned_group_id |
-    | jdoe  | 0         | 1        | 2              |
+    | login | temp_user | group_id |
+    | jdoe  | 0         | 1        |
 
   Scenario: Should fail when neither user_id & item_id nor attempt_id is present
     Given I am the user with id "1"

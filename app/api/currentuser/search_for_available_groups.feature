@@ -14,15 +14,15 @@ Feature: Search for groups available to the current user
       | 10 | Class    | The third class                           | The third class        | 1           |
       | 21 | UserSelf | (the) user self                           |                        | 0           |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | login | temp_user | group_id | first_name  | last_name | grade |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 6  | 5               | 21             |
       | 7  | 6               | 21             |
       | 10 | 9               | 21             |
       | 11 | 10              | 21             |
-      | 12 | 1               | 22             |
+      | 12 | 1               | 7              |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |

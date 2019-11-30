@@ -2,14 +2,13 @@ Feature: Delete the current user - robustness
   Background:
     Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
-      | id | type      | name       | lock_user_deletion_until |
-      | 1  | Base      | Root       | null                     |
-      | 2  | Base      | RootSelf   | null                     |
-      | 3  | Base      | RootAdmin  | null                     |
-      | 4  | Base      | RootTemp   | null                     |
-      | 21 | UserSelf  | user       | null                     |
-      | 22 | UserAdmin | user-admin | null                     |
-      | 50 | Class     | Our class  | 2019-08-10               |
+      | id | type     | name      | lock_user_deletion_until |
+      | 1  | Base     | Root      | null                     |
+      | 2  | Base     | RootSelf  | null                     |
+      | 3  | Base     | RootAdmin | null                     |
+      | 4  | Base     | RootTemp  | null                     |
+      | 21 | UserSelf | user      | null                     |
+      | 50 | Class    | Our class | 2019-08-10               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 2              |
@@ -17,7 +16,6 @@ Feature: Delete the current user - robustness
       | 1               | 50             |
       | 2               | 4              |
       | 2               | 21             |
-      | 3               | 22             |
       | 50              | 21             |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
@@ -26,21 +24,18 @@ Feature: Delete the current user - robustness
       | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 21             | false   |
-      | 1                 | 22             | false   |
       | 1                 | 50             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |
       | 3                 | 3              | true    |
-      | 3                 | 22             | false   |
       | 4                 | 4              | true    |
       | 21                | 21             | true    |
-      | 22                | 22             | true    |
       | 50                | 21             | false   |
       | 50                | 50             | true    |
     And the database has the following table 'users':
-      | temp_user | login | group_id | owned_group_id | login_id |
-      | 0         | user  | 21       | 22             | 1234567  |
+      | temp_user | login | group_id | login_id |
+      | 0         | user  | 21       | 1234567  |
     And the application config is:
       """
       auth:

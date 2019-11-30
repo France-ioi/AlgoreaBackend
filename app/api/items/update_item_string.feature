@@ -2,12 +2,11 @@ Feature: Update item strings
 
   Background:
     Given the database has the following table 'groups':
-      | id | name       | type      |
-      | 11 | jdoe       | UserSelf  |
-      | 12 | jdoe-admin | UserAdmin |
+      | id | name | type     |
+      | 11 | jdoe | UserSelf |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id |
-      | jdoe  | 0         | 11       | 12             |
+      | login | temp_user | group_id |
+      | jdoe  | 0         | 11       |
     And the database has the following table 'items':
       | id | default_language_id |
       | 21 | 2                   |
@@ -25,7 +24,6 @@ Feature: Update item strings
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
-      | 72 | 12                | 12             | 1       |
     And the database has the following table 'languages':
       | id |
       | 2  |

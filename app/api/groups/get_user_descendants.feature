@@ -1,23 +1,22 @@
 Feature: List user descendants of the group (groupUserDescendantView)
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name           | grade |
-      | 1  | Base      | Root 1         | -2    |
-      | 3  | Base      | Root 2         | -2    |
-      | 11 | Class     | Our Class      | -2    |
-      | 12 | Class     | Other Class    | -2    |
-      | 13 | Class     | Special Class  | -2    |
-      | 14 | Team      | Super Team     | -2    |
-      | 15 | Team      | Our Team       | -1    |
-      | 16 | Team      | First Team     | 0     |
-      | 17 | Other     | A custom group | -2    |
-      | 18 | Club      | Our Club       | -2    |
-      | 20 | Friends   | My Friends     | -2    |
-      | 21 | UserSelf  | owner          | -2    |
-      | 22 | UserAdmin | owner-admin    | -2    |
+      | id | type     | name           | grade |
+      | 1  | Base     | Root 1         | -2    |
+      | 3  | Base     | Root 2         | -2    |
+      | 11 | Class    | Our Class      | -2    |
+      | 12 | Class    | Other Class    | -2    |
+      | 13 | Class    | Special Class  | -2    |
+      | 14 | Team     | Super Team     | -2    |
+      | 15 | Team     | Our Team       | -1    |
+      | 16 | Team     | First Team     | 0     |
+      | 17 | Other    | A custom group | -2    |
+      | 18 | Club     | Our Club       | -2    |
+      | 20 | Friends  | My Friends     | -2    |
+      | 21 | UserSelf | owner          | -2    |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 10    |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 10    |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
@@ -59,25 +58,20 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
 
   Scenario: One group with 4 grand children (different parents)
     Given the database table 'groups' has also the following rows:
-      | id | type      | name        | grade |
-      | 51 | UserSelf  | johna       | -2    |
-      | 52 | UserAdmin | johna-admin | -2    |
-      | 53 | UserSelf  | johnb       | -2    |
-      | 54 | UserAdmin | johnb-admin | -2    |
-      | 55 | UserSelf  | johnc       | -2    |
-      | 56 | UserAdmin | johnc-admin | -2    |
-      | 57 | UserSelf  | johnd       | -2    |
-      | 58 | UserAdmin | johnd-admin | -2    |
+      | id | type     | name  | grade |
+      | 51 | UserSelf | johna | -2    |
+      | 53 | UserSelf | johnb | -2    |
+      | 55 | UserSelf | johnc | -2    |
+      | 57 | UserSelf | johnd | -2    |
     And the database table 'users' has also the following rows:
-      | login | group_id | owned_group_id | first_name | last_name | grade |
-      | johna | 51       | 52             | null       | Adams     | 1     |
-      | johnb | 53       | 54             | John       | Baker     | null  |
-      | johnc | 55       | 56             | John       | null      | 3     |
-      | johnd | 57       | 58             | John       | Doe       | 3     |
+      | login | group_id | first_name | last_name | grade |
+      | johna | 51       | null       | Adams     | 1     |
+      | johnb | 53       | John       | Baker     | null  |
+      | johnc | 55       | John       | null      | 3     |
+      | johnd | 57       | John       | Doe       | 3     |
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
       | 11              | 51             |
@@ -98,15 +92,9 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 16                | 55             | 0       |
       | 17                | 53             | 0       |
       | 18                | 57             | 0       |
-      | 22                | 51             | 0       |
-      | 22                | 53             | 0       |
-      | 22                | 55             | 0       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
       | 53                | 53             | 1       |
-      | 54                | 54             | 1       |
       | 55                | 55             | 1       |
-      | 56                | 56             | 1       |
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
@@ -180,12 +168,11 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
     Given the database table 'groups' has also the following rows:
-      | id | type      | name        | grade |
-      | 51 | UserSelf  | johna       | -2    |
-      | 52 | UserAdmin | johna-admin | -2    |
+      | id | type     | name  | grade |
+      | 51 | UserSelf | johna | -2    |
     And the database table 'users' has also the following rows:
-      | login | group_id | owned_group_id | first_name | last_name | grade |
-      | johna | 51       | 52             | null       | Adams     | 1     |
+      | login | group_id | first_name | last_name | grade |
+      | johna | 51       | null       | Adams     | 1     |
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
       | 11              | 51             |
@@ -196,9 +183,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 3                 | 51             | 0       |
       | 11                | 51             | 0       |
       | 13                | 51             | 0       |
-      | 22                | 51             | 0       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
@@ -216,12 +201,11 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Only actual memberships count
     Given the database table 'groups' has also the following rows:
-      | id | type      | name        | grade |
-      | 51 | UserSelf  | johna       | -2    |
-      | 52 | UserAdmin | johna-admin | -2    |
+      | id | type     | name  | grade |
+      | 51 | UserSelf | johna | -2    |
     And the database table 'users' has also the following rows:
-      | login | group_id | owned_group_id | first_name | last_name | grade |
-      | johna | 51       | 52             | John       | Adams     | 1     |
+      | login | group_id | first_name | last_name | grade |
+      | johna | 51       | John       | Adams     | 1     |
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 51             | 2019-05-30 11:00:00 |
@@ -229,9 +213,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 1                 | 51             | 0       | 2019-05-30 11:00:00 |
       | 11                | 51             | 0       | 2019-05-30 11:00:00 |
-      | 22                | 51             | 0       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
-      | 52                | 52             | 1       | 9999-12-31 23:59:59 |
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200
@@ -243,12 +225,11 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: No duplication (one group with 1 grand children connected through 2 different parents)
     Given the database table 'groups' has also the following rows:
-      | id | type      | name        | grade |
-      | 51 | UserSelf  | johna       | -2    |
-      | 52 | UserAdmin | johna-admin | -2    |
+      | id | type     | name  | grade |
+      | 51 | UserSelf | johna | -2    |
     And the database table 'users' has also the following rows:
-      | login | group_id | owned_group_id | first_name | last_name | grade |
-      | johna | 51       | 52             | null       | Adams     | 1     |
+      | login | group_id | first_name | last_name | grade |
+      | johna | 51       | null       | Adams     | 1     |
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
       | 11              | 51             |
@@ -258,9 +239,7 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 1                 | 51             | 0       |
       | 11                | 51             | 0       |
       | 14                | 51             | 0       |
-      | 22                | 51             | 0       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
     And I am the user with id "21"
     When I send a GET request to "/groups/1/user-descendants"
     Then the response code should be 200

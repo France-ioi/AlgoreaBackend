@@ -5,42 +5,31 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13  |
       | 14  |
       | 21  |
-      | 22  |
       | 31  |
-      | 32  |
       | 41  |
-      | 42  |
       | 51  |
-      | 52  |
       | 61  |
-      | 62  |
       | 71  |
-      | 72  |
       | 81  |
-      | 82  |
       | 91  |
-      | 92  |
       | 101 |
-      | 102 |
       | 111 |
-      | 112 |
       | 121 |
-      | 122 |
       | 131 |
       | 132 |
     And the database has the following table 'users':
-      | login  | group_id | owned_group_id |
-      | owner  | 21       | 22             |
-      | john   | 31       | 32             |
-      | jane   | 41       | 42             |
-      | jack   | 51       | 52             |
-      | james  | 61       | 62             |
-      | jacob  | 71       | 72             |
-      | janis  | 81       | 82             |
-      | jeff   | 91       | 92             |
-      | jenna  | 101      | 102            |
-      | jannet | 111      | 112            |
-      | judith | 121      | 122            |
+      | login  | group_id |
+      | owner  | 21       |
+      | john   | 31       |
+      | jane   | 41       |
+      | jack   | 51       |
+      | james  | 61       |
+      | jacob  | 71       |
+      | janis  | 81       |
+      | jeff   | 91       |
+      | jenna  | 101      |
+      | jannet | 111      |
+      | judith | 121      |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -55,27 +44,16 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 14                | 14             | 1       |
       | 14                | 41             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
       | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
       | 61                | 61             | 1       |
-      | 62                | 62             | 1       |
       | 71                | 71             | 1       |
-      | 72                | 72             | 1       |
       | 81                | 81             | 1       |
-      | 82                | 82             | 1       |
       | 91                | 91             | 1       |
-      | 92                | 92             | 1       |
       | 101               | 101            | 1       |
-      | 102               | 102            | 1       |
       | 111               | 111            | 1       |
-      | 112               | 112            | 1       |
       | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
       | 131               | 131            | 1       |
       | 132               | 132            | 1       |
     And the database has the following table 'groups_groups':
@@ -135,26 +113,15 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 14                | 14             | 1       |
       | 14                | 41             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
       | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
       | 61                | 61             | 1       |
-      | 62                | 62             | 1       |
       | 71                | 71             | 1       |
-      | 72                | 72             | 1       |
       | 81                | 81             | 1       |
-      | 82                | 82             | 1       |
       | 91                | 91             | 1       |
-      | 92                | 92             | 1       |
       | 101               | 101            | 1       |
-      | 102               | 102            | 1       |
       | 111               | 111            | 1       |
-      | 112               | 112            | 1       |
       | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
       | 131               | 131            | 1       |
       | 132               | 132            | 1       |

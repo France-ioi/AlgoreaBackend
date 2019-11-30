@@ -65,7 +65,7 @@ const minSearchStringLength = 3
 //             type: string
 //           type:
 //             type: string
-//             enum: [Class,Team,Club,Friends,Other,UserSelf,UserAdmin,Base]
+//             enum: [Class,Team,Club,Friends,Other,UserSelf,Base]
 //           description:
 //             description: Nullable
 //             type: string

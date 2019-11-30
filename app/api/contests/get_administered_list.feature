@@ -1,13 +1,13 @@
 Feature: Get the contests that the user has administration rights on (contestAdminList)
   Background:
     Given the database has the following users:
-      | login          | group_id | owned_group_id | default_language |
-      | possesseur     | 21       | 22             | fr               |
-      | owner          | 31       | 32             | en               |
-      | administrateur | 41       | 42             | fr               |
-      | admin          | 51       | 52             | en               |
-      | guest          | 61       | 62             | en               |
-      | panas          | 71       | 72             | uk               |
+      | login          | group_id | default_language |
+      | possesseur     | 21       | fr               |
+      | owner          | 31       | en               |
+      | administrateur | 41       | fr               |
+      | admin          | 51       | en               |
+      | guest          | 61       | en               |
+      | panas          | 71       | uk               |
     And the database has the following table 'languages':
       | id | code |
       | 1  | en   |
