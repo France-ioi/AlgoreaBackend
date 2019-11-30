@@ -13,7 +13,6 @@ Feature: Get group children (groupChildrenView)
       | 28 | Other         | 0     | Other    | true   | false       | null       |
       | 29 | UserSelf      | 0     | UserSelf | true   | false       | null       |
       | 30 | RootSelf      | 0     | Base     | true   | false       | null       |
-      | 31 | RootAdmin     | 0     | Base     | true   | false       | null       |
       | 42 | Their Class   | -3    | Class    | true   | false       | null       |
       | 43 | Other Root    | -2    | Base     | true   | false       | 3567894abc |
       | 44 | Other Team    | -1    | Team     | true   | false       | 678934abcd |
@@ -45,7 +44,6 @@ Feature: Get group children (groupChildrenView)
       | 13                | 28             | 0       |
       | 13                | 29             | 0       |
       | 13                | 30             | 0       |
-      | 13                | 31             | 0       |
       | 13                | 51             | 0       |
       | 13                | 53             | 0       |
       | 13                | 90             | 0       |
@@ -63,7 +61,6 @@ Feature: Get group children (groupChildrenView)
       | 28                | 28             | 1       |
       | 29                | 29             | 1       |
       | 30                | 30             | 1       |
-      | 31                | 31             | 1       |
       | 42                | 42             | 1       |
       | 43                | 43             | 1       |
       | 44                | 44             | 1       |
@@ -86,7 +83,6 @@ Feature: Get group children (groupChildrenView)
       | 13              | 28             |
       | 13              | 29             |
       | 13              | 30             |
-      | 13              | 31             |
       | 23              | 51             |
       | 23              | 90             |
       | 25              | 53             |
@@ -106,7 +102,6 @@ Feature: Get group children (groupChildrenView)
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
     ]
     """
@@ -124,7 +119,6 @@ Feature: Get group children (groupChildrenView)
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "UserSelf", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
       {"id": "29", "name": "UserSelf", "type": "UserSelf", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
@@ -144,7 +138,6 @@ Feature: Get group children (groupChildrenView)
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
       {"id": "25", "name": "Our Team", "type": "Team", "free_access": false, "grade": -1, "opened": true, "code": "456789abcd", "user_count": 1},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "UserSelf", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
       {"id": "29", "name": "UserSelf", "type": "UserSelf", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
@@ -160,7 +153,6 @@ Feature: Get group children (groupChildrenView)
     [
       {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "21", "name": "user", "type": "UserSelf", "free_access": false, "grade": -2, "opened": true, "code": null, "user_count": 0},
       {"id": "29", "name": "UserSelf", "type": "UserSelf", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
@@ -180,8 +172,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "26", "name": "Our Club", "type": "Club", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -198,8 +189,7 @@ Feature: Get group children (groupChildrenView)
       {"id": "27", "name": "Our Friends", "type": "Friends", "free_access": false, "grade": 0, "opened": true, "code": "56789abcde", "user_count": 1},
       {"id": "28", "name": "Other", "type": "Other", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
       {"id": "24", "name": "Root", "type": "Base", "free_access": false, "grade": -2, "opened": true, "code": "3456789abc", "user_count": 0},
-      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0},
-      {"id": "31", "name": "RootAdmin", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
+      {"id": "30", "name": "RootSelf", "type": "Base", "free_access": false, "grade": 0, "opened": true, "code": null, "user_count": 0}
     ]
     """
 
@@ -216,7 +206,7 @@ Feature: Get group children (groupChildrenView)
 
   Scenario: User is a manager of the parent group, paging applied, UserSelf is skipped
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/children?from.name=RootAdmin&from.id=31&types_exclude=UserSelf"
+    When I send a GET request to "/groups/13/children?from.name=Root&from.id=24&types_exclude=UserSelf"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

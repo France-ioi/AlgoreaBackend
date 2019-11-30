@@ -99,7 +99,6 @@ func (app *Application) CheckConfig() error {
 		}{
 			{name: "Root", id: domainConfig.RootGroup},
 			{name: "RootSelf", id: domainConfig.RootSelfGroup},
-			{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 			{name: "RootTemp", id: domainConfig.RootTempGroup},
 		} {
 			hasRows, err := groupStore.ByID(spec.id).HasRows()
@@ -118,7 +117,6 @@ func (app *Application) CheckConfig() error {
 			childID    int64
 		}{
 			{parentName: "Root", childName: "RootSelf", parentID: domainConfig.RootGroup, childID: domainConfig.RootSelfGroup},
-			{parentName: "Root", childName: "RootAdmin", parentID: domainConfig.RootGroup, childID: domainConfig.RootAdminGroup},
 			{parentName: "RootSelf", childName: "RootTemp", parentID: domainConfig.RootSelfGroup, childID: domainConfig.RootTempGroup},
 		} {
 			hasRows, err := groupGroupStore.Where("type = 'direct'").
@@ -156,7 +154,6 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 		inserted = inserted || insertedForDomain
 		for _, spec := range []database.ParentChild{
 			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
-			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
 			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
 		} {
 			found, err := groupGroupStore.Where("type = 'direct'").
@@ -184,7 +181,6 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Doma
 	}{
 		{name: "Root", id: domainConfig.RootGroup},
 		{name: "RootSelf", id: domainConfig.RootSelfGroup},
-		{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 		{name: "RootTemp", id: domainConfig.RootTempGroup},
 	} {
 		found, err := groupStore.ByID(spec.id).Where("type = 'Base'").

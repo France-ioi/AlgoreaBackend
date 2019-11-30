@@ -8,19 +8,16 @@ Feature: Create a temporary user
           domains: [127.0.0.1]
           rootGroup: 1
           rootSelfGroup: 2
-          rootAdminGroup: 3
           rootTempGroup: 4
       """
     And the database has the following table 'groups':
       | id | name      | type     | text_id   |
       | 1  | Root      | Base     | Root      |
       | 2  | RootSelf  | Base     | RootSelf  |
-      | 3  | RootAdmin | Base     | RootAdmin |
       | 4  | RootTemp  | UserSelf | RootTemp  |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | child_order |
       | 1  | 1               | 2              | 1           |
-      | 2  | 1               | 3              | 2           |
       | 3  | 2               | 4              | 1           |
 
   Scenario: Create a new temporary user
@@ -54,13 +51,11 @@ Feature: Create a temporary user
       | ancestor_group_id   | child_group_id      | is_self |
       | 1                   | 1                   | true    |
       | 1                   | 2                   | false   |
-      | 1                   | 3                   | false   |
       | 1                   | 4                   | false   |
       | 1                   | 5577006791947779410 | false   |
       | 2                   | 2                   | true    |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
-      | 3                   | 3                   | true    |
       | 4                   | 4                   | true    |
       | 4                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |

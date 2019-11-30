@@ -109,14 +109,6 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Child group is RootAdmin
-    Given I am the user with id "27"
-    When I send a POST request to "/groups/13/relations/17"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
   Scenario: Child group is UserSelf
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/18"

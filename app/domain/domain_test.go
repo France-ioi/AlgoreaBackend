@@ -8,7 +8,7 @@ import (
 )
 
 func TestFromContext(t *testing.T) {
-	expectedConfig := &Configuration{RootGroupID: 100, RootSelfGroupID: 101, RootAdminGroupID: 102, RootTempGroupID: 103}
+	expectedConfig := &Configuration{RootGroupID: 100, RootSelfGroupID: 101, RootTempGroupID: 103}
 	ctx := context.WithValue(context.Background(), ctxDomainConfig, expectedConfig)
 	conf := ConfigFromContext(ctx)
 

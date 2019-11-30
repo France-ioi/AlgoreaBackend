@@ -8,7 +8,6 @@
 - {ancestor_group_id: 1, child_group_id: 8}
 - {ancestor_group_id: 1, child_group_id: 9}
 - {ancestor_group_id: 1, child_group_id: 11}
-- {ancestor_group_id: 1, child_group_id: 12}
 - {ancestor_group_id: 2, child_group_id: 2, is_self: 1}
 - {ancestor_group_id: 2, child_group_id: 3}
 - {ancestor_group_id: 2, child_group_id: 4}
@@ -18,7 +17,6 @@
 - {ancestor_group_id: 2, child_group_id: 8}
 - {ancestor_group_id: 2, child_group_id: 9}
 - {ancestor_group_id: 2, child_group_id: 11}
-- {ancestor_group_id: 2, child_group_id: 12}
 - {ancestor_group_id: 3, child_group_id: 3, is_self: 1}
 - {ancestor_group_id: 4, child_group_id: 4, is_self: 1}
 - {ancestor_group_id: 5, child_group_id: 5, is_self: 1}
@@ -27,4 +25,3 @@
 - {ancestor_group_id: 8, child_group_id: 8, is_self: 1}
 - {ancestor_group_id: 9, child_group_id: 9, is_self: 1}
 - {ancestor_group_id: 11, child_group_id: 11, is_self: 1}
-- {ancestor_group_id: 12, child_group_id: 12, is_self: 1}

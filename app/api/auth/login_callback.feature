@@ -3,7 +3,6 @@ Feature: Login callback
     Given the database has the following table 'groups':
       | id | type | name      | created_at          |
       | 2  | Base | RootSelf  | 2015-08-10 12:34:55 |
-      | 3  | Base | RootAdmin | 2015-08-10 12:34:56 |
     And the application config is:
       """
       auth:
@@ -15,7 +14,6 @@ Feature: Login callback
         -
           domains: [127.0.0.1]
           rootSelfGroup: 2
-          rootAdminGroup: 3
       """
 
   Scenario: Create a new user
@@ -78,7 +76,6 @@ Feature: Login callback
     And the table "groups" should be:
       | id                  | name      | type     | description | created_at          | opened | send_emails |
       | 2                   | RootSelf  | Base     | null        | 2015-08-10 12:34:55 | false  | false       |
-      | 3                   | RootAdmin | Base     | null        | 2015-08-10 12:34:56 | false  | false       |
       | 5577006791947779410 | mohammed  | UserSelf | mohammed    | 2019-07-16 22:02:28 | false  | false       |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id      | child_order |
@@ -87,7 +84,6 @@ Feature: Login callback
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
       | 2                   | 5577006791947779410 | false   |
-      | 3                   | 3                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
     And the table "group_membership_changes" should be empty
     And the table "login_states" should be empty
@@ -161,7 +157,6 @@ Feature: Login callback
       | 2                 | 2              | true    |
       | 2                 | 11             | false   |
       | 2                 | 13             | false   |
-      | 3                 | 3              | true    |
       | 11                | 11             | true    |
       | 13                | 13             | true    |
     And the database has the following table 'login_states':
@@ -298,7 +293,6 @@ Feature: Login callback
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
       | 2                 | 11             | false   |
-      | 3                 | 3              | true    |
       | 11                | 11             | true    |
     And the table "group_membership_changes" should be empty
 

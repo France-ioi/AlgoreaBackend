@@ -5,14 +5,12 @@ Feature: Delete the current user - robustness
       | id | type     | name      | lock_user_deletion_until |
       | 1  | Base     | Root      | null                     |
       | 2  | Base     | RootSelf  | null                     |
-      | 3  | Base     | RootAdmin | null                     |
       | 4  | Base     | RootTemp  | null                     |
       | 21 | UserSelf | user      | null                     |
       | 50 | Class    | Our class | 2019-08-10               |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 2              |
-      | 1               | 3              |
       | 1               | 50             |
       | 2               | 4              |
       | 2               | 21             |
@@ -21,14 +19,12 @@ Feature: Delete the current user - robustness
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
-      | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 21             | false   |
       | 1                 | 50             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |
-      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 21                | 21             | true    |
       | 50                | 21             | false   |
@@ -74,24 +70,20 @@ Feature: Delete the current user - robustness
       | id | type  | name      | lock_user_deletion_until |
       | 1  | Base  | Root      | null                     |
       | 2  | Base  | RootSelf  | null                     |
-      | 3  | Base  | RootAdmin | null                     |
       | 4  | Base  | RootTemp  | null                     |
       | 50 | Class | Our class | 2019-08-10               |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
-      | 1               | 3              |
       | 1               | 50             |
       | 2               | 4              |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
-      | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 50             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
-      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 50                | 50             | true    |

@@ -12,7 +12,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 23 | teacher       | UserSelf  |
       | 52 | Root          | Base      |
       | 53 | RootSelf      | Base      |
-      | 54 | RootAdmin     | Base      |
       | 55 | UserSelf      | UserSelf  |
     And the database has the following table 'users':
       | login   | group_id | first_name  | last_name |
@@ -25,7 +24,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 22       | 21         |
       | 52       | 21         |
       | 53       | 21         |
-      | 54       | 21         |
       | 55       | 21         |
       | 23       | 11         |
     And the database has the following table 'groups_groups':
@@ -50,7 +48,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 22                | 22             | 1       |
       | 52                | 52             | 1       |
       | 53                | 53             | 1       |
-      | 54                | 54             | 1       |
       | 55                | 14             | 0       |
       | 55                | 55             | 1       |
 
@@ -114,14 +111,6 @@ Feature: Remove a direct parent-child relation between two groups - robustness
   Scenario: Child group is RootSelf
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/53"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Child group is RootAdmin
-    Given I am the user with id "21"
-    When I send a DELETE request to "/groups/13/relations/54"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

@@ -9,7 +9,6 @@ groups:
   - {id: 8, type: "Base", name: "Root"}
   - {id: 9, type: "UserSelf"}
   - {id: 11, type: "Base", name: "RootSelf"}
-  - {id: 12, type: "Base", name: "RootAdmin"}
   - {id: 111, type: "UserSelf"}
 
 users: [{group_id: 111}]
@@ -25,4 +24,3 @@ filters:
   - {group_id: 8, user_id: 111}
   - {group_id: 9, user_id: 111}
   - {group_id: 11, user_id: 111}
-  - {group_id: 12, user_id: 111}

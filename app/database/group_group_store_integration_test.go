@@ -83,14 +83,13 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			name:                  "deletes only orphans of accepted types",
 			fixture:               "deletes_only_orphans_of_accepted_types",
 			shouldDeleteOrphans:   true,
-			remainingGroupIDs:     []int64{1, 8, 9, 11, 12},
+			remainingGroupIDs:     []int64{1, 8, 9, 11},
 			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
 				{"ancestor_group_id": "1", "child_group_id": "1"},
 				{"ancestor_group_id": "8", "child_group_id": "8"},
 				{"ancestor_group_id": "9", "child_group_id": "9"},
 				{"ancestor_group_id": "11", "child_group_id": "11"},
-				{"ancestor_group_id": "12", "child_group_id": "12"},
 			},
 		},
 	}

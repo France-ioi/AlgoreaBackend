@@ -4,7 +4,6 @@ Feature: Delete the current user
       | id  | type     | name       |
       | 1   | Base     | Root       |
       | 2   | Base     | RootSelf   |
-      | 3   | Base     | RootAdmin  |
       | 4   | Base     | RootTemp   |
       | 21  | UserSelf | user       |
       | 31  | UserSelf | tmp-1234   |
@@ -12,7 +11,6 @@ Feature: Delete the current user
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 2              |
-      | 1               | 3              |
       | 2               | 4              |
       | 2               | 21             |
       | 4               | 31             |
@@ -28,7 +26,6 @@ Feature: Delete the current user
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
-      | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 21             | false   |
       | 1                 | 31             | false   |
@@ -36,7 +33,6 @@ Feature: Delete the current user
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |
       | 2                 | 31             | false   |
-      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 4                 | 31             | true    |
       | 21                | 21             | true    |
@@ -77,14 +73,12 @@ Feature: Delete the current user
       | id  | type     | name       |
       | 1   | Base     | Root       |
       | 2   | Base     | RootSelf   |
-      | 3   | Base     | RootAdmin  |
       | 4   | Base     | RootTemp   |
       | 31  | UserSelf | tmp-1234   |
       | 100 | Class    | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
-      | 1               | 3              |
       | 2               | 4              |
       | 4               | 31             |
     And the table "group_pending_requests" should be:
@@ -97,13 +91,11 @@ Feature: Delete the current user
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
-      | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 31             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 31             | false   |
-      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 4                 | 31             | true    |
       | 31                | 31             | true    |
@@ -127,14 +119,12 @@ Feature: Delete the current user
       | id  | type      | name       |
       | 1   | Base      | Root       |
       | 2   | Base      | RootSelf   |
-      | 3   | Base      | RootAdmin  |
       | 4   | Base      | RootTemp   |
       | 21  | UserSelf  | user       |
       | 100 | Class     | Some class |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
-      | 1               | 3              |
       | 2               | 4              |
       | 2               | 21             |
     And the table "group_pending_requests" should be:
@@ -147,13 +137,11 @@ Feature: Delete the current user
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
       | 1                 | 2              | false   |
-      | 1                 | 3              | false   |
       | 1                 | 4              | false   |
       | 1                 | 21             | false   |
       | 2                 | 2              | true    |
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |
-      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 21                | 21             | true    |
       | 100               | 100            | true    |
