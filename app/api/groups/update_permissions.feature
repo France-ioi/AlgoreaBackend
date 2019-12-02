@@ -1,19 +1,16 @@
 Feature: Change item access rights for a group
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      |
-      | 21 | owner       | UserSelf  |
-      | 22 | owner-admin | UserAdmin |
-      | 23 | user        | UserSelf  |
-      | 24 | user-admin  | UserAdmin |
-      | 25 | some class  | Class     |
-      | 31 | jane        | UserSelf  |
-      | 32 | jane-admin  | UserAdmin |
+      | id | name       | type     |
+      | 21 | owner      | UserSelf |
+      | 23 | user       | UserSelf |
+      | 25 | some class | Class    |
+      | 31 | jane       | UserSelf |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  |
-      | user  | 23       | 24             | John        | Doe       |
-      | jane  | 31       | 32             | Jane        | Doe       |
+      | login | group_id | first_name  | last_name |
+      | owner | 21       | Jean-Michel | Blanquer  |
+      | user  | 23       | John        | Doe       |
+      | jane  | 31       | Jane        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 23       | 21         |
@@ -21,13 +18,10 @@ Feature: Change item access rights for a group
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 23                | 23             | 1       |
-      | 24                | 24             | 1       |
       | 25                | 23             | 0       |
       | 25                | 25             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
     And the database has the following table 'items':
       | id  |
       | 100 |

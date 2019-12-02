@@ -1,12 +1,11 @@
 Feature: Get the contests that the user has administration rights on (contestAdminList) - robustness
   Background:
     Given the database has the following users:
-      | login      | group_id | owned_group_id | default_language |
-      | possesseur | 21       | 22             | fr               |
+      | login      | group_id | default_language |
+      | possesseur | 21       | fr               |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
 
   Scenario: Wrong sort
     Given I am the user with id "21"

@@ -1,30 +1,28 @@
 Feature: Get group memberships for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name               | description            |
-      | 1  | Class     | Our Class          | Our class group        |
-      | 2  | Team      | Our Team           | Our team group         |
-      | 3  | Club      | Our Club           | Our club group         |
-      | 4  | Friends   | Our Friends        | Group for our friends  |
-      | 5  | Other     | Other people       | Group for other people |
-      | 6  | Class     | Another Class      | Another class group    |
-      | 7  | Team      | Another Team       | Another team group     |
-      | 8  | Club      | Another Club       | Another club group     |
-      | 9  | Friends   | Some other friends | Another friends group  |
-      | 11 | UserSelf  | user self          |                        |
-      | 12 | UserAdmin | user admin         |                        |
-      | 21 | UserSelf  | owner self         |                        |
-      | 22 | UserAdmin | owner admin        |                        |
+      | id | type     | name               | description            |
+      | 1  | Class    | Our Class          | Our class group        |
+      | 2  | Team     | Our Team           | Our team group         |
+      | 3  | Club     | Our Club           | Our club group         |
+      | 4  | Friends  | Our Friends        | Group for our friends  |
+      | 5  | Other    | Other people       | Group for other people |
+      | 6  | Class    | Another Class      | Another class group    |
+      | 7  | Team     | Another Team       | Another team group     |
+      | 8  | Club     | Another Club       | Another club group     |
+      | 9  | Friends  | Some other friends | Another friends group  |
+      | 11 | UserSelf | user self          |                        |
+      | 21 | UserSelf | owner self         |                        |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 11       | 12             | John        | Doe       | 1     |
+      | login | temp_user | group_id | first_name  | last_name | grade |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+      | user  | 0         | 11       | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 6  | 5               | 21             |
       | 7  | 6               | 21             |
       | 10 | 9               | 21             |
-      | 11 | 1               | 22             |
+      | 11 | 1               | 11             |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  |
       | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |
@@ -35,7 +33,7 @@ Feature: Get group memberships for the current user
       | 6        | 21        | join_request_accepted | 2017-07-29 06:38:38 |
       | 7        | 21        | removed               | 2017-08-29 06:38:38 |
       | 8        | 21        | left                  | 2017-09-29 06:38:38 |
-      | 1        | 22        | added_directly        | 2017-11-29 06:38:38 |
+      | 1        | 11        | added_directly        | 2017-11-29 06:38:38 |
 
   Scenario: Show all memberships
     Given I am the user with id "21"

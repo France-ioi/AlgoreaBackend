@@ -1,10 +1,10 @@
 Feature: Get recent activity for group_id and item_id
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | default_language |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | fr               |
-      | user  | 0         | 11       | 12             | John        | Doe       | en               |
-      | jane  | 0         | 31       | 32             | Jane        | Doe       | en               |
+      | login | temp_user | group_id | first_name  | last_name | default_language |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
+      | user  | 0         | 11       | John        | Doe       | en               |
+      | jane  | 0         | 31       | Jane        | Doe       | en               |
     And the database has the following table 'groups':
       | id |
       | 13 |

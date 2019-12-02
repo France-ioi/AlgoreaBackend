@@ -2,12 +2,11 @@ Feature: Add item
 
   Background:
     Given the database has the following table 'groups':
-      | id | name       | type      |
-      | 11 | jdoe       | UserSelf  |
-      | 12 | jdoe-admin | UserAdmin |
+      | id | name | type     |
+      | 11 | jdoe | UserSelf |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id |
-      | jdoe  | 0         | 11       | 12             |
+      | login | temp_user | group_id |
+      | jdoe  | 0         | 11       |
     And the database has the following table 'items':
       | id | teams_editable | no_score |
       | 21 | false          | false    |
@@ -20,7 +19,6 @@ Feature: Add item
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
-      | 72 | 12                | 12             | 1       |
     And the database has the following table 'languages':
       | id |
       | 3  |
@@ -72,12 +70,6 @@ Feature: Add item
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
-    And the database table 'groups' has also the following rows:
-      | id    |
-      | 12345 |
-    And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 73 | 12                | 12345          | 0       |
     And the database table 'items' has also the following rows:
       | id |
       | 12 |

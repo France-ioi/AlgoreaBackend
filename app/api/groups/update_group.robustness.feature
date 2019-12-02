@@ -1,24 +1,20 @@
 Feature: Update a group (groupEdit) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | name        | grade | description     | created_at          | type      | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
-      | 11 | Group A     | -3    | Group A is here | 2019-02-06 09:26:40 | Class     | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
-      | 13 | Group B     | -2    | Group B is here | 2019-03-06 09:26:40 | Class     | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
-      | 14 | Group C     | -4    | Admin Group     | 2019-04-06 09:26:40 | UserAdmin | null                                   | true   | true        | null       | null          | null                | false        |
-      | 21 | owner       | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
-      | 22 | owner-admin | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
-      | 31 | user        | -4    | owner           | 2019-04-06 09:26:40 | UserSelf  | null                                   | false  | false       | null       | null          | null                | false        |
-      | 32 | user-admin  | -4    | owner-admin     | 2019-04-06 09:26:40 | UserAdmin | null                                   | false  | false       | null       | null          | null                | false        |
+      | id | name    | grade | description     | created_at          | type     | redirect_path                          | opened | free_access | code       | code_lifetime | code_expires_at     | open_contest |
+      | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class    | 182529188317717510/1672978871462145361 | true   | true        | ybqybxnlyo | 01:00:00      | 2017-10-13 05:39:48 | true         |
+      | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class    | 182529188317717610/1672978871462145461 | true   | true        | ybabbxnlyo | 01:00:00      | 2017-10-14 05:39:48 | true         |
+      | 21 | owner   | -4    | owner           | 2019-04-06 09:26:40 | UserSelf | null                                   | false  | false       | null       | null          | null                | false        |
+      | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | UserSelf | null                                   | false  | false       | null       | null          | null                | false        |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  |
-      | user  | 0         | 31       | 32             | John        | Doe       |
+      | login | temp_user | group_id | first_name  | last_name |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  |
+      | user  | 0         | 31       | John        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
-      | 22                | 13             | 0       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
       | 15                | 15             | 1       |

@@ -1,8 +1,8 @@
 Feature: Search for groups available to the current user - robustness
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | login | temp_user | group_id | first_name  | last_name | grade |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
 
   Scenario: Should fail if the search string is not present
     Given I am the user with id "21"

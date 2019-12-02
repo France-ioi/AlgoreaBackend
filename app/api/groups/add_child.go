@@ -21,7 +21,7 @@ import (
 //     * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
 //     * the authenticated user should have `users.allow_subgroups` set to 1,
 //     * the parent group should not be of type "UserSelf" or "Team",
-//     * the child group should not be of types "Base", "UserAdmin, or "UserSelf"
+//     * the child group should not be of types "Base" or "UserSelf"
 //       (since users should join groups only by code or by invitation/request),
 //     * the action should not create cycles in the groups relations graph.
 // parameters:

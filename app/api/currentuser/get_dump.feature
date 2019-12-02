@@ -2,24 +2,22 @@ Feature: Export the short version of the current user's data
   Background:
     Given the DB time now is "2019-07-16 22:02:28"
     And the database has the following table 'groups':
-      | id | type      | name               | description            |
-      | 1  | Class     | Our Class          | Our class group        |
-      | 2  | Team      | Our Team           | Our team group         |
-      | 3  | Club      | Our Club           | Our club group         |
-      | 4  | Friends   | Our Friends        | Group for our friends  |
-      | 5  | Other     | Other people       | Group for other people |
-      | 6  | Class     | Another Class      | Another class group    |
-      | 7  | Team      | Another Team       | Another team group     |
-      | 8  | Club      | Another Club       | Another club group     |
-      | 9  | Friends   | Some other friends | Another friends group  |
-      | 11 | UserSelf  | user self          |                        |
-      | 12 | UserAdmin | user admin         |                        |
-      | 31 | UserSelf  | jane               |                        |
-      | 32 | UserAdmin | jane-admin         |                        |
+      | id | type     | name               | description            |
+      | 1  | Class    | Our Class          | Our class group        |
+      | 2  | Team     | Our Team           | Our team group         |
+      | 3  | Club     | Our Club           | Our club group         |
+      | 4  | Friends  | Our Friends        | Group for our friends  |
+      | 5  | Other    | Other people       | Group for other people |
+      | 6  | Class    | Another Class      | Another class group    |
+      | 7  | Team     | Another Team       | Another team group     |
+      | 8  | Club     | Another Club       | Another club group     |
+      | 9  | Friends  | Some other friends | Another friends group  |
+      | 11 | UserSelf | user self          |                        |
+      | 31 | UserSelf | jane               |                        |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name | last_name | grade |
-      | user  | 11       | 12             | John       | Doe       | 1     |
-      | jane  | 31       | 32             | Jane       | Doe       | 2     |
+      | login | group_id | first_name | last_name | grade |
+      | user  | 11       | John       | Doe       | 1     |
+      | jane  | 31       | Jane       | Doe       | 2     |
     And the database has the following table 'refresh_tokens':
       | user_id | refresh_token    |
       | 11      | refreshTokenFor1 |
@@ -40,7 +38,7 @@ Feature: Export the short version of the current user's data
       | group_id | member_id | type         |
       | 1        | 11        | invitation   |
       | 3        | 11        | join_request |
-      | 1        | 12        | invitation   |
+      | 1        | 31        | invitation   |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action               | at                  | initiator_id |
       | 4        | 11        | join_request_refused | 2019-07-10 00:02:28 | 11           |
@@ -62,7 +60,6 @@ Feature: Export the short version of the current user's data
       | 9                 | 9              | true    |
       | 9                 | 11             | false   |
       | 11                | 11             | true    |
-      | 12                | 12             | true    |
     And the database has the following table 'items':
       | id  |
       | 404 |
@@ -92,7 +89,7 @@ Feature: Export the short version of the current user's data
         "group_id": "11", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
         "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
         "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "access_group_id": null, "owned_group_id": "12", "login_id": null,
+        "access_group_id": null, "login_id": null,
         "login_module_prefix": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
         "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
         "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
@@ -104,19 +101,19 @@ Feature: Export the short version of the current user's data
       "groups_groups": [
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
-          "name": "Our Team", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
-          "name": "Other people", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
-          "name": "Another Class", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
-          "name": "Some other friends", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
       "group_managers": [
@@ -165,7 +162,7 @@ Feature: Export the short version of the current user's data
         "group_id": "31", "allow_subgroups": null, "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
         "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
         "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
-        "owned_group_id": "32", "login_id": null, "login_module_prefix": null,
+        "login_id": null, "login_module_prefix": null,
         "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
         "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
         "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,

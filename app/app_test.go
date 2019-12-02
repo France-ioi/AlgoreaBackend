@@ -228,25 +228,23 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1", "192.168.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 				{
 					Domains:   []string{"www.france-ioi.org"},
-					RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8,
+					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4, exists: true},
+				{id: 4, exists: true},
 				{id: 5, exists: true}, {id: 6, exists: true},
-				{id: 7, exists: true}, {id: 8, exists: true},
+				{id: 8, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}, exists: true},
 			},
 		},
@@ -255,7 +253,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"192.168.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
@@ -268,7 +266,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"192.168.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
@@ -277,30 +275,16 @@ func TestApplication_CheckConfig(t *testing.T) {
 			expectedError: errors.New("no RootSelf group for domain \"192.168.0.1\""),
 		},
 		{
-			name: "RootAdmin is missing",
-			config: &config.Root{Domains: []config.Domain{
-				{
-					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
-				},
-			}},
-			expectedGroupsToCheck: []groupSpec{
-				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3},
-			},
-			expectedError: errors.New("no RootAdmin group for domain \"127.0.0.1\""),
-		},
-		{
 			name: "RootTemp is missing",
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4},
+				{id: 4},
 			},
 			expectedError: errors.New("no RootTemp group for domain \"127.0.0.1\""),
 		},
@@ -309,12 +293,12 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4, exists: true},
+				{id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
@@ -322,38 +306,19 @@ func TestApplication_CheckConfig(t *testing.T) {
 			expectedError: errors.New("no Root -> RootSelf link in groups_groups for domain \"127.0.0.1\""),
 		},
 		{
-			name: "Root -> RootAdmin relation is missing",
-			config: &config.Root{Domains: []config.Domain{
-				{
-					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
-				},
-			}},
-			expectedGroupsToCheck: []groupSpec{
-				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4, exists: true},
-			},
-			expectedRelationsToCheck: []relationSpec{
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
-			},
-			expectedError: errors.New("no Root -> RootAdmin link in groups_groups for domain \"127.0.0.1\""),
-		},
-		{
 			name: "RootSelf -> RootTemp relation is missing",
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4, exists: true},
+				{id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
 			expectedError: errors.New("no RootSelf -> RootTemp link in groups_groups for domain \"127.0.0.1\""),
@@ -363,7 +328,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
@@ -376,16 +341,16 @@ func TestApplication_CheckConfig(t *testing.T) {
 			config: &config.Root{Domains: []config.Domain{
 				{
 					Domains:   []string{"127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			}},
 			expectedGroupsToCheck: []groupSpec{
 				{id: 1, exists: true}, {id: 2, exists: true},
-				{id: 3, exists: true}, {id: 4, exists: true},
+				{id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, error: true},
+				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, error: true},
 			},
 			expectedError: errors.New("some error"),
 		},
@@ -421,8 +386,7 @@ func TestApplication_CheckConfig(t *testing.T) {
 						rowsToReturn.AddRow(1)
 					}
 					queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-						"SELECT 1 FROM `groups_groups_active`  WHERE (type = 'direct') AND (parent_group_id = ?) AND "+
-							"(child_group_id = ?) LIMIT 1",
+						"SELECT 1 FROM `groups_groups_active` WHERE (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
 					)+"$").
 						WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 					if !expectedRelationToCheck.error {
@@ -468,42 +432,40 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		{
 			name: "create all",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
-				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootAdmin", id: 3}, {name: "RootTemp", id: 4},
+				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootTemp", id: 4},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
 			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 1, ChildID: 2}, {ParentID: 1, ChildID: 3}, {ParentID: 2, ChildID: 4},
+				{ParentID: 1, ChildID: 2}, {ParentID: 2, ChildID: 4},
 			},
 		},
 		{
 			name: "create some",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8},
+				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
 			}},
 			expectedGroupsToInsert: []groupSpec{
-				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6},
-				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8},
+				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6, exists: true},
+				{name: "RootTemp", id: 8},
 			},
 			expectedRelationsToCheck: []relationSpec{
-				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}},
-				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, exists: true},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 6, ChildID: 8}},
 			},
 			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 5, ChildID: 6}, {ParentID: 6, ChildID: 8},
+				{ParentID: 6, ChildID: 8},
 			},
 		},
 		{
 			name: "error on group checking",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, error: true},
@@ -512,7 +474,7 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		{
 			name: "error on group insertion",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, errorOnInsert: true},
@@ -521,47 +483,44 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		{
 			name: "error on relation checking",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 8},
+				{RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 8},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 5, exists: true}, {name: "RootSelf", id: 6},
-				{name: "RootAdmin", id: 7, exists: true}, {name: "RootTemp", id: 8},
+				{name: "RootTemp", id: 8},
 			},
 			expectedRelationsToCheck: []relationSpec{
-				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}},
-				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 7}, error: true},
+				{ParentChild: database.ParentChild{ParentID: 5, ChildID: 6}, error: true},
 			},
 		},
 		{
 			name: "error while creating relations",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
-				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootAdmin", id: 3}, {name: "RootTemp", id: 4},
+				{name: "Root", id: 1}, {name: "RootSelf", id: 2}, {name: "RootTemp", id: 4},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
 			expectedRelationsToInsert: []database.ParentChild{
-				{ParentID: 1, ChildID: 2}, {ParentID: 1, ChildID: 3}, {ParentID: 2, ChildID: 4},
+				{ParentID: 1, ChildID: 2}, {ParentID: 2, ChildID: 4},
 			},
 			relationsError: true,
 		},
 		{
 			name: "no relations to insert",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{name: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
 			},
 			skipRelations: true,
@@ -569,15 +528,14 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		{
 			name: "only one relation to insert",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4, exists: true},
+				{name: "RootTemp", id: 4, exists: true},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}},
 			},
 			expectedRelationsToInsert: []database.ParentChild{
@@ -587,15 +545,14 @@ func TestApplication_CreateMissingData(t *testing.T) {
 		{
 			name: "only one group to insert",
 			config: &config.Root{Domains: []config.Domain{
-				{RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4},
+				{RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4},
 			}},
 			expectedGroupsToInsert: []groupSpec{
 				{name: "Root", id: 1, exists: true}, {name: "RootSelf", id: 2, exists: true},
-				{name: "RootAdmin", id: 3, exists: true}, {name: "RootTemp", id: 4},
+				{name: "RootTemp", id: 4},
 			},
 			expectedRelationsToCheck: []relationSpec{
 				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 2}, exists: true},
-				{ParentChild: database.ParentChild{ParentID: 1, ChildID: 3}, exists: true},
 				{ParentChild: database.ParentChild{ParentID: 2, ChildID: 4}, exists: true},
 			},
 		},
@@ -647,7 +604,7 @@ func setDBExpectationsForCreateMissingData(mock sqlmock.Sqlmock, tt *createMissi
 				rowsToReturn.AddRow(1)
 			}
 			queryMock := mock.ExpectQuery("^"+regexp.QuoteMeta(
-				"SELECT 1 FROM `groups_groups`  WHERE (type = 'direct') AND (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
+				"SELECT 1 FROM `groups_groups`  WHERE (parent_group_id = ?) AND (child_group_id = ?) LIMIT 1",
 			)+"$").
 				WithArgs(expectedRelationToCheck.ParentID, expectedRelationToCheck.ChildID)
 			if !expectedRelationToCheck.error {

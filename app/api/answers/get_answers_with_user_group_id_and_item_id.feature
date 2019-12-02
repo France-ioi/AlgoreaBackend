@@ -1,16 +1,15 @@
 Feature: Get answers with (item_id, user_id) pair
 Background:
   Given the database has the following table 'groups':
-    | id | name       | text_id | grade | type      |
-    | 11 | jdoe       |         | -2    | UserSelf  |
-    | 12 | jdoe-admin |         | -2    | UserAdmin |
-    | 13 | Group B    |         | -2    | Class     |
-    | 21 | jdoe       |         | -2    | UserSelf  |
-    | 23 | Group C    |         | -2    | Class     |
+    | id | name    | text_id | grade | type     |
+    | 11 | jdoe    |         | -2    | UserSelf |
+    | 13 | Group B |         | -2    | Class    |
+    | 21 | jdoe    |         | -2    | UserSelf |
+    | 23 | Group C |         | -2    | Class    |
   And the database has the following table 'users':
-    | login | temp_user | group_id | owned_group_id | first_name | last_name |
-    | jdoe  | 0         | 11       | 12             | John       | Doe       |
-    | other | 0         | 21       | 22             | George     | Bush      |
+    | login | temp_user | group_id | first_name | last_name |
+    | jdoe  | 0         | 11       | John       | Doe       |
+    | other | 0         | 21       | George     | Bush      |
   And the database has the following table 'group_managers':
     | group_id | manager_id |
     | 11       | 21         |
@@ -20,7 +19,6 @@ Background:
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
-    | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
     | 75 | 21                | 21             | 1       |

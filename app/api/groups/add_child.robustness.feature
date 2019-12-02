@@ -2,27 +2,22 @@ Feature: Add a parent-child relation between two groups - robustness
 
   Background:
     Given the database has the following table 'groups':
-      | id | name          | type      |
-      | 11 | Group A       | Class     |
-      | 13 | Group B       | Class     |
-      | 14 | UserAdmin     | UserAdmin |
-      | 15 | Root          | Base      |
-      | 16 | RootSelf      | Base      |
-      | 17 | RootAdmin     | Base      |
-      | 18 | UserSelf      | UserSelf  |
-      | 19 | Team          | Team      |
-      | 21 | owner         | UserSelf  |
-      | 22 | owner-admin   | UserAdmin |
-      | 25 | student       | UserSelf  |
-      | 26 | student-admin | UserAdmin |
-      | 27 | admin         | UserSelf  |
-      | 28 | admin-admin   | UserAdmin |
-      | 77 | Group C       | Class     |
+      | id | name     | type     |
+      | 11 | Group A  | Class    |
+      | 13 | Group B  | Class    |
+      | 15 | Root     | Base     |
+      | 16 | RootSelf | Base     |
+      | 18 | UserSelf | UserSelf |
+      | 19 | Team     | Team     |
+      | 21 | owner    | UserSelf |
+      | 25 | student  | UserSelf |
+      | 27 | admin    | UserSelf |
+      | 77 | Group C  | Class    |
     And the database has the following table 'users':
-      | login   | group_id | owned_group_id | first_name  | last_name | allow_subgroups |
-      | owner   | 21       | 22             | Jean-Michel | Blanquer  | 0               |
-      | student | 25       | 26             | Jane        | Doe       | 1               |
-      | admin   | 27       | 28             | John        | Doe       | 1               |
+      | login   | group_id | first_name  | last_name | allow_subgroups |
+      | owner   | 21       | Jean-Michel | Blanquer  | 0               |
+      | student | 25       | Jane        | Doe       | 1               |
+      | admin   | 27       | John        | Doe       | 1               |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 11       | 21         |
@@ -30,10 +25,8 @@ Feature: Add a parent-child relation between two groups - robustness
       | 13       | 21         |
       | 11       | 27         |
       | 13       | 27         |
-      | 14       | 27         |
       | 15       | 27         |
       | 16       | 27         |
-      | 17       | 27         |
       | 18       | 27         |
       | 19       | 27         |
     And the database has the following table 'groups_ancestors':
@@ -41,18 +34,13 @@ Feature: Add a parent-child relation between two groups - robustness
       | 11                | 11             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
-      | 14                | 14             | 1       |
       | 15                | 15             | 1       |
       | 16                | 16             | 1       |
-      | 17                | 17             | 1       |
       | 18                | 18             | 1       |
       | 19                | 19             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 25                | 25             | 1       |
-      | 26                | 26             | 1       |
       | 27                | 27             | 1       |
-      | 28                | 28             | 1       |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id | child_order |
       | 13              | 11             | 1           |
@@ -105,14 +93,6 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Child group is UserAdmin
-    Given I am the user with id "27"
-    When I send a POST request to "/groups/13/relations/14"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
   Scenario: Child group is Root
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/15"
@@ -124,14 +104,6 @@ Feature: Add a parent-child relation between two groups - robustness
   Scenario: Child group is RootSelf
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/16"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
-
-  Scenario: Child group is RootAdmin
-    Given I am the user with id "27"
-    When I send a POST request to "/groups/13/relations/17"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

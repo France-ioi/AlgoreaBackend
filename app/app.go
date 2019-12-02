@@ -99,7 +99,6 @@ func (app *Application) CheckConfig() error {
 		}{
 			{name: "Root", id: domainConfig.RootGroup},
 			{name: "RootSelf", id: domainConfig.RootSelfGroup},
-			{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 			{name: "RootTemp", id: domainConfig.RootTempGroup},
 		} {
 			hasRows, err := groupStore.ByID(spec.id).HasRows()
@@ -118,10 +117,9 @@ func (app *Application) CheckConfig() error {
 			childID    int64
 		}{
 			{parentName: "Root", childName: "RootSelf", parentID: domainConfig.RootGroup, childID: domainConfig.RootSelfGroup},
-			{parentName: "Root", childName: "RootAdmin", parentID: domainConfig.RootGroup, childID: domainConfig.RootAdminGroup},
 			{parentName: "RootSelf", childName: "RootTemp", parentID: domainConfig.RootSelfGroup, childID: domainConfig.RootTempGroup},
 		} {
-			hasRows, err := groupGroupStore.Where("type = 'direct'").
+			hasRows, err := groupGroupStore.
 				Where("parent_group_id = ?", spec.parentID).
 				Where("child_group_id = ?", spec.childID).
 				Select("1").Limit(1).HasRows()
@@ -156,10 +154,9 @@ func (app *Application) insertRootGroupsAndRelations(store *database.DataStore) 
 		inserted = inserted || insertedForDomain
 		for _, spec := range []database.ParentChild{
 			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootSelfGroup},
-			{ParentID: domainConfig.RootGroup, ChildID: domainConfig.RootAdminGroup},
 			{ParentID: domainConfig.RootSelfGroup, ChildID: domainConfig.RootTempGroup},
 		} {
-			found, err := groupGroupStore.Where("type = 'direct'").
+			found, err := groupGroupStore.
 				Where("parent_group_id = ?", spec.ParentID).Where("child_group_id = ?", spec.ChildID).
 				Limit(1).HasRows()
 			if err != nil {
@@ -184,7 +181,6 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *config.Doma
 	}{
 		{name: "Root", id: domainConfig.RootGroup},
 		{name: "RootSelf", id: domainConfig.RootSelfGroup},
-		{name: "RootAdmin", id: domainConfig.RootAdminGroup},
 		{name: "RootTemp", id: domainConfig.RootTempGroup},
 	} {
 		found, err := groupStore.ByID(spec.id).Where("type = 'Base'").

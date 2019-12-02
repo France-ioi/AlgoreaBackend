@@ -1,27 +1,24 @@
 Feature: Get group memberships history for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name               |
-      | 1  | Class     | Our Class          |
-      | 2  | Team      | Our Team           |
-      | 3  | Club      | Our Club           |
-      | 4  | Friends   | Our Friends        |
-      | 5  | Other     | Other people       |
-      | 6  | Class     | Another Class      |
-      | 7  | Team      | Another Team       |
-      | 8  | Club      | Another Club       |
-      | 9  | Friends   | Some other friends |
-      | 11 | UserSelf  | user               |
-      | 12 | UserAdmin | user-admin         |
-      | 13 | UserSelf  | jane               |
-      | 14 | UserAdmin | jane-admin         |
-      | 21 | UserSelf  | owner              |
-      | 22 | UserAdmin | owner-admin        |
+      | id | type     | name               |
+      | 1  | Class    | Our Class          |
+      | 2  | Team     | Our Team           |
+      | 3  | Club     | Our Club           |
+      | 4  | Friends  | Our Friends        |
+      | 5  | Other    | Other people       |
+      | 6  | Class    | Another Class      |
+      | 7  | Team     | Another Team       |
+      | 8  | Club     | Another Club       |
+      | 9  | Friends  | Some other friends |
+      | 11 | UserSelf | user               |
+      | 13 | UserSelf | jane               |
+      | 21 | UserSelf | owner              |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade | notifications_read_at |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |
-      | user  | 11       | 12             | John        | Doe       | 1     | null                  |
-      | jane  | 13       | 14             | Jane        | Doe       | 2     | 2019-06-29 06:38:38   |
+      | login | group_id | first_name  | last_name | grade | notifications_read_at |
+      | owner | 21       | Jean-Michel | Blanquer  | 3     | 2017-06-29 06:38:38   |
+      | user  | 11       | John        | Doe       | 1     | null                  |
+      | jane  | 13       | Jane        | Doe       | 2     | 2019-06-29 06:38:38   |
     And the database has the following table 'group_membership_changes':
       | group_id | member_id | action                | at                  |
       | 1        | 21        | invitation_created    | 2017-02-28 06:38:38 |

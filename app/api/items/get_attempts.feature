@@ -1,20 +1,17 @@
 Feature: Get groups attempts for current user and item_id
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      |
-      | 11 | jdoe        | UserSelf  |
-      | 12 | jdoe-admin  | UserAdmin |
-      | 13 | Group B     | Class     |
-      | 21 | other       | UserSelf  |
-      | 22 | other-admin | UserAdmin |
-      | 23 | Group C     | Class     |
-      | 31 | jane        | UserSelf  |
-      | 32 | jane-admin  | UserAdmin |
+      | id | name    | type     |
+      | 11 | jdoe    | UserSelf |
+      | 13 | Group B | Class    |
+      | 21 | other   | UserSelf |
+      | 23 | Group C | Class    |
+      | 31 | jane    | UserSelf |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name | last_name |
-      | jdoe  | 11       | 12             | John       | Doe       |
-      | other | 21       | 22             | George     | Bush      |
-      | jane  | 31       | 32             | Jane       | Doe       |
+      | login | group_id | first_name | last_name |
+      | jdoe  | 11       | John       | Doe       |
+      | other | 21       | George     | Bush      |
+      | jane  | 31       | Jane       | Doe       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 61 | 13              | 11             |
@@ -25,7 +22,6 @@ Feature: Get groups attempts for current user and item_id
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
-      | 72 | 12                | 12             | 1       |
       | 73 | 13                | 13             | 1       |
       | 74 | 13                | 11             | 0       |
       | 75 | 13                | 21             | 0       |
@@ -34,7 +30,6 @@ Feature: Get groups attempts for current user and item_id
       | 78 | 23                | 23             | 1       |
       | 79 | 23                | 31             | 0       |
       | 80 | 31                | 31             | 1       |
-      | 81 | 32                | 32             | 1       |
     And the database has the following table 'items':
       | id  | has_attempts |
       | 200 | 0            |

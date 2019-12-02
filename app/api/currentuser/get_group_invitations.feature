@@ -1,25 +1,23 @@
 Feature: Get group invitations for the current user
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name               | description            |
-      | 1  | Class     | Our Class          | Our class group        |
-      | 2  | Team      | Our Team           | Our team group         |
-      | 3  | Club      | Our Club           | Our club group         |
-      | 4  | Friends   | Our Friends        | Group for our friends  |
-      | 5  | Other     | Other people       | Group for other people |
-      | 6  | Class     | Another Class      | Another class group    |
-      | 7  | Team      | Another Team       | Another team group     |
-      | 8  | Club      | Another Club       | Another club group     |
-      | 9  | Friends   | Some other friends | Another friends group  |
-      | 10 | Other     | Secret group       | Our secret group       |
-      | 11 | UserSelf  | user self          |                        |
-      | 12 | UserAdmin | user admin         |                        |
-      | 21 | UserSelf  | owner self         |                        |
-      | 22 | UserAdmin | owner admin        |                        |
+      | id | type     | name               | description            |
+      | 1  | Class    | Our Class          | Our class group        |
+      | 2  | Team     | Our Team           | Our team group         |
+      | 3  | Club     | Our Club           | Our club group         |
+      | 4  | Friends  | Our Friends        | Group for our friends  |
+      | 5  | Other    | Other people       | Group for other people |
+      | 6  | Class    | Another Class      | Another class group    |
+      | 7  | Team     | Another Team       | Another team group     |
+      | 8  | Club     | Another Club       | Another club group     |
+      | 9  | Friends  | Some other friends | Another friends group  |
+      | 10 | Other    | Secret group       | Our secret group       |
+      | 11 | UserSelf | user self          |                        |
+      | 21 | UserSelf | owner self         |                        |
     And the database has the following table 'users':
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 11       | 12             | John        | Doe       | 1     |
+      | login | temp_user | group_id | first_name  | last_name | grade |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+      | user  | 0         | 11       | John        | Doe       | 1     |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 6  | 5               | 21             |
@@ -37,13 +35,13 @@ Feature: Get group invitations for the current user
       | 7        | 21        | removed               | {{relativeTime("-163h")}} | 21           |
       | 8        | 21        | left                  | {{relativeTime("-162h")}} | 21           |
       | 9        | 21        | added_directly        | {{relativeTime("-161h")}} | 11           |
-      | 1        | 22        | invitation_created    | {{relativeTime("-170h")}} | 11           |
+      | 1        | 11        | invitation_created    | {{relativeTime("-170h")}} | 11           |
       | 10       | 21        | joined_by_code        | {{relativeTime("-180h")}} | null         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |
       | 3        | 21        | join_request |
-      | 1        | 22        | invitation   |
+      | 1        | 11        | invitation   |
 
   Scenario: Show all invitations
     Given I am the user with id "21"

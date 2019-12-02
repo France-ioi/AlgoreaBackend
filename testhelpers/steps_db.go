@@ -69,15 +69,10 @@ func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
 		}}
 		head := data.Rows[0].Cells
 		groupIDColumnNumber := -1
-		ownedGroupIDColumnNumber := -1
 		loginColumnNumber := -1
 		for number, cell := range head {
 			if cell.Value == "group_id" {
 				groupIDColumnNumber = number
-				continue
-			}
-			if cell.Value == "owned_group_id" {
-				ownedGroupIDColumnNumber = number
 				continue
 			}
 			if cell.Value == "login" {
@@ -96,14 +91,6 @@ func (ctx *TestContext) DBHasUsers(data *gherkin.DataTable) error { // nolint
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
 					Cells: []*gherkin.TableCell{
 						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "UserSelf"},
-					},
-				})
-			}
-			if ownedGroupIDColumnNumber != -1 {
-				groupsToCreate.Rows = append(groupsToCreate.Rows, &gherkin.TableRow{
-					Cells: []*gherkin.TableCell{
-						{Value: data.Rows[i].Cells[ownedGroupIDColumnNumber].Value},
-						{Value: login + "-admin"}, {Value: login + "-admin"}, {Value: "UserAdmin"},
 					},
 				})
 			}

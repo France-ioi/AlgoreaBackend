@@ -1,23 +1,19 @@
 Feature: Get qualification state (contestGetQualificationState)
   Background:
     Given the database has the following table 'groups':
-      | id | name        | type      | team_item_id |
-      | 10 | Team 1      | Team      | 50           |
-      | 11 | Team 2      | Team      | 60           |
-      | 21 | owner       | UserSelf  | null         |
-      | 22 | owner-admin | UserAdmin | null         |
-      | 31 | john        | UserSelf  | null         |
-      | 32 | john-admin  | UserAdmin | null         |
-      | 41 | jane        | UserSelf  | null         |
-      | 42 | jane-admin  | UserAdmin | null         |
-      | 51 | jack        | UserSelf  | null         |
-      | 52 | jack-admin  | UserAdmin | null         |
+      | id | name   | type     | team_item_id |
+      | 10 | Team 1 | Team     | 50           |
+      | 11 | Team 2 | Team     | 60           |
+      | 21 | owner  | UserSelf | null         |
+      | 31 | john   | UserSelf | null         |
+      | 41 | jane   | UserSelf | null         |
+      | 51 | jack   | UserSelf | null         |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  |
-      | john  | 31       | 32             | John        | Doe       |
-      | jane  | 41       | 42             | Jane        | null      |
-      | jack  | 51       | 52             | Jack        | Daniel    |
+      | login | group_id | first_name  | last_name |
+      | owner | 21       | Jean-Michel | Blanquer  |
+      | john  | 31       | John        | Doe       |
+      | jane  | 41       | Jane        | null      |
+      | jack  | 51       | Jack        | Daniel    |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 10              | 31             |
@@ -37,13 +33,9 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11                | 41             | 0       |
       | 11                | 51             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
       | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
 
   Scenario Outline: Individual contest without can_enter_from & can_enter_until
     Given the database has the following table 'items':

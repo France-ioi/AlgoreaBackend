@@ -1,23 +1,19 @@
 Feature: Invite users
   Background:
     Given the database has the following table 'groups':
-      | id  | type      | team_item_id |
-      | 13  | Team      | 1234         |
-      | 21  | UserSelf  | null         |
-      | 22  | UserAdmin | null         |
-      | 101 | UserSelf  | null         |
-      | 102 | UserSelf  | null         |
-      | 103 | UserSelf  | null         |
-      | 111 | UserAdmin | null         |
-      | 112 | UserAdmin | null         |
-      | 113 | UserAdmin | null         |
-      | 444 | Team      | 1234         |
+      | id  | type     | team_item_id |
+      | 13  | Team     | 1234         |
+      | 21  | UserSelf | null         |
+      | 101 | UserSelf | null         |
+      | 102 | UserSelf | null         |
+      | 103 | UserSelf | null         |
+      | 444 | Team     | 1234         |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  |
-      | john  | 101      | 111            | John        | Doe       |
-      | jane  | 102      | 112            | Jane        | Doe       |
-      | Jane  | 103      | 113            | Jane        | Smith     |
+      | login | group_id | first_name  | last_name |
+      | owner | 21       | Jean-Michel | Blanquer  |
+      | john  | 101      | John        | Doe       |
+      | jane  | 102      | Jane        | Doe       |
+      | Jane  | 103      | Jane        | Smith     |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -25,13 +21,9 @@ Feature: Invite users
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 101               | 101            | 1       |
       | 102               | 102            | 1       |
       | 103               | 103            | 1       |
-      | 111               | 111            | 1       |
-      | 112               | 112            | 1       |
-      | 113               | 113            | 1       |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"

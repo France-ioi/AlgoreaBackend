@@ -1,20 +1,21 @@
 Feature: Get members of group_id
   Background:
     Given the database has the following users:
-      | login | group_id | owned_group_id | first_name  | last_name  | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer   | 3     |
-      | user  | 11       | 12             | John        | Doe        | 1     |
-      | jane  | 31       | 32             | Jane        | Doe        | 2     |
-      | john  | 41       | 42             | John        | Connor     | -1    |
-      | billg | 51       | 52             | Bill        | Gates      | 5     |
-      | zuck  | 61       | 62             | Mark        | Zuckerberg | 9     |
-      | jeff  | 71       | 72             | Jeff        | Bezos      | 7     |
-      | larry | 81       | 82             | Larry       | Ellison    | 8     |
-      | lp    | 91       | 92             | Larry       | Page       | 6     |
+      | login | group_id | first_name  | last_name  | grade |
+      | owner | 21       | Jean-Michel | Blanquer   | 3     |
+      | user  | 11       | John        | Doe        | 1     |
+      | jane  | 31       | Jane        | Doe        | 2     |
+      | john  | 41       | John        | Connor     | -1    |
+      | billg | 51       | Bill        | Gates      | 5     |
+      | zuck  | 61       | Mark        | Zuckerberg | 9     |
+      | jeff  | 71       | Jeff        | Bezos      | 7     |
+      | larry | 81       | Larry       | Ellison    | 8     |
+      | lp    | 91       | Larry       | Page       | 6     |
     And the database has the following table 'groups':
       | id |
       | 13 |
       | 14 |
+      | 22 |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -22,7 +23,6 @@ Feature: Get members of group_id
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
       | 13                | 13             | 1       |
       | 13                | 51             | 0       |
       | 13                | 61             | 0       |
@@ -34,19 +34,12 @@ Feature: Get members of group_id
       | 21                | 21             | 1       |
       | 22                | 22             | 1       |
       | 31                | 31             | 1       |
-      | 32                | 32             | 1       |
       | 41                | 41             | 1       |
-      | 42                | 42             | 1       |
       | 51                | 51             | 1       |
-      | 52                | 52             | 1       |
       | 61                | 61             | 1       |
-      | 62                | 62             | 1       |
       | 71                | 71             | 1       |
-      | 72                | 72             | 1       |
       | 81                | 81             | 1       |
-      | 82                | 82             | 1       |
       | 91                | 91             | 1       |
-      | 92                | 92             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id | expires_at          |
       | 9  | 13              | 51             | 9999-12-31 23:59:59 |

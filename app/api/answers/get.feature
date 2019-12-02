@@ -1,17 +1,15 @@
 Feature: Get user's answer by user_answer_id
 Background:
   Given the database has the following table 'groups':
-    | id | name        | type      |
-    | 11 | jdoe        | UserSelf  |
-    | 12 | jdoe-admin  | UserAdmin |
-    | 13 | Group B     | Class     |
-    | 21 | other       | UserSelf  |
-    | 22 | other-admin | UserAdmin |
-    | 23 | Group C     | Class     |
+    | id | name    | type     |
+    | 11 | jdoe    | UserSelf |
+    | 13 | Group B | Class    |
+    | 21 | other   | UserSelf |
+    | 23 | Group C | Class    |
   And the database has the following table 'users':
-    | login | temp_user | group_id | owned_group_id | first_name | last_name |
-    | jdoe  | 0         | 11       | 12             | John       | Doe       |
-    | other | 0         | 21       | 22             | George     | Bush      |
+    | login | temp_user | group_id | first_name | last_name |
+    | jdoe  | 0         | 11       | John       | Doe       |
+    | other | 0         | 21       | George     | Bush      |
   And the database has the following table 'groups_groups':
     | id | parent_group_id | child_group_id |
     | 61 | 13              | 11             |
@@ -20,7 +18,6 @@ Background:
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
-    | 72 | 12                | 12             | 1       |
     | 73 | 13                | 13             | 1       |
     | 74 | 13                | 11             | 0       |
     | 75 | 13                | 21             | 0       |

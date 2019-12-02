@@ -1,12 +1,11 @@
 Feature: Feature: Get user's answer by user_answer_id
   Background:
     Given the database has the following table 'groups':
-      | id | name       | type      |
-      | 11 | jdoe       | UserSelf  |
-      | 12 | jdoe-admin | UserAdmin |
+      | id | name | type     |
+      | 11 | jdoe | UserSelf |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id |
-      | jdoe  | 11       | 12             |
+      | login | group_id |
+      | jdoe  | 11       |
     And the database has the following table 'items':
       | id  | has_attempts |
       | 200 | 0            |

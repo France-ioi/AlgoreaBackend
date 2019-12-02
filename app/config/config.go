@@ -56,11 +56,10 @@ type Token struct {
 
 // Domain is the part of the config related to domains
 type Domain struct {
-	Domains        []string
-	RootGroup      int64
-	RootSelfGroup  int64
-	RootAdminGroup int64
-	RootTempGroup  int64
+	Domains       []string
+	RootGroup     int64
+	RootSelfGroup int64
+	RootTempGroup int64
 }
 
 // Root is the root of the app configuration

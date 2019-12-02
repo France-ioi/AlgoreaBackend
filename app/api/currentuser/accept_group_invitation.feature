@@ -7,8 +7,8 @@ Feature: User accepts an invitation to join a group
       | 21 |
       | 22 |
     Given the database has the following table 'users':
-      | group_id | owned_group_id |
-      | 21       | 22             |
+      | group_id |
+      | 21       |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

@@ -6,7 +6,6 @@ Feature: Accept group requests - robustness
       | 13  |
       | 14  |
       | 21  |
-      | 22  |
       | 31  |
       | 111 |
       | 121 |
@@ -15,9 +14,9 @@ Feature: Accept group requests - robustness
       | 131 |
       | 141 |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
-      | user  | 11       | 12             | John        | Doe       | 1     |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 3     |
+      | user  | 11       | John        | Doe       | 1     |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -30,7 +29,6 @@ Feature: Accept group requests - robustness
       | 13                | 123            | 0       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
       | 31                | 31             | 1       |
       | 111               | 111            | 1       |
       | 121               | 121            | 1       |
@@ -51,7 +49,7 @@ Feature: Accept group requests - robustness
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
@@ -61,7 +59,7 @@ Feature: Accept group requests - robustness
 
   Scenario: Fails when the user doesn't exist
     Given I am the user with id "404"
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "groups_groups" should stay unchanged
@@ -71,7 +69,7 @@ Feature: Accept group requests - robustness
 
   Scenario: Fails when the parent group id is wrong
     Given I am the user with id "21"
-    When I send a POST request to "/groups/abc/requests/accept?group_ids=31,141,21,11,13,22"
+    When I send a POST request to "/groups/abc/requests/accept?group_ids=31,141,21,11,13"
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
@@ -81,7 +79,7 @@ Feature: Accept group requests - robustness
 
   Scenario: Fails when group_ids is wrong
     Given I am the user with id "21"
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,abc,11,13,22"
+    When I send a POST request to "/groups/13/requests/accept?group_ids=31,abc,11,13"
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'group_ids')"
     And the table "groups_groups" should stay unchanged

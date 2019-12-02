@@ -25,14 +25,14 @@ func TestMiddleware(t *testing.T) {
 			domains: []config.Domain{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
-					RootGroup: 5, RootSelfGroup: 6, RootAdminGroup: 7, RootTempGroup: 7,
+					RootGroup: 5, RootSelfGroup: 6, RootTempGroup: 7,
 				},
 				{
 					Domains:   []string{"192.168.0.1", "127.0.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			},
-			expectedConfig:     &Configuration{RootGroupID: 1, RootSelfGroupID: 2, RootAdminGroupID: 3, RootTempGroupID: 4},
+			expectedConfig:     &Configuration{RootGroupID: 1, RootSelfGroupID: 2, RootTempGroupID: 4},
 			expectedStatusCode: http.StatusOK,
 			shouldEnterService: true,
 		},
@@ -41,11 +41,11 @@ func TestMiddleware(t *testing.T) {
 			domains: []config.Domain{
 				{
 					Domains:   []string{"france-ioi.org", "www.france-ioi.org"},
-					RootGroup: 4, RootSelfGroup: 5, RootAdminGroup: 6, RootTempGroup: 7,
+					RootGroup: 4, RootSelfGroup: 5, RootTempGroup: 7,
 				},
 				{
 					Domains:   []string{"192.168.0.1"},
-					RootGroup: 1, RootSelfGroup: 2, RootAdminGroup: 3, RootTempGroup: 4,
+					RootGroup: 1, RootSelfGroup: 2, RootTempGroup: 4,
 				},
 			},
 			expectedStatusCode: http.StatusNotImplemented,

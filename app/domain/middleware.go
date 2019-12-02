@@ -18,10 +18,9 @@ const (
 
 // Configuration contains domain-specific settings
 type Configuration struct {
-	RootGroupID      int64
-	RootSelfGroupID  int64
-	RootAdminGroupID int64
-	RootTempGroupID  int64
+	RootGroupID     int64
+	RootSelfGroupID int64
+	RootTempGroupID int64
 }
 
 // Middleware is a middleware setting domain-specific configuration into the request context
@@ -30,10 +29,9 @@ func Middleware(domains []config.Domain) func(next http.Handler) http.Handler {
 	for _, domain := range domains {
 		for _, host := range domain.Domains {
 			domainsMap[host] = &Configuration{
-				RootGroupID:      domain.RootGroup,
-				RootSelfGroupID:  domain.RootSelfGroup,
-				RootAdminGroupID: domain.RootAdminGroup,
-				RootTempGroupID:  domain.RootTempGroup,
+				RootGroupID:     domain.RootGroup,
+				RootSelfGroupID: domain.RootSelfGroup,
+				RootTempGroupID: domain.RootTempGroup,
 			}
 		}
 	}

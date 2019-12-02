@@ -3,31 +3,23 @@ Feature: Remove members from a group (groupRemoveMembers)
     Given the database has the following table 'groups':
       | id |
       | 11 |
-      | 12 |
       | 13 |
       | 21 |
-      | 22 |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
-      | user  | 11       | 12             | John        | Doe       | 1     |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 3     |
+      | user  | 11       | John        | Doe       | 1     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
-      | 12                | 12             | 1       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
       | 13                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 11             | 0       |
-      | 22                | 13             | 0       |
-      | 22                | 21             | 0       |
-      | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 1  | 13              | 21             |
       | 2  | 13              | 11             |
-      | 15 | 22              | 13             |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"

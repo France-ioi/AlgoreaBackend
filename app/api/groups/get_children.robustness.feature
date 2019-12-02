@@ -5,8 +5,8 @@ Feature: Get group children (groupChildrenView) - robustness
       | 11 | Group A | -3    | Class | true   | true        | ybqybxnlyo |
       | 13 | Group B | -2    | Class | true   | true        | ybabbxnlyo |
     And the database has the following users:
-      | login | temp_user | group_id | owned_group_id | first_name  | last_name | default_language |
-      | owner | 0         | 21       | 22             | Jean-Michel | Blanquer  | fr               |
+      | login | temp_user | group_id | first_name  | last_name | default_language |
+      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
@@ -15,7 +15,6 @@ Feature: Get group children (groupChildrenView) - robustness
       | 11                | 11             | 1       |
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
 
   Scenario: User is not a manager of the parent group
     Given I am the user with id "21"

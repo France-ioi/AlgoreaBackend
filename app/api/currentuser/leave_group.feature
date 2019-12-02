@@ -5,17 +5,15 @@ Feature: User leaves a group
       | 11 | 2019-08-20               |
       | 14 | null                     |
       | 21 | null                     |
-      | 22 | null                     |
     And the database has the following table 'users':
-      | group_id | owned_group_id |
-      | 21       | 22             |
+      | group_id |
+      | 21       |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 1  | 11                | 11             | 1       |
       | 2  | 11                | 21             | 0       |
       | 3  | 14                | 14             | 1       |
       | 4  | 21                | 21             | 1       |
-      | 5  | 22                | 22             | 1       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 1  | 11              | 21             |

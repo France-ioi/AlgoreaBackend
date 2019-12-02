@@ -23,16 +23,14 @@ import (
 //                1. [`users_threads`, `users_answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
 //                   having `user_id` = `users.group_id`;
 //                2. [`permissions_granted`, `permissions_generated`, `groups_attempts`, `groups_login_prefixes`]
-//                   having `group_id` = `users.group_id` or `group_id` = `users.owned_group_id`;
+//                   having `group_id` = `users.group_id`;
 //
-//                3. `groups_groups` having `parent_group_id` or `child_group_id` equal
-//                   to one of `users.group_id`/`users.owned_group_id`;
+//                3. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
 //                4. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
-//                   to one of `users.group_id`/`users.owned_group_id`;
+//                   to `users.group_id`;
 //                5. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
-//                   to one of `users.group_id`/`users.owned_group_id`;
-//                6. [`groups_propagate`, `groups`] having `id` equal to one of
-//                   `users.group_id`/`users.owned_group_id`;
+//                   to `users.group_id`;
+//                6. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
 //                7. `users` having `group_id` = `users.group_id`.
 //
 //

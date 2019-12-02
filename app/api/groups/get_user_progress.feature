@@ -1,53 +1,42 @@
 Feature: Display the current progress of users on a subset of items (groupUserProgress)
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name           |
-      | 1  | Base      | Root 1         |
-      | 3  | Base      | Root 2         |
-      | 11 | Class     | Our Class      |
-      | 12 | Class     | Other Class    |
-      | 13 | Class     | Special Class  |
-      | 14 | Team      | Super Team     |
-      | 15 | Team      | Our Team       |
-      | 16 | Team      | First Team     |
-      | 17 | Other     | A custom group |
-      | 18 | Club      | Our Club       |
-      | 20 | Friends   | My Friends     |
-      | 21 | UserSelf  | owner          |
-      | 51 | UserSelf  | johna          |
-      | 53 | UserSelf  | johnb          |
-      | 55 | UserSelf  | johnc          |
-      | 57 | UserSelf  | johnd          |
-      | 59 | UserSelf  | johne          |
-      | 61 | UserSelf  | janea          |
-      | 63 | UserSelf  | janeb          |
-      | 65 | UserSelf  | janec          |
-      | 67 | UserSelf  | janed          |
-      | 69 | UserSelf  | janee          |
-      | 22 | UserAdmin | owner-admin    |
-      | 52 | UserAdmin | johna-admin    |
-      | 54 | UserAdmin | johnb-admin    |
-      | 56 | UserAdmin | johnc-admin    |
-      | 58 | UserAdmin | johnd-admin    |
-      | 60 | UserAdmin | johne-admin    |
-      | 62 | UserAdmin | janea-admin    |
-      | 64 | UserAdmin | janeb-admin    |
-      | 66 | UserAdmin | janec-admin    |
-      | 68 | UserAdmin | janed-admin    |
-      | 70 | UserAdmin | janee-admin    |
+      | id | type     | name           |
+      | 1  | Base     | Root 1         |
+      | 3  | Base     | Root 2         |
+      | 11 | Class    | Our Class      |
+      | 12 | Class    | Other Class    |
+      | 13 | Class    | Special Class  |
+      | 14 | Team     | Super Team     |
+      | 15 | Team     | Our Team       |
+      | 16 | Team     | First Team     |
+      | 17 | Other    | A custom group |
+      | 18 | Club     | Our Club       |
+      | 20 | Friends  | My Friends     |
+      | 21 | UserSelf | owner          |
+      | 51 | UserSelf | johna          |
+      | 53 | UserSelf | johnb          |
+      | 55 | UserSelf | johnc          |
+      | 57 | UserSelf | johnd          |
+      | 59 | UserSelf | johne          |
+      | 61 | UserSelf | janea          |
+      | 63 | UserSelf | janeb          |
+      | 65 | UserSelf | janec          |
+      | 67 | UserSelf | janed          |
+      | 69 | UserSelf | janee          |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id |
-      | owner | 21       | 22             |
-      | johna | 51       | 52             |
-      | johnb | 53       | 54             |
-      | johnc | 55       | 56             |
-      | johnd | 57       | 58             |
-      | johne | 59       | 60             |
-      | janea | 61       | 62             |
-      | janeb | 63       | 64             |
-      | janec | 65       | 66             |
-      | janed | 67       | 68             |
-      | janee | 69       | 70             |
+      | login | group_id |
+      | owner | 21       |
+      | johna | 51       |
+      | johnb | 53       |
+      | johnc | 55       |
+      | johnd | 57       |
+      | johne | 59       |
+      | janea | 61       |
+      | janeb | 63       |
+      | janec | 65       |
+      | janed | 67       |
+      | janee | 69       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
@@ -74,8 +63,6 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 16              | 65             |
       | 16              | 67             |
       | 20              | 21             |
-      | 22              | 1              |
-      | 22              | 3              |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
@@ -144,7 +131,6 @@ Feature: Display the current progress of users on a subset of items (groupUserPr
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
     And the database has the following table 'items':
       | id  | type     |
       | 200 | Category |

@@ -1,10 +1,10 @@
 Feature: Get recent activity for group_id and item_id - robustness
   Background:
     Given the database has the following users:
-      | login   | temp_user | group_id | owned_group_id | first_name  | last_name |
-      | someone | 0         | 21       | 22             | Bill        | Clinton   |
-      | user    | 0         | 11       | 12             | John        | Doe       |
-      | owner   | 0         | 23       | 24             | Jean-Michel | Blanquer  |
+      | login   | temp_user | group_id | first_name  | last_name |
+      | someone | 0         | 21       | Bill        | Clinton   |
+      | user    | 0         | 11       | John        | Doe       |
+      | owner   | 0         | 23       | Jean-Michel | Blanquer  |
     And the database has the following table 'groups':
       | id |
       | 13 |
@@ -13,7 +13,6 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 13       | 23         |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 24                | 13             | 0       |
       | 76 | 13                | 11             | 0       |
       | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |

@@ -16,8 +16,8 @@ Feature: Reject group requests
       | 141 |
       | 151 |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 3     |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |

@@ -33,12 +33,10 @@ var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
 
 const groupsRelationsLockTimeout = 3 * time.Second
 
-// ParentChild represents a (ParentID, ChildID) pair with a role.
-// If the role is empty, the default value ("member") is used.
+// ParentChild represents a (ParentID, ChildID) pair.
 type ParentChild struct {
 	ParentID int64
 	ChildID  int64
-	Role     string
 }
 
 // CreateRelation creates a direct relation between two groups
@@ -62,14 +60,14 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 		}
 
 		groupGroupStore := store.GroupGroups()
-		groupGroupStore.createRelation(parentGroupID, childGroupID, "")
+		groupGroupStore.createRelation(parentGroupID, childGroupID)
 		groupGroupStore.createNewAncestors()
 		return nil
 	}))
 	return err
 }
 
-func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64, role string) {
+func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
 	s.mustBeInTransaction()
 	mustNotBeError(s.db.Exec(
 		"SET @maxIChildOrder = IFNULL((SELECT MAX(child_order) FROM `groups_groups` WHERE `parent_group_id` = ? FOR UPDATE), 0)",
@@ -83,9 +81,6 @@ func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64, role
 			"parent_group_id": parentGroupID,
 			"child_group_id":  childGroupID,
 			"child_order":     gorm.Expr("@maxIChildOrder+1"),
-		}
-		if role != "" {
-			relationMap["role"] = role
 		}
 		return store.GroupGroups().InsertMap(relationMap)
 	}))
@@ -101,7 +96,7 @@ func (s *GroupGroupStore) CreateRelationsWithoutChecking(pairs []ParentChild) (e
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
 		groupGroupStore := store.GroupGroups()
 		for _, pair := range pairs {
-			groupGroupStore.createRelation(pair.ParentID, pair.ChildID, pair.Role)
+			groupGroupStore.createRelation(pair.ParentID, pair.ChildID)
 		}
 		groupGroupStore.createNewAncestors()
 		return nil
@@ -144,7 +139,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 						ancestors.child_group_id = groups.id AND
 						ancestors.is_self = 0 AND
 						ancestors.ancestor_group_id = ?`, childGroupID).
-				Where("groups.type NOT IN('Base', 'UserAdmin', 'UserSelf')").
+				Where("groups.type NOT IN('Base', 'UserSelf')").
 				Pluck("groups.id", &candidatesForDeletion).Error())
 		}
 

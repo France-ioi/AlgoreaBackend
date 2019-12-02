@@ -142,7 +142,7 @@ func callAuthThroughMiddleware(expectedSessionID string, authorizationHeaders []
 	if expectedSessionID != "" {
 		expectation := mock.ExpectQuery("^" +
 			regexp.QuoteMeta(
-				"SELECT users.login, users.is_admin, users.group_id, users.owned_group_id, users.access_group_id, "+
+				"SELECT users.login, users.is_admin, users.group_id, users.access_group_id, "+
 					"users.temp_user, users.allow_subgroups, users.notifications_read_at, users.default_language, l.id as default_language_id "+
 					"FROM `sessions` "+
 					"JOIN users ON users.group_id = sessions.user_id "+

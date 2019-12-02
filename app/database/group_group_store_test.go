@@ -255,7 +255,6 @@ func TestGroupGroupStore_createRelation(t *testing.T) {
 	const (
 		parentGroupID = 1
 		childGroupID  = 2
-		role          = "role"
 	)
 
 	db, mock := NewDBMock()
@@ -269,20 +268,20 @@ func TestGroupGroupStore_createRelation(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `id`, `parent_group_id`, `role`) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?, ?)")+"$").
-		WithArgs(childGroupID, sqlmock.AnyArg(), parentGroupID, role).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `id`, `parent_group_id`) "+
+			"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
+		WithArgs(childGroupID, sqlmock.AnyArg(), parentGroupID).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'PRIMARY'"})
 	mock.ExpectExec("^"+
-		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `id`, `parent_group_id`, `role`) "+
-			"VALUES (?, @maxIChildOrder+1, ?, ?, ?)")+"$").
-		WithArgs(childGroupID, sqlmock.AnyArg(), parentGroupID, role).
+		regexp.QuoteMeta("INSERT INTO `groups_groups` (`child_group_id`, `child_order`, `id`, `parent_group_id`) "+
+			"VALUES (?, @maxIChildOrder+1, ?, ?)")+"$").
+		WithArgs(childGroupID, sqlmock.AnyArg(), parentGroupID).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
 	err := db.inTransaction(func(db *DB) error {
 		groupGroupStore := NewDataStore(db).GroupGroups()
-		groupGroupStore.createRelation(1, 2, role)
+		groupGroupStore.createRelation(1, 2)
 		return nil
 	})
 	assert.NoError(t, err)

@@ -1,53 +1,42 @@
 Feature: List team descendants of the group (groupTeamDescendantView)
   Background:
     Given the database has the following table 'groups':
-      | id | type      | name           | grade |
-      | 1  | Base      | Root 1         | -2    |
-      | 3  | Base      | Root 2         | -2    |
-      | 11 | Class     | Our Class      | -2    |
-      | 12 | Class     | Other Class    | -2    |
-      | 13 | Class     | Special Class  | -2    |
-      | 14 | Team      | Super Team     | -2    |
-      | 15 | Team      | Our Team       | -1    |
-      | 16 | Team      | First Team     | 0     |
-      | 17 | Other     | A custom group | -2    |
-      | 18 | Club      | Our Club       | -2    |
-      | 20 | Friends   | My Friends     | -2    |
-      | 21 | UserSelf  | owner          | -2    |
-      | 51 | UserSelf  | johna          | -2    |
-      | 53 | UserSelf  | johnb          | -2    |
-      | 55 | UserSelf  | johnc          | -2    |
-      | 57 | UserSelf  | johnd          | -2    |
-      | 59 | UserSelf  | johne          | -2    |
-      | 61 | UserSelf  | janea          | -2    |
-      | 63 | UserSelf  | janeb          | -2    |
-      | 65 | UserSelf  | janec          | -2    |
-      | 67 | UserSelf  | janed          | -2    |
-      | 69 | UserSelf  | janee          | -2    |
-      | 22 | UserAdmin | owner-admin    | -2    |
-      | 52 | UserAdmin | johna-admin    | -2    |
-      | 54 | UserAdmin | johnb-admin    | -2    |
-      | 56 | UserAdmin | johnc-admin    | -2    |
-      | 58 | UserAdmin | johnd-admin    | -2    |
-      | 60 | UserAdmin | johne-admin    | -2    |
-      | 62 | UserAdmin | janea-admin    | -2    |
-      | 64 | UserAdmin | janeb-admin    | -2    |
-      | 66 | UserAdmin | janec-admin    | -2    |
-      | 68 | UserAdmin | janed-admin    | -2    |
-      | 70 | UserAdmin | janee-admin    | -2    |
+      | id | type     | name           | grade |
+      | 1  | Base     | Root 1         | -2    |
+      | 3  | Base     | Root 2         | -2    |
+      | 11 | Class    | Our Class      | -2    |
+      | 12 | Class    | Other Class    | -2    |
+      | 13 | Class    | Special Class  | -2    |
+      | 14 | Team     | Super Team     | -2    |
+      | 15 | Team     | Our Team       | -1    |
+      | 16 | Team     | First Team     | 0     |
+      | 17 | Other    | A custom group | -2    |
+      | 18 | Club     | Our Club       | -2    |
+      | 20 | Friends  | My Friends     | -2    |
+      | 21 | UserSelf | owner          | -2    |
+      | 51 | UserSelf | johna          | -2    |
+      | 53 | UserSelf | johnb          | -2    |
+      | 55 | UserSelf | johnc          | -2    |
+      | 57 | UserSelf | johnd          | -2    |
+      | 59 | UserSelf | johne          | -2    |
+      | 61 | UserSelf | janea          | -2    |
+      | 63 | UserSelf | janeb          | -2    |
+      | 65 | UserSelf | janec          | -2    |
+      | 67 | UserSelf | janed          | -2    |
+      | 69 | UserSelf | janee          | -2    |
     And the database has the following table 'users':
-      | login | group_id | owned_group_id | first_name  | last_name | grade |
-      | owner | 21       | 22             | Jean-Michel | Blanquer  | 10    |
-      | johna | 51       | 52             | John        | Adams     | 1     |
-      | johnb | 53       | 54             | John        | Baker     | 2     |
-      | johnc | 55       | 56             | John        | null      | 3     |
-      | johnd | 57       | 58             | null        | Davis     | -1    |
-      | johne | 59       | 60             | John        | Edwards   | null  |
-      | janea | 61       | 62             | Jane        | Adams     | 3     |
-      | janeb | 63       | 64             | Jane        | Baker     | null  |
-      | janec | 65       | 66             | Jane        | null      | 4     |
-      | janed | 67       | 68             | Jane        | Doe       | -2    |
-      | janee | 69       | 70             | Jane        | Edwards   | null  |
+      | login | group_id | first_name  | last_name | grade |
+      | owner | 21       | Jean-Michel | Blanquer  | 10    |
+      | johna | 51       | John        | Adams     | 1     |
+      | johnb | 53       | John        | Baker     | 2     |
+      | johnc | 55       | John        | null      | 3     |
+      | johnd | 57       | null        | Davis     | -1    |
+      | johne | 59       | John        | Edwards   | null  |
+      | janea | 61       | Jane        | Adams     | 3     |
+      | janeb | 63       | Jane        | Baker     | null  |
+      | janec | 65       | Jane        | null      | 4     |
+      | janed | 67       | Jane        | Doe       | -2    |
+      | janee | 69       | Jane        | Edwards   | null  |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 1        | 21         |
@@ -137,7 +126,6 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 20                | 20             | 1       |
       | 20                | 21             | 0       |
       | 21                | 21             | 1       |
-      | 22                | 22             | 1       |
 
   Scenario: Get descendant teams
     Given I am the user with id "21"

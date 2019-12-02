@@ -20,7 +20,7 @@ import (
 func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"GET", "/current-user/full-dump", ``,
-		&database.User{OwnedGroupID: ptrInt64(10), GroupID: 11},
+		&database.User{GroupID: 11},
 		func(sqlmock sqlmock.Sqlmock) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`') FROM `INFORMATION_SCHEMA`.`COLUMNS`  "+
@@ -46,5 +46,3 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 
 }
-
-func ptrInt64(i int64) *int64 { return &i }
