@@ -130,23 +130,23 @@ Feature: Export the current user's data
       "groups_groups": [
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
-          "name": "Our Team", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
-          "name": "Other people", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
-          "name": "Another Class", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
-          "name": "Some other friends", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10",
-          "name": "Secret group", "role": "member", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Secret group", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
       "group_managers": [

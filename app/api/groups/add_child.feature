@@ -34,8 +34,8 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | role   |
-      | 13              | 11             | 1           | member |
+      | parent_group_id | child_group_id | child_order |
+      | 13              | 11             | 1           |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -53,9 +53,9 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | role   |
-      | 13              | 11             | 1           | member |
-      | 13              | 14             | 2           | member |
+      | parent_group_id | child_group_id | child_order |
+      | 13              | 11             | 1           |
+      | 13              | 14             | 2           |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -74,6 +74,6 @@ Feature: Add a parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | child_order | role   |
-      | 13              | 11             | 3           | member |
-      | 13              | 14             | 2           | member |
+      | parent_group_id | child_group_id | child_order |
+      | 13              | 11             | 3           |
+      | 13              | 14             | 2           |

@@ -58,10 +58,10 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | role   |
-      | 22              | 11             | member |
-      | 22              | 13             | member |
-      | 22              | 14             | member |
+      | parent_group_id | child_group_id |
+      | 22              | 11             |
+      | 22              | 13             |
+      | 22              | 14             |
     And the table "group_pending_requests" should stay unchanged
     And the table "group_membership_changes" should stay unchanged
     And the table "groups_ancestors" should be:
@@ -88,9 +88,9 @@ Feature: Remove a direct parent-child relation between two groups
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id | role   |
-      | 22              | 11             | member |
-      | 22              | 14             | member |
+      | parent_group_id | child_group_id |
+      | 22              | 11             |
+      | 22              | 14             |
     And the table "group_membership_changes" should be:
       | group_id | member_id |
       | 22       | 11        |
