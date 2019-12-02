@@ -77,14 +77,14 @@ UPDATE `groups` SET `team_item_id` = NULL WHERE `type` = 'UserAdmin';
 
 INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`, `role`, `child_order`)
     SELECT `group_managers`.`group_id`, `users`.`owned_group_id`, 'owner',
-           (SELECT MAX(`child_order`) FROM `groups_groups` WHERE `parent_group_id` = `users`.`owned_group_id`)
+           (SELECT IFNULL(MAX(`child_order`),0)+1 FROM `groups_groups` WHERE `parent_group_id` = `users`.`owned_group_id`)
     FROM `group_managers`
     JOIN `users` ON `users`.`group_id` = `group_managers`.`manager_id`
     WHERE `can_manage` = 'memberships_and_group' AND `can_grant_group_access` AND `can_watch_members`;
 
 INSERT INTO `groups_groups` (`child_group_id`, `parent_group_id`, `role`, `child_order`)
     SELECT `group_managers`.`group_id`, `users`.`owned_group_id`, 'observer',
-           (SELECT MAX(`child_order`) FROM `groups_groups` WHERE `parent_group_id` = `users`.`owned_group_id`)
+           (SELECT IFNULL(MAX(`child_order`),0)+1 FROM `groups_groups` WHERE `parent_group_id` = `users`.`owned_group_id`)
     FROM `group_managers`
     JOIN `users` ON `users`.`group_id` = `group_managers`.`manager_id`
     WHERE `can_manage` = 'none' AND NOT `can_grant_group_access` AND `can_watch_members`;
