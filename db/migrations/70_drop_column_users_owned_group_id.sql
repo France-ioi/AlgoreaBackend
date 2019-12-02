@@ -26,30 +26,10 @@ DELETE `groups_groups` FROM `groups_groups`
 
 DROP TEMPORARY TABLE root_admin_groups;
 
-# Delete `groups` matching any `owned_group_id`
-DELETE `filters` FROM `filters` JOIN `users` ON `users`.`owned_group_id` = `filters`.`group_id`;
-DELETE `groups_ancestors` FROM `groups_ancestors`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_ancestors`.`ancestor_group_id`;
-DELETE `groups_ancestors` FROM `groups_ancestors`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_ancestors`.`child_group_id`;
-DELETE `groups_attempts` FROM `groups_attempts`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_attempts`.`group_id`;
-DELETE `groups_contest_items` FROM `groups_contest_items`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_contest_items`.`group_id`;
-DELETE `groups_groups` FROM `groups_groups`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_groups`.`parent_group_id`;
-DELETE `groups_groups` FROM `groups_groups`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_groups`.`child_group_id`;
-DELETE `groups_login_prefixes` FROM `groups_login_prefixes`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_login_prefixes`.`group_id`;
-DELETE `groups` FROM `groups` JOIN `users` ON `users`.`owned_group_id` = `groups`.`id`;
-DELETE `groups_propagate` FROM `groups_propagate`
-    JOIN `users` ON `users`.`owned_group_id` = `groups_propagate`.`id`;
-
 CREATE TEMPORARY TABLE user_admin_groups
 SELECT `id` FROM `groups` WHERE `groups`.`type` = 'UserAdmin';
 
-# Delete `groups` matching with type = 'UserAdmin
+# Delete `groups` matching with type = 'UserAdmin'
 DELETE `filters` FROM `filters` JOIN `user_admin_groups` ON `user_admin_groups`.`id` = `filters`.`group_id`;
 DELETE `groups_ancestors` FROM `groups_ancestors`
     JOIN `user_admin_groups` ON `user_admin_groups`.`id` = `groups_ancestors`.`ancestor_group_id`;
