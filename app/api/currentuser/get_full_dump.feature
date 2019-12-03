@@ -130,22 +130,37 @@ Feature: Export the current user's data
       "groups_groups": [
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "14", "child_order": 0, "child_group_id": "11", "parent_group_id": "10",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Secret group", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
@@ -154,6 +169,7 @@ Feature: Export the current user's data
           "can_grant_group_access": 1,
           "can_manage": "memberships",
           "can_watch_members": 0,
+          "can_edit_personal_info": 0,
           "group_id": "1",
           "manager_id": "11",
           "name": "Our Class"
@@ -162,6 +178,7 @@ Feature: Export the current user's data
           "can_grant_group_access": 0,
           "can_manage": "memberships_and_group",
           "can_watch_members": 1,
+          "can_edit_personal_info": 0,
           "group_id": "2",
           "manager_id": "11",
           "name": "Our Team"
@@ -182,8 +199,16 @@ Feature: Export the current user's data
         }
       ],
       "group_pending_requests": [
-        {"group_id": "1", "member_id": "11", "name": "Our Class", "type": "invitation", "at": "2019-08-10T00:00:00Z"},
-        {"group_id": "3", "member_id": "11", "name": "Our Club", "type": "join_request", "at": "2019-08-11T00:00:00Z"}
+        {
+          "group_id": "1", "member_id": "11", "name": "Our Class", "type": "invitation",
+          "lock_membership_approved_at": null, "personal_info_access_approved_at": null,
+          "watch_approved_at": null, "at": "2019-08-10T00:00:00Z"
+        },
+        {
+          "group_id": "3", "member_id": "11", "name": "Our Club", "type": "join_request",
+          "lock_membership_approved_at": null, "personal_info_access_approved_at": null,
+          "watch_approved_at": null, "at": "2019-08-11T00:00:00Z"
+        }
       ],
       "joined_groups": [
         {"id": "2", "name": "Our Team"},
