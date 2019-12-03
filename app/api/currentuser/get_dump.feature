@@ -101,18 +101,30 @@ Feature: Export the short version of the current user's data
       "groups_groups": [
         {
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
         {
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
+          "lock_membership_approved_at": null, "lock_membership_approved": 0,
+          "personal_info_access_approved_at": null, "personal_info_access_approved": 0,
+          "watch_approved_at": null, "watch_approved": 0,
           "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         }
       ],
@@ -121,6 +133,7 @@ Feature: Export the short version of the current user's data
           "can_grant_group_access": 1,
           "can_manage": "memberships",
           "can_watch_members": 0,
+          "can_edit_personal_info": 0,
           "group_id": "1",
           "manager_id": "11",
           "name": "Our Class"
@@ -129,6 +142,7 @@ Feature: Export the short version of the current user's data
           "can_grant_group_access": 0,
           "can_manage": "memberships_and_group",
           "can_watch_members": 1,
+          "can_edit_personal_info": 0,
           "group_id": "2",
           "manager_id": "11",
           "name": "Our Team"
