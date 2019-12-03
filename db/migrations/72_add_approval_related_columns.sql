@@ -10,15 +10,15 @@ ALTER TABLE `groups`
 ALTER TABLE `groups_groups`
     ADD COLUMN `personal_info_access_approved_at` DATETIME DEFAULT NULL AFTER `expires_at`,
     ADD COLUMN `personal_info_access_approved` TINYINT(1)
-        AS (IFNULL(`personal_info_access_approved_at`, 0)) NOT NULL
+        AS (`personal_info_access_approved_at` IS NOT NULL) NOT NULL
         COMMENT 'personal_info_access_approved_at as boolean' AFTER `personal_info_access_approved_at`,
     ADD COLUMN `lock_membership_approved_at` DATETIME DEFAULT NULL AFTER `personal_info_access_approved`,
     ADD COLUMN `lock_membership_approved` TINYINT(1)
-        AS (IFNULL(`lock_membership_approved_at`, 0)) NOT NULL
+        AS (`lock_membership_approved_at` IS NOT NULL) NOT NULL
         COMMENT 'lock_membership_approved_at as boolean' AFTER `lock_membership_approved_at`,
     ADD COLUMN `watch_approved_at` DATETIME DEFAULT NULL AFTER `lock_membership_approved`,
     ADD COLUMN `watch_approved` TINYINT(1)
-        AS (IFNULL(`watch_approved_at`, 0)) NOT NULL COMMENT 'watch_approved_at as boolean' AFTER `watch_approved_at`;
+        AS (`watch_approved_at` IS NOT NULL) NOT NULL COMMENT 'watch_approved_at as boolean' AFTER `watch_approved_at`;
 
 ALTER TABLE `group_pending_requests`
     ADD COLUMN `personal_info_access_approved_at` DATETIME DEFAULT NULL
