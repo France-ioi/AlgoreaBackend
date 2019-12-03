@@ -3,8 +3,10 @@ CREATE TABLE `group_managers` (
     `group_id` BIGINT(20) NOT NULL,
     `manager_id` BIGINT(20) NOT NULL,
     `can_manage` ENUM('none', 'memberships', 'memberships_and_group') NOT NULL DEFAULT 'none',
-    `can_grant_group_access` TINYINT(1) NOT NULL DEFAULT 0,
-    `can_watch_members` TINYINT(1) NOT NULL DEFAULT 0,
+    `can_grant_group_access` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'Can give members access rights to some items (requires the giver to be allowed to give this permission on the item)',
+    `can_watch_members` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'Can watch members’ submissions on items. Requires the watcher to be allowed to watch this item. For members who have agreed',
     PRIMARY KEY (`group_id`, `manager_id`),
     CONSTRAINT `fk_group_managers_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_group_managers_manager_id_groups_id` FOREIGN KEY (`manager_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE
