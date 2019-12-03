@@ -18,16 +18,19 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | owner   | 21       | Jean-Michel | Blanquer  |
       | teacher | 23       | John        | Smith     |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
-      | 14       | 21         |
-      | 22       | 21         |
-      | 52       | 21         |
-      | 53       | 21         |
-      | 55       | 21         |
-      | 23       | 11         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
+      | 14       | 21         | memberships |
+      | 15       | 21         | memberships |
+      | 22       | 21         | memberships |
+      | 52       | 21         | none        |
+      | 53       | 21         | none        |
+      | 55       | 21         | memberships |
+      | 11       | 23         | none        |
+      | 55       | 23         | none        |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
+      | 11              | 55             |
       | 13              | 11             |
       | 13              | 55             |
       | 15              | 55             |
@@ -36,6 +39,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
+      | 11                | 55             | 0       |
       | 13                | 11             | 0       |
       | 13                | 13             | 1       |
       | 13                | 55             | 0       |
@@ -92,6 +96,14 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
+  Scenario: User is a manager of the two groups, but doesn't have enough rights on the parent group
+    Given I am the user with id "23"
+    When I send a DELETE request to "/groups/11/relations/11"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
   Scenario: User does not exist
     Given I am the user with id "404"
     When I send a DELETE request to "/groups/13/relations/11"
@@ -134,7 +146,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
 
   Scenario: Parent group is Team
     Given I am the user with id "21"
-    When I send a DELETE request to "/groups/55/relations/15"
+    When I send a DELETE request to "/groups/15/relations/55"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

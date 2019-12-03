@@ -9,8 +9,9 @@ Feature: Get requests for group_id - robustness
       | id |
       | 13 |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
+      | 13       | 31         | none        |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 11                | 11             | 1       |
@@ -20,6 +21,12 @@ Feature: Get requests for group_id - robustness
 
   Scenario: User is not a manager of the group
     Given I am the user with id "11"
+    When I send a GET request to "/groups/13/requests"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: User is a manager of the group, but doesn't have enough permissions on it
+    Given I am the user with id "31"
     When I send a GET request to "/groups/13/requests"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

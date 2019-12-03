@@ -63,7 +63,8 @@ const maxAllowedLoginsToInvite = 100
 //   The response status code on success (201) doesn't depend on per-group results.
 //
 //
-//   The authenticated user should be a manager of the `parent_group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `parent_group_id` with `can_manage` >= 'memberships',
+//   otherwise the 'forbidden' error is returned.
 //
 //
 //   _Warning:_ The service doesn't check if the authenticated user or listed users have access rights
@@ -118,7 +119,7 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 

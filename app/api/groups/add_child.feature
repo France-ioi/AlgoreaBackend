@@ -11,10 +11,10 @@ Feature: Add a parent-child relation between two groups
       | login | temp_user | group_id | first_name  | last_name | allow_subgroups |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | 1               |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 11       | 21         |
-      | 13       | 21         |
-      | 14       | 21         |
+      | group_id | manager_id | can_manage            |
+      | 11       | 21         | memberships_and_group |
+      | 13       | 21         | memberships           |
+      | 14       | 21         | memberships_and_group |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -22,7 +22,7 @@ Feature: Add a parent-child relation between two groups
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
 
-  Scenario: User is an owner of the two groups and is allowed to create sub-groups
+  Scenario: User is a manager of the two groups, has the needed permissions, and is allowed to create sub-groups
     Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/11"
     Then the response code should be 201

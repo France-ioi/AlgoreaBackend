@@ -51,19 +51,37 @@ func (srv *Service) SetRoutes(router chi.Router) {
 }
 
 func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
-	var count int64
-	if err := store.GroupAncestors().ManagedByUser(user).
-		Where("groups_ancestors.child_group_id = ?", groupID).Count(&count).Error(); err != nil {
-		return service.ErrUnexpected(err)
-	}
-	if count == 0 {
+	found, err := store.GroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors.child_group_id = ?", groupID).HasRows()
+	service.MustNotBeError(err)
+	if !found {
 		return service.InsufficientAccessRightsError
 	}
 	return service.NoError
 }
 
+func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+	found, err := store.GroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors.child_group_id = ?", groupID).
+		Where("group_managers.can_manage != 'none'").HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
+	}
+	return service.NoError
+}
+
+type createOrDeleteRelation bool
+
+const (
+	createRelation createOrDeleteRelation = true
+	deleteRelation createOrDeleteRelation = false
+)
+
 func checkThatUserHasRightsForDirectRelation(
-	store *database.DataStore, user *database.User, parentGroupID, childGroupID int64) service.APIError {
+	store *database.DataStore, user *database.User,
+	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation) service.APIError {
+
 	groupStore := store.Groups()
 
 	var groupData []struct {
@@ -71,10 +89,17 @@ func checkThatUserHasRightsForDirectRelation(
 		Type string
 	}
 
-	err := groupStore.ManagedBy(user).
+	query := groupStore.ManagedBy(user).
 		WithWriteLock().
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
+		Where("IF(groups.id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)
+
+	if createOrDelete == createRelation {
+		query = query.Where("IF(groups.id = ?, group_managers.can_manage = 'memberships_and_group', 1)", childGroupID)
+	}
+
+	err := query.
 		Group("groups.id").
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
@@ -116,7 +141,7 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 

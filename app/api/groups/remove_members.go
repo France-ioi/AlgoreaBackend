@@ -19,7 +19,8 @@ import (
 //   for each of `user_ids`. It also refreshes the access rights.
 //
 //
-//   The authenticated user should be a manager of the `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `group_id` with `can_manage` >= 'memberships',
+//   otherwise the 'forbidden' error is returned.
 //
 //
 //   Each of the input `user_ids` should have the input `group_id` as a parent in `groups_groups`,
@@ -79,7 +80,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 	}
 
 	user := srv.GetUser(r)
-	if apiErr := checkThatUserCanManageTheGroup(srv.Store, user, parentGroupID); apiErr != service.NoError {
+	if apiErr := checkThatUserCanManageTheGroupMemberships(srv.Store, user, parentGroupID); apiErr != service.NoError {
 		return apiErr
 	}
 

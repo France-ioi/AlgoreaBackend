@@ -18,9 +18,6 @@ Feature: Reject group requests
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -60,8 +57,11 @@ Feature: Reject group requests
       | 14       | 21        | join_request | {{relativeTime("-166h")}} |
       | 13       | 141       | join_request | {{relativeTime("-165h")}} |
 
-  Scenario: Reject requests
+  Scenario Outline: Reject requests
     Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage   |
+      | 13       | 21         | <can_manage> |
     When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22,151"
     And the response body should be, in JSON:
     """
@@ -90,3 +90,7 @@ Feature: Reject group requests
       | 13       | 31        | join_request_refused | 21           | 1                                         |
       | 13       | 141       | join_request_refused | 21           | 1                                         |
     And the table "groups_ancestors" should stay unchanged
+  Examples:
+    | can_manage            |
+    | memberships           |
+    | memberships_and_group |

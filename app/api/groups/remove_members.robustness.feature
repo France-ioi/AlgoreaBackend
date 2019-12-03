@@ -5,10 +5,12 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 11 |
       | 13 |
       | 21 |
+      | 31 |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | John        | Doe       | 1     |
+      | jane  | 31       | Jane        | Doe       | 1     |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -20,9 +22,21 @@ Feature: Remove members from a group (groupRemoveMembers)
       | id | parent_group_id | child_group_id |
       | 1  | 13              | 21             |
       | 2  | 13              | 11             |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 13       | 31         | none                  |
+      | 13       | 21         | memberships_and_group |
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
+    When I send a DELETE request to "/groups/13/members?user_ids=1,2"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user is a manager of the parent group, but doesn't have enough permissions on it
+    Given I am the user with id "31"
     When I send a DELETE request to "/groups/13/members?user_ids=1,2"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"

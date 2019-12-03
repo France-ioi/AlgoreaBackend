@@ -13,22 +13,26 @@ Feature: Add a parent-child relation between two groups - robustness
       | 25 | student  | UserSelf |
       | 27 | admin    | UserSelf |
       | 77 | Group C  | Class    |
+      | 78 | Group D  | Class    |
+      | 79 | Group E  | Class    |
     And the database has the following table 'users':
       | login   | group_id | first_name  | last_name | allow_subgroups |
       | owner   | 21       | Jean-Michel | Blanquer  | 0               |
       | student | 25       | Jane        | Doe       | 1               |
       | admin   | 27       | John        | Doe       | 1               |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 11       | 21         |
-      | 11       | 25         |
-      | 13       | 21         |
-      | 11       | 27         |
-      | 13       | 27         |
-      | 15       | 27         |
-      | 16       | 27         |
-      | 18       | 27         |
-      | 19       | 27         |
+      | group_id | manager_id | can_manage            |
+      | 11       | 21         | memberships_and_group |
+      | 13       | 21         | memberships           |
+      | 78       | 21         | memberships           |
+      | 79       | 21         | none                  |
+      | 11       | 25         | memberships           |
+      | 11       | 27         | memberships_and_group |
+      | 13       | 27         | memberships_and_group |
+      | 15       | 27         | memberships_and_group |
+      | 16       | 27         | memberships_and_group |
+      | 18       | 27         | memberships_and_group |
+      | 19       | 27         | memberships_and_group |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -69,7 +73,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User is an owner of the parent group, but is not an owner of the child group
+  Scenario: User is a manager of the parent group, but is not a manager of the child group
     Given I am the user with id "21"
     When I send a POST request to "/groups/13/relations/77"
     Then the response code should be 403
@@ -77,9 +81,25 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User is an owner of the child group, but is not an owner of the parent group
+  Scenario: User is a manager of the child group, but is not a manager of the parent group
     Given I am the user with id "25"
     When I send a POST request to "/groups/13/relations/11"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: User is a manager of the two groups, but doesn't have enough rights on the child group
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/13/relations/78"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: User is a manager of the two groups, but doesn't have enough rights on the parent group
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/79/relations/11"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged

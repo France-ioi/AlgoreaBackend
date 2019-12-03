@@ -19,6 +19,8 @@ import (
 //
 //   Restrictions (otherwise the 'forbidden' error is returned):
 //     * the authenticated user should be a manager of both `parent_group_id` and `child_group_id,
+//     * the authenticated user should have `can_manage` >= 'memberships' on the `parent_group_id`,
+//     * the authenticated user should have `can_manage` = 'memberships_and_group' on the `child_group_id`,
 //     * the authenticated user should have `users.allow_subgroups` set to 1,
 //     * the parent group should not be of type "UserSelf" or "Team",
 //     * the child group should not be of types "Base" or "UserSelf"
@@ -69,7 +71,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID)
+		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation)
 		if apiErr != service.NoError {
 			return apiErr.Error // rollback
 		}
