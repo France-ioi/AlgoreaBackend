@@ -19,7 +19,8 @@ import (
 //   The service also refreshes the access rights.
 //
 //
-//   The authenticated user should be a manager of the `{parent_group_id}`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of the `{parent_group_id}` with `can_manage` >= 'memberships',
+//   otherwise the 'forbidden' error is returned.
 //
 //
 //   If the `{parent_group_id}` corresponds to a team with `team_item_id` set, the service skips users

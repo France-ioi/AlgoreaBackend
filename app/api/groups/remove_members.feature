@@ -30,9 +30,6 @@ Feature: Remove members from a group (groupRemoveMembers)
       | jenna  | 101      |
       | jannet | 111      |
       | judith | 121      |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
@@ -71,8 +68,11 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13       | 101       | join_request |
       | 14       | 51        | join_request |
 
-  Scenario: Remove members
+  Scenario Outline: Remove members
     Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage   |
+      | 13       | 21         | <can_manage> |
     When I send a DELETE request to "/groups/13/members?user_ids=31,41,51,61,71,81,91,101,111,121,131,404"
     And the response body should be, in JSON:
     """
@@ -125,3 +125,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 121               | 121            | 1       |
       | 131               | 131            | 1       |
       | 132               | 132            | 1       |
+  Examples:
+    | can_manage            |
+    | memberships           |
+    | memberships_and_group |

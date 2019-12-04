@@ -5,13 +5,16 @@ Feature: Invite users - robustness
       | 11  |
       | 13  |
       | 21  |
+      | 22  |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
       | user  | 11       | John        | Doe       |
+      | jane  | 22       | Jane        | Doe       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
+      | 13       | 22         | none        |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -20,6 +23,21 @@ Feature: Invite users - robustness
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
+    When I send a POST request to "/groups/13/invitations" with the following body:
+      """
+      {
+        "logins": ["john", "jane", "owner", "barack"]
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "group_pending_requests" should be empty
+    And the table "group_membership_changes" should be empty
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user is a manager of the parent group, but doesn't have enough rights to manage memberships
+    Given I am the user with id "22"
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {

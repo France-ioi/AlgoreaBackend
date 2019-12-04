@@ -42,9 +42,6 @@ Feature: Accept group requests
       | 10 | 13              | 111            |
       | 13 | 13              | 123            |
       | 16 | 13              | 151            |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
@@ -56,6 +53,9 @@ Feature: Accept group requests
 
   Scenario: Accept requests
     Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -129,6 +129,9 @@ Feature: Accept group requests
       | 444               | 141            | 0       |
       | 444               | 161            | 0       |
       | 444               | 444            | 1       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 13       | 21         | memberships_and_group |
     When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151,161"
     Then the response code should be 200
     And the response body should be, in JSON:

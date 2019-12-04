@@ -14,9 +14,6 @@ Feature: Invite users
       | john  | 101      | John        | Doe       |
       | jane  | 102      | Jane        | Doe       |
       | Jane  | 103      | Jane        | Smith     |
-    And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 13                | 13             | 1       |
@@ -30,6 +27,9 @@ Feature: Invite users
     And the database table 'groups_ancestors' has also the following rows:
       | ancestor_group_id | child_group_id | is_self |
       | 444               | 444            | 1       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 13       | 21         | memberships_and_group |
     When I send a POST request to "/groups/13/invitations" with the following body:
       """
       {
@@ -65,6 +65,9 @@ Feature: Invite users
 
   Scenario: Successfully invite users into a team skipping those who are members of other teams with the same team_item_id
     Given I am the user with id "21"
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
     And the database table 'groups_groups' has also the following rows:
       | parent_group_id | child_group_id |
       | 444             | 21             |

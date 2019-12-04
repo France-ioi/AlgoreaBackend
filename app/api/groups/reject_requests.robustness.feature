@@ -3,6 +3,7 @@ Feature: Reject group requests - robustness
     Given the database has the following table 'groups':
       | id  |
       | 11  |
+      | 12  |
       | 13  |
       | 14  |
       | 21  |
@@ -17,9 +18,11 @@ Feature: Reject group requests - robustness
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
       | user  | 11       | John        | Doe       | 1     |
+      | jane  | 12       | Jane        | Doe       | 1     |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
+      | 13       | 12         | none        |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -42,6 +45,14 @@ Feature: Reject group requests - robustness
 
   Scenario: Fails when the user is not a manager of the parent group
     Given I am the user with id "11"
+    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Fails when the user is a manager of the parent group, but doesn't have enough rights to manage memberships
+    Given I am the user with id "12"
     When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
