@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -282,24 +281,13 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 		return true, nil // The user can submit an answer
 	}
 
-	activeContestErr := errors.New("the contest has not started yet or has already finished")
-
-	activeContest := s.getActiveContestInfoForUser(user)
-	if activeContest == nil {
-		return false, activeContestErr
-	}
-
-	if activeContest.IsOver() {
-		if activeContest.IsTeamContest {
-			s.closeTeamContest(activeContest.ItemID, user)
-		} else {
-			s.closeContest(activeContest.ItemID, user)
-		}
-		return false, activeContestErr
+	activeContestItemID := s.getActiveContestItemIDForUser(user)
+	if activeContestItemID == nil {
+		return false, errors.New("the contest has not started yet or has already finished")
 	}
 
 	for i := range contestItems {
-		if contestItems[i].FullAccess || activeContest.ItemID == contestItems[i].ItemID {
+		if contestItems[i].FullAccess || *activeContestItemID == contestItems[i].ItemID {
 			return true, nil
 		}
 	}
@@ -309,50 +297,22 @@ func (s *ItemStore) checkSubmissionRightsForTimeLimitedContest(itemID int64, use
 			"of a different competition than the one in progress")
 }
 
-type activeContestInfo struct {
-	ItemID                   int64
-	UserID                   int64
-	ContestEnteringCondition string
-	IsTeamContest            bool
-
-	Now               time.Time
-	DurationInSeconds int32
-	EndTime           time.Time
-	StartTime         time.Time
-}
-
-func (contest *activeContestInfo) IsOver() bool {
-	return contest.EndTime.Before(contest.Now) || contest.EndTime.Equal(contest.Now)
-}
-
-// Closes the time-limited contest if needed or returns time stats
-func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
-	// Get info for the item if the user has already started it, but hasn't finished yet
+func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
+	// Get id of the item if the user has already started it, but hasn't finished yet
 	// Note: the current API doesn't allow users to have more than one active contest
 	// Note: groups_attempts rows with 'entered_at' should exist to make this function return the info
-	var results []struct {
-		Now                      Time
-		DurationInSeconds        int32
-		ItemID                   int64
-		AdditionalTimeInSeconds  int32
-		EnteredAt                Time
-		ContestEnteringCondition string
-		IsTeamContest            bool
-	}
-	mustNotBeError(s.
-		Select(`
-			NOW() AS now,
-			TIME_TO_SEC(items.duration) AS duration_in_seconds,
-			items.id AS item_id,
-			items.contest_entering_condition,
-			items.has_attempts AS is_team_contest,
-			IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS additional_time_in_seconds,
-			MIN(contest_participations.entered_at) AS entered_at,
-			MIN(contest_participations.finished_at) AS finished_at`).
+	var itemID int64
+
+	err := s.
+		Select("items.id AS item_id").
 		Joins(`
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.child_group_id = ?`, user.GroupID).
-		Joins(`LEFT JOIN groups_attempts AS contest_participations ON contest_participations.item_id = items.id AND
+		Joins(`
+			JOIN groups_groups_active
+				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
+					groups_groups_active.child_group_id = groups_ancestors_active.child_group_id`).
+		Joins(`JOIN groups_attempts AS contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors_active.ancestor_group_id AND
 			contest_participations.entered_at IS NOT NULL`).
 		Joins(`
@@ -360,68 +320,14 @@ func (s *ItemStore) getActiveContestInfoForUser(user *User) *activeContestInfo {
 				groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id`).
 		Group("items.id").
 		Order("MIN(contest_participations.entered_at) DESC").
-		Having("entered_at IS NOT NULL AND finished_at IS NULL").
-		Limit(1).Scan(&results).Error())
+		PluckFirst("items.id", &itemID).Error()
 
-	if len(results) == 0 {
+	if gorm.IsRecordNotFoundError(err) {
 		return nil
 	}
+	mustNotBeError(err)
 
-	totalDuration := results[0].DurationInSeconds + results[0].AdditionalTimeInSeconds
-	endTime := time.Time(results[0].EnteredAt).Add(time.Duration(totalDuration) * time.Second)
-
-	return &activeContestInfo{
-		Now:                      time.Time(results[0].Now),
-		DurationInSeconds:        totalDuration,
-		StartTime:                time.Time(results[0].EnteredAt),
-		EndTime:                  endTime,
-		ItemID:                   results[0].ItemID,
-		UserID:                   user.GroupID,
-		ContestEnteringCondition: results[0].ContestEnteringCondition,
-		IsTeamContest:            results[0].IsTeamContest,
-	}
-}
-
-func (s *ItemStore) closeContest(itemID int64, user *User) {
-	mustNotBeError(s.GroupAttempts().
-		Where("item_id = ? AND group_id = ?", itemID, user.GroupID).
-		Where("entered_at IS NOT NULL").
-		Where("finished_at IS NULL").
-		UpdateColumn("finished_at", Now()).Error())
-
-	permissionGrantedStore := s.PermissionsGranted()
-
-	// TODO: "remove 'content' access if other access were present" (what did he mean???)
-	permissionGrantedStore.removeContentAccess(user.GroupID, itemID)
-	mustNotBeError(permissionGrantedStore.db.Exec(`
-		DELETE permissions_granted
-		FROM permissions_granted
-		JOIN items_ancestors ON
-			items_ancestors.child_item_id = permissions_granted.item_id AND
-			items_ancestors.ancestor_item_id = ?
-		WHERE permissions_granted.group_id = ? AND giver_group_id = -1 AND
-			can_view IN ('content', 'info') AND is_owner = 0 AND can_edit='none'`, itemID, user.GroupID).Error)
-
-	// we do not need to call PermissionGrantedStore.After() because we do not grant new access here
-	permissionGrantedStore.computeAllAccess()
-}
-
-func (s *ItemStore) closeTeamContest(itemID int64, user *User) {
-	var teamGroupID int64
-	mustNotBeError(s.Groups().TeamGroupForTeamItemAndUser(itemID, user).PluckFirst("groups.id", &teamGroupID).Error())
-
-	// Set contest as finished
-	mustNotBeError(s.db.Exec(`
-		UPDATE groups_attempts
-		SET finished_at = NOW()
-		WHERE group_id = ? AND item_id = ? AND entered_at IS NOT NULL AND finished_at IS NULL`, teamGroupID, itemID).Error)
-
-	permissionGrantedStore := s.PermissionsGranted()
-	// Remove access
-	permissionGrantedStore.removeContentAccess(teamGroupID, itemID)
-
-	// we do not need to call PermissionGrantedStore.After() because we do not grant new access here
-	permissionGrantedStore.computeAllAccess()
+	return &itemID
 }
 
 // ContestManagedByUser returns a composable query

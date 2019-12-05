@@ -23,7 +23,6 @@ type navigationItemUserActiveAttempt struct {
 	Submissions      int32          `json:"submissions"`
 	StartedAt        *database.Time `json:"started_at"`
 	ValidatedAt      *database.Time `json:"validated_at"`
-	FinishedAt       *database.Time `json:"finished_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -144,7 +143,6 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 			Submissions:      rawData.UserSubmissions,
 			StartedAt:        rawData.UserStartedAt,
 			ValidatedAt:      rawData.UserValidatedAt,
-			FinishedAt:       rawData.UserFinishedAt,
 		}
 	}
 	return result

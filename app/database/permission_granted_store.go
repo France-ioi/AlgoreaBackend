@@ -32,12 +32,6 @@ func (s *PermissionGrantedStore) After() (err error) {
 	return nil
 }
 
-func (s *PermissionGrantedStore) removeContentAccess(groupID, itemID int64) {
-	mustNotBeError(s.Where("item_id = ?", itemID).Where("group_id = ?", groupID).
-		Where("giver_group_id = -1").Where("can_view = 'content'").
-		UpdateColumn("can_view", "none").Error())
-}
-
 // PermissionIndexByKindAndName returns the index of the given permission in the enum
 func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string) int {
 	permissionMap := map[string]*map[string]int{
