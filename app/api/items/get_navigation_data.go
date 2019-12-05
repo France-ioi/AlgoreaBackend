@@ -16,13 +16,12 @@ type GetItemRequest struct {
 }
 
 type navigationItemUserActiveAttempt struct {
-	Score            float32        `json:"score"`
-	Validated        bool           `json:"validated"`
-	Finished         bool           `json:"finished"`
-	HasUnlockedItems bool           `json:"has_unlocked_items"`
-	Submissions      int32          `json:"submissions"`
-	StartedAt        *database.Time `json:"started_at"`
-	ValidatedAt      *database.Time `json:"validated_at"`
+	Score       float32        `json:"score"`
+	Validated   bool           `json:"validated"`
+	Finished    bool           `json:"finished"`
+	Submissions int32          `json:"submissions"`
+	StartedAt   *database.Time `json:"started_at"`
+	ValidatedAt *database.Time `json:"validated_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -37,8 +36,6 @@ type navigationItemString struct {
 type navigationItemCommonFields struct {
 	ID   int64  `json:"id,string"`
 	Type string `json:"type"`
-	// whether items.unlocked_item_ids is empty
-	HasUnlockedItems bool `json:"has_unlocked_items"`
 
 	String            navigationItemString             `json:"string"`
 	UserActiveAttempt *navigationItemUserActiveAttempt `json:"user_active_attempt"`
@@ -123,10 +120,9 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
 	result := &navigationItemCommonFields{
-		ID:               rawData.ID,
-		Type:             rawData.Type,
-		HasUnlockedItems: rawData.HasUnlockedItems,
-		String:           navigationItemString{Title: rawData.Title},
+		ID:     rawData.ID,
+		Type:   rawData.Type,
+		String: navigationItemString{Title: rawData.Title},
 		AccessRights: navigationItemAccessRights{
 			CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 		},
@@ -136,13 +132,12 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 	}
 	if rawData.UserAttemptID != nil {
 		result.UserActiveAttempt = &navigationItemUserActiveAttempt{
-			Score:            rawData.UserScore,
-			Validated:        rawData.UserValidated,
-			Finished:         rawData.UserFinished,
-			HasUnlockedItems: rawData.UserHasUnlockedItems,
-			Submissions:      rawData.UserSubmissions,
-			StartedAt:        rawData.UserStartedAt,
-			ValidatedAt:      rawData.UserValidatedAt,
+			Score:       rawData.UserScore,
+			Validated:   rawData.UserValidated,
+			Finished:    rawData.UserFinished,
+			Submissions: rawData.UserSubmissions,
+			StartedAt:   rawData.UserStartedAt,
+			ValidatedAt: rawData.UserValidatedAt,
 		}
 	}
 	return result

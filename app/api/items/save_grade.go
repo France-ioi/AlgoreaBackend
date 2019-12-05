@@ -116,12 +116,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		hasUnlockedItems = true
 		if !validated {
 			// If validated, as the ancestor's recomputation will happen anyway
-			// Update ancestors_computation_state only if we hadn't obtained the key before
 			columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
-			values = append(values, gorm.Expr("IF(has_unlocked_items = 0, 'todo', ancestors_computation_state)"))
+			values = append(values, "todo")
 		}
-		columnsToUpdate = append(columnsToUpdate, "has_unlocked_items")
-		values = append(values, 1)
 	}
 	if score > 0 {
 		// Always propagate attempts if the score was non-zero
@@ -182,13 +179,11 @@ func shouldUnlockItems(store *database.DataStore, itemID int64, score float64, g
 	if gotFullScore {
 		return true
 	}
-	var unlockedInfo struct {
-		UnlockedItemIDs string
-		ScoreMinUnlock  float64
-	}
-	service.MustNotBeError(store.Items().ByID(itemID).Select("unlocked_item_ids, score_min_unlock").
-		Take(&unlockedInfo).Error())
-	return unlockedInfo.UnlockedItemIDs != "" && unlockedInfo.ScoreMinUnlock <= score
+	found, err := store.ItemUnlockingRules().
+		Where("unlocking_item_id = ?", itemID).
+		Where("score <= ?", score).HasRows()
+	service.MustNotBeError(err)
+	return found
 }
 
 type saveGradeRequestParsed struct {

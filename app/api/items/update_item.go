@@ -61,7 +61,6 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var childrenPermissions []permission
 		registerChildrenValidator(formData, store, user, &childrenPermissions)
-		registerItemValidators(formData, store, user)
 		registerDefaultLanguageIDValidator(formData, store, itemID)
 
 		err = formData.ParseJSONRequestData(r)

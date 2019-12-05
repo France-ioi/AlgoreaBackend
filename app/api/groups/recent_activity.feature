@@ -28,8 +28,8 @@ Feature: Get recent activity for group_id and item_id
       | 7  | 31      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
       | 8  | 31      | 200     | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score | unlocked_item_ids |
-      | 200 | Category | false          | false    | 1234,2345         |
+      | id  | type     | teams_editable | no_score |
+      | 200 | Category | false          | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 200     | info               |

@@ -59,8 +59,6 @@ type itemUserActiveAttempt struct {
 	// only if `can_view` >= 'content'
 	Finished bool `json:"finished"`
 	// only if `can_view` >= 'content'
-	HasUnlockedItems bool `json:"has_unlocked_items"`
-	// only if `can_view` >= 'content'
 	HintsCached int32 `json:"hints_cached"`
 	// Nullable; only if `can_view` >= 'content'
 	// example: 2019-09-11T07:30:56Z
@@ -84,11 +82,6 @@ type itemCommonFields struct {
 	// required: true
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
-	// whether `items.unlocked_item_ids` is empty
-	// required: true
-	HasUnlockedItems bool `json:"has_unlocked_items"`
-	// required: true
-	ScoreMinUnlock int32 `json:"score_min_unlock"`
 	// required: true
 	// enum: All,Half,One,None
 	ContestEnteringCondition string `json:"contest_entering_condition"`
@@ -239,8 +232,6 @@ type rawItem struct {
 	Type                     string
 	DisplayDetailsInParent   bool
 	ValidationType           string
-	HasUnlockedItems         bool // whether items.unlocked_item_ids is empty
-	ScoreMinUnlock           int32
 	ContestEnteringCondition string
 	TeamsEditable            bool
 	ContestMaxTeamSize       int32
@@ -267,15 +258,14 @@ type rawItem struct {
 	StringEduComment  *string `sql:"column:edu_comment"`
 
 	// from groups_attempts for the active attempt of the current user
-	UserActiveAttemptID  *int64         `sql:"column:attempt_id"`
-	UserScore            float32        `sql:"column:score"`
-	UserSubmissions      int32          `sql:"column:submissions"`
-	UserValidated        bool           `sql:"column:validated"`
-	UserFinished         bool           `sql:"column:finished"`
-	UserHasUnlockedItems bool           `sql:"column:has_unlocked_items"`
-	UserHintsCached      int32          `sql:"column:hints_cached"`
-	UserStartedAt        *database.Time `sql:"column:started_at"`
-	UserValidatedAt      *database.Time `sql:"column:validated_at"`
+	UserActiveAttemptID *int64         `sql:"column:attempt_id"`
+	UserScore           float32        `sql:"column:score"`
+	UserSubmissions     int32          `sql:"column:submissions"`
+	UserValidated       bool           `sql:"column:validated"`
+	UserFinished        bool           `sql:"column:finished"`
+	UserHintsCached     int32          `sql:"column:hints_cached"`
+	UserStartedAt       *database.Time `sql:"column:started_at"`
+	UserValidatedAt     *database.Time `sql:"column:validated_at"`
 
 	// items_items
 	Order                  int32 `sql:"column:child_order"`
@@ -295,8 +285,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		items.type,
 		items.display_details_in_parent,
 		items.validation_type,
-		items.unlocked_item_ids,
-		items.score_min_unlock,
 		items.contest_entering_condition,
 		items.teams_editable,
 		items.contest_max_team_size,
@@ -330,15 +318,11 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 	unionQuery := rootItemQuery.UnionAll(childrenQuery.QueryExpr())
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 	query := s.Raw(`
-    SELECT
-		  items.id,
-      items.type,
-		  items.display_details_in_parent,
-      items.validation_type,`+
-		// unlocked_item_ids is a comma-separated list of item IDs which will be unlocked if this item is validated
-		// Here we consider both NULL and an empty string as FALSE
-		` COALESCE(items.unlocked_item_ids, '')<>'' as has_unlocked_items,
-			items.score_min_unlock,
+		SELECT
+			items.id,
+			items.type,
+			items.display_details_in_parent,
+			items.validation_type,
 			items.contest_entering_condition,
 			items.teams_editable,
 			items.contest_max_team_size,
@@ -359,7 +343,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			groups_attempts.submissions AS submissions,
 			groups_attempts.validated AS validated,
 			groups_attempts.finished AS finished,
-			groups_attempts.has_unlocked_items AS has_unlocked_items,
 			groups_attempts.hints_cached AS hints_cached,
 			groups_attempts.started_at AS started_at,
 			groups_attempts.validated_at AS validated_at,
@@ -368,7 +351,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.category AS category,
 			items.content_view_propagation, `+
 		// inputItem only
-		` items.title_bar_visible,
+		`	items.title_bar_visible,
 			items.read_only,
 			items.full_screen,
 			items.show_user_infos,
@@ -376,7 +359,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			items.uses_api,
 			items.hints_allowed,
 			access_rights.can_view_generated_value
-    FROM ? items `, unionQuery.SubQuery()).
+		FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
 		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
@@ -441,15 +424,14 @@ func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *databa
 		return nil
 	}
 	return &itemUserActiveAttempt{
-		AttemptID:        *rawData.UserActiveAttemptID,
-		Score:            rawData.UserScore,
-		Submissions:      rawData.UserSubmissions,
-		Validated:        rawData.UserValidated,
-		Finished:         rawData.UserFinished,
-		HasUnlockedItems: rawData.UserHasUnlockedItems,
-		HintsCached:      rawData.UserHintsCached,
-		StartedAt:        rawData.UserStartedAt,
-		ValidatedAt:      rawData.UserValidatedAt,
+		AttemptID:   *rawData.UserActiveAttemptID,
+		Score:       rawData.UserScore,
+		Submissions: rawData.UserSubmissions,
+		Validated:   rawData.UserValidated,
+		Finished:    rawData.UserFinished,
+		HintsCached: rawData.UserHintsCached,
+		StartedAt:   rawData.UserStartedAt,
+		ValidatedAt: rawData.UserValidatedAt,
 	}
 }
 
@@ -459,8 +441,6 @@ func fillItemCommonFieldsWithDBData(rawData *rawItem) *itemCommonFields {
 		Type:                     rawData.Type,
 		DisplayDetailsInParent:   rawData.DisplayDetailsInParent,
 		ValidationType:           rawData.ValidationType,
-		HasUnlockedItems:         rawData.HasUnlockedItems,
-		ScoreMinUnlock:           rawData.ScoreMinUnlock,
 		ContestEnteringCondition: rawData.ContestEnteringCondition,
 		TeamsEditable:            rawData.TeamsEditable,
 		ContestMaxTeamSize:       rawData.ContestMaxTeamSize,
