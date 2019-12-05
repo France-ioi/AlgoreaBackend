@@ -14,8 +14,9 @@ Feature: Change the code of the given group - robustness
       | user  | 0         | 41       | John        | Doe       | en               |
       | jane  | 0         | 31       | Jane        | Doe       | en               |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
+      | 13       | 31         | none        |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 11                | 11             | 1       |
@@ -25,6 +26,14 @@ Feature: Change the code of the given group - robustness
 
   Scenario: User is not a manager of the group
     Given I am the user with id "41"
+    And the generated group code is "newpassword"
+    When I send a POST request to "/groups/13/code"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+
+  Scenario: User is a manager of the group, but doesn't have enough permissions to manage the group
+    Given I am the user with id "31"
     And the generated group code is "newpassword"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 403

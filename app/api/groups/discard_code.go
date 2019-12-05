@@ -16,7 +16,8 @@ import (
 //   Sets `groups.code` = NULL for a given group.
 //
 //
-//   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
+//   The authenticated user should be a manager of `group_id` with `can_manage` >= 'memberships',
+//   otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: group_id
 //   in: path
@@ -42,7 +43,7 @@ func (srv *Service) discardCode(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(srv.Store, user, groupID); apiError != service.NoError {
+	if apiError := checkThatUserCanManageTheGroupMemberships(srv.Store, user, groupID); apiError != service.NoError {
 		return apiError
 	}
 

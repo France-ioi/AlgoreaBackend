@@ -10,8 +10,8 @@ Feature: Discard the code of the given group
       | login | temp_user | group_id | first_name  | last_name | default_language |
       | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 13       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 13       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 75 | 11                | 11             | 1       |

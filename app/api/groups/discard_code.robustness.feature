@@ -17,9 +17,20 @@ Feature: Discard the code of the given group - robustness
       | id | ancestor_group_id | child_group_id | is_self |
       | 76 | 13                | 11             | 0       |
       | 78 | 21                | 21             | 1       |
+    And the database has the following table 'group_managers':
+      | group_id | manager_id | can_manage            |
+      | 13       | 21         | memberships_and_group |
+      | 13       | 31         | none                  |
 
   Scenario: User is not a manager of the group
     Given I am the user with id "41"
+    When I send a DELETE request to "/groups/13/code"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "groups" should stay unchanged
+
+  Scenario: User is a manager of the group, but doesn't have enough permissions to manage the group
+    Given I am the user with id "31"
     When I send a DELETE request to "/groups/13/code"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
