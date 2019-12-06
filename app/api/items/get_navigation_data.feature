@@ -28,15 +28,15 @@ Feature: Get item for tree navigation
       | 76 | 16                | 16             | 1       |
       | 77 | 18                | 18             | 1       |
     And the database has the following table 'items':
-      | id  | type     | teams_editable | no_score | unlocked_item_ids |
-      | 200 | Category | false          | false    | 1234,2345         |
-      | 210 | Chapter  | false          | false    | 1234,2345         |
-      | 220 | Chapter  | false          | false    | 1234,2345         |
-      | 230 | Chapter  | false          | false    | 1234,2345         |
-      | 211 | Task     | false          | false    | 1234,2345         |
-      | 231 | Task     | false          | false    | 1234,2345         |
-      | 232 | Task     | false          | false    | 1234,2345         |
-      | 250 | Task     | false          | false    | 1234,2345         |
+      | id  | type     | teams_editable | no_score |
+      | 200 | Category | false          | false    |
+      | 210 | Chapter  | false          | false    |
+      | 220 | Chapter  | false          | false    |
+      | 230 | Chapter  | false          | false    |
+      | 211 | Task     | false          | false    |
+      | 231 | Task     | false          | false    |
+      | 232 | Task     | false          | false    |
+      | 250 | Task     | false          | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | content_with_descendants |
@@ -90,14 +90,14 @@ Feature: Get item for tree navigation
       | 66 | 230     | 2           | Chapitre C  |
       | 67 | 211     | 2           | Tâche 1     |
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | order | score | submissions | finished | has_unlocked_items | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 12341 | 11          | true     | true               | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 12342 | 12          | true     | true               | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 11       | 211     | 1     | 12343 | 13          | true     | true               | 2019-01-30 09:26:43 | 2019-01-31 09:26:43 |
-      | 103 | 11       | 220     | 1     | 12344 | 14          | true     | true               | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 11       | 230     | 1     | 12345 | 15          | true     | true               | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
-      | 106 | 11       | 231     | 1     | 12346 | 16          | true     | true               | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
-      | 107 | 11       | 232     | 1     | 12347 | 17          | true     | true               | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
+      | id  | group_id | item_id | order | score | submissions | finished | started_at          | validated_at        |
+      | 101 | 11       | 200     | 1     | 12341 | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 12342 | 12          | true     | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 11       | 211     | 1     | 12343 | 13          | true     | 2019-01-30 09:26:43 | 2019-01-31 09:26:43 |
+      | 103 | 11       | 220     | 1     | 12344 | 14          | true     | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 11       | 230     | 1     | 12345 | 15          | true     | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
+      | 106 | 11       | 231     | 1     | 12346 | 16          | true     | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
+      | 107 | 11       | 232     | 1     | 12347 | 17          | true     | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 200     | 101               |
@@ -117,7 +117,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
         },
@@ -125,7 +124,6 @@ Feature: Get item for tree navigation
           "score": 12341,
           "validated": true,
           "finished": true,
-          "has_unlocked_items": true,
           "submissions": 11,
           "started_at": "2019-01-30T09:26:41Z",
           "validated_at": "2019-01-31T09:26:41Z"
@@ -139,7 +137,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter C"
             },
@@ -147,7 +144,6 @@ Feature: Get item for tree navigation
               "score": 12345,
               "validated": true,
               "finished": true,
-              "has_unlocked_items": true,
               "submissions": 15,
               "started_at": "2019-01-30T09:26:45Z",
               "validated_at": "2019-01-31T09:26:45Z"
@@ -161,7 +157,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Task 3"
                 },
@@ -169,7 +164,6 @@ Feature: Get item for tree navigation
                   "score": 12347,
                   "validated": true,
                   "finished": true,
-                  "has_unlocked_items": true,
                   "submissions": 17,
                   "started_at": "2019-01-30T09:26:47Z",
                   "validated_at": "2019-01-31T09:26:47Z"
@@ -184,7 +178,6 @@ Feature: Get item for tree navigation
                 "order": 2,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Task 2"
                 },
@@ -192,7 +185,6 @@ Feature: Get item for tree navigation
                   "score": 12346,
                   "validated": true,
                   "finished": true,
-                  "has_unlocked_items": true,
                   "submissions": 16,
                   "started_at": "2019-01-30T09:26:46Z",
                   "validated_at": "2019-01-31T09:26:46Z"
@@ -209,7 +201,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
             },
@@ -217,7 +208,6 @@ Feature: Get item for tree navigation
               "score": 12344,
               "validated": true,
               "finished": true,
-              "has_unlocked_items": true,
               "submissions": 14,
               "started_at": "2019-01-30T09:26:44Z",
               "validated_at": "2019-01-31T09:26:44Z"
@@ -232,7 +222,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter A"
             },
@@ -240,7 +229,6 @@ Feature: Get item for tree navigation
               "score": 12342,
               "validated": true,
               "finished": true,
-              "has_unlocked_items": true,
               "submissions": 12,
               "started_at": "2019-01-30T09:26:42Z",
               "validated_at": "2019-01-31T09:26:42Z"
@@ -254,7 +242,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Task 1"
                 },
@@ -262,7 +249,6 @@ Feature: Get item for tree navigation
                   "score": 12343,
                   "validated": true,
                   "finished": true,
-                  "has_unlocked_items": true,
                   "submissions": 13,
                   "started_at": "2019-01-30T09:26:43Z",
                   "validated_at": "2019-01-31T09:26:43Z"
@@ -287,7 +273,6 @@ Feature: Get item for tree navigation
       {
         "id": "232",
         "type": "Task",
-        "has_unlocked_items": true,
         "string": {
           "title": "Task 3"
         },
@@ -295,7 +280,6 @@ Feature: Get item for tree navigation
           "score": 12347,
           "validated": true,
           "finished": true,
-          "has_unlocked_items": true,
           "submissions": 17,
           "started_at": "2019-01-30T09:26:47Z",
           "validated_at": "2019-01-31T09:26:47Z"
@@ -316,7 +300,6 @@ Feature: Get item for tree navigation
       {
         "id": "230",
         "type": "Chapter",
-        "has_unlocked_items": true,
         "string": {
           "title": "Chapter C"
         },
@@ -324,7 +307,6 @@ Feature: Get item for tree navigation
           "score": 12345,
           "validated": true,
           "finished": true,
-          "has_unlocked_items": true,
           "submissions": 15,
           "started_at": "2019-01-30T09:26:45Z",
           "validated_at": "2019-01-31T09:26:45Z"
@@ -338,7 +320,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "none",
             "type": "Task",
-            "has_unlocked_items": true,
             "string": {
               "title": "Task 3"
             },
@@ -346,7 +327,6 @@ Feature: Get item for tree navigation
               "score": 12347,
               "validated": true,
               "finished": true,
-              "has_unlocked_items": true,
               "submissions": 17,
               "started_at": "2019-01-30T09:26:47Z",
               "validated_at": "2019-01-31T09:26:47Z"
@@ -361,7 +341,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "none",
             "type": "Task",
-            "has_unlocked_items": true,
             "string": {
               "title": "Task 2"
             },
@@ -369,7 +348,6 @@ Feature: Get item for tree navigation
               "score": 12346,
               "validated": true,
               "finished": true,
-              "has_unlocked_items": true,
               "submissions": 16,
               "started_at": "2019-01-30T09:26:46Z",
               "validated_at": "2019-01-31T09:26:46Z"
@@ -392,7 +370,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
         },
@@ -413,7 +390,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "has_unlocked_items": true,
         "string": {
           "title": "Category 1"
         },
@@ -427,7 +403,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter C"
             },
@@ -442,7 +417,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
             },
@@ -457,7 +431,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter A"
             },
@@ -480,7 +453,6 @@ Feature: Get item for tree navigation
       {
         "id": "200",
         "type": "Category",
-        "has_unlocked_items": true,
         "string": {
           "title": "Catégorie 1"
         },
@@ -494,7 +466,6 @@ Feature: Get item for tree navigation
             "order": 1,
             "content_view_propagation": "as_content",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapitre C"
             },
@@ -508,7 +479,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Task 3"
                 },
@@ -523,7 +493,6 @@ Feature: Get item for tree navigation
                 "order": 2,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Task 2"
                 },
@@ -540,7 +509,6 @@ Feature: Get item for tree navigation
             "order": 2,
             "content_view_propagation": "as_info",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapter B"
             },
@@ -555,7 +523,6 @@ Feature: Get item for tree navigation
             "order": 3,
             "content_view_propagation": "none",
             "type": "Chapter",
-            "has_unlocked_items": true,
             "string": {
               "title": "Chapitre A"
             },
@@ -569,7 +536,6 @@ Feature: Get item for tree navigation
                 "order": 1,
                 "content_view_propagation": "none",
                 "type": "Task",
-                "has_unlocked_items": true,
                 "string": {
                   "title": "Tâche 1"
                 },

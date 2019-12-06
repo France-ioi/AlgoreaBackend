@@ -19,10 +19,10 @@ Background:
     | 74 | 13                | 11             | 0       |
     | 75 | 21                | 21             | 1       |
   And the database has the following table 'items':
-    | id  | type     | teams_editable | no_score | unlocked_item_ids |
-    | 190 | Category | false          | false    | 1234,2345         |
-    | 200 | Category | false          | false    | 1234,2345         |
-    | 210 | Category | false          | false    | 1234,2345         |
+    | id  | type     | teams_editable | no_score |
+    | 190 | Category | false          | false    |
+    | 200 | Category | false          | false    |
+    | 210 | Category | false          | false    |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 190     | none                     |

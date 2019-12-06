@@ -3,9 +3,6 @@ package items
 import (
 	"errors"
 	"net/http"
-	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/go-chi/render"
@@ -37,12 +34,6 @@ type item struct {
 	// default: All
 	ValidationType string `json:"validation_type" validate:"oneof=None All AllButOne Categories One Manual"`
 
-	// Nullable
-	//
-	// An optional comma-separated list of items' IDs to unlock (the current user should have `can_grant_view` >= 'content' on each)
-	UnlockedItemIDs *string `json:"unlocked_item_ids" validate:"unlocked_item_ids"`
-	// Nullable
-	ScoreMinUnlock *int32 `json:"score_min_unlock"`
 	// enum: All,Half,One,None
 	// default: None
 	ContestEnteringCondition string `json:"contest_entering_condition" validate:"oneof=All Half One None"`
@@ -136,7 +127,6 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //     * `can_edit` >= 'children' on the `parent_item_id`,
 //     * `can_view` != 'none' on the `children` items (if any),
-//     * `can_grant_view` >= 'content' on the `unlocked_item_ids` items (if any),
 //
 //   otherwise the "bad request" response is returned.
 // parameters:
@@ -225,29 +215,6 @@ func constructLanguageIDValidator(store *database.DataStore) validator.Func {
 	})
 }
 
-// constructUnlockedItemIDsValidator constructs a validator for the UnlockedItemIDs field.
-// The validator checks that the user can grant 'content' view right on all the listed items (can_grant_view >= content).
-func constructUnlockedItemIDsValidator(store *database.DataStore, user *database.User) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
-		field := fl.Field()
-		if field.Kind() == reflect.Ptr { // nil
-			return true
-		}
-		ids := strings.Split(field.String(), ",")
-		int64IDs := make([]int64, 0, len(ids))
-		for _, id := range ids {
-			int64ID, err := strconv.ParseInt(id, 10, 64)
-			if err != nil {
-				return false
-			}
-			int64IDs = append(int64IDs, int64ID)
-		}
-		hasAccess, err := store.Items().CanGrantViewContentOnAll(user, int64IDs...)
-		service.MustNotBeError(err)
-		return hasAccess
-	})
-}
-
 // constructChildrenValidator constructs a validator for the Children field.
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
@@ -278,20 +245,12 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 		"should exist and the user should be able to manage its children")
 
 	registerLanguageIDValidator(formData, store)
-
 	registerChildrenValidator(formData, store, user, childrenPermissions)
-	registerItemValidators(formData, store, user)
 }
 
 func registerLanguageIDValidator(formData *formdata.FormData, store *database.DataStore) {
 	formData.RegisterValidation("language_id", constructLanguageIDValidator(store))
 	formData.RegisterTranslation("language_id", "no such language")
-}
-
-func registerItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User) {
-	formData.RegisterValidation("unlocked_item_ids", constructUnlockedItemIDsValidator(store, user))
-	formData.RegisterTranslation("unlocked_item_ids",
-		"all the IDs should exist and the user should have `can_grant_view` >= 'content' permission on each")
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,

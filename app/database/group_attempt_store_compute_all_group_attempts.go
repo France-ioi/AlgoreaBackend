@@ -2,11 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"strconv"
 	"strings"
 	"time"
-
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
 )
 
 type groupItemPair struct {
@@ -26,7 +23,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated_at.
 //  This step is repeated until no records are updated.
-// 3. We insert new permissions_granted for each processed row with has_unlocked_items=1 according to corresponding items.unlocked_item_ids.
+// 3. We insert new permissions_granted for each unlocked item according to corresponding item_unlocking_rules.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -188,38 +185,25 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 }
 
 func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
-	// Unlock items depending on has_unlocked_items
+	// Unlock items according to item_unlocking_rules
 	const selectUnlocksQuery = `
 		SELECT
-			items.id AS item_id,
+			item_unlocking_rules.unlocking_item_id AS item_id,
 			groups.id AS group_id,
-			items.unlocked_item_ids as items_ids
+			item_unlocking_rules.unlocked_item_id
 		FROM groups_attempts
-		JOIN items ON groups_attempts.item_id = items.id
+		JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
+			item_unlocking_rules.score <= groups_attempts.score
 		JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
-		WHERE groups_attempts.ancestors_computation_state = 'processing' AND
-			groups_attempts.has_unlocked_items AND items.unlocked_item_ids IS NOT NULL`
-	var err error
+		WHERE groups_attempts.ancestors_computation_state = 'processing'`
 	var unlocksResult []struct {
-		ItemID   int64
-		GroupID  int64
-		ItemsIDs string
+		ItemID         int64
+		GroupID        int64
+		UnlockedItemID int64
 	}
 	mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
 	for _, unlock := range unlocksResult {
-		idsItems := strings.Split(unlock.ItemsIDs, ",")
-		for _, itemID := range idsItems {
-			var itemIDInt64 int64
-			if itemIDInt64, err = strconv.ParseInt(itemID, 10, 64); err != nil {
-				logging.SharedLogger.WithFields(map[string]interface{}{
-					"items.id":                unlock.ItemID,
-					"items.unlocked_item_ids": unlock.ItemsIDs,
-					"error":                   err,
-				}).Warn("cannot parse items.unlocked_item_ids")
-			} else {
-				groupItemsToUnlock[groupItemPair{groupID: unlock.GroupID, itemID: itemIDInt64}] = true
-			}
-		}
+		groupItemsToUnlock[groupItemPair{groupID: unlock.GroupID, itemID: unlock.UnlockedItemID}] = true
 	}
 }
 

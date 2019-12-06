@@ -3,14 +3,11 @@
 package database_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
@@ -37,60 +34,24 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_UpdatesOldRecords(t *
 	testUnlocks(db, t)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_WarnsWhenIdIsNotInteger(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture(
-		"groups_attempts_propagation/_common",
-		"groups_attempts_propagation/unlocks",
-	)
-	defer func() { _ = db.Close() }()
-
-	hook, restoreFunc := logging.MockSharedLoggerHook()
-	defer restoreFunc()
-
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
-	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
-		"has_unlocked_items", 1,
-	).Error())
-	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
-		"unlocked_item_ids", "1001,abc",
-	).Error())
-
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
-	})
-	assert.NoError(t, err)
-
-	logs := strings.Split((&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), "\n")
-	assert.Len(t, logs, 1)
-	assert.Contains(t, logs[0], `level=warning`)
-	assert.Contains(t, logs[0], `msg="cannot parse items.unlocked_item_ids"`)
-	assert.Contains(t, logs[0], `error="strconv.ParseInt: parsing \"abc\": invalid syntax"`)
-	assert.Contains(t, logs[0], `items.id=1`)
-	assert.Contains(t, logs[0], `items.unlocked_item_ids="1001,abc"`)
-}
-
 func testUnlocks(db *database.DB, t *testing.T) {
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
-	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn(
-		"has_unlocked_items", 1,
-	).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=13").UpdateColumn(
-		"has_unlocked_items", 1,
-	).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=14").UpdateColumn(
-		"has_unlocked_items", 1,
-	).Error())
-	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(
-		"unlocked_item_ids", "1001,1002",
-	).Error())
-	assert.NoError(t, itemStore.Where("id=3").UpdateColumn(
-		"unlocked_item_ids", "2001,2002",
-	).Error())
-	assert.NoError(t, itemStore.Where("id=4").UpdateColumn(
-		"unlocked_item_ids", "4001,4002",
-	).Error())
+	for _, id := range []int64{11, 13, 14} {
+		assert.NoError(t, groupAttemptStore.Where("id = ?", id).UpdateColumn(
+			"score", 100,
+		).Error())
+	}
+	itemUnlockingRuleStore := database.NewDataStore(db).ItemUnlockingRules()
+	for unlockingItemID, unlockedItemIDs := range map[int64][]int64{1: {1001, 1002}, 3: {2001, 2002}, 4: {4001, 4002}} {
+		for _, unlockedItemID := range unlockedItemIDs {
+			assert.NoError(t, itemUnlockingRuleStore.InsertMap(map[string]interface{}{
+				"unlocking_item_id": unlockingItemID, "unlocked_item_id": unlockedItemID,
+			}))
+		}
+	}
+	assert.NoError(t, itemUnlockingRuleStore.InsertMap(map[string]interface{}{
+		"unlocking_item_id": 4, "unlocked_item_id": 4003, "score": 101,
+	}))
 
 	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.GroupAttempts().ComputeAllGroupAttempts()

@@ -1,0 +1,9 @@
+items:
+  - { id: 1}
+  - { id: 2}
+  - { id: 3}
+  - { id: 4}
+  - { id: 5}
+  - { id: 55}
+item_unlocking_rules:
+  - { unlocking_item_id: 4, unlocked_item_id: 55}

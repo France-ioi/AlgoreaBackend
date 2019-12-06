@@ -91,19 +91,24 @@ func (s *DataStore) PermissionsGranted() *PermissionGrantedStore {
 	return &PermissionGrantedStore{NewDataStoreWithTable(s.DB, "permissions_granted")}
 }
 
-// ItemAncestors returns a ItemAncestorStore
+// ItemAncestors returns an ItemAncestorStore
 func (s *DataStore) ItemAncestors() *ItemAncestorStore {
 	return &ItemAncestorStore{NewDataStoreWithTable(s.DB, "items_ancestors")}
 }
 
-// ItemStrings returns a ItemStringStore
+// ItemStrings returns an ItemStringStore
 func (s *DataStore) ItemStrings() *ItemStringStore {
 	return &ItemStringStore{NewDataStoreWithTable(s.DB, "items_strings")}
 }
 
-// ItemItems returns a ItemItemStore
+// ItemItems returns an ItemItemStore
 func (s *DataStore) ItemItems() *ItemItemStore {
 	return &ItemItemStore{NewDataStoreWithTable(s.DB, "items_items")}
+}
+
+// ItemUnlockingRules returns an ItemUnlockingRuleStore
+func (s *DataStore) ItemUnlockingRules() *ItemUnlockingRuleStore {
+	return &ItemUnlockingRuleStore{NewDataStoreWithTable(s.DB, "item_unlocking_rules")}
 }
 
 // Languages returns a LanguageStore
