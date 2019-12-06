@@ -117,7 +117,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		if !validated {
 			// If validated, as the ancestor's recomputation will happen anyway
 			columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
-			values = append(values, "todo")
+			values = append(values, todo)
 		}
 	}
 	if score > 0 {
