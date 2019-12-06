@@ -315,9 +315,6 @@ func (s *ItemStore) getActiveContestItemIDForUser(user *User) *int64 {
 		Joins(`JOIN groups_attempts AS contest_participations ON contest_participations.item_id = items.id AND
 			contest_participations.group_id = groups_ancestors_active.ancestor_group_id AND
 			contest_participations.entered_at IS NOT NULL`).
-		Joins(`
-			LEFT JOIN groups_contest_items ON groups_contest_items.item_id = items.id AND
-				groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id`).
 		Group("items.id").
 		Order("MIN(contest_participations.entered_at) DESC").
 		PluckFirst("items.id", &itemID).Error()
