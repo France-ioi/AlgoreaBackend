@@ -73,7 +73,8 @@ type contestGetQualificationStateResponse struct {
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
 //
 //                  * 'not_ready' if the participant has a `groups_attempts` row for the item
-//                    with non-null `entered_at` and is NOT an active member of the item's "contest participants" group;
+//                    with non-null `entered_at` and is NOT an active member of the item's "contest participants" group
+//                    while the item's `has_attempts` is false;
 //
 //                  * 'ready' otherwise.
 //
