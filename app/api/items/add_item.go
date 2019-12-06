@@ -2,6 +2,7 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -45,7 +46,7 @@ type item struct {
 	// MySQL time (max value is 838:59:59)
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
-	Duration      *string `json:"duration" validate:"duration"`
+	Duration      *string `json:"duration" validate:"omitempty,duration"`
 	ShowUserInfos bool    `json:"show_user_infos"`
 	UsesAPI       bool    `json:"uses_api"`
 	// Nullable
@@ -123,6 +124,9 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
 //
+//     * (if `duration` is set) creates a participants group, links `contest_participants_group_id` to it,
+//       and gives this group 'can_view:content' permission on the new item.
+//
 //   The user should have
 //
 //     * `can_edit` >= 'children' on the `parent_item_id`,
@@ -166,17 +170,16 @@ func (srv *Service) addItem(w http.ResponseWriter, r *http.Request) service.APIE
 			return err // rollback
 		}
 
-		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+		return store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
 			if !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
 				return apiError.Error // rollback
 			}
 
 			// insertion
-			itemID, err = srv.insertItem(lockedStore, user, formData, &input, childrenPermissions)
-			return err
+			itemID = srv.insertItem(lockedStore, user, formData, &input, childrenPermissions)
+			return nil
 		})
-		return err
 	})
 
 	if apiError != service.NoError {
@@ -261,16 +264,32 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 }
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
-	newItemRequest *NewItemRequest, childrenPermissions []permission) (itemID int64, err error) {
+	newItemRequest *NewItemRequest, childrenPermissions []permission) (itemID int64) {
 	itemMap := formData.ConstructPartialMapForDB("itemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
-	err = store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
 		itemID = s.NewID()
 
 		itemMap["id"] = itemID
 		itemMap["default_language_id"] = newItemRequest.LanguageID
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
+
+		if itemMap["duration"] != nil {
+			participantsGroupID := s.NewID()
+			service.MustNotBeError(s.Groups().InsertMap(map[string]interface{}{
+				"id": participantsGroupID, "type": "ContestParticipants",
+				"name": fmt.Sprintf("%d-participants", itemID),
+			}))
+			service.MustNotBeError(s.PermissionsGranted().InsertMap(map[string]interface{}{
+				"group_id":       participantsGroupID,
+				"item_id":        itemID,
+				"giver_group_id": -1,
+				"can_view":       "content",
+			}))
+			service.MustNotBeError(s.Items().ByID(itemID).
+				UpdateColumn("contest_participants_group_id", participantsGroupID).Error())
+		}
 
 		service.MustNotBeError(s.PermissionsGranted().InsertMap(
 			map[string]interface{}{
@@ -296,6 +315,6 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
 		insertItemItems(s, parentChildSpec)
 		return store.ItemItems().After()
-	})
-	return itemID, err
+	}))
+	return itemID
 }
