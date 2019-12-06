@@ -136,26 +136,25 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
-  Scenario: Reenter an individual contest
+  Scenario: Reenter a contest as a team
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id |
-      | 50 | 01:01:01 | 0            | None                       | 99                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
+      | 60 | 01:01:01 | 1            | None                       | 10                    | 99                            |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
-      | 99              | 31             | 2019-05-30 11:00:00 |
+      | 99              | 11             | 2019-05-30 11:00:00 |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
-      | 11       | 50      | none                     |
-      | 21       | 50      | solution                 |
-      | 31       | 50      | content_with_descendants |
+      | 11       | 60      | solution                 |
+      | 31       | 60      | content_with_descendants |
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
-      | 11       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
+      | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
-      | 31       | 50      | 2019-05-29 11:00:00 | 1     |
+      | 11       | 60      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
-    When I send a POST request to "/contests/50/groups/31"
+    When I send a POST request to "/contests/60/groups/11"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -170,14 +169,14 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
     """
     And the table "groups_attempts" should be:
       | group_id | item_id | entered_at          | order |
-      | 31       | 50      | 2019-05-29 11:00:00 | 1     |
-      | 31       | 50      | 3019-10-10 10:10:10 | 2     |
+      | 11       | 60      | 2019-05-29 11:00:00 | 1     |
+      | 11       | 60      | 3019-10-10 10:10:10 | 2     |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 31             | 9999-12-31 23:59:59 |
       | 11              | 41             | 9999-12-31 23:59:59 |
       | 11              | 51             | 9999-12-31 23:59:59 |
-      | 99              | 31             | 3019-10-10 13:13:13 |
+      | 99              | 11             | 3019-10-10 13:13:13 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self | expires_at          |
       | 11                | 11             | 1       | 9999-12-31 23:59:59 |
@@ -189,7 +188,10 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 41                | 41             | 1       | 9999-12-31 23:59:59 |
       | 51                | 51             | 1       | 9999-12-31 23:59:59 |
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
+      | 99                | 11             | 0       | 3019-10-10 13:13:13 |
       | 99                | 31             | 0       | 3019-10-10 13:13:13 |
+      | 99                | 41             | 0       | 3019-10-10 13:13:13 |
+      | 99                | 51             | 0       | 3019-10-10 13:13:13 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
   Scenario: Enter a contest that don't have items.contest_participants_group_id set

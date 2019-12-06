@@ -416,7 +416,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | Half               |
       | One                |
 
-  Scenario: State is ready for an individual contest because the participation has expired
+  Scenario: State is not_ready for an individual contest because the participation has expired
     Given the database table 'groups' has also the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -444,7 +444,7 @@ Feature: Get qualification state (contestGetQualificationState)
       "current_user_can_enter": false,
       "entering_condition": "None",
       "other_members": [],
-      "state": "ready"
+      "state": "not_ready"
     }
     """
 
