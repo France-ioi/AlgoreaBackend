@@ -23,7 +23,7 @@ const computeAllGroupAttemptsLockTimeout = 10 * time.Second
 //  Then, if an object has children, we update
 //    latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, validated_at.
 //  This step is repeated until no records are updated.
-// 3. We insert new permissions_granted for each unlocked item according to corresponding items_unlocking_rules.
+// 3. We insert new permissions_granted for each unlocked item according to corresponding item_unlocking_rules.
 func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
@@ -185,15 +185,15 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 }
 
 func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
-	// Unlock items according to items_unlocking_rules
+	// Unlock items according to item_unlocking_rules
 	const selectUnlocksQuery = `
 		SELECT
-			items_unlocking_rules.unlocking_item_id AS item_id,
+			item_unlocking_rules.unlocking_item_id AS item_id,
 			groups.id AS group_id,
-			items_unlocking_rules.unlocked_item_id
+			item_unlocking_rules.unlocked_item_id
 		FROM groups_attempts
-		JOIN items_unlocking_rules ON items_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
-			items_unlocking_rules.score <= groups_attempts.score
+		JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
+			item_unlocking_rules.score <= groups_attempts.score
 		JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
 		WHERE groups_attempts.ancestors_computation_state = 'processing'`
 	var unlocksResult []struct {

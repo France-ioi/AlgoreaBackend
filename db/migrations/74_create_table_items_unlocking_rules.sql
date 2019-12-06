@@ -1,17 +1,17 @@
 -- +migrate Up
-CREATE TABLE `items_unlocking_rules` (
+CREATE TABLE `item_unlocking_rules` (
     `unlocking_item_id` BIGINT(20) NOT NULL,
     `unlocked_item_id` BIGINT(20) NOT NULL,
     `score` int(11) NOT NULL DEFAULT '100'
         COMMENT 'Score of the unlocking item from which the unlocked item is unlocked, i.e. can_view:content is given.',
     PRIMARY KEY (`unlocking_item_id`, `unlocked_item_id`),
-    CONSTRAINT `fk_items_unlocking_rules_unlocking_item_id_items_id`
+    CONSTRAINT `fk_item_unlocking_rules_unlocking_item_id_items_id`
         FOREIGN KEY (`unlocking_item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_items_unlocking_rules_unlocked_item_id_items_id`
+    CONSTRAINT `fk_item_unlocking_rules_unlocked_item_id_items_id`
         FOREIGN KEY (`unlocked_item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
 );
 
-INSERT INTO `items_unlocking_rules` (`unlocking_item_id`, `unlocked_item_id`, `score`)
+INSERT INTO `item_unlocking_rules` (`unlocking_item_id`, `unlocked_item_id`, `score`)
     SELECT `items`.`id` AS `unlocking_item_id`,
            `ids`.`id` AS `unlocked_item_id`,
            `items`.`score_min_unlock` AS `score`
@@ -33,7 +33,7 @@ ALTER TABLE `groups_attempts`
         AFTER `finished`;
 
 UPDATE `groups_attempts`
-JOIN (SELECT `unlocking_item_id`, MIN(`score`) AS `score` FROM `items_unlocking_rules` GROUP BY `unlocking_item_id`) AS `rules`
+JOIN (SELECT `unlocking_item_id`, MIN(`score`) AS `score` FROM `item_unlocking_rules` GROUP BY `unlocking_item_id`) AS `rules`
     ON `rules`.`unlocking_item_id` = `groups_attempts`.`item_id` AND `rules`.`score` <= `groups_attempts`.`score`
 SET `groups_attempts`.`has_unlocked_items` = 1;
 
@@ -50,10 +50,10 @@ JOIN (
         SELECT `unlocking_item_id` AS `id`,
                GROUP_CONCAT(`unlocked_item_id`) AS `unlocked_item_ids`,
                MAX(`score`) AS `score_min_unlock`
-        FROM `items_unlocking_rules`
+        FROM `item_unlocking_rules`
         GROUP BY `unlocking_item_id`
     ) AS `rules` USING (`id`)
 SET `items`.`unlocked_item_ids` = `rules`.`unlocked_item_ids`,
     `items`.`score_min_unlock` = `rules`.`score_min_unlock`;
 
-DROP TABLE `items_unlocking_rules`;
+DROP TABLE `item_unlocking_rules`;

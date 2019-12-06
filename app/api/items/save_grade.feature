@@ -19,7 +19,7 @@ Feature: Save grading result
       | 60 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | All             |
       | 10 | null        | null                                                                    | AllButOne       |
       | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | All             |
-    And the database has the following table 'items_unlocking_rules':
+    And the database has the following table 'item_unlocking_rules':
       | unlocking_item_id | unlocked_item_id | score |
       | 60                | 50               | 98    |
     And the database has the following table 'items_items':

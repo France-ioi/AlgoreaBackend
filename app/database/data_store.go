@@ -108,7 +108,7 @@ func (s *DataStore) ItemItems() *ItemItemStore {
 
 // ItemUnlockingRules returns an ItemUnlockingRuleStore
 func (s *DataStore) ItemUnlockingRules() *ItemUnlockingRuleStore {
-	return &ItemUnlockingRuleStore{NewDataStoreWithTable(s.DB, "items_unlocking_rules")}
+	return &ItemUnlockingRuleStore{NewDataStoreWithTable(s.DB, "item_unlocking_rules")}
 }
 
 // Languages returns a LanguageStore

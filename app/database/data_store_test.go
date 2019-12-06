@@ -34,7 +34,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"ItemAncestors", func(store *DataStore) *DB { return store.ItemAncestors().Where("") }, "`items_ancestors`"},
 		{"ItemItems", func(store *DataStore) *DB { return store.ItemItems().Where("") }, "`items_items`"},
 		{"ItemStrings", func(store *DataStore) *DB { return store.ItemStrings().Where("") }, "`items_strings`"},
-		{"ItemUnlockingRules", func(store *DataStore) *DB { return store.ItemUnlockingRules().Where("") }, "`items_unlocking_rules`"},
+		{"ItemUnlockingRules", func(store *DataStore) *DB { return store.ItemUnlockingRules().Where("") }, "`item_unlocking_rules`"},
 		{"Languages", func(store *DataStore) *DB { return store.Languages().Where("") }, "`languages`"},
 		{"LoginStates", func(store *DataStore) *DB { return store.LoginStates().Where("") }, "`login_states`"},
 		{"Platforms", func(store *DataStore) *DB { return store.Platforms().Where("") }, "`platforms`"},
