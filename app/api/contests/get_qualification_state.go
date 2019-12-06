@@ -55,7 +55,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                The qualification state is one of:
 //                  * 'already_started' if the participant has a `groups_attempts` row for the item
-//                    with non-null `entered_at` and `finished_at` = NULL;
+//                    with non-null `entered_at` and is an active member of the item's "contest participants" group;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
 //                    if the team/user doesn't satisfy the contest entering condition which is computed
@@ -71,6 +71,10 @@ type contestGetQualificationStateResponse struct {
 //                      * "All": same but all members of the team;
 //
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
+//
+//                  * 'not_ready' if the participant has a `groups_attempts` row for the item
+//                    with non-null `entered_at` and is NOT an active member of the item's "contest participants" group
+//                    while the item's `has_attempts` is false;
 //
 //                  * 'ready' otherwise.
 //
@@ -147,20 +151,29 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 	}
 
 	contestParticipationQuery := store.GroupAttempts().
+		Joins("JOIN items ON items.id = groups_attempts.item_id").
+		// check the participation is not expired
+		Joins(`
+			LEFT JOIN groups_groups_active
+				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
+					groups_groups_active.child_group_id = groups_attempts.group_id`).
 		Where("item_id = ?", itemID).
-		Where("group_id = ?", groupID).
-		Where("entered_at IS NOT NULL").
-		Where("finished_at IS NULL")
+		Where("groups_attempts.group_id = ?", groupID).
+		Where("entered_at IS NOT NULL")
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()
 	}
-	alreadyStarted, err := contestParticipationQuery.HasRows()
-	service.MustNotBeError(err)
+	var isActive, alreadyStarted bool
+	err = contestParticipationQuery.PluckFirst("groups_groups_active.parent_group_id IS NOT NULL", &isActive).Error()
+	if !gorm.IsRecordNotFoundError(err) {
+		service.MustNotBeError(err)
+		alreadyStarted = true
+	}
 
 	membersCount, otherMembers, currentUserCanEnter, qualifiedMembersCount :=
 		srv.getQualificatonInfo(contestInfo.IsTeamContest, groupID, itemID, user, store)
 	state := computeQualificationState(
-		alreadyStarted, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
+		alreadyStarted, isActive, contestInfo.IsTeamContest, contestInfo.ContestMaxTeamSize,
 		contestInfo.ContestEnteringCondition, membersCount, qualifiedMembersCount)
 
 	result := &contestGetQualificationStateResponse{
@@ -196,10 +209,10 @@ func (srv *Service) checkGroupID(
 	return service.NoError
 }
 
-func computeQualificationState(hasAlreadyStarted, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
+func computeQualificationState(hasAlreadyStarted, isActive, isTeamContest bool, maxTeamSize int32, contestEnteringCondition string,
 	membersCount, qualifiedMembersCount int32) qualificationState {
 	var state qualificationState
-	if hasAlreadyStarted {
+	if hasAlreadyStarted && isActive {
 		state = alreadyStarted
 	} else {
 		state = ready
@@ -207,6 +220,9 @@ func computeQualificationState(hasAlreadyStarted, isTeamContest bool, maxTeamSiz
 			!isContestEnteringConditionSatisfied(contestEnteringCondition, membersCount, qualifiedMembersCount) {
 			state = notReady
 		}
+	}
+	if hasAlreadyStarted && !isActive && !isTeamContest {
+		state = notReady
 	}
 	return state
 }

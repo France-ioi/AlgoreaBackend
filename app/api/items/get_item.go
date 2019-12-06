@@ -69,9 +69,6 @@ type itemUserActiveAttempt struct {
 	// example: 2019-09-11T07:30:56Z
 	// type: string
 	ValidatedAt *database.Time `json:"validated_at,string"`
-	// Nullable; only if `can_view` >= 'content'
-	// example: 2019-09-11T07:30:56Z
-	FinishedAt *database.Time `json:"finished_at,string"`
 }
 
 type itemCommonFields struct {
@@ -279,7 +276,6 @@ type rawItem struct {
 	UserHintsCached      int32          `sql:"column:hints_cached"`
 	UserStartedAt        *database.Time `sql:"column:started_at"`
 	UserValidatedAt      *database.Time `sql:"column:validated_at"`
-	UserFinishedAt       *database.Time `sql:"column:finished_at"`
 
 	// items_items
 	Order                  int32 `sql:"column:child_order"`
@@ -367,7 +363,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			groups_attempts.hints_cached AS hints_cached,
 			groups_attempts.started_at AS started_at,
 			groups_attempts.validated_at AS validated_at,
-			groups_attempts.finished_at AS finished_at,
 
 			items.child_order AS child_order,
 			items.category AS category,
@@ -455,7 +450,6 @@ func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *databa
 		HintsCached:      rawData.UserHintsCached,
 		StartedAt:        rawData.UserStartedAt,
 		ValidatedAt:      rawData.UserValidatedAt,
-		FinishedAt:       rawData.UserFinishedAt,
 	}
 }
 

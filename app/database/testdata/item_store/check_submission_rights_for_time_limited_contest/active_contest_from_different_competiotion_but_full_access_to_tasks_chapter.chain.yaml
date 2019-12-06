@@ -1,5 +1,5 @@
-items: [{id: 115, duration: 00:00:01}, {id: 500}]
-groups: [{id: 14}, {id: 23}]
+items: [{id: 115, duration: 00:00:01, contest_participants_group_id: 100}, {id: 500,contest_participants_group_id: 200}]
+groups: [{id: 14}, {id: 23}, {id: 100}, {id: 200}]
 users: [{group_id: 14, login: 4}]
 groups_groups: [{parent_group_id: 23, child_group_id: 14}]
 groups_ancestors:

@@ -90,7 +90,8 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 				Error())
 			service.MustNotBeError(store.Exec(`
 				INSERT INTO groups_groups (parent_group_id, child_group_id, expires_at)
-				VALUES(?, ?, DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND))`,
+				VALUES(?, ?, DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND))
+				ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)`,
 				itemInfo.ContestParticipantsGroupID, qualificationState.groupID,
 				itemInfo.Now, itemInfo.Duration, totalAdditionalTime).Error())
 			service.MustNotBeError(store.GroupGroups().After())

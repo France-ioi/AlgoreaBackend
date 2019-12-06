@@ -149,29 +149,28 @@ func setAdditionalTimeForGroupInContest(
 		)
 		?`,
 		// For each of groups participating in the contest ...
-		store.GroupGroups().
-			Where("groups_groups.parent_group_id = ?", participantsGroupID).
+		store.ActiveGroupGroups().
+			Where("groups_groups_active.parent_group_id = ?", participantsGroupID).
 			// ... that are descendants of `groupID` (so affected by the change) ...
 			Joins(`
 				JOIN groups_ancestors AS changed_group_descendants
-					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
+					ON changed_group_descendants.child_group_id = groups_groups_active.child_group_id AND
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
 			// ... and have entered the contest, ...
 			Joins(`
 				JOIN groups_attempts AS contest_participations
-					ON contest_participations.group_id = groups_groups.child_group_id AND
+					ON contest_participations.group_id = groups_groups_active.child_group_id AND
 						contest_participations.entered_at IS NOT NULL AND
-						contest_participations.finished_at IS NULL AND
 						contest_participations.item_id = ?`, itemID).
 			// ... we get all the ancestors to calculate the total additional time
-			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
+			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.child_group_id").
 			Joins(`
 				JOIN groups_contest_items
 					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
 						groups_contest_items.item_id = contest_participations.item_id`).
-			Group("groups_groups.child_group_id").
+			Group("groups_groups_active.child_group_id").
 			Select(`
-				groups_groups.child_group_id,
+				groups_groups_active.child_group_id,
 				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
 			WithWriteLock().QueryExpr()).Error())
 
@@ -181,15 +180,15 @@ func setAdditionalTimeForGroupInContest(
 		JOIN groups_attempts AS contest_participations
 			ON contest_participations.group_id = groups_groups.child_group_id AND
 				contest_participations.item_id = ? AND contest_participations.entered_at IS NOT NULL AND
-				contest_participations.entered_at IS NOT NULL AND
-				contest_participations.finished_at IS NULL
+				contest_participations.entered_at IS NOT NULL
 		JOIN total_additional_times
 			ON total_additional_times.child_group_id = groups_groups.child_group_id
 		SET groups_groups.expires_at = DATE_ADD(
 			contest_participations.entered_at,
 			INTERVAL (? + total_additional_times.total_additional_time) SECOND
 		)
-		WHERE groups_groups.parent_group_id = ?`, itemID, durationInSeconds, participantsGroupID)
+		WHERE NOW() < groups_groups.expires_at AND groups_groups.parent_group_id = ?`,
+		itemID, durationInSeconds, participantsGroupID)
 	service.MustNotBeError(result.Error())
 	if result.RowsAffected() > 0 {
 		service.MustNotBeError(store.GroupGroups().After())

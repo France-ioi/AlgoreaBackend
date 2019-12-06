@@ -327,9 +327,12 @@ Feature: Get qualification state (contestGetQualificationState)
       | One                |
 
   Scenario Outline: State is already_started for an individual contest
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     |
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
+      | 50 | 00:00:00 | 0            | <entering_condition>       | 0                     | 100                           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -339,6 +342,9 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 100             | 31             |
     And I am the user with id "31"
     When I send a GET request to "/contests/50/groups/31/qualification-state"
     Then the response code should be 200
@@ -359,9 +365,12 @@ Feature: Get qualification state (contestGetQualificationState)
       | One                |
 
   Scenario Outline: State is already_started for a team-only contest
-    Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     |
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
+      | 60 | 00:00:00 | 1            | <entering_condition>       | 0                     | 100                           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -369,6 +378,9 @@ Feature: Get qualification state (contestGetQualificationState)
     And the database has the following table 'groups_attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id |
+      | 100             | 11             |
     And I am the user with id "31"
     When I send a GET request to "/contests/60/groups/11/qualification-state"
     Then the response code should be 200
@@ -403,3 +415,81 @@ Feature: Get qualification state (contestGetQualificationState)
       | All                |
       | Half               |
       | One                |
+
+  Scenario: State is not_ready for an individual contest because the participation has expired
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
+      | 50 | 00:00:00 | 0            | None                       | 0                     | 100                           |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 10       | 50      | content                  |
+      | 11       | 50      | none                     |
+      | 21       | 50      | solution                 |
+      | 31       | 50      | content_with_descendants |
+    And the database has the following table 'groups_attempts':
+      | group_id | item_id | entered_at          | order |
+      | 31       | 50      | 2019-05-30 15:00:00 | 1     |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id | expires_at          |
+      | 100             | 31             | 2019-05-30 20:00:00 |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/50/groups/31/qualification-state"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "other_members": [],
+      "state": "not_ready"
+    }
+    """
+
+  Scenario: State is ready for a team-only contest because the participation has expired
+    Given the database table 'groups' has also the following row:
+      | id  | type                |
+      | 100 | ContestParticipants |
+    And the database has the following table 'items':
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
+      | 60 | 00:00:00 | 1            | None                       | 3                     | 100                           |
+    And the database has the following table 'permissions_generated':
+      | group_id | item_id | can_view_generated       |
+      | 11       | 60      | info                     |
+      | 21       | 60      | content_with_descendants |
+    And the database has the following table 'groups_attempts':
+      | group_id | item_id | entered_at          | order |
+      | 11       | 60      | 2019-05-30 15:00:00 | 1     |
+    And the database table 'groups_groups' has also the following row:
+      | parent_group_id | child_group_id | expires_at          |
+      | 100             | 11             | 2019-05-30 20:00:00 |
+    And I am the user with id "31"
+    When I send a GET request to "/contests/60/groups/11/qualification-state"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "current_user_can_enter": false,
+      "entering_condition": "None",
+      "max_team_size": 3,
+      "other_members": [
+        {
+          "can_enter": false,
+          "first_name": "Jane",
+          "group_id": "41",
+          "last_name": null,
+          "login": "jane"
+        },
+        {
+          "can_enter": false,
+          "first_name": "Jack",
+          "group_id": "51",
+          "last_name": "Daniel",
+          "login": "jack"
+        }
+      ],
+      "state": "ready"
+    }
+    """
