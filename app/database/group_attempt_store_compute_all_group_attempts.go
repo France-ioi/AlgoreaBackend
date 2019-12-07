@@ -111,7 +111,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								AS children_non_validated_categories,
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
-								AS max_validated_at_categories
+								AS max_validated_at_categories,
+							IFNULL(AVG(aggregated_children_attempts.score * items_items.weight), 0) AS average_score
 						FROM items_items ` +
 					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items.child_item_id.
 					// The usual LEFT JOIN conditions in the ON clause would group attempts before joining which would produce
@@ -123,7 +124,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								MAX(latest_activity_at) AS latest_activity_at,
 								MAX(tasks_tried) AS tasks_tried,
 								MAX(tasks_with_help) AS tasks_with_help,
-								MAX(tasks_solved) AS tasks_solved
+								MAX(tasks_solved) AS tasks_solved,
+								MAX(score) AS score
 							FROM groups_attempts AS children_attempts
 							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
 								children_attempts.item_id = items_items.child_item_id
@@ -157,6 +159,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							WHEN items.validation_type = 'One' AND children_stats.children_validated > 0 THEN children_stats.max_validated_at
 							ELSE NULL
 							END),
+						target_groups_attempts.score = IF(children_stats.id IS NOT NULL,
+							children_stats.average_score, target_groups_attempts.score),
 						target_groups_attempts.ancestors_computation_state = 'done'
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
