@@ -62,5 +62,5 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) acceptRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.acceptOrRejectRequests(w, r, acceptRequestsAction)
+	return srv.performBulkMembershipAction(w, r, acceptRequestsAction)
 }

@@ -118,18 +118,18 @@ func checkThatUserHasRightsForDirectRelation(
 	return service.NoError
 }
 
-type acceptOrRejectRequestsAction string
+type bulkMembershipAction string
 
 const (
-	acceptRequestsAction acceptOrRejectRequestsAction = "accept"
-	rejectRequestsAction acceptOrRejectRequestsAction = "reject"
+	acceptRequestsAction      bulkMembershipAction = "acceptRequests"
+	rejectRequestsAction      bulkMembershipAction = "rejectRequests"
 )
 
 const inAnotherTeam = "in_another_team"
 const notFound = "not_found"
 
-func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
-	action acceptOrRejectRequestsAction) service.APIError {
+func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
+	action bulkMembershipAction) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -154,9 +154,9 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 			}
 
 			results, err = store.GroupGroups().Transition(
-				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
-					acceptRequestsAction: database.AdminAcceptsRequest,
-					rejectRequestsAction: database.AdminRefusesRequest,
+				map[bulkMembershipAction]database.GroupGroupTransitionAction{
+					acceptRequestsAction:      database.AdminAcceptsRequest,
+					rejectRequestsAction:      database.AdminRefusesRequest,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})
