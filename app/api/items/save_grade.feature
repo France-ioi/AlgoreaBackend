@@ -95,7 +95,6 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -168,7 +167,6 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": false,
           "validated": false
         },
         "message": "created",
@@ -241,7 +239,6 @@ Feature: Save grading result
             "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": true,
           "validated": false
         },
         "message": "created",
@@ -314,7 +311,6 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": false,
           "validated": false
         },
         "message": "created",
@@ -384,7 +380,6 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -448,7 +443,6 @@ Feature: Save grading result
             "bAccessSolutions": true,
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
@@ -501,7 +495,6 @@ Feature: Save grading result
             "randomSeed": "",
             "platformName": "{{app().TokenConfig.PlatformName}}"
           },
-          "has_unlocked_items": true,
           "validated": true
         },
         "message": "created",
