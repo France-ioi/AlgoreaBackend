@@ -43,6 +43,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/groups/{parent_group_id}/requests/reject", service.AppHandler(srv.rejectRequests).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/invitations", service.AppHandler(srv.inviteUsers).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/invitations/withdraw", service.AppHandler(srv.withdrawInvitations).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
 	router.Delete("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
@@ -123,6 +124,7 @@ type bulkMembershipAction string
 const (
 	acceptRequestsAction      bulkMembershipAction = "acceptRequests"
 	rejectRequestsAction      bulkMembershipAction = "rejectRequests"
+	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
 const inAnotherTeam = "in_another_team"
@@ -157,6 +159,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 				map[bulkMembershipAction]database.GroupGroupTransitionAction{
 					acceptRequestsAction:      database.AdminAcceptsRequest,
 					rejectRequestsAction:      database.AdminRefusesRequest,
+					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})
