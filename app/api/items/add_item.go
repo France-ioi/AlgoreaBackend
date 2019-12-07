@@ -2,7 +2,6 @@ package items
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -276,17 +275,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
 		if itemMap["duration"] != nil {
-			participantsGroupID := s.NewID()
-			service.MustNotBeError(s.Groups().InsertMap(map[string]interface{}{
-				"id": participantsGroupID, "type": "ContestParticipants",
-				"name": fmt.Sprintf("%d-participants", itemID),
-			}))
-			service.MustNotBeError(s.PermissionsGranted().InsertMap(map[string]interface{}{
-				"group_id":       participantsGroupID,
-				"item_id":        itemID,
-				"giver_group_id": -1,
-				"can_view":       "content",
-			}))
+			participantsGroupID := createContestParticipantsGroup(s, itemID)
 			service.MustNotBeError(s.Items().ByID(itemID).
 				UpdateColumn("contest_participants_group_id", participantsGroupID).Error())
 		}

@@ -2,7 +2,6 @@ package items
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -134,21 +133,8 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageIDAndOptionalType")
 
 		if itemData["duration"] != nil && participantsGroupID == nil {
-			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-				participantsGroupIDTmp := s.NewID()
-				participantsGroupID = &participantsGroupIDTmp
-				service.MustNotBeError(s.Groups().InsertMap(map[string]interface{}{
-					"id": participantsGroupID, "type": "ContestParticipants",
-					"name": fmt.Sprintf("%d-participants", itemID),
-				}))
-				return s.PermissionsGranted().InsertMap(map[string]interface{}{
-					"group_id":       participantsGroupID,
-					"item_id":        itemID,
-					"giver_group_id": -1,
-					"can_view":       "content",
-				})
-			}))
-			itemData["contest_participants_group_id"] = participantsGroupID
+			createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
+			itemData["contest_participants_group_id"] = createdParticipantsGroupID
 		}
 
 		service.MustNotBeError(store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error())

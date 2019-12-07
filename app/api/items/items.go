@@ -149,3 +149,25 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 			watch_propagation, edit_propagation) VALUES ` + valuesMarks
 	service.MustNotBeError(store.Exec(query, values...).Error())
 }
+
+// createContestParticipantsGroup creates a new contest participants group for the given item and
+// gives "can_manage:content" permission on the item to this new group.
+// The method doesn't update `items.contest_participants_group_id` or run ItemItemStore.After()
+// (a caller should do both on their own).
+func createContestParticipantsGroup(store *database.DataStore, itemID int64) int64 {
+	var participantsGroupID int64
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
+		participantsGroupID = s.NewID()
+		return s.Groups().InsertMap(map[string]interface{}{
+			"id": participantsGroupID, "type": "ContestParticipants",
+			"name": fmt.Sprintf("%d-participants", itemID),
+		})
+	}))
+	service.MustNotBeError(store.PermissionsGranted().InsertMap(map[string]interface{}{
+		"group_id":       participantsGroupID,
+		"item_id":        itemID,
+		"giver_group_id": -1,
+		"can_view":       "content",
+	}))
+	return participantsGroupID
+}
