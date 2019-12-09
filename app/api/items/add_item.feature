@@ -48,8 +48,8 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
       | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -67,6 +67,7 @@ Feature: Add item
       | group_id | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
       | 11       | 5577006791947779410 | solution           | transfer                 | transfer            | transfer           | 1                  |
+    And the table "groups" should stay unchanged
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
@@ -127,11 +128,11 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
-      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | 1        | 1                |
+      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | 1        | 1                | 8674665223082153551           |
     And the table "items_strings" should be:
-      | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
-      | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | item_id             | language_id | title    | image_url          | subtitle  | description                  |
+      | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
@@ -144,18 +145,26 @@ Feature: Add item
       | 21                  | 5577006791947779410 |
       | 5577006791947779410 | 12                  |
       | 5577006791947779410 | 34                  |
-    And the table "permissions_granted" at group_id "11" should be:
-      | group_id | item_id             | giver_group_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11       | 12                  | 11             | content_with_descendants | solution       | answer    | all      | 0        | 0                                                       |
-      | 11       | 21                  | 11             | solution                 | none           | none      | children | 0        | 0                                                       |
-      | 11       | 34                  | 11             | solution                 | transfer       | transfer  | transfer | 0        | 0                                                       |
-      | 11       | 5577006791947779410 | 11             | none                     | none           | none      | none     | 1        | 1                                                       |
+    And the table "groups" should be:
+      | id                  | type                | name                             |
+      | 11                  | UserSelf            | jdoe                             |
+      | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
+    And the table "permissions_granted" should be:
+      | group_id            | item_id             | giver_group_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11                  | 12                  | 11             | content_with_descendants | solution       | answer    | all      | 0        | 0                                                       |
+      | 11                  | 21                  | 11             | solution                 | none           | none      | children | 0        | 0                                                       |
+      | 11                  | 34                  | 11             | solution                 | transfer       | transfer  | transfer | 0        | 0                                                       |
+      | 11                  | 5577006791947779410 | 11             | none                     | none           | none      | none     | 1        | 1                                                       |
+      | 8674665223082153551 | 5577006791947779410 | -1             | content                  | none           | none      | none     | 0        | 1                                                       |
     And the table "permissions_generated" should be:
-      | group_id | item_id             | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
-      | 11       | 12                  | content_with_descendants | solution                 | answer              | all                | 0                  |
-      | 11       | 21                  | solution                 | none                     | none                | children           | 0                  |
-      | 11       | 34                  | solution                 | transfer                 | transfer            | transfer           | 0                  |
-      | 11       | 5577006791947779410 | solution                 | transfer                 | transfer            | transfer           | 1                  |
+      | group_id            | item_id             | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 11                  | 12                  | content_with_descendants | solution                 | answer              | all                | 0                  |
+      | 11                  | 21                  | solution                 | none                     | none                | children           | 0                  |
+      | 11                  | 34                  | solution                 | transfer                 | transfer            | transfer           | 0                  |
+      | 11                  | 5577006791947779410 | solution                 | transfer                 | transfer            | transfer           | 1                  |
+      | 8674665223082153551 | 12                  | info                     | none                     | none                | none               | 0                  |
+      | 8674665223082153551 | 34                  | info                     | none                     | none                | none               | 0                  |
+      | 8674665223082153551 | 5577006791947779410 | content                  | none                     | none                | none               | 0                  |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -180,8 +189,8 @@ Feature: Add item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                |
+      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
     And the table "items_strings" should be:
       | id                  | item_id             | language_id | title    | image_url | subtitle | description |
       | 8674665223082153551 | 5577006791947779410 | 3           | my title | null      | null     | null        |
@@ -199,3 +208,4 @@ Feature: Add item
       | group_id | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
       | 11       | 5577006791947779410 | solution           | transfer                 | transfer            | transfer           | 1                  |
+    And the table "groups" should stay unchanged
