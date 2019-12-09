@@ -1,2 +1,2 @@
-- { id: 23, parent_item_id: 2, child_item_id: 3, child_order: 1, weight: 0.5}
-- { id: 24, parent_item_id: 2, child_item_id: 4, child_order: 2, weight: 2.0}
+- { id: 23, parent_item_id: 2, child_item_id: 3, child_order: 1, score_weight: 2}
+- { id: 24, parent_item_id: 2, child_item_id: 4, child_order: 2, score_weight: 3}
