@@ -149,8 +149,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							WHEN items.validation_type = 'One' AND children_stats.children_validated > 0 THEN children_stats.max_validated_at
 							ELSE NULL
 							END),
-						target_groups_attempts.score = IF(children_stats.id IS NOT NULL,
-							children_stats.average_score, target_groups_attempts.score)
+						target_groups_attempts.score = IF(items.no_score, 0, IF(children_stats.id IS NOT NULL,
+							children_stats.average_score, target_groups_attempts.score))
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
