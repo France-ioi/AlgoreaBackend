@@ -10,7 +10,7 @@ import (
 
 // swagger:operation GET /groups/{group_id}/team-descendants group-memberships groupTeamDescendantView
 // ---
-// summary: List team descendants of the group
+// summary: List group's team descendants
 // description: Returns all teams (`type` = "Team") among the descendants of the given group
 //
 //   * The authenticated user should be a manager of the parent group.

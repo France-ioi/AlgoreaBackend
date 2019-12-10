@@ -12,8 +12,11 @@ import (
 
 // swagger:operation DELETE /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupRemoveChild
 // ---
-// summary: Remove a child group from a parent group and optionally delete that group and its subgroups.
+// summary: Remove a subgroup
 // description: >
+//   Remove a child group from a parent group and optionally delete that group and its subgroups.
+//
+//
 //   Deletes the relation from `groups_groups`. If `delete_orphans` is true and the child group becomes an orphan
 //   then the service also deletes that group, its parent-child relations, and recursively deletes each
 //   new orphaned group.

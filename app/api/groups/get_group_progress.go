@@ -53,8 +53,11 @@ type groupGroupProgressResponseRow struct {
 
 // swagger:operation GET /groups/{group_id}/group-progress groups groupGroupProgress
 // ---
-// summary: Display the current progress of a group on a subset of items
-// description: For all children of items from the parent_item_id list, display the result
+// summary: Get group progress
+// description: Return the current progress of a group on a subset of items.
+//
+//
+//              For all children of items from the parent_item_id list, display the result
 //              of each direct child of the given `group_id` whose type is not in (Team,UserSelf).
 // parameters:
 // - name: group_id

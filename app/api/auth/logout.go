@@ -11,7 +11,7 @@ import (
 
 // swagger:operation POST /auth/logout auth authLogout
 // ---
-// summary: Sign the current user out
+// summary: User logout
 // description: Removes the current user’s session (all access and refresh tokens)
 // responses:
 //   "200":

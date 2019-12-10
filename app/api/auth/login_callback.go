@@ -18,8 +18,10 @@ import (
 
 // swagger:operation GET /auth/login-callback auth userLoginCallback
 // ---
-// summary: Callback to which the user is redirected after authentication with the login module
-// description: Creates or updates the authenticated user in the DB using the data returned by the login module,
+// summary: User login callback
+// description: Callback to which the user is redirected after authentication with the login module
+//
+//              Creates or updates the authenticated user in the DB using the data returned by the login module,
 //              saves the access & refresh tokens in DB as well.
 //
 //   * No “Authorization” header should be present

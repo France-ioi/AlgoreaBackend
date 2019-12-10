@@ -16,7 +16,7 @@ import (
 
 // swagger:operation POST /groups/{group_id}/code groups groupChangeCode
 // ---
-// summary: Generate a new code for joining a group
+// summary: Generate a new group code
 // description: >
 //
 //   Generates a new code using a set of allowed characters [3456789abcdefghijkmnpqrstuvwxy].

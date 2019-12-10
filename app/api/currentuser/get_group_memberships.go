@@ -10,7 +10,7 @@ import (
 
 // swagger:operation GET /current-user/group-memberships group-memberships membershipsView
 // ---
-// summary: List groups that the current user has joined
+// summary: List current user's groups
 // description:
 //   Returns the list of groups memberships of the current user.
 // parameters:
