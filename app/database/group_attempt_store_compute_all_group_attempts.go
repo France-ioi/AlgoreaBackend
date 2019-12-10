@@ -101,8 +101,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
 								AS max_validated_at_categories,
-							IFNULL(SUM(IFNULL(aggregated_children_attempts.score, 0) * items_items.score_weight), 0) /
-								COALESCE(NULLIF(IFNULL(SUM(items_items.score_weight), 1), 0), 1) AS average_score
+							SUM(IFNULL(aggregated_children_attempts.score, 0) * items_items.score_weight) /
+								COALESCE(NULLIF(IFNULL(SUM(items_items.score_weight), 0), 0), 1) AS average_score
 						FROM items_items ` +
 					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items.child_item_id.
 					// The usual LEFT JOIN conditions in the ON clause would group attempts before joining which would produce
