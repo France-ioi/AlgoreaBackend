@@ -17,6 +17,7 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		createGroupJoinRequestAction:         true,
 		joinGroupByCodeAction:                true,
 		createAcceptedGroupJoinRequestAction: true,
+		createGroupLeaveRequestAction:        true,
 	}[action]
 	switch result {
 	case database.Cycle:
@@ -33,7 +34,8 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		}
 		service.MustNotBeError(render.Render(w, r, service.UnchangedSuccess(statusCode)))
 	case database.Success:
-		renderGroupGroupTransitionSuccess(isCreateAction, action == leaveGroupAction, w, r)
+		renderGroupGroupTransitionSuccess(isCreateAction,
+			action == leaveGroupAction || action == withdrawGroupLeaveRequestAction, w, r)
 	}
 	return service.NoError
 }

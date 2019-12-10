@@ -53,6 +53,8 @@ const (
 	rejectInvitationAction               userGroupRelationAction = "rejectInvitation"
 	createGroupJoinRequestAction         userGroupRelationAction = "createJoinRequest"
 	createAcceptedGroupJoinRequestAction userGroupRelationAction = "createAcceptedJoinRequest"
+	createGroupLeaveRequestAction        userGroupRelationAction = "createLeaveRequest"
+	withdrawGroupLeaveRequestAction      userGroupRelationAction = "withdrawLeaveRequest"
 	leaveGroupAction                     userGroupRelationAction = "leaveGroup"
 	joinGroupByCodeAction                userGroupRelationAction = "joinGroupByCode"
 )
@@ -72,6 +74,22 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		service.MustNotBeError(err)
 		if !found {
 			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
+		}
+	}
+
+	if action == createGroupLeaveRequestAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).
+			Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id AND
+					   groups_groups_active.lock_membership_approved AND
+					   groups_groups_active.child_group_id = ?`, user.GroupID).
+			Where("NOW() < require_lock_membership_approval_until").HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(
+				errors.New("user is not a member of the group or the group doesn't require approval for leaving"))
 		}
 	}
 
@@ -121,7 +139,9 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 			rejectInvitationAction:               database.UserRefusesInvitation,
 			createGroupJoinRequestAction:         database.UserCreatesJoinRequest,
 			createAcceptedGroupJoinRequestAction: database.UserCreatesAcceptedJoinRequest,
+			withdrawGroupLeaveRequestAction:      database.UserCancelsLeaveRequest,
 			leaveGroupAction:                     database.UserLeavesGroup,
+			createGroupLeaveRequestAction:        database.UserCreatesLeaveRequest,
 		}[action], groupID, []int64{user.GroupID}, user.GroupID)
 	service.MustNotBeError(err)
 	return apiError, results
