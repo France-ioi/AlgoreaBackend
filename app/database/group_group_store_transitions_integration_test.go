@@ -308,8 +308,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		},
 		testTransitionRemovingUserFromGroup("AdminRemovesUser", database.AdminRemovesUser, database.Removed),
 		{
-			name:              "AdminCancelsInvitation",
-			action:            database.AdminCancelsInvitation,
+			name:              "AdminWithdrawsInvitation",
+			action:            database.AdminWithdrawsInvitation,
 			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				2: "success",

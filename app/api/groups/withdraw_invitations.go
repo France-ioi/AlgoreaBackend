@@ -6,13 +6,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/requests/reject groups users groupRequestsReject
+// swagger:operation POST /groups/{parent_group_id}/invitations/withdraw groups users groupInvitationsWithdraw
 // ---
-// summary: Reject requests to join a group
+// summary: Withdraw invitations to join a group
 // description:
-//   Lets an admin reject requests to join a group.
-//   On success the service removes rows with `type` = 'join_request' from `group_pending_requests` and
-//   creates new rows with `action` = 'join_request_refused' and `at` = current UTC time in `group_membership_changes`
+//   Lets a manager withdraw invitations to join a group.
+//   On success the service removes rows with `type` = 'invitation' from `group_pending_requests` and
+//   creates new rows with `action` = 'invitation_withdrawn' and `at` = current UTC time in `group_membership_changes`
 //   for each of `group_ids`.
 //
 //
@@ -20,7 +20,7 @@ import (
 //   otherwise the 'forbidden' error is returned.
 //
 //
-//   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
+//   There should be a row with `type` = 'invitation' and `group_id` = `{parent_group_id}`
 //   in `group_pending_requests` for each of the input `group_ids`, otherwise the `group_id` gets skipped with
 //   `invalid` as the result.
 //
@@ -48,6 +48,6 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) rejectRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.performBulkMembershipAction(w, r, rejectRequestsAction)
+func (srv *Service) withdrawInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
+	return srv.performBulkMembershipAction(w, r, withdrawInvitationsAction)
 }

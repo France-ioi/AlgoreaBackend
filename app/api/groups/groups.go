@@ -43,6 +43,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/groups/{parent_group_id}/requests/reject", service.AppHandler(srv.rejectRequests).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/invitations", service.AppHandler(srv.inviteUsers).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/invitations/withdraw", service.AppHandler(srv.withdrawInvitations).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.addChild).ServeHTTP)
 	router.Delete("/groups/{parent_group_id}/relations/{child_group_id}", service.AppHandler(srv.removeChild).ServeHTTP)
@@ -118,18 +119,19 @@ func checkThatUserHasRightsForDirectRelation(
 	return service.NoError
 }
 
-type acceptOrRejectRequestsAction string
+type bulkMembershipAction string
 
 const (
-	acceptRequestsAction acceptOrRejectRequestsAction = "accept"
-	rejectRequestsAction acceptOrRejectRequestsAction = "reject"
+	acceptRequestsAction      bulkMembershipAction = "acceptRequests"
+	rejectRequestsAction      bulkMembershipAction = "rejectRequests"
+	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
 const inAnotherTeam = "in_another_team"
 const notFound = "not_found"
 
-func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Request,
-	action acceptOrRejectRequestsAction) service.APIError {
+func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
+	action bulkMembershipAction) service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -154,9 +156,10 @@ func (srv *Service) acceptOrRejectRequests(w http.ResponseWriter, r *http.Reques
 			}
 
 			results, err = store.GroupGroups().Transition(
-				map[acceptOrRejectRequestsAction]database.GroupGroupTransitionAction{
-					acceptRequestsAction: database.AdminAcceptsRequest,
-					rejectRequestsAction: database.AdminRefusesRequest,
+				map[bulkMembershipAction]database.GroupGroupTransitionAction{
+					acceptRequestsAction:      database.AdminAcceptsRequest,
+					rejectRequestsAction:      database.AdminRefusesRequest,
+					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})

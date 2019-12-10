@@ -85,8 +85,8 @@ const (
 	// AdminRemovesUser means a group admin removes a user from a group. It marks relations as "removed".
 	// It doesn't check if a child is a user or not.
 	AdminRemovesUser
-	// AdminCancelsInvitation means a group admin cancels an invitation
-	AdminCancelsInvitation
+	// AdminWithdrawsInvitation means a group admin withdraws an invitation
+	AdminWithdrawsInvitation
 	// UserLeavesGroup means a user leaves a group
 	UserLeavesGroup
 	// UserCancelsRequest means a user cancels his request to join a group
@@ -160,7 +160,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			AddedDirectly: Removed,
 		},
 	},
-	AdminCancelsInvitation: {
+	AdminWithdrawsInvitation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			InvitationCreated: InvitationWithdrawn,
 		},
