@@ -69,19 +69,19 @@ type GroupGroupTransitionAction int
 const (
 	// AdminCreatesInvitation means a group admin invites new users to the group
 	AdminCreatesInvitation GroupGroupTransitionAction = iota
-	// UserCreatesRequest means a user sends request to become a group member
-	UserCreatesRequest
-	// UserCreatesAcceptedRequest means a user adds himself into a group that he owns
+	// UserCreatesJoinRequest means a user sends a request to become a group member
+	UserCreatesJoinRequest
+	// UserCreatesAcceptedJoinRequest means a user adds himself into a group that he owns
 	// It doesn't check if the user owns the group (a calling service should check that)
-	UserCreatesAcceptedRequest
+	UserCreatesAcceptedJoinRequest
 	// UserAcceptsInvitation means a user accepts a group invitation
 	UserAcceptsInvitation
-	// AdminAcceptsRequest means a group admin accepts a request
-	AdminAcceptsRequest
+	// AdminAcceptsJoinRequest means a group admin accepts a request to join a group
+	AdminAcceptsJoinRequest
 	// UserRefusesInvitation means a user refuses a group invitation
 	UserRefusesInvitation
-	// AdminRefusesRequest means a group admin refuses a request to join the group
-	AdminRefusesRequest
+	// AdminRefusesJoinRequest means a group admin refuses a request to join the group
+	AdminRefusesJoinRequest
 	// AdminRemovesUser means a group admin removes a user from a group. It marks relations as "removed".
 	// It doesn't check if a child is a user or not.
 	AdminRemovesUser
@@ -89,8 +89,8 @@ const (
 	AdminWithdrawsInvitation
 	// UserLeavesGroup means a user leaves a group
 	UserLeavesGroup
-	// UserCancelsRequest means a user cancels his request to join a group
-	UserCancelsRequest
+	// UserCancelsJoinRequest means a user cancels his request to join a group
+	UserCancelsJoinRequest
 	// AdminAddsDirectRelation means a group admin creates a direct relation between groups.
 	// It creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
@@ -115,13 +115,13 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated: JoinRequestAccepted,
 		},
 	},
-	UserCreatesRequest: {
+	UserCreatesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			NoRelation:         JoinRequestCreated,
 			JoinRequestCreated: JoinRequestCreated,
 		},
 	},
-	UserCreatesAcceptedRequest: {
+	UserCreatesAcceptedJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			NoRelation:         JoinRequestAccepted,
 			JoinRequestCreated: JoinRequestAccepted,
@@ -140,7 +140,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			InvitationCreated: InvitationAccepted,
 		},
 	},
-	AdminAcceptsRequest: {
+	AdminAcceptsJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			JoinRequestCreated: JoinRequestAccepted,
 		},
@@ -150,7 +150,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			InvitationCreated: InvitationRefused,
 		},
 	},
-	AdminRefusesRequest: {
+	AdminRefusesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			JoinRequestCreated: JoinRequestRefused,
 		},
@@ -173,7 +173,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			AddedDirectly:       Left,
 		},
 	},
-	UserCancelsRequest: {
+	UserCancelsJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			JoinRequestCreated: JoinRequestWithdrawn,
 		},

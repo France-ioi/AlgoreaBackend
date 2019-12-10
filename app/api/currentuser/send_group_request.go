@@ -64,5 +64,5 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) sendGroupRequest(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.performGroupRelationAction(w, r, createGroupRequestAction)
+	return srv.performGroupRelationAction(w, r, createGroupJoinRequestAction)
 }

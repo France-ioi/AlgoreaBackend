@@ -37,7 +37,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		{
 			name:           "invalid (unprocessable entity)",
 			result:         database.Invalid,
-			actions:        []userGroupRelationAction{createGroupRequestAction, joinGroupByCodeAction},
+			actions:        []userGroupRelationAction{createGroupJoinRequestAction, joinGroupByCodeAction},
 			wantStatusCode: http.StatusUnprocessableEntity,
 			wantResponseBody: `{"success":false,"message":"Unprocessable Entity",` +
 				`"error_text":"A conflicting relation exists"}`,
@@ -45,7 +45,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		{
 			name:             "unchanged (created)",
 			result:           database.Unchanged,
-			actions:          []userGroupRelationAction{createGroupRequestAction, joinGroupByCodeAction},
+			actions:          []userGroupRelationAction{createGroupJoinRequestAction, joinGroupByCodeAction},
 			wantStatusCode:   http.StatusCreated,
 			wantResponseBody: `{"success":true,"message":"unchanged","data":{"changed":false}}`,
 		},
@@ -66,7 +66,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		{
 			name:             "success (created)",
 			result:           database.Success,
-			actions:          []userGroupRelationAction{createGroupRequestAction, joinGroupByCodeAction},
+			actions:          []userGroupRelationAction{createGroupJoinRequestAction, joinGroupByCodeAction},
 			wantStatusCode:   http.StatusCreated,
 			wantResponseBody: `{"success":true,"message":"created","data":{"changed":true}}`,
 		},
@@ -83,7 +83,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		if len(tt.actions) == 0 {
 			tt.actions = []userGroupRelationAction{
 				acceptInvitationAction, joinGroupByCodeAction, rejectInvitationAction,
-				createGroupRequestAction, leaveGroupAction,
+				createGroupJoinRequestAction, leaveGroupAction,
 			}
 		}
 		for _, action := range tt.actions {

@@ -122,8 +122,8 @@ func checkThatUserHasRightsForDirectRelation(
 type bulkMembershipAction string
 
 const (
-	acceptRequestsAction      bulkMembershipAction = "acceptRequests"
-	rejectRequestsAction      bulkMembershipAction = "rejectRequests"
+	acceptJoinRequestsAction  bulkMembershipAction = "acceptJoinRequests"
+	rejectJoinRequestsAction  bulkMembershipAction = "rejectJoinRequests"
 	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
@@ -151,14 +151,14 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 	var filteredIDs []int64
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			if action == acceptRequestsAction {
+			if action == acceptJoinRequestsAction {
 				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
 			}
 
 			results, err = store.GroupGroups().Transition(
 				map[bulkMembershipAction]database.GroupGroupTransitionAction{
-					acceptRequestsAction:      database.AdminAcceptsRequest,
-					rejectRequestsAction:      database.AdminRefusesRequest,
+					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
+					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,
 					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err

@@ -49,5 +49,5 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) rejectRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.performBulkMembershipAction(w, r, rejectRequestsAction)
+	return srv.performBulkMembershipAction(w, r, rejectJoinRequestsAction)
 }

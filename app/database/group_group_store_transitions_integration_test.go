@@ -241,8 +241,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: true,
 		},
 		{
-			name:              "UserCreatesRequest",
-			action:            database.UserCreatesRequest,
+			name:              "UserCreatesJoinRequest",
+			action:            database.UserCreatesJoinRequest,
 			relationsToChange: allTheIDs,
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success",
@@ -273,7 +273,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners:         false,
 		},
 		testTransitionAcceptingPendingRequest(
-			"AdminAcceptsRequest", database.AdminAcceptsRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted),
+			"AdminAcceptsJoinRequest", database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted),
 		{
 			name:              "UserRefusesInvitation",
 			action:            database.UserRefusesInvitation,
@@ -291,8 +291,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: false,
 		},
 		{
-			name:              "AdminRefusesRequest",
-			action:            database.AdminRefusesRequest,
+			name:              "AdminRefusesJoinRequest",
+			action:            database.AdminRefusesJoinRequest,
 			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				3: "success",
@@ -325,8 +325,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		},
 		testTransitionRemovingUserFromGroup("UserLeavesGroup", database.UserLeavesGroup, database.Left),
 		{
-			name:              "UserCancelsRequest",
-			action:            database.UserCancelsRequest,
+			name:              "UserCancelsJoinRequest",
+			action:            database.UserCancelsJoinRequest,
 			relationsToChange: allTheIDs,
 			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 				3: "success",
@@ -343,7 +343,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"AdminAddsDirectRelation", database.AdminAddsDirectRelation, database.AddedDirectly, true),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"UserCreatesAcceptedRequest", database.UserCreatesAcceptedRequest, database.JoinRequestAccepted, false),
+			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, false),
 		{

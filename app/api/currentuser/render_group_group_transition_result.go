@@ -14,7 +14,9 @@ import (
 func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
 	action userGroupRelationAction) service.APIError {
 	isCreateAction := map[userGroupRelationAction]bool{
-		createGroupRequestAction: true, joinGroupByCodeAction: true, createAcceptedGroupRequestAction: true,
+		createGroupJoinRequestAction:         true,
+		joinGroupByCodeAction:                true,
+		createAcceptedGroupJoinRequestAction: true,
 	}[action]
 	switch result {
 	case database.Cycle:

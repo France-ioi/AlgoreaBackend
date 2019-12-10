@@ -49,12 +49,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 type userGroupRelationAction string
 
 const (
-	acceptInvitationAction           userGroupRelationAction = "acceptInvitation"
-	rejectInvitationAction           userGroupRelationAction = "rejectInvitation"
-	createGroupRequestAction         userGroupRelationAction = "createRequest"
-	createAcceptedGroupRequestAction userGroupRelationAction = "createAcceptedRequest"
-	leaveGroupAction                 userGroupRelationAction = "leaveGroup"
-	joinGroupByCodeAction            userGroupRelationAction = "joinGroupByCode"
+	acceptInvitationAction               userGroupRelationAction = "acceptInvitation"
+	rejectInvitationAction               userGroupRelationAction = "rejectInvitation"
+	createGroupJoinRequestAction         userGroupRelationAction = "createJoinRequest"
+	createAcceptedGroupJoinRequestAction userGroupRelationAction = "createAcceptedJoinRequest"
+	leaveGroupAction                     userGroupRelationAction = "leaveGroup"
+	joinGroupByCodeAction                userGroupRelationAction = "joinGroupByCode"
 )
 
 func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
@@ -98,18 +98,18 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	var err error
 	apiError := service.NoError
 
-	if action == createGroupRequestAction {
+	if action == createGroupJoinRequestAction {
 		var found bool
 		found, err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
-			action = createAcceptedGroupRequestAction
+			action = createAcceptedGroupJoinRequestAction
 		}
 	}
 	if map[userGroupRelationAction]bool{
-		createGroupRequestAction: true, acceptInvitationAction: true, createAcceptedGroupRequestAction: true,
+		createGroupJoinRequestAction: true, acceptInvitationAction: true, createAcceptedGroupJoinRequestAction: true,
 	}[action] {
-		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action == createGroupRequestAction)
+		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action == createGroupJoinRequestAction)
 		if apiError != service.NoError {
 			return apiError, nil
 		}
@@ -117,11 +117,11 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	var results database.GroupGroupTransitionResults
 	results, err = store.GroupGroups().Transition(
 		map[userGroupRelationAction]database.GroupGroupTransitionAction{
-			acceptInvitationAction:           database.UserAcceptsInvitation,
-			rejectInvitationAction:           database.UserRefusesInvitation,
-			createGroupRequestAction:         database.UserCreatesRequest,
-			createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
-			leaveGroupAction:                 database.UserLeavesGroup,
+			acceptInvitationAction:               database.UserAcceptsInvitation,
+			rejectInvitationAction:               database.UserRefusesInvitation,
+			createGroupJoinRequestAction:         database.UserCreatesJoinRequest,
+			createAcceptedGroupJoinRequestAction: database.UserCreatesAcceptedJoinRequest,
+			leaveGroupAction:                     database.UserLeavesGroup,
 		}[action], groupID, []int64{user.GroupID}, user.GroupID)
 	service.MustNotBeError(err)
 	return apiError, results
