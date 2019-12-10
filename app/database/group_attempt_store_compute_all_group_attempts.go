@@ -2,14 +2,8 @@ package database
 
 import (
 	"database/sql"
-	"strings"
 	"time"
 )
-
-type groupItemPair struct {
-	groupID int64
-	itemID  int64
-}
 
 const computeAllGroupAttemptsLockName = "listener_computeAllGroupAttempts"
 const computeAllGroupAttemptsLockTimeout = 10 * time.Second
@@ -32,8 +26,6 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
 	mustNotBeError(s.WithNamedLock(computeAllGroupAttemptsLockName, computeAllGroupAttemptsLockTimeout, func(ds *DataStore) error {
-		groupAttemptStore := ds.GroupAttempts()
-
 		// We mark as 'todo' all ancestors of objects marked as 'todo'
 		// (this query can take more than 50 seconds to run when executed for the first time after the db migration)
 		mustNotBeError(ds.db.Exec(
@@ -51,8 +43,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 
 		hasChanges := true
 
-		var markAsProcessingStatement, updateStatement *sql.Stmt
-		groupItemsToUnlock := make(map[groupItemPair]bool)
+		var markAsProcessingStatement, updateStatement, unlockStatement, markAsDoneStatement *sql.Stmt
 
 		for hasChanges {
 			// We mark as "processing" all objects that were marked as 'todo' and that have no children not marked as 'done'
@@ -87,8 +78,6 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 			_, err = markAsProcessingStatement.Exec()
 			mustNotBeError(err)
 
-			groupAttemptStore.collectItemsToUnlock(groupItemsToUnlock)
-
 			// For every object marked as 'processing', we compute all the characteristics based on the children:
 			//  - latest_activity_at as the max of children's
 			//  - tasks_with_help, tasks_tried, nbTaskSolved as the sum of children's per-item maximums
@@ -111,7 +100,9 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								AS children_non_validated_categories,
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
-								AS max_validated_at_categories
+								AS max_validated_at_categories,
+							SUM(IFNULL(aggregated_children_attempts.score, 0) * items_items.score_weight) /
+								COALESCE(NULLIF(SUM(items_items.score_weight), 0), 1) AS average_score
 						FROM items_items ` +
 					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items.child_item_id.
 					// The usual LEFT JOIN conditions in the ON clause would group attempts before joining which would produce
@@ -123,7 +114,8 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								MAX(latest_activity_at) AS latest_activity_at,
 								MAX(tasks_tried) AS tasks_tried,
 								MAX(tasks_with_help) AS tasks_with_help,
-								MAX(tasks_solved) AS tasks_solved
+								MAX(tasks_solved) AS tasks_solved,
+								MAX(score) AS score
 							FROM groups_attempts AS children_attempts
 							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
 								children_attempts.item_id = items_items.child_item_id
@@ -157,23 +149,63 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							WHEN items.validation_type = 'One' AND children_stats.children_validated > 0 THEN children_stats.max_validated_at
 							ELSE NULL
 							END),
-						target_groups_attempts.ancestors_computation_state = 'done'
+						target_groups_attempts.score = IF(items.no_score, 0, IF(children_stats.id IS NOT NULL,
+							children_stats.average_score, target_groups_attempts.score))
 					WHERE target_groups_attempts.ancestors_computation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(updateStatement.Close()) }()
 			}
 
+			_, err = updateStatement.Exec()
+			mustNotBeError(err)
+
+			if unlockStatement == nil {
+				const unlockQuery = `
+					INSERT INTO permissions_granted
+						(group_id, item_id, giver_group_id, can_view, latest_update_on)
+						SELECT
+							groups.id AS group_id,
+							item_unlocking_rules.unlocked_item_id AS item_id,
+							-1,
+							'content',
+							NOW()
+						FROM groups_attempts
+						JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
+							item_unlocking_rules.score <= groups_attempts.score
+						JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
+						WHERE groups_attempts.ancestors_computation_state = 'processing'
+					ON DUPLICATE KEY UPDATE
+						latest_update_on = IF(can_view = 'content', latest_update_on, NOW()),
+						can_view = GREATEST(can_view_value, 3 /* 'content' */)`
+				unlockStatement, err = ds.db.CommonDB().Prepare(unlockQuery)
+				mustNotBeError(err)
+				defer func() { mustNotBeError(unlockStatement.Close()) }()
+			}
+
 			var result sql.Result
-			result, err = updateStatement.Exec()
+			result, err = unlockStatement.Exec()
 			mustNotBeError(err)
 			var rowsAffected int64
 			rowsAffected, err = result.RowsAffected()
 			mustNotBeError(err)
+			groupsUnlocked += rowsAffected
+
+			if markAsDoneStatement == nil {
+				const markAsDoneQuery = `UPDATE groups_attempts SET ancestors_computation_state = 'done'
+						WHERE ancestors_computation_state = 'processing'`
+				markAsDoneStatement, err = ds.db.CommonDB().Prepare(markAsDoneQuery)
+				mustNotBeError(err)
+				defer func() { mustNotBeError(markAsDoneStatement.Close()) }()
+			}
+
+			result, err = markAsDoneStatement.Exec()
+			rowsAffected, err = result.RowsAffected()
+			mustNotBeError(err)
 			hasChanges = rowsAffected > 0
+			mustNotBeError(err)
 		}
 
-		groupsUnlocked = groupAttemptStore.unlockItems(groupItemsToUnlock)
 		return nil
 	}))
 
@@ -182,48 +214,4 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 		return s.PermissionsGranted().After()
 	}
 	return nil
-}
-
-func (s *GroupAttemptStore) collectItemsToUnlock(groupItemsToUnlock map[groupItemPair]bool) {
-	// Unlock items according to item_unlocking_rules
-	const selectUnlocksQuery = `
-		SELECT
-			item_unlocking_rules.unlocking_item_id AS item_id,
-			groups.id AS group_id,
-			item_unlocking_rules.unlocked_item_id
-		FROM groups_attempts
-		JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
-			item_unlocking_rules.score <= groups_attempts.score
-		JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
-		WHERE groups_attempts.ancestors_computation_state = 'processing'`
-	var unlocksResult []struct {
-		ItemID         int64
-		GroupID        int64
-		UnlockedItemID int64
-	}
-	mustNotBeError(s.Raw(selectUnlocksQuery).Scan(&unlocksResult).Error())
-	for _, unlock := range unlocksResult {
-		groupItemsToUnlock[groupItemPair{groupID: unlock.GroupID, itemID: unlock.UnlockedItemID}] = true
-	}
-}
-
-func (s *GroupAttemptStore) unlockItems(groupItemsToUnlock map[groupItemPair]bool) int64 {
-	if len(groupItemsToUnlock) == 0 {
-		return 0
-	}
-	query := `
-		INSERT INTO permissions_granted
-			(group_id, item_id, giver_group_id, can_view, latest_update_on)
-		VALUES (?, ?, -1, 'content', NOW())` // Which giver_group_id should we use here???
-	values := make([]interface{}, 0, len(groupItemsToUnlock)*2)
-	valuesTemplate := ", (?, ?, -1, 'content', NOW())"
-	for item := range groupItemsToUnlock {
-		values = append(values, item.groupID, item.itemID)
-	}
-
-	query += strings.Repeat(valuesTemplate, len(groupItemsToUnlock)-1) +
-		" ON DUPLICATE KEY UPDATE can_view = 'content', latest_update_on = NOW()"
-	result := s.db.Exec(query, values...)
-	mustNotBeError(result.Error)
-	return result.RowsAffected
 }
