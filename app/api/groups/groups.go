@@ -124,6 +124,8 @@ type bulkMembershipAction string
 const (
 	acceptJoinRequestsAction  bulkMembershipAction = "acceptJoinRequests"
 	rejectJoinRequestsAction  bulkMembershipAction = "rejectJoinRequests"
+	acceptLeaveRequestsAction bulkMembershipAction = "acceptLeaveRequests"
+	rejectLeaveRequestsAction bulkMembershipAction = "rejectLeaveRequests"
 	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
@@ -160,6 +162,8 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
 					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,
 					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
+					acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
+					rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})
