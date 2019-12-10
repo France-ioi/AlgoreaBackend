@@ -21,7 +21,7 @@ import (
 
 const maxAllowedLoginsToInvite = 100
 
-// swagger:operation POST /groups/{parent_group_id}/invitations groups users groupInviteUsers
+// swagger:operation POST /groups/{parent_group_id}/invitations group-memberships groupInviteUsers
 // ---
 // summary: Invite users to a group
 // description:

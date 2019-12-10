@@ -41,7 +41,7 @@ type groupsMembersViewResponseRow struct {
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
 }
 
-// swagger:operation GET /groups/{group_id}/members groups groupsMembersView
+// swagger:operation GET /groups/{group_id}/members group-memberships groupsMembersView
 // ---
 // summary: List group members
 // description: >

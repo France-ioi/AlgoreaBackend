@@ -58,7 +58,7 @@ type groupRequestsViewResponseRow struct {
 	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
 }
 
-// swagger:operation GET /groups/{group_id}/requests groups groupRequestsView
+// swagger:operation GET /groups/{group_id}/requests group-memberships groupRequestsView
 // ---
 // summary: List pending requests and invitations for a group
 // description: >

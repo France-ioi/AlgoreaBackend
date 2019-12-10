@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /groups/{parent_group_id}/relations/{child_group_id} groups groupRemoveChild
+// swagger:operation DELETE /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupRemoveChild
 // ---
 // summary: Remove a child group from a parent group and optionally delete that group and its subgroups.
 // description: >

@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/group-invitations groups invitationsView
+// swagger:operation GET /current-user/group-invitations group-memberships invitationsView
 // ---
 // summary: List current invitations and requests to groups
 // description:

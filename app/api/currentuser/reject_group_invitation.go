@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-invitations/{group_id}/reject groups groupInvitationReject
+// swagger:operation POST /current-user/group-invitations/{group_id}/reject group-memberships groupInvitationReject
 // ---
 // summary: Reject a group invitation
 // description:

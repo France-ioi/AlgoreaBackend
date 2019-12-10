@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/team-descendants groups groupTeamDescendantView
+// swagger:operation GET /groups/{group_id}/team-descendants group-memberships groupTeamDescendantView
 // ---
 // summary: List team descendants of the group
 // description: Returns all teams (`type` = "Team") among the descendants of the given group
