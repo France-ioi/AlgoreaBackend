@@ -33,6 +33,9 @@ ALTER TABLE `group_managers`
         COMMENT 'Can change member’s personal info, for those who have agreed (not visible to managers, only for specific uses)'
         AFTER `can_watch_members`;
 
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
+
 -- +migrate Down
 ALTER TABLE `groups`
     DROP COLUMN `require_personal_info_access_approval`,
@@ -54,3 +57,6 @@ ALTER TABLE `group_pending_requests`
 
 ALTER TABLE `group_managers`
     DROP COLUMN `can_edit_personal_info`;
+
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
