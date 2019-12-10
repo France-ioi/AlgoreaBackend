@@ -18,7 +18,7 @@ import (
 //
 //   * There should be a row in `groups_groups` with the `group_id` as a parent
 //     and the authenticated user’s selfGroup’s `id` as a child.
-//     Otherwise the unprocessable entity error is returned.
+//     Otherwise the "not found" error is returned.
 //
 //   * The user cannot leave the group if `NOW()` < `groups.lock_user_deletion_until`.
 // parameters:
@@ -35,8 +35,8 @@ import (
 //     "$ref": "#/responses/unauthorizedResponse"
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
-//   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
+//   "404":
+//     "$ref": "#/responses/notFoundResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) leaveGroup(w http.ResponseWriter, r *http.Request) service.APIError {
