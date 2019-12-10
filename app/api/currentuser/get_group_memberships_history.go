@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/group-memberships-history groups users groupsMembershipHistory
+// swagger:operation GET /current-user/group-memberships-history groups groupsMembershipHistory
 // ---
 // summary: Get a history of invitations/requests for the current user
 // description:

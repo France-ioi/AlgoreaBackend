@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/invitations/withdraw groups users groupInvitationsWithdraw
+// swagger:operation POST /groups/{parent_group_id}/invitations/withdraw groups groupInvitationsWithdraw
 // ---
 // summary: Withdraw invitations to join a group
 // description:

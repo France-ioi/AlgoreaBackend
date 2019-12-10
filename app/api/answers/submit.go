@@ -17,7 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation POST /answers answers items itemGetAnswerToken
+// swagger:operation POST /answers items itemGetAnswerToken
 // ---
 // summary: Generate an answer token
 // description: Generate and return an answer token from user s answer and task token.

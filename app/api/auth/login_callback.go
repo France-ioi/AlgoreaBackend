@@ -16,7 +16,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /auth/login-callback users auth userLoginCallback
+// swagger:operation GET /auth/login-callback auth userLoginCallback
 // ---
 // summary: Callback to which the user is redirected after authentication with the login module
 // description: Creates or updates the authenticated user in the DB using the data returned by the login module,

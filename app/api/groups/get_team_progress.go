@@ -48,7 +48,7 @@ type groupTeamProgressResponseRow struct {
 	TimeSpent int32 `json:"time_spent"`
 }
 
-// swagger:operation GET /groups/{group_id}/team-progress groups attempts items groupTeamProgress
+// swagger:operation GET /groups/{group_id}/team-progress groups groupTeamProgress
 // ---
 // summary: Display the current progress of teams on a subset of items
 // description: For all children of items from the parent_item_id list,

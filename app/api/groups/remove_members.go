@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /groups/{group_id}/members groups users groupRemoveMembers
+// swagger:operation DELETE /groups/{group_id}/members groups groupRemoveMembers
 // ---
 // summary: Remove members from a group
 // description:

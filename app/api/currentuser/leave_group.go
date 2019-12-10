@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation DELETE /current-user/group-memberships/{group_id} groups users groupLeave
+// swagger:operation DELETE /current-user/group-memberships/{group_id} groups groupLeave
 // ---
 // summary: Leave a group
 // description:

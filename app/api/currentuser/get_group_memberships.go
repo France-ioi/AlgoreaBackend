@@ -8,7 +8,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/group-memberships groups users membershipsView
+// swagger:operation GET /current-user/group-memberships groups membershipsView
 // ---
 // summary: List groups that the current user has joined
 // description:

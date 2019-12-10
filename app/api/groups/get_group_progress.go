@@ -51,7 +51,7 @@ type groupGroupProgressResponseRow struct {
 	AvgTimeSpent float32 `json:"avg_time_spent"`
 }
 
-// swagger:operation GET /groups/{group_id}/group-progress groups users attempts items groupGroupProgress
+// swagger:operation GET /groups/{group_id}/group-progress groups groupGroupProgress
 // ---
 // summary: Display the current progress of a group on a subset of items
 // description: For all children of items from the parent_item_id list, display the result

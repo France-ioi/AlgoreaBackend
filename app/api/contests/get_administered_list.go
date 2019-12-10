@@ -33,7 +33,7 @@ type contestAdminListRow struct {
 	Parents []parentTitle `json:"parents"`
 }
 
-// swagger:operation GET /contests/administered contests groups contestAdminList
+// swagger:operation GET /contests/administered contests contestAdminList
 // ---
 // summary: Get the contests that the user has administration rights on
 // description: >

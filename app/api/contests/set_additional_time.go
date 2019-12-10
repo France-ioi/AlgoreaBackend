@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests groups contestSetAdditionalTime
+// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests contestSetAdditionalTime
 // ---
 // summary: Set additional time in the contest for the group
 // description: >

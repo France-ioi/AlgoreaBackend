@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /auth/logout users auth authLogout
+// swagger:operation POST /auth/logout auth authLogout
 // ---
 // summary: Sign the current user out
 // description: Removes the current user’s session (all access and refresh tokens)

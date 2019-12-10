@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/requests/reject groups users groupRequestsReject
+// swagger:operation POST /groups/{parent_group_id}/requests/reject groups groupRequestsReject
 // ---
 // summary: Reject requests to join a group
 // description:
