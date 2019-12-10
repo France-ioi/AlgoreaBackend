@@ -20,6 +20,7 @@ groups_groups:
 group_pending_requests:
   - {group_id: 20, member_id: 2, type: invitation}
   - {group_id: 20, member_id: 3, type: join_request}
+  - {group_id: 20, member_id: 5, type: leave_request}
 groups_ancestors:
   - {id: 1, ancestor_group_id: 1, child_group_id: 1, is_self: 1}
   - {id: 2, ancestor_group_id: 2, child_group_id: 2, is_self: 1}

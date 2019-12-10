@@ -115,6 +115,7 @@ var groupsGroupsUnchanged = []groupGroup{
 var groupPendingRequestsUnchanged = []groupPendingRequest{
 	{GroupID: 20, MemberID: 2, Type: "invitation"},
 	{GroupID: 20, MemberID: 3, Type: "join_request"},
+	{GroupID: 20, MemberID: 5, Type: "leave_request"},
 }
 
 var currentTimePtr = (*database.Time)(ptrTime(time.Now().UTC()))
@@ -137,6 +138,9 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 			4: resultForDirectRelations, 5: resultForDirectRelations, 10: resultForDirectRelations, 11: resultForDirectRelations,
 			20: "invalid",
 			30: "cycle",
+		},
+		wantGroupPendingRequests: []groupPendingRequest{
+			{GroupID: 20, MemberID: 5, Type: "leave_request"},
 		},
 		wantGroupGroups: []groupGroup{
 			{ParentGroupID: 20, ChildGroupID: 1, ChildOrder: 1},
@@ -196,7 +200,10 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 		}),
 		wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged,
 			map[string]*groupGroup{"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil}, nil),
-		wantGroupPendingRequests: groupPendingRequestsUnchanged,
+		wantGroupPendingRequests: []groupPendingRequest{
+			{GroupID: 20, MemberID: 2, Type: "invitation"},
+			{GroupID: 20, MemberID: 3, Type: "join_request"},
+		},
 		wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 			map[string]*groupAncestor{
 				"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil,
@@ -340,6 +347,74 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			},
 			shouldRunListeners: false,
 		},
+		{
+			name:              "UserCreatesLeaveRequest",
+			action:            database.UserCreatesLeaveRequest,
+			relationsToChange: allTheIDs,
+			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
+				4: "success", 10: "success", 11: "success", 5: "unchanged",
+			}),
+			wantGroupGroups: groupsGroupsUnchanged,
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				nil, []groupPendingRequest{
+					{GroupID: 20, MemberID: 4, Type: "leave_request"},
+					{GroupID: 20, MemberID: 10, Type: "leave_request"},
+					{GroupID: 20, MemberID: 11, Type: "leave_request"},
+				}),
+			wantGroupAncestors: groupAncestorsUnchanged,
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 4, Action: "leave_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+				{GroupID: 20, MemberID: 10, Action: "leave_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+				{GroupID: 20, MemberID: 11, Action: "leave_request_created", At: currentTimePtr, InitiatorID: userIDPtr},
+			},
+		},
+		{
+			name:              "UserCancelsLeaveRequest",
+			action:            database.UserCancelsLeaveRequest,
+			relationsToChange: allTheIDs,
+			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
+				5: "success",
+			}),
+			wantGroupGroups: groupsGroupsUnchanged,
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				map[string]*groupPendingRequest{"20_5": nil}, nil),
+			wantGroupAncestors: groupAncestorsUnchanged,
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 5, Action: "leave_request_withdrawn", At: currentTimePtr, InitiatorID: userIDPtr},
+			},
+		},
+		{
+			name:              "AdminAcceptsLeaveRequest",
+			action:            database.AdminAcceptsLeaveRequest,
+			relationsToChange: allTheIDs,
+			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
+				5: "success",
+			}),
+			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, map[string]*groupGroup{"20_5": nil}, nil),
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				map[string]*groupPendingRequest{"20_5": nil}, nil),
+			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged, map[string]*groupAncestor{"20_5": nil, "30_5": nil}, nil),
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 5, Action: "leave_request_accepted", At: currentTimePtr, InitiatorID: userIDPtr},
+			},
+			shouldRunListeners: true,
+		},
+		{
+			name:              "AdminRefusesLeaveRequest",
+			action:            database.AdminRefusesLeaveRequest,
+			relationsToChange: allTheIDs,
+			wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
+				5: "success",
+			}),
+			wantGroupGroups: groupsGroupsUnchanged,
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				map[string]*groupPendingRequest{"20_5": nil}, nil),
+			wantGroupAncestors: groupAncestorsUnchanged,
+			wantGroupMembershipChanges: []groupMembershipChange{
+				{GroupID: 20, MemberID: 5, Action: "leave_request_refused", At: currentTimePtr, InitiatorID: userIDPtr},
+			},
+			shouldRunListeners: false,
+		},
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"AdminAddsDirectRelation", database.AdminAddsDirectRelation, database.AddedDirectly, true),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
@@ -357,7 +432,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupGroups: patchGroupGroups(groupsGroupsUnchanged, map[string]*groupGroup{
 				"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil,
 			}, nil),
-			wantGroupPendingRequests: groupPendingRequestsUnchanged,
+			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
+				map[string]*groupPendingRequest{"20_5": nil}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged,
 				map[string]*groupAncestor{
 					"20_4": nil, "20_5": nil, "20_10": nil, "20_11": nil,

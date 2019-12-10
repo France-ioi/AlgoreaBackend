@@ -16,6 +16,8 @@ const (
 	InvitationAccepted GroupMembershipAction = "invitation_accepted"
 	// JoinRequestAccepted means a user became a member of a group since a group admin accepted his request
 	JoinRequestAccepted GroupMembershipAction = "join_request_accepted"
+	// LeaveRequestAccepted means a user left a group since a group admin accepted his leave request
+	LeaveRequestAccepted GroupMembershipAction = "leave_request_accepted"
 	// InvitationRefused means a user refused an invitation to join a group
 	InvitationRefused GroupMembershipAction = "invitation_refused"
 	// InvitationWithdrawn means an admin withdrew his invitation to join a group
@@ -32,13 +34,20 @@ const (
 	Left GroupMembershipAction = "left"
 	// AddedDirectly means a user was added into a group directly
 	AddedDirectly GroupMembershipAction = "added_directly"
+	// LeaveRequestCreated means a pending user's request to leave a group was created
+	LeaveRequestCreated GroupMembershipAction = "added_directly,leave_request_created"
+	// LeaveRequestRefused means a manager refused a user's request to leave a group
+	LeaveRequestRefused GroupMembershipAction = "leave_request_refused"
+	// LeaveRequestWithdrawn means a user withdrew his request to leave a group
+	LeaveRequestWithdrawn GroupMembershipAction = "leave_request_withdrawn"
 	// NoRelation means there is no row for the group pair in the groups_groups/group_pending_requests tables
 	NoRelation GroupMembershipAction = ""
 )
 
 func (groupMembershipAction GroupMembershipAction) isActive() bool {
 	switch groupMembershipAction {
-	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, AddedDirectly:
+	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, AddedDirectly,
+		LeaveRequestCreated, LeaveRequestWithdrawn, LeaveRequestRefused:
 		return true
 	}
 	return false
@@ -46,7 +55,7 @@ func (groupMembershipAction GroupMembershipAction) isActive() bool {
 
 func (groupMembershipAction GroupMembershipAction) isPending() bool {
 	switch groupMembershipAction {
-	case InvitationCreated, JoinRequestCreated:
+	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated:
 		return true
 	}
 	return false
@@ -59,6 +68,8 @@ func (groupMembershipAction GroupMembershipAction) PendingType() string {
 		return "invitation"
 	case JoinRequestCreated:
 		return "join_request"
+	case LeaveRequestCreated:
+		return "leave_request"
 	}
 	panic("groupMembershipAction should be of pending kind in PendingType()")
 }
@@ -78,6 +89,10 @@ const (
 	UserAcceptsInvitation
 	// AdminAcceptsJoinRequest means a group admin accepts a request to join a group
 	AdminAcceptsJoinRequest
+	// AdminAcceptsLeaveRequest means a group admin accepts a request to leave a group
+	AdminAcceptsLeaveRequest
+	// AdminRefusesLeaveRequest means a group admin refuses a request to leave a group
+	AdminRefusesLeaveRequest
 	// UserRefusesInvitation means a user refuses a group invitation
 	UserRefusesInvitation
 	// AdminRefusesJoinRequest means a group admin refuses a request to join the group
@@ -89,8 +104,14 @@ const (
 	AdminWithdrawsInvitation
 	// UserLeavesGroup means a user leaves a group
 	UserLeavesGroup
+	// UserCreatesLeaveRequest means a user sends a request to leave a group
+	// We don't check that groups.require_lock_membership_approval_until & groups_groups.lock_membership_approved_at
+	// are not null (a calling service should check that by itself)
+	UserCreatesLeaveRequest
 	// UserCancelsJoinRequest means a user cancels his request to join a group
 	UserCancelsJoinRequest
+	// UserCancelsLeaveRequest means a user cancels his request to leave a group
+	UserCancelsLeaveRequest
 	// AdminAddsDirectRelation means a group admin creates a direct relation between groups.
 	// It creates a new direct relation. It doesn't check if a child is a user or not.
 	AdminAddsDirectRelation
@@ -145,6 +166,11 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated: JoinRequestAccepted,
 		},
 	},
+	AdminAcceptsLeaveRequest: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			LeaveRequestCreated: LeaveRequestAccepted,
+		},
+	},
 	UserRefusesInvitation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			InvitationCreated: InvitationRefused,
@@ -155,9 +181,15 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated: JoinRequestRefused,
 		},
 	},
+	AdminRefusesLeaveRequest: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			LeaveRequestCreated: LeaveRequestRefused,
+		},
+	},
 	AdminRemovesUser: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			AddedDirectly: Removed,
+			AddedDirectly:       Removed,
+			LeaveRequestCreated: Removed,
 		},
 	},
 	AdminWithdrawsInvitation: {
@@ -171,11 +203,23 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestAccepted: Left,
 			JoinedByCode:        Left,
 			AddedDirectly:       Left,
+			LeaveRequestCreated: Left,
+		},
+	},
+	UserCreatesLeaveRequest: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			AddedDirectly:       LeaveRequestCreated,
+			LeaveRequestCreated: LeaveRequestCreated,
 		},
 	},
 	UserCancelsJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
 			JoinRequestCreated: JoinRequestWithdrawn,
+		},
+	},
+	UserCancelsLeaveRequest: {
+		Transitions: map[GroupMembershipAction]GroupMembershipAction{
+			LeaveRequestCreated: LeaveRequestWithdrawn,
 		},
 	},
 	// This one is here for consistency purpose only.
@@ -189,12 +233,14 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestAccepted: AddedDirectly,
 			JoinedByCode:        AddedDirectly,
 			AddedDirectly:       AddedDirectly,
+			LeaveRequestCreated: LeaveRequestCreated,
 		},
 	},
 	AdminRemovesDirectRelation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			AddedDirectly: NoRelation,
-			NoRelation:    NoRelation,
+			AddedDirectly:       NoRelation,
+			NoRelation:          NoRelation,
+			LeaveRequestCreated: NoRelation,
 		},
 	},
 }
@@ -231,20 +277,25 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		}
 		var oldActions []idWithAction
 
-		mustNotBeError(dataStore.Raw("(? FOR UPDATE) UNION (? FOR UPDATE)",
-			dataStore.GroupGroups().
-				Select("child_group_id, 'added_directly' AS `action`").
-				Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
-			dataStore.GroupPendingRequests().
-				Select(`
+		mustNotBeError(
+			dataStore.Raw(`
+				SELECT child_group_id, GROUP_CONCAT(action) AS action
+					FROM ((? FOR UPDATE) UNION (? FOR UPDATE)) AS statuses
+					GROUP BY child_group_id`,
+				dataStore.GroupGroups().
+					Select("child_group_id, 'added_directly' AS `action`").
+					Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
+				dataStore.GroupPendingRequests().
+					Select(`
 					member_id,
 					CASE type
 						WHEN 'invitation' THEN 'invitation_created'
 						WHEN 'join_request' THEN 'join_request_created'
+						WHEN 'leave_request' THEN 'leave_request_created'
 						ELSE type
 					END`).
-				Where("group_id = ? AND member_id IN (?)", parentGroupID, childGroupIDs).QueryExpr()).
-			Scan(&oldActions).Error())
+					Where("group_id = ? AND member_id IN (?)", parentGroupID, childGroupIDs).QueryExpr()).
+				Scan(&oldActions).Error())
 
 		oldActionsMap := make(map[int64]GroupMembershipAction, len(childGroupIDs))
 		for _, oldAction := range oldActions {
@@ -336,7 +387,7 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 		mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 			values := make([]interface{}, 0, len(idsChanged)*paramsCount)
 			for id, toAction := range idsChanged {
-				values = append(values, parentGroupID, id, toAction, performedByUserID)
+				values = append(values, parentGroupID, id, toAction[strings.LastIndex(string(toAction), ",")+1:], performedByUserID)
 			}
 			return dataStore.db.Exec(insertQuery, values...).Error
 		}))
@@ -404,18 +455,22 @@ func buildOneTransition(id int64, oldAction, toAction GroupMembershipAction,
 		}
 		results[id] = Success
 		if oldAction.isActive() {
-			idsToDeleteRelation[id] = true
+			if !toAction.isActive() {
+				idsToDeleteRelation[id] = true
+			}
 		} else {
+			if toAction.isActive() {
+				idsToInsertRelation[id] = true
+			}
+			if toAction.isActive() || toAction.isPending() {
+				idsToCheckCycle[id] = true
+			}
+		}
+		if oldAction.isPending() {
 			idsToDeletePending[id] = true
 		}
-		switch {
-		case toAction.isActive():
-			idsToInsertRelation[id] = true
-		case toAction.isPending():
+		if toAction.isPending() {
 			idsToInsertPending[id] = toAction
-		}
-		if toAction.isActive() || toAction.isPending() {
-			idsToCheckCycle[id] = true
 		}
 	} else {
 		results[id] = Unchanged
