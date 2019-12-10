@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/requests/reject groups users groupRequestsReject
+// swagger:operation POST /groups/{parent_group_id}/requests/reject groups users groupJoinRequestsReject
 // ---
 // summary: Reject requests to join a group
 // description:
@@ -48,6 +48,6 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) rejectRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) rejectJoinRequests(w http.ResponseWriter, r *http.Request) service.APIError {
 	return srv.performBulkMembershipAction(w, r, rejectJoinRequestsAction)
 }
