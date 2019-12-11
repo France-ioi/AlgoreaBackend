@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-requests/{group_id} groups users groupJoinRequestCreate
+// swagger:operation POST /current-user/group-requests/{group_id} group-memberships groupJoinRequestCreate
 // ---
 // summary: Create a request to join a group
 // description: >

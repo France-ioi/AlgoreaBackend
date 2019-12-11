@@ -6,9 +6,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/invitations/withdraw groups users groupInvitationsWithdraw
+// swagger:operation POST /groups/{parent_group_id}/invitations/withdraw group-memberships groupInvitationsWithdraw
 // ---
-// summary: Withdraw invitations to join a group
+// summary: Withdraw group invitations
 // description:
 //   Lets a manager withdraw invitations to join a group.
 //   On success the service removes rows with `type` = 'invitation' from `group_pending_requests` and

@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /answers answers users attempts items itemAnswersView
+// swagger:operation GET /answers answers itemAnswersView
 // ---
 // summary: List answers
 // description: Return answers (i.e., history of submissions and current answer)

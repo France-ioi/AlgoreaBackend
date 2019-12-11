@@ -15,8 +15,10 @@ import (
 
 // swagger:operation GET /items/{item_id}/task-token items itemTaskTokenGet
 // ---
-// summary: Get a task token with a refreshed active attempt
+// summary: Get a task token
 // description: >
+//   Get a task token with a refreshed active attempt.
+//
 //
 //   * If there is no row for the current user and the given item in `users_items`, the service creates one.
 //

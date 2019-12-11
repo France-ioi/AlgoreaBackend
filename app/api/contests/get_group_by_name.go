@@ -9,7 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /contests/{item_id}/groups/by-name contests groups contestGetGroupByName
+// swagger:operation GET /contests/{item_id}/groups/by-name contests contestGetGroupByName
 // ---
 // summary: Get a group by name
 // description: >

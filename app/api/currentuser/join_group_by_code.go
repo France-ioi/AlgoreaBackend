@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-memberships/by-code groups users groupsJoinByCode
+// swagger:operation POST /current-user/group-memberships/by-code group-memberships groupsJoinByCode
 // ---
 // summary: Join a team using a code
 // description:

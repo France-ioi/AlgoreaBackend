@@ -8,9 +8,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /groups/{group_id}/user-descendants groups users groupUserDescendantView
+// swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
 // ---
-// summary: List user descendants of the group
+// summary: List group's user descendants
 // description: Return all users (`type` = "UserSelf") among the descendants of the given group
 //
 //   * The authenticated user should be a manager of the parent group.
