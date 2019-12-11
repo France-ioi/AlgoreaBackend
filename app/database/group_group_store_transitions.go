@@ -277,6 +277,10 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		}
 		var oldActions []idWithAction
 
+		// Here we get current states for each childGroupID:
+		// the current state can be one of
+		// ("", "invitation_created", "join_request_created", "added_directly", "added_directly,leave_request_created")
+		// where "added_directly" means that childGroupID is a member of the parentGroupID
 		mustNotBeError(
 			dataStore.Raw(`
 				SELECT child_group_id, GROUP_CONCAT(action) AS action
@@ -302,6 +306,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			oldActionsMap[oldAction.ChildGroupID] = oldAction.Action
 		}
 
+		// build the transition plan depending on the current states (oldActionsMap)
 		idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
 			idsToDeleteRelation, idsChanged := buildTransitionsPlan(
 			parentGroupID, childGroupIDs, results, oldActionsMap, action)
