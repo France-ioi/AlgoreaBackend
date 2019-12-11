@@ -36,7 +36,8 @@ type contestAdminListRow struct {
 // swagger:operation GET /contests/administered contests contestAdminList
 // ---
 // summary: List administered contests
-// description:   Get the contests that the user has administration rights on
+// description:   Get the contests that the user has administration rights on.
+//
 //
 //                For all items that are timed contests and for that the user is a contest admin
 //                (has `can_view` >= 'content_with_descendants'), returns item info
