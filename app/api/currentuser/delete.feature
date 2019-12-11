@@ -1,13 +1,13 @@
 Feature: Delete the current user
   Background:
     Given the database has the following table 'groups':
-      | id  | type     | name       |
-      | 1   | Base     | Root       |
-      | 2   | Base     | RootSelf   |
-      | 4   | Base     | RootTemp   |
-      | 21  | UserSelf | user       |
-      | 31  | UserSelf | tmp-1234   |
-      | 100 | Class    | Some class |
+      | id  | type     | name       | require_lock_membership_approval_until |
+      | 1   | Base     | Root       | null                                   |
+      | 2   | Base     | RootSelf   | 9999-12-31 23:59:59                    |
+      | 4   | Base     | RootTemp   | null                                   |
+      | 21  | UserSelf | user       | null                                   |
+      | 31  | UserSelf | tmp-1234   | null                                   |
+      | 100 | Class    | Some class | null                                   |
     And the database has the following table 'groups_groups':
       | parent_group_id | child_group_id |
       | 1               | 2              |
