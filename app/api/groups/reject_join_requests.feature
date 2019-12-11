@@ -62,7 +62,7 @@ Feature: Reject group requests
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage   |
       | 13       | 21         | <can_manage> |
-    When I send a POST request to "/groups/13/requests/reject?group_ids=31,141,21,11,13,22,151"
+    When I send a POST request to "/groups/13/join-requests/reject?group_ids=31,141,21,11,13,22,151"
     And the response body should be, in JSON:
     """
     {

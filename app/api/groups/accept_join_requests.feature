@@ -56,7 +56,7 @@ Feature: Accept group requests
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151"
+    When I send a POST request to "/groups/13/join-requests/accept?group_ids=31,141,21,11,13,122,151"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -132,7 +132,7 @@ Feature: Accept group requests
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
-    When I send a POST request to "/groups/13/requests/accept?group_ids=31,141,21,11,13,122,151,161"
+    When I send a POST request to "/groups/13/join-requests/accept?group_ids=31,141,21,11,13,122,151,161"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
