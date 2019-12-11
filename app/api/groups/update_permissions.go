@@ -16,9 +16,9 @@ type updatePermissionsInput struct {
 	CanView string `json:"can_view" validate:"oneof=none info content content_with_descendants solution"`
 }
 
-// swagger:operation PUT /groups/{group_id}/items/{item_id} groups items updatePermissions
+// swagger:operation PUT /groups/{group_id}/items/{item_id} groups updatePermissions
 // ---
-// summary: Update access rights of a group on an item
+// summary: Update permissions
 // description: Let an admin of a group give/withdraw access rights on an item (identified by `item_id`)
 //   to a user (identified by `group_id` of his self group).
 //

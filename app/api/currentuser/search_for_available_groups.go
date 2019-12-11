@@ -14,7 +14,7 @@ import (
 
 const minSearchStringLength = 3
 
-// swagger:operation GET /current-user/available-groups groups users groupsAvailableSearch
+// swagger:operation GET /current-user/available-groups groups groupsAvailableSearch
 // ---
 // summary: Search for available groups
 // description: >

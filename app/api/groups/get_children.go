@@ -32,7 +32,7 @@ type groupChildrenViewResponseRow struct {
 	UserCount int32 `json:"user_count"`
 }
 
-// swagger:operation GET /groups/{group_id}/children groups groupChildrenView
+// swagger:operation GET /groups/{group_id}/children group-memberships groupChildrenView
 // ---
 // summary: List group's children
 // description: Returns children of the group having types

@@ -36,7 +36,7 @@ type itemAttemptsViewResponseRow struct {
 	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
 }
 
-// swagger:operation GET /items/{item_id}/attempts groups users attempts items itemAttemptsView
+// swagger:operation GET /items/{item_id}/attempts items itemAttemptsView
 // ---
 // summary: List attempts for a task
 // description: Returns attempts made by the current user (if `items.has_attempts` = 0) or his

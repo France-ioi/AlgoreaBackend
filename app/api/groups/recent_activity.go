@@ -49,7 +49,7 @@ type groupRecentActivityResponseRow struct {
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 }
 
-// swagger:operation GET /groups/{group_id}/recent_activity groups users groupRecentActivity
+// swagger:operation GET /groups/{group_id}/recent_activity groups groupRecentActivity
 // ---
 // summary: Get recent activity of a group
 // description: >

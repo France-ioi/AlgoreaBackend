@@ -8,9 +8,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /current-user/group-memberships-history groups users groupsMembershipHistory
+// swagger:operation GET /current-user/group-memberships-history group-memberships groupsMembershipHistory
 // ---
-// summary: Get a history of invitations/requests for the current user
+// summary: Get invitations/requests for the current user
 // description:
 //   Returns the records from `group_membership_changes` having `at` >= `users.notifications_read_at`
 //   and any user-related type (`action` != "added_directly") with the corresponding `groups` for the current user.

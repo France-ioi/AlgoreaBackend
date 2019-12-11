@@ -10,10 +10,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} groups groupAddChild
+// swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupAddChild
 // ---
-// summary: Add a group as a child to another group
+// summary: Add a subgroup
 // description: >
+//   Add a group as a child to another group.
 //   Lets a group admin add another group as a child and refreshes the access rights afterwards.
 //
 //

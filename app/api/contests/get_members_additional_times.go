@@ -9,9 +9,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation GET /contests/{item_id}/groups/{group_id}/members/additional-times contests groups contestListMembersAdditionalTime
+// swagger:operation GET /contests/{item_id}/groups/{group_id}/members/additional-times contests contestListMembersAdditionalTime
 // ---
-// summary: Get additional times for a group of users/teams on a contest
+// summary: List additional times on a contest
 // description: >
 //                For all
 //

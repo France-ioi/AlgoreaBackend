@@ -46,7 +46,7 @@ type contestGetQualificationStateResponse struct {
 	itemID  int64
 }
 
-// swagger:operation GET /contests/{item_id}/groups/{group_id}/qualification-state contests groups contestGetQualificationState
+// swagger:operation GET /contests/{item_id}/groups/{group_id}/qualification-state contests contestGetQualificationState
 // ---
 // summary: Get qualification state
 // description: >

@@ -11,9 +11,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests groups contestSetAdditionalTime
+// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests contestSetAdditionalTime
 // ---
-// summary: Set additional time in the contest for the group
+// summary: Set additional time for a contest
 // description: >
 //                For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
 //                If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
