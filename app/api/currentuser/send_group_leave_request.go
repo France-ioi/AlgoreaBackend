@@ -6,17 +6,18 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-leave-requests/{group_id} groups users groupLeaveRequestCreate
+// swagger:operation POST /current-user/group-leave-requests/{group_id} group-memberships groupLeaveRequestCreate
 // ---
-// summary: Create a request to leave a group
+// summary: Create a leave request
 // description: >
-//   Lets a user create a request to leave a group.
+//     Lets a user create a request to leave a group.
+//
 //
 //     On success the service creates a new row in `group_pending_requests` with `group_id` = `{group_id}`
 //     `type` = 'leave_request' and `member_id` = user's `group_id` + a new row in `group_membership_changes`
 //     with `action` = `leave_request_created` and `at` equal to current UTC time.
 //
-//     * If there is already a row in `groups_groups` or a row in `group_pending_request` with
+//     * If there is already a row in `groups_groups` and a row in `group_pending_request` with
 //       `type` == 'leave_request', the "unchanged" (201) response is returned.
 //
 //

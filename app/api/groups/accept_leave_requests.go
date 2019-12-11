@@ -6,9 +6,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/leave-requests/accept groups users groupLeaveRequestsAccept
+// swagger:operation POST /groups/{parent_group_id}/leave-requests/accept group-memberships groupLeaveRequestsAccept
 // ---
-// summary: Accept requests to leave a group
+// summary: Accept leave request
 // description:
 //   Lets an admin approve requests to leave a group.
 //   On success the service removes `groups_groups` rows

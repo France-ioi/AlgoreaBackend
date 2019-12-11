@@ -6,9 +6,9 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /groups/{parent_group_id}/leave-requests/reject groups users groupLeaveRequestsReject
+// swagger:operation POST /groups/{parent_group_id}/leave-requests/reject group-memberships groupLeaveRequestsReject
 // ---
-// summary: Reject requests to leave a group
+// summary: Reject leave requests
 // description:
 //   Lets an admin reject requests to leave a group.
 //   On success the service removes rows with `type` = 'leave_request' from `group_pending_requests` and
