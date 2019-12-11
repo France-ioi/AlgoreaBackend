@@ -19,11 +19,10 @@ import (
 //     with `action` = `leave_request_withdrawn` and `at` equal to current UTC time.
 //
 //
-//   The user should be a member of the group and there should be a row with
-//   `type` = 'leave_request', `group_id` = `{parent_group_id}`
-//   and `member_id` = user's `group_id` in `group_pending_requests`,
-//   otherwise the "not found" error is returned.
-//
+//     The user should be a member of the group and there should be a row with
+//     `type` = 'leave_request', `group_id` = `{parent_group_id}`
+//     and `member_id` = user's `group_id` in `group_pending_requests`,
+//     otherwise the "not found" error is returned.
 // parameters:
 // - name: group_id
 //   in: path

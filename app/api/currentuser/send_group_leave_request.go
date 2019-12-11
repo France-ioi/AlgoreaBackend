@@ -17,15 +17,15 @@ import (
 //     `type` = 'leave_request' and `member_id` = user's `group_id` + a new row in `group_membership_changes`
 //     with `action` = `leave_request_created` and `at` equal to current UTC time.
 //
-//     * If there is already a row in `groups_groups` and a row in `group_pending_request` with
-//       `type` == 'leave_request', the "unchanged" (201) response is returned.
+//
+//     If there is already a row in `groups_groups` and a row in `group_pending_request` with
+//     `type` == 'leave_request', the "unchanged" (201) response is returned.
 //
 //
-//   The user should be a member of the `{group_id}` and
-//   the group's `require_lock_membership_approval_until` should be greater than NOW(),
-//   and `groups_groups.lock_membership_approved` should be set.
-//   Otherwise the "forbidden" error is returned.
-//
+//     The user should be a member of the `{group_id}` and
+//     the group's `require_lock_membership_approval_until` should be greater than NOW(),
+//     and `groups_groups.lock_membership_approved` should be set.
+//     Otherwise the "forbidden" error is returned.
 // parameters:
 // - name: group_id
 //   in: path
