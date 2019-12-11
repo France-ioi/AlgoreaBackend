@@ -43,6 +43,9 @@ JOIN `groups` AS `child` ON `child`.`id` = `groups_groups`.`child_group_id` AND
                             `child`.`type` = 'UserSelf'
 SET `groups_groups`.`lock_membership_approved_at` = NOW();
 
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
+
 -- +migrate Down
 ALTER TABLE `groups`
     ADD COLUMN `lock_user_deletion_until` date DEFAULT NULL
@@ -70,3 +73,6 @@ ALTER TABLE `group_pending_requests`
 
 ALTER TABLE `group_managers`
     DROP COLUMN `can_edit_personal_info`;
+
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
