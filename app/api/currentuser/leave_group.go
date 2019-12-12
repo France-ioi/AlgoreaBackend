@@ -20,7 +20,8 @@ import (
 //     and the authenticated user’s selfGroup’s `id` as a child.
 //     Otherwise the unprocessable entity error is returned.
 //
-//   * The user cannot leave the group if `NOW()` < `groups.lock_user_deletion_until`.
+//   * The user cannot leave the group if `NOW()` < `groups.require_lock_membership_approval_until` and
+//     `groups_groups.lock_membership_approved` is set.
 // parameters:
 // - name: group_id
 //   in: path

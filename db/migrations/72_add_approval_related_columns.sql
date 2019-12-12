@@ -33,7 +33,26 @@ ALTER TABLE `group_managers`
         COMMENT 'Can change member’s personal info, for those who have agreed (not visible to managers, only for specific uses)'
         AFTER `can_watch_members`;
 
+UPDATE `groups` SET `require_lock_membership_approval_until` = `lock_user_deletion_until`;
+ALTER TABLE `groups` DROP COLUMN `lock_user_deletion_until`;
+
+UPDATE `groups_groups`
+JOIN `groups` AS `parent` ON `parent`.`id` = `groups_groups`.`parent_group_id` AND
+                             `parent`.`require_lock_membership_approval_until` IS NOT NULL
+JOIN `groups` AS `child` ON `child`.`id` = `groups_groups`.`child_group_id` AND
+                            `child`.`type` = 'UserSelf'
+SET `groups_groups`.`lock_membership_approved_at` = NOW();
+
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
+
 -- +migrate Down
+ALTER TABLE `groups`
+    ADD COLUMN `lock_user_deletion_until` date DEFAULT NULL
+        COMMENT 'Prevent users from this group to delete their own user themselves until this date'
+        AFTER `send_emails`;
+UPDATE `groups` SET `lock_user_deletion_until` = CAST(`require_lock_membership_approval_until` AS DATE);
+
 ALTER TABLE `groups`
     DROP COLUMN `require_personal_info_access_approval`,
     DROP COLUMN `require_lock_membership_approval_until`,
@@ -54,3 +73,6 @@ ALTER TABLE `group_pending_requests`
 
 ALTER TABLE `group_managers`
     DROP COLUMN `can_edit_personal_info`;
+
+DROP VIEW IF EXISTS groups_groups_active;
+CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
