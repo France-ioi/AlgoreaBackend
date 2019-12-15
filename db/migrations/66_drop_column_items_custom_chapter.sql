@@ -11,10 +11,10 @@ INSERT INTO groups_groups (`parent_group_id`, `child_group_id`, `type`, `child_o
            ROW_NUMBER() OVER() AS `child_order`
     FROM (SELECT DISTINCT `group_id` FROM `permissions_granted` WHERE `is_owner`) AS `children`;
 
-INSERT INTO `permissions_granted` (`group_id`, `item_id`, `giver_group_id`, `can_edit`)
+INSERT INTO `permissions_granted` (`group_id`, `item_id`, `source_group_id`, `can_edit`)
     SELECT DISTINCT @group_id AS `group_id`,
            `id` AS `item_id`,
-           -2 AS `giver_group_id`,
+           -2 AS `source_group_id`,
            'children' AS `can_edit`
     FROM `items`
     WHERE `custom_chapter`;

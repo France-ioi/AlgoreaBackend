@@ -2,7 +2,8 @@
 CREATE TABLE `permissions_granted` (
     `group_id` BIGINT(20) NOT NULL,
     `item_id` BIGINT(20) NOT NULL,
-    `giver_group_id` BIGINT(20) NOT NULL,
+    `source_group_id` BIGINT(20) NOT NULL,
+    `origin` ENUM('group_membership','item_unlocking','self','other') NOT NULL,
     `latest_update_on` DATETIME NOT NULL DEFAULT NOW()
         COMMENT 'Last time one of the attributes has been modified',
     `can_view` ENUM('none','info','content','content_with_descendants','solution') NOT NULL DEFAULT 'none'
@@ -23,7 +24,7 @@ CREATE TABLE `permissions_granted` (
         COMMENT 'can_watch as an integer (to use comparison operators)',
     `can_edit_value` TINYINT(3) UNSIGNED AS (`can_edit` + 0) NOT NULL
         COMMENT 'can_edit as an integer (to use comparison operators)',
-    PRIMARY KEY (`group_id`,`item_id`,`giver_group_id`),
+    PRIMARY KEY (`group_id`,`item_id`,`source_group_id`,`origin`),
     INDEX `group_id_item_id` (`group_id`, `item_id`),
     CONSTRAINT `fk_permissions_granted_group_id_groups_id` FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_permissions_granted_item_id_items_id` FOREIGN KEY (`item_id`) REFERENCES `items`(`id`) ON DELETE CASCADE
@@ -180,10 +181,10 @@ END
 DELETE `groups_items` FROM `groups_items` LEFT JOIN `groups` ON `groups`.`id` = `groups_items`.`group_id` WHERE `groups`.`id` IS NULL;
 DELETE `groups_items` FROM `groups_items` LEFT JOIN `items` ON `items`.`id` = `groups_items`.`item_id` WHERE `items`.`id` IS NULL;
 
-INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, is_owner)
+INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_on, can_view, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       IFNULL(`groups_items`.`creator_id`, -1) AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_id`, IF(`groups_items`.`creator_user_id` = 0, -1, -3)) AS `source_group_id`,
        IFNULL(NULLIF(GREATEST(
                              IFNULL(`groups_items`.`partial_access_since`, '1000-01-01 00:00:00'),
                              IFNULL(`groups_items`.`full_access_since`, '1000-01-01 00:00:00'),
@@ -202,10 +203,10 @@ WHERE `groups_items`.`partial_access_since` IS NOT NULL OR
       `groups_items`.`solutions_access_since` IS NOT NULL OR
       `groups_items`.`owner_access`;
 
-INSERT INTO `permissions_granted` (group_id, item_id, giver_group_id, latest_update_on, can_view, can_grant_view, can_watch, can_edit, is_owner)
+INSERT INTO `permissions_granted` (group_id, item_id, source_group_id, latest_update_on, can_view, can_grant_view, can_watch, can_edit, is_owner)
 SELECT `groups_items`.`group_id`,
        `groups_items`.`item_id`,
-       IFNULL(`groups_items`.`creator_id`, -1) AS `giver_group_id`,
+       IFNULL(`groups_items`.`creator_id`, IF(`groups_items`.`creator_user_id` = 0, -1, -3)) AS `source_group_id`,
        NOW() AS `latest_update_on`,
        'solution' AS `can_view`,
        'solution' AS `can_grant_view`,
@@ -245,6 +246,7 @@ CREATE TABLE `groups_items` (
   `id` bigint(20) NOT NULL,
   `group_id` bigint(20) NOT NULL,
   `item_id` bigint(20) NOT NULL,
+  `creator_user_id` bigint(20) NOT NULL COMMENT 'User who created the entry',
   `creator_id` bigint(20) DEFAULT NULL COMMENT 'User who created the entry',
   `partial_access_since` datetime DEFAULT NULL COMMENT 'At what date the group obtains partial access to the item',
   `access_reason` varchar(200) DEFAULT NULL COMMENT 'Manual comment about why the current access was given',
@@ -380,7 +382,8 @@ INSERT INTO `groups_items` (
     `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
-       IF(`permissions_granted`.`giver_group_id` = -1, NULL, `permissions_granted`.`giver_group_id`) AS `creator_id`,
+       IF(`permissions_granted`.`source_group_id` IN (-1, -3), NULL, `permissions_granted`.`source_group_id`) AS `creator_id`,
+       IF(`permissions_granted`.`source_group_id` = -1, 0, `permissions_granted`.`source_group_id`) AS `creator_user_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
            `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
