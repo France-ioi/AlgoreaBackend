@@ -35,7 +35,7 @@ import (
 //
 //
 //                The deletion is rejected if the user is a member of at least one group with
-//                `now() < lock_user_deletion_until`.
+//                `now() < require_lock_membership_approval_until` and `groups_groups.lock_membership_approved` set.
 // responses:
 //   "200":
 //     "$ref": "#/responses/deletedResponse"
@@ -48,9 +48,10 @@ import (
 func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIError {
 	user := srv.GetUser(r)
 
-	doNotDelete, err := srv.Store.GroupGroups().WhereUserIsMember(user).
-		Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id").
-		Where("NOW() < `groups`.lock_user_deletion_until").HasRows()
+	doNotDelete, err := srv.Store.ActiveGroupGroups().WhereUserIsMember(user).
+		Where("groups_groups_active.lock_membership_approved").
+		Joins("JOIN `groups` ON `groups`.id = groups_groups_active.parent_group_id").
+		Where("NOW() < `groups`.require_lock_membership_approval_until").HasRows()
 	service.MustNotBeError(err)
 
 	if doNotDelete {

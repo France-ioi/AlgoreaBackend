@@ -2,19 +2,19 @@ Feature: Delete the current user - robustness
   Background:
     Given the DB time now is "2019-08-09 23:59:59"
     And the database has the following table 'groups':
-      | id | type     | name      | lock_user_deletion_until |
-      | 1  | Base     | Root      | null                     |
-      | 2  | Base     | RootSelf  | null                     |
-      | 4  | Base     | RootTemp  | null                     |
-      | 21 | UserSelf | user      | null                     |
-      | 50 | Class    | Our class | 2019-08-10               |
+      | id | type     | name      | require_lock_membership_approval_until |
+      | 1  | Base     | Root      | null                                   |
+      | 2  | Base     | RootSelf  | null                                   |
+      | 4  | Base     | RootTemp  | null                                   |
+      | 21 | UserSelf | user      | null                                   |
+      | 50 | Class    | Our class | 2019-08-10 00:00:00                    |
     And the database has the following table 'groups_groups':
-      | parent_group_id | child_group_id |
-      | 1               | 2              |
-      | 1               | 50             |
-      | 2               | 4              |
-      | 2               | 21             |
-      | 50              | 21             |
+      | parent_group_id | child_group_id | lock_membership_approved_at |
+      | 1               | 2              | null                        |
+      | 1               | 50             | null                        |
+      | 2               | 4              | null                        |
+      | 2               | 21             | null                        |
+      | 50              | 21             | 2019-05-30 11:00:00         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | true    |
@@ -67,11 +67,11 @@ Feature: Delete the current user - robustness
     And the response error message should contain "Can't unlink the user"
     And the table "users" should be empty
     And the table "groups" should be:
-      | id | type  | name      | lock_user_deletion_until |
-      | 1  | Base  | Root      | null                     |
-      | 2  | Base  | RootSelf  | null                     |
-      | 4  | Base  | RootTemp  | null                     |
-      | 50 | Class | Our class | 2019-08-10               |
+      | id | type  | name      | require_lock_membership_approval_until |
+      | 1  | Base  | Root      | null                                   |
+      | 2  | Base  | RootSelf  | null                                   |
+      | 4  | Base  | RootTemp  | null                                   |
+      | 50 | Class | Our class | 2019-08-10 00:00:00                    |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
       | 1               | 2              |
