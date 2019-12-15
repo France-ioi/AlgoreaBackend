@@ -15,7 +15,11 @@ SET `items`.`contest_participants_group_id` = `groups`.`id`,
     `groups`.`team_item_id` = NULL
 WHERE `items`.`duration` IS NOT NULL;
 
-# add all the participants into "contest participants" groups
+# Add all the participants into "contest participants" groups.
+# Here we require groups_attempts to exist for each group_id-item_id pair in order to create groups_groups rows,
+# but there is a pair in groups_items of the example database (group_id = 261836104618448530, item_id = 261836104618448530)
+# for which that is wrong. `can_view:content` permission for this pair will be lost and the group 261836104618448530
+# will not be added as a member of the item's contest participants group.
 INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `expires_at`, `child_order`)
     SELECT `items`.`contest_participants_group_id`,
            `groups_attempts`.`group_id`,
