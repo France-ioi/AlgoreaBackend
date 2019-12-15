@@ -14,8 +14,8 @@ Feature: Add item
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 21      | solution           | children           |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_edit | giver_group_id | latest_update_on    |
-      | 11       | 21      | solution | children | 11             | 2019-05-30 11:00:00 |
+      | group_id | item_id | can_view | can_edit | source_group_id | latest_update_on    |
+      | 11       | 21      | solution | children | 11              | 2019-05-30 11:00:00 |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -60,9 +60,9 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "permissions_granted" at group_id "11" should be:
-      | group_id | item_id             | giver_group_id | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11       | 21                  | 11             | solution | none           | none      | children | 0        | 0                                                       |
-      | 11       | 5577006791947779410 | 11             | none     | none           | none      | none     | 1        | 1                                                       |
+      | group_id | item_id             | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11       | 21                  | 11              | group_membership | solution | none           | none      | children | 0        | 0                                                       |
+      | 11       | 5577006791947779410 | 11              | self             | none     | none           | none      | none     | 1        | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
@@ -80,9 +80,9 @@ Feature: Add item
       | 11       | 12      | content_with_descendants | solution                 | answer              | all                | 0                  |
       | 11       | 34      | solution                 | transfer                 | transfer            | transfer           | 0                  |
     And the database table 'permissions_granted' has also the following rows:
-      | group_id | item_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | giver_group_id | latest_update_on    |
-      | 11       | 12      | content_with_descendants | solution       | answer    | all      | 0        | 11             | 2019-05-30 11:00:00 |
-      | 11       | 34      | solution                 | transfer       | transfer  | transfer | 0        | 11             | 2019-05-30 11:00:00 |
+      | group_id | item_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | 11       | 12      | content_with_descendants | solution       | answer    | all      | 0        | 11              | 2019-05-30 11:00:00 |
+      | 11       | 34      | solution                 | transfer       | transfer  | transfer | 0        | 11              | 2019-05-30 11:00:00 |
     When I send a POST request to "/items" with the following body:
       """
       {
@@ -150,12 +150,12 @@ Feature: Add item
       | 11                  | UserSelf            | jdoe                             |
       | 8674665223082153551 | ContestParticipants | 5577006791947779410-participants |
     And the table "permissions_granted" should be:
-      | group_id            | item_id             | giver_group_id | can_view                 | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11                  | 12                  | 11             | content_with_descendants | solution       | answer    | all      | 0        | 0                                                       |
-      | 11                  | 21                  | 11             | solution                 | none           | none      | children | 0        | 0                                                       |
-      | 11                  | 34                  | 11             | solution                 | transfer       | transfer  | transfer | 0        | 0                                                       |
-      | 11                  | 5577006791947779410 | 11             | none                     | none           | none      | none     | 1        | 1                                                       |
-      | 8674665223082153551 | 5577006791947779410 | -1             | content                  | none           | none      | none     | 0        | 1                                                       |
+      | group_id            | item_id             | source_group_id     | origin           | can_view                 | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11                  | 12                  | 11                  | group_membership | content_with_descendants | solution       | answer    | all      | 0        | 0                                                       |
+      | 11                  | 21                  | 11                  | group_membership | solution                 | none           | none      | children | 0        | 0                                                       |
+      | 11                  | 34                  | 11                  | group_membership | solution                 | transfer       | transfer  | transfer | 0        | 0                                                       |
+      | 11                  | 5577006791947779410 | 11                  | self             | none                     | none           | none      | none     | 1        | 1                                                       |
+      | 8674665223082153551 | 5577006791947779410 | 8674665223082153551 | group_membership | content                  | none           | none      | none     | 0        | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id             | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11                  | 12                  | content_with_descendants | solution                 | answer              | all                | 0                  |
@@ -201,9 +201,9 @@ Feature: Add item
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
     And the table "permissions_granted" at group_id "11" should be:
-      | group_id | item_id             | giver_group_id | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11       | 21                  | 11             | solution | none           | none      | children | 0        | 0                                                       |
-      | 11       | 5577006791947779410 | 11             | none     | none           | none      | none     | 1        | 1                                                       |
+      | group_id | item_id             | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11       | 21                  | 11              | group_membership | solution | none           | none      | children | 0        | 0                                                       |
+      | 11       | 5577006791947779410 | 11              | self             | none     | none           | none      | none     | 1        | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id | item_id             | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |

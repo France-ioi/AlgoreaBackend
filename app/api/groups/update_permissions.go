@@ -142,7 +142,7 @@ func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.Data
 	return found
 }
 
-func savePermissionsIntoDB(groupID, itemID, giverGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
+func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
 	dbMap["latest_update_on"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))
@@ -152,7 +152,8 @@ func savePermissionsIntoDB(groupID, itemID, giverGroupID int64, dbMap map[string
 
 	dbMap["group_id"] = groupID
 	dbMap["item_id"] = itemID
-	dbMap["giver_group_id"] = giverGroupID
+	dbMap["source_group_id"] = sourceGroupID
+	dbMap["origin"] = "group_membership"
 
 	permissionGrantedStore := s.PermissionsGranted()
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))

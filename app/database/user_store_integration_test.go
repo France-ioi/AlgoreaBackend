@@ -118,9 +118,9 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {group_id: 5001, item_id: 1}
 				- {group_id: 5002, item_id: 1}
 			permissions_granted:
-				- {group_id: 5000, item_id: 1, giver_group_id: 2}
-				- {group_id: 5001, item_id: 1, giver_group_id: 2}
-				- {group_id: 5002, item_id: 1, giver_group_id: 2}
+				- {group_id: 5000, item_id: 1, source_group_id: 1}
+				- {group_id: 5001, item_id: 1, source_group_id: 1}
+				- {group_id: 5002, item_id: 1, source_group_id: 1}
 			groups_login_prefixes: [{group_id: 5000, prefix: 5000, id: 1}, {group_id: 5001, prefix: 5001, id: 2},
 			                        {group_id: 5002, prefix: 5002, id: 3}]
 			groups_groups: [{parent_group_id: 5000, child_group_id: 7000}, {parent_group_id: 5001, child_group_id: 7000},

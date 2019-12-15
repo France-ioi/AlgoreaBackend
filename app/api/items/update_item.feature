@@ -27,10 +27,10 @@ Background:
     | 11       | 50      | solution           | transfer           | true               |
     | 11       | 60      | solution           | transfer           | true               |
   And the database has the following table 'permissions_granted':
-    | group_id | item_id | can_view | is_owner | giver_group_id | latest_update_on    |
-    | 11       | 21      | solution | false    | 11             | 2019-05-30 11:00:00 |
-    | 11       | 50      | none     | true     | 11             | 2019-05-30 11:00:00 |
-    | 11       | 60      | none     | true     | 11             | 2019-05-30 11:00:00 |
+    | group_id | item_id | can_view | is_owner | source_group_id | latest_update_on    |
+    | 11       | 21      | solution | false    | 11              | 2019-05-30 11:00:00 |
+    | 11       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
+    | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
@@ -77,9 +77,9 @@ Background:
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | transfer                 | transfer            | transfer           | true               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | giver_group_id | latest_update_on    |
-      | 11       | 112     | solution | content        | answer    | all      | false    | 11             | 2019-05-30 11:00:00 |
-      | 11       | 134     | none     | none           | none      | none     | true     | 11             | 2019-05-30 11:00:00 |
+      | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
+      | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
+      | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -130,13 +130,13 @@ Background:
       | 11                  | UserSelf            | jdoe            |
       | 5577006791947779410 | ContestParticipants | 50-participants |
     And the table "permissions_granted" should be:
-      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | giver_group_id | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
-      | 11                  | 21      | solution | none           | none      | none     | false    | 11             | 0                                                       |
-      | 11                  | 50      | none     | none           | none      | none     | true     | 11             | 0                                                       |
-      | 11                  | 60      | none     | none           | none      | none     | true     | 11             | 0                                                       |
-      | 11                  | 112     | solution | content        | answer    | all      | false    | 11             | 0                                                       |
-      | 11                  | 134     | none     | none           | none      | none     | true     | 11             | 0                                                       |
-      | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | -1             | 1                                                       |
+      | group_id            | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id     | ABS(TIMESTAMPDIFF(SECOND, latest_update_on, NOW())) < 3 |
+      | 11                  | 21      | solution | none           | none      | none     | false    | 11                  | 0                                                       |
+      | 11                  | 50      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 11                  | 60      | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 11                  | 112     | solution | content        | answer    | all      | false    | 11                  | 0                                                       |
+      | 11                  | 134     | none     | none           | none      | none     | true     | 11                  | 0                                                       |
+      | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | 5577006791947779410 | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11                  | 21      | solution           | none                     | none                | none               | false              |

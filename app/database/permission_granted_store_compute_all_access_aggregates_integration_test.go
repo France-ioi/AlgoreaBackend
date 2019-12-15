@@ -302,7 +302,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,
 						content_view_propagation: ` + testcase.contentViewPropagation + `,
 						upper_view_levels_propagation: ` + testcase.upperViewLevelsPropagation + `}
-				permissions_granted: [{group_id: 1, item_id: 1, giver_group_id: 1, can_view: ` + testcase.canView + `}]`)
+				permissions_granted: [{group_id: 1, item_id: 1, source_group_id: 1, can_view: ` + testcase.canView + `}]`)
 			permissionStore := database.NewDataStore(db).Permissions()
 			assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 				ds.PermissionsGranted().ComputeAllAccess()
@@ -326,8 +326,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 			- {parent_item_id: 2, child_item_id: 4, child_order: 2, content_view_propagation: as_info,
 				upper_view_levels_propagation: as_is}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: info}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_view: content_with_descendants}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: info}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_view: content_with_descendants}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -347,9 +347,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, content_view_propagation: as_content,
 				upper_view_levels_propagation: as_is}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: content}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_view: content_with_descendants}
-			- {group_id: 2, item_id: 2, giver_group_id: 1, can_view: solution}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_view: content_with_descendants}
+			- {group_id: 2, item_id: 2, source_group_id: 1, can_view: solution}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -364,10 +364,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_view: content}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: content_with_descendants}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content_with_descendants}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -382,10 +382,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_view: content}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_view: content_with_descendants, is_owner: 1}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content_with_descendants, is_owner: 1}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -407,9 +407,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantV
 			- {parent_item_id: 3, child_item_id: 5, child_order: 2, grant_view_propagation: 1}
 			- {parent_item_id: 4, child_item_id: 5, child_order: 2, grant_view_propagation: 0}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_grant_view: content}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_grant_view: content_with_descendants}
-			- {group_id: 1, item_id: 3, giver_group_id: 1, can_grant_view: transfer}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_grant_view: content_with_descendants}
+			- {group_id: 1, item_id: 3, source_group_id: 1, can_grant_view: transfer}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -428,9 +428,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, grant_view_propagation: 1}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_grant_view: content}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_grant_view: transfer}
-			- {group_id: 2, item_id: 2, giver_group_id: 1, can_grant_view: solution}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_grant_view: transfer}
+			- {group_id: 2, item_id: 2, source_group_id: 1, can_grant_view: solution}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -447,8 +447,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 		items: [{id: 1}]
 		groups: [{id: 1}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_grant_view: content}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_grant_view: content_with_descendants}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, origin: self, can_grant_view: content}
+			- {group_id: 1, item_id: 1, source_group_id: 1, origin: group_membership, can_grant_view: content_with_descendants}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -463,10 +463,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_grant_view: content}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_grant_view: content_with_descendants, is_owner: 1}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_grant_view: content}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content_with_descendants, is_owner: 1}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -488,9 +488,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(
 			- {parent_item_id: 3, child_item_id: 5, child_order: 2, watch_propagation: 1}
 			- {parent_item_id: 4, child_item_id: 5, child_order: 2, watch_propagation: 0}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_watch: result}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_watch: answer}
-			- {group_id: 1, item_id: 3, giver_group_id: 1, can_watch: transfer}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: result}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_watch: answer}
+			- {group_id: 1, item_id: 3, source_group_id: 1, can_watch: transfer}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -509,9 +509,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, watch_propagation: 1}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_watch: result}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_watch: transfer}
-			- {group_id: 2, item_id: 2, giver_group_id: 1, can_watch: answer}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: result}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_watch: transfer}
+			- {group_id: 2, item_id: 2, source_group_id: 1, can_watch: answer}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -526,10 +526,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_watch: result}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_watch: answer}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: answer}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -544,10 +544,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_watch: result}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_watch: answer, is_owner: 1}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: answer, is_owner: 1}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -569,9 +569,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t
 			- {parent_item_id: 3, child_item_id: 5, child_order: 2, edit_propagation: 1}
 			- {parent_item_id: 4, child_item_id: 5, child_order: 2, edit_propagation: 0}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_edit: children}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_edit: all}
-			- {group_id: 1, item_id: 3, giver_group_id: 1, can_edit: transfer}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: children}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_edit: all}
+			- {group_id: 1, item_id: 3, source_group_id: 1, can_edit: transfer}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -590,9 +590,9 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, edit_propagation: 1}
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_edit: children}
-			- {group_id: 1, item_id: 2, giver_group_id: 1, can_edit: transfer}
-			- {group_id: 2, item_id: 2, giver_group_id: 1, can_edit: all}`)
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: children}
+			- {group_id: 1, item_id: 2, source_group_id: 1, can_edit: transfer}
+			- {group_id: 2, item_id: 2, source_group_id: 1, can_edit: all}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -607,10 +607,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_edit: children}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_edit: all}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: all}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -625,10 +625,10 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanEditAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1}]
-		groups: [{id: 1}]
+		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
-			- {group_id: 1, item_id: 1, giver_group_id: -1, can_edit: children}
-			- {group_id: 1, item_id: 1, giver_group_id: 1, can_edit: all, is_owner: 1}`)
+			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
+			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: all, is_owner: 1}`)
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.PermissionsGranted().ComputeAllAccess()
@@ -710,7 +710,7 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 				items_items:
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,
 						` + propagationColumn + `: ` + grantViewPropagationString + `}
-				permissions_granted: [{group_id: 1, item_id: 1, giver_group_id: 1, ` + column + `: ` + valueForParent + `}]`)
+				permissions_granted: [{group_id: 1, item_id: 1, source_group_id: 1, ` + column + `: ` + valueForParent + `}]`)
 		permissionStore := database.NewDataStore(db).Permissions()
 		assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 			ds.PermissionsGranted().ComputeAllAccess()

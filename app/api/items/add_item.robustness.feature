@@ -21,10 +21,10 @@ Feature: Add item - robustness
       | 11       | 21      | solution           | children           |
       | 11       | 22      | none               | none               |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | giver_group_id | can_edit |
-      | 11       | 4       | solution | 11             | children |
-      | 11       | 21      | solution | 11             | children |
-      | 11       | 23      | solution | 11             | none     |
+      | group_id | item_id | can_view | source_group_id | can_edit |
+      | 11       | 4       | solution | 11              | children |
+      | 11       | 21      | solution | 11              | children |
+      | 11       | 23      | solution | 11              | none     |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
