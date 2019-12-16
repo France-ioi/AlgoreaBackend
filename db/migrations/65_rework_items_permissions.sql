@@ -382,8 +382,8 @@ INSERT INTO `groups_items` (
     `full_access_since`, `partial_access_since`, `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
-       IF(`permissions_granted`.`source_group_id` <= 0, NULL, `permissions_granted`.`source_group_id`) AS `creator_id`,
-       IF(`permissions_granted`.`source_group_id` < 0, 0, `permissions_granted`.`source_group_id`) AS `creator_user_id`,
+       `groups`.`id` AS `creator_id`,
+       IFNULL(`users`.`group_id`, 0) AS `creator_user_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
            `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
@@ -393,6 +393,8 @@ SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`is_owner` AS `owner_access`,
        `permissions_granted`.`can_edit` = 'all' AS `manager_access`
 FROM `permissions_granted`
+LEFT JOIN `users` ON `users`.`group_id` = `permissions_granted`.`source_group_id`
+LEFT JOIN `groups` ON `groups`.`id` = `permissions_granted`.`source_group_id`
 ON DUPLICATE KEY UPDATE
     `groups_items`.`creator_id` = IFNULL(`groups_items`.`creator_id`, VALUES(`creator_id`)),
     `groups_items`.`creator_user_id` = IFNULL(`groups_items`.`creator_user_id`, VALUES(`creator_user_id`)),
