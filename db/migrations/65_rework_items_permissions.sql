@@ -378,8 +378,8 @@ ALTER TABLE `items_items`
 UPDATE `items_items` SET `partial_access_propagation` = `content_view_propagation` + 0;
 
 INSERT INTO `groups_items` (
-    `group_id`, `item_id`, `creator_id`, `solutions_access_since`, `full_access_since`, `partial_access_since`,
-    `owner_access`, `manager_access`)
+    `group_id`, `item_id`, `creator_id`, `creator_user_id`, `solutions_access_since`,
+    `full_access_since`, `partial_access_since`, `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
        IF(`permissions_granted`.`source_group_id` IN (-1, -3), NULL, `permissions_granted`.`source_group_id`) AS `creator_id`,
@@ -395,6 +395,7 @@ SELECT `permissions_granted`.`group_id`,
 FROM `permissions_granted`
 ON DUPLICATE KEY UPDATE
     `groups_items`.`creator_id` = IFNULL(`groups_items`.`creator_id`, VALUES(`creator_id`)),
+    `groups_items`.`creator_user_id` = IFNULL(`groups_items`.`creator_user_id`, VALUES(`creator_user_id`)),
     `groups_items`.`solutions_access_since` = IFNULL(`groups_items`.`solutions_access_since`, VALUES(`solutions_access_since`)),
     `groups_items`.`full_access_since` = IFNULL(`groups_items`.`full_access_since`, VALUES(`full_access_since`)),
     `groups_items`.`partial_access_since` = IFNULL(`groups_items`.`partial_access_since`, VALUES(`partial_access_since`)),
