@@ -36,6 +36,8 @@ const (
 	IsMember GroupMembershipAction = "is_member"
 	// LeaveRequestCreated means a pending user's request to leave a group was created
 	LeaveRequestCreated GroupMembershipAction = "is_member,leave_request_created"
+	// LeaveRequestExpired means a pending user's leave request for an expired membership
+	LeaveRequestExpired GroupMembershipAction = "leave_request_created"
 	// LeaveRequestRefused means a manager refused a user's request to leave a group
 	LeaveRequestRefused GroupMembershipAction = "leave_request_refused"
 	// LeaveRequestWithdrawn means a user withdrew his request to leave a group
@@ -55,7 +57,7 @@ func (groupMembershipAction GroupMembershipAction) isActive() bool {
 
 func (groupMembershipAction GroupMembershipAction) isPending() bool {
 	switch groupMembershipAction {
-	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated:
+	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated, LeaveRequestExpired:
 		return true
 	}
 	return false
@@ -128,29 +130,33 @@ type groupGroupTransitionRule struct {
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
 	AdminCreatesInvitation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         InvitationCreated,
-			InvitationCreated:  InvitationCreated,
-			JoinRequestCreated: JoinRequestAccepted,
+			NoRelation:          InvitationCreated,
+			InvitationCreated:   InvitationCreated,
+			JoinRequestCreated:  JoinRequestAccepted,
+			LeaveRequestExpired: InvitationCreated,
 		},
 	},
 	UserCreatesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinRequestCreated,
-			JoinRequestCreated: JoinRequestCreated,
+			NoRelation:          JoinRequestCreated,
+			JoinRequestCreated:  JoinRequestCreated,
+			LeaveRequestExpired: JoinRequestCreated,
 		},
 	},
 	UserCreatesAcceptedJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinRequestAccepted,
-			JoinRequestCreated: JoinRequestAccepted,
-			InvitationCreated:  JoinRequestAccepted,
+			NoRelation:          JoinRequestAccepted,
+			JoinRequestCreated:  JoinRequestAccepted,
+			InvitationCreated:   JoinRequestAccepted,
+			LeaveRequestExpired: JoinRequestAccepted,
 		},
 	},
 	UserJoinsGroupByCode: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinedByCode,
-			JoinRequestCreated: JoinedByCode,
-			InvitationCreated:  JoinedByCode,
+			NoRelation:          JoinedByCode,
+			JoinRequestCreated:  JoinedByCode,
+			InvitationCreated:   JoinedByCode,
+			LeaveRequestExpired: JoinedByCode,
 		},
 	},
 	UserAcceptsInvitation: {
