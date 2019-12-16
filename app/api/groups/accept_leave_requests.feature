@@ -20,30 +20,32 @@ Feature: Accept requests to leave a group
       | login | group_id | first_name  | last_name | grade |
       | owner | 21       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table 'groups_ancestors':
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 13                | 151            | 0       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 111               | 111            | 1       |
-      | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
-      | 123               | 123            | 1       |
-      | 151               | 151            | 1       |
-      | 161               | 161            | 1       |
+      | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 11                | 11             | 1       | 9999-12-31 23:59:59 |
+      | 13                | 13             | 1       | 9999-12-31 23:59:59 |
+      | 13                | 111            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 121            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 123            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 141            | 0       | 2019-05-30 11:00:00 |
+      | 13                | 151            | 0       | 9999-12-31 23:59:59 |
+      | 14                | 14             | 1       | 9999-12-31 23:59:59 |
+      | 21                | 21             | 1       | 9999-12-31 23:59:59 |
+      | 31                | 31             | 1       | 9999-12-31 23:59:59 |
+      | 111               | 111            | 1       | 9999-12-31 23:59:59 |
+      | 121               | 121            | 1       | 9999-12-31 23:59:59 |
+      | 122               | 122            | 1       | 9999-12-31 23:59:59 |
+      | 123               | 123            | 1       | 9999-12-31 23:59:59 |
+      | 141               | 141            | 1       | 9999-12-31 23:59:59 |
+      | 151               | 151            | 1       | 9999-12-31 23:59:59 |
+      | 161               | 161            | 1       | 9999-12-31 23:59:59 |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 8  | 13              | 31             |
-      | 9  | 13              | 121            |
-      | 10 | 13              | 111            |
-      | 13 | 13              | 123            |
-      | 14 | 13              | 141            |
-      | 16 | 13              | 151            |
+      | id | parent_group_id | child_group_id | expires_at          |
+      | 8  | 13              | 31             | 9999-12-31 23:59:59 |
+      | 9  | 13              | 121            | 9999-12-31 23:59:59 |
+      | 10 | 13              | 111            | 9999-12-31 23:59:59 |
+      | 13 | 13              | 123            | 9999-12-31 23:59:59 |
+      | 14 | 13              | 141            | 2019-05-30 11:00:00 |
+      | 16 | 13              | 151            | 9999-12-31 23:59:59 |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
@@ -64,7 +66,7 @@ Feature: Accept requests to leave a group
     """
     {
       "data": {
-        "141": "success",
+        "141": "invalid",
         "31": "success",
         "11": "invalid",
         "13": "invalid",
@@ -78,38 +80,40 @@ Feature: Accept requests to leave a group
     """
     And the table "groups_groups" should stay unchanged but the row with parent_group_id "13"
     And the table "groups_groups" at parent_group_id "13" should be:
-      | parent_group_id | child_group_id |
-      | 13              | 111            |
-      | 13              | 121            |
-      | 13              | 123            |
-      | 13              | 151            |
+      | parent_group_id | child_group_id | expires_at          |
+      | 13              | 111            | 9999-12-31 23:59:59 |
+      | 13              | 121            | 9999-12-31 23:59:59 |
+      | 13              | 123            | 9999-12-31 23:59:59 |
+      | 13              | 141            | 2019-05-30 11:00:00 |
+      | 13              | 151            | 9999-12-31 23:59:59 |
     And the table "group_pending_requests" should be:
-      | group_id | member_id | type         |
-      | 13       | 21        | invitation   |
-      | 13       | 161       | join_request |
-      | 14       | 11        | invitation   |
-      | 14       | 21        | join_request |
+      | group_id | member_id | type          |
+      | 13       | 21        | invitation    |
+      | 13       | 141       | leave_request |
+      | 13       | 161       | join_request  |
+      | 14       | 11        | invitation    |
+      | 14       | 21        | join_request  |
     And the table "group_membership_changes" should be:
       | group_id | member_id | action                 | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 31        | leave_request_accepted | 21           | 1                                         |
-      | 13       | 141       | leave_request_accepted | 21           | 1                                         |
     And the table "groups_ancestors" should be:
-      | ancestor_group_id | child_group_id | is_self |
-      | 11                | 11             | 1       |
-      | 13                | 13             | 1       |
-      | 13                | 111            | 0       |
-      | 13                | 121            | 0       |
-      | 13                | 123            | 0       |
-      | 13                | 151            | 0       |
-      | 14                | 14             | 1       |
-      | 21                | 21             | 1       |
-      | 31                | 31             | 1       |
-      | 111               | 111            | 1       |
-      | 121               | 121            | 1       |
-      | 122               | 122            | 1       |
-      | 123               | 123            | 1       |
-      | 131               | 131            | 1       |
-      | 141               | 141            | 1       |
-      | 151               | 151            | 1       |
-      | 161               | 161            | 1       |
-      | 444               | 444            | 1       |
+      | ancestor_group_id | child_group_id | is_self | expires_at          |
+      | 11                | 11             | 1       | 9999-12-31 23:59:59 |
+      | 13                | 13             | 1       | 9999-12-31 23:59:59 |
+      | 13                | 111            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 121            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 123            | 0       | 9999-12-31 23:59:59 |
+      | 13                | 141            | 0       | 2019-05-30 11:00:00 |
+      | 13                | 151            | 0       | 9999-12-31 23:59:59 |
+      | 14                | 14             | 1       | 9999-12-31 23:59:59 |
+      | 21                | 21             | 1       | 9999-12-31 23:59:59 |
+      | 31                | 31             | 1       | 9999-12-31 23:59:59 |
+      | 111               | 111            | 1       | 9999-12-31 23:59:59 |
+      | 121               | 121            | 1       | 9999-12-31 23:59:59 |
+      | 122               | 122            | 1       | 9999-12-31 23:59:59 |
+      | 123               | 123            | 1       | 9999-12-31 23:59:59 |
+      | 131               | 131            | 1       | 9999-12-31 23:59:59 |
+      | 141               | 141            | 1       | 9999-12-31 23:59:59 |
+      | 151               | 151            | 1       | 9999-12-31 23:59:59 |
+      | 161               | 161            | 1       | 9999-12-31 23:59:59 |
+      | 444               | 444            | 1       | 9999-12-31 23:59:59 |
