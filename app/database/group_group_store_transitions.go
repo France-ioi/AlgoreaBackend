@@ -266,7 +266,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				SELECT child_group_id, GROUP_CONCAT(action) AS action
 					FROM ((? FOR UPDATE) UNION (? FOR UPDATE)) AS statuses
 					GROUP BY child_group_id`,
-				dataStore.GroupGroups().
+				dataStore.ActiveGroupGroups().
 					Select("child_group_id, 'is_member' AS `action`").
 					Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
 				dataStore.GroupPendingRequests().
@@ -324,6 +324,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			insertQuery += " VALUES " +
 				strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
 				valuesTemplate // #nosec
+			insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
 			mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 				values := make([]interface{}, 0, len(idsToInsertRelation)*4)
 				for id := range idsToInsertRelation {
