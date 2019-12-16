@@ -382,8 +382,8 @@ INSERT INTO `groups_items` (
     `full_access_since`, `partial_access_since`, `owner_access`, `manager_access`)
 SELECT `permissions_granted`.`group_id`,
        `permissions_granted`.`item_id`,
-       IF(`permissions_granted`.`source_group_id` IN (-1, -3), NULL, `permissions_granted`.`source_group_id`) AS `creator_id`,
-       IF(`permissions_granted`.`source_group_id` = -1, 0, `permissions_granted`.`source_group_id`) AS `creator_user_id`,
+       IF(`permissions_granted`.`source_group_id` <= 0, NULL, `permissions_granted`.`source_group_id`) AS `creator_id`,
+       IF(`permissions_granted`.`source_group_id` < 0, 0, `permissions_granted`.`source_group_id`) AS `creator_user_id`,
        IF(`permissions_granted`.`can_view` = 'solution',
            `permissions_granted`.`latest_update_on`, NULL) AS `solutions_access_since`,
        IF(`permissions_granted`.`can_view` IN ('solution', 'content_with_descendants'),
