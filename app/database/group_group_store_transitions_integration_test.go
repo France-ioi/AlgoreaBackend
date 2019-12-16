@@ -416,8 +416,6 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: false,
 		},
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
-			"AdminAddsDirectRelation", database.AdminAddsDirectRelation, database.AddedDirectly, true),
-		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, false),
