@@ -39,8 +39,10 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/team-progress", service.AppHandler(srv.getTeamProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress", service.AppHandler(srv.getUserProgress).ServeHTTP)
-	router.Post("/groups/{parent_group_id}/requests/accept", service.AppHandler(srv.acceptRequests).ServeHTTP)
-	router.Post("/groups/{parent_group_id}/requests/reject", service.AppHandler(srv.rejectRequests).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/join-requests/accept", service.AppHandler(srv.acceptJoinRequests).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/join-requests/reject", service.AppHandler(srv.rejectJoinRequests).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/leave-requests/accept", service.AppHandler(srv.acceptLeaveRequests).ServeHTTP)
+	router.Post("/groups/{parent_group_id}/leave-requests/reject", service.AppHandler(srv.rejectLeaveRequests).ServeHTTP)
 
 	router.Post("/groups/{parent_group_id}/invitations", service.AppHandler(srv.inviteUsers).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/invitations/withdraw", service.AppHandler(srv.withdrawInvitations).ServeHTTP)
@@ -122,8 +124,10 @@ func checkThatUserHasRightsForDirectRelation(
 type bulkMembershipAction string
 
 const (
-	acceptRequestsAction      bulkMembershipAction = "acceptRequests"
-	rejectRequestsAction      bulkMembershipAction = "rejectRequests"
+	acceptJoinRequestsAction  bulkMembershipAction = "acceptJoinRequests"
+	rejectJoinRequestsAction  bulkMembershipAction = "rejectJoinRequests"
+	acceptLeaveRequestsAction bulkMembershipAction = "acceptLeaveRequests"
+	rejectLeaveRequestsAction bulkMembershipAction = "rejectLeaveRequests"
 	withdrawInvitationsAction bulkMembershipAction = "withdrawInvitations"
 )
 
@@ -151,15 +155,17 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 	var filteredIDs []int64
 	if len(groupIDs) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			if action == acceptRequestsAction {
+			if action == acceptJoinRequestsAction {
 				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
 			}
 
 			results, err = store.GroupGroups().Transition(
 				map[bulkMembershipAction]database.GroupGroupTransitionAction{
-					acceptRequestsAction:      database.AdminAcceptsRequest,
-					rejectRequestsAction:      database.AdminRefusesRequest,
+					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
+					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,
 					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
+					acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
+					rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
 				}[action], parentGroupID, groupIDs, user.GroupID)
 			return err
 		})

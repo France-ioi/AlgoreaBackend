@@ -46,6 +46,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 
 	mustNotBeError(s.WithNamedLock(s.tableName, groupsRelationsLockTimeout, func(store *DataStore) (err error) {
 		mustNotBeError(store.GroupGroups().Delete("child_group_id = ? AND parent_group_id = ?", childGroupID, parentGroupID).Error())
+		mustNotBeError(store.GroupPendingRequests().Delete("group_id = ? AND member_id = ?", parentGroupID, childGroupID).Error())
 
 		var rows []interface{}
 		mustNotBeError(store.GroupAncestors().

@@ -67,6 +67,11 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 			"WHERE (child_group_id = ? AND parent_group_id = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
+	mock.ExpectExec("^"+
+		regexp.QuoteMeta("DELETE FROM `group_pending_requests`  "+
+			"WHERE (group_id = ? AND member_id = ?)")+"$").
+		WithArgs(parentGroupID, childGroupID).
+		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
 		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+
 			"WHERE (child_group_id = ? AND ancestor_group_id = ?) LIMIT 1 FOR UPDATE")+"$").
@@ -130,6 +135,11 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 		regexp.QuoteMeta("DELETE FROM `groups_groups`  "+
 			"WHERE (child_group_id = ? AND parent_group_id = ?)")+"$").
 		WithArgs(childGroupID, parentGroupID).
+		WillReturnResult(sqlmock.NewResult(-1, 1))
+	mock.ExpectExec("^"+
+		regexp.QuoteMeta("DELETE FROM `group_pending_requests`  "+
+			"WHERE (group_id = ? AND member_id = ?)")+"$").
+		WithArgs(parentGroupID, childGroupID).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 	mock.ExpectQuery("^"+
 		regexp.QuoteMeta("SELECT id FROM `groups_ancestors`  "+

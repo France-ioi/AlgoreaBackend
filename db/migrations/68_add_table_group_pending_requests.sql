@@ -2,7 +2,7 @@
 CREATE TABLE `group_pending_requests` (
     `group_id` BIGINT(20) NOT NULL,
     `member_id` BIGINT(20) NOT NULL,
-    `type` ENUM('invitation', 'join_request'),
+    `type` ENUM('invitation', 'join_request', 'leave_request'),
     `at` DATETIME NOT NULL DEFAULT NOW(),
     PRIMARY KEY (`group_id`, `member_id`),
     INDEX `group_id_member_id_at_desc` (`group_id`, `member_id`, `at` DESC),
@@ -96,11 +96,15 @@ SET `type` = IFNULL(
                     WHEN 'join_request_accepted' THEN 'requestAccepted'
                     WHEN 'joined_by_code' THEN 'joinedByCode'
                     WHEN 'added_directly' THEN 'direct'
+                    WHEN 'leave_request_accepted' THEN 'left'
                     ELSE `group_membership_changes`.`action`
                     END
          FROM `group_membership_changes`
          WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
            AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
+           AND `group_membership_changes`.`action` NOT IN (
+             'expired', 'leave_request_created', 'leave_request_refused', 'leave_request_withdrawn'
+           )
          ORDER BY `at` DESC
          LIMIT 1), `type`);
 
@@ -110,6 +114,9 @@ SET `type_changed_at` = (
     FROM `group_membership_changes`
     WHERE `group_membership_changes`.`group_id` = `groups_groups`.`parent_group_id`
       AND `group_membership_changes`.`member_id` = `groups_groups`.`child_group_id`
+      AND `group_membership_changes`.`action` NOT IN (
+        'expired', 'leave_request_created', 'leave_request_refused', 'leave_request_withdrawn'
+      )
       AND CASE `groups_groups`.`type`
         WHEN 'invitationSent' THEN 'invitation_created'
         WHEN 'invitationRefused' THEN 'invitation_refused'

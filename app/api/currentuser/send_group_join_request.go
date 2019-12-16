@@ -6,7 +6,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation POST /current-user/group-requests/{group_id} group-memberships groupRequestCreate
+// swagger:operation POST /current-user/group-requests/{group_id} group-memberships groupJoinRequestCreate
 // ---
 // summary: Create a request to join a group
 // description: >
@@ -63,6 +63,6 @@ import (
 //     "$ref": "#/responses/unprocessableEntityResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) sendGroupRequest(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.performGroupRelationAction(w, r, createGroupRequestAction)
+func (srv *Service) sendGroupJoinRequest(w http.ResponseWriter, r *http.Request) service.APIError {
+	return srv.performGroupRelationAction(w, r, createGroupJoinRequestAction)
 }

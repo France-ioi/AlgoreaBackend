@@ -32,7 +32,9 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-invitations/{group_id}/accept", service.AppHandler(srv.acceptGroupInvitation).ServeHTTP)
 	router.Post("/current-user/group-invitations/{group_id}/reject", service.AppHandler(srv.rejectGroupInvitation).ServeHTTP)
 
-	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupRequest).ServeHTTP)
+	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupJoinRequest).ServeHTTP)
+	router.Post("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.sendGroupLeaveRequest).ServeHTTP)
+	router.Delete("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.withdrawGroupLeaveRequest).ServeHTTP)
 
 	router.Get("/current-user/group-memberships", service.AppHandler(srv.getGroupMemberships).ServeHTTP)
 	router.Post("/current-user/group-memberships/by-code", service.AppHandler(srv.joinGroupByCode).ServeHTTP)
@@ -49,12 +51,14 @@ func (srv *Service) SetRoutes(router chi.Router) {
 type userGroupRelationAction string
 
 const (
-	acceptInvitationAction           userGroupRelationAction = "acceptInvitation"
-	rejectInvitationAction           userGroupRelationAction = "rejectInvitation"
-	createGroupRequestAction         userGroupRelationAction = "createRequest"
-	createAcceptedGroupRequestAction userGroupRelationAction = "createAcceptedRequest"
-	leaveGroupAction                 userGroupRelationAction = "leaveGroup"
-	joinGroupByCodeAction            userGroupRelationAction = "joinGroupByCode"
+	acceptInvitationAction               userGroupRelationAction = "acceptInvitation"
+	rejectInvitationAction               userGroupRelationAction = "rejectInvitation"
+	createGroupJoinRequestAction         userGroupRelationAction = "createJoinRequest"
+	createAcceptedGroupJoinRequestAction userGroupRelationAction = "createAcceptedJoinRequest"
+	createGroupLeaveRequestAction        userGroupRelationAction = "createLeaveRequest"
+	withdrawGroupLeaveRequestAction      userGroupRelationAction = "withdrawLeaveRequest"
+	leaveGroupAction                     userGroupRelationAction = "leaveGroup"
+	joinGroupByCodeAction                userGroupRelationAction = "joinGroupByCode"
 )
 
 func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
@@ -77,6 +81,22 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
+		}
+	}
+
+	if action == createGroupLeaveRequestAction {
+		var found bool
+		found, err = srv.Store.Groups().ByID(groupID).
+			Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id AND
+					   groups_groups_active.lock_membership_approved AND
+					   groups_groups_active.child_group_id = ?`, user.GroupID).
+			Where("NOW() < require_lock_membership_approval_until").HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(
+				errors.New("user is not a member of the group or the group doesn't require approval for leaving"))
 		}
 	}
 
@@ -103,18 +123,18 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	var err error
 	apiError := service.NoError
 
-	if action == createGroupRequestAction {
+	if action == createGroupJoinRequestAction {
 		var found bool
 		found, err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
-			action = createAcceptedGroupRequestAction
+			action = createAcceptedGroupJoinRequestAction
 		}
 	}
 	if map[userGroupRelationAction]bool{
-		createGroupRequestAction: true, acceptInvitationAction: true, createAcceptedGroupRequestAction: true,
+		createGroupJoinRequestAction: true, acceptInvitationAction: true, createAcceptedGroupJoinRequestAction: true,
 	}[action] {
-		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action == createGroupRequestAction)
+		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action == createGroupJoinRequestAction)
 		if apiError != service.NoError {
 			return apiError, nil
 		}
@@ -122,11 +142,13 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	var results database.GroupGroupTransitionResults
 	results, err = store.GroupGroups().Transition(
 		map[userGroupRelationAction]database.GroupGroupTransitionAction{
-			acceptInvitationAction:           database.UserAcceptsInvitation,
-			rejectInvitationAction:           database.UserRefusesInvitation,
-			createGroupRequestAction:         database.UserCreatesRequest,
-			createAcceptedGroupRequestAction: database.UserCreatesAcceptedRequest,
-			leaveGroupAction:                 database.UserLeavesGroup,
+			acceptInvitationAction:               database.UserAcceptsInvitation,
+			rejectInvitationAction:               database.UserRefusesInvitation,
+			createGroupJoinRequestAction:         database.UserCreatesJoinRequest,
+			createAcceptedGroupJoinRequestAction: database.UserCreatesAcceptedJoinRequest,
+			withdrawGroupLeaveRequestAction:      database.UserCancelsLeaveRequest,
+			leaveGroupAction:                     database.UserLeavesGroup,
+			createGroupLeaveRequestAction:        database.UserCreatesLeaveRequest,
 		}[action], groupID, []int64{user.GroupID}, user.GroupID)
 	service.MustNotBeError(err)
 	return apiError, results
