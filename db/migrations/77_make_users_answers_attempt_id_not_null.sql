@@ -45,7 +45,7 @@ ALTER TABLE `users_answers`
     DROP FOREIGN KEY `fk_users_answers_attempt_id_groups_attempts_id`,
     ADD COLUMN `item_id` bigint(20) NOT NULL AFTER `user_id`,
     ADD INDEX `item_id` (`item_id`),
-    MODIFY COLUMN `attempt_id` bigint(20) NOT NULL;
+    MODIFY COLUMN `attempt_id` bigint(20) DEFAULT NULL;
 
 UPDATE `users_answers` JOIN `groups_attempts` ON `groups_attempts`.`id` = `users_answers`.`attempt_id`
 SET `users_answers`.`item_id` = `groups_attempts`.`item_id`;
