@@ -37,8 +37,8 @@ Feature: Save grading result - robustness
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | submitted_at        |
-      | 123 | 101     | 50      | 2017-05-29 06:38:38 |
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: Wrong JSON in request
@@ -691,15 +691,18 @@ Feature: Save grading result - robustness
 
   Scenario: The answer has been already graded
     Given I am the user with id "101"
+    And the database has the following table 'groups_attempts':
+      | id  | group_id | item_id | validated_at        | order |
+      | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'users_answers':
-      | id  | user_id | item_id | score | submitted_at        |
-      | 124 | 101     | 80      | 0     | 2017-05-29 06:38:38 |
+      | id  | user_id | attempt_id | score | submitted_at        |
+      | 124 | 101     | 105        | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "100",
+        "idAttempt": "105",
         "itemURL": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "bAccessSolutions": false,
         "platformName": "{{app().TokenConfig.PlatformName}}"
@@ -710,7 +713,7 @@ Feature: Save grading result - robustness
       {
         "idUser": "101",
         "idItemLocal": "80",
-        "idAttempt": "100",
+        "idAttempt": "105",
         "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
         "score": "100",
         "idUserAnswer": "124"
@@ -727,7 +730,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "The answer has been already graded or is not found"
     And logs should contain:
     """
-    A user tries to replay a score token with a different score value ({"idAttempt":100,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
+    A user tries to replay a score token with a different score value ({"idAttempt":105,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
     """
     And the table "users_answers" should stay unchanged
     And the table "users_items" should stay unchanged

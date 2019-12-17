@@ -15,32 +15,31 @@ import (
 func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 121}]
-		users: [{group_id: 121}]`)
+		users: [{group_id: 121}]
+		groups_attempts: [{id: 56, group_id: 121, item_id: 34, order: 1}]`)
 	defer func() { _ = db.Close() }()
 
 	userAnswerStore := database.NewDataStore(db).UserAnswers()
 	tests := []struct {
 		name      string
 		userID    int64
-		itemID    int64
 		attemptID int64
 		answer    string
 	}{
-		{name: "with attemptID", userID: 121, itemID: 34, attemptID: 56, answer: "my answer"},
+		{name: "with attemptID", userID: 121, attemptID: 56, answer: "my answer"},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			newID, err := userAnswerStore.SubmitNewAnswer(test.userID, test.itemID, test.attemptID, test.answer)
+			newID, err := userAnswerStore.SubmitNewAnswer(test.userID, test.attemptID, test.answer)
 
 			assert.NoError(t, err)
 			assert.NotZero(t, newID)
 
 			type userAnswer struct {
 				UserID         int64
-				ItemID         int64
-				AttemptID      *int64
+				AttemptID      int64
 				Type           string
 				Answer         string
 				SubmittedAtSet bool
@@ -49,13 +48,12 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 			var insertedAnswer userAnswer
 			assert.NoError(t,
 				userAnswerStore.ByID(newID).
-					Select("user_id, item_id, attempt_id, type, answer, "+
+					Select("user_id, attempt_id, type, answer, "+
 						"validated, ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set").
 					Scan(&insertedAnswer).Error())
 			assert.Equal(t, userAnswer{
 				UserID:         test.userID,
-				ItemID:         test.itemID,
-				AttemptID:      &test.attemptID,
+				AttemptID:      test.attemptID,
 				Type:           "Submission",
 				Answer:         test.answer,
 				SubmittedAtSet: true,
@@ -66,18 +64,14 @@ func TestUserAnswerStore_SubmitNewAnswer(t *testing.T) {
 }
 
 func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
-	attemptID := int64(56)
 	tests := []struct {
 		name                    string
 		userID                  int64
-		itemID                  int64
-		attemptID               *int64
+		attemptID               int64
 		expectedCurrentAnswerID int64
 	}{
-		{name: "create new with attemptID", userID: 121, itemID: 34, attemptID: &attemptID},
-		{name: "create new without attemptID", userID: 121, itemID: 35},
-		{name: "return existing with attemptID", userID: 121, itemID: 33, attemptID: &attemptID, expectedCurrentAnswerID: 2},
-		{name: "return existing without attemptID", userID: 121, itemID: 34, expectedCurrentAnswerID: 5},
+		{name: "create new with attemptID", userID: 121, attemptID: 59},
+		{name: "return existing with attemptID", userID: 121, attemptID: 57, expectedCurrentAnswerID: 2},
 	}
 
 	for _, test := range tests {
@@ -86,13 +80,19 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
 				groups: [{id: 111}, {id: 121}]
 				users: [{login: 111, group_id: 111}, {login: 121, group_id: 121}]
+				groups_attempts:
+					- {id: 55, group_id: 121, item_id: 34, order: 1}
+					- {id: 56, group_id: 111, item_id: 34, order: 1}
+					- {id: 57, group_id: 121, item_id: 33, order: 1}
+					- {id: 58, group_id: 121, item_id: 35, order: 1}
+					- {id: 59, group_id: 121, item_id: 35, order: 1}
 				users_answers:
-					- {id: 1, user_id: 111, item_id: 34, attempt_id: 56, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 2, user_id: 121, item_id: 33, attempt_id: 56, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 3, user_id: 121, item_id: 34, attempt_id: 55, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 4, user_id: 121, item_id: 34, attempt_id: 56, type: Submission, submitted_at: 2018-03-22 08:44:55}
-					- {id: 5, user_id: 121, item_id: 34, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 6, user_id: 121, item_id: 35, type: Submission, submitted_at: 2018-03-22 08:44:55}`)
+					- {id: 1, user_id: 111, attempt_id: 56, type: Current, submitted_at: 2018-03-22 08:44:55}
+					- {id: 2, user_id: 121, attempt_id: 57, type: Current, submitted_at: 2018-03-22 08:44:55}
+					- {id: 3, user_id: 121, attempt_id: 55, type: Current, submitted_at: 2018-03-22 08:44:55}
+					- {id: 4, user_id: 121, attempt_id: 55, type: Submission, submitted_at: 2018-03-22 08:44:55}
+					- {id: 5, user_id: 121, attempt_id: 55, type: Current, submitted_at: 2018-03-22 08:44:55}
+					- {id: 6, user_id: 121, attempt_id: 58, type: Submission, submitted_at: 2018-03-22 08:44:55}`)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -100,7 +100,7 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				var err error
 				currentAnswerID, err = store.UserAnswers().
-					GetOrCreateCurrentAnswer(test.userID, test.itemID, test.attemptID)
+					GetOrCreateCurrentAnswer(test.userID, test.attemptID)
 				return err
 			}))
 
@@ -111,8 +111,7 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 				assert.True(t, currentAnswerID > int64(6))
 				type userAnswer struct {
 					UserID         int64
-					ItemID         int64
-					AttemptID      *int64
+					AttemptID      int64
 					Type           string
 					SubmittedAtSet bool
 					Validated      bool
@@ -121,12 +120,11 @@ func TestUserAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 				assert.NoError(t,
 					dataStore.UserAnswers().ByID(currentAnswerID).
 						Select(`
-							user_id, item_id, attempt_id, type, validated,
+							user_id, attempt_id, type, validated,
 							ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set`).
 						Scan(&insertedAnswer).Error())
 				assert.Equal(t, userAnswer{
 					UserID:         test.userID,
-					ItemID:         test.itemID,
 					AttemptID:      test.attemptID,
 					Type:           "Current",
 					SubmittedAtSet: true,
@@ -148,8 +146,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				users_answers: [{id: 200, user_id: 111, item_id: 50, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
+				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]
+				users_answers: [{id: 200, user_id: 111, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
 			userAnswerID:  200,
 			userID:        111,
 			expectedFound: true,
@@ -157,8 +155,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 		{
 			name: "okay (content access)",
 			fixture: `
-				users_answers: [{id: 200, user_id: 101, item_id: 50, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
+				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]
+				users_answers: [{id: 200, user_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
 			userAnswerID:  200,
 			userID:        101,
 			expectedFound: true,
@@ -168,17 +166,17 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       101,
 			userAnswerID: 200,
 			fixture: `
-				users_answers:
-					- {id: 200, user_id: 101, item_id: 60, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}
 				groups_attempts:
-					- {id: 100, group_id: 102, item_id: 60, order: 0}`,
+					- {id: 100, group_id: 102, item_id: 60, order: 0}
+				users_answers:
+					- {id: 200, user_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}`,
 			expectedFound: true,
 		},
 		{
 			name: "user not found",
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]
-				users_answers: [{id: 200, user_id: 101, item_id: 60, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
+				users_answers: [{id: 200, user_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
 			userID:        404,
 			userAnswerID:  100,
 			expectedFound: false,
@@ -188,15 +186,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       121,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{id: 100, user_id: 121, item_id: 50, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 200, group_id: 121, item_id: 50, order: 0}]`,
-			expectedFound: false,
-		},
-		{
-			name:          "no groups_attempts",
-			userID:        101,
-			userAnswerID:  100,
-			fixture:       `users_answers: [{id: 100, user_id: 101, item_id: 50, submitted_at: 2018-03-22 08:44:55}]`,
+				groups_attempts: [{id: 200, group_id: 121, item_id: 50, order: 0}]
+				users_answers: [{id: 100, user_id: 121, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -204,8 +195,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       101,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{id: 100, user_id: 101, item_id: 50, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 200, group_id: 101, item_id: 51, order: 0}]`,
+				groups_attempts: [{id: 200, group_id: 101, item_id: 51, order: 0}]
+				users_answers: [{id: 100, user_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -221,8 +212,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       101,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{id: 100, user_id: 101, item_id: 60, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 200, group_id: 103, item_id: 60, order: 0}]`,
+				groups_attempts: [{id: 200, group_id: 103, item_id: 60, order: 0}]
+				users_answers: [{id: 100, user_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -230,8 +221,8 @@ func TestUserAnswerStore_Visible(t *testing.T) {
 			userID:       101,
 			userAnswerID: 100,
 			fixture: `
-				users_answers: [{id: 100, user_id: 101, item_id: 50, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]
-				groups_attempts: [{id: 200, group_id: 102, item_id: 50, order: 0}]`,
+				groups_attempts: [{id: 200, group_id: 102, item_id: 50, order: 0}]
+				users_answers: [{id: 100, user_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 	}

@@ -36,11 +36,16 @@ Background:
     | 23       | 190     | none                     |
     | 23       | 200     | content_with_descendants |
     | 23       | 210     | info                     |
+  And the database has the following table 'groups_attempts':
+    | id | group_id | item_id | order |
+    | 1  | 11       | 200     | 0     |
+    | 2  | 11       | 200     | 0     |
+    | 3  | 11       | 210     | 1     |
   And the database has the following table 'users_answers':
-    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 11      | 200     | 1          | My answer        | Submission | Current | python    | 2017-05-29 06:37:38 | 100   | true      |
-    | 2  | 11      | 200     | 2          | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 11      | 210     | 3          | My third answer  | Submission | Current | python    | 2017-05-29 06:39:38 | 100   | true      |
+    | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+    | 1  | 11      | 1          | My answer        | Submission | Current | python    | 2017-05-29 06:37:38 | 100   | true      |
+    | 2  | 11      | 2          | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 3  | 11      | 3          | My third answer  | Submission | Current | python    | 2017-05-29 06:39:38 | 100   | true      |
 
   Scenario: Full access on the item+user_group pair (same user)
     Given I am the user with id "11"

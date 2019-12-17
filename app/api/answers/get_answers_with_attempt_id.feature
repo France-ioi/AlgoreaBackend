@@ -34,16 +34,16 @@ Background:
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | content                  |
     | 41       | 200     | content_with_descendants |
-  And the database has the following table 'users_answers':
-    | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 11      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 2  | 11      | 200     | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 11      | 210     | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
   And the database has the following table 'groups_attempts':
     | id  | group_id | item_id | order |
-    | 100 | 13       | 200     | 0     |
+    | 100 | 11       | 200     | 0     |
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
+  And the database has the following table 'users_answers':
+    | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+    | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 2  | 11      | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | 3  | 11      | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "11"

@@ -13,7 +13,8 @@ import (
 // summary: Get an answer
 // description: Return the answer identified by the given `answer_id`.
 //
-//   * The user should have at least 'content' access rights to the `users_answers.item_id` item
+//   * The user should have at least 'content' access rights to the `groups_attempts.item_id` item for
+//     `users_answers.attempt_id`.
 //
 //   * The user should be able to see answers related to his group's attempts, so
 //      (a) if `items.has_attempts = 1`, then the user should be a member of the groups_attempts.group_id team,
@@ -44,7 +45,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	var result []map[string]interface{}
 	err = srv.Store.UserAnswers().Visible(user).
 		Where("users_answers.id = ?", userAnswerID).
-		Select(`users_answers.id, users_answers.user_id, users_answers.item_id, users_answers.attempt_id,
+		Select(`users_answers.id, users_answers.user_id, groups_attempts.item_id, users_answers.attempt_id,
 			users_answers.type, users_answers.state, users_answers.answer,
 			users_answers.submitted_at, users_answers.score, users_answers.validated,
 			users_answers.graded_at`).

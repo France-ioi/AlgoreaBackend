@@ -23,8 +23,10 @@ func TestUserAnswerStore_WithMethods(t *testing.T) {
 				"JOIN groups_attempts ON groups_attempts.id = users_answers.attempt_id",
 		},
 		{
-			name:          "WithItems",
-			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` JOIN items ON items.id = users_answers.item_id",
+			name: "WithItems",
+			expectedQuery: "SELECT `users_answers`.* FROM `users_answers` " +
+				"JOIN groups_attempts ON groups_attempts.id = users_answers.attempt_id " +
+				"JOIN items ON items.id = groups_attempts.item_id",
 		},
 	}
 	for _, testCase := range tests {

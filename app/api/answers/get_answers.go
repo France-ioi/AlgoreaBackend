@@ -81,7 +81,7 @@ import (
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.UserAnswers().WithUsers().
+	dataQuery := srv.Store.UserAnswers().WithUsers().WithGroupAttempts().
 		Select(`users_answers.id, users_answers.name, users_answers.type, users_answers.lang_prog,
 		        users_answers.submitted_at, users_answers.score, users_answers.validated,
 		        users.login, users.first_name, users.last_name`)
@@ -99,7 +99,6 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 			return result
 		}
 
-		// we should create an index on `users_answers`.`attempt_id` for this query
 		dataQuery = dataQuery.Where("attempt_id = ?", attemptID)
 	} else { // user_id + item_id
 		if result := srv.checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID, user); result != service.NoError {

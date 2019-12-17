@@ -60,7 +60,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	user := srv.GetUser(httpReq)
 
 	attemptID := requestData.AttemptID
-	found, itemID, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
+	found, _, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
@@ -69,7 +69,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		userAnswerStore := store.UserAnswers()
 		var currentAnswerID int64
-		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.GroupID, itemID, &attemptID)
+		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.GroupID, attemptID)
 		service.MustNotBeError(err)
 
 		return userAnswerStore.ByID(currentAnswerID).UpdateColumn(map[string]interface{}{
