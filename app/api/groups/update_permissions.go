@@ -86,12 +86,12 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
 		dataMap := data.ConstructMapForDB()
 
-		if dataMap["can_view"] != nil && !checkUserHasRightsToSetCanView(dataMap["can_view"].(string), s, user, itemID) {
+		if dataMap["can_view"] != nil && !checkUserHasAppropriateCanGrantViewPermissionForItem(dataMap["can_view"].(string), s, user, itemID) {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}
 
-		apiErr = checkAccessRightsNeededToUpdatePermissions(s, user, sourceGroupID, groupID, itemID)
+		apiErr = checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
 		if apiErr != service.NoError {
 			return apiErr.Error
 		}
@@ -112,7 +112,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func checkAccessRightsNeededToUpdatePermissions(s *database.DataStore, user *database.User,
+func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
@@ -146,7 +146,8 @@ func checkAccessRightsNeededToUpdatePermissions(s *database.DataStore, user *dat
 	return service.NoError
 }
 
-func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.DataStore, user *database.User, itemID int64) bool {
+func checkUserHasAppropriateCanGrantViewPermissionForItem(viewPermissionToSet string, s *database.DataStore,
+	user *database.User, itemID int64) bool {
 	requiredGrantViewPermission := viewPermissionToSet
 	if requiredGrantViewPermission == "info" { // no "info" in can_grant_view
 		requiredGrantViewPermission = "content"
