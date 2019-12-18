@@ -47,3 +47,47 @@ func TestMembershipAction_PendingType(t *testing.T) {
 	assert.Equal(t, "join_request", JoinRequestCreated.PendingType())
 	assert.Panics(t, func() { JoinRequestAccepted.PendingType() })
 }
+
+func TestGroupApprovals_FromString(t *testing.T) {
+	for _, test := range []struct {
+		name                   string
+		csv                    string
+		expectedGroupApprovals GroupApprovals
+	}{
+		{
+			name: "all are set",
+			csv:  "personal_info_view,personal_info_edit,lock_membership,watch",
+			expectedGroupApprovals: GroupApprovals{
+				PersonalInfoViewApproval: true, PersonalInfoEditApproval: true, LockMembershipApproval: true, WatchApproval: true,
+			},
+		},
+		{name: "none are set", csv: "wrong"},
+		{
+			name:                   "personal_info_view",
+			csv:                    "personal_info_view",
+			expectedGroupApprovals: GroupApprovals{PersonalInfoViewApproval: true},
+		},
+		{
+			name:                   "personal_info_edit",
+			csv:                    "personal_info_edit",
+			expectedGroupApprovals: GroupApprovals{PersonalInfoEditApproval: true},
+		},
+		{
+			name:                   "lock_membership",
+			csv:                    "lock_membership",
+			expectedGroupApprovals: GroupApprovals{LockMembershipApproval: true},
+		},
+		{
+			name:                   "watch",
+			csv:                    "watch",
+			expectedGroupApprovals: GroupApprovals{WatchApproval: true},
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			var approvals GroupApprovals
+			approvals.FromString(test.csv)
+			assert.Equal(t, test.expectedGroupApprovals, approvals)
+		})
+	}
+}
