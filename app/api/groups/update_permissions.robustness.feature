@@ -239,7 +239,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: There are no item's parents visible to the group
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
+    When I send a PUT request to "/groups/23/permissions/23/103" with the following body:
     """
     {
       "can_view": "solution"
