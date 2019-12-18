@@ -144,7 +144,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
 			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
 		JoinsUserAndDefaultItemStrings(user).
-		Where("users_answers.item_id IN ?", itemDescendants.SubQuery()).
+		Where("groups_attempts.item_id IN ?", itemDescendants.SubQuery()).
 		Where("users_answers.type='Submission'").
 		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)

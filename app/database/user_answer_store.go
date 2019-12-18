@@ -27,54 +27,50 @@ func (s *UserAnswerStore) WithGroupAttempts() *UserAnswerStore {
 	}
 }
 
-// WithItems joins `items`
+// WithItems joins `items` through `groups_attempts`
 func (s *UserAnswerStore) WithItems() *UserAnswerStore {
 	return &UserAnswerStore{
 		NewDataStoreWithTable(
-			s.Joins("JOIN items ON items.id = users_answers.item_id"), s.tableName,
+			s.WithGroupAttempts().Joins("JOIN items ON items.id = groups_attempts.item_id"), s.tableName,
 		),
 	}
 }
 
 // SubmitNewAnswer inserts a new row with type='Submission', validated=0, submitted_at=NOW()
 // into the `users_answers` table.
-func (s *UserAnswerStore) SubmitNewAnswer(userID, itemID, attemptID int64, answer string) (int64, error) {
+func (s *UserAnswerStore) SubmitNewAnswer(userID, attemptID int64, answer string) (int64, error) {
 	var userAnswerID int64
 	err := s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		store := NewDataStore(db)
 		userAnswerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO users_answers (id, user_id, item_id, attempt_id, answer, submitted_at, validated)
-				VALUES (?, ?, ?, ?, ?, NOW(), 0)`,
-			userAnswerID, userID, itemID, attemptID, answer).Error
+				INSERT INTO users_answers (id, user_id, attempt_id, answer, submitted_at, validated)
+				VALUES (?, ?, ?, ?, NOW(), 0)`,
+			userAnswerID, userID, attemptID, answer).Error
 	})
 	return userAnswerID, err
 }
 
-// GetOrCreateCurrentAnswer returns an id of the current users_answers for given userID, itemID, attemptID
+// GetOrCreateCurrentAnswer returns an id of the current users_answers for given userID & attemptID
 // or inserts a new row with type='Current' and submitted_at=NOW() into the `users_answers` table.
-func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, itemID int64, attemptID *int64) (userAnswerID int64, err error) {
+func (s *UserAnswerStore) GetOrCreateCurrentAnswer(userID, attemptID int64) (userAnswerID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
 
-	query := s.WithWriteLock().
-		Where("user_id = ?", userID).
-		Where("item_id = ?", itemID).
-		Where("type = 'Current'")
-	if attemptID == nil {
-		query = query.Where("attempt_id IS NULL")
-	} else {
-		query = query.Where("attempt_id = ?", *attemptID)
-	}
-	err = query.PluckFirst("id", &userAnswerID).Error()
+	err = s.WithWriteLock().
+		Joins("JOIN groups_attempts ON groups_attempts.id = users_answers.attempt_id").
+		Where("users_answers.user_id = ?", userID).
+		Where("users_answers.type = 'Current'").
+		Where("attempt_id = ?", attemptID).
+		PluckFirst("users_answers.id", &userAnswerID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		err = s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 			store := NewDataStore(db)
 			userAnswerID = store.NewID()
 			return db.Exec(`
-				INSERT INTO users_answers (id, user_id, item_id, attempt_id, type, submitted_at)
-				VALUES (?, ?, ?, ?, 'Current', NOW())`,
-				userAnswerID, userID, itemID, attemptID).Error()
+				INSERT INTO users_answers (id, user_id, attempt_id, type, submitted_at)
+				VALUES (?, ?, ?, 'Current', NOW())`,
+				userAnswerID, userID, attemptID).Error()
 		})
 	}
 	mustNotBeError(err)
@@ -94,8 +90,8 @@ func (s *UserAnswerStore) Visible(user *User) *DB {
 
 	return s.
 		// the user should have at least 'content' access to the users_answers.item_id
-		Joins("JOIN ? AS items ON items.id = users_answers.item_id", itemsQuery.SubQuery()).
-		Joins("JOIN groups_attempts ON groups_attempts.item_id = users_answers.item_id AND groups_attempts.id = users_answers.attempt_id").
+		Joins("JOIN groups_attempts ON groups_attempts.id = users_answers.attempt_id").
+		Joins("JOIN ? AS items ON items.id = groups_attempts.item_id", itemsQuery.SubQuery()).
 		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,
 		// otherwise groups_attempts.group_id should be equal to the user's self group
 		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",

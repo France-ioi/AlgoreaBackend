@@ -35,11 +35,6 @@ Feature: Save grading result
       | 101      | 50      | content            |
       | 101      | 60      | content            |
       | 101      | 70      | content            |
-    And the database has the following table 'users_answers':
-      | id  | user_id | item_id | submitted_at        |
-      | 123 | 101     | 50      | 2017-05-29 06:38:38 |
-      | 124 | 101     | 60      | 2017-05-29 06:38:38 |
-      | 125 | 101     | 70      | 2017-05-29 06:38:38 |
     And time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
@@ -48,6 +43,10 @@ Feature: Save grading result
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
+      | 124 | 101     | 101        | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
@@ -102,10 +101,9 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101     | 50      | 100   | 1         | 1                                                |
-      | 124 | 101     | 60      | null  | null      | null                                             |
-      | 125 | 101     | 70      | null  | null      | null                                             |
+      | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 100   | 1         | 1                                                |
+      | 124 | 101     | null  | null      | null                                             |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -121,6 +119,10 @@ Feature: Save grading result
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
+      | 124 | 101     | 101        | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
@@ -174,10 +176,9 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101     | 50      | 99    | 0         | 1                                                |
-      | 124 | 101     | 60      | null  | null      | null                                             |
-      | 125 | 101     | 70      | null  | null      | null                                             |
+      | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | 99    | 0         | 1                                                |
+      | 124 | 101     | null  | null      | null                                             |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -193,6 +194,10 @@ Feature: Save grading result
       | id  | group_id | item_id | best_answer_at      | order |
       | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
+      | 124 | 101     | 101        | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
@@ -246,10 +251,9 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101     | 50      | null  | null      | null                                             |
-      | 124 | 101     | 60      | 99    | 0         | 1                                                |
-      | 125 | 101     | 70      | null  | null      | null                                             |
+      | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | null  | null      | null                                             |
+      | 124 | 101     | 99    | 0         | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -265,6 +269,10 @@ Feature: Save grading result
       | id  | group_id | item_id | score | best_answer_at      | order |
       | 100 | 101      | 50      | 20    | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 20    | 2018-05-29 06:38:38 | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
+      | 124 | 101     | 101        | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
@@ -318,10 +326,9 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101     | 50      | null  | null      | null                                             |
-      | 124 | 101     | 60      | 5     | 0         | 1                                                |
-      | 125 | 101     | 70      | null  | null      | null                                             |
+      | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | null  | null      | null                                             |
+      | 124 | 101     | 5     | 0         | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -334,6 +341,10 @@ Feature: Save grading result
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2018-05-29 06:38:38 | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
+      | 124 | 101     | 101        | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
@@ -387,10 +398,9 @@ Feature: Save grading result
       }
       """
     And the table "users_answers" should be:
-      | id  | user_id | item_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101     | 50      | null  | null      | null                                             |
-      | 124 | 101     | 60      | 100   | 1         | 1                                                |
-      | 125 | 101     | 70      | null  | null      | null                                             |
+      | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101     | null  | null      | null                                             |
+      | 124 | 101     | 100   | 1         | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -399,6 +409,12 @@ Feature: Save grading result
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated
     Given I am the user with id "101"
+    And the database has the following table 'groups_attempts':
+      | id  | group_id | item_id | validated_at        | order |
+      | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 123 | 101     | 100        | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -452,6 +468,12 @@ Feature: Save grading result
 
   Scenario: Platform doesn't support tokens
     Given I am the user with id "101"
+    And the database has the following table 'groups_attempts':
+      | id  | group_id | item_id | validated_at        | order |
+      | 100 | 101      | 70      | 2018-05-29 06:38:38 | 2     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 125 | 101     | 100        | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

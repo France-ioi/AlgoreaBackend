@@ -69,15 +69,15 @@ Feature: Export the current user's data
       | id  |
       | 404 |
       | 405 |
-    And the database has the following table 'users_answers':
-      | id | user_id | item_id | submitted_at        |
-      | 1  | 11      | 404     | 2019-07-09 21:02:28 |
-      | 2  | 21      | 405     | 2019-07-09 21:02:28 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |
       | 113 | 1        | 405     | 0     |
+    And the database has the following table 'users_answers':
+      | id | user_id | attempt_id | submitted_at        |
+      | 1  | 11      | 111        | 2019-07-09 21:02:28 |
+      | 2  | 21      | 113        | 2019-07-09 21:02:28 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 404     | 111               |
@@ -232,7 +232,7 @@ Feature: Export the current user's data
       ],
       "users_answers": [
         {
-          "id": "1", "validated": null, "score": null, "attempt_id": null, "item_id": "404",
+          "id": "1", "validated": null, "score": null, "attempt_id": "111",
           "user_id": "11", "answer": null, "graded_at": null, "lang_prog": null,
           "name": null, "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }

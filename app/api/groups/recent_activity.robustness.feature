@@ -17,10 +17,14 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
       | 79 | 23                | 23             | 1       |
+    And the database has the following table 'groups_attempts':
+      | id  | item_id | group_id | order |
+      | 100 | 200     | 11       | 1     |
+      | 101 | 200     | 11       | 2     |
     And the database has the following table 'users_answers':
-      | id | user_id | item_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 1  | 11      | 200     | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 2  | 11      | 200     | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+      | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 2  | 11      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |

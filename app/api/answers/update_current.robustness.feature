@@ -15,12 +15,12 @@ Feature: Update the 'current' answer
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
-    And the database has the following table 'users_answers':
-      | id  | user_id | item_id | attempt_id | submitted_at        |
-      | 100 | 101     | 50      | 200        | 2017-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
+    And the database has the following table 'users_answers':
+      | id  | user_id | attempt_id | submitted_at        |
+      | 100 | 101     | 200        | 2017-05-29 06:38:38 |
 
   Scenario: Missing attempt_id
     Given I am the user with id "101"
