@@ -118,7 +118,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
 //
 //     * gives full access to the item for the current user (creates a new `permissions_granted` row with: `item_id` = `items.id`,
-//       `group_id` = `group_id` of the current user, `giver_group_id` = `users.group_id` of the current user,
+//       `group_id` = `group_id` of the current user, `source_group_id` = `users.group_id` of the current user, `origin` = 'self',
 //       `is_owner` = 1).
 //
 //     * adds new relations for the parent and (optionally) children items into `items_items` and propagates `permissions_generated`.
@@ -282,10 +282,11 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 
 		service.MustNotBeError(s.PermissionsGranted().InsertMap(
 			map[string]interface{}{
-				"item_id":        itemID,
-				"group_id":       user.GroupID,
-				"giver_group_id": user.GroupID,
-				"is_owner":       true,
+				"item_id":         itemID,
+				"group_id":        user.GroupID,
+				"source_group_id": user.GroupID,
+				"origin":          "self",
+				"is_owner":        true,
 			}))
 
 		stringMap["id"] = s.NewID()

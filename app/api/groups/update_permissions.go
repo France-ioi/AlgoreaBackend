@@ -16,13 +16,14 @@ type updatePermissionsInput struct {
 	CanView string `json:"can_view" validate:"oneof=none info content content_with_descendants solution"`
 }
 
-// swagger:operation PUT /groups/{group_id}/items/{item_id} groups updatePermissions
+// swagger:operation PUT /groups/{source_group_id}/permissions/{group_id}/{item_id} groups updatePermissions
 // ---
 // summary: Update permissions
 // description: Let an admin of a group give/withdraw access rights on an item (identified by `item_id`)
 //   to a user (identified by `group_id` of his self group).
 //
-//   * The user giving the access must be a manager of one of the ancestors of the group.
+//   * The user giving the access must be a manager (with `can_grant_group_access` permission)
+//     of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
@@ -30,6 +31,10 @@ type updatePermissionsInput struct {
 //   * The group must already have access to one of the parents of the item or the item itself.
 // parameters:
 // - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: source_group_id
 //   in: path
 //   required: true
 //   type: integer
@@ -54,6 +59,11 @@ type updatePermissionsInput struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) service.APIError {
+	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
+
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -74,44 +84,19 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	apiErr := service.NoError
 
 	err = srv.Store.InTransaction(func(s *database.DataStore) error {
-		var found bool
-
 		dataMap := data.ConstructMapForDB()
 
-		if dataMap["can_view"] != nil {
-			if !checkUserHasRightsToSetCanView(dataMap["can_view"].(string), s, user, itemID) {
-				apiErr = service.InsufficientAccessRightsError
-				return apiErr.Error // rollback
-			}
-		}
-
-		// the authorized user should be a manager of the group
-		found, err = s.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
-		service.MustNotBeError(err)
-		if !found {
+		if dataMap["can_view"] != nil && !checkUserHasAppropriateCanGrantViewPermissionForItem(dataMap["can_view"].(string), s, user, itemID) {
 			apiErr = service.InsufficientAccessRightsError
 			return apiErr.Error // rollback
 		}
 
-		// at least one of the item's parents should be visible to the group
-		itemsVisibleToGroupSubQuery := s.Permissions().VisibleToGroup(groupID).SubQuery()
-
-		found, err = s.ItemItems().
-			Joins("JOIN ? AS visible ON visible.item_id = items_items.parent_item_id", itemsVisibleToGroupSubQuery).
-			Where("items_items.child_item_id = ?", itemID).
-			HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			found, err = s.Items().ByID(itemID).
-				Joins("JOIN ? AS visible ON visible.item_id = items.id", itemsVisibleToGroupSubQuery).HasRows()
-			service.MustNotBeError(err)
-			if !found {
-				apiErr = service.InsufficientAccessRightsError
-				return apiErr.Error // rollback
-			}
+		apiErr = checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s, user, sourceGroupID, groupID, itemID)
+		if apiErr != service.NoError {
+			return apiErr.Error
 		}
 
-		savePermissionsIntoDB(groupID, itemID, user.GroupID, dataMap, s)
+		savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
 		return nil
 	})
 
@@ -127,7 +112,42 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.DataStore, user *database.User, itemID int64) bool {
+func checkUserIsManagerAllowedToGrantPermissionsAndItemIsVisibleToGroup(s *database.DataStore, user *database.User,
+	sourceGroupID, groupID, itemID int64) service.APIError {
+	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
+	// the 'sourceGroupID' should be an ancestor of 'groupID'
+	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
+		Joins(`
+				JOIN groups_ancestors_active AS descendants
+					ON descendants.ancestor_group_id = groups.id AND descendants.child_group_id = ?`, groupID).
+		Where("group_managers.can_grant_group_access").
+		HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
+	}
+
+	// at least one of the item's parents should be visible to the group
+	itemsVisibleToGroupSubQuery := s.Permissions().VisibleToGroup(groupID).SubQuery()
+
+	found, err = s.ItemItems().
+		Joins("JOIN ? AS visible ON visible.item_id = items_items.parent_item_id", itemsVisibleToGroupSubQuery).
+		Where("items_items.child_item_id = ?", itemID).
+		HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		found, err = s.Items().ByID(itemID).
+			Joins("JOIN ? AS visible ON visible.item_id = items.id", itemsVisibleToGroupSubQuery).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.InsufficientAccessRightsError
+		}
+	}
+	return service.NoError
+}
+
+func checkUserHasAppropriateCanGrantViewPermissionForItem(viewPermissionToSet string, s *database.DataStore,
+	user *database.User, itemID int64) bool {
 	requiredGrantViewPermission := viewPermissionToSet
 	if requiredGrantViewPermission == "info" { // no "info" in can_grant_view
 		requiredGrantViewPermission = "content"
@@ -142,7 +162,7 @@ func checkUserHasRightsToSetCanView(viewPermissionToSet string, s *database.Data
 	return found
 }
 
-func savePermissionsIntoDB(groupID, itemID, giverGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
+func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
 	dbMap["latest_update_on"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))
@@ -152,7 +172,8 @@ func savePermissionsIntoDB(groupID, itemID, giverGroupID int64, dbMap map[string
 
 	dbMap["group_id"] = groupID
 	dbMap["item_id"] = itemID
-	dbMap["giver_group_id"] = giverGroupID
+	dbMap["source_group_id"] = sourceGroupID
+	dbMap["origin"] = "group_membership"
 
 	permissionGrantedStore := s.PermissionsGranted()
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))

@@ -25,10 +25,10 @@ Feature: Update item - robustness
       | 11       | 4       | solution           | none               | false              |
       | 11       | 50      | solution           | all                | false              |
     And the database has the following table 'permissions_granted':
-      | group_id | item_id | can_view | can_edit | is_owner | giver_group_id |
-      | 11       | 4       | solution | none     | false    | 11             |
-      | 11       | 21      | solution | none     | false    | 11             |
-      | 11       | 50      | solution | all      | false    | 11             |
+      | group_id | item_id | can_view | can_edit | is_owner | source_group_id |
+      | 11       | 4       | solution | none     | false    | 11              |
+      | 11       | 21      | solution | none     | false    | 11              |
+      | 11       | 50      | solution | all      | false    | 11              |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |

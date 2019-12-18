@@ -48,9 +48,9 @@ UPDATE `groups_groups` LEFT JOIN `users` ON `users`.`id` = `groups_groups`.`invi
 ALTER TABLE `groups_groups`
     ADD CONSTRAINT `fk_groups_groups_inviting_user_id_users_group_id` FOREIGN KEY (`inviting_user_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL;
 
-ALTER TABLE `groups_items` CHANGE COLUMN `creator_user_id` `creator_id` bigint(20) DEFAULT NULL
-    COMMENT 'User who created the entry';
-UPDATE `groups_items` LEFT JOIN `users` ON `users`.`id` = `groups_items`.`creator_id` SET `groups_items`.`creator_id` = `users`.`group_id`;
+ALTER TABLE `groups_items`
+    ADD COLUMN `creator_id` bigint(20) DEFAULT NULL COMMENT 'User who created the entry' AFTER `creator_user_id` ;
+UPDATE `groups_items` LEFT JOIN `users` ON `users`.`id` = `groups_items`.`creator_user_id` SET `groups_items`.`creator_id` = `users`.`group_id`;
 ALTER TABLE `groups_items`
     ADD CONSTRAINT `fk_groups_items_creator_id_users_group_id` FOREIGN KEY (`creator_id`) REFERENCES `users`(`group_id`) ON DELETE SET NULL;
 
@@ -150,10 +150,8 @@ ALTER TABLE `groups_groups`
         COMMENT 'User (one of the admins of the parent group) who initiated the invitation or accepted the request';
 
 ALTER TABLE `groups_items`
-    DROP FOREIGN KEY `fk_groups_items_creator_id_users_group_id`;
-UPDATE `groups_items` LEFT JOIN `users` ON `users`.`group_id` = `groups_items`.`creator_id` SET `groups_items`.`creator_id` = IFNULL(`users`.`id`, 0);
-ALTER TABLE `groups_items` CHANGE COLUMN `creator_id` `creator_user_id` bigint(20) NOT NULL
-    COMMENT 'User who created the entry';
+    DROP FOREIGN KEY `fk_groups_items_creator_id_users_group_id`,
+    DROP COLUMN `creator_id`;
 
 ALTER TABLE `messages`
     DROP FOREIGN KEY `fk_messages_user_id_users_group_id`;

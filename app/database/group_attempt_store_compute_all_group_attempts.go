@@ -163,11 +163,12 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 			if unlockStatement == nil {
 				const unlockQuery = `
 					INSERT INTO permissions_granted
-						(group_id, item_id, giver_group_id, can_view, latest_update_on)
+						(group_id, item_id, source_group_id, origin, can_view, latest_update_on)
 						SELECT
 							groups.id AS group_id,
 							item_unlocking_rules.unlocked_item_id AS item_id,
-							-1,
+							groups.id,
+							'item_unlocking',
 							'content',
 							NOW()
 						FROM groups_attempts
@@ -177,7 +178,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 						WHERE groups_attempts.ancestors_computation_state = 'processing'
 					ON DUPLICATE KEY UPDATE
 						latest_update_on = IF(can_view = 'content', latest_update_on, NOW()),
-						can_view = GREATEST(can_view_value, 3 /* 'content' */)`
+						can_view = 'content'`
 				unlockStatement, err = ds.db.CommonDB().Prepare(unlockQuery)
 				mustNotBeError(err)
 				defer func() { mustNotBeError(unlockStatement.Close()) }()

@@ -164,10 +164,11 @@ func createContestParticipantsGroup(store *database.DataStore, itemID int64) int
 		})
 	}))
 	service.MustNotBeError(store.PermissionsGranted().InsertMap(map[string]interface{}{
-		"group_id":       participantsGroupID,
-		"item_id":        itemID,
-		"giver_group_id": -1,
-		"can_view":       "content",
+		"group_id":        participantsGroupID,
+		"item_id":         itemID,
+		"source_group_id": participantsGroupID,
+		"origin":          "group_membership",
+		"can_view":        "content",
 	}))
 	return participantsGroupID
 }

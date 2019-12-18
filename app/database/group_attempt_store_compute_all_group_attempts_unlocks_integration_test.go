@@ -12,9 +12,11 @@ import (
 )
 
 type unlocksResultRow struct {
-	GroupID int64
-	ItemID  int64
-	CanView string
+	GroupID       int64
+	ItemID        int64
+	CanView       string
+	SourceGroupID int64
+	Origin        string
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks(t *testing.T) {
@@ -60,16 +62,16 @@ func testUnlocks(db *database.DB, t *testing.T) {
 
 	var result []unlocksResultRow
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
-		Select("group_id, item_id, can_view").
+		Select("group_id, item_id, can_view, source_group_id, origin").
 		Order("group_id, item_id").
 		Scan(&result).Error())
 	assert.Equal(t, []unlocksResultRow{
-		{GroupID: 101, ItemID: 1001, CanView: "content"},
-		{GroupID: 101, ItemID: 1002, CanView: "content"},
-		{GroupID: 101, ItemID: 2001, CanView: "content"},
-		{GroupID: 101, ItemID: 2002, CanView: "content"},
-		{GroupID: 101, ItemID: 4001, CanView: "content"},
-		{GroupID: 101, ItemID: 4002, CanView: "content"},
+		{GroupID: 101, ItemID: 1001, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
+		{GroupID: 101, ItemID: 1002, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
+		{GroupID: 101, ItemID: 2001, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
+		{GroupID: 101, ItemID: 2002, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
+		{GroupID: 101, ItemID: 4001, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
+		{GroupID: 101, ItemID: 4002, CanView: "content", SourceGroupID: 101, Origin: "item_unlocking"},
 	}, result)
 	var count int64
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().
