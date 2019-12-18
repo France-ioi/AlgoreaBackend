@@ -13,7 +13,7 @@ Feature: Change item access rights for a group
       | jane  | 31       | Jane        | Doe       |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
-      | 23       | 21         |
+      | 25       | 21         |
       | 31       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
@@ -21,6 +21,7 @@ Feature: Change item access rights for a group
       | 23                | 23             | 1       |
       | 25                | 23             | 0       |
       | 25                | 25             | 1       |
+      | 25                | 31             | 0       |
       | 31                | 31             | 1       |
     And the database has the following table 'items':
       | id  |
@@ -43,13 +44,12 @@ Feature: Change item access rights for a group
       | 102              | 103           |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated        |
-      | 25       | 100     | content_with_descendants  |
-      | 25       | 101     | info                      |
-      | 25       | 102     | info                      |
-      | 25       | 103     | info                      |
+      | 23       | 100     | content_with_descendants  |
+      | 23       | 101     | info                      |
+      | 23       | 103     | info                      |
     And the database has the following table 'permissions_granted':
       | group_id | item_id | can_view | source_group_id | latest_update_on    |
-      | 25       | 100     | content  | 23              | 2019-05-30 11:00:00 |
+      | 23       | 100     | content  | 23              | 2019-05-30 11:00:00 |
 
   Scenario Outline: Create a new permissions_granted row
     Given I am the user with id "21"
@@ -60,7 +60,7 @@ Feature: Change item access rights for a group
     And the database table 'permissions_granted' has also the following rows:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | source_group_id | latest_update_on    |
       | 21       | 102     | solution | transfer       | transfer  | transfer | 23              | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/23/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
       """
       {
         "can_view": "<can_view>"
@@ -70,18 +70,16 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | source_group_id | origin           | can_view   | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 102     | 23              | group_membership | solution   | 0                                                  |
-      | 23       | 102     | 21              | group_membership | <can_view> | 1                                                  |
-      | 25       | 100     | 23              | group_membership | content    | 0                                                  |
+      | 23       | 100     | 23              | group_membership | content    | 0                                                  |
+      | 23       | 102     | 25              | group_membership | <can_view> | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated    | can_grant_view_generated | can_watch_generated | can_edit_generated |
       | 21       | 102     | solution              | transfer                 | transfer            | transfer           |
       | 21       | 103     | content               | none                     | none                | none               |
+      | 23       | 100     | content               | none                     | none                | none               |
+      | 23       | 101     | info                  | none                     | none                | none               |
       | 23       | 102     | <can_view>            | none                     | none                | none               |
       | 23       | 103     | <propagated_can_view> | none                     | none                | none               |
-      | 25       | 100     | content               | none                     | none                | none               |
-      | 25       | 101     | info                  | none                     | none                | none               |
-      | 25       | 102     | none                  | none                     | none                | none               |
-      | 25       | 103     | none                  | none                     | none                | none               |
   Examples:
     | can_view | propagated_can_view |
     | solution | content             |
@@ -96,8 +94,8 @@ Feature: Change item access rights for a group
     And the database table 'permissions_granted' has also the following rows:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | origin           | source_group_id | latest_update_on    |
       | 21       | 102     | solution | solution       | answer    | all      | group_membership | 23              | 2019-05-30 11:00:00 |
-      | 23       | 102     | none     | none           | none      | none     | group_membership | 21              | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/23/items/102" with the following body:
+      | 23       | 102     | none     | none           | none      | none     | group_membership | 25              | 2019-05-30 11:00:00 |
+    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -107,18 +105,16 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 102     | 23              | group_membership | solution | solution       | answer    | all      | 0                                                  |
-      | 23       | 102     | 21              | group_membership | solution | none           | none      | none     | 1                                                  |
-      | 25       | 100     | 23              | group_membership | content  | none           | none      | none     | 0                                                  |
+      | 23       | 100     | 23              | group_membership | content  | none           | none      | none     | 0                                                  |
+      | 23       | 102     | 25              | group_membership | solution | none           | none      | none     | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated |
       | 21       | 102     | solution           | solution                 | answer              | all                |
       | 21       | 103     | content            | none                     | none                | none               |
+      | 23       | 100     | content            | none                     | none                | none               |
+      | 23       | 101     | info               | none                     | none                | none               |
       | 23       | 102     | solution           | none                     | none                | none               |
       | 23       | 103     | content            | none                     | none                | none               |
-      | 25       | 100     | content            | none                     | none                | none               |
-      | 25       | 101     | info               | none                     | none                | none               |
-      | 25       | 102     | none               | none                     | none                | none               |
-      | 25       | 103     | none               | none                     | none                | none               |
 
   Scenario: Create a new permissions_granted row (the group has only 'content' access on the item's parent)
     Given I am the user with id "21"
@@ -133,7 +129,7 @@ Feature: Change item access rights for a group
       | group_id | item_id | can_view | is_owner | source_group_id | origin           | latest_update_on    |
       | 21       | 102     | none     | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 101     | content  | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/31/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/31/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -143,17 +139,17 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 102     | none     | 1        | 23              | group_membership | 0                                                  |
-      | 25       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
+      | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 101     | content  | 0        | 23              | group_membership | 0                                                  |
-      | 31       | 102     | solution | 0        | 21              | group_membership | 1                                                  |
+      | 31       | 102     | solution | 0        | 25              | group_membership | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 21       | 102     | solution           | transfer                 | transfer            | transfer           | 1                  |
       | 21       | 103     | content            | none                     | none                | none               | 0                  |
-      | 25       | 100     | content            | none                     | none                | none               | 0                  |
-      | 25       | 101     | info               | none                     | none                | none               | 0                  |
-      | 25       | 102     | none               | none                     | none                | none               | 0                  |
-      | 25       | 103     | none               | none                     | none                | none               | 0                  |
+      | 23       | 100     | content            | none                     | none                | none               | 0                  |
+      | 23       | 101     | info               | none                     | none                | none               | 0                  |
+      | 23       | 102     | none               | none                     | none                | none               | 0                  |
+      | 23       | 103     | none               | none                     | none                | none               | 0                  |
       | 31       | 101     | content            | none                     | none                | none               | 0                  |
       | 31       | 102     | solution           | none                     | none                | none               | 0                  |
       | 31       | 103     | content            | none                     | none                | none               | 0                  |
@@ -174,7 +170,7 @@ Feature: Change item access rights for a group
       | group_id | item_id | can_view                 | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
       | 21       | 100     | solution                 | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content_with_descendants | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/31/items/100" with the following body:
+    When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
     """
     {
       "can_view": "solution"
@@ -184,19 +180,19 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | can_view                 | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 100     | solution                 | 1        | 23              | group_membership | 0                                                  |
-      | 25       | 100     | content                  | 0        | 23              | group_membership | 0                                                  |
+      | 23       | 100     | content                  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | content_with_descendants | 0        | 23              | group_membership | 0                                                  |
-      | 31       | 100     | solution                 | 0        | 21              | group_membership | 1                                                  |
+      | 31       | 100     | solution                 | 0        | 25              | group_membership | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | is_owner_generated |
       | 21       | 100     | solution           | 1                  |
       | 21       | 101     | info               | 0                  |
       | 21       | 102     | none               | 0                  |
       | 21       | 103     | none               | 0                  |
-      | 25       | 100     | content            | 0                  |
-      | 25       | 101     | info               | 0                  |
-      | 25       | 102     | none               | 0                  |
-      | 25       | 103     | none               | 0                  |
+      | 23       | 100     | content            | 0                  |
+      | 23       | 101     | info               | 0                  |
+      | 23       | 102     | none               | 0                  |
+      | 23       | 103     | none               | 0                  |
       | 31       | 100     | solution           | 0                  |
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |
@@ -218,7 +214,7 @@ Feature: Change item access rights for a group
       | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | content  | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/31/items/100" with the following body:
+    When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
     """
     {
       "can_view": "solution"
@@ -228,19 +224,19 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 100     | none     | 1        | 23              | group_membership | 0                                                  |
-      | 25       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
+      | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
-      | 31       | 100     | solution | 0        | 21              | group_membership | 1                                                  |
+      | 31       | 100     | solution | 0        | 25              | group_membership | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | is_owner_generated |
       | 21       | 100     | solution           | 1                  |
       | 21       | 101     | info               | 0                  |
       | 21       | 102     | none               | 0                  |
       | 21       | 103     | none               | 0                  |
-      | 25       | 100     | content            | 0                  |
-      | 25       | 101     | info               | 0                  |
-      | 25       | 102     | none               | 0                  |
-      | 25       | 103     | none               | 0                  |
+      | 23       | 100     | content            | 0                  |
+      | 23       | 101     | info               | 0                  |
+      | 23       | 102     | none               | 0                  |
+      | 23       | 103     | none               | 0                  |
       | 31       | 100     | solution           | 0                  |
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |
@@ -262,7 +258,7 @@ Feature: Change item access rights for a group
       | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_on    |
       | 21       | 100     | none     | solution       | 1        | 23              | group_membership | 2019-05-30 11:00:00 |
       | 31       | 100     | info     | none           | 0        | 23              | group_membership | 2019-05-30 11:00:00 |
-    When I send a PUT request to "/groups/31/items/100" with the following body:
+    When I send a PUT request to "/groups/25/permissions/31/100" with the following body:
     """
     {
       "can_view": "solution"
@@ -272,19 +268,19 @@ Feature: Change item access rights for a group
     And the table "permissions_granted" should be:
       | group_id | item_id | can_view | is_owner | source_group_id | origin           | TIMESTAMPDIFF(SECOND, latest_update_on, NOW()) < 3 |
       | 21       | 100     | none     | 1        | 23              | group_membership | 0                                                  |
-      | 25       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
+      | 23       | 100     | content  | 0        | 23              | group_membership | 0                                                  |
       | 31       | 100     | info     | 0        | 23              | group_membership | 0                                                  |
-      | 31       | 100     | solution | 0        | 21              | group_membership | 1                                                  |
+      | 31       | 100     | solution | 0        | 25              | group_membership | 1                                                  |
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | is_owner_generated |
       | 21       | 100     | solution           | 1                  |
       | 21       | 101     | info               | 0                  |
       | 21       | 102     | none               | 0                  |
       | 21       | 103     | none               | 0                  |
-      | 25       | 100     | content            | 0                  |
-      | 25       | 101     | info               | 0                  |
-      | 25       | 102     | none               | 0                  |
-      | 25       | 103     | none               | 0                  |
+      | 23       | 100     | content            | 0                  |
+      | 23       | 101     | info               | 0                  |
+      | 23       | 102     | none               | 0                  |
+      | 23       | 103     | none               | 0                  |
       | 31       | 100     | solution           | 0                  |
       | 31       | 101     | info               | 0                  |
       | 31       | 102     | none               | 0                  |

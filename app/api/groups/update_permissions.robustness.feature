@@ -13,7 +13,7 @@ Feature: Change item access rights for a group - robustness
       | admin | 31       | Allie       | Grater    |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
-      | 23       | 21         |
+      | 25       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
@@ -57,9 +57,22 @@ Feature: Change item access rights for a group - robustness
       | 25       | 101     | info     | none                     | 0        | 23              | 2019-05-30 11:00:00 |
       | 31       | 102     | none     | content_with_descendants | 0        | 31              | 2019-05-30 11:00:00 |
 
+  Scenario: Invalid source_group_id
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/abc/permissions/23/102" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for source_group_id (should be int64)"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
   Scenario: Invalid group_id
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/abc/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/abc/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -72,7 +85,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: Invalid item_id
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/23/items/abc" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/abc" with the following body:
     """
     {
       "can_view": "solution"
@@ -85,7 +98,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: Invalid can_view
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/23/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
     """
     {
       "can_view": "unknown"
@@ -108,7 +121,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The user doesn't exist
     Given I am the user with id "404"
-    When I send a PUT request to "/groups/23/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -121,7 +134,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The user doesn't have enough rights to set can_view
     Given I am the user with id "31"
-    When I send a PUT request to "/groups/23/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -134,7 +147,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The user doesn't have enough rights to set can_view = info
     Given I am the user with id "31"
-    When I send a PUT request to "/groups/23/items/103" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
     """
     {
       "can_view": "info"
@@ -147,7 +160,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The item doesn't exist
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/23/items/404" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/404" with the following body:
     """
     {
       "can_view": "solution"
@@ -158,9 +171,35 @@ Feature: Change item access rights for a group - robustness
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should stay unchanged
 
-  Scenario: The user is not a manager of the group
+  Scenario: The user is not a manager of the source_group_id
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/21/items/102" with the following body:
+    When I send a PUT request to "/groups/21/permissions/21/102" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: source_group_id is not an ancestor of group_id
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/25/permissions/21/102" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: The source group doesn't exist
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/404/permissions/21/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -173,7 +212,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The group doesn't exist
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/404/items/102" with the following body:
+    When I send a PUT request to "/groups/25/permissions/404/102" with the following body:
     """
     {
       "can_view": "solution"
@@ -186,7 +225,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: There are no item's parents visible to the group
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/23/items/103" with the following body:
+    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
     """
     {
       "can_view": "solution"
