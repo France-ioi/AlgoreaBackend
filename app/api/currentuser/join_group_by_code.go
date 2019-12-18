@@ -101,7 +101,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
 		results, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID}, user.GroupID)
+			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID}, nil, user.GroupID)
 		return errInTransaction
 	})
 	if apiError != service.NoError {

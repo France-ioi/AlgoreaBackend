@@ -166,7 +166,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 					withdrawInvitationsAction: database.AdminWithdrawsInvitation,
 					acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
 					rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
-				}[action], parentGroupID, groupIDs, user.GroupID)
+				}[action], parentGroupID, groupIDs, nil, user.GroupID)
 			return err
 		})
 	}

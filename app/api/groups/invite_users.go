@@ -147,7 +147,8 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
 			groupsToInvite = filterOtherTeamsMembersOutForLogins(store, parentGroupID, groupsToInvite, results, groupIDToLoginMap)
 
-			groupResults, err = store.GroupGroups().Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, user.GroupID)
+			groupResults, err = store.GroupGroups().
+				Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, nil, user.GroupID)
 			return err
 		})
 	}
