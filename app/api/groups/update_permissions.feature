@@ -12,9 +12,9 @@ Feature: Change item access rights for a group
       | user  | 23       | John        | Doe       |
       | jane  | 31       | Jane        | Doe       |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 25       | 21         |
-      | 31       | 21         |
+      | group_id | manager_id | can_grant_group_access |
+      | 25       | 21         | 1                      |
+      | 31       | 21         | 0                      |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |

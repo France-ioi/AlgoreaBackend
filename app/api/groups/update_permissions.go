@@ -22,7 +22,8 @@ type updatePermissionsInput struct {
 // description: Let an admin of a group give/withdraw access rights on an item (identified by `item_id`)
 //   to a user (identified by `group_id` of his self group).
 //
-//   * The user giving the access must be a manager of `{source_group_id}` which should be an ancestor of the `{group_id}`.
+//   * The user giving the access must be a manager (with `can_grant_group_access` permission)
+//     of `{source_group_id}` which should be an ancestor of the `{group_id}`.
 //
 //   * The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //     for the item.
@@ -113,12 +114,13 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 func checkAccessRightsNeededToUpdatePermissions(s *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64) service.APIError {
-	// the authorized user should be a manager of the sourceGroupID and
+	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
 	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
 		Joins(`
 				JOIN groups_ancestors_active AS descendants
 					ON descendants.ancestor_group_id = groups.id AND descendants.child_group_id = ?`, groupID).
+		Where("group_managers.can_grant_group_access").
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {

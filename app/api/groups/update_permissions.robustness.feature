@@ -12,8 +12,9 @@ Feature: Change item access rights for a group - robustness
       | user  | 23       | John        | Doe       |
       | admin | 31       | Allie       | Grater    |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 25       | 21         |
+      | group_id | manager_id | can_grant_group_access |
+      | 23       | 21         | 1                      |
+      | 25       | 21         | 0                      |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 21                | 21             | 1       |
@@ -174,6 +175,19 @@ Feature: Change item access rights for a group - robustness
   Scenario: The user is not a manager of the source_group_id
     Given I am the user with id "21"
     When I send a PUT request to "/groups/21/permissions/21/102" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_generated" should stay unchanged
+
+  Scenario: The user is a manager of the source_group_id, but he doesn't have 'can_grant_group_access' permission
+    Given I am the user with id "21"
+    When I send a PUT request to "/groups/25/permissions/25/102" with the following body:
     """
     {
       "can_view": "solution"
