@@ -251,7 +251,6 @@ type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 // GroupApprovals represents all the approvals that can be given by a user to the group managers
 type GroupApprovals struct {
 	PersonalInfoViewApproval bool
-	PersonalInfoEditApproval bool
 	LockMembershipApproval   bool
 	WatchApproval            bool
 }
@@ -263,8 +262,6 @@ func (approvals *GroupApprovals) FromString(s string) {
 		switch approval {
 		case "personal_info_view":
 			approvals.PersonalInfoViewApproval = true
-		case "personal_info_edit":
-			approvals.PersonalInfoEditApproval = true
 		case "lock_membership":
 			approvals.LockMembershipApproval = true
 		case "watch":
@@ -383,17 +380,17 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 	if len(idsToInsertPending) > 0 {
 		insertQuery := `
 			INSERT INTO group_pending_requests
-				(group_id, member_id, ` + "`type`" + `, personal_info_view_approved, personal_info_edit_approved,
+				(group_id, member_id, ` + "`type`" + `, personal_info_view_approved,
 				 lock_membership_approved, watch_approved)`
-		valuesTemplate := "(?, ?, ?, ?, ?, ?, ?)"
+		valuesTemplate := "(?, ?, ?, ?, ?, ?)"
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
-		values := make([]interface{}, 0, len(idsToInsertPending)*7)
+		values := make([]interface{}, 0, len(idsToInsertPending)*6)
 		for id, groupMembershipAction := range idsToInsertPending {
 			values = append(values, parentGroupID, id, groupMembershipAction.PendingType(),
-				approvals[id].PersonalInfoViewApproval, approvals[id].PersonalInfoEditApproval,
-				approvals[id].LockMembershipApproval, approvals[id].WatchApproval)
+				approvals[id].PersonalInfoViewApproval, approvals[id].LockMembershipApproval,
+				approvals[id].WatchApproval)
 		}
 		mustNotBeError(dataStore.db.Exec(insertQuery, values...).Error)
 	}

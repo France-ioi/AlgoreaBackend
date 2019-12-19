@@ -56,9 +56,9 @@ func TestGroupApprovals_FromString(t *testing.T) {
 	}{
 		{
 			name: "all are set",
-			csv:  "personal_info_view,personal_info_edit,lock_membership,watch",
+			csv:  "personal_info_view,lock_membership,watch",
 			expectedGroupApprovals: GroupApprovals{
-				PersonalInfoViewApproval: true, PersonalInfoEditApproval: true, LockMembershipApproval: true, WatchApproval: true,
+				PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true,
 			},
 		},
 		{name: "none are set", csv: "wrong"},
@@ -66,11 +66,6 @@ func TestGroupApprovals_FromString(t *testing.T) {
 			name:                   "personal_info_view",
 			csv:                    "personal_info_view",
 			expectedGroupApprovals: GroupApprovals{PersonalInfoViewApproval: true},
-		},
-		{
-			name:                   "personal_info_edit",
-			csv:                    "personal_info_edit",
-			expectedGroupApprovals: GroupApprovals{PersonalInfoEditApproval: true},
 		},
 		{
 			name:                   "lock_membership",

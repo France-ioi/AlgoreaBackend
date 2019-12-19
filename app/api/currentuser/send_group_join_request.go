@@ -59,7 +59,7 @@ import (
 //   type: array
 //   items:
 //     type: string
-//     enum: [personal_info_view,personal_info_edit,lock_membership,watch]
+//     enum: [personal_info_view,lock_membership,watch]
 // responses:
 //   "201":
 //     "$ref": "#/responses/createdOrUnchangedResponse"

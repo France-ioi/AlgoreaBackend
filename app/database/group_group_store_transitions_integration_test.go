@@ -26,7 +26,6 @@ type groupPendingRequest struct {
 	MemberID                 int64
 	Type                     string
 	PersonalInfoViewApproved bool
-	PersonalInfoEditApproved bool
 	LockMembershipApproved   bool
 	WatchApproved            bool
 }
@@ -287,9 +286,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:            database.UserCreatesJoinRequest,
 			relationsToChange: allTheIDs,
 			approvals: map[int64]database.GroupApprovals{
-				1: {PersonalInfoViewApproval: true, PersonalInfoEditApproval: true, LockMembershipApproval: true, WatchApproval: true},
-				6: {PersonalInfoViewApproval: true, PersonalInfoEditApproval: false, LockMembershipApproval: true, WatchApproval: false},
-				7: {PersonalInfoViewApproval: false, PersonalInfoEditApproval: true, LockMembershipApproval: false, WatchApproval: true},
+				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
+				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
+				7: {PersonalInfoViewApproval: false, LockMembershipApproval: false, WatchApproval: true},
 			},
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 6: "success", 7: "success",
@@ -300,12 +299,12 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			wantGroupGroups: groupsGroupsUnchanged,
 			wantGroupPendingRequests: patchGroupPendingRequests(groupPendingRequestsUnchanged, "",
 				map[string]*groupPendingRequest{
-					"20_7": {GroupID: 20, MemberID: 7, Type: "join_request", PersonalInfoEditApproved: true, WatchApproved: true},
+					"20_7": {GroupID: 20, MemberID: 7, Type: "join_request", WatchApproved: true},
 				},
 				[]groupPendingRequest{
 					{
 						GroupID: 20, MemberID: 1, Type: "join_request", PersonalInfoViewApproved: true,
-						PersonalInfoEditApproved: true, LockMembershipApproved: true, WatchApproved: true,
+						LockMembershipApproved: true, WatchApproved: true,
 					},
 					{
 						GroupID: 20, MemberID: 6, Type: "join_request", PersonalInfoViewApproved: true,
@@ -657,7 +656,7 @@ func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *dat
 	expected []groupPendingRequest) {
 	var groupPendingRequests []groupPendingRequest
 	assert.NoError(t, groupPendingRequestStore.Select(`
-			group_id, member_id, `+"`type`"+`, personal_info_view_approved, personal_info_edit_approved,
+			group_id, member_id, `+"`type`"+`, personal_info_view_approved,
 			lock_membership_approved, watch_approved`).
 		Order("group_id, member_id").Scan(&groupPendingRequests).Error())
 
@@ -675,8 +674,6 @@ func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *dat
 		assert.Equal(t, row.Type, groupPendingRequests[index].Type, "wrong type for row %#v", groupPendingRequests[index])
 		assert.Equal(t, row.PersonalInfoViewApproved, groupPendingRequests[index].PersonalInfoViewApproved,
 			"wrong personal_info_view_approved for row %#v", groupPendingRequests[index])
-		assert.Equal(t, row.PersonalInfoEditApproved, groupPendingRequests[index].PersonalInfoEditApproved,
-			"wrong personal_info_edit_approved for row %#v", groupPendingRequests[index])
 		assert.Equal(t, row.LockMembershipApproved, groupPendingRequests[index].LockMembershipApproved,
 			"wrong lock_membership_approved for row %#v", groupPendingRequests[index])
 		assert.Equal(t, row.WatchApproved, groupPendingRequests[index].WatchApproved,

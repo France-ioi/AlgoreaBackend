@@ -161,12 +161,11 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 }
 
 type parentGroupInfo struct {
-	Type                            string
-	TeamItemID                      *int64
-	RequirePersonalInfoViewApproval bool
-	RequirePersonalInfoEditApproval bool
-	RequireLockMembershipApproval   bool
-	RequireWatchApproval            bool
+	Type                              string
+	TeamItemID                        *int64
+	RequirePersonalInfoAccessApproval string
+	RequireLockMembershipApproval     bool
+	RequireWatchApproval              bool
 }
 
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
@@ -175,7 +174,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 
 	// The group should exist (and optionally should have `free_access` = 1)
 	query := store.Groups().ByID(groupID).WithWriteLock().Select(`
-		type, team_item_id, require_personal_info_view_approval, require_personal_info_edit_approval,
+		type, team_item_id, require_personal_info_access_approval,
 		IFNULL(NOW() < require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
 		require_watch_approval`)
 	if action == createGroupJoinRequestAction {
@@ -209,11 +208,8 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 }
 
 func checkApprovals(parentGroup parentGroupInfo, approvals database.GroupApprovals) service.APIError {
-	if parentGroup.RequirePersonalInfoViewApproval && !approvals.PersonalInfoViewApproval {
+	if parentGroup.RequirePersonalInfoAccessApproval != "none" && !approvals.PersonalInfoViewApproval {
 		return service.ErrUnprocessableEntity(errors.New("the group requires 'personal_info_view' approval"))
-	}
-	if parentGroup.RequirePersonalInfoEditApproval && !approvals.PersonalInfoEditApproval {
-		return service.ErrUnprocessableEntity(errors.New("the group requires 'personal_info_edit' approval"))
 	}
 	if parentGroup.RequireLockMembershipApproval && !approvals.LockMembershipApproval {
 		return service.ErrUnprocessableEntity(errors.New("the group requires 'lock_membership' approval"))

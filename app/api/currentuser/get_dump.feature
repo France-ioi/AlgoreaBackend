@@ -103,7 +103,6 @@ Feature: Export the short version of the current user's data
           "id": "3", "child_order": 0, "child_group_id": "11", "parent_group_id": "2",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "personal_info_edit_approved_at": null, "personal_info_edit_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
         },
@@ -111,7 +110,6 @@ Feature: Export the short version of the current user's data
           "id": "6", "child_order": 0, "child_group_id": "11", "parent_group_id": "5",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "personal_info_edit_approved_at": null, "personal_info_edit_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
         },
@@ -119,7 +117,6 @@ Feature: Export the short version of the current user's data
           "id": "7", "child_order": 0, "child_group_id": "11", "parent_group_id": "6",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "personal_info_edit_approved_at": null, "personal_info_edit_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
         },
@@ -127,7 +124,6 @@ Feature: Export the short version of the current user's data
           "id": "10", "child_order": 0, "child_group_id": "11", "parent_group_id": "9",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "personal_info_edit_approved_at": null, "personal_info_edit_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
           "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
         }

@@ -1,15 +1,15 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | free_access | type      | team_item_id | require_personal_info_view_approval | require_personal_info_edit_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 11 | 1           | Class     | null         | 0                                   | 0                                   | null                                   | 0                      |
-      | 13 | 1           | Friends   | null         | 0                                   | 0                                   | null                                   | 0                      |
-      | 14 | 1           | Team      | 1234         | 0                                   | 0                                   | null                                   | 0                      |
-      | 15 | 0           | Club      | null         | 0                                   | 0                                   | null                                   | 0                      |
-      | 16 | 1           | Team      | 1234         | 1                                   | 1                                   | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 0           | Team      | 1234         | 0                                   | 0                                   | null                                   | 0                      |
-      | 21 | 0           | UserSelf  | null         | 0                                   | 0                                   | null                                   | 0                      |
-      | 23 | 0           | UserSelf  | null         | 0                                   | 0                                   | null                                   | 0                      |
+      | id | free_access | type     | team_item_id | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 11 | 1           | Class    | null         | none                                  | null                                   | 0                      |
+      | 13 | 1           | Friends  | null         | none                                  | null                                   | 0                      |
+      | 14 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 15 | 0           | Club     | null         | none                                  | null                                   | 0                      |
+      | 16 | 1           | Team     | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
+      | 17 | 0           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 21 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
+      | 23 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -133,20 +133,14 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 422
     And the response error message should contain "The group requires 'personal_info_view' approval"
 
-  Scenario: Can't send request to a group when personal_info_edit approval is missing
-    Given I am the user with id "23"
-    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view"
-    Then the response code should be 422
-    And the response error message should contain "The group requires 'personal_info_edit' approval"
-
   Scenario: Can't send request to a group when lock_membership approval is missing
     Given I am the user with id "23"
-    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,personal_info_edit"
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view"
     Then the response code should be 422
     And the response error message should contain "The group requires 'lock_membership' approval"
 
   Scenario: Can't send request to a group when watch approval is missing
     Given I am the user with id "23"
-    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,personal_info_edit,lock_membership"
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
     Then the response code should be 422
     And the response error message should contain "The group requires 'watch' approval"
