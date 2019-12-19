@@ -32,10 +32,12 @@ const (
 	Removed GroupMembershipAction = "removed"
 	// Left means a user left a group
 	Left GroupMembershipAction = "left"
-	// AddedDirectly means a user was added into a group directly
-	AddedDirectly GroupMembershipAction = "added_directly"
+	// IsMember means a user is a member of a group
+	IsMember GroupMembershipAction = "is_member"
 	// LeaveRequestCreated means a pending user's request to leave a group was created
-	LeaveRequestCreated GroupMembershipAction = "added_directly,leave_request_created"
+	LeaveRequestCreated GroupMembershipAction = "is_member,leave_request_created"
+	// LeaveRequestExpired means a pending user's leave request for an expired membership
+	LeaveRequestExpired GroupMembershipAction = "leave_request_created"
 	// LeaveRequestRefused means a manager refused a user's request to leave a group
 	LeaveRequestRefused GroupMembershipAction = "leave_request_refused"
 	// LeaveRequestWithdrawn means a user withdrew his request to leave a group
@@ -46,7 +48,7 @@ const (
 
 func (groupMembershipAction GroupMembershipAction) isActive() bool {
 	switch groupMembershipAction {
-	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, AddedDirectly,
+	case InvitationAccepted, JoinRequestAccepted, JoinedByCode, IsMember,
 		LeaveRequestCreated, LeaveRequestWithdrawn, LeaveRequestRefused:
 		return true
 	}
@@ -55,7 +57,7 @@ func (groupMembershipAction GroupMembershipAction) isActive() bool {
 
 func (groupMembershipAction GroupMembershipAction) isPending() bool {
 	switch groupMembershipAction {
-	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated:
+	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated, LeaveRequestExpired:
 		return true
 	}
 	return false
@@ -112,9 +114,6 @@ const (
 	UserCancelsJoinRequest
 	// UserCancelsLeaveRequest means a user cancels his request to leave a group
 	UserCancelsLeaveRequest
-	// AdminAddsDirectRelation means a group admin creates a direct relation between groups.
-	// It creates a new direct relation. It doesn't check if a child is a user or not.
-	AdminAddsDirectRelation
 	// AdminRemovesDirectRelation removes a direct relation
 	AdminRemovesDirectRelation
 	// UserJoinsGroupByCode means a user joins a group using a group's code
@@ -131,29 +130,33 @@ type groupGroupTransitionRule struct {
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
 	AdminCreatesInvitation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         InvitationCreated,
-			InvitationCreated:  InvitationCreated,
-			JoinRequestCreated: JoinRequestAccepted,
+			NoRelation:          InvitationCreated,
+			InvitationCreated:   InvitationCreated,
+			JoinRequestCreated:  JoinRequestAccepted,
+			LeaveRequestExpired: InvitationCreated,
 		},
 	},
 	UserCreatesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinRequestCreated,
-			JoinRequestCreated: JoinRequestCreated,
+			NoRelation:          JoinRequestCreated,
+			JoinRequestCreated:  JoinRequestCreated,
+			LeaveRequestExpired: JoinRequestCreated,
 		},
 	},
 	UserCreatesAcceptedJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinRequestAccepted,
-			JoinRequestCreated: JoinRequestAccepted,
-			InvitationCreated:  JoinRequestAccepted,
+			NoRelation:          JoinRequestAccepted,
+			JoinRequestCreated:  JoinRequestAccepted,
+			InvitationCreated:   JoinRequestAccepted,
+			LeaveRequestExpired: JoinRequestAccepted,
 		},
 	},
 	UserJoinsGroupByCode: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:         JoinedByCode,
-			JoinRequestCreated: JoinedByCode,
-			InvitationCreated:  JoinedByCode,
+			NoRelation:          JoinedByCode,
+			JoinRequestCreated:  JoinedByCode,
+			InvitationCreated:   JoinedByCode,
+			LeaveRequestExpired: JoinedByCode,
 		},
 	},
 	UserAcceptsInvitation: {
@@ -188,7 +191,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 	AdminRemovesUser: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			AddedDirectly:       Removed,
+			IsMember:            Removed,
 			LeaveRequestCreated: Removed,
 		},
 	},
@@ -199,16 +202,13 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 	},
 	UserLeavesGroup: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			InvitationAccepted:  Left,
-			JoinRequestAccepted: Left,
-			JoinedByCode:        Left,
-			AddedDirectly:       Left,
+			IsMember:            Left,
 			LeaveRequestCreated: Left,
 		},
 	},
 	UserCreatesLeaveRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			AddedDirectly:       LeaveRequestCreated,
+			IsMember:            LeaveRequestCreated,
 			LeaveRequestCreated: LeaveRequestCreated,
 		},
 	},
@@ -222,23 +222,9 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			LeaveRequestCreated: LeaveRequestWithdrawn,
 		},
 	},
-	// This one is here for consistency purpose only.
-	// GroupGroupStore.CreateRelation() is more effective when we need to create just one relation.
-	AdminAddsDirectRelation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          AddedDirectly,
-			InvitationCreated:   AddedDirectly,
-			JoinRequestCreated:  AddedDirectly,
-			InvitationAccepted:  AddedDirectly,
-			JoinRequestAccepted: AddedDirectly,
-			JoinedByCode:        AddedDirectly,
-			AddedDirectly:       AddedDirectly,
-			LeaveRequestCreated: LeaveRequestCreated,
-		},
-	},
 	AdminRemovesDirectRelation: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			AddedDirectly:       NoRelation,
+			IsMember:            NoRelation,
 			NoRelation:          NoRelation,
 			LeaveRequestCreated: NoRelation,
 		},
@@ -305,15 +291,15 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 		// Here we get current states for each childGroupID:
 		// the current state can be one of
-		// ("", "invitation_created", "join_request_created", "added_directly", "added_directly,leave_request_created")
-		// where "added_directly" means that childGroupID is a member of the parentGroupID
+		// ("", "invitation_created", "join_request_created", "is_member", "is_member,leave_request_created")
+		// where "is_member" means that childGroupID is a member of the parentGroupID
 		mustNotBeError(
 			dataStore.Raw(`
 				SELECT child_group_id, GROUP_CONCAT(action) AS action
 					FROM ((? FOR UPDATE) UNION (? FOR UPDATE)) AS statuses
 					GROUP BY child_group_id`,
-				dataStore.GroupGroups().
-					Select("child_group_id, 'added_directly' AS `action`").
+				dataStore.ActiveGroupGroups().
+					Select("child_group_id, 'is_member' AS `action`").
 					Where("parent_group_id = ? AND child_group_id IN (?)", parentGroupID, childGroupIDs).QueryExpr(),
 				dataStore.GroupPendingRequests().
 					Select(`
@@ -370,6 +356,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			insertQuery += " VALUES " +
 				strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
 				valuesTemplate // #nosec
+			insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
 			mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 				values := make([]interface{}, 0, len(idsToInsertRelation)*4)
 				for id := range idsToInsertRelation {

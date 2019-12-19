@@ -1,12 +1,12 @@
 Feature: User leaves a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | lock_user_deletion_until |
-      | 11 | null                     |
-      | 14 | null                     |
-      | 15 | 2037-04-29               |
-      | 21 | null                     |
-      | 31 | null                     |
+      | id | require_lock_membership_approval_until |
+      | 11 | null                                   |
+      | 14 | null                                   |
+      | 15 | 2037-04-29                             |
+      | 21 | null                                   |
+      | 31 | null                                   |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -21,9 +21,9 @@ Feature: User leaves a group - robustness
       | 21                | 21             | 1       |
       | 31                | 31             | 1       |
     And the database has the following table 'groups_groups':
-      | id | parent_group_id | child_group_id |
-      | 2  | 14              | 21             |
-      | 3  | 15              | 31             |
+      | id | parent_group_id | child_group_id | lock_membership_approved_at |
+      | 2  | 14              | 21             | null                        |
+      | 3  | 15              | 31             | 2019-05-30 11:00:00         |
     And the database has the following table 'group_pending_requests':
       | group_id | member_id | type         |
       | 11       | 21        | join_request |
@@ -57,7 +57,7 @@ Feature: User leaves a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
-  Scenario: Fails if lock_user_deletion_until = NOW() + 1
+  Scenario: Fails if require_lock_membership_approval_until = NOW() + 1
     Given the DB time now is "2037-04-28 23:59:59"
     And I am the user with id "31"
     When I send a DELETE request to "/current-user/group-memberships/15"

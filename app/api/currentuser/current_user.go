@@ -72,9 +72,14 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	if action == leaveGroupAction {
 		var found bool
 		found, err = srv.Store.Groups().ByID(groupID).
-			Where("lock_user_deletion_until IS NULL OR lock_user_deletion_until <= NOW()").HasRows()
+			Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.parent_group_id = groups.id AND
+						 groups_groups_active.lock_membership_approved AND
+						 groups_groups_active.child_group_id = ?`, user.GroupID).
+			Where("NOW() < groups.require_lock_membership_approval_until").HasRows()
 		service.MustNotBeError(err)
-		if !found {
+		if found {
 			return service.ErrForbidden(errors.New("user deletion is locked for this group"))
 		}
 	}
