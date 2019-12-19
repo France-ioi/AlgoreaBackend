@@ -85,7 +85,7 @@ const (
 	// UserCreatesJoinRequest means a user sends a request to become a group member
 	UserCreatesJoinRequest
 	// UserCreatesAcceptedJoinRequest means a user adds himself into a group that he owns
-	// It doesn't check if the user owns the group (a calling service should check that)
+	// It doesn't check if the user owns the group / all needed approvals are given (a calling service should check that)
 	UserCreatesAcceptedJoinRequest
 	// UserAcceptsInvitation means a user accepts a group invitation
 	UserAcceptsInvitation
@@ -248,9 +248,32 @@ const (
 // GroupGroupTransitionResults represents results of mass transition (format: map{ id -> GroupGroupTransitionResult })
 type GroupGroupTransitionResults map[int64]GroupGroupTransitionResult
 
+// GroupApprovals represents all the approvals that can be given by a user to the group managers
+type GroupApprovals struct {
+	PersonalInfoViewApproval bool
+	LockMembershipApproval   bool
+	WatchApproval            bool
+}
+
+// FromString initializes GroupApprovals from the given comma-separated list of approvals
+func (approvals *GroupApprovals) FromString(s string) {
+	approvalsList := strings.Split(s, ",")
+	for _, approval := range approvalsList {
+		switch approval {
+		case "personal_info_view":
+			approvals.PersonalInfoViewApproval = true
+		case "lock_membership":
+			approvals.LockMembershipApproval = true
+		case "watch":
+			approvals.WatchApproval = true
+		}
+	}
+}
+
 // Transition performs a groups_groups relation transition according to groupGroupTransitionRules
 func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
-	parentGroupID int64, childGroupIDs []int64, performedByUserID int64) (result GroupGroupTransitionResults, err error) {
+	parentGroupID int64, childGroupIDs []int64, approvals map[int64]GroupApprovals,
+	performedByUserID int64) (result GroupGroupTransitionResults, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -317,7 +340,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			shouldCreateNewAncestors = true
 		}
 
-		insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID)
+		insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
 
 		if len(idsToInsertRelation) > 0 {
 			var maxChildOrder struct{ MaxChildOrder int64 }
@@ -352,16 +375,22 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 	return results, nil
 }
 
-func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupMembershipAction, parentGroupID int64) {
+func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupMembershipAction,
+	parentGroupID int64, approvals map[int64]GroupApprovals) {
 	if len(idsToInsertPending) > 0 {
-		insertQuery := "INSERT INTO group_pending_requests (group_id, member_id, `type`)"
-		valuesTemplate := "(?, ?, ?)"
+		insertQuery := `
+			INSERT INTO group_pending_requests
+				(group_id, member_id, ` + "`type`" + `, personal_info_view_approved,
+				 lock_membership_approved, watch_approved)`
+		valuesTemplate := "(?, ?, ?, ?, ?, ?)"
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
-		values := make([]interface{}, 0, len(idsToInsertPending)*3)
+		values := make([]interface{}, 0, len(idsToInsertPending)*6)
 		for id, groupMembershipAction := range idsToInsertPending {
-			values = append(values, parentGroupID, id, groupMembershipAction.PendingType())
+			values = append(values, parentGroupID, id, groupMembershipAction.PendingType(),
+				approvals[id].PersonalInfoViewApproval, approvals[id].LockMembershipApproval,
+				approvals[id].WatchApproval)
 		}
 		mustNotBeError(dataStore.db.Exec(insertQuery, values...).Error)
 	}

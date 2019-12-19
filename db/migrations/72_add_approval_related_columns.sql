@@ -8,11 +8,11 @@ ALTER TABLE `groups`
         AFTER `require_lock_membership_approval_until`;
 
 ALTER TABLE `groups_groups`
-    ADD COLUMN `personal_info_access_approved_at` DATETIME DEFAULT NULL AFTER `expires_at`,
-    ADD COLUMN `personal_info_access_approved` TINYINT(1)
-        AS (`personal_info_access_approved_at` IS NOT NULL) NOT NULL
-        COMMENT 'personal_info_access_approved_at as boolean' AFTER `personal_info_access_approved_at`,
-    ADD COLUMN `lock_membership_approved_at` DATETIME DEFAULT NULL AFTER `personal_info_access_approved`,
+    ADD COLUMN `personal_info_view_approved_at` DATETIME DEFAULT NULL AFTER `expires_at`,
+    ADD COLUMN `personal_info_view_approved` TINYINT(1)
+        AS (`personal_info_view_approved_at` IS NOT NULL) NOT NULL
+        COMMENT 'personal_info_view_approved_at as boolean' AFTER `personal_info_view_approved_at`,
+    ADD COLUMN `lock_membership_approved_at` DATETIME DEFAULT NULL AFTER `personal_info_view_approved`,
     ADD COLUMN `lock_membership_approved` TINYINT(1)
         AS (`lock_membership_approved_at` IS NOT NULL) NOT NULL
         COMMENT 'lock_membership_approved_at as boolean' AFTER `lock_membership_approved_at`,
@@ -21,12 +21,12 @@ ALTER TABLE `groups_groups`
         AS (`watch_approved_at` IS NOT NULL) NOT NULL COMMENT 'watch_approved_at as boolean' AFTER `watch_approved_at`;
 
 ALTER TABLE `group_pending_requests`
-    ADD COLUMN `personal_info_access_approved_at` DATETIME DEFAULT NULL
+    ADD COLUMN `personal_info_view_approved` TINYINT(1) NOT NULL DEFAULT 0
         COMMENT 'for join requests' AFTER `at`,
-    ADD COLUMN `lock_membership_approved_at` DATETIME DEFAULT NULL
-        COMMENT 'for join requests' AFTER `personal_info_access_approved_at`,
-    ADD COLUMN `watch_approved_at` DATETIME DEFAULT NULL
-        COMMENT 'for join requests' AFTER `lock_membership_approved_at`;
+    ADD COLUMN `lock_membership_approved` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'for join requests' AFTER `personal_info_view_approved`,
+    ADD COLUMN `watch_approved` TINYINT(1) NOT NULL DEFAULT 0
+        COMMENT 'for join requests' AFTER `lock_membership_approved`;
 
 ALTER TABLE `group_managers`
     ADD COLUMN `can_edit_personal_info` TINYINT(1) NOT NULL DEFAULT 0
@@ -48,28 +48,28 @@ CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < ex
 
 -- +migrate Down
 ALTER TABLE `groups`
+    DROP COLUMN `require_personal_info_access_approval`,
     ADD COLUMN `lock_user_deletion_until` date DEFAULT NULL
         COMMENT 'Prevent users from this group to delete their own user themselves until this date'
         AFTER `send_emails`;
 UPDATE `groups` SET `lock_user_deletion_until` = CAST(`require_lock_membership_approval_until` AS DATE);
 
 ALTER TABLE `groups`
-    DROP COLUMN `require_personal_info_access_approval`,
     DROP COLUMN `require_lock_membership_approval_until`,
     DROP COLUMN `require_watch_approval`;
 
 ALTER TABLE `groups_groups`
-    DROP COLUMN `personal_info_access_approved_at`,
-    DROP COLUMN `personal_info_access_approved`,
+    DROP COLUMN `personal_info_view_approved_at`,
+    DROP COLUMN `personal_info_view_approved`,
     DROP COLUMN `lock_membership_approved_at`,
     DROP COLUMN `lock_membership_approved`,
     DROP COLUMN `watch_approved_at`,
     DROP COLUMN `watch_approved`;
 
 ALTER TABLE `group_pending_requests`
-    DROP COLUMN `personal_info_access_approved_at`,
-    DROP COLUMN `lock_membership_approved_at`,
-    DROP COLUMN `watch_approved_at`;
+    DROP COLUMN `personal_info_view_approved`,
+    DROP COLUMN `lock_membership_approved`,
+    DROP COLUMN `watch_approved`;
 
 ALTER TABLE `group_managers`
     DROP COLUMN `can_edit_personal_info`;

@@ -1,17 +1,19 @@
 Feature: User sends a request to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | free_access | type      | team_item_id |
-      | 11 | 1           | Class     | null         |
-      | 13 | 1           | Friends   | null         |
-      | 14 | 1           | Team      | 1234         |
-      | 15 | 0           | Club      | null         |
-      | 16 | 1           | Team      | 1234         |
-      | 17 | 0           | Team      | 1234         |
-      | 21 | 0           | UserSelf  | null         |
+      | id | free_access | type     | team_item_id | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 11 | 1           | Class    | null         | none                                  | null                                   | 0                      |
+      | 13 | 1           | Friends  | null         | none                                  | null                                   | 0                      |
+      | 14 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 15 | 0           | Club     | null         | none                                  | null                                   | 0                      |
+      | 16 | 1           | Team     | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
+      | 17 | 0           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 21 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
+      | 23 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
+      | 23       | jane  |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 17       | 21         |
@@ -124,3 +126,21 @@ Feature: User sends a request to join a group - robustness
     When I send a POST request to "/current-user/group-requests/15"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
+
+  Scenario: Can't send request to a group when personal_info_view approval is missing
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/16"
+    Then the response code should be 422
+    And the response error message should contain "The group requires 'personal_info_view' approval"
+
+  Scenario: Can't send request to a group when lock_membership approval is missing
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view"
+    Then the response code should be 422
+    And the response error message should contain "The group requires 'lock_membership' approval"
+
+  Scenario: Can't send request to a group when watch approval is missing
+    Given I am the user with id "23"
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
+    Then the response code should be 422
+    And the response error message should contain "The group requires 'watch' approval"

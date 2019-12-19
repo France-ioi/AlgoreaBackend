@@ -15,11 +15,15 @@ import (
 //   #### The user is not a manager of the group
 //
 //     On success the service creates a new row in `group_pending_requests` with
-//     `group_id` = `{group_id}`, `member_id` = user's self group id, `type` = 'join_request'
-//     and `at` equal to current UTC time and a new row in `group_membership_changes` for the same pair of groups
+//     `group_id` = `{group_id}`, `member_id` = user's self group id, `type` = 'join_request',
+//     given `approvals` and `at` equal to current UTC time,
+//     and a new row in `group_membership_changes` for the same pair of groups
 //     with `action` = 'join_request_created' and `at` equal to current UTC time.
 //
 //     * `groups.free_access` should be 1, otherwise the 'forbidden' response is returned.
+//
+//     * If not all of approvals required by the group are given in `approvals`,
+//       the unprocessable entity error is returned.
 //
 //     * If the group is a team with `team_item_id` set and the user is already on a team with the same `team_item_id`,
 //       the unprocessable entity error is returned.
@@ -50,6 +54,12 @@ import (
 //   in: path
 //   type: integer
 //   required: true
+// - name: approvals
+//   in: query
+//   type: array
+//   items:
+//     type: string
+//     enum: [personal_info_view,lock_membership,watch]
 // responses:
 //   "201":
 //     "$ref": "#/responses/createdOrUnchangedResponse"
