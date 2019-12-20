@@ -13,14 +13,14 @@ import (
 )
 
 type aggregatesResultRow struct {
-	ID                        int64
-	LatestActivityAt          *database.Time
-	TasksTried                int64
-	TasksWithHelp             int64
-	TasksSolved               int64
-	ChildrenValidated         int64
-	AncestorsComputationState string
-	Score                     float32
+	ID                     int64
+	LatestActivityAt       *database.Time
+	TasksTried             int64
+	TasksWithHelp          int64
+	TasksSolved            int64
+	ChildrenValidated      int64
+	ResultPropagationState string
+	Score                  float32
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
@@ -66,20 +66,20 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 
 	expected := []aggregatesResultRow{
 		{ID: 11, LatestActivityAt: (*database.Time)(&oldDate), TasksTried: 1, TasksWithHelp: 2, TasksSolved: 3,
-			ChildrenValidated: 4, Score: 10, AncestorsComputationState: "done"},
+			ChildrenValidated: 4, Score: 10, ResultPropagationState: "done"},
 		{ID: 12, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 1 + 5 + 9, TasksWithHelp: 2 + 6 + 10,
 			TasksSolved: 3 + 7 + 11, ChildrenValidated: 2, Score: 23.3333, /* (10*1 + 20*2 + 30*3) / (1 + 2 + 3) */
-			AncestorsComputationState: "done"}, // from 1, 3, 4
+			ResultPropagationState: "done"}, // from 1, 3, 4
 		{ID: 13, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7,
-			ChildrenValidated: 8, Score: 20, AncestorsComputationState: "done"},
+			ChildrenValidated: 8, Score: 20, ResultPropagationState: "done"},
 		{ID: 14, LatestActivityAt: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
-			Score: 30, AncestorsComputationState: "done"},
+			Score: 30, ResultPropagationState: "done"},
 		{ID: 15, LatestActivityAt: (*database.Time)(&currentDate), TasksTried: 5, TasksWithHelp: 6, TasksSolved: 7,
-			ChildrenValidated: 8, Score: 20, AncestorsComputationState: "done"},
+			ChildrenValidated: 8, Score: 20, ResultPropagationState: "done"},
 		{ID: 16, LatestActivityAt: nil, TasksTried: 9, TasksWithHelp: 10, TasksSolved: 11, ChildrenValidated: 12,
-			Score: 30, AncestorsComputationState: "done"},
+			Score: 30, ResultPropagationState: "done"},
 		// another user
-		{ID: 22, LatestActivityAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, LatestActivityAt: nil, ResultPropagationState: "done"},
 	}
 
 	assertAggregatesEqual(t, groupAttemptStore, expected)
@@ -96,9 +96,9 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_OnCommonData(t *te
 	assert.NoError(t, err)
 
 	expected := []aggregatesResultRow{
-		{ID: 11, AncestorsComputationState: "done"},
-		{ID: 12, AncestorsComputationState: "done"},
-		{ID: 22, AncestorsComputationState: "done"},
+		{ID: 11, ResultPropagationState: "done"},
+		{ID: 12, ResultPropagationState: "done"},
+		{ID: 22, ResultPropagationState: "done"},
 	}
 	assertAggregatesEqual(t, groupAttemptStore, expected)
 }
@@ -106,7 +106,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_OnCommonData(t *te
 func assertAggregatesEqual(t *testing.T, groupAttemptStore *database.GroupAttemptStore, expected []aggregatesResultRow) {
 	var result []aggregatesResultRow
 	assert.NoError(t, groupAttemptStore.
-		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, score, ancestors_computation_state").
+		Select("id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, score, result_propagation_state").
 		Scan(&result).Error())
 	assert.Equal(t, expected, result)
 }

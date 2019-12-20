@@ -43,6 +43,7 @@ Feature: Save grading result
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
+      | 102 | 101      | 10      | null                   | 1     |
     And the database has the following table 'users_answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
@@ -109,9 +110,10 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 100   | 1           | 1         | done                        | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
-      | 101 | 0     | 0           | 0         | done                        | null                                                      | null                                                    | null                                                  | null                                                |
+      | id  | score | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 100   | 1           | 1         | done                     | 1                                                         | 1                                                       | 1                                                     | 1                                                   |
+      | 101 | 0     | 0           | 0         | done                     | null                                                      | null                                                    | null                                                  | null                                                |
+      | 102 | 50    | 1           | 1         | done                     | 1                                                         | null                                                    | null                                                  | 1                                                   |
 
   Scenario: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
@@ -119,6 +121,7 @@ Feature: Save grading result
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
+      | 102 | 101      | 10      | null                   | 1     |
     And the database has the following table 'users_answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
@@ -184,9 +187,10 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 99    | 1           | 0         | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
-      | 101 | 0     | 0           | 0         | done                        | null                                                      | null                                                    | null                                                  | null                                                |
+      | id  | score | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 99    | 1           | 0         | done                     | 1                                                         | 1                                                       | 1                                                     | null                                                |
+      | 101 | 0     | 0           | 0         | done                     | null                                                      | null                                                    | null                                                  | null                                                |
+      | 102 | 49.5  | 1           | 0         | done                     | 1                                                         | null                                                    | null                                                  | null                                                |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"
@@ -259,9 +263,9 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score | tasks_tried | validated | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 99    | 1           | 0         | done                        | 1                                                         | 1                                                       | 1                                                     | null                                                |
-      | 101 | 0     | 0           | 0         | done                        | null                                                      | null                                                    | 0                                                     | null                                                |
+      | id  | score | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
+      | 100 | 99    | 1           | 0         | done                     | 1                                                         | 1                                                       | 1                                                     | null                                                |
+      | 101 | 0     | 0           | 0         | done                     | null                                                      | null                                                    | 0                                                     | null                                                |
 
   Scenario: Should keep previous score if it is greater
     Given I am the user with id "101"

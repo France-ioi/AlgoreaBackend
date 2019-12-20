@@ -13,36 +13,9 @@ import (
 )
 
 type validationDateResultRow struct {
-	ID                        int64
-	ValidatedAt               *database.Time
-	AncestorsComputationState string
-}
-
-func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedAtStaysTheSameIfItWasNotNull(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common")
-	defer func() { _ = db.Close() }()
-
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
-
-	expectedDate := time.Now().Round(time.Second).UTC()
-	expectedOldDate := expectedDate.AddDate(-1, -1, -1)
-
-	assert.NoError(t, groupAttemptStore.Where("id=12").UpdateColumn("validated_at", expectedOldDate).Error())
-	assert.NoError(t, groupAttemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
-
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
-	})
-	assert.NoError(t, err)
-
-	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
-	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&expectedOldDate), AncestorsComputationState: "done"},
-		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
-	}, result)
+	ID                     int64
+	ValidatedAt            *database.Time
+	ResultPropagationState string
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
@@ -72,16 +45,16 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_NonCategories_SetsValidatedAt
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, result_propagation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&skippedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), AncestorsComputationState: "done"}, // the result
-		{ID: 13, ValidatedAt: (*database.Time)(&oldestForItem3), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), AncestorsComputationState: "done"},
-		{ID: 15, ValidatedAt: (*database.Time)(&skippedInItem3), AncestorsComputationState: "done"},
-		{ID: 16, ValidatedAt: (*database.Time)(&skippedInItem4), AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&skippedDate), ResultPropagationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), ResultPropagationState: "done"}, // the result
+		{ID: 13, ValidatedAt: (*database.Time)(&oldestForItem3), ResultPropagationState: "done"},
+		{ID: 14, ValidatedAt: (*database.Time)(&oldestForItem4AndWinner), ResultPropagationState: "done"},
+		{ID: 15, ValidatedAt: (*database.Time)(&skippedInItem3), ResultPropagationState: "done"},
+		{ID: 16, ValidatedAt: (*database.Time)(&skippedInItem4), ResultPropagationState: "done"},
 		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, ValidatedAt: nil, ResultPropagationState: "done"},
 	}, result)
 }
 
@@ -107,16 +80,16 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, result_propagation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
+		{ID: 12, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 14, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 15, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 16, ValidatedAt: nil, ResultPropagationState: "done"},
 		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, ValidatedAt: nil, ResultPropagationState: "done"},
 	}, result)
 }
 
@@ -143,16 +116,16 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToN
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, result_propagation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
+		{ID: 12, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 14, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 15, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 16, ValidatedAt: nil, ResultPropagationState: "done"},
 		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, ValidatedAt: nil, ResultPropagationState: "done"},
 	}, result)
 }
 
@@ -180,16 +153,16 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_ValidatedAtShouldB
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, result_propagation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 15, ValidatedAt: nil, AncestorsComputationState: "done"},
-		{ID: 16, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
+		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 14, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 15, ValidatedAt: nil, ResultPropagationState: "done"},
+		{ID: 16, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
 		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, ValidatedAt: nil, ResultPropagationState: "done"},
 	}, result)
 }
 
@@ -225,15 +198,15 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Categories_SetsValidatedAtToM
 	assert.NoError(t, err)
 
 	var result []validationDateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated_at, ancestors_computation_state").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, validated_at, result_propagation_state").Scan(&result).Error())
 	assert.Equal(t, []validationDateResultRow{
-		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), AncestorsComputationState: "done"},
-		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 14, ValidatedAt: (*database.Time)(&oldDate), AncestorsComputationState: "done"},
-		{ID: 15, ValidatedAt: (*database.Time)(&oldDatePlusOneDay), AncestorsComputationState: "done"},
-		{ID: 16, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 11, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
+		{ID: 12, ValidatedAt: (*database.Time)(&expectedDate), ResultPropagationState: "done"},
+		{ID: 13, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 14, ValidatedAt: (*database.Time)(&oldDate), ResultPropagationState: "done"},
+		{ID: 15, ValidatedAt: (*database.Time)(&oldDatePlusOneDay), ResultPropagationState: "done"},
+		{ID: 16, ValidatedAt: nil, ResultPropagationState: "done"},
 		// another user
-		{ID: 22, ValidatedAt: nil, AncestorsComputationState: "done"},
+		{ID: 22, ValidatedAt: nil, ResultPropagationState: "done"},
 	}, result)
 }

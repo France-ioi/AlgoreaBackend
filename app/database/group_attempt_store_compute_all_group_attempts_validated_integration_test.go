@@ -13,9 +13,9 @@ import (
 )
 
 type validatedResultRow struct {
-	ID                        int64
-	Validated                 bool
-	AncestorsComputationState string
+	ID                     int64
+	Validated              bool
+	ResultPropagationState string
 }
 
 func testGroupAttemptStoreComputeAllGroupAttemptsValidated(t *testing.T, fixtures []string,
@@ -38,39 +38,9 @@ func testGroupAttemptStoreComputeAllGroupAttemptsValidated(t *testing.T, fixture
 	assert.NoError(t, err)
 
 	var result []validatedResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, validated, ancestors_computation_state").
+	assert.NoError(t, groupAttemptStore.Select("id, validated, result_propagation_state").
 		Order("id").Scan(&result).Error())
 	assert.Equal(t, expectedResults, result)
-}
-
-func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedStaysValidated(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{name: "None"},
-		{name: "All"},
-		{name: "AllButOne"},
-		{name: "Categories"},
-		{name: "One"},
-		{name: "Manual"},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			testGroupAttemptStoreComputeAllGroupAttemptsValidated(t,
-				[]string{"groups_attempts_propagation/_common", "groups_attempts_propagation/validated/one"},
-				tt.name,
-				func(t *testing.T, groupAttemptStore *database.GroupAttemptStore) {
-					assert.NoError(t, groupAttemptStore.Where("id IN(12, 13)").UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
-				},
-				buildExpectedValidatedResultRows(map[int64]bool{
-					11: false, 12: true, 13: true,
-					// another user
-					22: false,
-				}))
-		})
-	}
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_ValidatedStaysNonValidatedFor(t *testing.T) {
@@ -263,7 +233,7 @@ func buildExpectedValidatedResultRows(validatedMap map[int64]bool) []validatedRe
 	result := make([]validatedResultRow, 0, len(validatedMap)+1)
 	addResultForAnotherUser := true
 	for id, validated := range validatedMap {
-		result = append(result, validatedResultRow{ID: id, Validated: validated, AncestorsComputationState: "done"})
+		result = append(result, validatedResultRow{ID: id, Validated: validated, ResultPropagationState: "done"})
 		if id == 22 {
 			addResultForAnotherUser = false
 		}
@@ -271,7 +241,7 @@ func buildExpectedValidatedResultRows(validatedMap map[int64]bool) []validatedRe
 
 	// another user
 	if addResultForAnotherUser {
-		result = append(result, validatedResultRow{ID: 22, Validated: false, AncestorsComputationState: "done"})
+		result = append(result, validatedResultRow{ID: 22, Validated: false, ResultPropagationState: "done"})
 	}
 
 	sort.Slice(result, func(i, j int) bool {

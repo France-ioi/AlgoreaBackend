@@ -77,7 +77,6 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed) (validated, ok bool) {
-	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
@@ -110,8 +109,8 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 	if score > 0 {
 		// Always propagate attempts if the score was non-zero
-		columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
-		values = append(values, todo)
+		columnsToUpdate = append(columnsToUpdate, "result_propagation_state")
+		values = append(values, "changed")
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
