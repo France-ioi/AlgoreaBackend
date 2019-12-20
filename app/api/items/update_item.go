@@ -138,23 +138,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		}
 
 		service.MustNotBeError(store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error())
-		if formData.IsSet("children") {
-			err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
-				service.MustNotBeError(lockedStore.ItemItems().Delete("parent_item_id = ?", itemID).Error())
-
-				if !input.checkItemsRelationsCycles(lockedStore, itemID) {
-					apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-					return apiError.Error // rollback
-				}
-
-				service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-					parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, retryStore, itemID)
-					insertItemItems(retryStore, parentChildSpec)
-					return nil
-				}))
-				return lockedStore.ItemItems().After()
-			})
-		}
+		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenPermissions)
 		return err
 	})
 
@@ -166,6 +150,35 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	// response
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
 	return service.NoError
+}
+
+func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.DataStore, itemID int64,
+	input *updateItemRequest, childrenPermissions []permission) (apiError service.APIError, err error) {
+	if formData.IsSet("children") {
+		err = store.WithNamedLock("items_items", 3*time.Second, func(lockedStore *database.DataStore) error {
+			service.MustNotBeError(lockedStore.ItemItems().Delete("parent_item_id = ?", itemID).Error())
+
+			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
+				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
+				return apiError.Error // rollback
+			}
+
+			service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
+				parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, retryStore, itemID)
+				insertItemItems(retryStore, parentChildSpec)
+				return nil
+			}))
+			return lockedStore.ItemItems().After()
+		})
+	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
+		groupAttemptStore := store.GroupAttempts()
+		// we assume that `no_score` or `validation_type` will not be edited for tasks
+		// (otherwise groups_attempts data of the task will be zeroed)
+		service.MustNotBeError(groupAttemptStore.Where("item_id = ?", itemID).
+			UpdateColumn("result_propagation_state", "to_be_recomputed").Error())
+		service.MustNotBeError(groupAttemptStore.ComputeAllGroupAttempts())
+	}
+	return apiError, err
 }
 
 func registerDefaultLanguageIDValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) {
