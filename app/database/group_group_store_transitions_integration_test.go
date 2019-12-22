@@ -603,12 +603,12 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 		},
 		{
 			name:                              "personal_info_view approval required (view), but it is not given",
-			wantResult:                        "invalid",
+			wantResult:                        "approvals_needed",
 			requirePersonalInfoAccessApproval: "view",
 		},
 		{
 			name:                              "personal_info_view approval required (edit), but it is not given",
-			wantResult:                        "invalid",
+			wantResult:                        "approvals_needed",
 			requirePersonalInfoAccessApproval: "edit",
 		},
 		{
@@ -619,19 +619,19 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 		},
 		{
 			name:                               "lock_membership_until is not expired, but the lock_membership approval is not given",
-			wantResult:                         "invalid",
+			wantResult:                         "approvals_needed",
 			requirePersonalInfoAccessApproval:  "none",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 		},
 		{
 			name:                              "watch approval required, but it is not given",
-			wantResult:                        "invalid",
+			wantResult:                        "approvals_needed",
 			requirePersonalInfoAccessApproval: "none",
 			requireWatchApproval:              1,
 		},
 		{
 			name:                               "all approvals required, but personal_info_view is not given",
-			wantResult:                         "invalid",
+			wantResult:                         "approvals_needed",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -641,7 +641,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 		},
 		{
 			name:                               "all approvals required, but lock_membership is not given",
-			wantResult:                         "invalid",
+			wantResult:                         "approvals_needed",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -651,7 +651,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 		},
 		{
 			name:                               "all approvals required, but watch is not given",
-			wantResult:                         "invalid",
+			wantResult:                         "approvals_needed",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -753,7 +753,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 			})
 
 			assert.NoError(t, err)
-			assert.Equal(t, database.GroupGroupTransitionResults{3: "invalid"}, result)
+			assert.Equal(t, database.GroupGroupTransitionResults{3: "approvals_needed"}, result)
 		})
 	}
 }

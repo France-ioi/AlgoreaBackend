@@ -34,7 +34,7 @@ import (
 //
 //
 //   If the `{parent_group_id}` requires any approvals, but the pending request doesn't contain them,
-//   the `group_id` gets skipped with 'invalid' as the result.
+//   the `group_id` gets skipped with 'approvals_needed' as the result.
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise
