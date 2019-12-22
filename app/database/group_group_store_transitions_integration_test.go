@@ -559,22 +559,24 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 	}
 }
 
-func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
-	expectedTime := (*database.Time)(ptrTime(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
-	const success = "success"
-	tests := []struct {
-		name                               string
-		requirePersonalInfoAccessApproval  string
-		requireLockMembershipApprovalUntil string
-		requireWatchApproval               int
-		personalInfoViewApproved           int
-		lockMembershipApproved             int
-		watchApproved                      int
-		wantResult                         database.GroupGroupTransitionResult
-		wantPersonalInfoViewApprovedAt     *database.Time
-		wantLockMembershipApprovedAt       *database.Time
-		wantWatchApprovedAt                *database.Time
-	}{
+type approvalsTest struct {
+	name                               string
+	requirePersonalInfoAccessApproval  string
+	requireLockMembershipApprovalUntil string
+	requireWatchApproval               int
+	personalInfoViewApproved           int
+	lockMembershipApproved             int
+	watchApproved                      int
+	wantResult                         database.GroupGroupTransitionResult
+	wantPersonalInfoViewApprovedAt     *database.Time
+	wantLockMembershipApprovedAt       *database.Time
+	wantWatchApprovedAt                *database.Time
+}
+
+const success = "success"
+
+func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
+	return []approvalsTest{
 		{
 			name:                              "no approvals required, no approvals given",
 			wantResult:                        success,
@@ -660,7 +662,11 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 			watchApproved:                      0,
 		},
 	}
-	for _, tt := range tests {
+}
+
+func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
+	var expectedTime = (*database.Time)(ptrTime(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
+	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
@@ -754,6 +760,74 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 
 			assert.NoError(t, err)
 			assert.Equal(t, database.GroupGroupTransitionResults{3: "approvals_needed"}, result)
+		})
+	}
+}
+
+func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvitations(t *testing.T) {
+	const success = "success"
+	expectedTime := (*database.Time)(ptrTime(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
+	database.MockNow("2019-06-01 00:00:00")
+	defer database.RestoreNow()
+
+	for _, tt := range generateApprovalsTests(expectedTime) {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
+				groups:
+					- {id: 3}
+					- {id: 20, require_personal_info_access_approval: %s, require_lock_membership_approval_until: %s, require_watch_approval: %d}
+					- {id: 111}
+				users:
+					- {group_id: 111}
+				group_pending_requests:
+					- {group_id: 20, member_id: 3, type: invitation, at: 2019-05-30 11:00:00}`,
+				tt.requirePersonalInfoAccessApproval, tt.requireLockMembershipApprovalUntil, tt.requireWatchApproval))
+			defer func() { _ = db.Close() }()
+			dataStore := database.NewDataStore(db)
+
+			var result database.GroupGroupTransitionResults
+			err := dataStore.InTransaction(func(store *database.DataStore) error {
+				var err error
+				result, err = store.GroupGroups().Transition(
+					database.UserAcceptsInvitation, 20, []int64{3}, map[int64]database.GroupApprovals{
+						3: {
+							PersonalInfoViewApproval: tt.personalInfoViewApproved == 1,
+							LockMembershipApproval:   tt.lockMembershipApproved == 1,
+							WatchApproval:            tt.watchApproved == 1,
+						},
+					}, 111,
+				)
+				return err
+			})
+
+			assert.NoError(t, err)
+			assert.Equal(t, database.GroupGroupTransitionResults{3: tt.wantResult}, result)
+
+			if tt.wantResult == success {
+				assertGroupGroupsEqual(t, dataStore.GroupGroups(), []groupGroup{
+					{
+						ParentGroupID:              20,
+						ChildGroupID:               3,
+						ChildOrder:                 1,
+						PersonalInfoViewApprovedAt: tt.wantPersonalInfoViewApprovedAt,
+						LockMembershipApprovedAt:   tt.wantLockMembershipApprovedAt,
+						WatchApprovedAt:            tt.wantWatchApprovedAt,
+					},
+				})
+				assertGroupPendingRequestsEqual(t, dataStore.GroupPendingRequests(), nil)
+			} else {
+				assertGroupGroupsEqual(t, dataStore.GroupGroups(), nil)
+			}
+
+			var count int64
+			assert.NoError(t, dataStore.Table("groups_propagate").
+				Where("ancestors_computation_state != 'done'").Count(&count).Error())
+			if tt.wantResult == success {
+				assert.Zero(t, count, "Listeners should be executed")
+			} else {
+				assert.NotZero(t, count, "Listeners should not be executed")
+			}
 		})
 	}
 }

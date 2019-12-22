@@ -279,12 +279,15 @@ func (approvals *GroupApprovals) FromString(s string) {
 }
 
 type stateInfo struct {
-	ChildGroupID               int64
-	Action                     GroupMembershipAction
-	ApprovalsOK                bool
-	PersonalInfoViewApprovedAt *Time
-	LockMembershipApprovedAt   *Time
-	WatchApprovedAt            *Time
+	ChildGroupID                      int64
+	Action                            GroupMembershipAction
+	ApprovalsOK                       bool
+	RequirePersonalInfoAccessApproval bool
+	RequireLockMembershipApproval     bool
+	RequireWatchApproval              bool
+	PersonalInfoViewApprovedAt        *Time
+	LockMembershipApprovedAt          *Time
+	WatchApprovedAt                   *Time
 }
 
 // Transition performs a groups_groups relation transition according to groupGroupTransitionRules
@@ -306,6 +309,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		mustNotBeError(
 			dataStore.Raw(`
 				SELECT child_group_id, GROUP_CONCAT(action) AS action, MAX(approvals_ok) AS approvals_ok,
+					MAX(require_personal_info_access_approval) AS require_personal_info_access_approval,
+					MAX(require_lock_membership_approval) AS require_lock_membership_approval,
+					MAX(require_watch_approval) AS require_watch_approval,
 					MAX(personal_info_view_approved_at) AS personal_info_view_approved_at,
 					MAX(lock_membership_approved_at) AS lock_membership_approved_at, MAX(watch_approved_at) AS watch_approved_at
 					FROM ((? FOR UPDATE) UNION (? FOR UPDATE)) AS statuses
@@ -314,6 +320,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 					Select(`
 						child_group_id, 'is_member' AS action,
 						0 AS approvals_ok,
+						0 AS require_personal_info_access_approval,
+						0 AS require_lock_membership_approval,
+						0 AS require_watch_approval,
 						NULL AS personal_info_view_approved_at,
 						NULL AS lock_membership_approved_at,
 						NULL AS watch_approved_at`).
@@ -331,6 +340,9 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 						(require_lock_membership_approval_until IS NULL OR require_lock_membership_approval_until <= NOW() OR
 						 lock_membership_approved) AND
 						(NOT require_watch_approval OR watch_approved) AS approvals_ok,
+						require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
+						NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
+						require_watch_approval AS require_watch_approval,
 						IF(personal_info_view_approved, at, NULL) AS personal_info_view_approved_at,
 						IF(lock_membership_approved, at, NULL) AS lock_membership_approved_at,
 						IF(watch_approved, at, NULL) AS watch_approved_at`).
@@ -346,7 +358,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		// build the transition plan depending on the current states (oldActionsMap)
 		idsToInsertPending, idsToInsertRelation, idsToCheckCycle, idsToDeletePending,
 			idsToDeleteRelation, idsChanged := buildTransitionsPlan(
-			parentGroupID, childGroupIDs, results, oldActionsMap, action)
+			parentGroupID, childGroupIDs, results, oldActionsMap, approvals, action)
 
 		performCyclesChecking(dataStore, idsToCheckCycle, parentGroupID, results, idsToInsertPending, idsToInsertRelation,
 			idsToDeletePending, idsToDeleteRelation, idsChanged)
@@ -390,9 +402,10 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 				values := make([]interface{}, 0, len(idsToInsertRelation)*7)
 				for id := range idsToInsertRelation {
 					maxChildOrder.MaxChildOrder++
+					personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt :=
+						resolveApprovalTimesForGroupsGroups(oldActionsMap, id, approvals)
 					values = append(values, NewDataStore(db).NewID(), parentGroupID, id, maxChildOrder.MaxChildOrder,
-						oldActionsMap[id].PersonalInfoViewApprovedAt, oldActionsMap[id].LockMembershipApprovedAt,
-						oldActionsMap[id].WatchApprovedAt)
+						personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
 					shouldCreateNewAncestors = true
 				}
 				return db.Exec(insertQuery, values...).Error()
@@ -407,6 +420,26 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		return nil
 	}))
 	return results, nil
+}
+
+func resolveApprovalTimesForGroupsGroups(oldActionsMap map[int64]stateInfo, id int64, approvals map[int64]GroupApprovals) (
+	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}) {
+	if oldActionsMap[id].Action.hasApprovals() {
+		personalInfoViewApprovedAt = oldActionsMap[id].PersonalInfoViewApprovedAt
+		lockMembershipApprovedAt = oldActionsMap[id].LockMembershipApprovedAt
+		watchApprovedAt = oldActionsMap[id].WatchApprovedAt
+	} else {
+		if approvals[id].PersonalInfoViewApproval {
+			personalInfoViewApprovedAt = Now()
+		}
+		if approvals[id].LockMembershipApproval {
+			lockMembershipApprovedAt = Now()
+		}
+		if approvals[id].WatchApproval {
+			watchApprovedAt = Now()
+		}
+	}
+	return personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt
 }
 
 func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int64]GroupMembershipAction,
@@ -477,7 +510,7 @@ func performCyclesChecking(s *DataStore, idsToCheckCycle map[int64]bool, parentG
 }
 
 func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results GroupGroupTransitionResults,
-	oldActionsMap map[int64]stateInfo, action GroupGroupTransitionAction,
+	oldActionsMap map[int64]stateInfo, approvals map[int64]GroupApprovals, action GroupGroupTransitionAction,
 ) (idsToInsertPending map[int64]GroupMembershipAction, idsToInsertRelation, idsToCheckCycle,
 	idsToDeletePending, idsToDeleteRelation map[int64]bool, idsChanged map[int64]GroupMembershipAction) {
 	idsToCheckCycle = make(map[int64]bool, len(childGroupIDs))
@@ -495,7 +528,7 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 		oldAction := oldActionsMap[id]
 
 		if toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldAction.Action]; toActionOK {
-			if oldAction.Action.hasApprovals() && toAction.isActive() && !oldAction.ApprovalsOK {
+			if toAction.isActive() && !oldAction.Action.isActive() && !approvalsOK(&oldAction, approvals[id]) {
 				results[id] = ApprovalsNeeded
 				continue
 			}
@@ -537,4 +570,12 @@ func buildOneTransition(id int64, oldAction stateInfo, toAction GroupMembershipA
 	} else {
 		results[id] = Unchanged
 	}
+}
+
+func approvalsOK(oldAction *stateInfo, approvals GroupApprovals) bool {
+	return oldAction.Action.hasApprovals() && oldAction.ApprovalsOK ||
+		!oldAction.Action.hasApprovals() &&
+			(!oldAction.RequirePersonalInfoAccessApproval || approvals.PersonalInfoViewApproval) &&
+			(!oldAction.RequireLockMembershipApproval || approvals.LockMembershipApproval) &&
+			(!oldAction.RequireWatchApproval || approvals.WatchApproval)
 }
