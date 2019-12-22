@@ -25,6 +25,9 @@ import (
 //     and the authenticated user’s `group_id` as `member_id` with `type`='invitation'.
 //     Otherwise the unprocessable entity error is returned.
 //
+//   * If some of approvals required by the group are missing in `approvals`,
+//     the unprocessable entity error is returned.
+//
 //
 //   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.
 // parameters:
@@ -32,6 +35,12 @@ import (
 //   in: path
 //   type: integer
 //   required: true
+// - name: approvals
+//   in: query
+//   type: array
+//   items:
+//     type: string
+//     enum: [personal_info_view,lock_membership,watch]
 // responses:
 //   "200":
 //     "$ref": "#/responses/updatedOrUnchangedResponse"

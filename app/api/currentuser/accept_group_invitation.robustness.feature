@@ -1,12 +1,13 @@
 Feature: User accepts an invitation to join a group - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type     | team_item_id |
-      | 11 | Class    | null         |
-      | 13 | Friends  | null         |
-      | 14 | Team     | 1234         |
-      | 15 | Team     | 1234         |
-      | 21 | UserSelf | null         |
+      | id | type     | team_item_id | require_personal_info_access_approval |
+      | 11 | Class    | null         | none                                  |
+      | 13 | Friends  | null         | none                                  |
+      | 14 | Team     | 1234         | none                                  |
+      | 15 | Team     | 1234         | none                                  |
+      | 16 | Team     | null         | view                                  |
+      | 21 | UserSelf | null         | none                                  |
     And the database has the following table 'users':
       | group_id | login |
       | 21       | john  |
@@ -28,6 +29,7 @@ Feature: User accepts an invitation to join a group - robustness
       | 11       | 21        | join_request |
       | 13       | 21        | invitation   |
       | 15       | 21        | invitation   |
+      | 16       | 21        | invitation   |
 
   Scenario: User tries to create a cycle in the group relations graph
     Given I am the user with id "21"
@@ -88,3 +90,17 @@ Feature: User accepts an invitation to join a group - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
 
+  Scenario: User tries to accept an invitation to join a group that requires approvals which are not given
+    Given I am the user with id "21"
+    When I send a POST request to "/current-user/group-invitations/16/accept"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals"
+    }
+    """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged

@@ -104,7 +104,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	var results database.GroupGroupTransitionResults
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var approvals database.GroupApprovals
-		if action == createGroupJoinRequestAction {
+		if action == createGroupJoinRequestAction || action == acceptInvitationAction {
 			approvals.FromString(r.URL.Query().Get("approvals"))
 		}
 
