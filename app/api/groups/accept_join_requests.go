@@ -14,8 +14,9 @@ import (
 //   On success the service creates new `groups_groups` rows
 //   with `parent_group_id` = `{parent_group_id}` and new `group_membership_changes` with
 //   `group_id` = `{parent_group_id}`, `action` = 'join_request_accepted`, `at` = current UTC time
-//   for each of `group_ids`
-//   The appropriate pending requests get removed from `group_pending_requests`.
+//   for each of `group_ids`. The `groups_groups.*_approved_at` fields are set to `group_pending_requests.at`
+//   for each approval given in the pending join requests.
+//   Then the appropriate pending requests get removed from `group_pending_requests`.
 //   The service also refreshes the access rights.
 //
 //
@@ -29,7 +30,11 @@ import (
 //
 //   There should be a row with `type` = 'join_request' and `group_id` = `{parent_group_id}`
 //   in `group_pending_requests` for each of the input `group_ids`, otherwise the `group_id` gets skipped with
-//   `invalid` as the result.
+//   'invalid' as the result.
+//
+//
+//   If the `{parent_group_id}` requires any approvals, but the pending request doesn't contain them,
+//   the `group_id` gets skipped with 'invalid' as the result.
 //
 //
 //   The action should not create cycles in the groups relations graph, otherwise
