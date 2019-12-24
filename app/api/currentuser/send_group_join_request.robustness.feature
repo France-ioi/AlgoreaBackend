@@ -168,3 +168,20 @@ Feature: User sends a request to join a group - robustness
       "data": {"missing_approvals": ["watch"]}
     }
     """
+
+  Scenario: Can't send request to a group when an approval is missing even while being a group manager
+    Given I am the user with id "23"
+    And the database table 'group_managers' has also the following rows:
+      | group_id | manager_id | can_manage  |
+      | 16       | 21         | memberships |
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals",
+      "data": {"missing_approvals": ["watch"]}
+    }
+    """

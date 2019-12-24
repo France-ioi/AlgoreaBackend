@@ -59,7 +59,7 @@ Feature: User sends a request to join a group
     And the database has the following table 'group_managers':
       | group_id | manager_id | can_manage  |
       | 11       | 21         | memberships |
-    When I send a POST request to "/current-user/group-requests/11"
+    When I send a POST request to "/current-user/group-requests/11?approvals=personal_info_view,lock_membership,watch"
     Then the response code should be 201
     And the response body should be, in JSON:
     """
@@ -70,8 +70,8 @@ Feature: User sends a request to join a group
     }
     """
     And the table "groups_groups" should be:
-      | parent_group_id | child_group_id |
-      | 11              | 21             |
+      | parent_group_id | child_group_id | ABS(TIMESTAMPDIFF(SECOND, personal_info_view_approved_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, lock_membership_approved_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, watch_approved_at, NOW())) < 3 |
+      | 11              | 21             | 1                                                                     | 1                                                                  | 1                                                        |
     And the table "group_pending_requests" should be:
       | group_id | member_id | type         | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 14       | 21        | join_request | 0                                         |
