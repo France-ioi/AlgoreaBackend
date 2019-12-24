@@ -99,7 +99,10 @@ Feature: User accepts an invitation to join a group - robustness
     {
       "success": false,
       "message": "Unprocessable Entity",
-      "error_text": "Missing required approvals"
+      "error_text": "Missing required approvals",
+      "data": {
+        "missing_approvals": ["personal_info_view"]
+      }
     }
     """
     And the table "groups_groups" should stay unchanged

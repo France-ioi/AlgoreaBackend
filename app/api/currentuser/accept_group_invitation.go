@@ -26,7 +26,7 @@ import (
 //     Otherwise the unprocessable entity error is returned.
 //
 //   * If some of approvals required by the group are missing in `approvals`,
-//     the unprocessable entity error is returned.
+//     the unprocessable entity error is returned with a list of missing approvals.
 //
 //
 //   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` when the group is a team.
@@ -51,7 +51,7 @@ import (
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
 //   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
+//     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) service.APIError {

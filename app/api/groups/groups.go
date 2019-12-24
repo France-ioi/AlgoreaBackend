@@ -160,7 +160,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
 			}
 
-			results, err = store.GroupGroups().Transition(
+			results, _, err = store.GroupGroups().Transition(
 				map[bulkMembershipAction]database.GroupGroupTransitionAction{
 					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
 					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,

@@ -12,7 +12,7 @@ import (
 
 // RenderGroupGroupTransitionResult renders database.GroupGroupTransitionResult as a response or returns an APIError
 func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
-	action userGroupRelationAction) service.APIError {
+	approvalsToRequest database.GroupApprovals, action userGroupRelationAction) service.APIError {
 	isCreateAction := map[userGroupRelationAction]bool{
 		createGroupJoinRequestAction:         true,
 		joinGroupByCodeAction:                true,
@@ -28,7 +28,20 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		}
 		return service.ErrNotFound(errors.New("no such relation"))
 	case database.ApprovalsNeeded:
-		return service.ErrUnprocessableEntity(errors.New("missing required approvals"))
+		errorResponse := &service.ErrorResponse{
+			Response: service.Response{
+				HTTPStatusCode: http.StatusUnprocessableEntity,
+				Success:        false,
+				Message:        "Unprocessable Entity",
+			},
+			ErrorText: "Missing required approvals",
+			Errors:    nil,
+		}
+		if approvalsToRequest != (database.GroupApprovals{}) {
+			errorResponse.Data = map[string]interface{}{"missing_approvals": approvalsToRequest.ToArray()}
+		}
+		service.MustNotBeError(render.Render(w, r, errorResponse))
+		return service.NoError
 	case database.Unchanged:
 		statusCode := 200
 		if isCreateAction {
