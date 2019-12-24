@@ -7,7 +7,7 @@ Feature: User sends a request to join a group - robustness
       | 14 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
       | 15 | 0           | Club     | null         | none                                  | null                                   | 0                      |
       | 16 | 1           | Team     | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 0           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 17 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
       | 21 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
       | 23 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
@@ -15,8 +15,8 @@ Feature: User sends a request to join a group - robustness
       | 21       | john  |
       | 23       | jane  |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 17       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 17       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |

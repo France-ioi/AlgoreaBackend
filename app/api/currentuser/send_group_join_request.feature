@@ -54,11 +54,11 @@ Feature: User sends a request to join a group
     And the table "group_pending_requests" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Automatically accepts the request if the user owns the group
+  Scenario: Automatically accepts the request if the user can manage group memberships
     Given I am the user with id "21"
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 11       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 11       | 21         | memberships |
     When I send a POST request to "/current-user/group-requests/11"
     Then the response code should be 201
     And the response body should be, in JSON:

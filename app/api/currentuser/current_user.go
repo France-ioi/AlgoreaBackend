@@ -131,7 +131,7 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 
 	if action == createGroupJoinRequestAction {
 		var found bool
-		found, err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
+		found, err = store.Groups().ManagedBy(user).Where("can_manage != 'none'").Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
 			action = createAcceptedGroupJoinRequestAction
