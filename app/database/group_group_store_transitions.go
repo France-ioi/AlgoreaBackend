@@ -131,6 +131,8 @@ type groupGroupTransitionRule struct {
 	// Transitions defines all possible transitions for the action. The format is "FromAction->ToAction".
 	// Relations that have "from" action not listed here are considered as invalid.
 	Transitions map[GroupMembershipAction]GroupMembershipAction
+
+	IfNotEnoughApprovalsDowngradeTo GroupMembershipAction
 }
 
 var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
@@ -141,6 +143,7 @@ var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransit
 			JoinRequestCreated:  JoinRequestAccepted,
 			LeaveRequestExpired: InvitationCreated,
 		},
+		IfNotEnoughApprovalsDowngradeTo: InvitationCreated, // only JoinRequestAccepted requires approvals
 	},
 	UserCreatesJoinRequest: {
 		Transitions: map[GroupMembershipAction]GroupMembershipAction{
@@ -543,11 +546,15 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 		if toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldAction.Action]; toActionOK {
 			if toAction.isActive() && !oldAction.Action.isActive() || toAction.hasApprovals() {
 				if ok, approvalsNeeded := approvalsOK(&oldAction, groupRequiredApprovals, approvals[id]); !ok {
+					if groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo != NoRelation {
+						toAction = groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo
+					} else {
 						results[id] = ApprovalsNeeded
 						if approvalsNeeded != (GroupApprovals{}) {
 							approvalsToRequest[id] = approvalsNeeded
 						}
 						continue
+					}
 				}
 			}
 

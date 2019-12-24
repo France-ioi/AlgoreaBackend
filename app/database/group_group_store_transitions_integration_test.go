@@ -746,7 +746,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 		name   string
 		action database.GroupGroupTransitionAction
 	}{
-		{"when an admin creates an invitation", database.AdminCreatesInvitation},
 		{"when a user joins the group by code", database.UserJoinsGroupByCode},
 		{"when a group owner creates an accepted join request", database.UserCreatesAcceptedJoinRequest},
 	} {
@@ -783,6 +782,40 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 			}, approvalsToRequest)
 		})
 	}
+}
+
+func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEnoughApprovalsInJoinRequestOnCreatingInvitation(
+	t *testing.T) {
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups:
+			- {id: 3}
+			- {id: 20, require_personal_info_access_approval: view,
+				 require_lock_membership_approval_until: 9999-12-31 23:59:59, require_watch_approval: 1}
+			- {id: 111}
+		users:
+			- {group_id: 111}
+		group_pending_requests:
+			- {group_id: 20, member_id: 3, type: join_request, at: 2019-05-30 11:00:00,
+				 personal_info_view_approved: 0, lock_membership_approved: 0, watch_approved: 0}`)
+	defer func() { _ = db.Close() }()
+	dataStore := database.NewDataStore(db)
+
+	var result database.GroupGroupTransitionResults
+	var approvalsToRequest map[int64]database.GroupApprovals
+	err := dataStore.InTransaction(func(store *database.DataStore) error {
+		var err error
+		result, approvalsToRequest, err = store.GroupGroups().Transition(
+			database.AdminCreatesInvitation, 20, []int64{3}, nil, 111,
+		)
+		return err
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, database.GroupGroupTransitionResults{3: "success"}, result)
+	assert.Empty(t, approvalsToRequest)
+	assertGroupPendingRequestsEqual(t, dataStore.GroupPendingRequests(), []groupPendingRequest{
+		{GroupID: 20, MemberID: 3, Type: "invitation"},
+	})
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvitations(t *testing.T) {
