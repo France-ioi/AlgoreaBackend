@@ -70,7 +70,7 @@ Feature: Get groups attempts for current user and item_id - robustness
 
   Scenario: as_team_id is not a team
     Given I am the user with id "12"
-    When I send a POST request to "/items/210/attempts?as_team_id=14"
+    When I send a GET request to "/items/210/attempts?as_team_id=14"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
@@ -78,7 +78,7 @@ Feature: Get groups attempts for current user and item_id - robustness
 
   Scenario: as_team_id is a team for a different item
     Given I am the user with id "12"
-    When I send a POST request to "/items/210/attempts?as_team_id=15"
+    When I send a GET request to "/items/210/attempts?as_team_id=15"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
