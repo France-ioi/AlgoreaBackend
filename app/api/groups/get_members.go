@@ -48,7 +48,8 @@ type groupsMembersViewResponseRow struct {
 //
 //   Returns a list of group members
 //   (rows from the `groups_groups` table with `parent_group_id` = `group_id` and NOW() < `groups_groups.expires_at`).
-//   Rows related to users contain basic user info.
+//   Rows related to users contain basic user info (`first_name` and `last_name` are only shown if the user
+//   approved access to their personal info for some group managed by the authenticated user).
 //
 //
 //   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
@@ -117,27 +118,39 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		return apiError
 	}
 
-	query := srv.Store.GroupGroups().
-		Select(`
-			groups_groups.id,
-			latest_change.at AS member_since,
-			latest_change.action,
-			users.group_id AS user__group_id,
-			users.login AS user__login,
-			users.first_name AS user__first_name,
-			users.last_name AS user__last_name,
-			users.grade AS user__grade`).
-		Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
-		Joins(`
-			LEFT JOIN LATERAL (
-				SELECT at, action FROM group_membership_changes
-				WHERE group_membership_changes.group_id = groups_groups.parent_group_id AND
-					group_membership_changes.member_id = groups_groups.child_group_id
-				ORDER BY at DESC
-				LIMIT 1
-			) AS latest_change ON 1`).
-		WhereGroupRelationIsActual().
-		Where("groups_groups.parent_group_id = ?", groupID)
+	query := srv.Store.Raw(`
+		WITH managed_groups_with_approval AS ? ?`,
+		srv.Store.ActiveGroupAncestors().ManagedByUser(user).
+			Joins(`
+				JOIN groups_groups_active
+					ON groups_groups_active.child_group_id = groups_ancestors_active.child_group_id AND
+						 groups_groups_active.personal_info_view_approved`).
+			Select("groups_groups_active.child_group_id AS id").
+			Group("groups_groups_active.child_group_id").
+			SubQuery(),
+		srv.Store.GroupGroups().
+			Select(`
+				groups_groups.id,
+				latest_change.at AS member_since,
+				latest_change.action,
+				users.group_id AS user__group_id,
+				users.login AS user__login,
+				IF(managed_groups_with_approval.id IS NOT NULL, users.first_name, NULL) AS user__first_name,
+				IF(managed_groups_with_approval.id IS NOT NULL, users.last_name, NULL) AS user__last_name,
+				users.grade AS user__grade`).
+			Joins("LEFT JOIN users ON users.group_id = groups_groups.child_group_id").
+			Joins("LEFT JOIN managed_groups_with_approval ON managed_groups_with_approval.id = users.group_id").
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT at, action FROM group_membership_changes USE INDEX(group_id_member_id_at_desc)
+					WHERE group_membership_changes.group_id = groups_groups.parent_group_id AND
+						group_membership_changes.member_id = groups_groups.child_group_id
+					ORDER BY group_membership_changes.group_id, group_membership_changes.member_id, at DESC
+					LIMIT 1
+				) AS latest_change ON 1`).
+			WhereGroupRelationIsActual().
+			Where("groups_groups.parent_group_id = ?", groupID).
+			QueryExpr())
 
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query,
