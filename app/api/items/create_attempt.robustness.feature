@@ -44,6 +44,12 @@ Feature: Create an attempt for an item - robustness
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
+  Scenario: Invalid as_team_id
+    Given I am the user with id "101"
+    When I send a POST request to "/items/50/attempts?as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
   Scenario: User not found
     Given I am the user with id "404"
     When I send a POST request to "/items/50/attempts"
