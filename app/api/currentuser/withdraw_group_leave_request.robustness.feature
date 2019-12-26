@@ -1,4 +1,4 @@
-Feature: User sends a request to leave a group - robustness
+Feature: User withdraws a request to leave a group - robustness
   Background:
     Given the database has the following table 'groups':
       | id |
