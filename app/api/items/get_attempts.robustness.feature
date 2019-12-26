@@ -56,6 +56,12 @@ Feature: Get groups attempts for current user and item_id - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Wrong as_team_id
+    Given I am the user with id "12"
+    When I send a GET request to "/items/210/attempts?as_team_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for as_team_id (should be int64)"
+
   Scenario: Team doesn't have access to the item
     Given I am the user with id "12"
     When I send a GET request to "/items/210/attempts?as_team_id=13"
