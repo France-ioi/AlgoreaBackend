@@ -1,6 +1,7 @@
 package items
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -39,18 +40,21 @@ type itemAttemptsViewResponseRow struct {
 // swagger:operation GET /items/{item_id}/attempts items itemAttemptsView
 // ---
 // summary: List attempts for a task
-// description: Returns attempts made by the current user (if `items.has_attempts` = 0) or his
-//              teams (if `items.has_attempts` = 1) while solving the task given in `item_id`.
+// description: Returns attempts made by the current user (if `as_team_id` is not given) or
+//              `as_team_id` (otherwise) while solving the task given in `item_id`.
 //
 //
-//              The current user should have at least 'content' permission on the task item,
-//              otherwise an empty list is returned.
+//              The current user (if no `as_team_id` given) or `as_team_id` (otherwise) should have
+//              at least 'content' permission on the task item, the 'forbidden' error is returned.
 // parameters:
 // - name: item_id
 //   in: path
 //   type: integer
 //   format: int64
 //   required: true
+// - name: as_team_id
+//   in: query
+//   type: integer
 // - name: sort
 //   in: query
 //   default: [order,id]
@@ -87,6 +91,8 @@ type itemAttemptsViewResponseRow struct {
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
 //     "$ref": "#/responses/unauthorizedResponse"
+//   "403":
+//     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
@@ -95,7 +101,31 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 	user := srv.GetUser(r)
-	query := srv.Store.GroupAttempts().VisibleAndByItemID(user, itemID).
+
+	groupID := user.GroupID
+	if len(r.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
+
+		var found bool
+		found, err = srv.Store.Groups().TeamGroupForItemAndUser(itemID, user).Where("groups.id = ?", groupID).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrForbidden(errors.New("can't use given as_team_id as a user's team for the item"))
+		}
+	}
+
+	var found bool
+	found, err = srv.Store.Items().ByID(itemID).WhereGroupHasViewPermissionOnItems(groupID, "content").HasRows()
+	service.MustNotBeError(err)
+	if !found {
+		return service.InsufficientAccessRightsError
+	}
+
+	query := srv.Store.GroupAttempts().Where("groups_attempts.group_id = ?", groupID).
+		Where("item_id = ?", itemID).
 		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_id").
 		Select(`
 			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,

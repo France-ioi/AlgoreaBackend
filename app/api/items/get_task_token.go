@@ -1,7 +1,6 @@
 package items
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -13,38 +12,34 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/token"
 )
 
-// swagger:operation GET /items/{item_id}/task-token items itemTaskTokenGet
+// swagger:operation GET /attempts/{attempt_id}/task-token items itemTaskTokenGet
 // ---
 // summary: Get a task token
 // description: >
-//   Get a task token with a refreshed active attempt.
+//   Get a task token with the refreshed active attempt.
 //
 //
 //   * If there is no row for the current user and the given item in `users_items`, the service creates one.
 //
 //   * If the active attempt (`active_attempt_id`) is not set in the `users_items` for the item and the user,
-//   the service chooses the most recent one among all the user's attempts (or the team's attempts if
-//   `items.has_attempts`=1)  for the given item. If no attempts found, the new one gets created and chosen as active.
+//   the service makes `attempt_id` active.
 //
 //   * Then `started_at` (if it is NULL) and `latest_activity_at` of `groups_attempts` & `user_items` are set to the current time.
 //
 //   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
 //
 //
-//   Depending on the `items.has_attempts` the active attempt is linked to the user's self group (if `items.has_attempts`=0)
-//   or to the user’s team (if `items.has_attempts`=1). The user’s team is a user's parent group with `groups.team_item_id`
-//   pointing to one of the item's ancestors or the item itself.
-//
-//
 //   Restrictions:
 //
-//     * the user should have at least 'content' access to the item,
+//     * the `groups_attempts.group_id` should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
-//     * for items with `has_attempts`=1 the user's team should exist when a new attempt is being created,
+//     * if `groups_attempts.group_id` != current user's `group_id`, it should be a team with `groups.team_item_id`
+//       pointing to one of ancestors of `groups_attempts.item_id` or the `groups_attempts.item_id` itself,
+//       and the current user should be a member of this team,
 //
 //   otherwise the 'forbidden' error is returned.
 // parameters:
-// - name: item_id
+// - name: attempt_id
 //   in: path
 //   type: integer
 //   required: true
@@ -80,7 +75,7 @@ import (
 func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
 	var err error
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -94,75 +89,67 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		TextID            *string
 		URL               string
 		SupportedLangProg *string
+		ActiveAttemptID   *int64
 	}
-	err = srv.Store.Items().ByID(itemID).WhereUserHasViewPermissionOnItems(user, "content").
-		Where("items.type IN('Task','Course')").
-		Select(`
-			can_view_generated_value = ? AS access_solutions,
-			has_attempts, hints_allowed, text_id, url, supported_lang_prog`,
-			srv.Store.PermissionsGranted().ViewIndexByName("solution")).
-		Take(&itemInfo).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
-	}
-	service.MustNotBeError(err)
 
 	var groupsAttemptInfo struct {
 		ID               int64
 		HintsRequested   *string
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
+		GroupID          int64
+		ItemID           int64
 	}
-	var activeAttemptID *int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		userItemStore := store.UserItems()
-		err = userItemStore.Where("user_id = ?", user.GroupID).Where("item_id = ?", itemID).
-			WithWriteLock().PluckFirst("active_attempt_id", &activeAttemptID).Error()
+		// load the attempt data
+		err = store.GroupAttempts().ByID(attemptID).WithWriteLock().
+			Select("id, hints_requested, hints_cached, group_id, item_id").Take(&groupsAttemptInfo).Error()
 
-		// No active attempt set in `users_items` so we should choose or create one
 		if gorm.IsRecordNotFoundError(err) {
-			groupID := user.GroupID
+			apiError = service.InsufficientAccessRightsError
+			return err // rollback
+		}
+		service.MustNotBeError(err)
 
-			// if items.has_attempts = 1, we use use a team group instead of the user's self group
-			if itemInfo.HasAttempts {
-				err = store.Groups().TeamGroupForItemAndUser(itemID, user).PluckFirst("groups.id", &groupID).Error()
-				if gorm.IsRecordNotFoundError(err) {
-					apiError = service.ErrForbidden(errors.New("no team found for the user"))
-					return err // rollback
-				}
-				service.MustNotBeError(err)
+		// if the attempt doesn't belong to the user, it should belong to the user's team related to the item
+		if groupsAttemptInfo.GroupID != user.GroupID {
+			var found bool
+			found, err = store.Groups().TeamGroupForItemAndUser(groupsAttemptInfo.ItemID, user).
+				Where("groups.id = ?", groupsAttemptInfo.GroupID).HasRows()
+			service.MustNotBeError(err)
+			if !found {
+				apiError = service.InsufficientAccessRightsError
+				return err // rollback
 			}
+		}
 
-			// find the freshest one among all the group's attempts for the item
-			var attemptID int64
-			groupAttemptScope := store.GroupAttempts().
-				Where("group_id = ?", groupID).Where("item_id = ?", itemID)
-			err = groupAttemptScope.Order("latest_activity_at DESC").
-				Select("id, hints_requested, hints_cached").Limit(1).
-				Take(&groupsAttemptInfo).Error()
-
-			// if no attempt found, create a new one
-			if gorm.IsRecordNotFoundError(err) {
-				attemptID, err = store.GroupAttempts().CreateNew(groupID, itemID)
-				service.MustNotBeError(err)
-			} else { // otherwise, update groups_attempts.started_at (if it is NULL) & groups_attempts.latest_activity_at
-				attemptID = groupsAttemptInfo.ID
-			}
-			activeAttemptID = &attemptID
+		// the attempt's group should have can_view >= 'content' permission on the item
+		err = store.Items().ByID(groupsAttemptInfo.ItemID).
+			WhereGroupHasViewPermissionOnItems(groupsAttemptInfo.GroupID, "content").
+			Where("items.type IN('Task','Course')").
+			Joins("LEFT JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ?", user.GroupID).
+			Select(`
+					can_view_generated_value = ? AS access_solutions,
+					has_attempts, hints_allowed, text_id, url, supported_lang_prog,
+					users_items.active_attempt_id`,
+				store.PermissionsGranted().ViewIndexByName("solution")).
+			Take(&itemInfo).Error()
+		if gorm.IsRecordNotFoundError(err) {
+			apiError = service.InsufficientAccessRightsError
+			return apiError.Error // rollback
 		}
 		service.MustNotBeError(err)
 
 		// update groups_attempts
-		service.MustNotBeError(store.GroupAttempts().ByID(*activeAttemptID).UpdateColumn(map[string]interface{}{
+		service.MustNotBeError(store.GroupAttempts().ByID(groupsAttemptInfo.ID).UpdateColumn(map[string]interface{}{
 			"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
 			"latest_activity_at": database.Now(),
 		}).Error())
 
 		// update users_items.active_attempt_id
-		service.MustNotBeError(userItemStore.SetActiveAttempt(user.GroupID, itemID, *activeAttemptID))
-
-		// propagate groups_attempts
-		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
+		if itemInfo.ActiveAttemptID == nil {
+			service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, groupsAttemptInfo.ItemID, groupsAttemptInfo.ID))
+		}
 
 		return nil
 	})
@@ -180,12 +167,12 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		IsAdmin:            ptrBool(false),
 		ReadAnswers:        ptrBool(true),
 		UserID:             strconv.FormatInt(user.GroupID, 10),
-		LocalItemID:        strconv.FormatInt(itemID, 10),
+		LocalItemID:        strconv.FormatInt(groupsAttemptInfo.ItemID, 10),
 		ItemID:             itemInfo.TextID,
-		AttemptID:          strconv.FormatInt(*activeAttemptID, 10),
+		AttemptID:          strconv.FormatInt(groupsAttemptInfo.ID, 10),
 		ItemURL:            itemInfo.URL,
 		SupportedLangProg:  itemInfo.SupportedLangProg,
-		RandomSeed:         strconv.FormatInt(*activeAttemptID, 10),
+		RandomSeed:         strconv.FormatInt(groupsAttemptInfo.ID, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
 	}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)

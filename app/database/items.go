@@ -7,12 +7,28 @@ func (conn *DB) WhereUserHasViewPermissionOnItems(user *User, viewPermission str
 	return conn.WhereUserHasPermissionOnItems(user, "view", viewPermission)
 }
 
+// WhereGroupHasViewPermissionOnItems returns a subview of the items
+// on that the given group has `can_view_generated` >= `viewPermission`
+// basing on the given view.
+func (conn *DB) WhereGroupHasViewPermissionOnItems(groupID int64, viewPermission string) *DB {
+	return conn.WhereGroupHasPermissionOnItems(groupID, "view", viewPermission)
+}
+
 // WhereUserHasPermissionOnItems returns a subview of the items
 // on that the given user has `can_view_generated` >= `viewPermission`
 // basing on the given view.
 func (conn *DB) WhereUserHasPermissionOnItems(user *User, permissionKind, neededPermission string) *DB {
 	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
 		WithPermissionForUser(user, permissionKind, neededPermission)
+	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
+}
+
+// WhereGroupHasPermissionOnItems returns a subview of the items
+// on that the given group has `can_view_generated` >= `viewPermission`
+// basing on the given view.
+func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, neededPermission string) *DB {
+	itemsPerms := NewDataStore(newDB(conn.db.New())).Permissions().
+		WithPermissionForGroup(groupID, permissionKind, neededPermission)
 	return conn.Joins("JOIN ? AS permissions ON permissions.item_id = items.id", itemsPerms.SubQuery())
 }
 

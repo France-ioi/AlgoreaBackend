@@ -30,104 +30,9 @@ Feature: Get a task token with a refreshed active attempt for an item
       | group_id | item_id | can_view_generated       |
       | 101      | 50      | content                  |
       | 101      | 60      | solution                 |
+      | 102      | 60      | solution                 |
       | 111      | 50      | content_with_descendants |
     And time is frozen
-
-  Scenario: User is able to fetch an active attempt (no active attempt set)
-    Given I am the user with id "111"
-    When I send a GET request to "/items/50/task-token"
-    Then the response code should be 200
-    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
-      """
-      {
-        "task_token": {
-          "date": "{{currentTimeInFormat("02-01-2006")}}",
-          "bAccessSolutions": false,
-          "bHintsAllowed": true,
-          "bIsAdmin": false,
-          "bReadAnswers": true,
-          "bSubmissionPossible": true,
-          "idAttempt": "5577006791947779410",
-          "idUser": "111",
-          "idItemLocal": "50",
-          "idItem": "task1",
-          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "nbHintsGiven": "0",
-          "randomSeed": "5577006791947779410",
-          "platformName": "{{app().TokenConfig.PlatformName}}"
-        }
-      }
-      """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 111     | 50      | 5577006791947779410 |
-    And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 111      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
-
-  Scenario: User is able to fetch a task token (no active attempt set, only full access)
-    Given I am the user with id "101"
-    When I send a GET request to "/items/50/task-token"
-    Then the response code should be 200
-    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
-      """
-      {
-        "task_token": {
-          "date": "{{currentTimeInFormat("02-01-2006")}}",
-          "bAccessSolutions": false,
-          "bHintsAllowed": true,
-          "bIsAdmin": false,
-          "bReadAnswers": true,
-          "bSubmissionPossible": true,
-          "idAttempt": "5577006791947779410",
-          "idUser": "101",
-          "idItem": "task1",
-          "idItemLocal": "50",
-          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "nbHintsGiven": "0",
-          "randomSeed": "5577006791947779410",
-          "platformName": "{{app().TokenConfig.PlatformName}}"
-        }
-      }
-      """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 101     | 50      | 5577006791947779410 |
-    And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
-
-  Scenario: User is able to fetch a task token (no active attempt and item.has_attempts=1)
-    Given I am the user with id "101"
-    When I send a GET request to "/items/60/task-token"
-    Then the response code should be 200
-    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
-      """
-      {
-        "task_token": {
-          "date": "{{currentTimeInFormat("02-01-2006")}}",
-          "bAccessSolutions": true,
-          "bHintsAllowed": false,
-          "bIsAdmin": false,
-          "bReadAnswers": true,
-          "bSubmissionPossible": true,
-          "idAttempt": "5577006791947779410",
-          "idUser": "101",
-          "idItemLocal": "60",
-          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "nbHintsGiven": "0",
-          "sSupportedLangProg": "c,python",
-          "randomSeed": "5577006791947779410",
-          "platformName": "{{app().TokenConfig.PlatformName}}"
-        }
-      }
-      """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 101     | 60      | 5577006791947779410 |
-    And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 5577006791947779410 | 102      | 60      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token (with active attempt set)
     Given I am the user with id "101"
@@ -137,7 +42,7 @@ Feature: Get a task token with a refreshed active attempt for an item
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
-    When I send a GET request to "/items/50/task-token"
+    When I send a GET request to "/attempts/100/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -165,7 +70,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | id  | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 100 | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
-  Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB)
+  Scenario: User is able to fetch a task token (no active attempt set)
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
@@ -173,7 +78,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 | null       | 0     | null           | null         | [1,2,3,4]       | 4            |
       | 3  | 102      | 50      | 0     | 2019-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
       | 4  | 101      | 51      | 0     | 2019-04-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
-    When I send a GET request to "/items/50/task-token"
+    When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -205,7 +110,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
-  Scenario: User is able to fetch a task token (no active attempt set, but there are some in the DB and items.has_attempts=1)
+  Scenario: User is able to fetch a task token as a team (no active attempt set, but there are some in the DB)
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
@@ -213,7 +118,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 2  | 102      | 60      | 1     | 2018-05-29 06:38:38 | null       | 0     | null           | null         | [1,2,3,4]       | 4            |
       | 3  | 101      | 60      | 0     | 2019-05-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
       | 4  | 102      | 61      | 0     | 2019-04-29 06:38:38 | null       | 0     | null           | null         | null            | 0            |
-    When I send a GET request to "/items/60/task-token"
+    When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -250,7 +155,7 @@ Feature: Get a task token with a refreshed active attempt for an item
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score | best_answer_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-    When I send a GET request to "/items/50/task-token"
+    When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 200
     And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
       """
@@ -280,3 +185,16 @@ Feature: Get a task token with a refreshed active attempt for an item
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
       | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
+
+  Scenario: Keeps previous active_attempt_id
+    Given I am the user with id "101"
+    And the database has the following table 'groups_attempts':
+      | id | group_id | item_id | order | latest_activity_at  |
+      | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 |
+      | 3  | 101      | 50      | 2     | 2018-05-29 06:38:38 |
+    And the database has the following table 'users_items':
+      | user_id | item_id | active_attempt_id |
+      | 101     | 50      | 3                 |
+    When I send a GET request to "/attempts/2/task-token"
+    Then the response code should be 200
+    And the table "users_items" should stay unchanged
