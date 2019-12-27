@@ -29,15 +29,25 @@ type createGroupManagerRequest struct {
 //   The authenticated user should have 'can_manage:memberships_and_group' permission on the group
 //   and `{manager_id}` should exist, otherwise the "forbidden" error is returned.
 // parameters:
+// - name: group_id
+//   in: path
+//   required: true
+//   type: integer
+// - name: manager_id
+//   in: path
+//   required: true
+//   type: integer
 // - in: body
 //   name: data
 //   required: true
-//   description: The group to create
+//   description: Permissions of the new manager
 //   schema:
-//     "$ref": "#/definitions/createGroupRequest"
+//     "$ref": "#/definitions/createGroupManagerRequest"
 // responses:
 //   "201":
-//     "$ref": "#/responses/createdWithIDResponse"
+//     description: Created. The request has successfully added a user as a manager.
+//     schema:
+//       "$ref": "#/definitions/createdResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
