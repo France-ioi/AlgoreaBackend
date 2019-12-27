@@ -45,6 +45,16 @@ Feature: Make a user a group manager (groupManagerCreate) - robustness
     And the response error message should contain "Wrong value for manager_id (should be int64)"
     And the table "group_managers" should stay unchanged
 
+  Scenario: Wrong JSON
+    Given I am the user with id "21"
+    When I send a POST request to "/groups/2/managers/22" with the following body:
+      """
+      {
+      """
+    Then the response code should be 400
+    And the response error message should contain "Unexpected EOF"
+    And the table "group_managers" should stay unchanged
+
   Scenario: manager_id doesn't exist
     Given I am the user with id "21"
     When I send a POST request to "/groups/2/managers/404" with the following body:
