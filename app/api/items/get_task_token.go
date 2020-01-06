@@ -16,17 +16,12 @@ import (
 // ---
 // summary: Get a task token
 // description: >
-//   Get a task token with the refreshed active attempt.
+//   Get a task token with the refreshed attempt.
 //
 //
-//   * If there is no row for the current user and the given item in `users_items`, the service creates one.
+//   * `started_at` (if it is NULL) and `latest_activity_at` of `groups_attempts` are set to the current time.
 //
-//   * If the active attempt (`active_attempt_id`) is not set in the `users_items` for the item and the user,
-//   the service makes `attempt_id` active.
-//
-//   * Then `started_at` (if it is NULL) and `latest_activity_at` of `groups_attempts` & `user_items` are set to the current time.
-//
-//   * Finally, the service returns a task token with fresh data for the active attempt for the given item.
+//   * Then the service returns a task token with fresh data for the attempt for the given item.
 //
 //
 //   Restrictions:
@@ -89,7 +84,6 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		TextID            *string
 		URL               string
 		SupportedLangProg *string
-		ActiveAttemptID   *int64
 	}
 
 	var groupsAttemptInfo struct {
@@ -127,11 +121,9 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		err = store.Items().ByID(groupsAttemptInfo.ItemID).
 			WhereGroupHasViewPermissionOnItems(groupsAttemptInfo.GroupID, "content").
 			Where("items.type IN('Task','Course')").
-			Joins("LEFT JOIN users_items ON users_items.item_id = items.id AND users_items.user_id = ?", user.GroupID).
 			Select(`
 					can_view_generated_value = ? AS access_solutions,
-					has_attempts, hints_allowed, text_id, url, supported_lang_prog,
-					users_items.active_attempt_id`,
+					has_attempts, hints_allowed, text_id, url, supported_lang_prog`,
 				store.PermissionsGranted().ViewIndexByName("solution")).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {
@@ -145,11 +137,6 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 			"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
 			"latest_activity_at": database.Now(),
 		}).Error())
-
-		// update users_items.active_attempt_id
-		if itemInfo.ActiveAttemptID == nil {
-			service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, groupsAttemptInfo.ItemID, groupsAttemptInfo.ID))
-		}
 
 		return nil
 	})

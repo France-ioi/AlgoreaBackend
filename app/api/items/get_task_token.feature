@@ -1,4 +1,4 @@
-Feature: Get a task token with a refreshed active attempt for an item
+Feature: Get a task token with a refreshed attempt for an item
   Background:
     Given the database has the following table 'groups':
       | id  | team_item_id | type     |
@@ -34,43 +34,7 @@ Feature: Get a task token with a refreshed active attempt for an item
       | 111      | 50      | content_with_descendants |
     And time is frozen
 
-  Scenario: User is able to fetch a task token (with active attempt set)
-    Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | order | score | best_answer_at | validated_at | started_at |
-      | 100 | 101      | 50      | 1     | 0     | null           | null         | null       |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-    When I send a GET request to "/attempts/100/task-token"
-    Then the response code should be 200
-    And the response body decoded as "GetTaskTokenResponse" should be, in JSON:
-      """
-      {
-        "task_token": {
-          "date": "{{currentTimeInFormat("02-01-2006")}}",
-          "bAccessSolutions": false,
-          "bHintsAllowed": true,
-          "bIsAdmin": false,
-          "bReadAnswers": true,
-          "bSubmissionPossible": true,
-          "idAttempt": "100",
-          "idUser": "101",
-          "idItem": "task1",
-          "idItemLocal": "50",
-          "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-          "nbHintsGiven": "0",
-          "randomSeed": "100",
-          "platformName": "{{app().TokenConfig.PlatformName}}"
-        }
-      }
-      """
-    And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should be:
-      | id  | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
-
-  Scenario: User is able to fetch a task token (no active attempt set)
+  Scenario: User is able to fetch a task token
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
@@ -102,15 +66,12 @@ Feature: Get a task token with a refreshed active attempt for an item
         }
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
-  Scenario: User is able to fetch a task token as a team (no active attempt set, but there are some in the DB)
+  Scenario: User is able to fetch a task token as a team
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score | best_answer_at | validated_at | hints_requested | hints_cached |
@@ -142,9 +103,6 @@ Feature: Get a task token with a refreshed active attempt for an item
         }
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 101     | 60      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
@@ -178,23 +136,7 @@ Feature: Get a task token with a refreshed active attempt for an item
         }
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 2                 |
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
       | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
       | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
-
-  Scenario: Keeps previous active_attempt_id
-    Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
-      | id | group_id | item_id | order | latest_activity_at  |
-      | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 |
-      | 3  | 101      | 50      | 2     | 2018-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 3                 |
-    When I send a GET request to "/attempts/2/task-token"
-    Then the response code should be 200
-    And the table "users_items" should stay unchanged

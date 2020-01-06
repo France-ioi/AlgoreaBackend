@@ -1,4 +1,4 @@
-Feature: Get a task token with a refreshed active attempt for an item - robustness
+Feature: Get a task token with a refreshed attempt for an item - robustness
   Background:
     Given the database has the following table 'groups':
       | id  | team_item_id | type     |
@@ -54,7 +54,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/abc/task-token"
     Then the response code should be 400
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User not found
@@ -62,7 +61,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No attempt
@@ -70,7 +68,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/404/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No access to the item (info access)
@@ -78,7 +75,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/2/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No access to the item (type='Root')
@@ -86,7 +82,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/3/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No access to the item (type='Category')
@@ -94,7 +89,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/4/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: No access to the item (type='Chapter')
@@ -102,7 +96,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/5/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: User is not a team member
@@ -110,7 +103,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/6/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: Attempt group is not a team
@@ -118,7 +110,6 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/7/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
   Scenario: as_team_id is a team for a different item
@@ -126,5 +117,4 @@ Feature: Get a task token with a refreshed active attempt for an item - robustne
     When I send a GET request to "/attempts/8/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
