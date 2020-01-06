@@ -245,8 +245,8 @@ const (
 	Cycle GroupGroupTransitionResult = "cycle"
 	// Invalid means that the transition is impossible
 	Invalid GroupGroupTransitionResult = "invalid"
-	// ApprovalsNeeded means that one or more approvals required by the transition are missing
-	ApprovalsNeeded GroupGroupTransitionResult = "approvals_needed"
+	// ApprovalsMissing means that one or more approvals required by the transition are missing
+	ApprovalsMissing GroupGroupTransitionResult = "approvals_missing"
 	// Success means that the transition was performed successfully
 	Success GroupGroupTransitionResult = "success"
 	// Unchanged means that the transition has been already performed
@@ -496,7 +496,7 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 
 		if toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldAction.Action]; toActionOK {
 			if oldAction.Action.hasApprovals() && toAction.isActive() && !oldAction.ApprovalsOK {
-				results[id] = ApprovalsNeeded
+				results[id] = ApprovalsMissing
 				continue
 			}
 
