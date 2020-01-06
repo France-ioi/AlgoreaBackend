@@ -167,7 +167,7 @@ Feature: Accept group requests
       """
       {
         "data": {
-          "21": "approvals_needed"
+          "21": "approvals_missing"
         },
         "message": "updated",
         "success": true

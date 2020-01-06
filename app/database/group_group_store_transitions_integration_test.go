@@ -612,13 +612,13 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 		},
 		{
 			name:                              "personal_info_view approval required (view), but it is not given",
-			wantResult:                        "approvals_needed",
+			wantResult:                        "approvals_missing",
 			requirePersonalInfoAccessApproval: "view",
 			wantApprovalsToRequest:            database.GroupApprovals{PersonalInfoViewApproval: true},
 		},
 		{
 			name:                              "personal_info_view approval required (edit), but it is not given",
-			wantResult:                        "approvals_needed",
+			wantResult:                        "approvals_missing",
 			requirePersonalInfoAccessApproval: "edit",
 			wantApprovalsToRequest:            database.GroupApprovals{PersonalInfoViewApproval: true},
 		},
@@ -630,21 +630,21 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 		},
 		{
 			name:                               "lock_membership_until is not expired, but the lock_membership approval is not given",
-			wantResult:                         "approvals_needed",
+			wantResult:                         "approvals_missing",
 			requirePersonalInfoAccessApproval:  "none",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			wantApprovalsToRequest:             database.GroupApprovals{LockMembershipApproval: true},
 		},
 		{
 			name:                              "watch approval required, but it is not given",
-			wantResult:                        "approvals_needed",
+			wantResult:                        "approvals_missing",
 			requirePersonalInfoAccessApproval: "none",
 			requireWatchApproval:              1,
 			wantApprovalsToRequest:            database.GroupApprovals{WatchApproval: true},
 		},
 		{
 			name:                               "all approvals required, but personal_info_view is not given",
-			wantResult:                         "approvals_needed",
+			wantResult:                         "approvals_missing",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -655,7 +655,7 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 		},
 		{
 			name:                               "all approvals required, but lock_membership is not given",
-			wantResult:                         "approvals_needed",
+			wantResult:                         "approvals_missing",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -666,7 +666,7 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 		},
 		{
 			name:                               "all approvals required, but watch is not given",
-			wantResult:                         "approvals_needed",
+			wantResult:                         "approvals_missing",
 			requirePersonalInfoAccessApproval:  "view",
 			requireLockMembershipApprovalUntil: "9999-12-31 23:59:59",
 			requireWatchApproval:               1,
@@ -776,7 +776,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 			})
 
 			assert.NoError(t, err)
-			assert.Equal(t, database.GroupGroupTransitionResults{3: "approvals_needed"}, result)
+			assert.Equal(t, database.GroupGroupTransitionResults{3: "approvals_missing"}, result)
 			assert.Equal(t, map[int64]database.GroupApprovals{
 				3: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
 			}, approvalsToRequest)

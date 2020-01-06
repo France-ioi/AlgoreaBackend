@@ -79,14 +79,14 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 			wantResponseBody: `{"success":true,"message":"deleted","data":{"changed":true}}`,
 		},
 		{
-			name:             "approvals_needed",
-			result:           database.ApprovalsNeeded,
+			name:             "approvals_missing",
+			result:           database.ApprovalsMissing,
 			wantStatusCode:   http.StatusUnprocessableEntity,
 			wantResponseBody: `{"success":false,"message":"Unprocessable Entity","error_text":"Missing required approvals"}`,
 		},
 		{
-			name:   "approvals_needed (with approvals listed)",
-			result: database.ApprovalsNeeded,
+			name:   "approvals_missing (with approvals listed)",
+			result: database.ApprovalsMissing,
 			approvalsToRequest: database.GroupApprovals{
 				PersonalInfoViewApproval: true,
 				LockMembershipApproval:   true,

@@ -27,7 +27,7 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 			return service.ErrUnprocessableEntity(errors.New("a conflicting relation exists"))
 		}
 		return service.ErrNotFound(errors.New("no such relation"))
-	case database.ApprovalsNeeded:
+	case database.ApprovalsMissing:
 		errorResponse := &service.ErrorResponse{
 			Response: service.Response{
 				HTTPStatusCode: http.StatusUnprocessableEntity,
