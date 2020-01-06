@@ -12,8 +12,8 @@ import (
 )
 
 type stateResultRow struct {
-	ID                        int64
-	AncestorsComputationState string
+	ID                     int64
+	ResultPropagationState string
 }
 
 func TestGroupAttemptStore_ComputeAllGroupAttempts_WithCyclicGraph(t *testing.T) {
@@ -28,11 +28,11 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_WithCyclicGraph(t *testing.T)
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, ancestors_computation_state").Order("id").Scan(&result).Error())
+	assert.NoError(t, groupAttemptStore.Select("id, result_propagation_state").Order("id").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
-		{ID: 11, AncestorsComputationState: "todo"},
-		{ID: 12, AncestorsComputationState: "todo"},
+		{ID: 11, ResultPropagationState: "to_be_recomputed"},
+		{ID: 12, ResultPropagationState: "to_be_recomputed"},
 		// another user
-		{ID: 22, AncestorsComputationState: "done"},
+		{ID: 22, ResultPropagationState: "done"},
 	}, result)
 }

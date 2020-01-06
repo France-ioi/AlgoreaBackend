@@ -126,12 +126,12 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		// Update groups_attempts with the hint request
 		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(map[string]interface{}{
-				"tasks_with_help":             1,
-				"ancestors_computation_state": "todo",
-				"latest_activity_at":          database.Now(),
-				"latest_hint_at":              database.Now(),
-				"hints_requested":             hintsRequestedNew,
-				"hints_cached":                len(hintsRequestedParsed),
+				"tasks_with_help":          1,
+				"result_propagation_state": "changed",
+				"latest_activity_at":       database.Now(),
+				"latest_hint_at":           database.Now(),
+				"hints_requested":          hintsRequestedNew,
+				"hints_cached":             len(hintsRequestedParsed),
 			}).Error())
 
 		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())

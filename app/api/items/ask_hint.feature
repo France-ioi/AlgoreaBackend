@@ -85,9 +85,9 @@ Feature: Ask for a hint
       }
       """
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null                               | done                        | 1                                                         | null                                                  |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "101"
@@ -147,9 +147,9 @@ Feature: Ask for a hint
       }
       """
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null                               | done                        | 1                                                         | null                                                  |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "101"
@@ -209,9 +209,9 @@ Feature: Ask for a hint
       }
       """
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                        | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null              | done                        | 1                                                         | null                                                  |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                     | 1                                                         | 1                                                     |
+      | 200 | 101      | 10      | 1               | 0            | null              | done                     | 1                                                         | null                                                  |
 
   Scenario: Can't parse hints_requested
     Given I am the user with id "101"
@@ -271,9 +271,9 @@ Feature: Ask for a hint
       }
       """
     And the table "groups_attempts" should be:
-      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
-      | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                        | 1                                                         | 1                                                     |
-      | 200 | 101      | 10      | 1               | 0            | null               | done                        | 1                                                         | null                                                  |
+      | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
+      | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
+      | 200 | 101      | 10      | 1               | 0            | null               | done                     | 1                                                         | null                                                  |
     And logs should contain:
       """
       Unable to parse hints_requested ({"idAttempt":100,"idItemLocal":50,"idUser":101}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
