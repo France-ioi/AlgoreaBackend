@@ -111,7 +111,7 @@ Feature: Export the current user's data
           "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "11", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "ancestors_computation_state": "done",
+          "tasks_with_help": 0, "result_propagation_state": "done",
           "best_answer_at": null, "entered_at": null, "hints_requested": null,
           "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
           "started_at": null, "validated_at": null
@@ -121,7 +121,7 @@ Feature: Export the current user's data
           "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
           "group_id": "2", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "ancestors_computation_state": "done",
+          "tasks_with_help": 0, "result_propagation_state": "done",
           "best_answer_at": null, "entered_at": null, "hints_requested": null,
           "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
           "started_at": null, "validated_at": null

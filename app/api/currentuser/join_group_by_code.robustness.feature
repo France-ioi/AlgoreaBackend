@@ -1,14 +1,14 @@
 Feature: Join a group using a code (groupsJoinByCode) - robustness
   Background:
     Given the database has the following table 'groups':
-      | id | type     | code       | code_expires_at     | code_lifetime | free_access | team_item_id |
-      | 11 | Team     | 3456789abc | 2017-04-29 06:38:38 | null          | true        | null         |
-      | 12 | Team     | abc3456789 | null                | null          | true        | null         |
-      | 14 | Team     | cba9876543 | null                | null          | true        | 1234         |
-      | 15 | Team     | 75987654ab | null                | null          | false       | null         |
-      | 16 | Class    | dcef123492 | null                | null          | false       | null         |
-      | 17 | Team     | 5987654abc | null                | null          | true        | 1234         |
-      | 21 | UserSelf | null       | null                | null          | false       | null         |
+      | id | type     | code       | code_expires_at     | code_lifetime | free_access | team_item_id | require_watch_approval |
+      | 11 | Team     | 3456789abc | 2017-04-29 06:38:38 | null          | true        | null         | 0                      |
+      | 12 | Team     | abc3456789 | null                | null          | true        | null         | 1                      |
+      | 14 | Team     | cba9876543 | null                | null          | true        | 1234         | 0                      |
+      | 15 | Team     | 75987654ab | null                | null          | false       | null         | 0                      |
+      | 16 | Class    | dcef123492 | null                | null          | false       | null         | 0                      |
+      | 17 | Team     | 5987654abc | null                | null          | true        | 1234         | 0                      |
+      | 21 | UserSelf | null       | null                | null          | false       | null         | 0                      |
     And the database has the following table 'users':
       | login | group_id |
       | john  | 21       |
@@ -118,5 +118,22 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
       "error_text": "You are already on a team for this item"
     }
     """
+    And the table "groups_groups" should stay unchanged
+    And the table "groups_ancestors" should stay unchanged
+
+  Scenario: Cannot join if required approvals are missing
+    Given I am the user with id "21"
+    When I send a POST request to "/current-user/group-memberships/by-code?code=abc3456789"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "data": {"missing_approvals":["watch"]},
+      "error_text": "Missing required approvals"
+    }
+    """
+    And the table "groups" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged

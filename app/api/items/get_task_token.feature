@@ -68,8 +68,8 @@ Feature: Get a task token with a refreshed attempt for an item
       """
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id | group_id | item_id | score | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 2  | 101      | 50      | 0     | 0           | done                     | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token as a team
     Given I am the user with id "101"
@@ -105,8 +105,8 @@ Feature: Get a task token with a refreshed attempt for an item
       """
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
-      | 2  | 102      | 60      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
+      | id | group_id | item_id | score | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 2  | 102      | 60      | 0     | 0           | done                     | 1                                                         | null                                                    | null                                                  | null                                                | 1                                                 |
 
   Scenario: Keeps previous started_at values
     Given I am the user with id "101"
@@ -138,5 +138,5 @@ Feature: Get a task token with a refreshed attempt for an item
       """
     And the table "groups_attempts" should stay unchanged but the row with id "2"
     And the table "groups_attempts" at id "2" should be:
-      | id | group_id | item_id | score | tasks_tried | ancestors_computation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
-      | 2  | 101      | 50      | 0     | 0           | done                        | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |
+      | id | group_id | item_id | score | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, best_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
+      | 2  | 101      | 50      | 0     | 0           | done                     | 1                                                         | null                                                    | null                                                  | null                                                | 2017-05-29 06:38:38 |

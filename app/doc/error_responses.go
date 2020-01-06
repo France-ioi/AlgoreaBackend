@@ -47,6 +47,16 @@ type unprocessableEntityResponse struct {
 	Body struct{ unprocessableEntity }
 }
 
+// Unprocessable Entity. Returned by services performing groups relations transitions to indicate
+// that the transition is impossible because of missing approvals.
+// swagger:response unprocessableEntityResponseWithMissingApprovals
+type unprocessableEntityResponseWithMissingApprovals struct {
+	// in:body
+	Body struct {
+		unprocessableEntityWithMissingApprovals
+	}
+}
+
 // Internal Error. An unexpected error has happened on the server (e.g., uncaught database error).
 // If the problem persists, it should be reported.
 // swagger:response internalErrorResponse

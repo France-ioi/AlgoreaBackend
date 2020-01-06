@@ -96,7 +96,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 	var groupResults database.GroupGroupTransitionResults
 	if len(groupsToRemove) > 0 {
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
-			groupResults, err = store.GroupGroups().
+			groupResults, _, err = store.GroupGroups().
 				Transition(database.AdminRemovesUser, parentGroupID, groupsToRemove, nil, user.GroupID)
 			return err
 		})

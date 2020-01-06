@@ -33,6 +33,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Post("/current-user/group-invitations/{group_id}/reject", service.AppHandler(srv.rejectGroupInvitation).ServeHTTP)
 
 	router.Post("/current-user/group-requests/{group_id}", service.AppHandler(srv.sendGroupJoinRequest).ServeHTTP)
+	router.Delete("/current-user/group-requests/{group_id}", service.AppHandler(srv.withdrawGroupJoinRequest).ServeHTTP)
 	router.Post("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.sendGroupLeaveRequest).ServeHTTP)
 	router.Delete("/current-user/group-leave-requests/{group_id}", service.AppHandler(srv.withdrawGroupLeaveRequest).ServeHTTP)
 
@@ -56,6 +57,7 @@ const (
 	createGroupJoinRequestAction         userGroupRelationAction = "createJoinRequest"
 	createAcceptedGroupJoinRequestAction userGroupRelationAction = "createAcceptedJoinRequest"
 	createGroupLeaveRequestAction        userGroupRelationAction = "createLeaveRequest"
+	withdrawGroupJoinRequestAction       userGroupRelationAction = "withdrawJoinRequest"
 	withdrawGroupLeaveRequestAction      userGroupRelationAction = "withdrawLeaveRequest"
 	leaveGroupAction                     userGroupRelationAction = "leaveGroup"
 	joinGroupByCodeAction                userGroupRelationAction = "joinGroupByCode"
@@ -101,14 +103,15 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	}
 
 	apiError := service.NoError
-	var results database.GroupGroupTransitionResults
+	var result database.GroupGroupTransitionResult
+	var approvalsToRequest database.GroupApprovals
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var approvals database.GroupApprovals
-		if action == createGroupJoinRequestAction {
+		if action == createGroupJoinRequestAction || action == acceptInvitationAction {
 			approvals.FromString(r.URL.Query().Get("approvals"))
 		}
 
-		apiError, results = performUserGroupRelationAction(action, store, user, groupID, approvals)
+		apiError, result, approvalsToRequest = performUserGroupRelationAction(action, store, user, groupID, approvals)
 		if apiError != service.NoError {
 			return apiError.Error // rollback
 		}
@@ -120,17 +123,17 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 	}
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], action)
+	return RenderGroupGroupTransitionResult(w, r, result, approvalsToRequest, action)
 }
 
 func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,
-	groupID int64, approvals database.GroupApprovals) (service.APIError, database.GroupGroupTransitionResults) {
+	groupID int64, approvals database.GroupApprovals) (service.APIError, database.GroupGroupTransitionResult, database.GroupApprovals) {
 	var err error
 	apiError := service.NoError
 
 	if action == createGroupJoinRequestAction {
 		var found bool
-		found, err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).HasRows()
+		found, err = store.Groups().ManagedBy(user).Where("can_manage != 'none'").Where("groups.id = ?", groupID).HasRows()
 		service.MustNotBeError(err)
 		if found {
 			action = createAcceptedGroupJoinRequestAction
@@ -140,24 +143,26 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 		createGroupJoinRequestAction: true, acceptInvitationAction: true, createAcceptedGroupJoinRequestAction: true,
 	}[action] {
 
-		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action, approvals)
+		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action)
 		if apiError != service.NoError {
-			return apiError, nil
+			return apiError, "", database.GroupApprovals{}
 		}
 	}
 	var results database.GroupGroupTransitionResults
-	results, err = store.GroupGroups().Transition(
+	var approvalsToRequest map[int64]database.GroupApprovals
+	results, approvalsToRequest, err = store.GroupGroups().Transition(
 		map[userGroupRelationAction]database.GroupGroupTransitionAction{
 			acceptInvitationAction:               database.UserAcceptsInvitation,
 			rejectInvitationAction:               database.UserRefusesInvitation,
 			createGroupJoinRequestAction:         database.UserCreatesJoinRequest,
 			createAcceptedGroupJoinRequestAction: database.UserCreatesAcceptedJoinRequest,
+			withdrawGroupJoinRequestAction:       database.UserCancelsJoinRequest,
 			withdrawGroupLeaveRequestAction:      database.UserCancelsLeaveRequest,
 			leaveGroupAction:                     database.UserLeavesGroup,
 			createGroupLeaveRequestAction:        database.UserCreatesLeaveRequest,
 		}[action], groupID, []int64{user.GroupID}, map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
 	service.MustNotBeError(err)
-	return apiError, results
+	return apiError, results[user.GroupID], approvalsToRequest[user.GroupID]
 }
 
 type parentGroupInfo struct {
@@ -169,7 +174,7 @@ type parentGroupInfo struct {
 }
 
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
-	groupID int64, action userGroupRelationAction, approvals database.GroupApprovals) service.APIError {
+	groupID int64, action userGroupRelationAction) service.APIError {
 	var parentGroup parentGroupInfo
 
 	// The group should exist (and optionally should have `free_access` = 1)
@@ -186,12 +191,6 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 	service.MustNotBeError(err)
 
-	if action == createGroupJoinRequestAction {
-		if apiError := checkApprovals(parentGroup, approvals); apiError != service.NoError {
-			return apiError
-		}
-	}
-
 	// If the group is a team and its `team_item_id` is set, ensure that the current user is not a member of
 	// another team with the same `team_item_id'.
 	if parentGroup.Type == "Team" && parentGroup.TeamItemID != nil {
@@ -203,19 +202,6 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("you are already on a team for this item"))
 		}
-	}
-	return service.NoError
-}
-
-func checkApprovals(parentGroup parentGroupInfo, approvals database.GroupApprovals) service.APIError {
-	if parentGroup.RequirePersonalInfoAccessApproval != "none" && !approvals.PersonalInfoViewApproval {
-		return service.ErrUnprocessableEntity(errors.New("the group requires 'personal_info_view' approval"))
-	}
-	if parentGroup.RequireLockMembershipApproval && !approvals.LockMembershipApproval {
-		return service.ErrUnprocessableEntity(errors.New("the group requires 'lock_membership' approval"))
-	}
-	if parentGroup.RequireWatchApproval && !approvals.WatchApproval {
-		return service.ErrUnprocessableEntity(errors.New("the group requires 'watch' approval"))
 	}
 	return service.NoError
 }

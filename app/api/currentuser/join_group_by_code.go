@@ -32,6 +32,9 @@ import (
 //   * If there is already a row in `groups_groups` with the found team as a parent
 //     and the authenticated user’s selfGroup’s id as a child, the unprocessable entity error is returned.
 //
+//   * If the group requires some approvals from the user and those are not given in `approval`,
+//     the unprocessable entity error is returned with a list of missing approvals.
+//
 //
 //   _Warning:_ The service doesn't check if the user has access rights on `team_item_id` of the team.
 // parameters:
@@ -39,6 +42,12 @@ import (
 //   in: query
 //   type: string
 //   required: true
+// - name: approvals
+//   in: query
+//   type: array
+//   items:
+//     type: string
+//     enum: [personal_info_view,lock_membership,watch]
 // responses:
 //   "201":
 //     description: Created. The request has successfully created the group relation.
@@ -51,7 +60,7 @@ import (
 //   "403":
 //     "$ref": "#/responses/forbiddenResponse"
 //   "422":
-//     "$ref": "#/responses/unprocessableEntityResponse"
+//     "$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) service.APIError {
@@ -64,6 +73,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 
 	apiError := service.NoError
 	var results database.GroupGroupTransitionResults
+	var approvalsToRequest map[int64]database.GroupApprovals
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var groupInfo struct {
 			ID                 int64
@@ -100,8 +110,11 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 			service.MustNotBeError(store.Groups().ByID(groupInfo.ID).
 				UpdateColumn("code_expires_at", gorm.Expr("ADDTIME(NOW(), code_lifetime)")).Error())
 		}
-		results, errInTransaction = store.GroupGroups().Transition(
-			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID}, nil, user.GroupID)
+		var approvals database.GroupApprovals
+		approvals.FromString(r.URL.Query().Get("approvals"))
+		results, approvalsToRequest, errInTransaction = store.GroupGroups().Transition(
+			database.UserJoinsGroupByCode, groupInfo.ID, []int64{user.GroupID},
+			map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
 		return errInTransaction
 	})
 	if apiError != service.NoError {
@@ -109,5 +122,5 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], joinGroupByCodeAction)
+	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
 }

@@ -36,6 +36,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/members", service.AppHandler(srv.getMembers).ServeHTTP)
 	router.Delete("/groups/{group_id}/members", service.AppHandler(srv.removeMembers).ServeHTTP)
 
+	router.Post("/groups/{group_id}/managers/{manager_id}", service.AppHandler(srv.createGroupManager).ServeHTTP)
+
 	router.Get("/groups/{group_id}/requests", service.AppHandler(srv.getRequests).ServeHTTP)
 	router.Get("/groups/{group_id}/group-progress", service.AppHandler(srv.getGroupProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/team-progress", service.AppHandler(srv.getTeamProgress).ServeHTTP)
@@ -160,7 +162,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 				groupIDs, filteredIDs = filterOtherTeamsMembersOut(store, parentGroupID, groupIDs)
 			}
 
-			results, err = store.GroupGroups().Transition(
+			results, _, err = store.GroupGroups().Transition(
 				map[bulkMembershipAction]database.GroupGroupTransitionAction{
 					acceptJoinRequestsAction:  database.AdminAcceptsJoinRequest,
 					rejectJoinRequestsAction:  database.AdminRefusesJoinRequest,

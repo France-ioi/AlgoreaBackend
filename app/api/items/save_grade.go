@@ -77,7 +77,6 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed) (validated, ok bool) {
-	const todo = "todo"
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
@@ -95,6 +94,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		"best_answer_at",
 		"latest_answer_at",
 		"score",
+		"result_propagation_state",
 	}
 	values := []interface{}{
 		1,
@@ -102,16 +102,12 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		gorm.Expr("IF(? > score, ?, best_answer_at)", score, database.Now()),
 		database.Now(),
 		gorm.Expr("GREATEST(?, score)", score),
+		"changed",
 	}
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate, "validated_at")
 		values = append(values, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
-	}
-	if score > 0 {
-		// Always propagate attempts if the score was non-zero
-		columnsToUpdate = append(columnsToUpdate, "ancestors_computation_state")
-		values = append(values, todo)
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
@@ -260,6 +256,6 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 }
 
 // Bind of saveGradeRequestParsed does nothing.
-func (requestData *saveGradeRequestParsed) Bind(r *http.Request) error {
+func (requestData *saveGradeRequestParsed) Bind(*http.Request) error {
 	return nil
 }

@@ -7,7 +7,7 @@ Feature: User sends a request to join a group - robustness
       | 14 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
       | 15 | 0           | Club     | null         | none                                  | null                                   | 0                      |
       | 16 | 1           | Team     | 1234         | edit                                  | 9999-12-31 23:59:59                    | 1                      |
-      | 17 | 0           | Team     | 1234         | none                                  | null                                   | 0                      |
+      | 17 | 1           | Team     | 1234         | none                                  | null                                   | 0                      |
       | 21 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
       | 23 | 0           | UserSelf | null         | none                                  | null                                   | 0                      |
     And the database has the following table 'users':
@@ -15,8 +15,8 @@ Feature: User sends a request to join a group - robustness
       | 21       | john  |
       | 23       | jane  |
     And the database has the following table 'group_managers':
-      | group_id | manager_id |
-      | 17       | 21         |
+      | group_id | manager_id | can_manage  |
+      | 17       | 21         | memberships |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 11                | 11             | 1       |
@@ -127,20 +127,61 @@ Feature: User sends a request to join a group - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: Can't send request to a group when personal_info_view approval is missing
+  Scenario: Can't send request to a group when all approvals are missing
     Given I am the user with id "23"
     When I send a POST request to "/current-user/group-requests/16"
     Then the response code should be 422
-    And the response error message should contain "The group requires 'personal_info_view' approval"
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals",
+      "data": {"missing_approvals": ["personal_info_view","lock_membership","watch"]}
+    }
+    """
 
-  Scenario: Can't send request to a group when lock_membership approval is missing
+  Scenario: Can't send request to a group when lock_membership & watch approvals are missing
     Given I am the user with id "23"
     When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view"
     Then the response code should be 422
-    And the response error message should contain "The group requires 'lock_membership' approval"
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals",
+      "data": {"missing_approvals": ["lock_membership","watch"]}
+    }
+    """
 
   Scenario: Can't send request to a group when watch approval is missing
     Given I am the user with id "23"
     When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
     Then the response code should be 422
-    And the response error message should contain "The group requires 'watch' approval"
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals",
+      "data": {"missing_approvals": ["watch"]}
+    }
+    """
+
+  Scenario: Can't send request to a group when an approval is missing even while being a group manager
+    Given I am the user with id "23"
+    And the database table 'group_managers' has also the following rows:
+      | group_id | manager_id | can_manage  |
+      | 16       | 21         | memberships |
+    When I send a POST request to "/current-user/group-requests/16?approvals=personal_info_view,lock_membership"
+    Then the response code should be 422
+    And the response body should be, in JSON:
+    """
+    {
+      "success": false,
+      "message": "Unprocessable Entity",
+      "error_text": "Missing required approvals",
+      "data": {"missing_approvals": ["watch"]}
+    }
+    """
