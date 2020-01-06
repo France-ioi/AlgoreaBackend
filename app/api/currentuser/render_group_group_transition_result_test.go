@@ -14,11 +14,12 @@ import (
 
 func TestRenderGroupGroupTransitionResult(t *testing.T) {
 	tests := []struct {
-		name             string
-		result           database.GroupGroupTransitionResult
-		actions          []userGroupRelationAction
-		wantStatusCode   int
-		wantResponseBody string
+		name               string
+		result             database.GroupGroupTransitionResult
+		approvalsToRequest database.GroupApprovals
+		actions            []userGroupRelationAction
+		wantStatusCode     int
+		wantResponseBody   string
 	}{
 		{
 			name:           "cycle",
@@ -83,6 +84,19 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 			wantStatusCode:   http.StatusUnprocessableEntity,
 			wantResponseBody: `{"success":false,"message":"Unprocessable Entity","error_text":"Missing required approvals"}`,
 		},
+		{
+			name:   "approvals_missing (with approvals listed)",
+			result: database.ApprovalsMissing,
+			approvalsToRequest: database.GroupApprovals{
+				PersonalInfoViewApproval: true,
+				LockMembershipApproval:   true,
+				WatchApproval:            true,
+			},
+			wantStatusCode: http.StatusUnprocessableEntity,
+			wantResponseBody: `{"success":false,"message":"Unprocessable Entity",` +
+				`"data":{"missing_approvals":["personal_info_view","lock_membership","watch"]},` +
+				`"error_text":"Missing required approvals"}`,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -96,7 +110,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 			action := action
 			t.Run(tt.name+": "+string(action), func(t *testing.T) {
 				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) service.APIError {
-					return RenderGroupGroupTransitionResult(respW, req, tt.result, action)
+					return RenderGroupGroupTransitionResult(respW, req, tt.result, tt.approvalsToRequest, action)
 				}
 				handler := http.HandlerFunc(fn.ServeHTTP)
 				req, _ := http.NewRequest("GET", "/dummy", nil)

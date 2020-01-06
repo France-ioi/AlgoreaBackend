@@ -105,7 +105,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			var apiError service.APIError
 			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
 				apiError = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
-					&database.User{GroupID: 10}, 1, "createJoinRequest", database.GroupApprovals{})
+					&database.User{GroupID: 10}, 1, "createJoinRequest")
 				return nil
 			}))
 			assert.Equal(t, tt.wantAPIError, apiError)

@@ -61,6 +61,20 @@ type unprocessableEntity struct {
 	Message string `json:"message"`
 }
 
+type unprocessableEntityWithMissingApprovals struct {
+	genericError
+	// required: true
+	// enum: Unprocessable Entity
+	Message string                                      `json:"message"`
+	Data    unprocessableEntityWithMissingApprovalsData `json:"data"`
+}
+
+// Unprocessable Entity response with a list of missing approvals
+type unprocessableEntityWithMissingApprovalsData struct {
+	// items.enum: personal_info_view,lock_membership,watch
+	MissingApprovals []string `json:"missing_approvals"`
+}
+
 type internalError struct {
 	genericError
 	// required: true

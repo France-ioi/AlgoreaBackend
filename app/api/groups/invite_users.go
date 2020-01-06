@@ -49,7 +49,8 @@ const maxAllowedLoginsToInvite = 100
 //   * If the `parent_group_id` corresponds to a team with `team_item_id` set, the service skips users
 //     who are members of other teams with the same `team_item_id` (result = "in_another_team").
 //
-//   * Pending group requests from users listed in `logins` become accepted (result = "success").
+//   * Pending group requests from users listed in `logins` become accepted (result = "success")
+//     if all needed approvals are given, or replaced by invitations otherwise.
 //
 //   * Pending invitations stay unchanged (result = "unchanged).
 //
@@ -147,7 +148,7 @@ func (srv *Service) inviteUsers(w http.ResponseWriter, r *http.Request) service.
 		err = srv.Store.InTransaction(func(store *database.DataStore) error {
 			groupsToInvite = filterOtherTeamsMembersOutForLogins(store, parentGroupID, groupsToInvite, results, groupIDToLoginMap)
 
-			groupResults, err = store.GroupGroups().
+			groupResults, _, err = store.GroupGroups().
 				Transition(database.AdminCreatesInvitation, parentGroupID, groupsToInvite, nil, user.GroupID)
 			return err
 		})
