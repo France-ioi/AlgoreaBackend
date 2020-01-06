@@ -50,9 +50,11 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		service.MustNotBeError(render.Render(w, r, service.UnchangedSuccess(statusCode)))
 	case database.Success:
 		renderGroupGroupTransitionSuccess(isCreateAction,
-			action == leaveGroupAction ||
-				action == withdrawGroupLeaveRequestAction ||
-				action == withdrawGroupJoinRequestAction, w, r)
+			map[userGroupRelationAction]bool{
+				leaveGroupAction:                true,
+				withdrawGroupLeaveRequestAction: true,
+				withdrawGroupJoinRequestAction:  true,
+			}[action], w, r)
 	}
 	return service.NoError
 }
