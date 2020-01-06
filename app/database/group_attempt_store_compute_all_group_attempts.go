@@ -88,10 +88,10 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 						SELECT
 							target_groups_attempts.id,
 							MAX(aggregated_children_attempts.latest_activity_at) AS latest_activity_at,
-							IFNULL(SUM(aggregated_children_attempts.tasks_tried), 0) AS tasks_tried,
-							IFNULL(SUM(aggregated_children_attempts.tasks_with_help), 0) AS tasks_with_help,
-							IFNULL(SUM(aggregated_children_attempts.tasks_solved), 0) AS tasks_solved,
-							IFNULL(SUM(aggregated_children_attempts.validated), 0) AS children_validated,
+							SUM(aggregated_children_attempts.tasks_tried) AS tasks_tried,
+							SUM(aggregated_children_attempts.tasks_with_help) AS tasks_with_help,
+							SUM(aggregated_children_attempts.tasks_solved) AS tasks_solved,
+							SUM(aggregated_children_attempts.validated) AS children_validated,
 							SUM(IFNULL(NOT aggregated_children_attempts.validated, 1)) AS children_non_validated,
 							SUM(items_items.category = 'Validation' AND IFNULL(NOT aggregated_children_attempts.validated, 1))
 								AS children_non_validated_categories,
