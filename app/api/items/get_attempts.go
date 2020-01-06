@@ -44,8 +44,13 @@ type itemAttemptsViewResponseRow struct {
 //              `as_team_id` (otherwise) while solving the task given in `item_id`.
 //
 //
-//              The current user (if no `as_team_id` given) or `as_team_id` (otherwise) should have
-//              at least 'content' permission on the task item, the 'forbidden' error is returned.
+//              * The current user (if no `as_team_id` given) or `as_team_id` (otherwise) should have
+//                at least 'content' permission on the task item,
+//
+//              * the current user must be member of the team if `as_team_id` is provided,
+//
+//
+//              otherwise the 'forbidden' error is returned.
 // parameters:
 // - name: item_id
 //   in: path
