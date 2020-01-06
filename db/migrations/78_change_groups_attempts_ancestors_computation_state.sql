@@ -9,7 +9,7 @@ UPDATE `groups_attempts` SET `result_propagation_state` = 'to_be_recomputed' WHE
 
 ALTER TABLE `groups_attempts`
     MODIFY COLUMN `result_propagation_state` ENUM('done','processing','changed','to_be_recomputed') NOT NULL DEFAULT 'done'
-        COMMENT 'Used by the algorithm that computes attempts summaries for ancestor items and unlocks items if needed ("changed" means that ancestors should be recomputed).';
+        COMMENT 'Used by the algorithm that computes results for items that have children and unlocks items if needed ("changed" means that ancestors should be recomputed).';
 
 DROP TRIGGER IF EXISTS `after_insert_items_items`;
 -- +migrate StatementBegin

@@ -172,8 +172,7 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 		})
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
 		groupAttemptStore := store.GroupAttempts()
-		// we assume that `no_score` or `validation_type` will not be edited for tasks
-		// (otherwise groups_attempts data of the task will be zeroed)
+		// groups_attempts data of the task will be zeroed
 		service.MustNotBeError(groupAttemptStore.Where("item_id = ?", itemID).
 			UpdateColumn("result_propagation_state", "to_be_recomputed").Error())
 		service.MustNotBeError(groupAttemptStore.ComputeAllGroupAttempts())
