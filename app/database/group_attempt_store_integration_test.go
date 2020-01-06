@@ -13,6 +13,10 @@ import (
 
 func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
+		groups:
+			- {id: 100}
+		users:
+			- {group_id: 100}
 		groups_attempts:
 			- {id: 1, group_id: 10, item_id: 20, order: 1}
 			- {id: 2, group_id: 10, item_id: 30, order: 3}
@@ -22,29 +26,24 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	var newID int64
 	var err error
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		newID, err = store.GroupAttempts().CreateNew(10, 20)
+		newID, err = store.GroupAttempts().CreateNew(10, 20, 100)
 		return err
 	}))
 	assert.True(t, newID > 0)
 	type resultType struct {
-		GroupID             int64
-		ItemID              int64
-		StartedAtSet        bool
-		LatestActivityAtSet bool
-		Order               int32
+		GroupID   int64
+		ItemID    int64
+		CreatorID int64
+		Order     int32
 	}
 	var result resultType
 	assert.NoError(t, database.NewDataStore(db).GroupAttempts().ByID(newID).
-		Select(`
-			group_id, item_id, ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 AS started_at_set,
-			ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 AS latest_activity_at_set, `+"`order`").
-		Take(&result).Error())
+		Select("group_id, item_id, creator_id, `order`").Take(&result).Error())
 	assert.Equal(t, resultType{
-		GroupID:             10,
-		ItemID:              20,
-		StartedAtSet:        true,
-		LatestActivityAtSet: true,
-		Order:               2,
+		GroupID:   10,
+		ItemID:    20,
+		CreatorID: 100,
+		Order:     2,
 	}, result)
 }
 
@@ -167,130 +166,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedFound, found)
 			assert.Equal(t, test.expectedItemID, itemID)
-		})
-	}
-}
-
-func TestGroupAttemptStore_VisibleAndByItemID(t *testing.T) {
-	tests := []struct {
-		name        string
-		fixture     string
-		attemptID   int64
-		userID      int64
-		itemID      int64
-		expectedIDs []int64
-		expectedErr error
-	}{
-		{
-			name: "okay (full access)",
-			fixture: `groups_attempts:
-			                - {id: 100, group_id: 111, item_id: 50, order: 0}
-			                - {id: 101, group_id: 111, item_id: 50, order: 1}
-			                - {id: 102, group_id: 111, item_id: 70, order: 0}`,
-			attemptID:   100,
-			userID:      111,
-			expectedIDs: []int64{100, 101},
-			itemID:      50,
-		},
-		{
-			name:        "okay (content access)",
-			fixture:     `groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
-			attemptID:   100,
-			userID:      101,
-			expectedIDs: []int64{100},
-			itemID:      50,
-		},
-		{
-			name:        "okay (has_attempts=1)",
-			userID:      101,
-			attemptID:   200,
-			fixture:     `groups_attempts: [{id: 200, group_id: 102, item_id: 60, order: 0},{id: 201, group_id: 102, item_id: 60, order: 1}]`,
-			expectedIDs: []int64{200, 201},
-			itemID:      60,
-		},
-		{
-			name:        "user not found",
-			fixture:     `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
-			userID:      404,
-			attemptID:   100,
-			expectedIDs: []int64(nil),
-		},
-		{
-			name:        "user doesn't have access to the item",
-			userID:      121,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
-			expectedIDs: []int64(nil),
-		},
-		{
-			name:        "no groups_attempts",
-			userID:      101,
-			attemptID:   100,
-			fixture:     "",
-			expectedIDs: nil,
-		},
-		{
-			name:        "wrong item in groups_attempts",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "user is not a member of the team",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
-			expectedIDs: nil,
-		},
-		{
-			name:        "groups_attempts.group_id is not user's self group",
-			userID:      101,
-			attemptID:   100,
-			fixture:     `groups_attempts: [{id: 100, group_id: 102, item_id: 50, order: 0}]`,
-			expectedIDs: nil,
-		},
-	}
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(`
-				groups: [{id: 101}, {id: 103}, {id: 111}, {id: 121}]`, `
-				users:
-					- {login: "john", group_id: 101}
-					- {login: "jane", group_id: 111}
-					- {login: "guest", group_id: 121}
-				groups_groups:
-					- {parent_group_id: 102, child_group_id: 101}
-				groups_ancestors:
-					- {ancestor_group_id: 101, child_group_id: 101, is_self: 1}
-					- {ancestor_group_id: 102, child_group_id: 101, is_self: 0}
-					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
-					- {ancestor_group_id: 103, child_group_id: 103, is_self: 1}
-					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
-					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
-				items:
-					- {id: 10, has_attempts: 0}
-					- {id: 50, has_attempts: 0}
-					- {id: 60, has_attempts: 1}
-					- {id: 70, has_attempts: 0}
-				permissions_generated:
-					- {group_id: 101, item_id: 50, can_view_generated: content}
-					- {group_id: 101, item_id: 60, can_view_generated: content}
-					- {group_id: 101, item_id: 70, can_view_generated: content}
-					- {group_id: 111, item_id: 50, can_view_generated: content_with_descendants}
-					- {group_id: 111, item_id: 70, can_view_generated: content_with_descendants}
-					- {group_id: 121, item_id: 50, can_view_generated: info}
-					- {group_id: 121, item_id: 70, can_view_generated: info}`,
-				test.fixture)
-			defer func() { _ = db.Close() }()
-			store := database.NewDataStore(db)
-			user := &database.User{}
-			assert.NoError(t, user.LoadByID(store, test.userID))
-			var ids []int64
-			err := store.GroupAttempts().VisibleAndByItemID(user, test.itemID).Pluck("groups_attempts.id", &ids).Error()
-			assert.Equal(t, test.expectedErr, err)
-			assert.Equal(t, test.expectedIDs, ids)
 		})
 	}
 }

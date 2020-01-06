@@ -42,11 +42,11 @@ Feature: Update active attempt for an item - robustness
       | 111      | 50      | content_with_descendants |
       | 121      | 50      | info                     |
 
-  Scenario: Invalid groups_attempt_id
+  Scenario: Invalid attempt_id
     Given I am the user with id "101"
     When I send a PUT request to "/attempts/abc/active"
     Then the response code should be 400
-    And the response error message should contain "Wrong value for groups_attempt_id (should be int64)"
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 

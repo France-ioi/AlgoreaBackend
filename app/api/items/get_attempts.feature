@@ -1,22 +1,19 @@
 Feature: Get groups attempts for current user and item_id
   Background:
     Given the database has the following table 'groups':
-      | id | name    | type     |
-      | 11 | jdoe    | UserSelf |
-      | 13 | Group B | Class    |
-      | 21 | other   | UserSelf |
-      | 23 | Group C | Class    |
-      | 31 | jane    | UserSelf |
+      | id | name    | type     | team_item_id |
+      | 11 | jdoe    | UserSelf | null         |
+      | 13 | Group B | Class    | null         |
+      | 21 | other   | UserSelf | null         |
+      | 23 | Group C | Team     | 210          |
     And the database has the following table 'users':
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |
       | other | 21       | George     | Bush      |
-      | jane  | 31       | Jane       | Doe       |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 61 | 13              | 11             |
       | 62 | 13              | 21             |
-      | 63 | 13              | 31             |
       | 64 | 23              | 21             |
       | 65 | 23              | 31             |
     And the database has the following table 'groups_ancestors':
@@ -25,11 +22,8 @@ Feature: Get groups attempts for current user and item_id
       | 73 | 13                | 13             | 1       |
       | 74 | 13                | 11             | 0       |
       | 75 | 13                | 21             | 0       |
-      | 76 | 13                | 31             | 0       |
       | 77 | 23                | 21             | 0       |
       | 78 | 23                | 23             | 1       |
-      | 79 | 23                | 31             | 0       |
-      | 80 | 31                | 31             | 1       |
     And the database has the following table 'items':
       | id  | has_attempts |
       | 200 | 0            |
@@ -41,11 +35,11 @@ Feature: Get groups attempts for current user and item_id
       | 23       | 210     | content_with_descendants |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score | order | validated_at        | started_at          | creator_id |
-      | 150 | 11       | 200     | 100   | 1     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 31         |
+      | 150 | 11       | 200     | 100   | 1     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 21         |
       | 151 | 11       | 200     | 99    | 0     | null                | 2018-05-29 06:38:38 | null       |
-      | 250 | 13       | 210     | 99    | 0     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
+      | 250 | 23       | 210     | 99    | 0     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
 
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (type='invitationAccepted')
+  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts"
     Then the response code should be 200
@@ -66,16 +60,16 @@ Feature: Get groups attempts for current user and item_id
         "score": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
-          "first_name": "Jane",
-          "last_name": "Doe",
-          "login": "jane"
+          "first_name": "George",
+          "last_name": "Bush",
+          "login": "other"
         },
         "validated": true
       }
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (with limit)
+  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (with limit)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?limit=1"
     Then the response code should be 200
@@ -93,16 +87,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User doesn't have access to the item
-    Given I am the user with id "11"
-    When I send a GET request to "/items/210/attempts?limit=1"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    []
-    """
-
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order)
+  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (reverse order)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order,id"
     Then the response code should be 200
@@ -115,9 +100,9 @@ Feature: Get groups attempts for current user and item_id
         "score": 100,
         "started_at": "2018-05-29T06:38:38Z",
         "user_creator": {
-          "first_name": "Jane",
-          "last_name": "Doe",
-          "login": "jane"
+          "first_name": "George",
+          "last_name": "Bush",
+          "login": "other"
         },
         "validated": true
       },
@@ -132,7 +117,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's group_id (reverse order, start from the second row)
+  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (reverse order, start from the second row)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order,id&from.order=1&from.id=150"
     Then the response code should be 200
@@ -150,31 +135,9 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='requestAccepted')
+  Scenario: Team has access to the item and the groups_attempts.group_id = team's group_id
     Given I am the user with id "21"
-    When I send a GET request to "/items/210/attempts"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "250",
-        "order": 0,
-        "score": 99,
-        "started_at": "2019-05-29T06:38:38Z",
-        "user_creator": {
-          "first_name": "John",
-          "last_name": "Doe",
-          "login": "jdoe"
-        },
-        "validated": true
-      }
-    ]
-    """
-
-  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1, type='joinedByCode')
-    Given I am the user with id "31"
-    When I send a GET request to "/items/210/attempts"
+    When I send a GET request to "/items/210/attempts?as_team_id=23"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

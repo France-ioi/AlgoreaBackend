@@ -10,7 +10,7 @@ import (
 )
 
 func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupsAttemptID, err := service.ResolveURLQueryPathInt64Field(r, "groups_attempt_id")
+	groupsAttemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
