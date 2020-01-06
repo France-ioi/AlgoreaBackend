@@ -46,8 +46,8 @@ Feature: Create an attempt for an item
       | user_id | item_id | active_attempt_id   |
       | 111     | 50      | 5577006791947779410 |
     And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | ancestors_computation_state | latest_activity_at | latest_answer_at | best_answer_at | validated_at | started_at |
-      | 5577006791947779410 | 111      | 50      | 0     | 0           | done                        | null               | null             | null           | null         | null       |
+      | id                  | group_id | item_id | score | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | best_answer_at | validated_at | started_at |
+      | 5577006791947779410 | 111      | 50      | 0     | 0           | done                     | null               | null             | null           | null         | null       |
 
   Scenario: User is able to create an attempt as a team
     Given I am the user with id "101"
@@ -63,5 +63,5 @@ Feature: Create an attempt for an item
       | user_id | item_id | active_attempt_id   |
       | 101     | 60      | 5577006791947779410 |
     And the table "groups_attempts" should be:
-      | id                  | group_id | item_id | score | tasks_tried | ancestors_computation_state | latest_activity_at | latest_answer_at | best_answer_at | validated_at | started_at |
-      | 5577006791947779410 | 102      | 60      | 0     | 0           | done                        | null               | null             | null           | null         | null       |
+      | id                  | group_id | item_id | score | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | best_answer_at | validated_at | started_at |
+      | 5577006791947779410 | 102      | 60      | 0     | 0           | done                     | null               | null             | null           | null         | null       |
