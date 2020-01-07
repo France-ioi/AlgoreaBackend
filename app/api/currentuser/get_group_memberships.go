@@ -79,7 +79,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		map[string]*service.FieldSortingParams{
 			"member_since": {ColumnName: "member_since", FieldType: "time"},
 			"id":           {ColumnName: "groups_groups_active.id", FieldType: "int64"}},
-		"-member_since,id", false)
+		"-member_since,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

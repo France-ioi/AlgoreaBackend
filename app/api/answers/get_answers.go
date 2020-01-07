@@ -111,7 +111,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
 		"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
 		"id":           {ColumnName: "users_answers.id", FieldType: "int64"},
-	}, "-submitted_at,id", false)
+	}, "-submitted_at,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

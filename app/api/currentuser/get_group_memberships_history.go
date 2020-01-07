@@ -76,7 +76,7 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 		map[string]*service.FieldSortingParams{
 			"at":       {ColumnName: "group_membership_changes.at", FieldType: "time"},
 			"group_id": {ColumnName: "group_membership_changes.group_id", FieldType: "int64"}},
-		"-at,group_id", false)
+		"-at,group_id", "group_id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

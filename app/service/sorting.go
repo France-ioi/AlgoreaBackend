@@ -18,6 +18,8 @@ type FieldSortingParams struct {
 	ColumnNameForOrdering string
 	// FieldType is one of "int64", "bool", "string", "time"
 	FieldType string
+	// Unique means that sorting rules containing this parameter will not be augmented with a tie-breaker field
+	Unique bool
 }
 
 type sortingDirection int
@@ -46,10 +48,10 @@ func (d sortingDirection) conditionSign() string {
 // taking into the account the URL parameters 'from.*'.
 // When the `skipSortParameter` is true, the 'sort' request parameter is ignored.
 func ApplySortingAndPaging(r *http.Request, query *database.DB, acceptedFields map[string]*FieldSortingParams,
-	defaultRules string, skipSortParameter bool) (*database.DB, APIError) {
+	defaultRules, tieBreakerFieldName string, skipSortParameter bool) (*database.DB, APIError) {
 	sortingRules := prepareSortingRulesAndAcceptedFields(r, defaultRules, skipSortParameter)
 
-	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields)
+	usedFields, fieldsDirections, err := parseSortingRules(sortingRules, acceptedFields, tieBreakerFieldName)
 	if err != nil {
 		return nil, ErrInvalidRequest(err)
 	}
@@ -78,11 +80,12 @@ func prepareSortingRulesAndAcceptedFields(r *http.Request, defaultRules string, 
 
 // parseSortingRules returns a slice with used fields and a map fieldName -> direction
 // It also checks that there are no unallowed fields in the rules.
-func parseSortingRules(sortingRules string,
-	acceptedFields map[string]*FieldSortingParams) (usedFields []string, fieldsDirections map[string]sortingDirection, err error) {
+func parseSortingRules(sortingRules string, acceptedFields map[string]*FieldSortingParams, tieBreakerFieldName string) (
+	usedFields []string, fieldsDirections map[string]sortingDirection, err error) {
 	sortStatements := strings.Split(sortingRules, ",")
 	usedFields = make([]string, 0, len(sortStatements)+1)
 	fieldsDirections = make(map[string]sortingDirection, len(sortStatements)+1)
+	includesUniqueField := false
 	for _, sortStatement := range sortStatements {
 		fieldName, direction := getFieldNameAndDirectionFromSortStatement(sortStatement)
 		if fieldsDirections[fieldName] != 0 {
@@ -93,6 +96,15 @@ func parseSortingRules(sortingRules string,
 		}
 		fieldsDirections[fieldName] = direction
 		usedFields = append(usedFields, fieldName)
+		if acceptedFields[fieldName].Unique {
+			includesUniqueField = true
+		}
+	}
+	if !includesUniqueField {
+		if fieldsDirections[tieBreakerFieldName] == 0 {
+			fieldsDirections[tieBreakerFieldName] = 1
+			usedFields = append(usedFields, tieBreakerFieldName)
+		}
 	}
 	return
 }

@@ -17,10 +17,11 @@ import (
 
 func TestApplySorting(t *testing.T) {
 	type args struct {
-		urlParameters      string
-		acceptedFields     map[string]*FieldSortingParams
-		defaultRules       string
-		skipSortParameters bool
+		urlParameters       string
+		acceptedFields      map[string]*FieldSortingParams
+		defaultRules        string
+		tieBreakerFieldName string
+		skipSortParameters  bool
 	}
 	tests := []struct {
 		name             string
@@ -37,7 +38,8 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			wantSQL:      "SELECT id FROM `users` ORDER BY name DESC, id ASC",
 			wantAPIError: NoError},
@@ -48,6 +50,7 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
+				tieBreakerFieldName: "id",
 			},
 			wantSQL:      "SELECT id FROM `users` ORDER BY name ASC, id DESC",
 			wantAPIError: NoError},
@@ -58,8 +61,9 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				skipSortParameters: true,
-				defaultRules:       "id",
+				tieBreakerFieldName: "id",
+				skipSortParameters:  true,
+				defaultRules:        "id",
 			},
 			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC",
 			wantAPIError: NoError},
@@ -70,7 +74,8 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string", ColumnNameForOrdering: "LOWER(name)"},
 					"id":   {ColumnName: "id", FieldType: "int64", ColumnNameForOrdering: "-id"},
 				},
-				defaultRules: "-name,id",
+				tieBreakerFieldName: "id",
+				defaultRules:        "-name,id",
 			},
 			wantSQL:      "SELECT id FROM `users` ORDER BY LOWER(name) DESC, -id ASC",
 			wantAPIError: NoError},
@@ -81,7 +86,8 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`a field cannot be a sorting parameter more than once: "name"`))},
 		{name: "unallowed field",
@@ -91,9 +97,36 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`))},
+		{name: "add a tie-breaker field",
+			args: args{
+				urlParameters: "",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string"},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules:        "-name",
+				tieBreakerFieldName: "id",
+			},
+			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, id ASC",
+			wantSQLArguments: nil,
+			wantAPIError:     NoError},
+		{name: "do not add a tie-breaker field if a sorting field is unique",
+			args: args{
+				urlParameters: "",
+				acceptedFields: map[string]*FieldSortingParams{
+					"name": {ColumnName: "name", FieldType: "string", Unique: true},
+					"id":   {ColumnName: "id", FieldType: "int64"},
+				},
+				defaultRules:        "-name",
+				tieBreakerFieldName: "id",
+			},
+			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC",
+			wantSQLArguments: nil,
+			wantAPIError:     NoError},
 		{name: "sorting + paging",
 			args: args{
 				urlParameters: "?from.id=1&from.name=Joe&from.flag=1",
@@ -102,7 +135,8 @@ func TestApplySorting(t *testing.T) {
 					"id":   {ColumnName: "id", FieldType: "int64"},
 					"flag": {ColumnName: "bFlag", FieldType: "bool"},
 				},
-				defaultRules: "-name,id,flag",
+				defaultRules:        "-name,id,flag",
+				tieBreakerFieldName: "id",
 			},
 			wantSQL: "SELECT id FROM `users` " +
 				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
@@ -116,7 +150,8 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`wrong value for from.id (should be int64)`))},
 		{name: "one of the from. fields is skipped",
@@ -127,7 +162,8 @@ func TestApplySorting(t *testing.T) {
 					"type": {ColumnName: "type", FieldType: "string"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`all 'from' parameters (from.name, from.id) or none of them must be present`))},
 		{name: "unsupported field type",
@@ -137,7 +173,8 @@ func TestApplySorting(t *testing.T) {
 					"name": {ColumnName: "name", FieldType: "interface{}"},
 					"id":   {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "-name,id",
+				defaultRules:        "-name,id",
+				tieBreakerFieldName: "id",
 			},
 			shouldPanic: errors.New(`unsupported type "interface{}" for field "name"`)},
 		{name: "unallowed from fields",
@@ -147,7 +184,8 @@ func TestApplySorting(t *testing.T) {
 					"id":   {ColumnName: "id", FieldType: "int64"},
 					"name": {ColumnName: "name", FieldType: "string"},
 				},
-				defaultRules: "id",
+				defaultRules:        "id",
+				tieBreakerFieldName: "id",
 			},
 			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.name, from.version)`))},
 		{name: "paging by time",
@@ -157,7 +195,8 @@ func TestApplySorting(t *testing.T) {
 					"submitted_at": {ColumnName: "submitted_at", FieldType: "time"},
 					"id":           {ColumnName: "id", FieldType: "int64"},
 				},
-				defaultRules: "submitted_at,id",
+				defaultRules:        "submitted_at,id",
+				tieBreakerFieldName: "id",
 			},
 			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
 				"ORDER BY submitted_at ASC, id ASC",
@@ -192,7 +231,8 @@ func TestApplySorting(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, nil)
 			query := db.Table("users").Select("id")
 
-			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules, tt.args.skipSortParameters)
+			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.acceptedFields, tt.args.defaultRules,
+				tt.args.tieBreakerFieldName, tt.args.skipSortParameters)
 			assert.Equal(t, tt.wantAPIError, gotAPIError)
 
 			if gotAPIError == NoError {
