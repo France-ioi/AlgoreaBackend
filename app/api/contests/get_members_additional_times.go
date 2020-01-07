@@ -145,7 +145,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		map[string]*service.FieldSortingParams{
 			"name": {ColumnName: "found_group.name", FieldType: "string"},
 			"id":   {ColumnName: "found_group.id", FieldType: "int64"}},
-		"name,id", false)
+		"name,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}

@@ -157,7 +157,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			"user.grade":   {ColumnName: "users.grade"},
 			"member_since": {ColumnName: "member_since", FieldType: "time"},
 			"id":           {ColumnName: "groups_groups.id", FieldType: "int64"}},
-		"-member_since,id", false)
+		"-member_since,id", "id", false)
 
 	if apiError != service.NoError {
 		return apiError

@@ -152,7 +152,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			"type":  {ColumnName: "groups.type", FieldType: "string"},
 			"grade": {ColumnName: "groups.grade", FieldType: "int64"},
 			"id":    {ColumnName: "groups.id", FieldType: "int64"}},
-		"name,id", false)
+		"name,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}
