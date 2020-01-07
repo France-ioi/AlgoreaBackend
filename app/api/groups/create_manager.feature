@@ -6,11 +6,10 @@ Feature: Make a user a group manager (groupManagerCreate)
       | 1  | Group | Class    |
       | 2  | Team  | Team     |
       | 21 | owner | UserSelf |
-      | 22 | john  | UserSelf |
+      | 22 | Class | Class    |
     And the database has the following table 'users':
       | login | group_id | first_name  | last_name |
       | owner | 21       | Jean-Michel | Blanquer  |
-      | john  | 22       | John        | Doe       |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
       | 1                 | 1              | 1       |
