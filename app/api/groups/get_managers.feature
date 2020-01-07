@@ -76,24 +76,17 @@ Feature: Get managers of group_id
     ]
     """
 
-  Scenario: Default sort (by name)
+  Scenario: Sort by name in descending order
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/managers"
+    When I send a GET request to "/groups/13/managers?sort=-name"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
-        "id": "51",
-        "name": "billg",
-        "can_manage": "memberships",
-        "can_grant_group_access": false,
-        "can_watch_members": true
-      },
-      {
-        "id": "91",
-        "name": "lp",
-        "can_manage": "none",
+        "id": "61",
+        "name": "zuck",
+        "can_manage": "memberships_and_group",
         "can_grant_group_access": true,
         "can_watch_members": false
       },
@@ -105,11 +98,18 @@ Feature: Get managers of group_id
         "can_watch_members": false
       },
       {
-        "id": "61",
-        "name": "zuck",
-        "can_manage": "memberships_and_group",
+        "id": "91",
+        "name": "lp",
+        "can_manage": "none",
         "can_grant_group_access": true,
         "can_watch_members": false
+      },
+      {
+        "id": "51",
+        "name": "billg",
+        "can_manage": "memberships",
+        "can_grant_group_access": false,
+        "can_watch_members": true
       }
     ]
     """
