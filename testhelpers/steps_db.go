@@ -41,7 +41,23 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 			}
 		}
 		if ctx.inScenario {
-			_, err := db.Exec(query, vals...)
+			tx, err := db.Begin()
+			if err != nil {
+				return err
+			}
+			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+			if err != nil {
+				return err
+			}
+			_, err = tx.Exec(query, vals...)
+			if err != nil {
+				return err
+			}
+			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+			if err != nil {
+				return err
+			}
+			err = tx.Commit()
 			if err != nil {
 				return err
 			}
