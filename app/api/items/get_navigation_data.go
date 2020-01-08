@@ -16,12 +16,12 @@ type GetItemRequest struct {
 }
 
 type navigationItemUserActiveAttempt struct {
-	Score       float32        `json:"score"`
-	Validated   bool           `json:"validated"`
-	Finished    bool           `json:"finished"`
-	Submissions int32          `json:"submissions"`
-	StartedAt   *database.Time `json:"started_at"`
-	ValidatedAt *database.Time `json:"validated_at"`
+	ScoreComputed float32        `json:"score_computed"`
+	Validated     bool           `json:"validated"`
+	Finished      bool           `json:"finished"`
+	Submissions   int32          `json:"submissions"`
+	StartedAt     *database.Time `json:"started_at"`
+	ValidatedAt   *database.Time `json:"validated_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -132,12 +132,12 @@ func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationI
 	}
 	if rawData.UserAttemptID != nil {
 		result.UserActiveAttempt = &navigationItemUserActiveAttempt{
-			Score:       rawData.UserScore,
-			Validated:   rawData.UserValidated,
-			Finished:    rawData.UserFinished,
-			Submissions: rawData.UserSubmissions,
-			StartedAt:   rawData.UserStartedAt,
-			ValidatedAt: rawData.UserValidatedAt,
+			ScoreComputed: rawData.UserScoreComputed,
+			Validated:     rawData.UserValidated,
+			Finished:      rawData.UserFinished,
+			Submissions:   rawData.UserSubmissions,
+			StartedAt:     rawData.UserStartedAt,
+			ValidatedAt:   rawData.UserValidatedAt,
 		}
 	}
 	return result

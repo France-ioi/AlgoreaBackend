@@ -16,13 +16,13 @@ type rawNavigationItem struct {
 	Title *string
 
 	// from groups_attempts for the active attempt of the current user
-	UserAttemptID   *int64         `sql:"column:attempt_id"`
-	UserScore       float32        `sql:"column:score"`
-	UserValidated   bool           `sql:"column:validated"`
-	UserFinished    bool           `sql:"column:finished"`
-	UserSubmissions int32          `sql:"column:submissions"`
-	UserStartedAt   *database.Time `sql:"column:started_at"`
-	UserValidatedAt *database.Time `sql:"column:validated_at"`
+	UserAttemptID     *int64         `sql:"column:attempt_id"`
+	UserScoreComputed float32        `sql:"column:score_computed"`
+	UserValidated     bool           `sql:"column:validated"`
+	UserFinished      bool           `sql:"column:finished"`
+	UserSubmissions   int32          `sql:"column:submissions"`
+	UserStartedAt     *database.Time `sql:"column:started_at"`
+	UserValidatedAt   *database.Time `sql:"column:validated_at"`
 
 	// items_items
 	ParentItemID int64
@@ -59,7 +59,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		SELECT items.id, items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			groups_attempts.id AS attempt_id,
-			groups_attempts.score AS score, groups_attempts.validated AS validated,
+			groups_attempts.score_computed AS score_computed, groups_attempts.validated AS validated,
 			groups_attempts.finished AS finished,
 			groups_attempts.submissions AS submissions,
 			groups_attempts.started_at AS started_at, groups_attempts.validated_at AS validated_at,

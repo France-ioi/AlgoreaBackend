@@ -29,13 +29,13 @@ type groupGroupProgressResponseRow struct {
 	// Average number of hints requested by each "end-member".
 	// The number of hints requested of an "end-member" is the `groups_attempts.hints_cached`
 	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `best_answer_at`).
+	// (if several with the same score, we use the first attempt chronologically on `users_answers.submitted_at`).
 	// required:true
 	AvgHintsRequested float32 `json:"avg_hints_requested"`
 	// Average number of submissions made by each "end-member".
 	// The number of submissions made by an "end-member" is the `groups_attempts.submissions`.
 	// of the attempt with the best score
-	// (if several with the same score, we use the first attempt chronologically on `best_answer_at`).
+	// (if several with the same score, we use the first attempt chronologically on `users_answers.submitted_at`).
 	// required:true
 	AvgSubmissions float32 `json:"avg_submissions"`
 	// Average time spent among all the "end-members" (in seconds). The time spent by an "end-member" is computed as:
@@ -213,10 +213,14 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins("JOIN ? AS items", itemsUnion.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score, validated, hints_cached, submissions, group_id
+				SELECT groups_attempts.score_computed AS score, groups_attempts.validated,
+				       groups_attempts.hints_cached, groups_attempts.submissions, groups_attempts.group_id
 				FROM groups_attempts
+				LEFT JOIN users_answers ON users_answers.id = groups_attempts.best_answer_id
 				WHERE group_id = end_members.id AND item_id = items.id
-				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+				ORDER BY groups_attempts.group_id, groups_attempts.item_id, groups_attempts.score_computed DESC,
+                 users_answers.submitted_at
+				LIMIT 1
 			) AS attempt_with_best_score ON 1`)
 
 	var result []groupGroupProgressResponseRow

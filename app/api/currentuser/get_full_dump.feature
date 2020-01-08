@@ -108,22 +108,22 @@ Feature: Export the current user's data
       "groups_attempts": [
         {
           "id": "111", "finished": 0, "validated": 0,
-          "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
+          "order": 0, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "group_id": "11", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "result_propagation_state": "done",
-          "best_answer_at": null, "entered_at": null, "hints_requested": null,
-          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
+          "best_answer_id": null, "entered_at": null, "hints_requested": null,
+          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_edit_comment": null,
           "started_at": null, "validated_at": null
         },
         {
           "id": "112", "finished": 0, "validated": 0,
-          "order": 0, "score": 0, "score_computed": 0, "score_diff_manual": 0, "score_reeval": 0,
+          "order": 0, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
           "group_id": "2", "item_id": "404", "creator_id": null, "children_validated": 0,
           "hints_cached": 0, "submissions": 0, "tasks_solved": 0, "tasks_tried": 0,
           "tasks_with_help": 0, "result_propagation_state": "done",
-          "best_answer_at": null, "entered_at": null, "hints_requested": null,
-          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_diff_comment": "",
+          "best_answer_id": null, "entered_at": null, "hints_requested": null,
+          "latest_activity_at": null, "latest_answer_at": null, "latest_hint_at": null, "score_edit_comment": null,
           "started_at": null, "validated_at": null
         }
       ],
