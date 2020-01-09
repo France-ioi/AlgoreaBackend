@@ -21,7 +21,7 @@ INSERT INTO `groups_attempts` (
     `autonomy`,`started_at`,`validated_at`,`finished_at`,`latest_activity_at`,`thread_started_at`,
     `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`,`ancestors_computation_state`)
 SELECT
-    FLOOR(RAND(`groups_to_insert`.`id`) * 1000000000) + FLOOR(RAND(`items`.`id`) * 1000000000) * 1000000000,
+    (FLOOR(RAND(1) * 1000000000) + FLOOR(RAND(2) * 1000000000) * 1000000000 + `groups_to_insert`.`id` + `items`.`id`) % 9223372036854775806 + 1,
     `groups_to_insert`.`id`, `items`.`id`,
     `users`.`id`,
     (SELECT IFNULL(MAX(`order`)+1, 1) FROM `groups_attempts` WHERE `group_id` = `users`.`self_group_id` AND `groups_attempts`.`item_id` = `users_items`.`item_id`),
