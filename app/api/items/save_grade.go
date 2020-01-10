@@ -86,29 +86,30 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	// Build query to update groups_attempts
+	// The score_compute is set towards the end, so that the IF condition on
+	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
 		"latest_activity_at",
-		"best_answer_id",
-		"latest_answer_at",
+		"score_obtained_at",
 		"score_computed",
+		"latest_answer_at",
 		"result_propagation_state",
 	}
-	values := []interface{}{
-		1,
-		database.Now(),
-		// for best_answer_id we compare raw scores
-		gorm.Expr("IF(? > users_answers.score OR users_answers.score IS NULL, ?, best_answer_id)",
-			score, requestData.ScoreToken.Converted.UserAnswerID),
-		database.Now(),
-		// for score_computed we compare patched scores
-		gorm.Expr(`
+	newScoreExpression := gorm.Expr(`
 			LEAST(GREATEST(
 				CASE score_edit_rule
 					WHEN 'set' THEN score_edit_value
 					WHEN 'diff' THEN ? + score_edit_value
 					ELSE ?
-				END, score_computed, 0), 100)`, score, score),
+				END, score_computed, 0), 100)`, score, score)
+	values := []interface{}{
+		1,
+		database.Now(),
+		// for score_computed we compare patched scores
+		gorm.Expr("IF(score_obtained_at IS NULL OR score_computed < ?, NOW(), score_obtained_at)", newScoreExpression),
+		newScoreExpression,
+		database.Now(),
 		"changed",
 	}
 	if validated {
@@ -120,11 +121,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
-		// nolint:gosec
-		store.DB.Exec(`
-			UPDATE groups_attempts
-			LEFT JOIN users_answers ON users_answers.id = groups_attempts.best_answer_id `+
-			updateExpr+" WHERE groups_attempts.id = ?", values...).Error())
+		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE id = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 	return validated, true
 }

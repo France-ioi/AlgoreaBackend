@@ -170,13 +170,10 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`JOIN items ON items.id IN ?`, itemsQuery.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT groups_attempts.score_computed, groups_attempts.validated,
-				       groups_attempts.hints_cached, groups_attempts.submissions, group_id
+				SELECT score_computed, validated, hints_cached, submissions, group_id
 				FROM groups_attempts
-				LEFT JOIN users_answers ON users_answers.id = groups_attempts.best_answer_id
 				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY groups_attempts.group_id, groups_attempts.item_id, groups_attempts.score_computed DESC,
-				         users_answers.submitted_at
+				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
 			) AS attempt_with_best_score ON 1`).
 		Where("groups.id IN (?)", teamIDs).

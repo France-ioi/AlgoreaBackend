@@ -250,18 +250,18 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 3  | 50    | 2017-05-29 06:38:38 | 55      | 3          |
       | 4  | 50    | 2017-05-30 06:38:38 | 57      | 4          |
     And the database has the following table 'groups_attempts':
-      | group_id | item_id | order | started_at          | score_computed | best_answer_id | hints_cached | submissions | validated_at        | latest_activity_at  |
-      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0              | 1              | 100          | 100         | null                | 2018-05-30 06:38:38 |
-      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40             | 2              | 2            | 3           | null                | null                |
-      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50             | 3              | 3            | 4           | 2017-05-30 06:38:38 | null                | # hints_cached & submissions for 14,211 come from this line
-      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50             | 4              | 10           | 20          | 2017-05-30 06:38:38 | null                |
-      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0              | null           | 0            | 0           | null                | null                |
-      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0              | null           | 0            | 0           | null                | null                |
-      | 16       | 212     | 0     | 2019-01-01 00:00:00 | 10             | null           | 0            | 0           | null                | 2019-06-01 00:00:00 |
-      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0              | null           | 0            | 0           | null                | null                |
-      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0              | null           | 0            | 0           | null                | null                |
-      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100            | null           | 0            | 0           | null                | null                |
-      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0              | null           | 0            | 0           | null                | null                |
+      | group_id | item_id | order | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
+      | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                | 2018-05-30 06:38:38 |
+      | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | null                | null                |
+      | 14       | 211     | 2     | 2017-05-29 06:38:38 | 50             | 2017-05-29 06:38:38 | 3            | 4           | 2017-05-30 06:38:38 | null                | # hints_cached & submissions for 14,211 come from this line
+      | 14       | 211     | 3     | 2017-05-29 06:38:38 | 50             | 2017-05-30 06:38:38 | 10           | 20          | 2017-05-30 06:38:38 | null                |
+      | 15       | 211     | 0     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | null                |
+      | 15       | 212     | 0     | 2017-03-29 06:38:38 | 0              | null                | 0            | 0           | null                | null                |
+      | 16       | 212     | 0     | 2019-01-01 00:00:00 | 10             | null                | 0            | 0           | null                | 2019-06-01 00:00:00 |
+      | 14       | 211     | 4     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | null                |
+      | 15       | 211     | 1     | 2017-04-29 06:38:38 | 0              | null                | 0            | 0           | null                | null                |
+      | 15       | 212     | 1     | 2017-03-29 06:38:38 | 100            | null                | 0            | 0           | null                | null                |
+      | 14       | 211     | 5     | 2017-05-29 06:38:38 | 0              | null                | 0            | 0           | null                | null                |
 
   Scenario: Get progress of teams
     Given I am the user with id "21"
