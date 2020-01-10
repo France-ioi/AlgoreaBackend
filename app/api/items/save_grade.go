@@ -103,12 +103,12 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		database.Now(),
 		// for score_computed we compare patched scores
 		gorm.Expr(`
-			GREATEST(
+			LEAST(GREATEST(
 				CASE score_edit_rule
 					WHEN 'set' THEN score_edit_value
 					WHEN 'diff' THEN ? + score_edit_value
 					ELSE ?
-				END, score_computed, 0)`, score, score),
+				END, score_computed, 0), 100)`, score, score),
 		"changed",
 	}
 	if validated {

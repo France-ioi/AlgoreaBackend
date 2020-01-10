@@ -115,6 +115,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_EditScore(t *testi
 		{name: "diff positive", editRule: "diff", editValue: 20, expectedComputedScore: 30},
 		{name: "diff negative", editRule: "diff", editValue: -5, expectedComputedScore: 5},
 		{name: "diff big negative", editRule: "diff", editValue: -20, expectedComputedScore: 0},
+		{name: "diff big positive", editRule: "diff", editValue: 95, expectedComputedScore: 100},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {

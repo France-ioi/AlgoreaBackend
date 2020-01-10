@@ -147,11 +147,11 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 						END,
 						target_groups_attempts.score_computed = IF(items.no_score OR children_stats.average_score IS NULL,
 							0,
-							GREATEST(CASE target_groups_attempts.score_edit_rule
+							LEAST(GREATEST(CASE target_groups_attempts.score_edit_rule
 								WHEN 'set' THEN target_groups_attempts.score_edit_value
 								WHEN 'diff' THEN children_stats.average_score + target_groups_attempts.score_edit_value
 								ELSE children_stats.average_score
-							END, 0)),
+							END, 0), 100)),
 						target_groups_attempts.result_propagation_state = 'changed'
 					WHERE target_groups_attempts.result_propagation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)

@@ -198,6 +198,7 @@ Feature: Save grading result
     | 89    | set             | -10              | 0              | 0            |
     | 79    | diff            | -10              | 69             | 34.5         |
     | 79    | diff            | -80              | 0              | 0            |
+    | 79    | diff            | 80               | 100            | 50           |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"

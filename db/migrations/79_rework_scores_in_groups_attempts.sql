@@ -9,6 +9,7 @@ ALTER TABLE `groups_attempts`
     ADD COLUMN `score_edit_value` FLOAT DEFAULT NULL
         COMMENT 'Score which overrides or adds up (depending on score_edit_rule) to the score obtained from best answer or propagation'
         AFTER `score_edit_rule`,
+    ADD CONSTRAINT `cs_groups_attempts_score_edit_value_is_valid` CHECK (IFNULL(`score_edit_value`, 0) BETWEEN -100 AND 100),
     CHANGE COLUMN `score_diff_comment` `score_edit_comment` varchar(200) DEFAULT NULL
         COMMENT 'Explanation of the value set in score_edit_value',
     ADD CONSTRAINT `fk_groups_attempts_best_answer_id_users_answers_id`
@@ -32,6 +33,9 @@ WHERE `score_diff_manual` != 0 AND `score_diff_manual` = -`score_computed`;
 UPDATE `groups_attempts` SET `score_edit_rule` = 'diff', `score_edit_value` = -40
 WHERE `score_diff_manual` = -40;
 
+# 83 rows
+UPDATE `groups_attempts` SET `score` = 100 WHERE `score` > 100;
+
 UPDATE `groups_attempts`
     JOIN `items` on `items`.`id` = `groups_attempts`.`item_id`
     LEFT JOIN `users_answers` AS `best_answer` ON `best_answer`.`id` = `groups_attempts`.`best_answer_id`
@@ -49,6 +53,7 @@ ALTER TABLE `groups_attempts`
     DROP COLUMN `score_computed`,
     CHANGE COLUMN `score` `score_computed` FLOAT NOT NULL DEFAULT '0'
         COMMENT 'Score computed from the best answer or by propagation, with score_edit_rule applied',
+    ADD CONSTRAINT `cs_groups_attempts_score_computed_is_valid` CHECK (`score_computed` BETWEEN 0 AND 100),
     DROP INDEX `group_item_score_desc_best_answer_at`,
     ADD INDEX `group_item_score_computed_desc` (`group_id`,`item_id`,`score_computed` DESC),
     DROP COLUMN `best_answer_at`,
@@ -59,6 +64,7 @@ UPDATE `groups_attempts` SET `score_edit_comment` = '' WHERE `score_edit_comment
 
 ALTER TABLE `groups_attempts`
     DROP FOREIGN KEY `fk_groups_attempts_best_answer_id_users_answers_id`,
+    DROP CHECK `cs_groups_attempts_score_computed_is_valid`,
     ADD COLUMN `score_reeval` FLOAT DEFAULT '0'
         COMMENT 'Score computed during a reevaluation. This field allows to do a reevaluation, continue it if interrupted, and then apply the reevaluated score when/if we want.'
         AFTER `score_computed`,
@@ -103,4 +109,4 @@ ALTER TABLE `groups_attempts`
     DROP COLUMN `score_edit_rule`,
     DROP COLUMN `score_edit_value`,
     DROP COLUMN `best_answer_id`,
-    ADD INDEX `group_item_score_desc_best_answer_at` (`group_id`,`item_id`,`score` DESC,`best_answer_at`);
+    ADD INDEX `group_item_score_desc_best_answer_at` (`group_id`, `item_id`, `score` DESC, `best_answer_at`);
