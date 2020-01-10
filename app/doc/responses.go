@@ -178,7 +178,7 @@ type itemAnswerGetResponse struct {
 		// required:true
 		ID int64 `json:"id,string"`
 		// required:true
-		UserID int64 `json:"user_id,string"`
+		AuthorID int64 `json:"author_id,string"`
 		// required:true
 		ItemID int64 `json:"item_id,string"`
 		// Nullable

@@ -22,15 +22,15 @@ Feature: Get recent activity for group_id and item_id
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
     And the database has the following table 'answers':
-      | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 2  | 11      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 3  | 11      | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 4  | 11      | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 5  | 11      | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 6  | 31      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 7  | 31      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 8  | 31      | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | id | author_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+      | 2  | 11        | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 1  | 11        | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+      | 3  | 11        | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 4  | 11        | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 5  | 11        | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | 6  | 31        | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 7  | 31        | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
+      | 8  | 31        | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |

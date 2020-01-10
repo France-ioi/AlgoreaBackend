@@ -15,7 +15,7 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 	}{
 		{
 			name:          "WithUsers",
-			expectedQuery: "SELECT `answers`.* FROM `answers` JOIN users ON users.group_id = answers.user_id",
+			expectedQuery: "SELECT `answers`.* FROM `answers` JOIN users ON users.group_id = answers.author_id",
 		},
 		{
 			name: "WithGroupAttempts",

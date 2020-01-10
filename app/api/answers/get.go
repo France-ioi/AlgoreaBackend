@@ -45,7 +45,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	var result []map[string]interface{}
 	err = srv.Store.Answers().Visible(user).
 		Where("answers.id = ?", answerID).
-		Select(`answers.id, answers.user_id, groups_attempts.item_id, answers.attempt_id,
+		Select(`answers.id, answers.author_id, groups_attempts.item_id, answers.attempt_id,
 			answers.type, answers.state, answers.answer,
 			answers.submitted_at, answers.score, answers.validated,
 			answers.graded_at`).

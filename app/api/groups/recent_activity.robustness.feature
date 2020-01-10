@@ -22,9 +22,9 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
     And the database has the following table 'answers':
-      | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 2  | 11      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | id | author_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
+      | 1  | 11        | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+      | 2  | 11        | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |

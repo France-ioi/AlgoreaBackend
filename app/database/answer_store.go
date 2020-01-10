@@ -9,11 +9,11 @@ type AnswerStore struct {
 	*DataStore
 }
 
-// WithUsers creates a composable query for getting answers joined with users
+// WithUsers creates a composable query for getting answers joined with users (via author_id)
 func (s *AnswerStore) WithUsers() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(
-			s.Joins("JOIN users ON users.group_id = answers.user_id"), s.tableName,
+			s.Joins("JOIN users ON users.group_id = answers.author_id"), s.tableName,
 		),
 	}
 }
@@ -38,28 +38,28 @@ func (s *AnswerStore) WithItems() *AnswerStore {
 
 // SubmitNewAnswer inserts a new row with type='Submission', validated=0, submitted_at=NOW()
 // into the `answers` table.
-func (s *AnswerStore) SubmitNewAnswer(userID, attemptID int64, answer string) (int64, error) {
+func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) (int64, error) {
 	var answerID int64
 	err := s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
 		store := NewDataStore(db)
 		answerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO answers (id, user_id, attempt_id, answer, submitted_at, validated)
+				INSERT INTO answers (id, author_id, attempt_id, answer, submitted_at, validated)
 				VALUES (?, ?, ?, ?, NOW(), 0)`,
-			answerID, userID, attemptID, answer).Error
+			answerID, authorID, attemptID, answer).Error
 	})
 	return answerID, err
 }
 
-// GetOrCreateCurrentAnswer returns an id of the current answer for given userID & attemptID
+// GetOrCreateCurrentAnswer returns an id of the current answer for given authorID & attemptID
 // or inserts a new row with type='Current' and submitted_at=NOW() into the `answers` table.
-func (s *AnswerStore) GetOrCreateCurrentAnswer(userID, attemptID int64) (answerID int64, err error) {
+func (s *AnswerStore) GetOrCreateCurrentAnswer(authorID, attemptID int64) (answerID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
 
 	err = s.WithWriteLock().
 		Joins("JOIN groups_attempts ON groups_attempts.id = answers.attempt_id").
-		Where("answers.user_id = ?", userID).
+		Where("answers.author_id = ?", authorID).
 		Where("answers.type = 'Current'").
 		Where("attempt_id = ?", attemptID).
 		PluckFirst("answers.id", &answerID).Error()
@@ -68,9 +68,9 @@ func (s *AnswerStore) GetOrCreateCurrentAnswer(userID, attemptID int64) (answerI
 			store := NewDataStore(db)
 			answerID = store.NewID()
 			return db.Exec(`
-				INSERT INTO answers (id, user_id, attempt_id, type, submitted_at)
+				INSERT INTO answers (id, author_id, attempt_id, type, submitted_at)
 				VALUES (?, ?, ?, 'Current', NOW())`,
-				answerID, userID, attemptID).Error()
+				answerID, authorID, attemptID).Error()
 		})
 	}
 	mustNotBeError(err)

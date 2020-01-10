@@ -20,8 +20,8 @@ Feature: Update the 'current' answer
       | 100 | 101      | 50      | 0     |
       | 200 | 101      | 50      | 0     |
     And the database has the following table 'answers':
-      | id  | user_id | attempt_id | type       | submitted_at        |
-      | 100 | 101     | 200        | Submission | 2017-05-29 06:38:38 |
+      | id  | author_id | attempt_id | type       | submitted_at        |
+      | 100 | 101       | 200        | Submission | 2017-05-29 06:38:38 |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id = request.attempt_id
     Given I am the user with id "101"
@@ -48,9 +48,9 @@ Feature: Update the 'current' answer
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
     And the table "answers" should be:
-      | user_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101     | 200        | Submission | null    | null       | 0                                                   |
-      | 101     | 200        | Current    | print 1 | some state | 1                                                   |
+      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101       | 200        | Submission | null    | null       | 0                                                   |
+      | 101       | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to create the 'current' answer and users_items.active_attempt_id != request.attempt_id
     Given I am the user with id "101"
@@ -75,15 +75,15 @@ Feature: Update the 'current' answer
       """
     And the table "users_items" should stay unchanged
     And the table "answers" should be:
-      | user_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101     | 200        | Submission | null    | null       | 0                                                   |
-      | 101     | 200        | Current    | print 1 | some state | 1                                                   |
+      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 101       | 200        | Submission | null    | null       | 0                                                   |
+      | 101       | 200        | Current    | print 1 | some state | 1                                                   |
 
   Scenario: User is able to update the 'current' answer
     Given I am the user with id "101"
     And the database has the following table 'answers':
-      | id  | user_id | attempt_id | type    | submitted_at        |
-      | 101 | 101     | 200        | Current | 2017-05-29 06:38:38 |
+      | id  | author_id | attempt_id | type    | submitted_at        |
+      | 101 | 101       | 200        | Current | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
@@ -107,6 +107,6 @@ Feature: Update the 'current' answer
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
     And the table "answers" should be:
-      | id  | user_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 100 | 101     | 200        | Submission | null    | null       | 0                                                   |
-      | 101 | 101     | 200        | Current    | print 1 | some state | 0                                                   |
+      | id  | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
+      | 100 | 101       | 200        | Submission | null    | null       | 0                                                   |
+      | 101 | 101       | 200        | Current    | print 1 | some state | 0                                                   |

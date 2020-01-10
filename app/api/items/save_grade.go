@@ -130,7 +130,7 @@ func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
 	answerID := requestData.ScoreToken.Converted.UserAnswerID
 	answerScope := store.Answers().ByID(answerID).
-		Where("user_id = ?", user.GroupID).
+		Where("author_id = ?", user.GroupID).
 		Where("(SELECT item_id FROM groups_attempts WHERE id = attempt_id) = ?", requestData.TaskToken.Converted.LocalItemID)
 
 	updateResult := answerScope.Where("score = ? OR score IS NULL", score).

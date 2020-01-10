@@ -108,7 +108,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	if full {
 		writeComma(w)
 		writeJSONObjectArrayElement("answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.Answers().Where("user_id = ?", user.GroupID).
+			service.MustNotBeError(srv.Store.Answers().Where("author_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
