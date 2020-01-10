@@ -243,7 +243,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 20       | 417     | none                     |
       | 21       | 418     | none                     |
       | 20       | 419     | none                     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id | score | submitted_at        | user_id | attempt_id |
       | 1  | 0     | 2017-05-29 06:38:38 | 51      | 1          |
       | 2  | 40    | 2017-05-29 06:38:38 | 53      | 2          |

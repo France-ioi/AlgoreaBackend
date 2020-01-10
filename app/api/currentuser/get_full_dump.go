@@ -23,7 +23,7 @@ import (
 //     * `sessions`, `refresh_token`: all attributes, but secrets replaced with “***”;
 //     * `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
-//     * `users_answers`: all attributes;
+//     * `answers`: all attributes;
 //     * `users_items`: all attributes;
 //     * `groups_attempts`: the user's or his teams' attempts, all attributes;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
@@ -107,8 +107,8 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 
 	if full {
 		writeComma(w)
-		writeJSONObjectArrayElement("users_answers", w, func(writer io.Writer) {
-			service.MustNotBeError(srv.Store.UserAnswers().Where("user_id = ?", user.GroupID).
+		writeJSONObjectArrayElement("answers", w, func(writer io.Writer) {
+			service.MustNotBeError(srv.Store.Answers().Where("user_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 

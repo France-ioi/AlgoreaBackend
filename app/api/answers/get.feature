@@ -35,12 +35,12 @@ Background:
     | id  | group_id | item_id | order |
     | 150 | 11       | 200     | 0     |
     | 250 | 13       | 210     | 0     |
-  And the database has the following table 'users_answers':
+  And the database has the following table 'answers':
     | id  | user_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
     | 101 | 11      | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
     | 102 | 11      | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 |
 
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's self group
+  Scenario: User has access to the item and the answers.user_id = authenticated user's self group
     Given I am the user with id "11"
     When I send a GET request to "/answers/101"
     Then the response code should be 200

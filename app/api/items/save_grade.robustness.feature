@@ -36,7 +36,7 @@ Feature: Save grading result - robustness
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
     And time is frozen
@@ -49,7 +49,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -85,7 +85,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -121,7 +121,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -157,7 +157,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Token in score_token doesn't correspond to user session: got idUser=20, expected 10"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -193,7 +193,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in score_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -229,7 +229,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idItemLocal in score_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -265,7 +265,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong itemUrl in score_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -290,7 +290,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing task_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -316,7 +316,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid task_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -341,7 +341,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -377,7 +377,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Item is read-only"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -402,7 +402,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -428,7 +428,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -465,7 +465,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idUser in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -502,7 +502,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idItemLocal in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -539,7 +539,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong itemUrl in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -575,7 +575,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -612,7 +612,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -648,7 +648,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing score"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -685,7 +685,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid idUserAnswer in answer_token"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -694,7 +694,7 @@ Feature: Save grading result - robustness
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | score | submitted_at        |
       | 124 | 101     | 105        | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
@@ -732,7 +732,7 @@ Feature: Save grading result - robustness
     """
     A user tries to replay a score token with a different score value ({"idAttempt":105,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
     """
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged
 
@@ -769,6 +769,6 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 403
     And the response error message should contain "The answer has been already graded or is not found"
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
     And the table "groups_attempts" should stay unchanged

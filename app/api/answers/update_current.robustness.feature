@@ -18,7 +18,7 @@ Feature: Update the 'current' answer
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 100 | 101     | 200        | 2017-05-29 06:38:38 |
 
@@ -44,7 +44,7 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: Missing answer
     Given I am the user with id "101"
@@ -68,7 +68,7 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: Missing state
     Given I am the user with id "101"
@@ -92,7 +92,7 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: User not found
     Given I am the user with id "404"
@@ -107,7 +107,7 @@ Feature: Update the 'current' answer
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: No access
     Given I am the user with id "101"
@@ -122,4 +122,4 @@ Feature: Update the 'current' answer
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged

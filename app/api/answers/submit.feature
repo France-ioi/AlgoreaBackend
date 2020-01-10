@@ -62,7 +62,7 @@ Feature: Submit a new answer
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | user_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 101     | 100        | Submission | print 1 | 1                                                   |
     And the table "groups_attempts" should be:
@@ -116,7 +116,7 @@ Feature: Submit a new answer
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | user_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
       | 101     | 100        | Submission | print(2) | 1                                                   |
     And the table "groups_attempts" should be:

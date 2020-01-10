@@ -67,12 +67,12 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	}
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		userAnswerStore := store.UserAnswers()
+		answerStore := store.Answers()
 		var currentAnswerID int64
-		currentAnswerID, err = userAnswerStore.GetOrCreateCurrentAnswer(user.GroupID, attemptID)
+		currentAnswerID, err = answerStore.GetOrCreateCurrentAnswer(user.GroupID, attemptID)
 		service.MustNotBeError(err)
 
-		return userAnswerStore.ByID(currentAnswerID).UpdateColumn(map[string]interface{}{
+		return answerStore.ByID(currentAnswerID).UpdateColumn(map[string]interface{}{
 			"state":  requestData.State,
 			"answer": requestData.Answer,
 		}).Error()

@@ -39,7 +39,7 @@ Background:
     | 100 | 11       | 200     | 0     |
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
-  And the database has the following table 'users_answers':
+  And the database has the following table 'answers':
     | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
     | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
     | 2  | 11      | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |

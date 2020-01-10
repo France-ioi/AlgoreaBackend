@@ -45,13 +45,13 @@ import (
 //     enum: [submitted_at,-submitted_at,id,-id]
 // - name: from.submitted_at
 //   description: Start the page from the answer next to the answer with `submitted_at` = `from.submitted_at`
-//                and `users_answers.id` = `from.id`
+//                and `answers.id` = `from.id`
 //                (`from.id` is required when `from.submitted_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
 //   description: Start the page from the answer next to the answer with `submitted_at`=`from.submitted_at`
-//                and `users_answers.id`=`from.id`
+//                and `answers.id`=`from.id`
 //                (`from.submitted_at` is required when from.id is present)
 //   in: query
 //   type: integer
@@ -81,9 +81,9 @@ import (
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.UserAnswers().WithUsers().WithGroupAttempts().
-		Select(`users_answers.id, users_answers.name, users_answers.type, users_answers.lang_prog,
-		        users_answers.submitted_at, users_answers.score, users_answers.validated,
+	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
+		Select(`answers.id, answers.name, answers.type, answers.lang_prog,
+		        answers.submitted_at, answers.score, answers.validated,
 		        users.login, users.first_name, users.last_name`)
 
 	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
@@ -109,8 +109,8 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
-		"id":           {ColumnName: "users_answers.id", FieldType: "int64"},
+		"submitted_at": {ColumnName: "answers.submitted_at", FieldType: "time"},
+		"id":           {ColumnName: "answers.id", FieldType: "int64"},
 	}, "-submitted_at,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
@@ -153,7 +153,7 @@ type answersResponseAnswerUser struct {
 
 // swagger:model
 type answersResponseAnswer struct {
-	// `users_answers.id`
+	// `answers.id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// Nullable

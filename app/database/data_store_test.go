@@ -18,6 +18,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		function  func(store *DataStore) *DB
 		wantTable string
 	}{
+		{"Answers", func(store *DataStore) *DB { return store.Answers().Where("") }, "`answers`"},
 		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "`groups`"},
 		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "`groups_ancestors`"},
 		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "`groups_ancestors_active`"},
@@ -41,7 +42,6 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) *DB { return store.RefreshTokens().Where("") }, "`refresh_tokens`"},
 		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "`sessions`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
-		{"UserAnswers", func(store *DataStore) *DB { return store.UserAnswers().Where("") }, "`users_answers`"},
 		{"UserItems", func(store *DataStore) *DB { return store.UserItems().Where("") }, "`users_items`"},
 	}
 	for _, tt := range tests {
@@ -65,6 +65,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		function func(store *DataStore) interface{}
 		wantType interface{}
 	}{
+		{"Answers", func(store *DataStore) interface{} { return store.Answers() }, &AnswerStore{}},
 		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
 		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
 		{"ActiveGroupAncestors", func(store *DataStore) interface{} { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},
@@ -88,7 +89,6 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) interface{} { return store.RefreshTokens() }, &RefreshTokenStore{}},
 		{"Sessions", func(store *DataStore) interface{} { return store.Sessions() }, &SessionStore{}},
 		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
-		{"UserAnswers", func(store *DataStore) interface{} { return store.UserAnswers() }, &UserAnswerStore{}},
 		{"UserItems", func(store *DataStore) interface{} { return store.UserItems() }, &UserItemStore{}},
 	}
 	for _, tt := range tests {

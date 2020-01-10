@@ -44,7 +44,7 @@ Feature: Save grading result
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
       | 102 | 101      | 10      | null                   | 1     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
       | 124 | 101     | 101        | 2017-05-29 06:38:38 |
@@ -101,7 +101,7 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123 | 101     | 100   | 1         | 1                                                |
       | 124 | 101     | null  | null      | null                                             |
@@ -122,7 +122,7 @@ Feature: Save grading result
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     | <score_edit_rule> | <score_edit_value> |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     | null              | null               |
       | 102 | 101      | 10      | null                   | 1     | null              | null               |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
       | 124 | 101     | 101        | 2017-05-29 06:38:38 |
@@ -178,7 +178,7 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | id  | user_id | score   | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123 | 101     | <score> | 0         | 1                                                |
       | 124 | 101     | null    | null      | null                                             |
@@ -206,7 +206,7 @@ Feature: Save grading result
       | id  | group_id | item_id | score_obtained_at   | order |
       | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
       | 124 | 101     | 101        | 2017-05-29 06:38:38 |
@@ -262,7 +262,7 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123 | 101     | null  | null      | null                                             |
       | 124 | 101     | 99    | 0         | 1                                                |
@@ -277,7 +277,7 @@ Feature: Save grading result
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | score | submitted_at        |
       | 123 | 101     | 100        | 5     | 2018-05-29 06:38:38 |
       | 124 | 101     | 101        | null  | 2018-05-29 06:38:38 |
@@ -338,7 +338,7 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | id  | user_id | score   | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123 | 101     | 5       | null      | null                                             |
       | 124 | 101     | <score> | 0         | 1                                                |
@@ -362,7 +362,7 @@ Feature: Save grading result
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2018-05-29 06:38:38 | 2     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
       | 124 | 101     | 101        | 2017-05-29 06:38:38 |
@@ -418,7 +418,7 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "users_answers" should be:
+    And the table "answers" should be:
       | id  | user_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123 | 101     | null  | null      | null                                             |
       | 124 | 101     | 100   | 1         | 1                                                |
@@ -433,7 +433,7 @@ Feature: Save grading result
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 123 | 101     | 100        | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
@@ -492,7 +492,7 @@ Feature: Save grading result
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 70      | 2018-05-29 06:38:38 | 2     |
-    And the database has the following table 'users_answers':
+    And the database has the following table 'answers':
       | id  | user_id | attempt_id | submitted_at        |
       | 125 | 101     | 100        | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:

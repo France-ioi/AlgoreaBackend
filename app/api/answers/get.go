@@ -14,7 +14,7 @@ import (
 // description: Return the answer identified by the given `answer_id`.
 //
 //   * The user should have at least 'content' access rights to the `groups_attempts.item_id` item for
-//     `users_answers.attempt_id`.
+//     `answers.attempt_id`.
 //
 //   * The user should be able to see answers related to his group's attempts, so
 //      (a) if `items.has_attempts = 1`, then the user should be a member of the groups_attempts.group_id team,
@@ -36,19 +36,19 @@ import (
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	userAnswerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
+	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
-	err = srv.Store.UserAnswers().Visible(user).
-		Where("users_answers.id = ?", userAnswerID).
-		Select(`users_answers.id, users_answers.user_id, groups_attempts.item_id, users_answers.attempt_id,
-			users_answers.type, users_answers.state, users_answers.answer,
-			users_answers.submitted_at, users_answers.score, users_answers.validated,
-			users_answers.graded_at`).
+	err = srv.Store.Answers().Visible(user).
+		Where("answers.id = ?", answerID).
+		Select(`answers.id, answers.user_id, groups_attempts.item_id, answers.attempt_id,
+			answers.type, answers.state, answers.answer,
+			answers.submitted_at, answers.score, answers.validated,
+			answers.graded_at`).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {

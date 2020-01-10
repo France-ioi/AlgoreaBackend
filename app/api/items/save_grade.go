@@ -81,7 +81,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
-	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
+	if !saveNewScoreIntoAnswer(store, user, requestData, score, validated) {
 		return validated, false
 	}
 
@@ -126,14 +126,14 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	return validated, true
 }
 
-func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
+func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
-	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
-	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
+	answerID := requestData.ScoreToken.Converted.UserAnswerID
+	answerScope := store.Answers().ByID(answerID).
 		Where("user_id = ?", user.GroupID).
 		Where("(SELECT item_id FROM groups_attempts WHERE id = attempt_id) = ?", requestData.TaskToken.Converted.LocalItemID)
 
-	updateResult := userAnswerScope.Where("score = ? OR score IS NULL", score).
+	updateResult := answerScope.Where("score = ? OR score IS NULL", score).
 		UpdateColumn(map[string]interface{}{
 			"graded_at": database.Now(),
 			"validated": validated,
@@ -143,7 +143,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 
 	if updateResult.RowsAffected() == 0 {
 		var oldScore *float64
-		err := userAnswerScope.PluckFirst("score", &oldScore).Error()
+		err := answerScope.PluckFirst("score", &oldScore).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			return false
 		}
@@ -177,11 +177,11 @@ type saveGradeRequestParsed struct {
 }
 
 type saveGradeRequest struct {
-	TaskToken    *string            `json:"task_token"`
-	ScoreToken   formdata.Anything  `json:"score_token"`
-	Score        *float64           `json:"score"`
-	AnswerToken  *formdata.Anything `json:"answer_token"`
-	UserAnswerID *string            `json:"user_answer_id"`
+	TaskToken   *string            `json:"task_token"`
+	ScoreToken  formdata.Anything  `json:"score_token"`
+	Score       *float64           `json:"score"`
+	AnswerToken *formdata.Anything `json:"answer_token"`
+	AnswerID    *string            `json:"answer_id"`
 }
 
 // UnmarshalJSON unmarshals the items/saveGrade request data from JSON
