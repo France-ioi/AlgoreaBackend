@@ -7,7 +7,7 @@ ALTER TABLE `groups_attempts`
         COMMENT 'Whether the edit value replaces and adds up to the score of the best answer'
         AFTER `score_reeval`,
     ADD COLUMN `score_edit_value` FLOAT DEFAULT NULL
-        COMMENT 'Score which overrides or adds up (depending on score_edit_rule) to the computed score'
+        COMMENT 'Score which overrides or adds up (depending on score_edit_rule) to the score obtained from best answer or propagation'
         AFTER `score_edit_rule`,
     CHANGE COLUMN `score_diff_comment` `score_edit_comment` varchar(200) DEFAULT NULL
         COMMENT 'Explanation of the value set in score_edit_value',
