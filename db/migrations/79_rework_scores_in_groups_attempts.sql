@@ -31,7 +31,7 @@ WHERE `score_diff_manual` != 0 AND `score_diff_manual` = -`score_computed`;
 
 # 1 row
 UPDATE `groups_attempts` SET `score_edit_rule` = 'diff', `score_edit_value` = -40
-WHERE `score_diff_manual` = -40;
+WHERE `score_diff_manual` = -40 AND `score_computed` = 100 AND `score` = 60;
 
 # 83 rows
 UPDATE `groups_attempts` SET `score` = 100 WHERE `score` > 100;
