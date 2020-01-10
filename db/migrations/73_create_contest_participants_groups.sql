@@ -3,10 +3,12 @@
 ALTER TABLE `groups` MODIFY COLUMN `type` enum('Class','Team','Club','Friends','Other','UserSelf','Base','ContestParticipants') NOT NULL;
 
 # create a "contest participants" group for each contest
-INSERT INTO `groups` (`name`, `type`, `team_item_id`)
-    SELECT CONCAT(`items`.`id`, '-participants'), 'ContestParticipants', `items`.`id`
+INSERT INTO `groups` (`id`, `name`, `type`, `team_item_id`)
+    SELECT FLOOR(RAND(3) * 1000000000) + FLOOR(RAND(4) * 1000000000) * 1000000000,
+           CONCAT(`items`.`id`, '-participants'), 'ContestParticipants', `items`.`id`
     FROM `items`
-    WHERE `duration` IS NOT NULL;
+    WHERE `duration` IS NOT NULL
+    ORDER BY `items`.`id`;
 
 # link contests to their "contest participants" groups
 UPDATE `items`
@@ -20,8 +22,9 @@ WHERE `items`.`duration` IS NOT NULL;
 # but there is a pair in groups_items of the example database (group_id = 261836104618448530, item_id = 261836104618448530)
 # for which that is wrong. `can_view:content` permission for this pair will be lost and the group 261836104618448530
 # will not be added as a member of the item's contest participants group.
-INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `expires_at`, `child_order`)
-    SELECT `items`.`contest_participants_group_id`,
+INSERT INTO `groups_groups` (`id`, `parent_group_id`, `child_group_id`, `expires_at`, `child_order`)
+    SELECT FLOOR(RAND(5) * 1000000000) + FLOOR(RAND(6) * 1000000000) * 1000000000,
+           `items`.`contest_participants_group_id`,
            `groups_attempts`.`group_id`,
            IFNULL(MIN(`finished_at`),
                DATE_ADD(
@@ -37,7 +40,8 @@ INSERT INTO `groups_groups` (`parent_group_id`, `child_group_id`, `expires_at`, 
                                    `groups_contest_items`.`item_id` = `items`.`id`
     WHERE `items`.`contest_participants_group_id` IS NOT NULL AND
           `items`.`duration` IS NOT NULL
-    GROUP BY `groups_attempts`.`group_id`, `groups_attempts`.`item_id`;
+    GROUP BY `groups_attempts`.`group_id`, `groups_attempts`.`item_id`
+    ORDER BY `groups_attempts`.`group_id`, `groups_attempts`.`item_id`;
 
 # remove 'content' permissions given to participants directly on entering
 DELETE `permissions_granted`

@@ -11,6 +11,7 @@ WHERE `users`.`id` IS NULL;
 
 -- Copy users data for all the items
 INSERT INTO `groups_attempts` (
+    `id`,
     `group_id`, `item_id`,
     `creator_user_id`,
     `order`,
@@ -20,6 +21,7 @@ INSERT INTO `groups_attempts` (
     `autonomy`,`started_at`,`validated_at`,`finished_at`,`latest_activity_at`,`thread_started_at`,
     `best_answer_at`,`latest_answer_at`,`latest_hint_at`,`ranked`,`all_lang_prog`,`ancestors_computation_state`)
 SELECT
+    (FLOOR(RAND(1) * 1000000000) + FLOOR(RAND(2) * 1000000000) * 1000000000 + `groups_to_insert`.`id` + `items`.`id`) % 9223372036854775806 + 1,
     `groups_to_insert`.`id`, `items`.`id`,
     `users`.`id`,
     (SELECT IFNULL(MAX(`order`)+1, 1) FROM `groups_attempts` WHERE `group_id` = `users`.`self_group_id` AND `groups_attempts`.`item_id` = `users_items`.`item_id`),
@@ -68,7 +70,8 @@ FROM `users_items`
     ) AS groups_to_insert ON `groups_to_insert`.`id` IS NOT NULL
     LEFT JOIN `groups_attempts` AS `existing_attempts`
         ON `existing_attempts`.`group_id` = `groups_to_insert`.`id` AND `existing_attempts`.`item_id` = `items`.`id`
-    WHERE `existing_attempts`.`id` IS NULL;
+    WHERE `existing_attempts`.`id` IS NULL
+ORDER BY `groups_to_insert`.`id`, `items`.`id`;
 
 ALTER TABLE `groups_attempts` ADD KEY `item_id_creator_user_id_latest_activity_at_desc` (`item_id`, `creator_user_id`, `latest_activity_at` DESC);
 UPDATE `users_items`
