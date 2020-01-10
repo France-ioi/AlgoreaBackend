@@ -86,8 +86,6 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	// Build query to update groups_attempts
-	// The score_compute is set towards the end, so that the IF condition on
-	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
 		"latest_activity_at",
