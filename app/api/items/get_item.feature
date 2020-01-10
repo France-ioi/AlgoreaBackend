@@ -43,16 +43,16 @@ Feature: Get item view information
       | 55 | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | hints_cached | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 12341          | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 12342          | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 103 | 11       | 220     | 1     | 12344          | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 14       | 210     | 1     | 12342          | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 17       | 200     | 1     | 12341          | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 106 | 17       | 210     | 1     | 12342          | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 107 | 17       | 220     | 1     | 12344          | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 108 | 22       | 200     | 1     | 12341          | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 109 | 22       | 210     | 1     | 12342          | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 110 | 22       | 220     | 1     | 12344          | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 101 | 11       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 103 | 11       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 14       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 17       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 106 | 17       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 107 | 17       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 108 | 22       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 109 | 22       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 110 | 22       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 200     | 101               |
@@ -115,7 +115,7 @@ Feature: Get item view information
 
       "user_active_attempt": {
         "attempt_id": "101",
-        "score_computed": 12341,
+        "score_computed": 91,
         "submissions": 11,
         "validated": true,
         "finished": true,
@@ -152,7 +152,7 @@ Feature: Get item view information
 
           "user_active_attempt": {
             "attempt_id": "103",
-            "score_computed": 12344,
+            "score_computed": 94,
             "submissions": 14,
             "validated": true,
             "finished": true,
@@ -189,7 +189,7 @@ Feature: Get item view information
 
           "user_active_attempt": {
             "attempt_id": "102",
-            "score_computed": 12342,
+            "score_computed": 92,
             "submissions": 12,
             "validated": true,
             "finished": true,
@@ -237,7 +237,7 @@ Feature: Get item view information
 
       "user_active_attempt": {
         "attempt_id": "102",
-        "score_computed": 12342,
+        "score_computed": 92,
         "submissions": 12,
         "validated": true,
         "finished": true,
@@ -284,7 +284,7 @@ Feature: Get item view information
 
       "user_active_attempt": {
         "attempt_id": "104",
-        "score_computed": 12342,
+        "score_computed": 92,
         "submissions": 12,
         "validated": true,
         "finished": true,
@@ -335,7 +335,7 @@ Feature: Get item view information
 
       "user_active_attempt": {
         "attempt_id": "105",
-        "score_computed": 12341,
+        "score_computed": 91,
         "submissions": 11,
         "validated": true,
         "finished": true,
@@ -400,7 +400,7 @@ Feature: Get item view information
 
           "user_active_attempt": {
             "attempt_id": "106",
-            "score_computed": 12342,
+            "score_computed": 92,
             "submissions": 12,
             "validated": true,
             "finished": true,
@@ -451,7 +451,7 @@ Feature: Get item view information
 
       "user_active_attempt": {
         "attempt_id": "108",
-        "score_computed": 12341,
+        "score_computed": 91,
         "submissions": 11,
         "validated": true,
         "finished": true,

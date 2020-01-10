@@ -91,13 +91,13 @@ Feature: Get item for tree navigation
       | 67 | 211     | 2           | Tâche 1     |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 12341          | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 12342          | 12          | true     | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 11       | 211     | 1     | 12343          | 13          | true     | 2019-01-30 09:26:43 | 2019-01-31 09:26:43 |
-      | 103 | 11       | 220     | 1     | 12344          | 14          | true     | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 11       | 230     | 1     | 12345          | 15          | true     | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
-      | 106 | 11       | 231     | 1     | 12346          | 16          | true     | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
-      | 107 | 11       | 232     | 1     | 12347          | 17          | true     | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
+      | 101 | 11       | 200     | 1     | 91             | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 102 | 11       | 210     | 1     | 92             | 12          | true     | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
+      | 105 | 11       | 211     | 1     | 93             | 13          | true     | 2019-01-30 09:26:43 | 2019-01-31 09:26:43 |
+      | 103 | 11       | 220     | 1     | 94             | 14          | true     | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
+      | 104 | 11       | 230     | 1     | 95             | 15          | true     | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
+      | 106 | 11       | 231     | 1     | 96             | 16          | true     | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
+      | 107 | 11       | 232     | 1     | 97             | 17          | true     | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 200     | 101               |
@@ -121,7 +121,7 @@ Feature: Get item for tree navigation
           "title": "Category 1"
         },
         "user_active_attempt": {
-          "score_computed": 12341,
+          "score_computed": 91,
           "validated": true,
           "finished": true,
           "submissions": 11,
@@ -141,7 +141,7 @@ Feature: Get item for tree navigation
               "title": "Chapter C"
             },
             "user_active_attempt": {
-              "score_computed": 12345,
+              "score_computed": 95,
               "validated": true,
               "finished": true,
               "submissions": 15,
@@ -161,7 +161,7 @@ Feature: Get item for tree navigation
                   "title": "Task 3"
                 },
                 "user_active_attempt": {
-                  "score_computed": 12347,
+                  "score_computed": 97,
                   "validated": true,
                   "finished": true,
                   "submissions": 17,
@@ -182,7 +182,7 @@ Feature: Get item for tree navigation
                   "title": "Task 2"
                 },
                 "user_active_attempt": {
-                  "score_computed": 12346,
+                  "score_computed": 96,
                   "validated": true,
                   "finished": true,
                   "submissions": 16,
@@ -205,7 +205,7 @@ Feature: Get item for tree navigation
               "title": "Chapter B"
             },
             "user_active_attempt": {
-              "score_computed": 12344,
+              "score_computed": 94,
               "validated": true,
               "finished": true,
               "submissions": 14,
@@ -226,7 +226,7 @@ Feature: Get item for tree navigation
               "title": "Chapter A"
             },
             "user_active_attempt": {
-              "score_computed": 12342,
+              "score_computed": 92,
               "validated": true,
               "finished": true,
               "submissions": 12,
@@ -246,7 +246,7 @@ Feature: Get item for tree navigation
                   "title": "Task 1"
                 },
                 "user_active_attempt": {
-                  "score_computed": 12343,
+                  "score_computed": 93,
                   "validated": true,
                   "finished": true,
                   "submissions": 13,
@@ -277,7 +277,7 @@ Feature: Get item for tree navigation
           "title": "Task 3"
         },
         "user_active_attempt": {
-          "score_computed": 12347,
+          "score_computed": 97,
           "validated": true,
           "finished": true,
           "submissions": 17,
@@ -304,7 +304,7 @@ Feature: Get item for tree navigation
           "title": "Chapter C"
         },
         "user_active_attempt": {
-          "score_computed": 12345,
+          "score_computed": 95,
           "validated": true,
           "finished": true,
           "submissions": 15,
@@ -324,7 +324,7 @@ Feature: Get item for tree navigation
               "title": "Task 3"
             },
             "user_active_attempt": {
-              "score_computed": 12347,
+              "score_computed": 97,
               "validated": true,
               "finished": true,
               "submissions": 17,
@@ -345,7 +345,7 @@ Feature: Get item for tree navigation
               "title": "Task 2"
             },
             "user_active_attempt": {
-              "score_computed": 12346,
+              "score_computed": 96,
               "validated": true,
               "finished": true,
               "submissions": 16,
