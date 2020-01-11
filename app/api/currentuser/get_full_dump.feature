@@ -234,7 +234,7 @@ Feature: Export the current user's data
         {
           "id": "1", "validated": null, "score": null, "attempt_id": "111",
           "author_id": "11", "answer": null, "graded_at": null, "lang_prog": null,
-          "name": null, "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
+          "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],
       "users_items": [

@@ -82,7 +82,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	user := srv.GetUser(httpReq)
 
 	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
-		Select(`answers.id, answers.name, answers.type, answers.lang_prog,
+		Select(`answers.id, answers.type, answers.lang_prog,
 		        answers.submitted_at, answers.score, answers.validated,
 		        users.login, users.first_name, users.last_name`)
 
@@ -129,7 +129,6 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 // swagger:ignore
 type rawAnswersData struct {
 	ID            int64
-	Name          *string
 	Type          string
 	LangProg      *string
 	SubmittedAt   database.Time
@@ -156,9 +155,6 @@ type answersResponseAnswer struct {
 	// `answers.id`
 	// required: true
 	ID int64 `json:"id,string"`
-	// Nullable
-	// required: true
-	Name *string `json:"name"`
 	// required: true
 	// enum: Submission,Saved,Current
 	Type string `json:"type"`
@@ -183,7 +179,6 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	for _, row := range rawData {
 		responseData = append(responseData, answersResponseAnswer{
 			ID:          row.ID,
-			Name:        row.Name,
 			Type:        row.Type,
 			LangProg:    row.LangProg,
 			SubmittedAt: row.SubmittedAt,
