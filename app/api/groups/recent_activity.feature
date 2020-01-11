@@ -22,15 +22,15 @@ Feature: Get recent activity for group_id and item_id
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 2  | 11        | 101        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 1  | 11        | 100        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 3  | 11        | 101        | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 4  | 11        | 101        | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 5  | 11        | 101        | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 6  | 31        | 101        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 7  | 31        | 100        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 8  | 31        | 101        | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+      | id | author_id | attempt_id | type       | state   | submitted_at        | score |
+      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
+      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 99    |
+      | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 | 100   |
+      | 4  | 11        | 101        | Saved      | Current | 2017-05-30 06:38:38 | 100   |
+      | 5  | 11        | 101        | Current    | Current | 2017-05-30 06:38:38 | 100   |
+      | 6  | 31        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
+      | 7  | 31        | 100        | Submission | Current | 2017-05-29 06:38:38 | 98    |
+      | 8  | 31        | 101        | Submission | Current | 2017-05-30 06:38:38 | 100   |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |
@@ -74,8 +74,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       },
       {
         "id": "1",
@@ -86,14 +85,13 @@ Feature: Get recent activity for group_id and item_id
           },
           "type": "Category"
         },
-        "score": 100,
+        "score": 99,
         "submitted_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": false
+        }
       },
       {
         "id": "2",
@@ -110,8 +108,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -138,8 +135,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -160,14 +156,13 @@ Feature: Get recent activity for group_id and item_id
           },
           "type": "Category"
         },
-        "score": 100,
+        "score": 99,
         "submitted_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": false
+        }
       },
       {
         "id": "2",
@@ -184,8 +179,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -212,8 +206,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -240,8 +233,7 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       },
       {
         "id": "2",
@@ -258,8 +250,34 @@ Feature: Get recent activity for group_id and item_id
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
+        }
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request unvalidated answers only
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&validated=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "1",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Catégorie 1"
+          },
+          "type": "Category"
         },
-        "validated": true
+        "score": 99,
+        "submitted_at": "2017-05-29T06:38:38Z",
+        "user": {
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
+        }
       }
     ]
     """

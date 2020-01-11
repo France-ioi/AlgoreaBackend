@@ -36,7 +36,7 @@ func (s *AnswerStore) WithItems() *AnswerStore {
 	}
 }
 
-// SubmitNewAnswer inserts a new row with type='Submission', validated=0, submitted_at=NOW()
+// SubmitNewAnswer inserts a new row with type='Submission', submitted_at=NOW()
 // into the `answers` table.
 func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) (int64, error) {
 	var answerID int64
@@ -44,8 +44,8 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 		store := NewDataStore(db)
 		answerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO answers (id, author_id, attempt_id, answer, submitted_at, validated)
-				VALUES (?, ?, ?, ?, NOW(), 0)`,
+				INSERT INTO answers (id, author_id, attempt_id, answer, submitted_at)
+				VALUES (?, ?, ?, ?, NOW())`,
 			answerID, authorID, attemptID, answer).Error
 	})
 	return answerID, err

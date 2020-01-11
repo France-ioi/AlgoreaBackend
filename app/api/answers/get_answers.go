@@ -82,8 +82,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	user := srv.GetUser(httpReq)
 
 	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
-		Select(`answers.id, answers.type, answers.lang_prog,
-		        answers.submitted_at, answers.score, answers.validated,
+		Select(`answers.id, answers.type, answers.submitted_at, answers.score,
 		        users.login, users.first_name, users.last_name`)
 
 	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
@@ -130,10 +129,8 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 type rawAnswersData struct {
 	ID            int64
 	Type          string
-	LangProg      *string
 	SubmittedAt   database.Time
 	Score         *float32
-	Validated     *bool
 	UserLogin     string  `sql:"column:login"`
 	UserFirstName *string `sql:"column:first_name"`
 	UserLastName  *string `sql:"column:last_name"`
@@ -158,17 +155,11 @@ type answersResponseAnswer struct {
 	// required: true
 	// enum: Submission,Saved,Current
 	Type string `json:"type"`
-	// Nullable
-	// required: true
-	LangProg *string `json:"lang_prog"`
 	// required: true
 	SubmittedAt database.Time `json:"submitted_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
-	// Nullable
-	// required: true
-	Validated *bool `json:"validated"`
 
 	// required: true
 	User answersResponseAnswerUser `json:"user"`
@@ -180,10 +171,8 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 		responseData = append(responseData, answersResponseAnswer{
 			ID:          row.ID,
 			Type:        row.Type,
-			LangProg:    row.LangProg,
 			SubmittedAt: row.SubmittedAt,
 			Score:       row.Score,
-			Validated:   row.Validated,
 			User: answersResponseAnswerUser{
 				Login:     row.UserLogin,
 				FirstName: row.UserFirstName,

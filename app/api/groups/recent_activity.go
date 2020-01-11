@@ -19,9 +19,6 @@ type groupRecentActivityResponseRow struct {
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
-	// Nullable
-	// required: true
-	Validated *bool `json:"validated"`
 	// required: true
 	User struct {
 		// required: true
@@ -64,7 +61,8 @@ type groupRecentActivityResponseRow struct {
 //   descendants of `item_id` and visible to the authenticated user (at least 'info' access).
 //
 //
-//   If the `validated` parameter is true, only validated `answers` (with `validated`=1) are returned.
+//   If the `validated` parameter is given, only `answers` with `score` = 100 (if `validated` = 1)
+//   or with `score` != 100 (otherwise) are returned.
 //
 //
 //   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
@@ -139,7 +137,7 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.Answers().WithUsers().WithItems().
 		Select(
-			`answers.id as id, answers.submitted_at, answers.validated, answers.score,
+			`answers.id as id, answers.submitted_at, answers.score,
        items.id AS item__id, items.type AS item__type,
 		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
 			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
@@ -171,7 +169,12 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		query = query.Where("answers.validated = ?", validated)
+		condition := "answers.score "
+		if !validated {
+			condition += "!"
+		}
+		condition += "= 100"
+		query = query.Where(condition)
 	}
 	return query
 }

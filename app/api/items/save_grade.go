@@ -81,7 +81,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
-	if !saveNewScoreIntoAnswer(store, user, requestData, score, validated) {
+	if !saveNewScoreIntoAnswer(store, user, requestData, score) {
 		return validated, false
 	}
 
@@ -138,7 +138,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 }
 
 func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
+	requestData *saveGradeRequestParsed, score float64) bool {
 	answerID := requestData.ScoreToken.Converted.UserAnswerID
 	answerScope := store.Answers().ByID(answerID).
 		Where("author_id = ?", user.GroupID).
@@ -147,7 +147,6 @@ func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
 	updateResult := answerScope.Where("score = ? OR score IS NULL", score).
 		UpdateColumn(map[string]interface{}{
 			"graded_at": database.Now(),
-			"validated": validated,
 			"score":     score,
 		})
 	service.MustNotBeError(updateResult.Error())

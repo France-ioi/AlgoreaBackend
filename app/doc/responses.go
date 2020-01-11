@@ -201,9 +201,6 @@ type itemAnswerGetResponse struct {
 		Score *float32 `json:"score"`
 		// Nullable
 		// required:true
-		Validated *bool `json:"validated"`
-		// Nullable
-		// required:true
 		GradedAt *time.Time `json:"graded_at"`
 	}
 }

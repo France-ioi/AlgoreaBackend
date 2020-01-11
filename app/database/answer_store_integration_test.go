@@ -43,13 +43,12 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 				Type           string
 				Answer         string
 				SubmittedAtSet bool
-				Validated      bool
 			}
 			var insertedAnswer answer
 			assert.NoError(t,
 				answerStore.ByID(newID).
 					Select("author_id, attempt_id, type, answer, "+
-						"validated, ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set").
+						"ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set").
 					Scan(&insertedAnswer).Error())
 			assert.Equal(t, answer{
 				AuthorID:       test.authorID,
@@ -57,7 +56,6 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 				Type:           "Submission",
 				Answer:         test.answer,
 				SubmittedAtSet: true,
-				Validated:      false,
 			}, insertedAnswer)
 		})
 	}
@@ -114,13 +112,12 @@ func TestAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 					AttemptID      int64
 					Type           string
 					SubmittedAtSet bool
-					Validated      bool
 				}
 				var insertedAnswer answer
 				assert.NoError(t,
 					dataStore.Answers().ByID(currentAnswerID).
 						Select(`
-							author_id, attempt_id, type, validated,
+							author_id, attempt_id, type,
 							ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set`).
 						Scan(&insertedAnswer).Error())
 				assert.Equal(t, answer{
@@ -128,7 +125,6 @@ func TestAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 					AttemptID:      test.attemptID,
 					Type:           "Current",
 					SubmittedAtSet: true,
-					Validated:      false,
 				}, insertedAnswer)
 			}
 		})

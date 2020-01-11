@@ -102,9 +102,9 @@ Feature: Save grading result
       }
       """
     And the table "answers" should be:
-      | id  | author_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | 100   | 1         | 1                                                |
-      | 124 | 101       | null  | null      | null                                             |
+      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101       | 100   | 1                                                |
+      | 124 | 101       | null  | null                                             |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -179,9 +179,9 @@ Feature: Save grading result
       }
       """
     And the table "answers" should be:
-      | id  | author_id | score   | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | <score> | 0         | 1                                                |
-      | 124 | 101       | null    | null      | null                                             |
+      | id  | author_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101       | <score> | 1                                                |
+      | 124 | 101       | null    | null                                             |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -263,9 +263,9 @@ Feature: Save grading result
       }
       """
     And the table "answers" should be:
-      | id  | author_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | null  | null      | null                                             |
-      | 124 | 101       | 99    | 0         | 1                                                |
+      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101       | null  | null                                             |
+      | 124 | 101       | 99    | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -339,10 +339,10 @@ Feature: Save grading result
       }
       """
     And the table "answers" should be:
-      | id  | author_id | score   | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | 5       | null      | null                                             |
-      | 124 | 101       | <score> | 0         | 1                                                |
-      | 125 | 101       | 20      | null      | null                                             |
+      | id  | author_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101       | 5       | null                                             |
+      | 124 | 101       | <score> | 1                                                |
+      | 125 | 101       | 20      | null                                             |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -419,9 +419,9 @@ Feature: Save grading result
       }
       """
     And the table "answers" should be:
-      | id  | author_id | score | validated | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | null  | null      | null                                             |
-      | 124 | 101       | 100   | 1         | 1                                                |
+      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123 | 101       | null  | null                                             |
+      | 124 | 101       | 100   | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |

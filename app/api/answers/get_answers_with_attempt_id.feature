@@ -40,10 +40,10 @@ Background:
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 11        | 100        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 2  | 11        | 101        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 11        | 102        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    | id | author_id | attempt_id | type       | state   | submitted_at        | score |
+    | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 100   |
+    | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
+    | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 | 100   |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "11"
@@ -54,7 +54,6 @@ Background:
     [
       {
         "id": "1",
-        "lang_prog": "python",
         "score": 100,
         "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
@@ -62,8 +61,7 @@ Background:
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -77,7 +75,6 @@ Background:
     [
       {
         "id": "1",
-        "lang_prog": "python",
         "score": 100,
         "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
@@ -85,8 +82,7 @@ Background:
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -100,7 +96,6 @@ Background:
     [
       {
         "id": "2",
-        "lang_prog": "python",
         "score": 100,
         "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
@@ -108,8 +103,7 @@ Background:
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -123,7 +117,6 @@ Background:
     [
       {
         "id": "3",
-        "lang_prog": "python",
         "score": 100,
         "submitted_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
@@ -131,8 +124,7 @@ Background:
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
