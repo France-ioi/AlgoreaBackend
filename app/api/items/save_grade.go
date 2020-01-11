@@ -86,14 +86,12 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	// Build query to update groups_attempts
-	// The score_compute is set towards the end, so that the IF condition on
-	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
-		"latest_activity_at",
+		"latest_answer_at",
+		"latest_answer_at",
 		"score_obtained_at",
 		"score_computed",
-		"latest_answer_at",
 		"result_propagation_state",
 	}
 	newScoreExpression := gorm.Expr(`
@@ -105,18 +103,31 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 				END, score_computed, 0), 100)`, score, score)
 	values := []interface{}{
 		1,
-		database.Now(),
+		// store the old value into a temporary variable
+		gorm.Expr("(@old_latest_answer_at:=latest_answer_at)"),
+		// use latest_answer_at to store the answer's submission time
+		gorm.Expr("(SELECT submitted_at FROM answers WHERE id = ? FOR UPDATE)", requestData.ScoreToken.Converted.UserAnswerID),
 		// for score_computed we compare patched scores
-		gorm.Expr("IF(score_obtained_at IS NULL OR score_computed < ?, NOW(), score_obtained_at)", newScoreExpression),
+		gorm.Expr(`
+			CASE
+			  -- New best score or no time saved yet
+				-- Note that when the score = 0, score_obtained_at is the time of the first submission
+				WHEN score_obtained_at IS NULL OR score_computed < ? THEN latest_answer_at
+				-- We may get the result of an earlier submission after one with the same score
+				WHEN score_computed = ? THEN LEAST(score_obtained_at, latest_answer_at)
+				-- New score if lower than the best score
+				ELSE score_obtained_at
+			END`, newScoreExpression, newScoreExpression),
 		newScoreExpression,
-		database.Now(),
 		"changed",
 	}
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate, "validated_at")
-		values = append(values, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
+		values = append(values, gorm.Expr("LEAST(IFNULL(validated_at, latest_answer_at), latest_answer_at)"))
 	}
+	columnsToUpdate = append(columnsToUpdate, "latest_answer_at")
+	values = append(values, gorm.Expr("GREATEST(latest_answer_at, IFNULL(@old_latest_answer_at, latest_answer_at))"))
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values, requestData.TaskToken.Converted.AttemptID)

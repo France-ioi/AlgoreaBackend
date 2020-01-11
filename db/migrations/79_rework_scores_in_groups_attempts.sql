@@ -11,7 +11,9 @@ ALTER TABLE `groups_attempts`
         AFTER `score_edit_rule`,
     ADD CONSTRAINT `cs_groups_attempts_score_edit_value_is_valid` CHECK (IFNULL(`score_edit_value`, 0) BETWEEN -100 AND 100),
     CHANGE COLUMN `score_diff_comment` `score_edit_comment` varchar(200) DEFAULT NULL
-        COMMENT 'Explanation of the value set in score_edit_value';
+        COMMENT 'Explanation of the value set in score_edit_value',
+    MODIFY COLUMN `validated_at` DATETIME DEFAULT NULL
+        COMMENT 'Submission time of the first answer that made the item validated within this attempt (validation criteria depends on item)';
 
 # 79 rows
 UPDATE `groups_attempts` SET `score_edit_rule` = 'set', `score_edit_value` = 0
@@ -63,7 +65,9 @@ ALTER TABLE `groups_attempts`
     ADD COLUMN `score_diff_manual` FLOAT NOT NULL DEFAULT '0'
         COMMENT 'How much did we manually add to the computed score' AFTER `score_reeval`,
     CHANGE COLUMN `score_edit_comment` `score_diff_comment` VARCHAR(200) NOT NULL DEFAULT ''
-        COMMENT 'Reason why the score was manually changed';
+        COMMENT 'Reason why the score was manually changed',
+    MODIFY COLUMN `validated_at` DATETIME DEFAULT NULL
+        COMMENT 'When the item was validated within this attempt (validation criteria depends on item)';
 
 ALTER TABLE `groups_attempts`
     CHANGE COLUMN `score_computed` `score` FLOAT NOT NULL DEFAULT '0' COMMENT 'Current score for this attempt',

@@ -110,10 +110,10 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 100            | 1           | 1         | done                     | 1                                                         | 1                                                       | 1                                                        | 1                                                   |
-      | 101 | 0              | 0           | 0         | done                     | null                                                      | null                                                    | null                                                     | null                                                |
-      | 102 | 50             | 1           | 1         | done                     | 1                                                         | null                                                    | null                                                     | 1                                                   |
+      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at        |
+      | 100 | 100            | 1           | 1         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 101 | 0              | 0           | 0         | done                     | null               | null                | null                | null                |
+      | 102 | 50             | 1           | 1         | done                     | null               | null                | null                | 2017-05-29 06:38:38 |
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
@@ -187,10 +187,10 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score_computed   | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | <score_computed> | 1           | 0         | done                     | 1                                                         | 1                                                       | 1                                                        | null                                                |
-      | 101 | 0                | 0           | 0         | done                     | null                                                      | null                                                    | null                                                     | null                                                |
-      | 102 | <parent_score>   | 1           | 0         | done                     | 1                                                         | null                                                    | null                                                     | null                                                |
+      | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
+      | 100 | <score_computed> | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
+      | 101 | 0                | 0           | 0         | done                     | null               | null                | null                | null         |
+      | 102 | <parent_score>   | 1           | 0         | done                     | null               | null                | null                | null         |
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -204,7 +204,7 @@ Feature: Save grading result
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score_obtained_at   | order |
-      | 100 | 101      | 50      | 2017-05-29 06:38:38 | 1     |
+      | 100 | 101      | 50      | 2017-04-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | submitted_at        |
@@ -271,9 +271,9 @@ Feature: Save grading result
       | 101     | 50      |
       | 101     | 60      |
     And the table "groups_attempts" should be:
-      | id  | score_computed | tasks_tried | validated | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 |
-      | 100 | 99             | 1           | 0         | done                     | 1                                                         | 1                                                       | 1                                                        | null                                                |
-      | 101 | 0              | 0           | 0         | done                     | null                                                      | null                                                    | 0                                                        | null                                                |
+      | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
+      | 100 | 99             | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
+      | 101 | 0              | 0           | 0         | done                     | null               | null                | 2017-05-29 06:38:38 | null         |
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
@@ -356,12 +356,12 @@ Feature: Save grading result
       | 20    | diff            | -1               |
       | 15    | diff            | -80              |
 
-  Scenario: Should keep previous sValidationDate if it is earlier
+  Scenario: Should keep previous validated_at & latest_answer_at if they are earlier
     Given I am the user with id "101"
     And the database has the following table 'groups_attempts':
-      | id  | group_id | item_id | validated_at        | order |
-      | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
-      | 101 | 101      | 60      | 2018-05-29 06:38:38 | 2     |
+      | id  | group_id | item_id | validated_at        | latest_answer_at    | order |
+      | 100 | 101      | 50      | 2016-05-29 06:38:37 | 2018-05-29 06:38:37 | 1     |
+      | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2018-05-29 06:38:37 | 2     |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | submitted_at        |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
