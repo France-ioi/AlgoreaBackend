@@ -40,7 +40,7 @@ Background:
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | submitted_at        | score |
+    | id | author_id | attempt_id | type       | state   | created_at          | score |
     | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 100   |
     | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
     | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 | 100   |
@@ -55,7 +55,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -76,7 +76,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -97,7 +97,7 @@ Background:
       {
         "id": "2",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -118,7 +118,7 @@ Background:
       {
         "id": "3",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",

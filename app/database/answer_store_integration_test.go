@@ -38,24 +38,24 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 			assert.NotZero(t, newID)
 
 			type answer struct {
-				AuthorID       int64
-				AttemptID      int64
-				Type           string
-				Answer         string
-				SubmittedAtSet bool
+				AuthorID     int64
+				AttemptID    int64
+				Type         string
+				Answer       string
+				CreatedAtSet bool
 			}
 			var insertedAnswer answer
 			assert.NoError(t,
 				answerStore.ByID(newID).
 					Select("author_id, attempt_id, type, answer, "+
-						"ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set").
+						"ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
 					Scan(&insertedAnswer).Error())
 			assert.Equal(t, answer{
-				AuthorID:       test.authorID,
-				AttemptID:      test.attemptID,
-				Type:           "Submission",
-				Answer:         test.answer,
-				SubmittedAtSet: true,
+				AuthorID:     test.authorID,
+				AttemptID:    test.attemptID,
+				Type:         "Submission",
+				Answer:       test.answer,
+				CreatedAtSet: true,
 			}, insertedAnswer)
 		})
 	}
@@ -85,12 +85,12 @@ func TestAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 					- {id: 58, group_id: 121, item_id: 35, order: 1}
 					- {id: 59, group_id: 121, item_id: 35, order: 1}
 				answers:
-					- {id: 1, author_id: 111, attempt_id: 56, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 2, author_id: 121, attempt_id: 57, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 3, author_id: 121, attempt_id: 55, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 4, author_id: 121, attempt_id: 55, type: Submission, submitted_at: 2018-03-22 08:44:55}
-					- {id: 5, author_id: 121, attempt_id: 55, type: Current, submitted_at: 2018-03-22 08:44:55}
-					- {id: 6, author_id: 121, attempt_id: 58, type: Submission, submitted_at: 2018-03-22 08:44:55}`)
+					- {id: 1, author_id: 111, attempt_id: 56, type: Current, created_at: 2018-03-22 08:44:55}
+					- {id: 2, author_id: 121, attempt_id: 57, type: Current, created_at: 2018-03-22 08:44:55}
+					- {id: 3, author_id: 121, attempt_id: 55, type: Current, created_at: 2018-03-22 08:44:55}
+					- {id: 4, author_id: 121, attempt_id: 55, type: Submission, created_at: 2018-03-22 08:44:55}
+					- {id: 5, author_id: 121, attempt_id: 55, type: Current, created_at: 2018-03-22 08:44:55}
+					- {id: 6, author_id: 121, attempt_id: 58, type: Submission, created_at: 2018-03-22 08:44:55}`)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -108,23 +108,23 @@ func TestAnswerStore_GetOrCreateCurrentAnswer(t *testing.T) {
 			} else {
 				assert.True(t, currentAnswerID > int64(6))
 				type answer struct {
-					AuthorID       int64
-					AttemptID      int64
-					Type           string
-					SubmittedAtSet bool
+					AuthorID     int64
+					AttemptID    int64
+					Type         string
+					CreatedAtSet bool
 				}
 				var insertedAnswer answer
 				assert.NoError(t,
 					dataStore.Answers().ByID(currentAnswerID).
 						Select(`
 							author_id, attempt_id, type,
-							ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 AS submitted_at_set`).
+							ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set`).
 						Scan(&insertedAnswer).Error())
 				assert.Equal(t, answer{
-					AuthorID:       test.authorID,
-					AttemptID:      test.attemptID,
-					Type:           "Current",
-					SubmittedAtSet: true,
+					AuthorID:     test.authorID,
+					AttemptID:    test.attemptID,
+					Type:         "Current",
+					CreatedAtSet: true,
 				}, insertedAnswer)
 			}
 		})
@@ -143,7 +143,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			name: "okay (full access)",
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]
-				answers: [{id: 200, author_id: 111, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 200, author_id: 111, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        111,
 			expectedFound: true,
@@ -152,7 +152,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			name: "okay (content access)",
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]
-				answers: [{id: 200, author_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			answerID:      200,
 			userID:        101,
 			expectedFound: true,
@@ -165,14 +165,14 @@ func TestAnswerStore_Visible(t *testing.T) {
 				groups_attempts:
 					- {id: 100, group_id: 102, item_id: 60, order: 0}
 				answers:
-					- {id: 200, author_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}`,
+					- {id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}`,
 			expectedFound: true,
 		},
 		{
 			name: "user not found",
 			fixture: `
 				groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]
-				answers: [{id: 200, author_id: 101, attempt_id: 100, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 200, author_id: 101, attempt_id: 100, created_at: 2018-03-22 08:44:55}]`,
 			userID:        404,
 			answerID:      100,
 			expectedFound: false,
@@ -183,7 +183,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 100,
 			fixture: `
 				groups_attempts: [{id: 200, group_id: 121, item_id: 50, order: 0}]
-				answers: [{id: 100, author_id: 121, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 100, author_id: 121, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -192,7 +192,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 100,
 			fixture: `
 				groups_attempts: [{id: 200, group_id: 101, item_id: 51, order: 0}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -209,7 +209,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 100,
 			fixture: `
 				groups_attempts: [{id: 200, group_id: 103, item_id: 60, order: 0}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 		{
@@ -218,7 +218,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			answerID: 100,
 			fixture: `
 				groups_attempts: [{id: 200, group_id: 102, item_id: 50, order: 0}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, submitted_at: 2018-03-22 08:44:55}]`,
+				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
 	}

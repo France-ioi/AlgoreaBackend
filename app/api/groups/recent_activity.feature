@@ -22,7 +22,7 @@ Feature: Get recent activity for group_id and item_id
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | type       | state   | submitted_at        | score |
+      | id | author_id | attempt_id | type       | state   | created_at          | score |
       | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
       | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 99    |
       | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 | 100   |
@@ -69,7 +69,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -86,7 +86,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 99,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -103,7 +103,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -130,7 +130,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -142,7 +142,7 @@ Feature: Get recent activity for group_id and item_id
 
   Scenario: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z&from.id=3"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-30T06:38:38Z&from.id=3"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -157,7 +157,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 99,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -174,7 +174,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -186,7 +186,7 @@ Feature: Get recent activity for group_id and item_id
 
   Scenario: User is a manager of the group and there are visible descendants of the item; request the third row
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-29T06:38:38Z&from.id=1"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-29T06:38:38Z&from.id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -201,7 +201,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -228,7 +228,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -245,7 +245,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
@@ -272,7 +272,7 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 99,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",

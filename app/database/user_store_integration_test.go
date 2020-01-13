@@ -105,9 +105,9 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {user_id: 5001, expires_at: "`+currentTime.Add(-10*time.Second).Format("2006-01-02 15:04:05")+`"}
 			users_threads: [{user_id: 5000, thread_id: 1}, {user_id: 5001, thread_id: 1}, {user_id: 5002, thread_id: 1}]
 			answers:
-				- {author_id: 5000, attempt_id: 2000, submitted_at: 2019-05-30 11:00:00}
-				- {author_id: 5001, attempt_id: 2001, submitted_at: 2019-05-30 11:00:00}
-				- {author_id: 5002, attempt_id: 2002, submitted_at: 2019-05-30 11:00:00}
+				- {author_id: 5000, attempt_id: 2000, created_at: 2019-05-30 11:00:00}
+				- {author_id: 5001, attempt_id: 2001, created_at: 2019-05-30 11:00:00}
+				- {author_id: 5002, attempt_id: 2002, created_at: 2019-05-30 11:00:00}
 			users_items:
 				- {user_id: 5000, item_id: 1, active_attempt_id: 2000}
 				- {user_id: 5001, item_id: 1, active_attempt_id: 2001}

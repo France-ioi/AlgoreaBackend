@@ -36,7 +36,7 @@ func (s *AnswerStore) WithItems() *AnswerStore {
 	}
 }
 
-// SubmitNewAnswer inserts a new row with type='Submission', submitted_at=NOW()
+// SubmitNewAnswer inserts a new row with type='Submission', created_at=NOW()
 // into the `answers` table.
 func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) (int64, error) {
 	var answerID int64
@@ -44,7 +44,7 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 		store := NewDataStore(db)
 		answerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO answers (id, author_id, attempt_id, answer, submitted_at)
+				INSERT INTO answers (id, author_id, attempt_id, answer, created_at)
 				VALUES (?, ?, ?, ?, NOW())`,
 			answerID, authorID, attemptID, answer).Error
 	})
@@ -52,7 +52,7 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 }
 
 // GetOrCreateCurrentAnswer returns an id of the current answer for given authorID & attemptID
-// or inserts a new row with type='Current' and submitted_at=NOW() into the `answers` table.
+// or inserts a new row with type='Current' and created_at=NOW() into the `answers` table.
 func (s *AnswerStore) GetOrCreateCurrentAnswer(authorID, attemptID int64) (answerID int64, err error) {
 	s.mustBeInTransaction()
 	recoverPanics(&err)
@@ -68,7 +68,7 @@ func (s *AnswerStore) GetOrCreateCurrentAnswer(authorID, attemptID int64) (answe
 			store := NewDataStore(db)
 			answerID = store.NewID()
 			return db.Exec(`
-				INSERT INTO answers (id, author_id, attempt_id, type, submitted_at)
+				INSERT INTO answers (id, author_id, attempt_id, type, created_at)
 				VALUES (?, ?, ?, 'Current', NOW())`,
 				answerID, authorID, attemptID).Error()
 		})

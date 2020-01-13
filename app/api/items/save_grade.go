@@ -106,7 +106,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		// store the old value into a temporary variable
 		gorm.Expr("(@old_latest_answer_at:=latest_answer_at)"),
 		// use latest_answer_at to store the answer's submission time
-		gorm.Expr("(SELECT submitted_at FROM answers WHERE id = ? FOR UPDATE)", requestData.ScoreToken.Converted.UserAnswerID),
+		gorm.Expr("(SELECT created_at FROM answers WHERE id = ? FOR UPDATE)", requestData.ScoreToken.Converted.UserAnswerID),
 		// for score_computed we compare patched scores
 		gorm.Expr(`
 			CASE

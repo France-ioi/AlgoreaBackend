@@ -10,7 +10,8 @@ ALTER TABLE `users_answers`
         FOREIGN KEY (`author_id`) REFERENCES `users` (`group_id`) ON DELETE CASCADE,
     DROP COLUMN `name`,
     DROP COLUMN `lang_prog`,
-    DROP COLUMN `validated`;
+    DROP COLUMN `validated`,
+    RENAME COLUMN `submitted_at` TO `created_at`;
 
 -- +migrate Down
 ALTER TABLE `answers`
@@ -27,6 +28,7 @@ ALTER TABLE `answers`
         AFTER `answer`,
     ADD COLUMN `validated` tinyint(1) DEFAULT NULL
         COMMENT 'Whether it is considered "validated" (above validation threshold for this item)'
-        AFTER `score`;
+        AFTER `score`,
+    RENAME COLUMN `created_at` TO `submitted_at`;
 
 UPDATE `users_answers` SET `validated` = (`score` = 100);

@@ -42,7 +42,7 @@ Background:
     | 2  | 11       | 200     | 0     |
     | 3  | 11       | 210     | 1     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | submitted_at        | score |
+    | id | author_id | attempt_id | type       | state   | created_at          | score |
     | 1  | 11        | 1          | Submission | Current | 2017-05-29 06:37:38 | 100   |
     | 2  | 11        | 2          | Submission | Current | 2017-05-29 06:38:38 | 100   |
     | 3  | 11        | 3          | Submission | Current | 2017-05-29 06:39:38 | 100   |
@@ -57,7 +57,7 @@ Background:
       {
         "id": "2",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -68,7 +68,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:37:38Z",
+        "created_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -89,7 +89,7 @@ Background:
       {
         "id": "2",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -100,7 +100,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:37:38Z",
+        "created_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -121,7 +121,7 @@ Background:
       {
         "id": "3",
         "score": 100,
-        "submitted_at": "2017-05-29T06:39:38Z",
+        "created_at": "2017-05-29T06:39:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -142,7 +142,7 @@ Background:
       {
         "id": "2",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -155,7 +155,7 @@ Background:
 
   Scenario: Full access on the item+user_group pair (same user) [with limit and reversed order]
     Given I am the user with id "11"
-    When I send a GET request to "/answers?item_id=200&author_id=11&limit=1&sort=submitted_at,id"
+    When I send a GET request to "/answers?item_id=200&author_id=11&limit=1&sort=created_at,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -163,7 +163,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:37:38Z",
+        "created_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
@@ -176,7 +176,7 @@ Background:
 
   Scenario: Start from the second row
     Given I am the user with id "21"
-    When I send a GET request to "/answers?item_id=200&author_id=11&from.submitted_at=2017-05-29T06:38:38Z&from.id=2"
+    When I send a GET request to "/answers?item_id=200&author_id=11&from.created_at=2017-05-29T06:38:38Z&from.id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -184,7 +184,7 @@ Background:
       {
         "id": "1",
         "score": 100,
-        "submitted_at": "2017-05-29T06:37:38Z",
+        "created_at": "2017-05-29T06:37:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",

@@ -19,7 +19,7 @@ Feature: Update the 'current' answer
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | submitted_at        |
+      | id  | author_id | attempt_id | created_at          |
       | 100 | 101       | 200        | 2017-05-29 06:38:38 |
 
   Scenario: Missing attempt_id

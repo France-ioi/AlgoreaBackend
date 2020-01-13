@@ -38,21 +38,21 @@ import (
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-submitted_at,id]
+//   default: [-created_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [submitted_at,-submitted_at,id,-id]
-// - name: from.submitted_at
-//   description: Start the page from the answer next to the answer with `submitted_at` = `from.submitted_at`
+//     enum: [created_at,-created_at,id,-id]
+// - name: from.created_at
+//   description: Start the page from the answer next to the answer with `created_at` = `from.created_at`
 //                and `answers.id` = `from.id`
-//                (`from.id` is required when `from.submitted_at` is present)
+//                (`from.id` is required when `from.created_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the answer next to the answer with `submitted_at`=`from.submitted_at`
+//   description: Start the page from the answer next to the answer with `created_at`=`from.created_at`
 //                and `answers.id`=`from.id`
-//                (`from.submitted_at` is required when from.id is present)
+//                (`from.created_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -82,7 +82,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	user := srv.GetUser(httpReq)
 
 	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
-		Select(`answers.id, answers.type, answers.submitted_at, answers.score,
+		Select(`answers.id, answers.type, answers.created_at, answers.score,
 		        users.login, users.first_name, users.last_name`)
 
 	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
@@ -108,9 +108,9 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"submitted_at": {ColumnName: "answers.submitted_at", FieldType: "time"},
-		"id":           {ColumnName: "answers.id", FieldType: "int64"},
-	}, "-submitted_at,id", "id", false)
+		"created_at": {ColumnName: "answers.created_at", FieldType: "time"},
+		"id":         {ColumnName: "answers.id", FieldType: "int64"},
+	}, "-created_at,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -129,7 +129,7 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 type rawAnswersData struct {
 	ID            int64
 	Type          string
-	SubmittedAt   database.Time
+	CreatedAt     database.Time
 	Score         *float32
 	UserLogin     string  `sql:"column:login"`
 	UserFirstName *string `sql:"column:first_name"`
@@ -156,7 +156,7 @@ type answersResponseAnswer struct {
 	// enum: Submission,Saved,Current
 	Type string `json:"type"`
 	// required: true
-	SubmittedAt database.Time `json:"submitted_at"`
+	CreatedAt database.Time `json:"created_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
@@ -169,10 +169,10 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	responseData := make([]answersResponseAnswer, 0, len(rawData))
 	for _, row := range rawData {
 		responseData = append(responseData, answersResponseAnswer{
-			ID:          row.ID,
-			Type:        row.Type,
-			SubmittedAt: row.SubmittedAt,
-			Score:       row.Score,
+			ID:        row.ID,
+			Type:      row.Type,
+			CreatedAt: row.CreatedAt,
+			Score:     row.Score,
 			User: answersResponseAnswerUser{
 				Login:     row.UserLogin,
 				FirstName: row.UserFirstName,

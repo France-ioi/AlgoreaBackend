@@ -36,7 +36,7 @@ Background:
     | 150 | 11       | 200     | 0     |
     | 250 | 13       | 210     | 0     |
   And the database has the following table 'answers':
-    | id  | author_id | attempt_id | type       | state   | answer   | submitted_at        | score | graded_at           |
+    | id  | author_id | attempt_id | type       | state   | answer   | created_at          | score | graded_at           |
     | 101 | 11        | 150        | Submission | Current | print(1) | 2017-05-29 06:38:38 | 100   | 2018-05-29 06:38:38 |
     | 102 | 11        | 250        | Submission | Current | print(2) | 2017-05-29 06:38:38 | 100   | 2019-05-29 06:38:38 |
 
@@ -52,7 +52,7 @@ Background:
       "score": 100.0,
       "answer": "print(1)",
       "state": "Current",
-      "submitted_at": "2017-05-29T06:38:38Z",
+      "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "200",
       "author_id": "11",
@@ -72,7 +72,7 @@ Background:
       "score": 100,
       "answer": "print(2)",
       "state": "Current",
-      "submitted_at": "2017-05-29T06:38:38Z",
+      "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "210",
       "author_id": "11",

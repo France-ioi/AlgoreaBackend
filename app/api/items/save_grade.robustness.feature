@@ -37,7 +37,7 @@ Feature: Save grading result - robustness
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | submitted_at        |
+      | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
     And time is frozen
 
@@ -695,7 +695,7 @@ Feature: Save grading result - robustness
       | id  | group_id | item_id | validated_at        | order |
       | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | score | submitted_at        |
+      | id  | author_id | attempt_id | score | created_at          |
       | 124 | 101       | 105        | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """

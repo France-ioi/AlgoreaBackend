@@ -46,7 +46,7 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	err = srv.Store.Answers().Visible(user).
 		Where("answers.id = ?", answerID).
 		Select(`answers.id, answers.author_id, groups_attempts.item_id, answers.attempt_id,
-			answers.type, answers.state, answers.answer, answers.submitted_at, answers.score,
+			answers.type, answers.state, answers.answer, answers.created_at, answers.score,
 			answers.graded_at`).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
