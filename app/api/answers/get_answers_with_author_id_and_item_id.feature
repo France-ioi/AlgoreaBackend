@@ -42,10 +42,15 @@ Background:
     | 2  | 11       | 200     | 0     |
     | 3  | 11       | 210     | 1     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | created_at          | score |
-    | 1  | 11        | 1          | Submission | Current | 2017-05-29 06:37:38 | 100   |
-    | 2  | 11        | 2          | Submission | Current | 2017-05-29 06:38:38 | 100   |
-    | 3  | 11        | 3          | Submission | Current | 2017-05-29 06:39:38 | 100   |
+    | id | author_id | attempt_id | type       | state   | created_at          |
+    | 1  | 11        | 1          | Submission | Current | 2017-05-29 06:37:38 |
+    | 2  | 11        | 2          | Submission | Current | 2017-05-29 06:38:38 |
+    | 3  | 11        | 3          | Submission | Current | 2017-05-29 06:39:38 |
+  And the database has the following table 'gradings':
+    | answer_id | score | graded_at           |
+    | 1         | 100   | 2018-05-29 06:38:38 |
+    | 2         | 100   | 2019-05-29 06:38:38 |
+    | 3         | 100   | 2019-05-29 06:38:38 |
 
   Scenario: Full access on the item+user_group pair (same user)
     Given I am the user with id "11"

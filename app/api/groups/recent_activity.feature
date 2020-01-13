@@ -22,15 +22,25 @@ Feature: Get recent activity for group_id and item_id
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
     And the database has the following table 'answers':
-      | id | author_id | attempt_id | type       | state   | created_at          | score |
-      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
-      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 99    |
-      | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 | 100   |
-      | 4  | 11        | 101        | Saved      | Current | 2017-05-30 06:38:38 | 100   |
-      | 5  | 11        | 101        | Current    | Current | 2017-05-30 06:38:38 | 100   |
-      | 6  | 31        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
-      | 7  | 31        | 100        | Submission | Current | 2017-05-29 06:38:38 | 98    |
-      | 8  | 31        | 101        | Submission | Current | 2017-05-30 06:38:38 | 100   |
+      | id | author_id | attempt_id | type       | state   | created_at          |
+      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+      | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 |
+      | 4  | 11        | 101        | Saved      | Current | 2017-05-30 06:38:38 |
+      | 5  | 11        | 101        | Current    | Current | 2017-05-30 06:38:38 |
+      | 6  | 31        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+      | 7  | 31        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+      | 8  | 31        | 101        | Submission | Current | 2017-05-30 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | graded_at           | score |
+      | 2         | 2017-05-29 06:38:38 | 100   |
+      | 1         | 2017-05-29 06:38:38 | 99    |
+      | 3         | 2017-05-30 06:38:38 | 100   |
+      | 4         | 2017-05-30 06:38:38 | 100   |
+      | 5         | 2017-05-30 06:38:38 | 100   |
+      | 6         | 2017-05-29 06:38:38 | 100   |
+      | 7         | 2017-05-29 06:38:38 | 98    |
+      | 8         | 2017-05-30 06:38:38 | 100   |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |

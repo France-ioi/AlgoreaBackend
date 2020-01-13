@@ -44,10 +44,11 @@ func (srv *Service) get(rw http.ResponseWriter, httpReq *http.Request) service.A
 	user := srv.GetUser(httpReq)
 	var result []map[string]interface{}
 	err = srv.Store.Answers().Visible(user).
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Where("answers.id = ?", answerID).
 		Select(`answers.id, answers.author_id, groups_attempts.item_id, answers.attempt_id,
-			answers.type, answers.state, answers.answer, answers.created_at, answers.score,
-			answers.graded_at`).
+			answers.type, answers.state, answers.answer, answers.created_at, gradings.score,
+			gradings.graded_at`).
 		ScanIntoSliceOfMaps(&result).Error()
 	service.MustNotBeError(err)
 	if len(result) == 0 {

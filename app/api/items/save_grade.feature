@@ -101,10 +101,10 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should be:
-      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | 100   | 1                                                |
-      | 124 | 101       | null  | null                                             |
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123       | 100   | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -178,10 +178,10 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should be:
-      | id  | author_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | <score> | 1                                                |
-      | 124 | 101       | null    | null                                             |
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123       | <score> | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -262,10 +262,10 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should be:
-      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | null  | null                                             |
-      | 124 | 101       | 99    | 1                                                |
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 124       | 99    | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -278,10 +278,14 @@ Feature: Save grading result
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | score | created_at          |
-      | 123 | 101       | 100        | 5     | 2018-05-29 06:38:38 |
-      | 124 | 101       | 101        | null  | 2018-05-29 06:38:38 |
-      | 125 | 101       | 100        | 20    | 2018-05-29 06:38:38 |
+      | id  | author_id | attempt_id | created_at          |
+      | 123 | 101       | 100        | 2018-05-29 06:38:38 |
+      | 124 | 101       | 101        | 2018-05-29 06:38:38 |
+      | 125 | 101       | 100        | 2018-05-29 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | score | graded_at           |
+      | 123       | 5     | 2018-05-29 06:38:38 |
+      | 125       | 20    | 2018-05-29 06:38:38 |
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
       | 100 | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
@@ -338,11 +342,12 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should be:
-      | id  | author_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | 5       | null                                             |
-      | 124 | 101       | <score> | 1                                                |
-      | 125 | 101       | 20      | null                                             |
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123       | 5       | 0                                                |
+      | 124       | <score> | 1                                                |
+      | 125       | 20      | 0                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |
@@ -418,10 +423,10 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should be:
-      | id  | author_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
-      | 123 | 101       | null  | null                                             |
-      | 124 | 101       | 100   | 1                                                |
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 124       | 100   | 1                                                |
     And the table "users_items" should be:
       | user_id | item_id |
       | 101     | 50      |

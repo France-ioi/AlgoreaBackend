@@ -136,8 +136,9 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.Answers().WithUsers().WithItems().
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Select(
-			`answers.id as id, answers.created_at, answers.score,
+			`answers.id as id, answers.created_at, gradings.score,
        items.id AS item__id, items.type AS item__type,
 		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
 			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
@@ -169,9 +170,9 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		condition := "answers.score "
+		condition := "gradings.score "
 		if !validated {
-			condition += "!"
+			condition += "IS NULL OR gradings.score !"
 		}
 		condition += "= 100"
 		query = query.Where(condition)

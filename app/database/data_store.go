@@ -26,6 +26,11 @@ func (s *DataStore) Answers() *AnswerStore {
 	return &AnswerStore{NewDataStoreWithTable(s.DB, "answers")}
 }
 
+// Gradings returns a GradingStore
+func (s *DataStore) Gradings() *GradingStore {
+	return &GradingStore{NewDataStoreWithTable(s.DB, "gradings")}
+}
+
 // Users returns a UserStore
 func (s *DataStore) Users() *UserStore {
 	return &UserStore{NewDataStoreWithTable(s.DB, "users")}

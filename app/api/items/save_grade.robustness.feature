@@ -695,8 +695,11 @@ Feature: Save grading result - robustness
       | id  | group_id | item_id | validated_at        | order |
       | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | score | created_at          |
-      | 124 | 101       | 105        | 0     | 2017-05-29 06:38:38 |
+      | id  | author_id | attempt_id | created_at          |
+      | 124 | 101       | 105        | 2017-05-29 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | score | graded_at           |
+      | 124       | 0     | 2017-05-29 06:38:38 |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

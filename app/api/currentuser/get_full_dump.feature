@@ -232,8 +232,7 @@ Feature: Export the current user's data
       ],
       "answers": [
         {
-          "id": "1", "score": null, "attempt_id": "111",
-          "author_id": "11", "answer": null, "graded_at": null,
+          "id": "1", "attempt_id": "111", "author_id": "11", "answer": null,
           "state": null, "created_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],

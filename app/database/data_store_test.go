@@ -19,6 +19,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		wantTable string
 	}{
 		{"Answers", func(store *DataStore) *DB { return store.Answers().Where("") }, "`answers`"},
+		{"Gradings", func(store *DataStore) *DB { return store.Gradings().Where("") }, "`gradings`"},
 		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "`groups`"},
 		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "`groups_ancestors`"},
 		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "`groups_ancestors_active`"},
@@ -66,6 +67,7 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		wantType interface{}
 	}{
 		{"Answers", func(store *DataStore) interface{} { return store.Answers() }, &AnswerStore{}},
+		{"Gradings", func(store *DataStore) interface{} { return store.Gradings() }, &GradingStore{}},
 		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
 		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
 		{"ActiveGroupAncestors", func(store *DataStore) interface{} { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},

@@ -82,7 +82,8 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 	user := srv.GetUser(httpReq)
 
 	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
-		Select(`answers.id, answers.type, answers.created_at, answers.score,
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
+		Select(`answers.id, answers.type, answers.created_at, gradings.score,
 		        users.login, users.first_name, users.last_name`)
 
 	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")

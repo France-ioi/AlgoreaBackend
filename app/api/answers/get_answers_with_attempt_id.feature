@@ -40,10 +40,15 @@ Background:
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
   And the database has the following table 'answers':
-    | id | author_id | attempt_id | type       | state   | created_at          | score |
-    | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 | 100   |
-    | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 | 100   |
-    | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 | 100   |
+    | id | author_id | attempt_id | type       | state   | created_at          |
+    | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+    | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+    | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 |
+  And the database has the following table 'gradings':
+    | answer_id | score | graded_at           |
+    | 1         | 100   | 2018-05-29 06:38:38 |
+    | 2         | 100   | 2019-05-29 06:38:38 |
+    | 3         | 100   | 2019-05-29 06:38:38 |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "11"

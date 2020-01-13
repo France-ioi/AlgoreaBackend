@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -81,7 +82,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
-	if !saveNewScoreIntoAnswer(store, user, requestData, score) {
+	if !saveNewScoreIntoGradings(store, user, requestData, score) {
 		return validated, false
 	}
 
@@ -137,27 +138,25 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	return validated, true
 }
 
-func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
+func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
 	requestData *saveGradeRequestParsed, score float64) bool {
 	answerID := requestData.ScoreToken.Converted.UserAnswerID
-	answerScope := store.Answers().ByID(answerID).
-		Where("author_id = ?", user.GroupID).
-		Where("(SELECT item_id FROM groups_attempts WHERE id = attempt_id) = ?", requestData.TaskToken.Converted.LocalItemID)
+	gradingStore := store.Gradings()
 
-	updateResult := answerScope.Where("score = ? OR score IS NULL", score).
-		UpdateColumn(map[string]interface{}{
-			"graded_at": database.Now(),
-			"score":     score,
-		})
-	service.MustNotBeError(updateResult.Error())
+	insertError := gradingStore.InsertMap(map[string]interface{}{
+		"answer_id": answerID, "score": score, "graded_at": database.Now(),
+	})
 
-	if updateResult.RowsAffected() == 0 {
+	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (the answer has been removed)
+	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1452 {
+		return false
+	}
+
+	// ERROR 1062 (23000): Duplicate entry (already graded)
+	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1062 {
 		var oldScore *float64
-		err := answerScope.PluckFirst("score", &oldScore).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return false
-		}
-		service.MustNotBeError(err)
+		service.MustNotBeError(gradingStore.
+			Where("answer_id = ?", answerID).PluckFirst("score", &oldScore).Error())
 		if oldScore != nil {
 			if *oldScore != score {
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
@@ -173,6 +172,7 @@ func saveNewScoreIntoAnswer(store *database.DataStore, user *database.User,
 			return false
 		}
 	}
+	service.MustNotBeError(insertError)
 
 	return true
 }
