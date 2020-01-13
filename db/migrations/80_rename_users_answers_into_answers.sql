@@ -12,7 +12,7 @@ ALTER TABLE `users_answers`
     DROP COLUMN `lang_prog`,
     DROP COLUMN `validated`,
     RENAME COLUMN `submitted_at` TO `created_at`,
-    MODIFY COLUMN `type` enum('Submission','Saved','Current') NOT NULL DEFAULT 'Submission'
+    MODIFY COLUMN `type` enum('Submission','Saved','Current') NOT NULL
         COMMENT '\'Submission\' for answers submitted for grading, \'Saved\' for manual backups of answers, \'Current\' for automatic snapshots of the latest answers (unique for a user on an attempt)';
 
 CREATE TABLE `gradings` (
