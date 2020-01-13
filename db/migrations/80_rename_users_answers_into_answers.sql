@@ -11,7 +11,9 @@ ALTER TABLE `users_answers`
     DROP COLUMN `name`,
     DROP COLUMN `lang_prog`,
     DROP COLUMN `validated`,
-    RENAME COLUMN `submitted_at` TO `created_at`;
+    RENAME COLUMN `submitted_at` TO `created_at`,
+    MODIFY COLUMN `type` enum('Submission','Saved','Current') NOT NULL DEFAULT 'Submission'
+        COMMENT '\'Submission\' for answers submitted for grading, \'Saved\' for manual backups of answers, \'Current\' for automatic snapshots of the latest answers (unique for a user on an attempt)';
 
 -- +migrate Down
 ALTER TABLE `answers`
@@ -29,6 +31,7 @@ ALTER TABLE `answers`
     ADD COLUMN `validated` tinyint(1) DEFAULT NULL
         COMMENT 'Whether it is considered "validated" (above validation threshold for this item)'
         AFTER `score`,
-    RENAME COLUMN `created_at` TO `submitted_at`;
+    RENAME COLUMN `created_at` TO `submitted_at`,
+    MODIFY COLUMN `type` enum('Submission','Saved','Current') NOT NULL DEFAULT 'Submission' COMMENT '';
 
 UPDATE `users_answers` SET `validated` = (`score` = 100);
