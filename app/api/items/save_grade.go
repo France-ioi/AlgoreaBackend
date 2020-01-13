@@ -86,34 +86,49 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	}
 
 	// Build query to update groups_attempts
-	// The score is set towards the end, so that the IF condition on
-	// best_answer_at is computed before score is updated
 	columnsToUpdate := []string{
 		"tasks_tried",
-		"latest_activity_at",
-		"best_answer_at",
 		"latest_answer_at",
-		"score",
+		"score_obtained_at",
+		"score_computed",
 		"result_propagation_state",
 	}
+	newScoreExpression := gorm.Expr(`
+			LEAST(GREATEST(
+				CASE score_edit_rule
+					WHEN 'set' THEN score_edit_value
+					WHEN 'diff' THEN ? + score_edit_value
+					ELSE ?
+				END, score_computed, 0), 100)`, score, score)
 	values := []interface{}{
-		1,
-		database.Now(),
-		gorm.Expr("IF(? > score, ?, best_answer_at)", score, database.Now()),
-		database.Now(),
-		gorm.Expr("GREATEST(?, score)", score),
-		"changed",
+		requestData.ScoreToken.Converted.UserAnswerID, // for join
+		1, // tasks_tried
+		gorm.Expr("GREATEST(users_answers.submitted_at, IFNULL(latest_answer_at, users_answers.submitted_at))"), // latest_answer_at
+		// for score_computed we compare patched scores
+		gorm.Expr(`
+			CASE
+			  -- New best score or no time saved yet
+				-- Note that when the score = 0, score_obtained_at is the time of the first submission
+				WHEN score_obtained_at IS NULL OR score_computed < ? THEN users_answers.submitted_at
+				-- We may get the result of an earlier submission after one with the same score
+				WHEN score_computed = ? THEN LEAST(score_obtained_at, users_answers.submitted_at)
+				-- New score if lower than the best score
+				ELSE score_obtained_at
+			END`, newScoreExpression, newScoreExpression), // score_obtained_at
+		newScoreExpression, // score_computed
+		"changed",          // result_propagation_state
 	}
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate, "validated_at")
-		values = append(values, gorm.Expr("IFNULL(validated_at, ?)", database.Now()))
+		values = append(values, gorm.Expr("LEAST(IFNULL(validated_at, users_answers.submitted_at), users_answers.submitted_at)"))
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE groups_attempts "+updateExpr+" WHERE id = ?", values...).Error()) // nolint:gosec
+		store.DB.Exec("UPDATE groups_attempts JOIN users_answers ON users_answers.id = ? "+ // nolint:gosec
+			updateExpr+" WHERE groups_attempts.id = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 	return validated, true
 }

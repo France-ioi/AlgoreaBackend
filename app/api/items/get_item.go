@@ -51,7 +51,7 @@ type itemUserActiveAttempt struct {
 	// Nullable; only if `can_view` >= 'content'
 	AttemptID int64 `json:"attempt_id,string"`
 	// only if `can_view` >= 'content'
-	Score float32 `json:"score"`
+	ScoreComputed float32 `json:"score_computed"`
 	// only if `can_view` >= 'content'
 	Submissions int32 `json:"submissions"`
 	// only if `can_view` >= 'content'
@@ -259,7 +259,7 @@ type rawItem struct {
 
 	// from groups_attempts for the active attempt of the current user
 	UserActiveAttemptID *int64         `sql:"column:attempt_id"`
-	UserScore           float32        `sql:"column:score"`
+	UserScoreComputed   float32        `sql:"column:score_computed"`
 	UserSubmissions     int32          `sql:"column:submissions"`
 	UserValidated       bool           `sql:"column:validated"`
 	UserFinished        bool           `sql:"column:finished"`
@@ -339,7 +339,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
 			groups_attempts.id AS attempt_id,
-			groups_attempts.score AS score,
+			groups_attempts.score_computed AS score_computed,
 			groups_attempts.submissions AS submissions,
 			groups_attempts.validated AS validated,
 			groups_attempts.finished AS finished,
@@ -424,14 +424,14 @@ func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *databa
 		return nil
 	}
 	return &itemUserActiveAttempt{
-		AttemptID:   *rawData.UserActiveAttemptID,
-		Score:       rawData.UserScore,
-		Submissions: rawData.UserSubmissions,
-		Validated:   rawData.UserValidated,
-		Finished:    rawData.UserFinished,
-		HintsCached: rawData.UserHintsCached,
-		StartedAt:   rawData.UserStartedAt,
-		ValidatedAt: rawData.UserValidatedAt,
+		AttemptID:     *rawData.UserActiveAttemptID,
+		ScoreComputed: rawData.UserScoreComputed,
+		Submissions:   rawData.UserSubmissions,
+		Validated:     rawData.UserValidated,
+		Finished:      rawData.UserFinished,
+		HintsCached:   rawData.UserHintsCached,
+		StartedAt:     rawData.UserStartedAt,
+		ValidatedAt:   rawData.UserValidatedAt,
 	}
 }
 

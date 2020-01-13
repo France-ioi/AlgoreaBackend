@@ -40,7 +40,7 @@ func testUnlocks(db *database.DB, t *testing.T) {
 	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
 	for _, id := range []int64{11, 13, 14} {
 		assert.NoError(t, groupAttemptStore.Where("id = ?", id).UpdateColumn(
-			"score", 100,
+			"score_computed", 100,
 		).Error())
 	}
 	itemUnlockingRuleStore := database.NewDataStore(db).ItemUnlockingRules()

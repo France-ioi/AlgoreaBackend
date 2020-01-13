@@ -35,9 +35,9 @@ Background:
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
   And the database has the following table 'groups_attempts':
-    | group_id | item_id | score | order | result_propagation_state |
-    | 11       | 21      | 0     | 1     | done                     |
-    | 11       | 50      | 10    | 1     | done                     |
+    | group_id | item_id | score_computed | order | result_propagation_state |
+    | 11       | 21      | 0              | 1     | done                     |
+    | 11       | 50      | 10             | 1     | done                     |
   And the database has the following table 'languages':
     | id |
     | 2  |
@@ -86,9 +86,9 @@ Background:
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
     And the database table 'groups_attempts' has also the following rows:
-      | group_id | item_id | order | score | result_propagation_state |
-      | 11       | 112     | 1     | 50    | done                     |
-      | 11       | 134     | 1     | 60    | done                     |
+      | group_id | item_id | order | score_computed | result_propagation_state |
+      | 11       | 112     | 1     | 50             | done                     |
+      | 11       | 134     | 1     | 60             | done                     |
     When I send a PUT request to "/items/50" with the following body:
       """
       {
@@ -158,8 +158,8 @@ Background:
       | 5577006791947779410 | 134     | info               | none                     | none                | none               | false              |
     And the table "groups_attempts" should stay unchanged but the row with item_id "50"
     And the table "groups_attempts" at item_id "50" should be:
-      | group_id | item_id | score | order | result_propagation_state |
-      | 11       | 50      | 55    | 1     | done                     |
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 55             | 1     | done                     |
 
   Scenario: Valid with empty full_screen
     Given I am the user with id "11"
@@ -216,8 +216,8 @@ Background:
     And the table "permissions_granted" should stay unchanged
     And the table "groups_attempts" should stay unchanged but the row with item_id "50"
     And the table "groups_attempts" at item_id "50" should be:
-      | group_id | item_id | score | order | result_propagation_state |
-      | 11       | 50      | 0     | 1     | done                     |
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 0              | 1     | done                     |
 
   Scenario: Keep existing contest participants group
     Given I am the user with id "11"
@@ -270,8 +270,8 @@ Background:
     And the table "permissions_granted" should stay unchanged
     And the table "groups_attempts" should stay unchanged but the row with item_id "50"
     And the table "groups_attempts" at item_id "50" should be:
-      | group_id | item_id | score | order | result_propagation_state |
-      | 11       | 50      | 0     | 1     | done                     |
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 0              | 1     | done                     |
 
   Scenario: Recomputes groups_attempts if validation_type is given
     Given I am the user with id "11"
@@ -293,5 +293,5 @@ Background:
     And the table "permissions_granted" should stay unchanged
     And the table "groups_attempts" should stay unchanged but the row with item_id "50"
     And the table "groups_attempts" at item_id "50" should be:
-      | group_id | item_id | score | order | result_propagation_state |
-      | 11       | 50      | 0     | 1     | done                     |
+      | group_id | item_id | score_computed | order | result_propagation_state |
+      | 11       | 50      | 0              | 1     | done                     |

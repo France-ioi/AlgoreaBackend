@@ -166,7 +166,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,
-			IFNULL(MAX(attempt_with_best_score.score), 0) AS score,
+			IFNULL(MAX(attempt_with_best_score.score_computed), 0) AS score,
 			IFNULL(MAX(attempt_with_best_score.validated), 0) AS validated,
 			MAX(last_attempt.latest_activity_at) AS latest_activity_at,
 			IFNULL(MAX(attempt_with_best_score.hints_cached), 0) AS hints_requested,
@@ -188,26 +188,30 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 				teams.id = team_links.parent_group_id`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, score, best_answer_at FROM groups_attempts
+				SELECT id, score_computed, score_obtained_at
+				FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				LIMIT 1
 			) AS attempt_with_best_score_for_user ON 1`).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT id, score, best_answer_at FROM groups_attempts
+				SELECT id, score_computed, score_obtained_at
+				FROM groups_attempts
 				WHERE group_id = teams.id AND item_id = items.id
-				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				LIMIT 1
 			) AS attempt_with_best_score_for_team ON 1`).
 		Joins(`
 			LEFT JOIN groups_attempts AS attempt_with_best_score
-			ON attempt_with_best_score.id = IF(attempt_with_best_score_for_team.score IS NOT NULL AND
-				attempt_with_best_score_for_user.score IS NOT NULL AND (
-				attempt_with_best_score_for_team.score > attempt_with_best_score_for_user.score OR
+			ON attempt_with_best_score.id = IF(attempt_with_best_score_for_team.score_computed IS NOT NULL AND
+				attempt_with_best_score_for_user.score_computed IS NOT NULL AND (
+				attempt_with_best_score_for_team.score_computed > attempt_with_best_score_for_user.score_computed OR
 					(
-						attempt_with_best_score_for_team.score = attempt_with_best_score_for_user.score AND
-						attempt_with_best_score_for_team.best_answer_at < attempt_with_best_score_for_user.best_answer_at
+						attempt_with_best_score_for_team.score_computed = attempt_with_best_score_for_user.score_computed AND
+						attempt_with_best_score_for_team.score_obtained_at < attempt_with_best_score_for_user.score_obtained_at
 					)
-				) OR attempt_with_best_score_for_user.score IS NULL,
+				) OR attempt_with_best_score_for_user.score_computed IS NULL,
 				attempt_with_best_score_for_team.id,
 				attempt_with_best_score_for_user.id
 			)`).
@@ -288,7 +292,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Order(gorm.Expr(
 			"FIELD(items.id"+strings.Repeat(", ?", len(itemIDs))+")",
 			itemIDs...)).
-		Order("MIN(attempt_with_best_score.score), MAX(attempt_with_best_score.best_answer_at)").
+		Order("MIN(attempt_with_best_score.score_computed), MAX(attempt_with_best_score.score_obtained_at)").
 		Scan(&result).Error())
 
 	render.Respond(w, r, result)

@@ -17,7 +17,7 @@ type itemAttemptsViewResponseRow struct {
 	// required: true
 	Order int32 `json:"order"`
 	// required: true
-	Score float32 `json:"score"`
+	ScoreComputed float32 `json:"score_computed"`
 	// required: true
 	Validated bool `json:"validated"`
 	// Nullable
@@ -133,7 +133,7 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		Where("item_id = ?", itemID).
 		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_id").
 		Select(`
-			groups_attempts.id, groups_attempts.order, groups_attempts.score, groups_attempts.validated,
+			groups_attempts.id, groups_attempts.order, groups_attempts.score_computed, groups_attempts.validated,
 			groups_attempts.started_at, creators.login AS user_creator__login,
 			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
 			creators.group_id AS user_creator__group_id`)

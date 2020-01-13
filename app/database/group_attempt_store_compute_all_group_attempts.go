@@ -98,7 +98,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 							MAX(aggregated_children_attempts.validated_at) AS max_validated_at,
 							MAX(IF(items_items.category = 'Validation', aggregated_children_attempts.validated_at, NULL))
 								AS max_validated_at_categories,
-							SUM(IFNULL(aggregated_children_attempts.score, 0) * items_items.score_weight) /
+							SUM(IFNULL(aggregated_children_attempts.score_computed, 0) * items_items.score_weight) /
 								COALESCE(NULLIF(SUM(items_items.score_weight), 0), 1) AS average_score
 						FROM items_items ` +
 					// We use LEFT JOIN LATERAL to aggregate attempts grouped by target_groups_attempts.group_id & items_items.child_item_id.
@@ -112,7 +112,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								MAX(tasks_tried) AS tasks_tried,
 								MAX(tasks_with_help) AS tasks_with_help,
 								MAX(tasks_solved) AS tasks_solved,
-								MAX(score) AS score
+								MAX(score_computed) AS score_computed
 							FROM groups_attempts AS children_attempts
 							WHERE children_attempts.group_id = target_groups_attempts.group_id AND
 								children_attempts.item_id = items_items.child_item_id
@@ -145,8 +145,13 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 								THEN children_stats.max_validated_at
 							ELSE NULL
 						END,
-						target_groups_attempts.score = IF(items.no_score OR children_stats.average_score IS NULL,
-							0, children_stats.average_score),
+						target_groups_attempts.score_computed = IF(items.no_score OR children_stats.average_score IS NULL,
+							0,
+							LEAST(GREATEST(CASE target_groups_attempts.score_edit_rule
+								WHEN 'set' THEN target_groups_attempts.score_edit_value
+								WHEN 'diff' THEN children_stats.average_score + target_groups_attempts.score_edit_value
+								ELSE children_stats.average_score
+							END, 0), 100)),
 						target_groups_attempts.result_propagation_state = 'changed'
 					WHERE target_groups_attempts.result_propagation_state = 'processing'`
 				updateStatement, err = ds.db.CommonDB().Prepare(updateQuery)
@@ -174,7 +179,7 @@ func (s *GroupAttemptStore) ComputeAllGroupAttempts() (err error) {
 					NOW()
 				FROM groups_attempts
 				JOIN item_unlocking_rules ON item_unlocking_rules.unlocking_item_id = groups_attempts.item_id AND
-					item_unlocking_rules.score <= groups_attempts.score
+					item_unlocking_rules.score <= groups_attempts.score_computed
 				JOIN ` + "`groups`" + ` ON groups_attempts.group_id = groups.id
 				WHERE groups_attempts.result_propagation_state = 'changed'
 			ON DUPLICATE KEY UPDATE

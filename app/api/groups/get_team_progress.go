@@ -151,7 +151,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Select(`
 			items.id AS item_id,
 			groups.id AS group_id,
-			IFNULL(attempt_with_best_score.score, 0) AS score,
+			IFNULL(attempt_with_best_score.score_computed, 0) AS score,
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
 			(SELECT MAX(latest_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
@@ -170,9 +170,11 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`JOIN items ON items.id IN ?`, itemsQuery.SubQuery()).
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT score, validated, hints_cached, submissions, group_id FROM groups_attempts
+				SELECT score_computed, validated, hints_cached, submissions, group_id
+				FROM groups_attempts
 				WHERE group_id = groups.id AND item_id = items.id
-				ORDER BY group_id, item_id, score DESC, best_answer_at LIMIT 1
+				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
+				LIMIT 1
 			) AS attempt_with_best_score ON 1`).
 		Where("groups.id IN (?)", teamIDs).
 		Order(gorm.Expr(

@@ -39,14 +39,14 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
       | 103      | 60      | content            |
       | 104      | 60      | content            |
     And the database has the following table 'groups_attempts':
-      | id | group_id | item_id | order | latest_activity_at  | started_at          | score | best_answer_at | validated_at |
-      | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 3  | 101      | 70      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 4  | 101      | 80      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 5  | 101      | 90      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 6  | 102      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 7  | 103      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
-      | 8  | 104      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0     | null           | null         |
+      | id | group_id | item_id | order | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
+      | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 3  | 101      | 70      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 4  | 101      | 80      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 5  | 101      | 90      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 6  | 102      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 7  | 103      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
+      | 8  | 104      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
     And time is frozen
 
   Scenario: Invalid attempt_id

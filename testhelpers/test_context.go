@@ -191,8 +191,26 @@ func (ctx *TestContext) initDB() error {
 	}
 	db := ctx.db()
 
-	for _, query := range ctx.featureQueries {
-		_, err := db.Exec(query.sql, query.values)
+	if len(ctx.featureQueries) > 0 {
+		tx, err := db.Begin()
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+		if err != nil {
+			return err
+		}
+		for _, query := range ctx.featureQueries {
+			_, err = tx.Exec(query.sql, query.values)
+			if err != nil {
+				return err
+			}
+		}
+		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+		if err != nil {
+			return err
+		}
+		err = tx.Commit()
 		if err != nil {
 			return err
 		}
