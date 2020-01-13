@@ -14,7 +14,7 @@ import (
 // swagger:operation GET /answers answers itemAnswersView
 // ---
 // summary: List answers
-// description: Return answers (i.e., history of submissions and current answer)
+// description: Return answers (i.e., saved answers, current answer and submissions)
 //   for a given item and user, or from a given attempt.
 //
 //   * One of (`author_id`, `item_id`) pair or `attempt_id` is required.
