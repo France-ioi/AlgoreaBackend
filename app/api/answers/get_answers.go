@@ -21,8 +21,8 @@ import (
 //
 //   * The user should have at least 'content' access to the item.
 //
-//   * If `item_id` and `author_id` are given, the authenticated user should have `group_id` equal to the input `author_id`
-//   or be an owner of a group containing the input `author_id`.
+//   * If `item_id` and `author_id` are given, the authenticated user should be the input `author_id`
+//     or a manager of a group containing the input `author_id`.
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
