@@ -77,11 +77,11 @@ Feature: Update the 'current' answer
       | 101       | 200        | Submission | null    | null       | 0                                                 |
       | 101       | 200        | Current    | print 1 | some state | 1                                                 |
 
-  Scenario: User is able to update the 'current' answer
+  Scenario: User is able to replace the 'current' answer
     Given I am the user with id "101"
     And the database has the following table 'answers':
-      | id  | author_id | attempt_id | type    | created_at          |
-      | 101 | 101       | 200        | Current | 2017-05-29 06:38:38 |
+      | author_id | attempt_id | type    | created_at          |
+      | 101       | 200        | Current | 2017-05-29 06:38:38 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
@@ -104,6 +104,6 @@ Feature: Update the 'current' answer
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
     And the table "answers" should be:
-      | id  | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 100 | 101       | 200        | Submission | null    | null       | 0                                                 |
-      | 101 | 101       | 200        | Current    | print 1 | some state | 0                                                 |
+      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 200        | Submission | null    | null       | 0                                                 |
+      | 101       | 200        | Current    | print 1 | some state | 1                                                 |

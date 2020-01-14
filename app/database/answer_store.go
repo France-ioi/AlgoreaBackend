@@ -1,9 +1,5 @@
 package database
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
 // AnswerStore implements database operations on `answers`
 type AnswerStore struct {
 	*DataStore
@@ -48,32 +44,6 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 				VALUES (?, ?, ?, ?, NOW(), 'Submission')`,
 			answerID, authorID, attemptID, answer).Error
 	})
-	return answerID, err
-}
-
-// GetOrCreateCurrentAnswer returns an id of the current answer for given authorID & attemptID
-// or inserts a new row with type='Current' and created_at=NOW() into the `answers` table.
-func (s *AnswerStore) GetOrCreateCurrentAnswer(authorID, attemptID int64) (answerID int64, err error) {
-	s.mustBeInTransaction()
-	recoverPanics(&err)
-
-	err = s.WithWriteLock().
-		Joins("JOIN groups_attempts ON groups_attempts.id = answers.attempt_id").
-		Where("answers.author_id = ?", authorID).
-		Where("answers.type = 'Current'").
-		Where("attempt_id = ?", attemptID).
-		PluckFirst("answers.id", &answerID).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		err = s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
-			store := NewDataStore(db)
-			answerID = store.NewID()
-			return db.Exec(`
-				INSERT INTO answers (id, author_id, attempt_id, type, created_at)
-				VALUES (?, ?, ?, 'Current', NOW())`,
-				answerID, authorID, attemptID).Error()
-		})
-	}
-	mustNotBeError(err)
 	return answerID, err
 }
 

@@ -72,15 +72,24 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	}
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		answerStore := store.Answers()
-		var currentAnswerID int64
-		currentAnswerID, err = answerStore.GetOrCreateCurrentAnswer(user.GroupID, attemptID)
-		service.MustNotBeError(err)
+		answersStore := store.Answers()
+		service.MustNotBeError(answersStore.Where("answers.author_id = ?", user.GroupID).
+			Where("answers.attempt_id = ?", attemptID).
+			Where("answers.type = 'Current'").
+			Delete().Error())
 
-		return answerStore.ByID(currentAnswerID).UpdateColumn(map[string]interface{}{
-			"state":  requestData.State,
-			"answer": requestData.Answer,
-		}).Error()
+		return answersStore.RetryOnDuplicatePrimaryKeyError(func(store *database.DataStore) error {
+			answerID := store.NewID()
+			return store.Answers().InsertMap(map[string]interface{}{
+				"id":         answerID,
+				"author_id":  user.GroupID,
+				"attempt_id": attemptID,
+				"type":       "Current",
+				"state":      requestData.State,
+				"answer":     requestData.Answer,
+				"created_at": database.Now(),
+			})
+		})
 	})
 	service.MustNotBeError(err)
 
