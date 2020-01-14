@@ -28,10 +28,9 @@ Feature: Update the 'current' answer
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/200/answers/current" with the following body:
       """
       {
-        "attempt_id": "200",
         "answer": "print 1",
         "state": "some state"
       }
@@ -57,10 +56,9 @@ Feature: Update the 'current' answer
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 100               |
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/200/answers/current" with the following body:
       """
       {
-        "attempt_id": "200",
         "answer": "print 1",
         "state": "some state"
       }
@@ -87,10 +85,9 @@ Feature: Update the 'current' answer
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 101     | 50      | 200               |
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/200/answers/current" with the following body:
       """
       {
-        "attempt_id": "200",
         "answer": "print 1",
         "state": "some state"
       }

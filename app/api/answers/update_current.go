@@ -13,8 +13,6 @@ import (
 // swagger:model
 type updateCurrentRequest struct {
 	// required: true
-	AttemptID int64 `json:"attempt_id,string" validate:"set"`
-	// required: true
 	// minLength: 1
 	Answer string `json:"answer" validate:"set,min=1"`
 	// required: true
@@ -22,7 +20,7 @@ type updateCurrentRequest struct {
 	State string `json:"state" validate:"set,min=1"`
 }
 
-// swagger:operation PUT /answers/current answers itemAnswerUpdateCurrent
+// swagger:operation PUT /attempts/{attempt_id}/answers/current answers itemAnswerUpdateCurrent
 // ---
 // summary: Update current answer
 // description: Update user's current answer. Used for auto-saving while working on a task.
@@ -32,6 +30,10 @@ type updateCurrentRequest struct {
 //   * `groups_attempts.group_id` should be the user's selfGroup (if `items.has_attempts=0`) or the user's team (otherwise)
 //   [this extra check just ensures the consistency of data]
 // parameters:
+// - name: attempt_id
+//   in: path
+//   type: integer
+//   required: true
 // - name: current answer information
 //   in: body
 //   required: true
@@ -49,17 +51,20 @@ type updateCurrentRequest struct {
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
 func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	var requestData updateCurrentRequest
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpReq, "attempt_id")
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
+	var requestData updateCurrentRequest
 	formData := formdata.NewFormData(&requestData)
-	err := formData.ParseJSONRequestData(httpReq)
+	err = formData.ParseJSONRequestData(httpReq)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(httpReq)
 
-	attemptID := requestData.AttemptID
 	found, _, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
 	service.MustNotBeError(err)
 	if !found {
