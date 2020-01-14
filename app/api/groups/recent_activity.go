@@ -137,11 +137,15 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
 	query := srv.Store.Answers().WithUsers().WithItems().
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(
-			`answers.id as id, answers.created_at, gradings.score,
-       items.id AS item__id, items.type AS item__type,
-		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
-			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
+		Select(`
+			answers.id as id, answers.created_at, gradings.score,
+			items.id AS item__id, items.type AS item__type,
+			users.login AS user__login,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
+			IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`,
+			user.GroupID, user.GroupID).
+		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user).
 		Where("groups_attempts.item_id IN ?", itemDescendants.SubQuery()).
 		Where("answers.type='Submission'").

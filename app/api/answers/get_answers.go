@@ -26,6 +26,10 @@ import (
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
+//
+//
+//   Users `first_name` and `last_name` are only shown for the authenticated user or if the user
+//   approved access to their personal info for some group managed by the authenticated user.
 // parameters:
 // - name: author_id
 //   in: query
@@ -83,8 +87,13 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 
 	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
-		Select(`answers.id, answers.type, answers.created_at, gradings.score,
-		        users.login, users.first_name, users.last_name`)
+		Select(`
+			answers.id, answers.type, answers.created_at, gradings.score,
+			users.login,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name`,
+			user.GroupID, user.GroupID).
+		WithPersonalInfoViewApprovals(user)
 
 	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")

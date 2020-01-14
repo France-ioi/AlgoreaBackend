@@ -10,13 +10,19 @@ Feature: Get recent activity for group_id and item_id
       | 13 |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
+      | 11       | 31         |
       | 13       | 21         |
+      | 31       | 31         |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 13              | 11             | 2019-05-30 11:00:00            |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 11                | 11             | 1       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 1       |
-      | 78 | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 11             | 0       |
+      | 13                | 13             | 1       |
+      | 21                | 21             | 1       |
+      | 31                | 31             | 1       |
     And the database has the following table 'groups_attempts':
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |
@@ -47,6 +53,7 @@ Feature: Get recent activity for group_id and item_id
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 200     | info               |
+      | 31       | 200     | info               |
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id |
       | 1  | 200              | 200           |
@@ -286,6 +293,60 @@ Feature: Get recent activity for group_id and item_id
         "user": {
           "first_name": "John",
           "last_name": "Doe",
+          "login": "user"
+        }
+      }
+    ]
+    """
+
+  Scenario: User can see their own name
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/31/recent_activity?item_id=200&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "created_at": "2017-05-30T06:38:38Z",
+        "id": "8",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Category 1"
+          },
+          "type": "Category"
+        },
+        "score": 100,
+        "user": {
+          "first_name": "Jane",
+          "last_name": "Doe",
+          "login": "jane"
+        }
+      }
+    ]
+    """
+
+  Scenario: User cannot see names without approval
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/11/recent_activity?item_id=200&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "created_at": "2017-05-30T06:38:38Z",
+        "id": "3",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Category 1"
+          },
+          "type": "Category"
+        },
+        "score": 100,
+        "user": {
+          "first_name": null,
+          "last_name": null,
           "login": "user"
         }
       }

@@ -14,8 +14,8 @@ Background:
     | group_id | manager_id |
     | 13       | 21         |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id |
-    | 61 | 13              | 11             |
+    | id | parent_group_id | child_group_id | personal_info_view_approved_at |
+    | 61 | 13              | 11             | 2019-05-30 11:00:00            |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |

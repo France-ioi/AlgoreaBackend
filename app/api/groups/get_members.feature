@@ -19,6 +19,7 @@ Feature: Get members of group_id
     And the database has the following table 'group_managers':
       | group_id | manager_id |
       | 13       | 21         |
+      | 13       | 91         |
       | 22       | 21         |
     And the database has the following table 'groups_ancestors':
       | ancestor_group_id | child_group_id | is_self |
@@ -109,6 +110,52 @@ Feature: Get members of group_id
           "first_name": null,
           "group_id": "91",
           "last_name": null,
+          "login": "lp",
+          "grade": 6
+        },
+        "member_since": "2017-03-29T06:38:38Z",
+        "action": "added_directly"
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group (default sort, different approvals)
+    Given I am the user with id "91"
+    When I send a GET request to "/groups/13/members"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "9",
+        "user": {
+          "first_name": null,
+          "group_id": "51",
+          "last_name": null,
+          "login": "billg",
+          "grade": 5
+        },
+        "member_since": "2017-07-29T06:38:38Z",
+        "action": "invitation_accepted"
+      },
+      {
+        "id": "10",
+        "user": {
+          "first_name": "Mark",
+          "group_id": "61",
+          "last_name": "Zuckerberg",
+          "login": "zuck",
+          "grade": 9
+        },
+        "member_since": "2017-06-29T06:38:38Z",
+        "action": "join_request_accepted"
+      },
+      {
+        "id": "13",
+        "user": {
+          "first_name": "Larry",
+          "group_id": "91",
+          "last_name": "Page",
           "login": "lp",
           "grade": 6
         },
