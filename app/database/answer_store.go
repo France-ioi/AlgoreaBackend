@@ -44,8 +44,8 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 		store := NewDataStore(db)
 		answerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO answers (id, author_id, attempt_id, answer, created_at)
-				VALUES (?, ?, ?, ?, NOW())`,
+				INSERT INTO answers (id, author_id, attempt_id, answer, created_at, type)
+				VALUES (?, ?, ?, ?, NOW(), 'Submission')`,
 			answerID, authorID, attemptID, answer).Error
 	})
 	return answerID, err
