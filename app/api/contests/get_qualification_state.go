@@ -54,7 +54,7 @@ type contestGetQualificationStateResponse struct {
 //                i.e. whether he can enter the contest, and info on each team member.
 //
 //                The qualification state is one of:
-//                  * 'already_started' if the participant has a `groups_attempts` row for the item
+//                  * 'already_started' if the participant has a `attempts` row for the item
 //                    with non-null `entered_at` and is an active member of the item's "contest participants" group;
 //
 //                  * 'not_ready' if there are more members than `contest_max_team_size` or
@@ -72,7 +72,7 @@ type contestGetQualificationStateResponse struct {
 //
 //                      * "Half": same but half of the members (ceil-rounded) of the team;
 //
-//                  * 'not_ready' if the participant has a `groups_attempts` row for the item
+//                  * 'not_ready' if the participant has an `attempts` row for the item
 //                    with non-null `entered_at` and is NOT an active member of the item's "contest participants" group
 //                    while the item's `has_attempts` is false;
 //
@@ -150,15 +150,15 @@ func (srv *Service) getContestInfoAndQualificationStateFromRequest(r *http.Reque
 		return nil, apiError
 	}
 
-	contestParticipationQuery := store.GroupAttempts().
-		Joins("JOIN items ON items.id = groups_attempts.item_id").
+	contestParticipationQuery := store.Attempts().
+		Joins("JOIN items ON items.id = attempts.item_id").
 		// check the participation is not expired
 		Joins(`
 			LEFT JOIN groups_groups_active
 				ON groups_groups_active.parent_group_id = items.contest_participants_group_id AND
-					groups_groups_active.child_group_id = groups_attempts.group_id`).
+					groups_groups_active.child_group_id = attempts.group_id`).
 		Where("item_id = ?", itemID).
-		Where("groups_attempts.group_id = ?", groupID).
+		Where("attempts.group_id = ?", groupID).
 		Where("entered_at IS NOT NULL")
 	if lock {
 		contestParticipationQuery = contestParticipationQuery.WithWriteLock()

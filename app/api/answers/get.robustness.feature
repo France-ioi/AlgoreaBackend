@@ -13,7 +13,7 @@ Feature: Feature: Get user's answer by user_answer_id
     And the database has the following table 'permissions_generated':
       | item_id | group_id | can_view_generated |
       | 200     | 11       | info               |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 150 | 11       | 200     | 0     |
       | 250 | 13       | 210     | 0     |

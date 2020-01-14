@@ -41,7 +41,7 @@ Feature: Get item view information
       | id | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
       | 54 | 200            | 210           | 2           | Discovery | as_info                  |
       | 55 | 200            | 220           | 1           | Discovery | as_info                  |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | hints_cached | started_at          | validated_at        |
       | 101 | 11       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
       | 102 | 11       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |

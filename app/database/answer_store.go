@@ -14,20 +14,20 @@ func (s *AnswerStore) WithUsers() *AnswerStore {
 	}
 }
 
-// WithGroupAttempts creates a composable query for getting answers joined with groups_attempts
-func (s *AnswerStore) WithGroupAttempts() *AnswerStore {
+// WithAttempts creates a composable query for getting answers joined with attempts
+func (s *AnswerStore) WithAttempts() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(
-			s.Joins("JOIN groups_attempts ON groups_attempts.id = answers.attempt_id"), s.tableName,
+			s.Joins("JOIN attempts ON attempts.id = answers.attempt_id"), s.tableName,
 		),
 	}
 }
 
-// WithItems joins `items` through `groups_attempts`
+// WithItems joins `items` through `attempts`
 func (s *AnswerStore) WithItems() *AnswerStore {
 	return &AnswerStore{
 		NewDataStoreWithTable(
-			s.WithGroupAttempts().Joins("JOIN items ON items.id = groups_attempts.item_id"), s.tableName,
+			s.WithAttempts().Joins("JOIN items ON items.id = attempts.item_id"), s.tableName,
 		),
 	}
 }
@@ -51,8 +51,8 @@ func (s *AnswerStore) SubmitNewAnswer(authorID, attemptID int64, answer string) 
 // restrictions:
 // 1) the user should have at least 'content' access rights to the answers.item_id item,
 // 2) the user is able to see answers related to his group's attempts, so
-//    the user should be a member of the groups_attempts.group_id team or
-//    groups_attempts.group_id should be equal to the user's self group
+//    the user should be a member of the attempts.group_id team or
+//    attempts.group_id should be equal to the user's self group
 func (s *AnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least 'content' access to the item
@@ -60,9 +60,9 @@ func (s *AnswerStore) Visible(user *User) *DB {
 
 	return s.
 		// the user should have at least 'content' access to the answers.item_id
-		Joins("JOIN groups_attempts ON groups_attempts.id = answers.attempt_id").
-		Joins("JOIN ? AS items ON items.id = groups_attempts.item_id", itemsQuery.SubQuery()).
-		// groups_attempts.group_id should be one of the authorized user's groups or the user's self group
-		Where("groups_attempts.group_id = ? OR groups_attempts.group_id IN ?",
+		Joins("JOIN attempts ON attempts.id = answers.attempt_id").
+		Joins("JOIN ? AS items ON items.id = attempts.item_id", itemsQuery.SubQuery()).
+		// attempts.group_id should be one of the authorized user's groups or the user's self group
+		Where("attempts.group_id = ? OR attempts.group_id IN ?",
 			user.GroupID, usersGroupsQuery.SubQuery())
 }

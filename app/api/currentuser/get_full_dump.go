@@ -25,7 +25,7 @@ import (
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `answers`: all attributes;
 //     * `users_items`: all attributes;
-//     * `groups_attempts`: the user's or his teams' attempts, all attributes;
+//     * `attempts`: the user's or his teams' attempts, all attributes;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
 //     * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
 //     * `group_pending_requests`: where the user’s `group_id` is the `member_id`, all attributes + `groups.name`;
@@ -120,13 +120,13 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		})
 
 		writeComma(w)
-		writeJSONObjectArrayElement("groups_attempts", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "groups_attempts", nil)
-			service.MustNotBeError(srv.Store.GroupAttempts().
+		writeJSONObjectArrayElement("attempts", w, func(writer io.Writer) {
+			columns := getColumnsList(srv.Store, databaseName, "attempts", nil)
+			service.MustNotBeError(srv.Store.Attempts().
 				Select(columns).
 				Where("group_id = ?", user.GroupID).
 				UnionAll(
-					srv.Store.GroupAttempts().
+					srv.Store.Attempts().
 						Select(columns).
 						Where("group_id IN (?)",
 							srv.Store.GroupGroups().WhereUserIsMember(user).

@@ -46,7 +46,7 @@ type itemStringRoot struct {
 	*itemStringRootNodeWithSolutionAccess
 }
 
-// from `groups_attempts`
+// from `attempts`
 type itemUserActiveAttempt struct {
 	// Nullable; only if `can_view` >= 'content'
 	AttemptID int64 `json:"attempt_id,string"`
@@ -171,7 +171,7 @@ type itemResponse struct {
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
 //              and the current user's interactions with them
-//              (from tables `items`, `items_items`, `items_string`, and `groups_attempts` for the active attempt).
+//              (from tables `items`, `items_items`, `items_string`, and `attempts` for the active attempt).
 //
 //
 //              * If the specified item is not visible by the current user, the 'not found' response is returned.
@@ -257,7 +257,7 @@ type rawItem struct {
 	StringDescription *string `sql:"column:description"`
 	StringEduComment  *string `sql:"column:edu_comment"`
 
-	// from groups_attempts for the active attempt of the current user
+	// from attempts for the active attempt of the current user
 	UserActiveAttemptID *int64         `sql:"column:attempt_id"`
 	UserScoreComputed   float32        `sql:"column:score_computed"`
 	UserSubmissions     int32          `sql:"column:submissions"`
@@ -338,14 +338,14 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
-			groups_attempts.id AS attempt_id,
-			groups_attempts.score_computed AS score_computed,
-			groups_attempts.submissions AS submissions,
-			groups_attempts.validated AS validated,
-			groups_attempts.finished AS finished,
-			groups_attempts.hints_cached AS hints_cached,
-			groups_attempts.started_at AS started_at,
-			groups_attempts.validated_at AS validated_at,
+			attempts.id AS attempt_id,
+			attempts.score_computed AS score_computed,
+			attempts.submissions AS submissions,
+			attempts.validated AS validated,
+			attempts.finished AS finished,
+			attempts.hints_cached AS hints_cached,
+			attempts.started_at AS started_at,
+			attempts.validated_at AS validated_at,
 
 			items.child_order AS child_order,
 			items.category AS category,
@@ -362,7 +362,7 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 		FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
-		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
+		Joins("LEFT JOIN attempts ON attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
 		Order("child_order")
 

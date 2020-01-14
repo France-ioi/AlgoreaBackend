@@ -68,14 +68,14 @@ type itemAttemptsViewResponseRow struct {
 //     type: string
 //     enum: [order,-order,id,-id]
 // - name: from.order
-//   description: Start the page from the attempt next to the attempt with `groups_attempts.order` = `from.order` and
-//                `groups_attempts.id` = `from.id` (`from.id` is required when `from.order` is present)
+//   description: Start the page from the attempt next to the attempt with `attempts.order` = `from.order` and
+//                `attempts.id` = `from.id` (`from.id` is required when `from.order` is present)
 //   in: query
 //   type: integer
 //   format: int32
 // - name: from.id
-//   description: Start the page from the attempt next to the attempt with `groups_attempts.order` = `from.order` and
-//                `groups_attempts.id` = `from.id` (`from.order` is required when `from.id` is present)
+//   description: Start the page from the attempt next to the attempt with `attempts.order` = `from.order` and
+//                `attempts.id` = `from.id` (`from.order` is required when `from.id` is present)
 //   in: query
 //   type: integer
 //   format: int64
@@ -129,18 +129,18 @@ func (srv *Service) getAttempts(w http.ResponseWriter, r *http.Request) service.
 		return service.InsufficientAccessRightsError
 	}
 
-	query := srv.Store.GroupAttempts().Where("groups_attempts.group_id = ?", groupID).
+	query := srv.Store.Attempts().Where("attempts.group_id = ?", groupID).
 		Where("item_id = ?", itemID).
-		Joins("LEFT JOIN users AS creators ON creators.group_id = groups_attempts.creator_id").
+		Joins("LEFT JOIN users AS creators ON creators.group_id = attempts.creator_id").
 		Select(`
-			groups_attempts.id, groups_attempts.order, groups_attempts.score_computed, groups_attempts.validated,
-			groups_attempts.started_at, creators.login AS user_creator__login,
+			attempts.id, attempts.order, attempts.score_computed, attempts.validated,
+			attempts.started_at, creators.login AS user_creator__login,
 			creators.first_name AS user_creator__first_name, creators.last_name AS user_creator__last_name,
 			creators.group_id AS user_creator__group_id`)
 	query = service.NewQueryLimiter().Apply(r, query)
 	query, apiError := service.ApplySortingAndPaging(r, query, map[string]*service.FieldSortingParams{
-		"order": {ColumnName: "groups_attempts.order", FieldType: "int64"},
-		"id":    {ColumnName: "groups_attempts.id", FieldType: "int64"},
+		"order": {ColumnName: "attempts.order", FieldType: "int64"},
+		"id":    {ColumnName: "attempts.id", FieldType: "int64"},
 	}, "order,id", "id", false)
 	if apiError != service.NoError {
 		return apiError

@@ -28,7 +28,7 @@ Background:
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | info                     |
-  And the database has the following table 'groups_attempts':
+  And the database has the following table 'attempts':
     | id  | group_id | item_id | order |
     | 100 | 13       | 190     | 1     |
     | 110 | 13       | 210     | 2     |

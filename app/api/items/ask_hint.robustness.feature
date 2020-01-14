@@ -26,7 +26,7 @@ Feature: Ask for a hint - robustness
       | group_id | item_id | can_view_generated |
       | 101      | 10      | content            |
       | 101      | 50      | content            |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
@@ -44,7 +44,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.askHintRequestWrapper"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User not found
     Given I am the user with id "404"
@@ -78,7 +78,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
     Given I am the user with id "101"
@@ -112,7 +112,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: itemUrls of task_token and hint_requested don't match
     Given I am the user with id "101"
@@ -146,7 +146,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong itemUrl in hint_requested token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idUser in hint_requested doesn't match the user's id
     Given I am the user with id "101"
@@ -180,7 +180,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Token in hint_requested doesn't correspond to user session: got idUser=20, expected 10"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idAttempt in hint_requested & task_token don't match
     Given I am the user with id "101"
@@ -214,7 +214,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in hint_requested token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idItemLocal in hint_requested & task_token don't match
     Given I am the user with id "101"
@@ -248,7 +248,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idItemLocal in hint_requested token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No submission rights
     Given I am the user with id "101"
@@ -282,7 +282,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 403
     And the response error message should contain "Item is read-only"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idAttempt not found
     Given I am the user with id "101"
@@ -316,7 +316,7 @@ Feature: Ask for a hint - robustness
     Then the response code should be 404
     And the response error message should contain "Can't find previously requested hints info"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: missing askedHint
     Given I am the user with id "101"
@@ -349,4 +349,4 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Asked hint should not be empty"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

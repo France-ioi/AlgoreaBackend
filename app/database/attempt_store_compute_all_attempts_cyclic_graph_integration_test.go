@@ -16,19 +16,19 @@ type stateResultRow struct {
 	ResultPropagationState string
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_WithCyclicGraph(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/cyclic")
+func TestAttemptStore_ComputeAllAttempts_WithCyclicGraph(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/cyclic")
 	defer func() { _ = db.Close() }()
 
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	attemptStore := database.NewDataStore(db).Attempts()
 
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
+	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
 
 	var result []stateResultRow
-	assert.NoError(t, groupAttemptStore.Select("id, result_propagation_state").Order("id").Scan(&result).Error())
+	assert.NoError(t, attemptStore.Select("id, result_propagation_state").Order("id").Scan(&result).Error())
 	assert.Equal(t, []stateResultRow{
 		{ID: 11, ResultPropagationState: "to_be_recomputed"},
 		{ID: 12, ResultPropagationState: "to_be_recomputed"},

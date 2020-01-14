@@ -23,16 +23,16 @@ type aggregatesResultRow struct {
 	ScoreComputed          float32
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/aggregates")
+func TestAttemptStore_ComputeAllAttempts_Aggregates(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/aggregates")
 	defer func() { _ = db.Close() }()
 
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	attemptStore := database.NewDataStore(db).Attempts()
 
 	currentDate := time.Now().Round(time.Second).UTC()
 	oldDate := currentDate.AddDate(-1, -1, -1)
 
-	assert.NoError(t, groupAttemptStore.Where("id=11").Updates(map[string]interface{}{
+	assert.NoError(t, attemptStore.Where("id=11").Updates(map[string]interface{}{
 		"latest_activity_at": oldDate,
 		"tasks_tried":        1,
 		"tasks_with_help":    2,
@@ -41,7 +41,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		"score_computed":     10,
 		"validated_at":       "2019-05-30 11:00:00",
 	}).Error())
-	assert.NoError(t, groupAttemptStore.Where("id IN (13, 15)").Updates(map[string]interface{}{
+	assert.NoError(t, attemptStore.Where("id IN (13, 15)").Updates(map[string]interface{}{
 		"latest_activity_at": currentDate,
 		"tasks_tried":        5,
 		"tasks_with_help":    6,
@@ -49,7 +49,7 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		"children_validated": 8,
 		"score_computed":     20,
 	}).Error())
-	assert.NoError(t, groupAttemptStore.Where("id IN (14, 16)").Updates(map[string]interface{}{
+	assert.NoError(t, attemptStore.Where("id IN (14, 16)").Updates(map[string]interface{}{
 		"latest_activity_at": nil,
 		"tasks_tried":        9,
 		"tasks_with_help":    10,
@@ -59,8 +59,8 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		"validated_at":       "2019-05-30 11:00:00",
 	}).Error())
 
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
+	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -82,16 +82,16 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates(t *testing.T) {
 		{ID: 22, LatestActivityAt: nil, ResultPropagationState: "done"},
 	}
 
-	assertAggregatesEqual(t, groupAttemptStore, expected)
+	assertAggregatesEqual(t, attemptStore, expected)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_OnCommonData(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common")
+func TestAttemptStore_ComputeAllAttempts_Aggregates_OnCommonData(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
 	defer func() { _ = db.Close() }()
 
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
+	attemptStore := database.NewDataStore(db).Attempts()
+	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
 
@@ -100,10 +100,10 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_OnCommonData(t *te
 		{ID: 12, ResultPropagationState: "done"},
 		{ID: 22, ResultPropagationState: "done"},
 	}
-	assertAggregatesEqual(t, groupAttemptStore, expected)
+	assertAggregatesEqual(t, attemptStore, expected)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_EditScore(t *testing.T) {
+func TestAttemptStore_ComputeAllAttempts_Aggregates_EditScore(t *testing.T) {
 	for _, test := range []struct {
 		name                  string
 		editRule              string
@@ -119,20 +119,20 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_EditScore(t *testi
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common")
+			db := testhelpers.SetupDBWithFixture("attempts_propagation/_common")
 			defer func() { _ = db.Close() }()
 
-			groupAttemptStore := database.NewDataStore(db).GroupAttempts()
-			assert.NoError(t, groupAttemptStore.Where("id=11").Updates(map[string]interface{}{
+			attemptStore := database.NewDataStore(db).Attempts()
+			assert.NoError(t, attemptStore.Where("id=11").Updates(map[string]interface{}{
 				"score_computed": 10,
 			}).Error())
-			assert.NoError(t, groupAttemptStore.Where("id=12").Updates(map[string]interface{}{
+			assert.NoError(t, attemptStore.Where("id=12").Updates(map[string]interface{}{
 				"score_edit_rule":  test.editRule,
 				"score_edit_value": test.editValue,
 			}).Error())
 
-			err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-				return s.GroupAttempts().ComputeAllGroupAttempts()
+			err := attemptStore.InTransaction(func(s *database.DataStore) error {
+				return s.Attempts().ComputeAllAttempts()
 			})
 			assert.NoError(t, err)
 
@@ -141,14 +141,14 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts_Aggregates_EditScore(t *testi
 				{ID: 12, ScoreComputed: test.expectedComputedScore, ResultPropagationState: "done"},
 				{ID: 22, ResultPropagationState: "done"},
 			}
-			assertAggregatesEqual(t, groupAttemptStore, expected)
+			assertAggregatesEqual(t, attemptStore, expected)
 		})
 	}
 }
 
-func assertAggregatesEqual(t *testing.T, groupAttemptStore *database.GroupAttemptStore, expected []aggregatesResultRow) {
+func assertAggregatesEqual(t *testing.T, attemptStore *database.AttemptStore, expected []aggregatesResultRow) {
 	var result []aggregatesResultRow
-	assert.NoError(t, groupAttemptStore.
+	assert.NoError(t, attemptStore.
 		Select(`
 			id, latest_activity_at, tasks_tried, tasks_with_help, tasks_solved, children_validated, score_computed,
 			result_propagation_state`).

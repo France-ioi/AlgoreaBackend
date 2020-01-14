@@ -248,7 +248,7 @@ Feature: Display the current progress of a group on a subset of items (groupGrou
       | 20       | 417     | none                     |
       | 21       | 418     | none                     |
       | 20       | 419     | none                     |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | order | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        |
       | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                |
       | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | null                |

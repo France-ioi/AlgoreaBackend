@@ -22,7 +22,7 @@ import (
 //
 //
 //                `groups_groups.expires_at` of affected `items.contest_participants_group_id` members is set to
-//                `groups_attempts.entered_at` + `items.duration` + total additional time.
+//                `attempts.entered_at` + `items.duration` + total additional time.
 //
 //
 //                Restrictions:
@@ -158,7 +158,7 @@ func setAdditionalTimeForGroupInContest(
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
 			// ... and have entered the contest, ...
 			Joins(`
-				JOIN groups_attempts AS contest_participations
+				JOIN attempts AS contest_participations
 					ON contest_participations.group_id = groups_groups_active.child_group_id AND
 						contest_participations.entered_at IS NOT NULL AND
 						contest_participations.item_id = ?`, itemID).
@@ -177,7 +177,7 @@ func setAdditionalTimeForGroupInContest(
 	//nolint:gosec
 	result := store.Exec(`
 		UPDATE groups_groups
-		JOIN groups_attempts AS contest_participations
+		JOIN attempts AS contest_participations
 			ON contest_participations.group_id = groups_groups.child_group_id AND
 				contest_participations.item_id = ? AND contest_participations.entered_at IS NOT NULL AND
 				contest_participations.entered_at IS NOT NULL

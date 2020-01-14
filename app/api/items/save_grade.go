@@ -86,7 +86,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 		return validated, false
 	}
 
-	// Build query to update groups_attempts
+	// Build query to update attempts
 	columnsToUpdate := []string{
 		"tasks_tried",
 		"latest_answer_at",
@@ -128,9 +128,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE groups_attempts JOIN answers ON answers.id = ? "+ // nolint:gosec
-			updateExpr+" WHERE groups_attempts.id = ?", values...).Error()) // nolint:gosec
-	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
+		store.DB.Exec("UPDATE attempts JOIN answers ON answers.id = ? "+ // nolint:gosec
+			updateExpr+" WHERE attempts.id = ?", values...).Error()) // nolint:gosec
+	service.MustNotBeError(store.Attempts().ComputeAllAttempts())
 	return validated, true
 }
 

@@ -45,7 +45,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: Wrong group_id
     Given I am the user with id "31"
@@ -54,7 +54,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The item is not visible to the current user
     Given I am the user with id "31"
@@ -63,7 +63,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The item is visible, but it doesn't exist
     Given I am the user with id "31"
@@ -72,7 +72,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The item is not visible (can_view = none)
     Given the database has the following table 'items':
@@ -87,7 +87,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
@@ -103,7 +103,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: group_id is not a self group of the current user while the item's has_attempts = false
     Given the database has the following table 'items':
@@ -119,7 +119,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: group_id is not a team related to the item while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -135,7 +135,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: group_id is a user self group while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -150,7 +150,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The current user is not a member of group_id while the item's has_attempts = true
     Given the database has the following table 'items':
@@ -166,7 +166,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
@@ -187,7 +187,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should be empty
+    And the table "attempts" should be empty
 
   Scenario Outline: Reenter a non-team contest
     Given the database has the following table 'items':
@@ -204,7 +204,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 31       | 50      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
@@ -213,7 +213,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
   Examples:
     | expires_at          |
     | 2019-05-30 11:00:00 |
@@ -233,7 +233,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the database has the following table 'groups_contest_items':
       | group_id | item_id | can_enter_from   | can_enter_until     | additional_time |
       | 11       | 60      | 2007-01-01 10:21 | 9999-12-31 23:59:59 | 02:02:02        |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-29 11:00:00 | 1     |
     And I am the user with id "31"
@@ -242,4 +242,4 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the response error message should contain "Insufficient access rights"
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

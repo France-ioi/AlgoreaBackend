@@ -25,9 +25,9 @@ type updateCurrentRequest struct {
 // summary: Update current answer
 // description: Update user's current answer. Used for auto-saving while working on a task.
 //
-//   * The authenticated user should have at least 'content' access to the `groups_attempts[attempt_id].item_id`
+//   * The authenticated user should have at least 'content' access to the `attempts[attempt_id].item_id`
 //
-//   * `groups_attempts.group_id` should be the user's selfGroup or the user's team
+//   * `attempts.group_id` should be the user's selfGroup or the user's team
 //     [this extra check just ensures the consistency of data]
 // parameters:
 // - name: attempt_id
@@ -65,7 +65,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 
 	user := srv.GetUser(httpReq)
 
-	found, _, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
+	found, _, err := srv.Store.Attempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError

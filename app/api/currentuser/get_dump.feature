@@ -63,7 +63,7 @@ Feature: Export the short version of the current user's data
     And the database has the following table 'items':
       | id  |
       | 404 |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |

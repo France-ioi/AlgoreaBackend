@@ -34,7 +34,7 @@ Background:
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
-  And the database has the following table 'groups_attempts':
+  And the database has the following table 'attempts':
     | group_id | item_id | score_computed | order | result_propagation_state |
     | 11       | 21      | 0              | 1     | done                     |
     | 11       | 50      | 10             | 1     | done                     |
@@ -60,7 +60,7 @@ Background:
     And the table "items_items" should stay unchanged
     And the table "items_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
     And the table "permissions_granted" should stay unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | is_owner_generated |
@@ -85,7 +85,7 @@ Background:
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_on    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table 'groups_attempts' has also the following rows:
+    And the database table 'attempts' has also the following rows:
       | group_id | item_id | order | score_computed | result_propagation_state |
       | 11       | 112     | 1     | 50             | done                     |
       | 11       | 134     | 1     | 60             | done                     |
@@ -156,8 +156,8 @@ Background:
       | 5577006791947779410 | 50      | content            | none                     | none                | none               | false              |
       | 5577006791947779410 | 112     | info               | none                     | none                | none               | false              |
       | 5577006791947779410 | 134     | info               | none                     | none                | none               | false              |
-    And the table "groups_attempts" should stay unchanged but the row with item_id "50"
-    And the table "groups_attempts" at item_id "50" should be:
+    And the table "attempts" should stay unchanged but the row with item_id "50"
+    And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
       | 11       | 50      | 55             | 1     | done                     |
 
@@ -214,8 +214,8 @@ Background:
       | 21               | 60            |
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "groups_attempts" should stay unchanged but the row with item_id "50"
-    And the table "groups_attempts" at item_id "50" should be:
+    And the table "attempts" should stay unchanged but the row with item_id "50"
+    And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
       | 11       | 50      | 0              | 1     | done                     |
 
@@ -250,7 +250,7 @@ Background:
       | 60 | 12:34:56 | 1234                          |
     And the table "groups" should stay unchanged
 
-  Scenario: Recomputes groups_attempts if no_score is given
+  Scenario: Recomputes attempts if no_score is given
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
@@ -268,12 +268,12 @@ Background:
     And the table "items_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "groups_attempts" should stay unchanged but the row with item_id "50"
-    And the table "groups_attempts" at item_id "50" should be:
+    And the table "attempts" should stay unchanged but the row with item_id "50"
+    And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
       | 11       | 50      | 0              | 1     | done                     |
 
-  Scenario: Recomputes groups_attempts if validation_type is given
+  Scenario: Recomputes attempts if validation_type is given
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
     """
@@ -291,7 +291,7 @@ Background:
     And the table "items_ancestors" should stay unchanged
     And the table "groups" should stay unchanged
     And the table "permissions_granted" should stay unchanged
-    And the table "groups_attempts" should stay unchanged but the row with item_id "50"
-    And the table "groups_attempts" at item_id "50" should be:
+    And the table "attempts" should stay unchanged but the row with item_id "50"
+    And the table "attempts" at item_id "50" should be:
       | group_id | item_id | score_computed | order | result_propagation_state |
       | 11       | 50      | 0              | 1     | done                     |

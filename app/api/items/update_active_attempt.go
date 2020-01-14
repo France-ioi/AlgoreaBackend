@@ -10,27 +10,27 @@ import (
 )
 
 func (srv *Service) updateActiveAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupsAttemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(r)
-	foundItemID, itemID, err := srv.Store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(groupsAttemptID, user)
+	foundItemID, itemID, err := srv.Store.Attempts().GetAttemptItemIDIfUserHasAccess(attemptID, user)
 	service.MustNotBeError(err)
 	if !foundItemID {
 		return service.InsufficientAccessRightsError
 	}
 
 	service.MustNotBeError(srv.Store.InTransaction(func(store *database.DataStore) error {
-		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, itemID, groupsAttemptID))
-		groupAttemptStore := store.GroupAttempts()
+		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, itemID, attemptID))
+		attemptStore := store.Attempts()
 		service.MustNotBeError(
-			groupAttemptStore.ByID(groupsAttemptID).
+			attemptStore.ByID(attemptID).
 				UpdateColumn(map[string]interface{}{
 					"latest_activity_at": database.Now(),
 				}).Error())
-		service.MustNotBeError(groupAttemptStore.ComputeAllGroupAttempts())
+		service.MustNotBeError(attemptStore.ComputeAllAttempts())
 		return nil
 	}))
 

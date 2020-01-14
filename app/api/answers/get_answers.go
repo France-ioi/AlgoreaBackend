@@ -85,7 +85,7 @@ import (
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
+	dataQuery := srv.Store.Answers().WithUsers().WithAttempts().
 		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
 		Select(`
 			answers.id, answers.type, answers.created_at, gradings.score,
@@ -200,9 +200,9 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	groupsManagedByUser := srv.Store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := srv.Store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
-	service.MustNotBeError(srv.Store.GroupAttempts().ByID(attemptID).
-		Joins("JOIN ? rights ON rights.item_id = groups_attempts.item_id", itemsUserCanAccess.SubQuery()).
-		Where("(groups_attempts.group_id IN ?) OR (groups_attempts.group_id IN ?) OR groups_attempts.group_id = ?",
+	service.MustNotBeError(srv.Store.Attempts().ByID(attemptID).
+		Joins("JOIN ? rights ON rights.item_id = attempts.item_id", itemsUserCanAccess.SubQuery()).
+		Where("(attempts.group_id IN ?) OR (attempts.group_id IN ?) OR attempts.group_id = ?",
 			groupsManagedByUser.SubQuery(),
 			groupsWhereUserIsMember.SubQuery(),
 			user.GroupID).

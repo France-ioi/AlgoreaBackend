@@ -5,4 +5,4 @@ groups_ancestors:
   - {ancestor_group_id: 13, child_group_id: 13}
   - {ancestor_group_id: 22, child_group_id: 13}
 permissions_generated: [{group_id: 22, item_id: 115, can_view_generated: content_with_descendants}]
-groups_attempts: [{group_id: 22, item_id: 115, entered_at: 2019-03-22 08:44:55, order: 1}]
+attempts: [{group_id: 22, item_id: 115, entered_at: 2019-03-22 08:44:55, order: 1}]
