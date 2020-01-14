@@ -27,8 +27,8 @@ type updateCurrentRequest struct {
 //
 //   * The authenticated user should have at least 'content' access to the `groups_attempts[attempt_id].item_id`
 //
-//   * `groups_attempts.group_id` should be the user's selfGroup (if `items.has_attempts=0`) or the user's team (otherwise)
-//   [this extra check just ensures the consistency of data]
+//   * `groups_attempts.group_id` should be the user's selfGroup or the user's team
+//     [this extra check just ensures the consistency of data]
 // parameters:
 // - name: attempt_id
 //   in: path

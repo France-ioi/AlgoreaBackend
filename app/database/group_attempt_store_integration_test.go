@@ -75,7 +75,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			expectedItemID: 50,
 		},
 		{
-			name:      "okay (has_attempts=1)",
+			name:      "okay (as a team member)",
 			userID:    101,
 			attemptID: 200,
 			fixture: `
@@ -122,14 +122,6 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 				groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
-		{
-			name:      "groups_attempts.group_id is not user's self group",
-			userID:    101,
-			attemptID: 100,
-			fixture: `
-				groups_attempts: [{id: 100, group_id: 102, item_id: 50, order: 0}]`,
-			expectedFound: false,
-		},
 	}
 	for _, test := range tests {
 		test := test
@@ -149,9 +141,9 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
 				items:
-					- {id: 10, has_attempts: 0}
-					- {id: 50, has_attempts: 0}
-					- {id: 60, has_attempts: 1}
+					- {id: 10}
+					- {id: 50}
+					- {id: 60}
 				permissions_generated:
 					- {group_id: 101, item_id: 50, can_view_generated: content}
 					- {group_id: 101, item_id: 60, can_view_generated: content}

@@ -29,16 +29,15 @@ func (s *GroupAttemptStore) CreateNew(groupID, itemID, creatorID int64) (newID i
 
 // GetAttemptItemIDIfUserHasAccess returns groups_attempts.item_id if:
 //  1) the user has at least 'content' access to this item
-//  2) the user is a member of groups_attempts.group_id  (if items.has_attempts = 1)
-//  3) the user's group_id = groups_attempts.group_id (if items.has_attempts = 0)
+//  2) the user is a member of groups_attempts.group_id or the user's group_id = groups_attempts.group_id
 func (s *GroupAttemptStore) GetAttemptItemIDIfUserHasAccess(attemptID int64, user *User) (found bool, itemID int64, err error) {
 	recoverPanics(&err)
 	mustNotBeError(err)
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	err = s.Items().WhereUserHasViewPermissionOnItems(user, "content").
 		Joins("JOIN groups_attempts ON groups_attempts.item_id = items.id AND groups_attempts.id = ?", attemptID).
-		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
-			usersGroupsQuery.SubQuery(), user.GroupID).
+		Where("groups_attempts.group_id = ? OR groups_attempts.group_id IN ?",
+			user.GroupID, usersGroupsQuery.SubQuery()).
 		PluckFirst("items.id", &itemID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, 0, nil
