@@ -80,9 +80,9 @@ func (s *AnswerStore) GetOrCreateCurrentAnswer(authorID, attemptID int64) (answe
 // Visible returns a composable query for getting answers with the following access rights
 // restrictions:
 // 1) the user should have at least 'content' access rights to the answers.item_id item,
-// 2) the user is able to see answers related to his group's attempts, so:
-//   (a) if items.has_attempts = 1, then the user should be a member of the groups_attempts.group_id team
-//   (b) if items.has_attempts = 0, then groups_attempts.group_id should be equal to the user's self group
+// 2) the user is able to see answers related to his group's attempts, so
+//    the user should be a member of the groups_attempts.group_id team or
+//    groups_attempts.group_id should be equal to the user's self group
 func (s *AnswerStore) Visible(user *User) *DB {
 	usersGroupsQuery := s.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 	// the user should have at least 'content' access to the item
@@ -92,8 +92,7 @@ func (s *AnswerStore) Visible(user *User) *DB {
 		// the user should have at least 'content' access to the answers.item_id
 		Joins("JOIN groups_attempts ON groups_attempts.id = answers.attempt_id").
 		Joins("JOIN ? AS items ON items.id = groups_attempts.item_id", itemsQuery.SubQuery()).
-		// if items.has_attempts = 1, then groups_attempts.group_id should be one of the authorized user's groups,
-		// otherwise groups_attempts.group_id should be equal to the user's self group
-		Where("IF(items.has_attempts, groups_attempts.group_id IN ?, groups_attempts.group_id = ?)",
-			usersGroupsQuery.SubQuery(), user.GroupID)
+		// groups_attempts.group_id should be one of the authorized user's groups or the user's self group
+		Where("groups_attempts.group_id = ? OR groups_attempts.group_id IN ?",
+			user.GroupID, usersGroupsQuery.SubQuery())
 }

@@ -24,9 +24,9 @@ Background:
     | 76 | 23                | 21             | 0       |
     | 77 | 23                | 23             | 1       |
   And the database has the following table 'items':
-    | id  | has_attempts |
-    | 200 | 0            |
-    | 210 | 1            |
+    | id  |
+    | 200 |
+    | 210 |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 200     | content                  |
@@ -64,7 +64,7 @@ Background:
     }
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1)
+  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id
     Given I am the user with id "21"
     When I send a GET request to "/answers/102"
     Then the response code should be 200

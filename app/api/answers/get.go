@@ -16,9 +16,9 @@ import (
 //   * The user should have at least 'content' access rights to the `groups_attempts.item_id` item for
 //     `answers.attempt_id`.
 //
-//   * The user should be able to see answers related to his group's attempts, so
-//      (a) if `items.has_attempts = 1`, then the user should be a member of the groups_attempts.group_id team,
-//      (b) if `items.has_attempts = 0`, then groups_attempts.group_id should be equal to the user's self group
+//   * The user should be able to see answers related to his group's attempts so
+//     the user should be a member of the `groups_attempts.group_id` team or
+//     `groups_attempts.group_id` should be equal to the user's self group.
 // parameters:
 // - name: answer_id
 //   in: path

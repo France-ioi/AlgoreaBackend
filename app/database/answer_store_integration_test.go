@@ -158,7 +158,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 			expectedFound: true,
 		},
 		{
-			name:     "okay (has_attempts=1)",
+			name:     "okay (a team member)",
 			userID:   101,
 			answerID: 200,
 			fixture: `
@@ -212,15 +212,6 @@ func TestAnswerStore_Visible(t *testing.T) {
 				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
 			expectedFound: false,
 		},
-		{
-			name:     "groups_attempts.group_id is not user's self group",
-			userID:   101,
-			answerID: 100,
-			fixture: `
-				groups_attempts: [{id: 200, group_id: 102, item_id: 50, order: 0}]
-				answers: [{id: 100, author_id: 101, attempt_id: 200, created_at: 2018-03-22 08:44:55}]`,
-			expectedFound: false,
-		},
 	}
 	for _, test := range tests {
 		test := test
@@ -240,9 +231,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
 				items:
-					- {id: 10, has_attempts: 0}
-					- {id: 50, has_attempts: 0}
-					- {id: 60, has_attempts: 1}
+					- {id: 10}
+					- {id: 50}
+					- {id: 60}
 				permissions_generated:
 					- {group_id: 101, item_id: 50, can_view_generated: content}
 					- {group_id: 101, item_id: 60, can_view_generated: content}
