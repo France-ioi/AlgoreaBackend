@@ -73,6 +73,7 @@ issues:
         - golint
   exclude:
     - "not declared by package utf8"
+    - "unicode/utf8/utf8.go"
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
