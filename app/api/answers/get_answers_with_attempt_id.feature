@@ -14,8 +14,8 @@ Background:
     | group_id | manager_id |
     | 13       | 21         |
   And the database has the following table 'groups_groups':
-    | id | parent_group_id | child_group_id |
-    | 61 | 13              | 11             |
+    | id | parent_group_id | child_group_id | personal_info_view_approved_at |
+    | 61 | 13              | 11             | 2019-05-30 11:00:00            |
   And the database has the following table 'groups_ancestors':
     | id | ancestor_group_id | child_group_id | is_self |
     | 71 | 11                | 11             | 1       |
@@ -39,11 +39,16 @@ Background:
     | 100 | 11       | 200     | 0     |
     | 101 | 11       | 200     | 0     |
     | 102 | 11       | 210     | 1     |
-  And the database has the following table 'users_answers':
-    | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-    | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 2  | 11      | 101        | My second answer | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-    | 3  | 11      | 102        | My third answer  | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+  And the database has the following table 'answers':
+    | id | author_id | attempt_id | type       | state   | created_at          |
+    | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+    | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+    | 3  | 11        | 102        | Submission | Current | 2017-05-29 06:38:38 |
+  And the database has the following table 'gradings':
+    | answer_id | score | graded_at           |
+    | 1         | 100   | 2018-05-29 06:38:38 |
+    | 2         | 100   | 2019-05-29 06:38:38 |
+    | 3         | 100   | 2019-05-29 06:38:38 |
 
   Scenario: Full access on the item and the user is a member of the attempt's group
     Given I am the user with id "11"
@@ -54,17 +59,14 @@ Background:
     [
       {
         "id": "1",
-        "lang_prog": "python",
-        "name": "My answer",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -78,17 +80,14 @@ Background:
     [
       {
         "id": "1",
-        "lang_prog": "python",
-        "name": "My answer",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -102,17 +101,14 @@ Background:
     [
       {
         "id": "2",
-        "lang_prog": "python",
-        "name": "My second answer",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -126,17 +122,14 @@ Background:
     [
       {
         "id": "3",
-        "lang_prog": "python",
-        "name": "My third answer",
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "type": "Submission",
         "user": {
           "login": "jdoe",
           "first_name": "John",
           "last_name": "Doe"
-        },
-        "validated": true
+        }
       }
     ]
     """

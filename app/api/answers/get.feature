@@ -24,9 +24,9 @@ Background:
     | 76 | 23                | 21             | 0       |
     | 77 | 23                | 23             | 1       |
   And the database has the following table 'items':
-    | id  | has_attempts |
-    | 200 | 0            |
-    | 210 | 1            |
+    | id  |
+    | 200 |
+    | 210 |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 200     | content                  |
@@ -35,12 +35,16 @@ Background:
     | id  | group_id | item_id | order |
     | 150 | 11       | 200     | 0     |
     | 250 | 13       | 210     | 0     |
-  And the database has the following table 'users_answers':
-    | id  | user_id | attempt_id | type       | state   | answer   | lang_prog | submitted_at        | score | validated | graded_at           |
-    | 101 | 11      | 150        | Submission | Current | print(1) | python    | 2017-05-29 06:38:38 | 100   | true      | 2018-05-29 06:38:38 |
-    | 102 | 11      | 250        | Submission | Current | print(2) | python    | 2017-05-29 06:38:38 | 100   | true      | 2019-05-29 06:38:38 |
+  And the database has the following table 'answers':
+    | id  | author_id | attempt_id | type       | state   | answer   | created_at          |
+    | 101 | 11        | 150        | Submission | Current | print(1) | 2017-05-29 06:38:38 |
+    | 102 | 11        | 250        | Submission | Current | print(2) | 2017-05-29 06:38:38 |
+  And the database has the following table 'gradings':
+    | answer_id | score | graded_at           |
+    | 101       | 100   | 2018-05-29 06:38:38 |
+    | 102       | 100   | 2019-05-29 06:38:38 |
 
-  Scenario: User has access to the item and the users_answers.user_id = authenticated user's self group
+  Scenario: User has access to the item and the answers.author_id = authenticated user's self group
     Given I am the user with id "11"
     When I send a GET request to "/answers/101"
     Then the response code should be 200
@@ -52,16 +56,15 @@ Background:
       "score": 100.0,
       "answer": "print(1)",
       "state": "Current",
-      "submitted_at": "2017-05-29T06:38:38Z",
+      "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "200",
-      "user_id": "11",
-      "graded_at": "2018-05-29T06:38:38Z",
-      "validated": true
+      "author_id": "11",
+      "graded_at": "2018-05-29T06:38:38Z"
     }
     """
 
-  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id (items.has_attempts=1)
+  Scenario: User has access to the item and the user is a team member of groups_attempts.group_id
     Given I am the user with id "21"
     When I send a GET request to "/answers/102"
     Then the response code should be 200
@@ -73,11 +76,10 @@ Background:
       "score": 100,
       "answer": "print(2)",
       "state": "Current",
-      "submitted_at": "2017-05-29T06:38:38Z",
+      "created_at": "2017-05-29T06:38:38Z",
       "type": "Submission",
       "item_id": "210",
-      "user_id": "11",
-      "graded_at": "2019-05-29T06:38:38Z",
-      "validated": true
+      "author_id": "11",
+      "graded_at": "2019-05-29T06:38:38Z"
     }
     """

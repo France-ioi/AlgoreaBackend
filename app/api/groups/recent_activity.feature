@@ -10,33 +10,50 @@ Feature: Get recent activity for group_id and item_id
       | 13 |
     And the database has the following table 'group_managers':
       | group_id | manager_id |
+      | 11       | 31         |
       | 13       | 21         |
+      | 31       | 31         |
+    And the database has the following table 'groups_groups':
+      | parent_group_id | child_group_id | personal_info_view_approved_at |
+      | 13              | 11             | 2019-05-30 11:00:00            |
     And the database has the following table 'groups_ancestors':
-      | id | ancestor_group_id | child_group_id | is_self |
-      | 75 | 11                | 11             | 1       |
-      | 76 | 13                | 11             | 0       |
-      | 77 | 13                | 13             | 1       |
-      | 78 | 21                | 21             | 1       |
+      | ancestor_group_id | child_group_id | is_self |
+      | 11                | 11             | 1       |
+      | 13                | 11             | 0       |
+      | 13                | 13             | 1       |
+      | 21                | 21             | 1       |
+      | 31                | 31             | 1       |
     And the database has the following table 'groups_attempts':
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
-    And the database has the following table 'users_answers':
-      | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 2  | 11      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 3  | 11      | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 4  | 11      | 101        | My fourth answer | Saved      | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 5  | 11      | 101        | My fifth answer  | Current    | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
-      | 6  | 31      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 7  | 31      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | false     |
-      | 8  | 31      | 101        | My third anwser  | Submission | Current | python    | 2017-05-30 06:38:38 | 100   | true      |
+    And the database has the following table 'answers':
+      | id | author_id | attempt_id | type       | state   | created_at          |
+      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+      | 3  | 11        | 101        | Submission | Current | 2017-05-30 06:38:38 |
+      | 4  | 11        | 101        | Saved      | Current | 2017-05-30 06:38:38 |
+      | 5  | 11        | 101        | Current    | Current | 2017-05-30 06:38:38 |
+      | 6  | 31        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+      | 7  | 31        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+      | 8  | 31        | 101        | Submission | Current | 2017-05-30 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | graded_at           | score |
+      | 2         | 2017-05-29 06:38:38 | 100   |
+      | 1         | 2017-05-29 06:38:38 | 99    |
+      | 3         | 2017-05-30 06:38:38 | 100   |
+      | 4         | 2017-05-30 06:38:38 | 100   |
+      | 5         | 2017-05-30 06:38:38 | 100   |
+      | 6         | 2017-05-29 06:38:38 | 100   |
+      | 7         | 2017-05-29 06:38:38 | 98    |
+      | 8         | 2017-05-30 06:38:38 | 100   |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 200     | info               |
+      | 31       | 200     | info               |
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id |
       | 1  | 200              | 200           |
@@ -69,13 +86,12 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       },
       {
         "id": "1",
@@ -86,14 +102,13 @@ Feature: Get recent activity for group_id and item_id
           },
           "type": "Category"
         },
-        "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "score": 99,
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": false
+        }
       },
       {
         "id": "2",
@@ -105,13 +120,12 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -133,20 +147,19 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
 
   Scenario: User is a manager of the group and there are visible descendants of the item; request the second and the third rows
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z&from.id=3"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-30T06:38:38Z&from.id=3"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -160,14 +173,13 @@ Feature: Get recent activity for group_id and item_id
           },
           "type": "Category"
         },
-        "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "score": 99,
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": false
+        }
       },
       {
         "id": "2",
@@ -179,20 +191,19 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
 
   Scenario: User is a manager of the group and there are visible descendants of the item; request the third row
     Given I am the user with id "21"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-29T06:38:38Z&from.id=1"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-29T06:38:38Z&from.id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -207,13 +218,12 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       }
     ]
     """
@@ -235,13 +245,12 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-30T06:38:38Z",
+        "created_at": "2017-05-30T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
-        },
-        "validated": true
+        }
       },
       {
         "id": "2",
@@ -253,13 +262,93 @@ Feature: Get recent activity for group_id and item_id
           "type": "Category"
         },
         "score": 100,
-        "submitted_at": "2017-05-29T06:38:38Z",
+        "created_at": "2017-05-29T06:38:38Z",
         "user": {
           "first_name": "John",
           "last_name": "Doe",
           "login": "user"
+        }
+      }
+    ]
+    """
+
+  Scenario: User is a manager of the group and there are visible descendants of the item; request unvalidated answers only
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&validated=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "1",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Catégorie 1"
+          },
+          "type": "Category"
         },
-        "validated": true
+        "score": 99,
+        "created_at": "2017-05-29T06:38:38Z",
+        "user": {
+          "first_name": "John",
+          "last_name": "Doe",
+          "login": "user"
+        }
+      }
+    ]
+    """
+
+  Scenario: User can see their own name
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/31/recent_activity?item_id=200&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "created_at": "2017-05-30T06:38:38Z",
+        "id": "8",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Category 1"
+          },
+          "type": "Category"
+        },
+        "score": 100,
+        "user": {
+          "first_name": "Jane",
+          "last_name": "Doe",
+          "login": "jane"
+        }
+      }
+    ]
+    """
+
+  Scenario: User cannot see names without approval
+    Given I am the user with id "31"
+    When I send a GET request to "/groups/11/recent_activity?item_id=200&limit=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "created_at": "2017-05-30T06:38:38Z",
+        "id": "3",
+        "item": {
+          "id": "200",
+          "string": {
+            "title": "Category 1"
+          },
+          "type": "Category"
+        },
+        "score": 100,
+        "user": {
+          "first_name": null,
+          "last_name": null,
+          "login": "user"
+        }
       }
     ]
     """

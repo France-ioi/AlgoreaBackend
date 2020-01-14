@@ -62,7 +62,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			requestData.TaskToken.Converted.UserID, user.GroupID))
 	}
 
-	var userAnswerID int64
+	var answerID int64
 	var hintsInfo struct {
 		HintsRequested *string
 		HintsCached    int32
@@ -80,7 +80,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			return nil // commit! (CheckSubmissionRights() changes the DB sometimes)
 		}
 
-		userAnswerID, err = store.UserAnswers().SubmitNewAnswer(
+		answerID, err = store.Answers().SubmitNewAnswer(
 			user.GroupID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
@@ -105,7 +105,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		ItemID:          requestData.TaskToken.ItemID,
 		ItemURL:         requestData.TaskToken.ItemURL,
 		LocalItemID:     requestData.TaskToken.LocalItemID,
-		UserAnswerID:    strconv.FormatInt(userAnswerID, 10),
+		UserAnswerID:    strconv.FormatInt(answerID, 10),
 		RandomSeed:      requestData.TaskToken.RandomSeed,
 		HintsRequested:  hintsInfo.HintsRequested,
 		HintsGivenCount: strconv.FormatInt(int64(hintsInfo.HintsCached), 10),

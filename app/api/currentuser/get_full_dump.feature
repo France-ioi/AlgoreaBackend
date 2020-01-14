@@ -74,10 +74,10 @@ Feature: Export the current user's data
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |
       | 113 | 1        | 405     | 0     |
-    And the database has the following table 'users_answers':
-      | id | user_id | attempt_id | submitted_at        |
-      | 1  | 11      | 111        | 2019-07-09 21:02:28 |
-      | 2  | 21      | 113        | 2019-07-09 21:02:28 |
+    And the database has the following table 'answers':
+      | id | author_id | attempt_id | created_at          |
+      | 1  | 11        | 111        | 2019-07-09 21:02:28 |
+      | 2  | 21        | 113        | 2019-07-09 21:02:28 |
     And the database has the following table 'users_items':
       | user_id | item_id | active_attempt_id |
       | 11      | 404     | 111               |
@@ -230,11 +230,10 @@ Feature: Export the current user's data
           "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
-      "users_answers": [
+      "answers": [
         {
-          "id": "1", "validated": null, "score": null, "attempt_id": "111",
-          "user_id": "11", "answer": null, "graded_at": null, "lang_prog": null,
-          "name": null, "state": null, "submitted_at": "2019-07-09T21:02:28Z", "type": "Submission"
+          "id": "1", "attempt_id": "111", "author_id": "11", "answer": null,
+          "state": null, "created_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
       ],
       "users_items": [
@@ -280,7 +279,7 @@ Feature: Export the current user's data
           "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
-      "users_answers": [],
+      "answers": [],
       "users_items": []
     }
     """

@@ -21,6 +21,16 @@ func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
 	return &DataStore{conn.Table(tableName), tableName}
 }
 
+// Answers returns a AnswerStore
+func (s *DataStore) Answers() *AnswerStore {
+	return &AnswerStore{NewDataStoreWithTable(s.DB, "answers")}
+}
+
+// Gradings returns a GradingStore
+func (s *DataStore) Gradings() *GradingStore {
+	return &GradingStore{NewDataStoreWithTable(s.DB, "gradings")}
+}
+
 // Users returns a UserStore
 func (s *DataStore) Users() *UserStore {
 	return &UserStore{NewDataStoreWithTable(s.DB, "users")}
@@ -134,11 +144,6 @@ func (s *DataStore) RefreshTokens() *RefreshTokenStore {
 // Sessions returns a SessionStore
 func (s *DataStore) Sessions() *SessionStore {
 	return &SessionStore{NewDataStoreWithTable(s.DB, "sessions")}
-}
-
-// UserAnswers returns a UserAnswerStore
-func (s *DataStore) UserAnswers() *UserAnswerStore {
-	return &UserAnswerStore{NewDataStoreWithTable(s.DB, "users_answers")}
 }
 
 // UserItems returns a UserItemStore

@@ -62,9 +62,9 @@ Feature: Submit a new answer
         "success": true
       }
       """
-    And the table "users_answers" should be:
-      | user_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101     | 100        | Submission | print 1 | 1                                                   |
+    And the table "answers" should be:
+      | author_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 100        | Submission | print 1 | 1                                                 |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |
@@ -116,9 +116,9 @@ Feature: Submit a new answer
         "success": true
       }
       """
-    And the table "users_answers" should be:
-      | user_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, submitted_at, NOW())) < 3 |
-      | 101     | 100        | Submission | print(2) | 1                                                   |
+    And the table "answers" should be:
+      | author_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 100        | Submission | print(2) | 1                                                 |
     And the table "groups_attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |

@@ -14,20 +14,24 @@ import (
 // swagger:operation GET /answers answers itemAnswersView
 // ---
 // summary: List answers
-// description: Return answers (i.e., history of submissions and current answer)
+// description: Return answers (i.e., saved answers, current answer and submissions)
 //   for a given item and user, or from a given attempt.
 //
-//   * One of (`user_id`, `item_id`) pair or `attempt_id` is required.
+//   * One of (`author_id`, `item_id`) pair or `attempt_id` is required.
 //
 //   * The user should have at least 'content' access to the item.
 //
-//   * If `item_id` and `user_id` are given, the authenticated user should have `group_id` equal to the input `user_id`
-//   or be an owner of a group containing the input `user_id`.
+//   * If `item_id` and `author_id` are given, the authenticated user should be the input `author_id`
+//     or a manager of a group containing the input `author_id`.
 //
 //   * If `attempt_id` is given, the authenticated user should be a member of the group
 //   or an owner of the group attached to the attempt.
+//
+//
+//   Users `first_name` and `last_name` are only shown for the authenticated user or if the user
+//   approved access to their personal info for some group managed by the authenticated user.
 // parameters:
-// - name: user_id
+// - name: author_id
 //   in: query
 //   type: integer
 // - name: item_id
@@ -38,21 +42,21 @@ import (
 //   type: integer
 // - name: sort
 //   in: query
-//   default: [-submitted_at,id]
+//   default: [-created_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [submitted_at,-submitted_at,id,-id]
-// - name: from.submitted_at
-//   description: Start the page from the answer next to the answer with `submitted_at` = `from.submitted_at`
-//                and `users_answers.id` = `from.id`
-//                (`from.id` is required when `from.submitted_at` is present)
+//     enum: [created_at,-created_at,id,-id]
+// - name: from.created_at
+//   description: Start the page from the answer next to the answer with `created_at` = `from.created_at`
+//                and `answers.id` = `from.id`
+//                (`from.id` is required when `from.created_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the answer next to the answer with `submitted_at`=`from.submitted_at`
-//                and `users_answers.id`=`from.id`
-//                (`from.submitted_at` is required when from.id is present)
+//   description: Start the page from the answer next to the answer with `created_at`=`from.created_at`
+//                and `answers.id`=`from.id`
+//                (`from.created_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -81,18 +85,23 @@ import (
 func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	user := srv.GetUser(httpReq)
 
-	dataQuery := srv.Store.UserAnswers().WithUsers().WithGroupAttempts().
-		Select(`users_answers.id, users_answers.name, users_answers.type, users_answers.lang_prog,
-		        users_answers.submitted_at, users_answers.score, users_answers.validated,
-		        users.login, users.first_name, users.last_name`)
+	dataQuery := srv.Store.Answers().WithUsers().WithGroupAttempts().
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
+		Select(`
+			answers.id, answers.type, answers.created_at, gradings.score,
+			users.login,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name`,
+			user.GroupID, user.GroupID).
+		WithPersonalInfoViewApprovals(user)
 
-	userID, userIDError := service.ResolveURLQueryGetInt64Field(httpReq, "user_id")
+	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
 	itemID, itemIDError := service.ResolveURLQueryGetInt64Field(httpReq, "item_id")
 
-	if userIDError != nil || itemIDError != nil { // attempt_id
+	if authorIDError != nil || itemIDError != nil { // attempt_id
 		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
 		if attemptIDError != nil {
-			return service.ErrInvalidRequest(fmt.Errorf("either user_id & item_id or attempt_id must be present"))
+			return service.ErrInvalidRequest(fmt.Errorf("either author_id & item_id or attempt_id must be present"))
 		}
 
 		if result := srv.checkAccessRightsForGetAnswersByAttemptID(attemptID, user); result != service.NoError {
@@ -100,18 +109,18 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 		}
 
 		dataQuery = dataQuery.Where("attempt_id = ?", attemptID)
-	} else { // user_id + item_id
-		if result := srv.checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID, user); result != service.NoError {
+	} else { // author_id + item_id
+		if result := srv.checkAccessRightsForGetAnswersByAuthorIDAndItemID(authorID, itemID, user); result != service.NoError {
 			return result
 		}
 
-		dataQuery = dataQuery.Where("item_id = ? AND user_id = ?", itemID, userID)
+		dataQuery = dataQuery.Where("item_id = ? AND author_id = ?", itemID, authorID)
 	}
 
 	dataQuery, apiError := service.ApplySortingAndPaging(httpReq, dataQuery, map[string]*service.FieldSortingParams{
-		"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
-		"id":           {ColumnName: "users_answers.id", FieldType: "int64"},
-	}, "-submitted_at,id", "id", false)
+		"created_at": {ColumnName: "answers.created_at", FieldType: "time"},
+		"id":         {ColumnName: "answers.id", FieldType: "int64"},
+	}, "-created_at,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -129,12 +138,9 @@ func (srv *Service) getAnswers(rw http.ResponseWriter, httpReq *http.Request) se
 // swagger:ignore
 type rawAnswersData struct {
 	ID            int64
-	Name          *string
 	Type          string
-	LangProg      *string
-	SubmittedAt   database.Time
+	CreatedAt     database.Time
 	Score         *float32
-	Validated     *bool
 	UserLogin     string  `sql:"column:login"`
 	UserFirstName *string `sql:"column:first_name"`
 	UserLastName  *string `sql:"column:last_name"`
@@ -153,26 +159,17 @@ type answersResponseAnswerUser struct {
 
 // swagger:model
 type answersResponseAnswer struct {
-	// `users_answers.id`
+	// `answers.id`
 	// required: true
 	ID int64 `json:"id,string"`
-	// Nullable
-	// required: true
-	Name *string `json:"name"`
 	// required: true
 	// enum: Submission,Saved,Current
 	Type string `json:"type"`
-	// Nullable
 	// required: true
-	LangProg *string `json:"lang_prog"`
-	// required: true
-	SubmittedAt database.Time `json:"submitted_at"`
+	CreatedAt database.Time `json:"created_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
-	// Nullable
-	// required: true
-	Validated *bool `json:"validated"`
 
 	// required: true
 	User answersResponseAnswerUser `json:"user"`
@@ -182,13 +179,10 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 	responseData := make([]answersResponseAnswer, 0, len(rawData))
 	for _, row := range rawData {
 		responseData = append(responseData, answersResponseAnswer{
-			ID:          row.ID,
-			Name:        row.Name,
-			Type:        row.Type,
-			LangProg:    row.LangProg,
-			SubmittedAt: row.SubmittedAt,
-			Score:       row.Score,
-			Validated:   row.Validated,
+			ID:        row.ID,
+			Type:      row.Type,
+			CreatedAt: row.CreatedAt,
+			Score:     row.Score,
 			User: answersResponseAnswerUser{
 				Login:     row.UserLogin,
 				FirstName: row.UserFirstName,
@@ -219,11 +213,11 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(attemptID int64, u
 	return service.NoError
 }
 
-func (srv *Service) checkAccessRightsForGetAnswersByUserIDAndItemID(userID, itemID int64, user *database.User) service.APIError {
-	if userID != user.GroupID {
+func (srv *Service) checkAccessRightsForGetAnswersByAuthorIDAndItemID(authorID, itemID int64, user *database.User) service.APIError {
+	if authorID != user.GroupID {
 		count := 0
 		err := srv.Store.GroupAncestors().ManagedByUser(user).
-			Where("groups_ancestors.child_group_id=?", userID).
+			Where("groups_ancestors.child_group_id=?", authorID).
 			Count(&count).Error()
 		service.MustNotBeError(err)
 		if count == 0 {

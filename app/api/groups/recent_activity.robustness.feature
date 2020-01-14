@@ -21,10 +21,14 @@ Feature: Get recent activity for group_id and item_id - robustness
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |
-    And the database has the following table 'users_answers':
-      | id | user_id | attempt_id | name             | type       | state   | lang_prog | submitted_at        | score | validated |
-      | 1  | 11      | 100        | My answer        | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
-      | 2  | 11      | 101        | My second anwser | Submission | Current | python    | 2017-05-29 06:38:38 | 100   | true      |
+    And the database has the following table 'answers':
+      | id | author_id | attempt_id | type       | state   | created_at          |
+      | 1  | 11        | 100        | Submission | Current | 2017-05-29 06:38:38 |
+      | 2  | 11        | 101        | Submission | Current | 2017-05-29 06:38:38 |
+    And the database has the following table 'gradings':
+      | answer_id | graded_at           | score |
+      | 1         | 2017-05-29 06:38:38 | 100   |
+      | 2         | 2017-05-29 06:38:38 | 100   |
     And the database has the following table 'items':
       | id  | type     | teams_editable | no_score |
       | 200 | Category | false          | false    |
@@ -69,14 +73,14 @@ Feature: Get recent activity for group_id and item_id - robustness
     []
     """
 
-  Scenario: Should fail when from.id is given, but from.submitted_at is not
+  Scenario: Should fail when from.id is given, but from.created_at is not
     Given I am the user with id "23"
     When I send a GET request to "/groups/13/recent_activity?item_id=200&from.id=1"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.submitted_at, from.id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.created_at, from.id) or none of them must be present"
 
-  Scenario: Should fail when from.submitted_at is given, but from.id is not
+  Scenario: Should fail when from.created_at is given, but from.id is not
     Given I am the user with id "23"
-    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.submitted_at=2017-05-30T06:38:38Z"
+    When I send a GET request to "/groups/13/recent_activity?item_id=200&from.created_at=2017-05-30T06:38:38Z"
     Then the response code should be 400
-    And the response error message should contain "All 'from' parameters (from.submitted_at, from.id) or none of them must be present"
+    And the response error message should contain "All 'from' parameters (from.created_at, from.id) or none of them must be present"

@@ -18,13 +18,13 @@ Feature: Update the 'current' answer
     And the database has the following table 'groups_attempts':
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
-    And the database has the following table 'users_answers':
-      | id  | user_id | attempt_id | submitted_at        |
-      | 100 | 101     | 200        | 2017-05-29 06:38:38 |
+    And the database has the following table 'answers':
+      | id  | author_id | attempt_id | created_at          |
+      | 100 | 101       | 200        | 2017-05-29 06:38:38 |
 
-  Scenario: Missing attempt_id
+  Scenario: Invalid attempt_id
     Given I am the user with id "101"
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/abc/answers/current" with the following body:
       """
       {
         "answer": "print 1",
@@ -32,26 +32,15 @@ Feature: Update the 'current' answer
       }
       """
     Then the response code should be 400
-    And the response body should be, in JSON:
-      """
-      {
-        "error_text": "Invalid input data",
-        "errors": {
-          "attempt_id": ["missing field"]
-        },
-        "message": "Bad Request",
-        "success": false
-      }
-      """
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: Missing answer
     Given I am the user with id "101"
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/100/answers/current" with the following body:
       """
       {
-        "attempt_id": "100",
         "state": "some state"
       }
       """
@@ -68,14 +57,13 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: Missing state
     Given I am the user with id "101"
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/100/answers/current" with the following body:
       """
       {
-        "attempt_id": "100",
         "answer": "print 1"
       }
       """
@@ -92,14 +80,13 @@ Feature: Update the 'current' answer
       }
       """
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: User not found
     Given I am the user with id "404"
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/100/answers/current" with the following body:
       """
       {
-        "attempt_id": "100",
         "answer": "print 1",
         "state": "some state"
       }
@@ -107,14 +94,13 @@ Feature: Update the 'current' answer
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged
 
   Scenario: No access
     Given I am the user with id "101"
-    When I send a PUT request to "/answers/current" with the following body:
+    When I send a PUT request to "/attempts/300/answers/current" with the following body:
       """
       {
-        "attempt_id": "300",
         "answer": "print 1",
         "state": "some state"
       }
@@ -122,4 +108,4 @@ Feature: Update the 'current' answer
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "users_answers" should stay unchanged
+    And the table "answers" should stay unchanged

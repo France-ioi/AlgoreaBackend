@@ -11,17 +11,14 @@ import (
 
 // swagger:model groupRecentActivityResponseRow
 type groupRecentActivityResponseRow struct {
-	// `users_answers.id`
+	// `answers.id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
-	SubmittedAt *database.Time `json:"submitted_at"`
+	CreatedAt *database.Time `json:"created_at"`
 	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
-	// Nullable
-	// required: true
-	Validated *bool `json:"validated"`
 	// required: true
 	User struct {
 		// required: true
@@ -53,7 +50,7 @@ type groupRecentActivityResponseRow struct {
 // ---
 // summary: Get recent activity of a group
 // description: >
-//   Returns rows from `users_answers` with `type` = "Submission" and additional info on users and items.
+//   Returns rows from `answers` with `type` = "Submission" and additional info on users and items.
 //
 //
 //   If possible, items titles are shown in the authenticated user's default language.
@@ -64,7 +61,8 @@ type groupRecentActivityResponseRow struct {
 //   descendants of `item_id` and visible to the authenticated user (at least 'info' access).
 //
 //
-//   If the `validated` parameter is true, only validated `users_answers` (with `validated`=1) are returned.
+//   If the `validated` parameter is given, only `answers` with `score` = 100 (if `validated` = 1)
+//   or with `score` != 100 (otherwise) are returned.
 //
 //
 //   The authenticated user should be a manager of `group_id`, otherwise the 'forbidden' error is returned.
@@ -83,19 +81,19 @@ type groupRecentActivityResponseRow struct {
 //   default: false
 // - name: sort
 //   in: query
-//   default: [-submitted_at,id]
+//   default: [-created_at,id]
 //   type: array
 //   items:
 //     type: string
-//     enum: [submitted_at,-submitted_at,id,-id]
-// - name: from.submitted_at
-//   description: Start the page from the row next to the row with `users_answers.submitted_at` = `from.submitted_at`
-//                (`from.id` is required when `from.submitted_at` is present)
+//     enum: [created_at,-created_at,id,-id]
+// - name: from.created_at
+//   description: Start the page from the row next to the row with `answers.created_at` = `from.created_at`
+//                (`from.id` is required when `from.created_at` is present)
 //   in: query
 //   type: string
 // - name: from.id
-//   description: Start the page from the row next to the row with `users_answers.id`=`from.id`
-//                (`from.submitted_at` is required when from.id is present)
+//   description: Start the page from the row next to the row with `answers.id`=`from.id`
+//                (`from.created_at` is required when from.id is present)
 //   in: query
 //   type: integer
 // - name: limit
@@ -137,15 +135,20 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 	}
 
 	itemDescendants := srv.Store.ItemAncestors().DescendantsOf(itemID).Select("child_item_id")
-	query := srv.Store.UserAnswers().WithUsers().WithItems().
-		Select(
-			`users_answers.id as id, users_answers.submitted_at, users_answers.validated, users_answers.score,
-       items.id AS item__id, items.type AS item__type,
-		   users.login AS user__login, users.first_name AS user__first_name, users.last_name AS user__last_name,
-			 IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`).
+	query := srv.Store.Answers().WithUsers().WithItems().
+		Joins("LEFT JOIN gradings ON gradings.answer_id = answers.id").
+		Select(`
+			answers.id as id, answers.created_at, gradings.score,
+			items.id AS item__id, items.type AS item__type,
+			users.login AS user__login,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
+			IF(user_strings.language_id IS NULL, default_strings.title, user_strings.title) AS item__string__title`,
+			user.GroupID, user.GroupID).
+		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user).
 		Where("groups_attempts.item_id IN ?", itemDescendants.SubQuery()).
-		Where("users_answers.type='Submission'").
+		Where("answers.type='Submission'").
 		WhereItemsAreVisible(user).
 		WhereUsersAreDescendantsOfGroup(groupID)
 
@@ -154,9 +157,9 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 
 	query, apiError := service.ApplySortingAndPaging(r, query,
 		map[string]*service.FieldSortingParams{
-			"submitted_at": {ColumnName: "users_answers.submitted_at", FieldType: "time"},
-			"id":           {ColumnName: "users_answers.id", FieldType: "int64"}},
-		"-submitted_at,id", "id", false)
+			"created_at": {ColumnName: "answers.created_at", FieldType: "time"},
+			"id":         {ColumnName: "answers.id", FieldType: "int64"}},
+		"-created_at,id", "id", false)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -171,7 +174,12 @@ func (srv *Service) getRecentActivity(w http.ResponseWriter, r *http.Request) se
 func (srv *Service) filterByValidated(r *http.Request, query *database.DB) *database.DB {
 	validated, err := service.ResolveURLQueryGetBoolField(r, "validated")
 	if err == nil {
-		query = query.Where("users_answers.validated = ?", validated)
+		condition := "gradings.score "
+		if !validated {
+			condition += "IS NULL OR gradings.score !"
+		}
+		condition += "= 100"
+		query = query.Where(condition)
 	}
 	return query
 }

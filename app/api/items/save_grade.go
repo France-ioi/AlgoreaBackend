@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
@@ -81,7 +82,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
-	if !saveNewScoreIntoUserAnswer(store, user, requestData, score, validated) {
+	if !saveNewScoreIntoGradings(store, user, requestData, score) {
 		return validated, false
 	}
 
@@ -103,15 +104,15 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	values := []interface{}{
 		requestData.ScoreToken.Converted.UserAnswerID, // for join
 		1, // tasks_tried
-		gorm.Expr("GREATEST(users_answers.submitted_at, IFNULL(latest_answer_at, users_answers.submitted_at))"), // latest_answer_at
+		gorm.Expr("GREATEST(answers.created_at, IFNULL(latest_answer_at, answers.created_at))"), // latest_answer_at
 		// for score_computed we compare patched scores
 		gorm.Expr(`
 			CASE
 			  -- New best score or no time saved yet
 				-- Note that when the score = 0, score_obtained_at is the time of the first submission
-				WHEN score_obtained_at IS NULL OR score_computed < ? THEN users_answers.submitted_at
+				WHEN score_obtained_at IS NULL OR score_computed < ? THEN answers.created_at
 				-- We may get the result of an earlier submission after one with the same score
-				WHEN score_computed = ? THEN LEAST(score_obtained_at, users_answers.submitted_at)
+				WHEN score_computed = ? THEN LEAST(score_obtained_at, answers.created_at)
 				-- New score if lower than the best score
 				ELSE score_obtained_at
 			END`, newScoreExpression, newScoreExpression), // score_obtained_at
@@ -121,40 +122,37 @@ func saveGradingResultsIntoDB(store *database.DataStore, user *database.User,
 	if validated {
 		// Item was validated
 		columnsToUpdate = append(columnsToUpdate, "validated_at")
-		values = append(values, gorm.Expr("LEAST(IFNULL(validated_at, users_answers.submitted_at), users_answers.submitted_at)"))
+		values = append(values, gorm.Expr("LEAST(IFNULL(validated_at, answers.created_at), answers.created_at)"))
 	}
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values, requestData.TaskToken.Converted.AttemptID)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE groups_attempts JOIN users_answers ON users_answers.id = ? "+ // nolint:gosec
+		store.DB.Exec("UPDATE groups_attempts JOIN answers ON answers.id = ? "+ // nolint:gosec
 			updateExpr+" WHERE groups_attempts.id = ?", values...).Error()) // nolint:gosec
 	service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
 	return validated, true
 }
 
-func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
-	requestData *saveGradeRequestParsed, score float64, validated bool) bool {
-	userAnswerID := requestData.ScoreToken.Converted.UserAnswerID
-	userAnswerScope := store.UserAnswers().ByID(userAnswerID).
-		Where("user_id = ?", user.GroupID).
-		Where("(SELECT item_id FROM groups_attempts WHERE id = attempt_id) = ?", requestData.TaskToken.Converted.LocalItemID)
+func saveNewScoreIntoGradings(store *database.DataStore, user *database.User,
+	requestData *saveGradeRequestParsed, score float64) bool {
+	answerID := requestData.ScoreToken.Converted.UserAnswerID
+	gradingStore := store.Gradings()
 
-	updateResult := userAnswerScope.Where("score = ? OR score IS NULL", score).
-		UpdateColumn(map[string]interface{}{
-			"graded_at": database.Now(),
-			"validated": validated,
-			"score":     score,
-		})
-	service.MustNotBeError(updateResult.Error())
+	insertError := gradingStore.InsertMap(map[string]interface{}{
+		"answer_id": answerID, "score": score, "graded_at": database.Now(),
+	})
 
-	if updateResult.RowsAffected() == 0 {
+	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (the answer has been removed)
+	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1452 {
+		return false
+	}
+
+	// ERROR 1062 (23000): Duplicate entry (already graded)
+	if e, ok := insertError.(*mysql.MySQLError); ok && e.Number == 1062 {
 		var oldScore *float64
-		err := userAnswerScope.PluckFirst("score", &oldScore).Error()
-		if gorm.IsRecordNotFoundError(err) {
-			return false
-		}
-		service.MustNotBeError(err)
+		service.MustNotBeError(gradingStore.
+			Where("answer_id = ?", answerID).PluckFirst("score", &oldScore).Error())
 		if oldScore != nil {
 			if *oldScore != score {
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
@@ -170,6 +168,7 @@ func saveNewScoreIntoUserAnswer(store *database.DataStore, user *database.User,
 			return false
 		}
 	}
+	service.MustNotBeError(insertError)
 
 	return true
 }
@@ -184,11 +183,11 @@ type saveGradeRequestParsed struct {
 }
 
 type saveGradeRequest struct {
-	TaskToken    *string            `json:"task_token"`
-	ScoreToken   formdata.Anything  `json:"score_token"`
-	Score        *float64           `json:"score"`
-	AnswerToken  *formdata.Anything `json:"answer_token"`
-	UserAnswerID *string            `json:"user_answer_id"`
+	TaskToken   *string            `json:"task_token"`
+	ScoreToken  formdata.Anything  `json:"score_token"`
+	Score       *float64           `json:"score"`
+	AnswerToken *formdata.Anything `json:"answer_token"`
+	AnswerID    *string            `json:"answer_id"`
 }
 
 // UnmarshalJSON unmarshals the items/saveGrade request data from JSON

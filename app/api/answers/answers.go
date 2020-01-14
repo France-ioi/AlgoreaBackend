@@ -21,5 +21,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/answers", service.AppHandler(srv.getAnswers).ServeHTTP)
 	router.Get("/answers/{answer_id}", service.AppHandler(srv.get).ServeHTTP)
 	router.Post("/answers", service.AppHandler(srv.submit).ServeHTTP)
-	router.Put("/answers/current", service.AppHandler(srv.updateCurrent).ServeHTTP)
+	router.Put("/attempts/{attempt_id}/answers/current", service.AppHandler(srv.updateCurrent).ServeHTTP)
 }
