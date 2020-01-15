@@ -10,16 +10,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:model
-type updateCurrentRequest struct {
-	// required: true
-	// minLength: 1
-	Answer string `json:"answer" validate:"set,min=1"`
-	// required: true
-	// minLength: 1
-	State string `json:"state" validate:"set,min=1"`
-}
-
 // swagger:operation PUT /attempts/{attempt_id}/answers/current answers itemAnswerUpdateCurrent
 // ---
 // summary: Update current answer
@@ -38,7 +28,7 @@ type updateCurrentRequest struct {
 //   in: body
 //   required: true
 //   schema:
-//     "$ref": "#/definitions/updateCurrentRequest"
+//     "$ref": "#/definitions/answerData"
 // responses:
 //   "201":
 //     "$ref": "#/responses/updatedResponse"
@@ -56,7 +46,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 		return service.ErrInvalidRequest(err)
 	}
 
-	var requestData updateCurrentRequest
+	var requestData answerData
 	formData := formdata.NewFormData(&requestData)
 	err = formData.ParseJSONRequestData(httpReq)
 	if err != nil {

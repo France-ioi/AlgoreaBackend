@@ -14,6 +14,16 @@ type Service struct {
 	service.Base
 }
 
+// swagger:model
+type answerData struct {
+	// required: true
+	// minLength: 1
+	Answer string `json:"answer" validate:"set,min=1"`
+	// required: true
+	// minLength: 1
+	State string `json:"state" validate:"set,min=1"`
+}
+
 // SetRoutes defines the routes for this package in a route answers
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
