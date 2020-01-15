@@ -30,8 +30,10 @@ import (
 //   schema:
 //     "$ref": "#/definitions/answerData"
 // responses:
-//   "200":
-//     "$ref": "#/responses/createdResponse"
+//   "201":
+//     description: Created. The request has successfully saved the answer.
+//     schema:
+//       "$ref": "#/definitions/createdResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
