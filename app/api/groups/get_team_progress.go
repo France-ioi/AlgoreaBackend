@@ -153,7 +153,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			groups.id AS group_id,
 			IFNULL(attempt_with_best_score.score_computed, 0) AS score,
 			IFNULL(attempt_with_best_score.validated, 0) AS validated,
-			(SELECT MAX(latest_activity_at) FROM groups_attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
+			(SELECT MAX(latest_activity_at) FROM attempts WHERE group_id = groups.id AND item_id = items.id) AS latest_activity_at,
 			IFNULL(attempt_with_best_score.hints_cached, 0) AS hints_requested,
 			IFNULL(attempt_with_best_score.submissions, 0) AS submissions,
 			IF(attempt_with_best_score.group_id IS NULL,
@@ -163,7 +163,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
-					FROM groups_attempts
+					FROM attempts
 					WHERE group_id = groups.id AND item_id = items.id
 				)
 			) AS time_spent`).
@@ -171,7 +171,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT score_computed, validated, hints_cached, submissions, group_id
-				FROM groups_attempts
+				FROM attempts
 				WHERE group_id = groups.id AND item_id = items.id
 				ORDER BY group_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1

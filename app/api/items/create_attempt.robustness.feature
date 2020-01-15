@@ -42,7 +42,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Invalid as_team_id
     Given I am the user with id "101"
@@ -56,7 +56,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (no item)
     Given I am the user with id "101"
@@ -64,7 +64,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (info access)
     Given I am the user with id "101"
@@ -72,7 +72,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (as a team)
     Given I am the user with id "101"
@@ -80,7 +80,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (type='Root')
     Given I am the user with id "101"
@@ -88,7 +88,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (type='Category')
     Given I am the user with id "101"
@@ -96,7 +96,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: No access to the item (type='Chapter')
     Given I am the user with id "101"
@@ -104,7 +104,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User is not a team member
     Given I am the user with id "101"
@@ -112,7 +112,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: as_team_id is not a team
     Given I am the user with id "101"
@@ -120,7 +120,7 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: as_team_id is a team for a different item
     Given I am the user with id "101"
@@ -128,18 +128,18 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: There is an attempt for the (group, item) pair already, but items.has_attempts = 0
     Given I am the user with id "101"
     And the database table 'permissions_generated' has also the following row:
       | group_id | item_id | can_view_generated |
       | 104      | 50      | content            |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | order |
       | 104      | 50      | 1     |
     When I send a POST request to "/items/50/attempts?as_team_id=104"
     Then the response code should be 422
     And the response error message should contain "The item doesn't allow multiple attempts"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

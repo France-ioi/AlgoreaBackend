@@ -15,7 +15,7 @@ type rawNavigationItem struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title *string
 
-	// from groups_attempts for the active attempt of the current user
+	// from attempts for the active attempt of the current user
 	UserAttemptID     *int64         `sql:"column:attempt_id"`
 	UserScoreComputed float32        `sql:"column:score_computed"`
 	UserValidated     bool           `sql:"column:validated"`
@@ -58,11 +58,11 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	query := dataStore.Raw(`
 		SELECT items.id, items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
-			groups_attempts.id AS attempt_id,
-			groups_attempts.score_computed AS score_computed, groups_attempts.validated AS validated,
-			groups_attempts.finished AS finished,
-			groups_attempts.submissions AS submissions,
-			groups_attempts.started_at AS started_at, groups_attempts.validated_at AS validated_at,
+			attempts.id AS attempt_id,
+			attempts.score_computed AS score_computed, attempts.validated AS validated,
+			attempts.finished AS finished,
+			attempts.submissions AS submissions,
+			attempts.started_at AS started_at, attempts.validated_at AS validated_at,
 			items.child_order AS child_order,
 			items.content_view_propagation,
 			items.parent_item_id AS parent_item_id,
@@ -71,7 +71,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
 		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
-		Joins("LEFT JOIN groups_attempts ON groups_attempts.id=users_items.active_attempt_id").
+		Joins("LEFT JOIN attempts ON attempts.id=users_items.active_attempt_id").
 		Order("item_grandparent_id, parent_item_id, child_order")
 
 	if err := query.Scan(&result).Error(); err != nil {

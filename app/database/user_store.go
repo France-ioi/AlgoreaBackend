@@ -21,7 +21,7 @@ const deleteWithTrapsBatchSize = 1000
 // 1. [`users_threads`, `users_items`, `filters`, `sessions`, `refresh_tokens`]
 //    having `user_id` = `users.group_id`;
 // 2. `answers` having `author_id` = `users.group_id`;
-// 3. [`permissions_granted`, `permissions_generated`, `groups_attempts`, `groups_login_prefixes`]
+// 3. [`permissions_granted`, `permissions_generated`, `attempts`, `groups_login_prefixes`]
 //    having `group_id` = `users.group_id`;
 // 4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
 // 5. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
@@ -85,7 +85,7 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 	db.mustBeInTransaction()
 
 	executeDeleteQuery(db, "users_threads", "WHERE user_id IN (?)", userIDs)
-	for _, table := range [...]string{"groups_attempts", "groups_login_prefixes"} {
+	for _, table := range [...]string{"attempts", "groups_login_prefixes"} {
 		executeDeleteQuery(db, table, "WHERE group_id IN (?)", userIDs)
 	}
 	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", userIDs)
@@ -94,7 +94,7 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 	executeDeleteQuery(db, "groups_ancestors", "WHERE child_group_id IN (?)", userIDs)
 	// deleting from `groups` triggers deletion from
 	// `group_pending_requests`, `group_membership_changes`,
-	// `permissions_granted`, `permissions_generated", `groups_attempts`, `groups_login_prefixes`
+	// `permissions_granted`, `permissions_generated", `attempts`, `groups_login_prefixes`
 	// `users`, `users_threads`, `answers`, `users_items`, `filters`, `sessions`, `refresh_tokens`
 	for _, table := range [...]string{"groups_propagate", "groups"} {
 		executeDeleteQuery(db, table, "WHERE id IN (?)", userIDs)

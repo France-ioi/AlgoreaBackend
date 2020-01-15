@@ -22,18 +22,18 @@ type groupGroupProgressResponseRow struct {
 	// required:true
 	AverageScore float32 `json:"average_score"`
 	// % (float [0,1]) of "end-members" who have validated the task.
-	// An "end-member" has validated a task if one of his attempts has `groups_attempts.validated` = 1.
+	// An "end-member" has validated a task if one of his attempts has `attempts.validated` = 1.
 	// No attempts for an "end-member" is considered as not validated.
 	// required:true
 	ValidationRate float32 `json:"validation_rate"`
 	// Average number of hints requested by each "end-member".
-	// The number of hints requested of an "end-member" is the `groups_attempts.hints_cached`
+	// The number of hints requested of an "end-member" is the `attempts.hints_cached`
 	// of the attempt with the best score
 	// (if several with the same score, we use the first attempt chronologically on `score_obtained_at`).
 	// required:true
 	AvgHintsRequested float32 `json:"avg_hints_requested"`
 	// Average number of submissions made by each "end-member".
-	// The number of submissions made by an "end-member" is the `groups_attempts.submissions`.
+	// The number of submissions made by an "end-member" is the `attempts.submissions`.
 	// of the attempt with the best score
 	// (if several with the same score, we use the first attempt chronologically on `score_obtained_at`).
 	// required:true
@@ -205,7 +205,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 						TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
 						TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
 					)
-					FROM groups_attempts
+					FROM attempts
 					WHERE group_id = end_members.id AND item_id = items.id
 				)
 			) AS time_spent
@@ -214,7 +214,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			LEFT JOIN LATERAL (
 				SELECT score_computed AS score, validated, hints_cached, submissions, group_id
-				FROM groups_attempts
+				FROM attempts
 				WHERE group_id = end_members.id AND item_id = items.id
 				ORDER BY group_id, item_id, score DESC, score_obtained_at
 				LIMIT 1

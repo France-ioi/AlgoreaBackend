@@ -89,7 +89,7 @@ Feature: Get item for tree navigation
       | 64 | 210     | 2           | Chapitre A  |
       | 66 | 230     | 2           | Chapitre C  |
       | 67 | 211     | 2           | Tâche 1     |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | started_at          | validated_at        |
       | 101 | 11       | 200     | 1     | 91             | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
       | 102 | 11       | 210     | 1     | 92             | 12          | true     | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |

@@ -36,7 +36,7 @@ Feature: Get a task token with a refreshed attempt for an item
 
   Scenario: User is able to fetch a task token
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
       | 1  | 101      | 50      | 0     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
       | 2  | 101      | 50      | 1     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
@@ -66,14 +66,14 @@ Feature: Get a task token with a refreshed attempt for an item
         }
       }
       """
-    And the table "groups_attempts" should stay unchanged but the row with id "2"
-    And the table "groups_attempts" at id "2" should be:
+    And the table "attempts" should stay unchanged but the row with id "2"
+    And the table "attempts" at id "2" should be:
       | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 101      | 50      | 0              | 0           | done                     | 1                                                         | null                                                    | null                                                     | null                                                | 1                                                 |
 
   Scenario: User is able to fetch a task token as a team
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at | score_computed | score_obtained_at | validated_at | hints_requested | hints_cached |
       | 1  | 102      | 60      | 0     | 2017-05-29 06:38:38 | null       | 0              | null              | null         | null            | 0            |
       | 2  | 102      | 60      | 1     | 2018-05-29 06:38:38 | null       | 0              | null              | null         | [1,2,3,4]       | 4            |
@@ -103,14 +103,14 @@ Feature: Get a task token with a refreshed attempt for an item
         }
       }
       """
-    And the table "groups_attempts" should stay unchanged but the row with id "2"
-    And the table "groups_attempts" at id "2" should be:
+    And the table "attempts" should stay unchanged but the row with id "2"
+    And the table "attempts" at id "2" should be:
       | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 2  | 102      | 60      | 0              | 0           | done                     | 1                                                         | null                                                    | null                                                     | null                                                | 1                                                 |
 
   Scenario: Keeps previous started_at values
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
     When I send a GET request to "/attempts/2/task-token"
@@ -136,7 +136,7 @@ Feature: Get a task token with a refreshed attempt for an item
         }
       }
       """
-    And the table "groups_attempts" should stay unchanged but the row with id "2"
-    And the table "groups_attempts" at id "2" should be:
+    And the table "attempts" should stay unchanged but the row with id "2"
+    And the table "attempts" at id "2" should be:
       | id | group_id | item_id | score_computed | tasks_tried | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_answer_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | started_at          |
       | 2  | 101      | 50      | 0              | 0           | done                     | 1                                                         | null                                                    | null                                                     | null                                                | 2017-05-29 06:38:38 |

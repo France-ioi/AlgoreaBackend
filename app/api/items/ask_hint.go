@@ -25,7 +25,7 @@ import (
 // summary: Register a hint request
 // description: >
 //
-//   Saves the hint request into `groups_attempts` and generates a new task token.
+//   Saves the hint request into `attempts` and generates a new task token.
 //
 //
 //   Restrictions:
@@ -123,8 +123,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		hintsGivenCountString := strconv.Itoa(len(hintsRequestedParsed))
 		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
 
-		// Update groups_attempts with the hint request
-		service.MustNotBeError(store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID).
+		// Update attempts with the hint request
+		service.MustNotBeError(store.Attempts().ByID(requestData.TaskToken.Converted.AttemptID).
 			UpdateColumn(map[string]interface{}{
 				"tasks_with_help":          1,
 				"result_propagation_state": "changed",
@@ -134,7 +134,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 				"hints_cached":             len(hintsRequestedParsed),
 			}).Error())
 
-		service.MustNotBeError(store.GroupAttempts().ComputeAllGroupAttempts())
+		service.MustNotBeError(store.Attempts().ComputeAllAttempts())
 
 		return nil
 	})
@@ -156,7 +156,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
 	user *database.User, r *http.Request) ([]formdata.Anything, error) {
 	var hintsRequested *string
-	err := store.GroupAttempts().ByID(taskToken.Converted.AttemptID).PluckFirst("hints_requested", &hintsRequested).Error()
+	err := store.Attempts().ByID(taskToken.Converted.AttemptID).PluckFirst("hints_requested", &hintsRequested).Error()
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsRequested), &hintsRequestedParsed)

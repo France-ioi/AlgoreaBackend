@@ -137,7 +137,7 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	assert.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.GroupAttempts().Order("group_id").
+	assert.NoError(t, dataStore.Attempts().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
 	assert.NoError(t, dataStore.PermissionsGranted().Order("group_id").

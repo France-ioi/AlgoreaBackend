@@ -33,13 +33,13 @@ Feature: Get groups attempts for current user and item_id
       | 13       | 200     | content                  |
       | 13       | 210     | info                     |
       | 23       | 210     | content_with_descendants |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | score_computed | order | validated_at        | started_at          | creator_id |
       | 150 | 11       | 200     | 100            | 1     | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 21         |
       | 151 | 11       | 200     | 99             | 0     | null                | 2018-05-29 06:38:38 | null       |
       | 250 | 23       | 210     | 99             | 0     | 2018-05-29 08:00:00 | 2019-05-29 06:38:38 | 11         |
 
-  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id
+  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts"
     Then the response code should be 200
@@ -69,7 +69,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (with limit)
+  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (with limit)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?limit=1"
     Then the response code should be 200
@@ -87,7 +87,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (reverse order)
+  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order,id"
     Then the response code should be 200
@@ -117,7 +117,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the groups_attempts.group_id = authenticated user's group_id (reverse order, start from the second row)
+  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order, start from the second row)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?sort=-order,id&from.order=1&from.id=150"
     Then the response code should be 200
@@ -135,7 +135,7 @@ Feature: Get groups attempts for current user and item_id
     ]
     """
 
-  Scenario: Team has access to the item and the groups_attempts.group_id = team's group_id
+  Scenario: Team has access to the item and the attempts.group_id = team's group_id
     Given I am the user with id "21"
     When I send a GET request to "/items/210/attempts?as_team_id=23"
     Then the response code should be 200

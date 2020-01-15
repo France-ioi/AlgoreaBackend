@@ -15,7 +15,7 @@ Feature: Update the 'current' answer
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 200 | 101      | 50      | 0     |
     And the database has the following table 'answers':

@@ -83,7 +83,7 @@ func TestItemItemStore_After_HandlesErrorOfComputeAllAccess(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestItemItemStore_After_HandlesErrorOfComputeAllGroupAttempts(t *testing.T) {
+func TestItemItemStore_After_HandlesErrorOfComputeAllAttempts(t *testing.T) {
 	expectedError := errors.New("some error")
 
 	db, dbMock := NewDBMock()

@@ -84,11 +84,11 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 			user.GroupID, requestData.TaskToken.Converted.AttemptID, *requestData.Answer)
 		service.MustNotBeError(err)
 
-		groupAttemptsScope := store.GroupAttempts().ByID(requestData.TaskToken.Converted.AttemptID)
+		attemptsScope := store.Attempts().ByID(requestData.TaskToken.Converted.AttemptID)
 		service.MustNotBeError(
-			groupAttemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
+			attemptsScope.WithWriteLock().Select("hints_requested, hints_cached").Scan(&hintsInfo).Error())
 
-		return groupAttemptsScope.UpdateColumn(map[string]interface{}{
+		return attemptsScope.UpdateColumn(map[string]interface{}{
 			"submissions":        gorm.Expr("submissions + 1"),
 			"latest_activity_at": database.Now(),
 		}).Error()

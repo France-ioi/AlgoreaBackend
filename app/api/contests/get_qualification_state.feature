@@ -339,7 +339,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
@@ -375,7 +375,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
@@ -429,7 +429,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 31       | 50      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:
@@ -459,7 +459,7 @@ Feature: Get qualification state (contestGetQualificationState)
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | entered_at          | order |
       | 11       | 60      | 2019-05-30 15:00:00 | 1     |
     And the database table 'groups_groups' has also the following row:

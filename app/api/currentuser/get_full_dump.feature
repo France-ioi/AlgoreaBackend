@@ -69,7 +69,7 @@ Feature: Export the current user's data
       | id  |
       | 404 |
       | 405 |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |
       | 112 | 2        | 404     | 0     |
@@ -105,7 +105,7 @@ Feature: Export the current user's data
         "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
         "web_site": null, "zipcode": null, "temp_user": 0
       },
-      "groups_attempts": [
+      "attempts": [
         {
           "id": "111", "finished": 0, "validated": 0,
           "order": 0, "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
@@ -265,7 +265,7 @@ Feature: Export the current user's data
         "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0
       },
-      "groups_attempts": [],
+      "attempts": [],
       "groups_groups": [],
       "group_managers": [],
       "group_membership_changes": [],

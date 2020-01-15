@@ -171,11 +171,11 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 			return lockedStore.ItemItems().After()
 		})
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
-		groupAttemptStore := store.GroupAttempts()
-		// groups_attempts data of the task will be zeroed
-		service.MustNotBeError(groupAttemptStore.Where("item_id = ?", itemID).
+		attemptStore := store.Attempts()
+		// attempts data of the task will be zeroed
+		service.MustNotBeError(attemptStore.Where("item_id = ?", itemID).
 			UpdateColumn("result_propagation_state", "to_be_recomputed").Error())
-		service.MustNotBeError(groupAttemptStore.ComputeAllGroupAttempts())
+		service.MustNotBeError(attemptStore.ComputeAllAttempts())
 	}
 	return apiError, err
 }

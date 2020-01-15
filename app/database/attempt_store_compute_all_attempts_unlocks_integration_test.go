@@ -19,27 +19,27 @@ type unlocksResultRow struct {
 	Origin        string
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/_common", "groups_attempts_propagation/unlocks")
+func TestAttemptStore_ComputeAllAttempts_Unlocks(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/_common", "attempts_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Unlocks_UpdatesOldRecords(t *testing.T) {
+func TestAttemptStore_ComputeAllAttempts_Unlocks_UpdatesOldRecords(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture(
-		"groups_attempts_propagation/_common",
-		"groups_attempts_propagation/unlocks",
-		"groups_attempts_propagation/unlocks_old_records")
+		"attempts_propagation/_common",
+		"attempts_propagation/unlocks",
+		"attempts_propagation/unlocks_old_records")
 	defer func() { _ = db.Close() }()
 
 	testUnlocks(db, t)
 }
 
 func testUnlocks(db *database.DB, t *testing.T) {
-	groupAttemptStore := database.NewDataStore(db).GroupAttempts()
+	attemptStore := database.NewDataStore(db).Attempts()
 	for _, id := range []int64{11, 13, 14} {
-		assert.NoError(t, groupAttemptStore.Where("id = ?", id).UpdateColumn(
+		assert.NoError(t, attemptStore.Where("id = ?", id).UpdateColumn(
 			"score_computed", 100,
 		).Error())
 	}
@@ -55,8 +55,8 @@ func testUnlocks(db *database.DB, t *testing.T) {
 		"unlocking_item_id": 4, "unlocked_item_id": 4003, "score": 101,
 	}))
 
-	err := groupAttemptStore.InTransaction(func(s *database.DataStore) error {
-		return s.GroupAttempts().ComputeAllGroupAttempts()
+	err := attemptStore.InTransaction(func(s *database.DataStore) error {
+		return s.Attempts().ComputeAllAttempts()
 	})
 	assert.NoError(t, err)
 

@@ -17,7 +17,7 @@ Feature: Get recent activity for group_id and item_id - robustness
       | 77 | 13                | 13             | 1       |
       | 78 | 21                | 21             | 1       |
       | 79 | 23                | 23             | 1       |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |

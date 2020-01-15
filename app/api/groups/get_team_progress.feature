@@ -249,7 +249,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 2  | 2017-05-29 06:38:38 | 53        | 2          |
       | 3  | 2017-05-29 06:38:38 | 55        | 3          |
       | 4  | 2017-05-30 06:38:38 | 57        | 4          |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | order | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
       | 14       | 211     | 0     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                | 2018-05-30 06:38:38 |
       | 14       | 211     | 1     | 2017-05-29 06:38:38 | 40             | 2017-05-29 06:38:38 | 2            | 3           | null                | null                |

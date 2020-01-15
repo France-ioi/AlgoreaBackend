@@ -58,10 +58,10 @@ func init() { // nolint:gochecknoinits
 				var gormDB *database.DB
 				gormDB, err = database.Open(db)
 				assertNoError(err, "Cannot open GORM db connection: ")
-				_, err = db.Exec("ANALYZE TABLE `groups_attempts`")
+				_, err = db.Exec("ANALYZE TABLE `attempts`")
 				assertNoError(err, "Cannot execute ANALYZE TABLE")
 				err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-					assertNoError(store.GroupAttempts().ComputeAllGroupAttempts(), "Cannot compute groups_attempts")
+					assertNoError(store.Attempts().ComputeAllAttempts(), "Cannot compute attempts")
 					assertNoError(store.PermissionsGranted().After(), "Cannot compute permissions_generated")
 					return nil
 				})

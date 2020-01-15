@@ -91,10 +91,10 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	var attemptID int64
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
-		groupAttemptStore := store.GroupAttempts()
+		attemptStore := store.Attempts()
 		if !hasAttempts {
 			var found bool
-			found, err = groupAttemptStore.
+			found, err = attemptStore.
 				Where("group_id = ?", groupID).Where("item_id = ?", itemID).WithWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if found {
@@ -103,7 +103,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 			}
 		}
 
-		attemptID, err = groupAttemptStore.CreateNew(groupID, itemID, user.GroupID)
+		attemptID, err = attemptStore.CreateNew(groupID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
 		// update users_items.active_attempt_id

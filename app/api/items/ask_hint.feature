@@ -29,7 +29,7 @@ Feature: Ask for a hint
 
   Scenario: User is able to ask for a hint
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | hints_cached | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0     |
       | 200 | 101      | 10      | null                   | 0            | 0     |
@@ -84,14 +84,14 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
       | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
       | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
@@ -146,14 +146,14 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested                    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
       | 100 | 101      | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
       | 200 | 101      | 10      | 1               | 0            | null                               | done                     | 1                                                         | null                                                  |
 
   Scenario: User is able to ask for an already given hint
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
@@ -208,14 +208,14 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested   | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
       | 100 | 101      | 50      | 1               | 4            | [0,1,"hint",null] | done                     | 1                                                         | 1                                                     |
       | 200 | 101      | 10      | 1               | 0            | null              | done                     | 1                                                         | null                                                  |
 
   Scenario: Can't parse hints_requested
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested | order |
       | 100 | 101      | 50      | not an array    | 0     |
       | 200 | 101      | 10      | null            | 0     |
@@ -270,7 +270,7 @@ Feature: Ask for a hint
         "success": true
       }
       """
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | tasks_with_help | hints_cached | hints_requested    | result_propagation_state | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_hint_at, NOW())) < 3 |
       | 100 | 101      | 50      | 1               | 1            | [{"rotorIndex":1}] | done                     | 1                                                         | 1                                                     |
       | 200 | 101      | 10      | 1               | 0            | null               | done                     | 1                                                         | null                                                  |

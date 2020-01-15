@@ -30,7 +30,7 @@ Feature: Save grading result - robustness
       | 101      | 50      | content            |
       | 101      | 70      | content            |
       | 101      | 80      | content            |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
     And the database has the following table 'users_items':
@@ -51,7 +51,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User not found
     Given I am the user with id "404"
@@ -87,7 +87,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Invalid access token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
     Given I am the user with id "101"
@@ -123,7 +123,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idUser in score_token doesn't match the user's id
     Given I am the user with id "101"
@@ -159,7 +159,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Token in score_token doesn't correspond to user session: got idUser=20, expected 10"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idAttempt in score_token and task_token don't match
     Given I am the user with id "101"
@@ -195,7 +195,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idAttempt in score_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: idItemLocal in score_token and task_token don't match
     Given I am the user with id "101"
@@ -231,7 +231,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idItemLocal in score_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: itemUrl of score_token doesn't match itemUrl of task_token
     Given I am the user with id "101"
@@ -267,7 +267,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong itemUrl in score_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Missing task_token
     Given I am the user with id "101"
@@ -292,7 +292,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Missing task_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Invalid task_token
     Given I am the user with id "101"
@@ -318,7 +318,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Invalid task_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Invalid score_token
     Given I am the user with id "101"
@@ -343,7 +343,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Invalid score_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Scenario: No submission rights
     Given I am the user with id "101"
@@ -379,7 +379,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Item is read-only"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is missing
     Given I am the user with id "101"
@@ -404,7 +404,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Missing answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
     Given I am the user with id "101"
@@ -430,7 +430,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Invalid answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
     Given I am the user with id "101"
@@ -467,7 +467,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idUser in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
     Given I am the user with id "101"
@@ -504,7 +504,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idItemLocal in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
     Given I am the user with id "101"
@@ -541,7 +541,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong itemUrl in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
     Given I am the user with id "101"
@@ -577,7 +577,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idAttempt in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
     Given I am the user with id "101"
@@ -614,7 +614,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Wrong idAttempt in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and score is missing
     Given I am the user with id "101"
@@ -650,7 +650,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "Missing score"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
     Given I am the user with id "101"
@@ -687,11 +687,11 @@ Feature: Save grading result - robustness
     And the response error message should contain "Invalid idUserAnswer in answer_token"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: The answer has been already graded
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 105 | 101      | 80      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'answers':
@@ -737,7 +737,7 @@ Feature: Save grading result - robustness
     """
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: The answer is not found
     Given I am the user with id "101"
@@ -774,4 +774,4 @@ Feature: Save grading result - robustness
     And the response error message should contain "The answer has been already graded or is not found"
     And the table "answers" should stay unchanged
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

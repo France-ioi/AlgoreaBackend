@@ -45,7 +45,7 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User not found
     Given I am the user with id "404"
@@ -53,11 +53,11 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User doesn't have access to the item
     Given I am the user with id "121"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 100 | 121      | 50      | 1     |
       | 101 | 121      | 50      | 2     |
@@ -68,11 +68,11 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User has only info access to the item
     Given I am the user with id "121"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 100 | 121      | 50      | 1     |
       | 101 | 121      | 50      | 2     |
@@ -83,19 +83,19 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
-  Scenario: No groups_attempts
+  Scenario: No attempts
     Given I am the user with id "101"
     When I send a PUT request to "/attempts/100/active"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
-  Scenario: Wrong item in groups_attempts
+  Scenario: Wrong item in attempts
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 100 | 101      | 51      | 1     |
       | 101 | 101      | 50      | 2     |
@@ -106,11 +106,11 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: User is not a member of the team
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 100 | 103      | 60      | 1     |
       | 200 | 102      | 60      | 2     |
@@ -121,4 +121,4 @@ Feature: Update active attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

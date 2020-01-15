@@ -80,7 +80,7 @@ Feature: Get groups attempts for current user and item_id - robustness
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: as_team_id is a team for a different item
     Given I am the user with id "12"
@@ -88,4 +88,4 @@ Feature: Get groups attempts for current user and item_id - robustness
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team for the item"
     And the table "users_items" should stay unchanged
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged

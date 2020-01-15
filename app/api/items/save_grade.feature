@@ -39,7 +39,7 @@ Feature: Save grading result
 
   Scenario: User is able to save the grading result with a high score and attempt_id
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     |
@@ -109,7 +109,7 @@ Feature: Save grading result
       | user_id | item_id |
       | 101     | 50      |
       | 101     | 60      |
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at        |
       | 100 | 100            | 1           | 1         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
       | 101 | 0              | 0           | 0         | done                     | null               | null                | null                | null                |
@@ -117,7 +117,7 @@ Feature: Save grading result
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order | score_edit_rule   | score_edit_value   |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 1     | <score_edit_rule> | <score_edit_value> |
       | 101 | 101      | 60      | [0,  1, "hint" , null] | 2     | null              | null               |
@@ -186,7 +186,7 @@ Feature: Save grading result
       | user_id | item_id |
       | 101     | 50      |
       | 101     | 60      |
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
       | 100 | <score_computed> | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
       | 101 | 0                | 0           | 0         | done                     | null               | null                | null                | null         |
@@ -202,7 +202,7 @@ Feature: Save grading result
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | score_obtained_at   | order |
       | 100 | 101      | 50      | 2017-04-29 06:38:38 | 1     |
       | 101 | 101      | 60      | 2017-05-29 06:38:38 | 2     |
@@ -270,7 +270,7 @@ Feature: Save grading result
       | user_id | item_id |
       | 101     | 50      |
       | 101     | 60      |
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
       | 100 | 99             | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
       | 101 | 0              | 0           | 0         | done                     | null               | null                | 2017-05-29 06:38:38 | null         |
@@ -286,7 +286,7 @@ Feature: Save grading result
       | answer_id | score | graded_at           |
       | 123       | 5     | 2018-05-29 06:38:38 |
       | 125       | 20    | 2018-05-29 06:38:38 |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
       | 100 | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
       | 101 | 101      | 60      | 20             | 2018-05-29 06:38:38 | 2     | null              | null               |
@@ -352,7 +352,7 @@ Feature: Save grading result
       | user_id | item_id |
       | 101     | 50      |
       | 101     | 60      |
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
     Examples:
       | score | score_edit_rule | score_edit_value |
       | 19    | null            | null             |
@@ -363,7 +363,7 @@ Feature: Save grading result
 
   Scenario: Should keep previous validated_at & latest_answer_at if they are earlier
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | validated_at        | latest_answer_at    | order |
       | 100 | 101      | 50      | 2016-05-29 06:38:37 | 2018-05-29 06:38:37 | 1     |
       | 101 | 101      | 60      | 2018-05-29 06:38:37 | 2018-05-29 06:38:37 | 2     |
@@ -431,11 +431,11 @@ Feature: Save grading result
       | user_id | item_id |
       | 101     | 50      |
       | 101     | 60      |
-    And the table "groups_attempts" should stay unchanged
+    And the table "attempts" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 50      | 2018-05-29 06:38:38 | 1     |
     And the database has the following table 'answers':
@@ -494,7 +494,7 @@ Feature: Save grading result
 
   Scenario: Platform doesn't support tokens
     Given I am the user with id "101"
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | validated_at        | order |
       | 100 | 101      | 70      | 2018-05-29 06:38:38 | 2     |
     And the database has the following table 'answers':

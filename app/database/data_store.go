@@ -26,6 +26,11 @@ func (s *DataStore) Answers() *AnswerStore {
 	return &AnswerStore{NewDataStoreWithTable(s.DB, "answers")}
 }
 
+// Attempts returns a AttemptStore
+func (s *DataStore) Attempts() *AttemptStore {
+	return &AttemptStore{NewDataStoreWithTable(s.DB, "attempts")}
+}
+
 // Gradings returns a GradingStore
 func (s *DataStore) Gradings() *GradingStore {
 	return &GradingStore{NewDataStoreWithTable(s.DB, "gradings")}
@@ -39,11 +44,6 @@ func (s *DataStore) Users() *UserStore {
 // Items returns a ItemStore
 func (s *DataStore) Items() *ItemStore {
 	return &ItemStore{NewDataStoreWithTable(s.DB, "items")}
-}
-
-// GroupAttempts returns a GroupAttemptStore
-func (s *DataStore) GroupAttempts() *GroupAttemptStore {
-	return &GroupAttemptStore{NewDataStoreWithTable(s.DB, "groups_attempts")}
 }
 
 // Groups returns a GroupStore

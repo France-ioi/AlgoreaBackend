@@ -11,13 +11,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/testhelpers"
 )
 
-func TestGroupAttemptStore_CreateNew(t *testing.T) {
+func TestAttemptStore_CreateNew(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups:
 			- {id: 100}
 		users:
 			- {group_id: 100}
-		groups_attempts:
+		attempts:
 			- {id: 1, group_id: 10, item_id: 20, order: 1}
 			- {id: 2, group_id: 10, item_id: 30, order: 3}
 			- {id: 3, group_id: 20, item_id: 20, order: 4}`)
@@ -26,7 +26,7 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	var newID int64
 	var err error
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		newID, err = store.GroupAttempts().CreateNew(10, 20, 100)
+		newID, err = store.Attempts().CreateNew(10, 20, 100)
 		return err
 	}))
 	assert.True(t, newID > 0)
@@ -37,7 +37,7 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 		Order     int32
 	}
 	var result resultType
-	assert.NoError(t, database.NewDataStore(db).GroupAttempts().ByID(newID).
+	assert.NoError(t, database.NewDataStore(db).Attempts().ByID(newID).
 		Select("group_id, item_id, creator_id, `order`").Take(&result).Error())
 	assert.Equal(t, resultType{
 		GroupID:   10,
@@ -47,7 +47,7 @@ func TestGroupAttemptStore_CreateNew(t *testing.T) {
 	}, result)
 }
 
-func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
+func TestAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 	tests := []struct {
 		name           string
 		fixture        string
@@ -59,7 +59,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (full access)",
 			fixture: `
-				groups_attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 111, item_id: 50, order: 0}]`,
 			attemptID:      100,
 			userID:         111,
 			expectedFound:  true,
@@ -68,7 +68,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 		{
 			name: "okay (content access)",
 			fixture: `
-				groups_attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 101, item_id: 50, order: 0}]`,
 			attemptID:      100,
 			userID:         101,
 			expectedFound:  true,
@@ -79,14 +79,14 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    101,
 			attemptID: 200,
 			fixture: `
-				groups_attempts:
+				attempts:
 					- {id: 200, group_id: 102, item_id: 60, order: 0}`,
 			expectedFound:  true,
 			expectedItemID: 60,
 		},
 		{
 			name:          "user not found",
-			fixture:       `groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
+			fixture:       `attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
 			userID:        404,
 			attemptID:     100,
 			expectedFound: false,
@@ -96,22 +96,22 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    121,
 			attemptID: 100,
 			fixture: `
-				groups_attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
+				attempts: [{id: 100, group_id: 121, item_id: 50, order: 0}]`,
 			expectedFound: false,
 		},
 		{
-			name:          "no groups_attempts",
+			name:          "no attempts",
 			userID:        101,
 			attemptID:     100,
 			fixture:       ``,
 			expectedFound: false,
 		},
 		{
-			name:      "wrong item in groups_attempts",
+			name:      "wrong item in attempts",
 			userID:    101,
 			attemptID: 100,
 			fixture: `
-				groups_attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
+				attempts: [{id: 100, group_id: 101, item_id: 51, order: 0}]`,
 			expectedFound: false,
 		},
 		{
@@ -119,7 +119,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			userID:    101,
 			attemptID: 100,
 			fixture: `
-				groups_attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
+				attempts: [{id: 100, group_id: 103, item_id: 60, order: 0}]`,
 			expectedFound: false,
 		},
 	}
@@ -154,7 +154,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 			store := database.NewDataStore(db)
 			user := &database.User{}
 			assert.NoError(t, user.LoadByID(store, test.userID))
-			found, itemID, err := store.GroupAttempts().GetAttemptItemIDIfUserHasAccess(test.attemptID, user)
+			found, itemID, err := store.Attempts().GetAttemptItemIDIfUserHasAccess(test.attemptID, user)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedFound, found)
 			assert.Equal(t, test.expectedItemID, itemID)
@@ -162,7 +162,7 @@ func TestGroupAttemptStore_GetAttemptItemIDIfUserHasAccess(t *testing.T) {
 	}
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts(t *testing.T) {
+func TestAttemptStore_ComputeAllAttempts(t *testing.T) {
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -170,30 +170,30 @@ func TestGroupAttemptStore_ComputeAllGroupAttempts(t *testing.T) {
 		{name: "basic", wantErr: false},
 	}
 
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/main")
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/main")
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
-				return s.GroupAttempts().ComputeAllGroupAttempts()
+				return s.Attempts().ComputeAllAttempts()
 			})
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GroupAttemptsStore.computeAllGroupAttempts() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("AttemptStore.computeAllAttempts() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestGroupAttemptStore_ComputeAllGroupAttempts_Concurrent(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("groups_attempts_propagation/main")
+func TestAttemptStore_ComputeAllAttempts_Concurrent(t *testing.T) {
+	db := testhelpers.SetupDBWithFixture("attempts_propagation/main")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
 		s := database.NewDataStore(db)
 		err := s.InTransaction(func(st *database.DataStore) error {
-			return st.GroupAttempts().ComputeAllGroupAttempts()
+			return st.Attempts().ComputeAllAttempts()
 		})
 		assert.NoError(t, err)
 	}, 30)

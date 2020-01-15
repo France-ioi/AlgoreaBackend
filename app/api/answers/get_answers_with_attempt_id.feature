@@ -34,7 +34,7 @@ Background:
     | 13       | 200     | content_with_descendants |
     | 13       | 210     | content                  |
     | 41       | 200     | content_with_descendants |
-  And the database has the following table 'groups_attempts':
+  And the database has the following table 'attempts':
     | id  | group_id | item_id | order |
     | 100 | 11       | 200     | 0     |
     | 101 | 11       | 200     | 0     |
@@ -92,7 +92,7 @@ Background:
     ]
     """
 
-  Scenario: Full access on the item and the user's self group is the groups_attempts.group_id
+  Scenario: Full access on the item and the user's self group is the attempts.group_id
     Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=101"
     Then the response code should be 200
@@ -113,7 +113,7 @@ Background:
     ]
     """
 
-  Scenario: 'Content' access on the item and the user's self group is the groups_attempts.group_id
+  Scenario: 'Content' access on the item and the user's self group is the attempts.group_id
     Given I am the user with id "11"
     When I send a GET request to "/answers?attempt_id=102"
     Then the response code should be 200

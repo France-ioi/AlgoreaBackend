@@ -19,11 +19,11 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		wantTable string
 	}{
 		{"Answers", func(store *DataStore) *DB { return store.Answers().Where("") }, "`answers`"},
+		{"Attempts", func(store *DataStore) *DB { return store.Attempts().Where("") }, "`attempts`"},
 		{"Gradings", func(store *DataStore) *DB { return store.Gradings().Where("") }, "`gradings`"},
 		{"Groups", func(store *DataStore) *DB { return store.Groups().Where("") }, "`groups`"},
 		{"GroupAncestors", func(store *DataStore) *DB { return store.GroupAncestors().Where("") }, "`groups_ancestors`"},
 		{"ActiveGroupAncestors", func(store *DataStore) *DB { return store.ActiveGroupAncestors().Where("") }, "`groups_ancestors_active`"},
-		{"GroupAttempts", func(store *DataStore) *DB { return store.GroupAttempts().Where("") }, "`groups_attempts`"},
 		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "`groups_groups`"},
 		{"ActiveGroupGroups", func(store *DataStore) *DB { return store.ActiveGroupGroups().Where("") }, "`groups_groups_active`"},
 		{"GroupMembershipChanges", func(store *DataStore) *DB { return store.GroupMembershipChanges().Where("") }, "`group_membership_changes`"},
@@ -67,11 +67,11 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		wantType interface{}
 	}{
 		{"Answers", func(store *DataStore) interface{} { return store.Answers() }, &AnswerStore{}},
+		{"Attempts", func(store *DataStore) interface{} { return store.Attempts() }, &AttemptStore{}},
 		{"Gradings", func(store *DataStore) interface{} { return store.Gradings() }, &GradingStore{}},
 		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
 		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
 		{"ActiveGroupAncestors", func(store *DataStore) interface{} { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},
-		{"GroupAttempts", func(store *DataStore) interface{} { return store.GroupAttempts() }, &GroupAttemptStore{}},
 		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
 		{"ActiveGroupGroups", func(store *DataStore) interface{} { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
 		{"GroupMembershipChanges", func(store *DataStore) interface{} { return store.GroupMembershipChanges() }, &GroupMembershipChangeStore{}},

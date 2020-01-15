@@ -35,7 +35,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5001, 5002, 7000})
 	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5001, 5002})
 	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5001, 5002, 7000})
-	for _, table := range []string{"permissions_granted", "permissions_generated", "groups_attempts", "groups_login_prefixes"} {
+	for _, table := range []string{"permissions_granted", "permissions_generated", "attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5001, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
@@ -73,7 +73,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	assertTableColumn(t, db, "group_pending_requests", "member_id", []int64{5000, 5002, 7000})
 	assertTableColumn(t, db, "group_membership_changes", "group_id", []int64{1, 5000, 5002})
 	assertTableColumn(t, db, "group_membership_changes", "member_id", []int64{5000, 5002, 7000})
-	for _, table := range []string{"permissions_generated", "permissions_granted", "groups_attempts", "groups_login_prefixes"} {
+	for _, table := range []string{"permissions_generated", "permissions_granted", "attempts", "groups_login_prefixes"} {
 		assertTableColumn(t, db, table, "group_id", []int64{5000, 5002})
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
@@ -92,8 +92,8 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}]`, `
 			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 7000}]
-			groups_attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 0}, {id: 2001, group_id: 5001, item_id: 1, order: 0},
-			                  {id: 2002, group_id: 5002, item_id: 1, order: 0}]
+			attempts: [{id: 2000, group_id: 5000, item_id: 1, order: 0}, {id: 2001, group_id: 5001, item_id: 1, order: 0},
+			           {id: 2002, group_id: 5002, item_id: 1, order: 0}]
 			users:
 				- {temp_user: 1, login: 500, group_id: 5000} # should be deleted
 				- {login: 501, temp_user: 1, group_id: 5001}

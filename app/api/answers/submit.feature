@@ -15,7 +15,7 @@ Feature: Submit a new answer
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | order |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 2           | 0     |
 
@@ -65,7 +65,7 @@ Feature: Submit a new answer
     And the table "answers" should be:
       | author_id | attempt_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 100        | Submission | print 1 | 1                                                 |
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |
 
@@ -119,6 +119,6 @@ Feature: Submit a new answer
     And the table "answers" should be:
       | author_id | attempt_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 100        | Submission | print(2) | 1                                                 |
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | id  | group_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 |
       | 100 | 101      | 50      | [{"rotorIndex":0,"cellRank":0}] | 12           | 3           | 1                                                         |

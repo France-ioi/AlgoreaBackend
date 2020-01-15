@@ -121,7 +121,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					}); err != nil {
 					return err
 				}
-				return database.NewDataStore(db).GroupAttempts().InsertMap(
+				return database.NewDataStore(db).Attempts().InsertMap(
 					map[string]interface{}{
 						"item_id":    500, // chapter
 						"group_id":   14,
@@ -140,7 +140,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					}); err != nil {
 					return err
 				}
-				return database.NewDataStore(db).GroupAttempts().
+				return database.NewDataStore(db).Attempts().
 					InsertMap(map[string]interface{}{
 						"item_id":    115,
 						"group_id":   15,
@@ -159,7 +159,7 @@ func TestItemStore_CheckSubmissionRightsForTimeLimitedContest(t *testing.T) {
 					}); err != nil {
 					return err
 				}
-				return database.NewDataStore(db).GroupAttempts().
+				return database.NewDataStore(db).Attempts().
 					InsertMap(map[string]interface{}{
 						"item_id":    114,
 						"group_id":   17,
@@ -225,7 +225,7 @@ func TestItemStore_GetActiveContestInfoForUser(t *testing.T) {
 			- {group_id: 105, item_id: 15}  # ok with team mode
 			- {group_id: 106, item_id: 14, additional_time: 00:01:00} # multiple
 			- {group_id: 106, item_id: 15, additional_time: 00:01:00} # multiple
-		groups_attempts:
+		attempts:
 			- {group_id: 103, item_id: 13, entered_at: 2019-03-22 08:44:55, order: 1} # finished
 			- {group_id: 104, item_id: 14, entered_at: 2019-03-22 08:44:55, order: 1} # ok
 			- {group_id: 105, item_id: 15, entered_at: 2019-04-22 08:44:55, order: 1}  # ok with team mode

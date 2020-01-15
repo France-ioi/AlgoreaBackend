@@ -23,7 +23,7 @@ Feature: Get recent activity for group_id and item_id
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
       | 31                | 31             | 1       |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | id  | item_id | group_id | order |
       | 100 | 200     | 11       | 1     |
       | 101 | 200     | 11       | 2     |

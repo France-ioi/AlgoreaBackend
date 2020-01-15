@@ -19,7 +19,7 @@ Feature: Add item
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
-    And the database has the following table 'groups_attempts':
+    And the database has the following table 'attempts':
       | group_id | item_id | order | result_propagation_state |
       | 11       | 21      | 1     | done                     |
     And the database has the following table 'languages':
@@ -71,7 +71,7 @@ Feature: Add item
       | 11       | 21                  | solution           | none                     | none                | children           | 0                  |
       | 11       | 5577006791947779410 | solution           | transfer                 | transfer            | transfer           | 1                  |
     And the table "groups" should stay unchanged
-    And the table "groups_attempts" should be:
+    And the table "attempts" should be:
       | group_id | item_id | result_propagation_state |
       | 11       | 21      | done                     |
 

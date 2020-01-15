@@ -19,17 +19,17 @@ import (
 //   Get a task token with the refreshed attempt.
 //
 //
-//   * `started_at` (if it is NULL) and `latest_activity_at` of `groups_attempts` are set to the current time.
+//   * `started_at` (if it is NULL) and `latest_activity_at` of `attempts` are set to the current time.
 //
 //   * Then the service returns a task token with fresh data for the attempt for the given item.
 //
 //
 //   Restrictions:
 //
-//     * the `groups_attempts.group_id` should have at least 'content' access to the item,
+//     * the `attempts.group_id` should have at least 'content' access to the item,
 //     * the item should be either 'Task' or 'Course',
-//     * if `groups_attempts.group_id` != current user's `group_id`, it should be a team with `groups.team_item_id`
-//       pointing to one of ancestors of `groups_attempts.item_id` or the `groups_attempts.item_id` itself,
+//     * if `attempts.group_id` != current user's `group_id`, it should be a team with `groups.team_item_id`
+//       pointing to one of ancestors of `attempts.item_id` or the `attempts.item_id` itself,
 //       and the current user should be a member of this team,
 //
 //   otherwise the 'forbidden' error is returned.
@@ -86,7 +86,7 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		SupportedLangProg *string
 	}
 
-	var groupsAttemptInfo struct {
+	var attemptInfo struct {
 		ID               int64
 		HintsRequested   *string
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
@@ -96,8 +96,8 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 	apiError := service.NoError
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		// load the attempt data
-		err = store.GroupAttempts().ByID(attemptID).WithWriteLock().
-			Select("id, hints_requested, hints_cached, group_id, item_id").Take(&groupsAttemptInfo).Error()
+		err = store.Attempts().ByID(attemptID).WithWriteLock().
+			Select("id, hints_requested, hints_cached, group_id, item_id").Take(&attemptInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
 			apiError = service.InsufficientAccessRightsError
@@ -106,10 +106,10 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		service.MustNotBeError(err)
 
 		// if the attempt doesn't belong to the user, it should belong to the user's team related to the item
-		if groupsAttemptInfo.GroupID != user.GroupID {
+		if attemptInfo.GroupID != user.GroupID {
 			var found bool
-			found, err = store.Groups().TeamGroupForItemAndUser(groupsAttemptInfo.ItemID, user).
-				Where("groups.id = ?", groupsAttemptInfo.GroupID).HasRows()
+			found, err = store.Groups().TeamGroupForItemAndUser(attemptInfo.ItemID, user).
+				Where("groups.id = ?", attemptInfo.GroupID).HasRows()
 			service.MustNotBeError(err)
 			if !found {
 				apiError = service.InsufficientAccessRightsError
@@ -118,8 +118,8 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		}
 
 		// the attempt's group should have can_view >= 'content' permission on the item
-		err = store.Items().ByID(groupsAttemptInfo.ItemID).
-			WhereGroupHasViewPermissionOnItems(groupsAttemptInfo.GroupID, "content").
+		err = store.Items().ByID(attemptInfo.ItemID).
+			WhereGroupHasViewPermissionOnItems(attemptInfo.GroupID, "content").
 			Where("items.type IN('Task','Course')").
 			Select(`
 					can_view_generated_value = ? AS access_solutions,
@@ -132,8 +132,8 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		}
 		service.MustNotBeError(err)
 
-		// update groups_attempts
-		service.MustNotBeError(store.GroupAttempts().ByID(groupsAttemptInfo.ID).UpdateColumn(map[string]interface{}{
+		// update attempts
+		service.MustNotBeError(store.Attempts().ByID(attemptInfo.ID).UpdateColumn(map[string]interface{}{
 			"started_at":         gorm.Expr("IFNULL(started_at, ?)", database.Now()),
 			"latest_activity_at": database.Now(),
 		}).Error())
@@ -149,17 +149,17 @@ func (srv *Service) getTaskToken(w http.ResponseWriter, r *http.Request) service
 		AccessSolutions:    &itemInfo.AccessSolutions,
 		SubmissionPossible: ptrBool(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
-		HintsRequested:     groupsAttemptInfo.HintsRequested,
-		HintsGivenCount:    ptrString(strconv.Itoa(int(groupsAttemptInfo.HintsCachedCount))),
+		HintsRequested:     attemptInfo.HintsRequested,
+		HintsGivenCount:    ptrString(strconv.Itoa(int(attemptInfo.HintsCachedCount))),
 		IsAdmin:            ptrBool(false),
 		ReadAnswers:        ptrBool(true),
 		UserID:             strconv.FormatInt(user.GroupID, 10),
-		LocalItemID:        strconv.FormatInt(groupsAttemptInfo.ItemID, 10),
+		LocalItemID:        strconv.FormatInt(attemptInfo.ItemID, 10),
 		ItemID:             itemInfo.TextID,
-		AttemptID:          strconv.FormatInt(groupsAttemptInfo.ID, 10),
+		AttemptID:          strconv.FormatInt(attemptInfo.ID, 10),
 		ItemURL:            itemInfo.URL,
 		SupportedLangProg:  itemInfo.SupportedLangProg,
-		RandomSeed:         strconv.FormatInt(groupsAttemptInfo.ID, 10),
+		RandomSeed:         strconv.FormatInt(attemptInfo.ID, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
 	}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
