@@ -24,7 +24,6 @@ import (
 //     * `managed_groups`: `id` and `name` for every descendant of groups managed by the user;
 //     * `joined_groups`: `id` and `name` for every ancestor of user’s `group_id`;
 //     * `answers`: all attributes;
-//     * `users_items`: all attributes;
 //     * `attempts`: the user's or his teams' attempts, all attributes;
 //     * `groups_groups`: where the user’s `group_id` is the `child_group_id`, all attributes + `groups.name`;
 //     * `group_managers`: where the user’s `group_id` is the `manager_id`, all attributes + `groups.name`;
@@ -110,13 +109,6 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeJSONObjectArrayElement("answers", w, func(writer io.Writer) {
 			service.MustNotBeError(srv.Store.Answers().Where("author_id = ?", user.GroupID).
 				ScanAndHandleMaps(streamerFunc(w)).Error())
-		})
-
-		writeComma(w)
-		writeJSONObjectArrayElement("users_items", w, func(writer io.Writer) {
-			columns := getColumnsList(srv.Store, databaseName, "users_items", nil)
-			service.MustNotBeError(srv.Store.UserItems().Where("user_id = ?", user.GroupID).
-				Select(columns).ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
 		writeComma(w)

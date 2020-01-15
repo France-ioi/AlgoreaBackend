@@ -33,7 +33,6 @@ Feature: Update the 'current' answer
       """
     Then the response code should be 400
     And the response error message should contain "Wrong value for attempt_id (should be int64)"
-    And the table "users_items" should stay unchanged
     And the table "answers" should stay unchanged
 
   Scenario: Missing answer
@@ -56,7 +55,6 @@ Feature: Update the 'current' answer
         "success": false
       }
       """
-    And the table "users_items" should stay unchanged
     And the table "answers" should stay unchanged
 
   Scenario: Missing state
@@ -79,7 +77,6 @@ Feature: Update the 'current' answer
         "success": false
       }
       """
-    And the table "users_items" should stay unchanged
     And the table "answers" should stay unchanged
 
   Scenario: User not found
@@ -93,7 +90,6 @@ Feature: Update the 'current' answer
       """
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "users_items" should stay unchanged
     And the table "answers" should stay unchanged
 
   Scenario: No access
@@ -107,5 +103,4 @@ Feature: Update the 'current' answer
       """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "users_items" should stay unchanged
     And the table "answers" should stay unchanged

@@ -15,14 +15,9 @@ type rawNavigationItem struct {
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title *string
 
-	// from attempts for the active attempt of the current user
-	UserAttemptID     *int64         `sql:"column:attempt_id"`
-	UserScoreComputed float32        `sql:"column:score_computed"`
-	UserValidated     bool           `sql:"column:validated"`
-	UserFinished      bool           `sql:"column:finished"`
-	UserSubmissions   int32          `sql:"column:submissions"`
-	UserStartedAt     *database.Time `sql:"column:started_at"`
-	UserValidatedAt   *database.Time `sql:"column:validated_at"`
+	// max from attempts of the current user
+	UserBestScore float32 `sql:"column:best_score"`
+	UserValidated bool    `sql:"column:validated"`
 
 	// items_items
 	ParentItemID int64
@@ -58,11 +53,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 	query := dataStore.Raw(`
 		SELECT items.id, items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
-			attempts.id AS attempt_id,
-			attempts.score_computed AS score_computed, attempts.validated AS validated,
-			attempts.finished AS finished,
-			attempts.submissions AS submissions,
-			attempts.started_at AS started_at, attempts.validated_at AS validated_at,
+			IFNULL(best_scores.best_score, 0) AS best_score,
+			IFNULL(best_scores.validated, 0) AS validated,
 			items.child_order AS child_order,
 			items.content_view_propagation,
 			items.parent_item_id AS parent_item_id,
@@ -70,8 +62,14 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 			items.can_view_generated_value
 		FROM ? items`, itemThreeGenQ.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
-		Joins("LEFT JOIN attempts ON attempts.id=users_items.active_attempt_id").
+		Joins(`
+			LEFT JOIN LATERAL (
+				SELECT MAX(attempts.score_computed) AS best_score,
+				       MAX(attempts.validated) AS validated
+				FROM attempts
+				WHERE attempts.item_id = items.id AND attempts.group_id = ?
+				GROUP by attempts.group_id, attempts.item_id
+			) AS best_scores ON 1`, user.GroupID).
 		Order("item_grandparent_id, parent_item_id, child_order")
 
 	if err := query.Scan(&result).Error(); err != nil {

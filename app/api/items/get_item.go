@@ -46,29 +46,6 @@ type itemStringRoot struct {
 	*itemStringRootNodeWithSolutionAccess
 }
 
-// from `attempts`
-type itemUserActiveAttempt struct {
-	// Nullable; only if `can_view` >= 'content'
-	AttemptID int64 `json:"attempt_id,string"`
-	// only if `can_view` >= 'content'
-	ScoreComputed float32 `json:"score_computed"`
-	// only if `can_view` >= 'content'
-	Submissions int32 `json:"submissions"`
-	// only if `can_view` >= 'content'
-	Validated bool `json:"validated"`
-	// only if `can_view` >= 'content'
-	Finished bool `json:"finished"`
-	// only if `can_view` >= 'content'
-	HintsCached int32 `json:"hints_cached"`
-	// Nullable; only if `can_view` >= 'content'
-	// example: 2019-09-11T07:30:56Z
-	StartedAt *database.Time `json:"started_at,string"`
-	// only if `can_view` >= 'content'
-	// example: 2019-09-11T07:30:56Z
-	// type: string
-	ValidatedAt *database.Time `json:"validated_at,string"`
-}
-
 type itemCommonFields struct {
 	// items
 
@@ -131,10 +108,6 @@ type itemChildNode struct {
 	// enum: none,as_info,as_content
 	// required: true
 	ContentViewPropagation string `json:"content_view_propagation"`
-
-	// Nullable
-	// required: true
-	UserActiveAttempt *itemUserActiveAttempt `json:"user_active_attempt"`
 }
 
 // swagger:model itemResponse
@@ -153,10 +126,6 @@ type itemResponse struct {
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
 
-	// Nullable
-	// required: true
-	UserActiveAttempt *itemUserActiveAttempt `json:"user_active_attempt"`
-
 	// required: true
 	String itemStringRoot `json:"string"`
 
@@ -171,7 +140,7 @@ type itemResponse struct {
 // summary: Get an item
 // description: Returns data related to the specified item, its children,
 //              and the current user's interactions with them
-//              (from tables `items`, `items_items`, `items_string`, and `attempts` for the active attempt).
+//              (from tables `items`, `items_items`, `items_string`).
 //
 //
 //              * If the specified item is not visible by the current user, the 'not found' response is returned.
@@ -257,16 +226,6 @@ type rawItem struct {
 	StringDescription *string `sql:"column:description"`
 	StringEduComment  *string `sql:"column:edu_comment"`
 
-	// from attempts for the active attempt of the current user
-	UserActiveAttemptID *int64         `sql:"column:attempt_id"`
-	UserScoreComputed   float32        `sql:"column:score_computed"`
-	UserSubmissions     int32          `sql:"column:submissions"`
-	UserValidated       bool           `sql:"column:validated"`
-	UserFinished        bool           `sql:"column:finished"`
-	UserHintsCached     int32          `sql:"column:hints_cached"`
-	UserStartedAt       *database.Time `sql:"column:started_at"`
-	UserValidatedAt     *database.Time `sql:"column:validated_at"`
-
 	// items_items
 	Order                  int32 `sql:"column:child_order"`
 	Category               string
@@ -338,15 +297,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			IF(user_strings.language_id IS NULL, default_strings.description, user_strings.description) AS description,
 			IF(user_strings.language_id IS NULL, default_strings.edu_comment, user_strings.edu_comment) AS edu_comment,
 
-			attempts.id AS attempt_id,
-			attempts.score_computed AS score_computed,
-			attempts.submissions AS submissions,
-			attempts.validated AS validated,
-			attempts.finished AS finished,
-			attempts.hints_cached AS hints_cached,
-			attempts.started_at AS started_at,
-			attempts.validated_at AS validated_at,
-
 			items.child_order AS child_order,
 			items.category AS category,
 			items.content_view_propagation, `+
@@ -361,8 +311,6 @@ func getRawItemData(s *database.ItemStore, rootID int64, user *database.User) []
 			access_rights.can_view_generated_value
 		FROM ? items `, unionQuery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).
-		Joins("LEFT JOIN users_items ON users_items.item_id=items.id AND users_items.user_id=?", user.GroupID).
-		Joins("LEFT JOIN attempts ON attempts.id=users_items.active_attempt_id").
 		Joins("JOIN ? access_rights on access_rights.item_id=items.id", accessRights.SubQuery()).
 		Order("child_order")
 
@@ -397,7 +345,6 @@ func constructItemResponseFromDBData(rawData *rawItem, permissionGrantedStore *d
 		},
 	}
 	result.String.itemStringNotInfo = constructStringNotInfo(rawData, permissionGrantedStore)
-	result.UserActiveAttempt = constructUserActiveAttempt(rawData, permissionGrantedStore)
 	return result
 }
 
@@ -416,22 +363,6 @@ func constructStringNotInfo(rawData *rawItem, permissionGrantedStore *database.P
 	return &itemStringNotInfo{
 		Subtitle:    rawData.StringSubtitle,
 		Description: rawData.StringDescription,
-	}
-}
-
-func constructUserActiveAttempt(rawData *rawItem, permissionGrantedStore *database.PermissionGrantedStore) *itemUserActiveAttempt {
-	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("info") || rawData.UserActiveAttemptID == nil {
-		return nil
-	}
-	return &itemUserActiveAttempt{
-		AttemptID:     *rawData.UserActiveAttemptID,
-		ScoreComputed: rawData.UserScoreComputed,
-		Submissions:   rawData.UserSubmissions,
-		Validated:     rawData.UserValidated,
-		Finished:      rawData.UserFinished,
-		HintsCached:   rawData.UserHintsCached,
-		StartedAt:     rawData.UserStartedAt,
-		ValidatedAt:   rawData.UserValidatedAt,
 	}
 }
 
@@ -463,7 +394,6 @@ func (srv *Service) fillItemResponseWithChildren(response *itemResponse, rawData
 		child := &itemChildNode{itemCommonFields: fillItemCommonFieldsWithDBData(&(*rawData)[index])}
 		child.String.itemStringCommon = constructItemStringCommon(&(*rawData)[index])
 		child.String.itemStringNotInfo = constructStringNotInfo(&(*rawData)[index], permissionGrantedStore)
-		child.UserActiveAttempt = constructUserActiveAttempt(&(*rawData)[index], permissionGrantedStore)
 		child.Order = (*rawData)[index].Order
 		child.Category = (*rawData)[index].Category
 		child.ContentViewPropagation = (*rawData)[index].ContentViewPropagation

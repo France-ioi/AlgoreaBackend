@@ -91,22 +91,14 @@ Feature: Get item for tree navigation
       | 67 | 211     | 2           | Tâche 1     |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | order | score_computed | submissions | finished | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 91             | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
+      | 101 | 11       | 200     | 1     | 91             | 11          | true     | 2019-01-30 09:26:41 | null                |
       | 102 | 11       | 210     | 1     | 92             | 12          | true     | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 11       | 211     | 1     | 93             | 13          | true     | 2019-01-30 09:26:43 | 2019-01-31 09:26:43 |
+      | 105 | 11       | 211     | 1     | 93             | 13          | true     | 2019-01-30 09:26:43 | null                |
       | 103 | 11       | 220     | 1     | 94             | 14          | true     | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
       | 104 | 11       | 230     | 1     | 95             | 15          | true     | 2019-01-30 09:26:45 | 2019-01-31 09:26:45 |
       | 106 | 11       | 231     | 1     | 96             | 16          | true     | 2019-01-30 09:26:46 | 2019-01-31 09:26:46 |
       | 107 | 11       | 232     | 1     | 97             | 17          | true     | 2019-01-30 09:26:47 | 2019-01-31 09:26:47 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 11      | 200     | 101               |
-      | 11      | 210     | 102               |
-      | 11      | 211     | 105               |
-      | 11      | 220     | 103               |
-      | 11      | 230     | 104               |
-      | 11      | 231     | 106               |
-      | 11      | 232     | 107               |
+      | 108 | 11       | 200     | 2     | 90             | 11          | true     | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
 
   Scenario: Get tree structure
     Given I am the user with id "11"
@@ -120,14 +112,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Category 1"
         },
-        "user_active_attempt": {
-          "score_computed": 91,
-          "validated": true,
-          "finished": true,
-          "submissions": 11,
-          "started_at": "2019-01-30T09:26:41Z",
-          "validated_at": "2019-01-31T09:26:41Z"
-        },
+        "best_score": 91,
+        "validated": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -140,14 +126,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter C"
             },
-            "user_active_attempt": {
-              "score_computed": 95,
-              "validated": true,
-              "finished": true,
-              "submissions": 15,
-              "started_at": "2019-01-30T09:26:45Z",
-              "validated_at": "2019-01-31T09:26:45Z"
-            },
+            "best_score": 95,
+            "validated": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -160,14 +140,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Task 3"
                 },
-                "user_active_attempt": {
-                  "score_computed": 97,
-                  "validated": true,
-                  "finished": true,
-                  "submissions": 17,
-                  "started_at": "2019-01-30T09:26:47Z",
-                  "validated_at": "2019-01-31T09:26:47Z"
-                },
+                "best_score": 97,
+                "validated": true,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -181,14 +155,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Task 2"
                 },
-                "user_active_attempt": {
-                  "score_computed": 96,
-                  "validated": true,
-                  "finished": true,
-                  "submissions": 16,
-                  "started_at": "2019-01-30T09:26:46Z",
-                  "validated_at": "2019-01-31T09:26:46Z"
-                },
+                "best_score": 96,
+                "validated": true,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -204,14 +172,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter B"
             },
-            "user_active_attempt": {
-              "score_computed": 94,
-              "validated": true,
-              "finished": true,
-              "submissions": 14,
-              "started_at": "2019-01-30T09:26:44Z",
-              "validated_at": "2019-01-31T09:26:44Z"
-            },
+            "best_score": 94,
+            "validated": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -225,14 +187,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter A"
             },
-            "user_active_attempt": {
-              "score_computed": 92,
-              "validated": true,
-              "finished": true,
-              "submissions": 12,
-              "started_at": "2019-01-30T09:26:42Z",
-              "validated_at": "2019-01-31T09:26:42Z"
-            },
+            "best_score": 92,
+            "validated": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -245,14 +201,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Task 1"
                 },
-                "user_active_attempt": {
-                  "score_computed": 93,
-                  "validated": true,
-                  "finished": true,
-                  "submissions": 13,
-                  "started_at": "2019-01-30T09:26:43Z",
-                  "validated_at": "2019-01-31T09:26:43Z"
-                },
+                "best_score": 93,
+                "validated": false,
                 "access_rights": {
                   "can_view": "content_with_descendants"
                 },
@@ -276,14 +226,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Task 3"
         },
-        "user_active_attempt": {
-          "score_computed": 97,
-          "validated": true,
-          "finished": true,
-          "submissions": 17,
-          "started_at": "2019-01-30T09:26:47Z",
-          "validated_at": "2019-01-31T09:26:47Z"
-        },
+        "best_score": 97,
+        "validated": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -303,14 +247,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Chapter C"
         },
-        "user_active_attempt": {
-          "score_computed": 95,
-          "validated": true,
-          "finished": true,
-          "submissions": 15,
-          "started_at": "2019-01-30T09:26:45Z",
-          "validated_at": "2019-01-31T09:26:45Z"
-        },
+        "best_score": 95,
+        "validated": true,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -323,14 +261,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Task 3"
             },
-            "user_active_attempt": {
-              "score_computed": 97,
-              "validated": true,
-              "finished": true,
-              "submissions": 17,
-              "started_at": "2019-01-30T09:26:47Z",
-              "validated_at": "2019-01-31T09:26:47Z"
-            },
+            "best_score": 97,
+            "validated": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -344,14 +276,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Task 2"
             },
-            "user_active_attempt": {
-              "score_computed": 96,
-              "validated": true,
-              "finished": true,
-              "submissions": 16,
-              "started_at": "2019-01-30T09:26:46Z",
-              "validated_at": "2019-01-31T09:26:46Z"
-            },
+            "best_score": 96,
+            "validated": true,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -373,7 +299,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Category 1"
         },
-        "user_active_attempt": null,
+        "best_score": 0,
+        "validated": false,
         "access_rights": {
           "can_view": "info"
         },
@@ -393,7 +320,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Category 1"
         },
-        "user_active_attempt": null,
+        "best_score": 0,
+        "validated": false,
         "access_rights": {
           "can_view": "content_with_descendants"
         },
@@ -406,7 +334,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter C"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "info"
             },
@@ -420,7 +349,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter B"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "content_with_descendants"
             },
@@ -434,7 +364,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter A"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "info"
             },
@@ -456,7 +387,8 @@ Feature: Get item for tree navigation
         "string": {
           "title": "Catégorie 1"
         },
-        "user_active_attempt": null,
+        "best_score": 0,
+        "validated": false,
         "access_rights": {
           "can_view": "content"
         },
@@ -469,7 +401,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapitre C"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -482,7 +415,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Task 3"
                 },
-                "user_active_attempt": null,
+                "best_score": 0,
+                "validated": false,
                 "access_rights": {
                   "can_view": "content"
                 },
@@ -496,7 +430,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Task 2"
                 },
-                "user_active_attempt": null,
+                "best_score": 0,
+                "validated": false,
                 "access_rights": {
                   "can_view": "content"
                 },
@@ -512,7 +447,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapter B"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -526,7 +462,8 @@ Feature: Get item for tree navigation
             "string": {
               "title": "Chapitre A"
             },
-            "user_active_attempt": null,
+            "best_score": 0,
+            "validated": false,
             "access_rights": {
               "can_view": "content"
             },
@@ -539,7 +476,8 @@ Feature: Get item for tree navigation
                 "string": {
                   "title": "Tâche 1"
                 },
-                "user_active_attempt": null,
+                "best_score": 0,
+                "validated": false,
                 "access_rights": {
                   "can_view": "content"
                 },

@@ -6,22 +6,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // GetItemRequest wraps the id parameter
 type GetItemRequest struct {
 	ID int64 `json:"id"`
-}
-
-type navigationItemUserActiveAttempt struct {
-	ScoreComputed float32        `json:"score_computed"`
-	Validated     bool           `json:"validated"`
-	Finished      bool           `json:"finished"`
-	Submissions   int32          `json:"submissions"`
-	StartedAt     *database.Time `json:"started_at"`
-	ValidatedAt   *database.Time `json:"validated_at"`
 }
 
 type navigationItemAccessRights struct {
@@ -37,9 +27,13 @@ type navigationItemCommonFields struct {
 	ID   int64  `json:"id,string"`
 	Type string `json:"type"`
 
-	String            navigationItemString             `json:"string"`
-	UserActiveAttempt *navigationItemUserActiveAttempt `json:"user_active_attempt"`
-	AccessRights      navigationItemAccessRights       `json:"access_rights"`
+	String navigationItemString `json:"string"`
+
+	// max among all the user's attempts
+	BestScore float32 `json:"best_score"`
+	Validated bool    `json:"validated"`
+
+	AccessRights navigationItemAccessRights `json:"access_rights"`
 
 	Children []navigationItemChild `json:"children"`
 }
@@ -120,25 +114,17 @@ func (srv *Service) fillNavigationSubtreeWithChildren(rawData []rawNavigationIte
 
 func (srv *Service) fillNavigationCommonFieldsWithDBData(rawData *rawNavigationItem) *navigationItemCommonFields {
 	result := &navigationItemCommonFields{
-		ID:     rawData.ID,
-		Type:   rawData.Type,
-		String: navigationItemString{Title: rawData.Title},
+		ID:        rawData.ID,
+		Type:      rawData.Type,
+		String:    navigationItemString{Title: rawData.Title},
+		BestScore: rawData.UserBestScore,
+		Validated: rawData.UserValidated,
 		AccessRights: navigationItemAccessRights{
 			CanView: srv.Store.PermissionsGranted().ViewNameByIndex(rawData.CanViewGeneratedValue),
 		},
 	}
 	if rawData.ItemGrandparentID == nil {
 		result.Children = make([]navigationItemChild, 0)
-	}
-	if rawData.UserAttemptID != nil {
-		result.UserActiveAttempt = &navigationItemUserActiveAttempt{
-			ScoreComputed: rawData.UserScoreComputed,
-			Validated:     rawData.UserValidated,
-			Finished:      rawData.UserFinished,
-			Submissions:   rawData.UserSubmissions,
-			StartedAt:     rawData.UserStartedAt,
-			ValidatedAt:   rawData.UserValidatedAt,
-		}
 	}
 	return result
 }

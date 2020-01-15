@@ -23,11 +23,8 @@ Feature: Update the 'current' answer
       | id  | author_id | attempt_id | type       | created_at          |
       | 100 | 101       | 200        | Submission | 2017-05-29 06:38:38 |
 
-  Scenario: User is able to create the 'current' answer and users_items.active_attempt_id = request.attempt_id
+  Scenario: User is able to create the 'current' answer
     Given I am the user with id "101"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 200               |
     When I send a PUT request to "/attempts/200/answers/current" with the following body:
       """
       {
@@ -43,35 +40,6 @@ Feature: Update the 'current' answer
         "success": true
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 200               |
-    And the table "answers" should be:
-      | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 200        | Submission | null    | null       | 0                                                 |
-      | 101       | 200        | Current    | print 1 | some state | 1                                                 |
-
-  Scenario: User is able to create the 'current' answer and users_items.active_attempt_id != request.attempt_id
-    Given I am the user with id "101"
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-    When I send a PUT request to "/attempts/200/answers/current" with the following body:
-      """
-      {
-        "answer": "print 1",
-        "state": "some state"
-      }
-      """
-    Then the response code should be 200
-    And the response body should be, in JSON:
-      """
-      {
-        "message": "updated",
-        "success": true
-      }
-      """
-    And the table "users_items" should stay unchanged
     And the table "answers" should be:
       | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 200        | Submission | null    | null       | 0                                                 |
@@ -82,9 +50,6 @@ Feature: Update the 'current' answer
     And the database has the following table 'answers':
       | author_id | attempt_id | type    | created_at          |
       | 101       | 200        | Current | 2017-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 200               |
     When I send a PUT request to "/attempts/200/answers/current" with the following body:
       """
       {
@@ -100,9 +65,6 @@ Feature: Update the 'current' answer
         "success": true
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 200               |
     And the table "answers" should be:
       | author_id | attempt_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 200        | Submission | null    | null       | 0                                                 |

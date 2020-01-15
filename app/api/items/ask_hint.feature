@@ -33,9 +33,6 @@ Feature: Ask for a hint
       | id  | group_id | item_id | hints_requested        | hints_cached | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 4            | 0     |
       | 200 | 101      | 10      | null                   | 0            | 0     |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -95,9 +92,6 @@ Feature: Ask for a hint
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -157,9 +151,6 @@ Feature: Ask for a hint
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
       | 200 | 101      | 10      | null                   | 0     |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -219,9 +210,6 @@ Feature: Ask for a hint
       | id  | group_id | item_id | hints_requested | order |
       | 100 | 101      | 50      | not an array    | 0     |
       | 200 | 101      | 10      | null            | 0     |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {

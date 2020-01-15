@@ -43,7 +43,6 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) *DB { return store.RefreshTokens().Where("") }, "`refresh_tokens`"},
 		{"Sessions", func(store *DataStore) *DB { return store.Sessions().Where("") }, "`sessions`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
-		{"UserItems", func(store *DataStore) *DB { return store.UserItems().Where("") }, "`users_items`"},
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -91,7 +90,6 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"RefreshTokens", func(store *DataStore) interface{} { return store.RefreshTokens() }, &RefreshTokenStore{}},
 		{"Sessions", func(store *DataStore) interface{} { return store.Sessions() }, &SessionStore{}},
 		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
-		{"UserItems", func(store *DataStore) interface{} { return store.UserItems() }, &UserItemStore{}},
 	}
 	for _, tt := range tests {
 		tt := tt
