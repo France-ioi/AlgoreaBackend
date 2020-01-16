@@ -64,7 +64,7 @@ DROP TRIGGER `before_insert_items_strings`;
 # 5 rows
 DELETE `items_strings` FROM `items_strings`
     JOIN (
-        SELECT `id`, ROW_NUMBER() OVER (PARTITION BY `items_strings`.`item_id` ORDER BY `title` DESC) as number
+        SELECT `id`, ROW_NUMBER() OVER (PARTITION BY `items_strings`.`item_id`, `items_strings`.`language_tag` ORDER BY `title` DESC) as number
         FROM `items_strings`
             JOIN (
                 SELECT `item_id`, `language_tag`, COUNT(*) AS cnt
