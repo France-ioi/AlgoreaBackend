@@ -176,14 +176,7 @@ func (s *ItemStore) checkAccessForID(id int64, last bool, accDets []ItemAccessDe
 }
 
 func (s *ItemStore) isRootItem(id int64) (bool, error) {
-	count := 0
-	if err := s.ByID(id).Where("is_root").Count(&count).Error(); err != nil {
-		return false, err
-	}
-	if count == 0 {
-		return false, nil
-	}
-	return true, nil
+	return s.ByID(id).Where("is_root").HasRows()
 }
 
 func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {

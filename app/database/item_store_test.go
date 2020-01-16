@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -288,5 +289,46 @@ func TestItemStore_GetAccessDetailsForIDs_HandlesDBErrors(t *testing.T) {
 	assert.Nil(t, result)
 	assert.Equal(t, expectedError, err)
 
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_isRootItem(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		sqlRows        *sqlmock.Rows
+		expectedResult bool
+	}{
+		{name: "true", sqlRows: sqlmock.NewRows([]string{"1"}).AddRow(1), expectedResult: true},
+		{name: "false", sqlRows: sqlmock.NewRows([]string{"1"}), expectedResult: false},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+
+			dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT 1 FROM `items` WHERE (items.id = ?) AND (is_root) LIMIT 1") + "$").
+				WithArgs(23).
+				WillReturnRows(test.sqlRows)
+
+			result, err := NewDataStore(db).Items().isRootItem(23)
+			assert.Nil(t, err)
+			assert.Equal(t, test.expectedResult, result)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestItemStore_isRootItem_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT 1 FROM `items` WHERE (items.id = ?) AND (is_root) LIMIT 1") + "$").
+		WithArgs(123).
+		WillReturnError(expectedError)
+
+	result, err := NewDataStore(db).Items().isRootItem(123)
+	assert.False(t, result)
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
