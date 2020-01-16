@@ -11,9 +11,9 @@ Feature: Update item - robustness
       | 50 |
       | 60 |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order |
-      | 1  | 4              | 21            | 0           |
-      | 2  | 21             | 50            | 0           |
+      | parent_item_id | child_item_id | child_order |
+      | 4              | 21            | 0           |
+      | 21             | 50            | 0           |
     And the database has the following table 'items_ancestors':
       | id | ancestor_item_id | child_item_id |
       | 1  | 4                | 21            |

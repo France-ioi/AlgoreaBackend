@@ -1,1 +1,1 @@
-- { id: 21, parent_item_id: 2, child_item_id: 1, child_order: 0}
+- { parent_item_id: 2, child_item_id: 1, child_order: 0 }

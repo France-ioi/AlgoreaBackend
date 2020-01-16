@@ -38,9 +38,9 @@ Feature: Get item view information
       | 76 | 13                | 17             | 0       |
       | 77 | 26                | 22             | 0       |
     And the database has the following table 'items_items':
-      | id | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
-      | 54 | 200            | 210           | 2           | Discovery | as_info                  |
-      | 55 | 200            | 220           | 1           | Discovery | as_info                  |
+      | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
+      | 200            | 210           | 2           | Discovery | as_info                  |
+      | 200            | 220           | 1           | Discovery | as_info                  |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | solution                 |

@@ -40,9 +40,9 @@ Scenario: Full access on all breadcrumb
     | 13       | 22      | content_with_descendants |
     | 13       | 23      | content_with_descendants |
   And the database has the following table 'items_items':
-    | id | parent_item_id | child_item_id | child_order | difficulty |
-    | 51 | 21             | 22            | 1           | 0          |
-    | 52 | 22             | 23            | 1           | 0          |
+    | parent_item_id | child_item_id | child_order | difficulty |
+    | 21             | 22            | 1           | 0          |
+    | 22             | 23            | 1           | 0          |
   And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
@@ -62,9 +62,9 @@ Scenario: 'Content' access on all breadcrumb
     | 13       | 22      | content            |
     | 13       | 23      | content            |
   And the database has the following table 'items_items':
-    | id | parent_item_id | child_item_id | child_order | difficulty |
-    | 51 | 21             | 22            | 1           | 0          |
-    | 52 | 22             | 23            | 1           | 0          |
+    | parent_item_id | child_item_id | child_order | difficulty |
+    | 21             | 22            | 1           | 0          |
+    | 22             | 23            | 1           | 0          |
   And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200
@@ -84,9 +84,9 @@ Scenario: Content access to all items except for last for which we have info acc
     | 13       | 22      | content            |
     | 13       | 23      | info               |
   And the database has the following table 'items_items':
-    | id | parent_item_id | child_item_id | child_order | difficulty |
-    | 51 | 21             | 22            | 1           | 0          |
-    | 52 | 22             | 23            | 1           | 0          |
+    | parent_item_id | child_item_id | child_order | difficulty |
+    | 21             | 22            | 1           | 0          |
+    | 22             | 23            | 1           | 0          |
   And I am the user with id "11"
   When I send a GET request to "/items/21/22/23/breadcrumbs"
   Then the response code should be 200

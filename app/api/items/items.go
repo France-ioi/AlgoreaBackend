@@ -134,17 +134,17 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 	var values = make([]interface{}, 0, len(spec)*9)
 
 	for index := range spec {
-		values = append(values, store.NewID(),
+		values = append(values,
 			spec[index].ParentItemID, spec[index].ChildItemID, spec[index].Order, spec[index].ContentViewPropagation,
 			spec[index].UpperViewLevelsPropagation, spec[index].GrantViewPropagation, spec[index].WatchPropagation,
 			spec[index].EditPropagation)
 	}
 
-	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	valuesMarks := strings.Repeat("(?, ?, ?, ?, ?, ?, ?, ?), ", len(spec)-1) + "(?, ?, ?, ?, ?, ?, ?, ?)"
 	// nolint:gosec
 	query :=
 		`INSERT INTO items_items (
-			id, parent_item_id, child_item_id, child_order,
+			parent_item_id, child_item_id, child_order,
 			content_view_propagation, upper_view_levels_propagation, grant_view_propagation,
 			watch_propagation, edit_propagation) VALUES ` + valuesMarks
 	service.MustNotBeError(store.Exec(query, values...).Error())

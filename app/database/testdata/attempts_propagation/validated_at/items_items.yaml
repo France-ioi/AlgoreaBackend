@@ -1,2 +1,2 @@
-- { id: 23, parent_item_id: 2, child_item_id: 3, child_order: 1}
-- { id: 24, parent_item_id: 2, child_item_id: 4, child_order: 2}
+- { parent_item_id: 2, child_item_id: 3, child_order: 1}
+- { parent_item_id: 2, child_item_id: 4, child_order: 2}

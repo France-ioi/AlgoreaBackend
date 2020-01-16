@@ -108,7 +108,8 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToNull_IfSome
 	assert.NoError(
 		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
 			Error())
-	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
+	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
+		UpdateColumn("category", "Validation").Error())
 
 	err := attemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.Attempts().ComputeAllAttempts()
@@ -145,7 +146,8 @@ func TestAttemptStore_ComputeAllAttempts_Categories_ValidatedAtShouldBeMaxOfChil
 	assert.NoError(
 		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
 			Error())
-	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (23,24)").UpdateColumn("category", "Validation").Error())
+	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
+		UpdateColumn("category", "Validation").Error())
 
 	err := attemptStore.InTransaction(func(s *database.DataStore) error {
 		return s.Attempts().ComputeAllAttempts()
@@ -183,7 +185,8 @@ func TestAttemptStore_ComputeAllAttempts_Categories_SetsValidatedAtToMaxOfValida
 	assert.NoError(t, attemptStore.Where("id=15").UpdateColumn("validated_at", oldDatePlusOneDay).Error()) // should be ignored
 	assert.NoError(t, attemptStore.Where("id=11").UpdateColumn("validated_at", expectedDate).Error())
 	assert.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
-	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("id IN (21,23,24)").UpdateColumn("category", "Validation").Error())
+	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (1, 3, 4)").
+		UpdateColumn("category", "Validation").Error())
 
 	assert.NoError(t, itemStore.Where("id=1").Updates(map[string]interface{}{
 		"type": "Course",
