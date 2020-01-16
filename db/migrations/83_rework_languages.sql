@@ -35,6 +35,12 @@ DELETE `items` FROM `items`
     LEFT JOIN `items_strings` ON `items_strings`.`item_id` = `items`.`id`
 WHERE `items_strings`.`item_id` IS NULL;
 
+DELETE `items_items` FROM `items_items` LEFT JOIN `items` ON `items`.`id` = `items_items`.`child_item_id`
+WHERE `items`.`id` IS NULL;
+
+DELETE `items_items` FROM `items_items` LEFT JOIN `items` ON `items`.`id` = `items_items`.`parent_item_id`
+WHERE `items`.`id` IS NULL;
+
 UPDATE `items` SET `items`.`default_language_tag` = (
     SELECT `language_tag` FROM `items_strings`
     WHERE `items_strings`.`item_id` = `items`.`id` AND `items_strings`.`language_tag` IS NOT NULL
