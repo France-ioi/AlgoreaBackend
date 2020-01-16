@@ -17,7 +17,7 @@ import (
 //
 //   * The authenticated user should have at least 'content' access to the `attempts[attempt_id].item_id`
 //
-//   * `attempts.group_id` should be the user's selfGroup or the user's team
+//   * `attempts.group_id` should be the user or the user's team
 //     [this extra check just ensures the consistency of data]
 // parameters:
 // - name: attempt_id
