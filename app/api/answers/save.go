@@ -10,28 +10,30 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-// swagger:operation PUT /attempts/{attempt_id}/answers/current answers itemAnswerUpdateCurrent
+// swagger:operation POST /attempts/{attempt_id}/answers answers itemAnswerSave
 // ---
-// summary: Update current answer
-// description: Update user's current answer. Used for auto-saving while working on a task.
+// summary: Save an answer
+// description: Allows user to "save" a current snapshot of an answer manually.
 //
 //   * The authenticated user should have at least 'content' access to the `attempts[attempt_id].item_id`
 //
-//   * `attempts.group_id` should be the user's selfGroup or the user's team
+//   * `attempts.group_id` should be the user or the user's team
 //     [this extra check just ensures the consistency of data]
 // parameters:
 // - name: attempt_id
 //   in: path
 //   type: integer
 //   required: true
-// - name: current answer information
+// - name: answer information
 //   in: body
 //   required: true
 //   schema:
 //     "$ref": "#/definitions/answerData"
 // responses:
 //   "201":
-//     "$ref": "#/responses/updatedResponse"
+//     description: Created. The request has successfully saved the answer.
+//     schema:
+//       "$ref": "#/definitions/createdResponse"
 //   "400":
 //     "$ref": "#/responses/badRequestResponse"
 //   "401":
@@ -40,7 +42,7 @@ import (
 //     "$ref": "#/responses/forbiddenResponse"
 //   "500":
 //     "$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) save(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(httpReq, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -63,10 +65,6 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		answersStore := store.Answers()
-		service.MustNotBeError(answersStore.Where("answers.author_id = ?", user.GroupID).
-			Where("answers.attempt_id = ?", attemptID).
-			Where("answers.type = 'Current'").
-			Delete().Error())
 
 		return answersStore.RetryOnDuplicatePrimaryKeyError(func(store *database.DataStore) error {
 			answerID := store.NewID()
@@ -74,7 +72,7 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 				"id":         answerID,
 				"author_id":  user.GroupID,
 				"attempt_id": attemptID,
-				"type":       "Current",
+				"type":       "Saved",
 				"state":      requestData.State,
 				"answer":     requestData.Answer,
 				"created_at": database.Now(),
@@ -83,6 +81,6 @@ func (srv *Service) updateCurrent(rw http.ResponseWriter, httpReq *http.Request)
 	})
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess(nil)))
+	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(nil)))
 	return service.NoError
 }
