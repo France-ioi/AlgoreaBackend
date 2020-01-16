@@ -200,11 +200,8 @@ func (s *ItemStore) isHierarchicalChain(ids []int64) (bool, error) {
 	}
 
 	count := 0
-	// For now, we don’t have a unique key for the pair ('parent_item_id' and 'child_item_id') and
-	// theoretically it’s still possible to have multiple rows with the same pair
-	// of 'parent_item_id' and 'child_item_id'.
-	// The “Group(...)” here resolves the issue.
-	if err := db.Group("parent_item_id, child_item_id").Count(&count).Error(); err != nil {
+	// There is a unique key for the pair ('parent_item_id' and 'child_item_id') so count() will work correctly
+	if err := db.Count(&count).Error(); err != nil {
 		return false, err
 	}
 

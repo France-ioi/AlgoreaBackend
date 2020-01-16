@@ -332,3 +332,71 @@ func TestItemStore_isRootItem_HandlesDBErrors(t *testing.T) {
 	assert.Equal(t, expectedError, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestItemStore_isHierarchicalChain_HandlesDBErrors(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("some error")
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta(
+		"SELECT count(*) FROM `items_items` "+
+			"WHERE (parent_item_id=? AND child_item_id=?) OR (parent_item_id=? AND child_item_id=?)")+"$").
+		WithArgs(1, 2, 2, 3).
+		WillReturnError(expectedError)
+
+	result, err := NewDataStore(db).Items().isHierarchicalChain([]int64{1, 2, 3})
+	assert.False(t, result)
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemStore_isHierarchicalChain_ShortListOfIDs(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		ids            []int64
+		expectedResult bool
+	}{
+		{name: "0 ids", ids: []int64{}, expectedResult: false},
+		{name: "1 id", ids: []int64{1}, expectedResult: true},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+
+			result, err := NewDataStore(db).Items().isHierarchicalChain(test.ids)
+			assert.Nil(t, err)
+			assert.Equal(t, test.expectedResult, result)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestItemStore_isHierarchicalChain_ChecksCount(t *testing.T) {
+	for _, test := range []struct {
+		name           string
+		dbCount        int64
+		expectedResult bool
+	}{
+		{name: "wrong", dbCount: 2, expectedResult: false},
+		{name: "correct", dbCount: 3, expectedResult: true},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+
+			dbMock.ExpectQuery("^"+regexp.QuoteMeta(
+				"SELECT count(*) FROM `items_items` "+
+					"WHERE (parent_item_id=? AND child_item_id=?) OR (parent_item_id=? AND child_item_id=?) OR "+
+					"(parent_item_id=? AND child_item_id=?)")+"$").
+				WithArgs(1, 2, 2, 3, 3, 4).
+				WillReturnRows(dbMock.NewRows([]string{"COUNT(*)"}).AddRow(test.dbCount))
+
+			result, err := NewDataStore(db).Items().isHierarchicalChain([]int64{1, 2, 3, 4})
+			assert.Nil(t, err)
+			assert.Equal(t, test.expectedResult, result)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+		})
+	}
+}
