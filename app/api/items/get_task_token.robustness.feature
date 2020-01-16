@@ -22,12 +22,10 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
       | 104               | 101            | 0       |
       | 104               | 104            | 1       |
     And the database has the following table 'items':
-      | id | url                                                                     | type     | has_attempts |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task     | 0            |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course   | 1            |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Root     | 1            |
-      | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Category | 1            |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter  | 1            |
+      | id | url                                                                     | type    | has_attempts |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | 1            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
@@ -41,8 +39,6 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
     And the database has the following table 'attempts':
       | id | group_id | item_id | order | latest_activity_at  | started_at          | score_computed | score_obtained_at | validated_at |
       | 2  | 101      | 50      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
-      | 3  | 101      | 70      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
-      | 4  | 101      | 80      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 5  | 101      | 90      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 6  | 102      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
       | 7  | 103      | 60      | 0     | 2018-05-29 06:38:38 | 2017-05-29 06:38:38 | 0              | null              | null         |
@@ -73,20 +69,6 @@ Feature: Get a task token with a refreshed attempt for an item - robustness
   Scenario: No access to the item (info access)
     Given I am the user with id "101"
     When I send a GET request to "/attempts/2/task-token"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
-  Scenario: No access to the item (type='Root')
-    Given I am the user with id "101"
-    When I send a GET request to "/attempts/3/task-token"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
-  Scenario: No access to the item (type='Category')
-    Given I am the user with id "101"
-    When I send a GET request to "/attempts/4/task-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged

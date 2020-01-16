@@ -15,20 +15,20 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
-type itemWithDefaultLanguageIDAndOptionalType struct {
+type itemWithDefaultLanguageTagAndOptionalType struct {
 	item `json:"item,squash"`
-	// new `default_language_id` of the item can only be set to a language
+	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
-	DefaultLanguageID int64 `json:"default_language_id" validate:"default_language_id"`
-	// enum: Root,Category,Chapter,Task,Course
-	Type string `json:"type" validate:"oneof=Root Category Chapter Task Course"`
+	DefaultLanguageTag string `json:"default_language_tag" validate:"default_language_tag"`
+	// enum: Chapter,Task,Course
+	Type string `json:"type" validate:"oneof=Chapter Task Course"`
 }
 
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	itemWithDefaultLanguageIDAndOptionalType `json:"item,squash"`
-	Children                                 []itemChild `json:"children" validate:"children"`
+	itemWithDefaultLanguageTagAndOptionalType `json:"item,squash"`
+	Children                                  []itemChild `json:"children" validate:"children"`
 }
 
 func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore, itemID int64) bool {
@@ -109,7 +109,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var childrenPermissions []permission
 		registerChildrenValidator(formData, store, user, &childrenPermissions)
-		registerDefaultLanguageIDValidator(formData, store, itemID)
+		registerDefaultLanguageTagValidator(formData, store, itemID)
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -130,7 +130,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 		}
 		service.MustNotBeError(err)
 
-		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageIDAndOptionalType")
+		itemData := formData.ConstructPartialMapForDB("itemWithDefaultLanguageTagAndOptionalType")
 
 		if itemData["duration"] != nil && participantsGroupID == nil {
 			createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
@@ -180,21 +180,21 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 	return apiError, err
 }
 
-func registerDefaultLanguageIDValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) {
-	formData.RegisterValidation("default_language_id", constructDefaultLanguageIDValidator(formData, store, itemID))
-	formData.RegisterTranslation("default_language_id",
+func registerDefaultLanguageTagValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) {
+	formData.RegisterValidation("default_language_tag", constructDefaultLanguageTagValidator(formData, store, itemID))
+	formData.RegisterTranslation("default_language_tag",
 		"default language should exist and there should be item's strings in this language")
 }
 
-// constructDefaultLanguageIDValidator constructs a validator for the DefaultLanguageID field.
+// constructDefaultLanguageTagValidator constructs a validator for the DefaultLanguageTag field.
 // The validator checks that the language exists and there is an items_strings row in this language for the item.
-func constructDefaultLanguageIDValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) validator.Func {
+func constructDefaultLanguageTagValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		if !formData.IsValid("default_language_id") {
+		if !formData.IsValid("default_language_tag") {
 			return true
 		}
-		found, err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().
-			Joins("JOIN items_strings ON items_strings.language_id = languages.id AND items_strings.item_id = ?", itemID).
+		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithWriteLock().
+			Joins("JOIN items_strings ON items_strings.language_tag = languages.tag AND items_strings.item_id = ?", itemID).
 			HasRows()
 		service.MustNotBeError(err)
 		return found

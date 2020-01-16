@@ -35,7 +35,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID int64, user *dat
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
-	commonAttributes := "items.id, items.type, items.default_language_id, " +
+	commonAttributes := "items.id, items.type, items.default_language_tag, " +
 		"can_view_generated_value"
 	itemQ := items.VisibleByID(user, rootID).Select(
 		commonAttributes + ", NULL AS parent_item_id, NULL AS item_grandparent_id, NULL AS child_order, NULL AS content_view_propagation")

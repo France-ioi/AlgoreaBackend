@@ -177,7 +177,7 @@ func (s *ItemStore) checkAccessForID(id int64, last bool, accDets []ItemAccessDe
 
 func (s *ItemStore) isRootItem(id int64) (bool, error) {
 	count := 0
-	if err := s.ByID(id).Where("type='Root'").Count(&count).Error(); err != nil {
+	if err := s.ByID(id).Where("is_root").Count(&count).Error(); err != nil {
 		return false, err
 	}
 	if count == 0 {

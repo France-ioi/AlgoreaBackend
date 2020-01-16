@@ -23,8 +23,8 @@ Feature: Add item
       | group_id | item_id | order | result_propagation_state |
       | 11       | 21      | 1     | done                     |
     And the database has the following table 'languages':
-      | id |
-      | 3  |
+      | tag |
+      | sl  |
 
   Scenario: Valid
     Given I am the user with id "11"
@@ -32,7 +32,7 @@ Feature: Add item
       """
       {
         "type": "Course",
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "image_url":"http://bit.ly/1234",
         "subtitle": "hard task",
@@ -51,14 +51,14 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
+      | id                  | type   | url  | default_language_tag | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | sl                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         | default     | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
     And the table "items_strings" should be:
-      | id                  | item_id             | language_id | title    | image_url          | subtitle  | description                  |
-      | 8674665223082153551 | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
+      | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | id                  | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 6129484611666145821 | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | 8674665223082153551 | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |
@@ -111,7 +111,7 @@ Feature: Add item
         "show_user_infos": true,
         "no_score": true,
         "group_code_enter": true,
-        "language_id": "3",
+        "language_tag": "sl",
         "title": "my title",
         "image_url":"http://bit.ly/1234",
         "subtitle": "hard task",
@@ -134,11 +134,11 @@ Feature: Add item
       }
       """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url               | default_language_id | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
-      | 5577006791947779410 | Course | http://myurl.com/ | 3                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | 1        | 1                | 8674665223082153551           |
+      | id                  | type   | url               | default_language_tag | teams_editable | no_score | text_id       | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | http://myurl.com/ | sl                   | 1              | 1        | Task number 1 | 1                 | 1                         | 1        | 1         | forceYes    | 1             | 1           | AllButOne       | All                        | 1              | 2345                  | 1            | 01:02:03 | 1               | 1        | 1                | 8674665223082153551           |
     And the table "items_strings" should be:
-      | item_id             | language_id | title    | image_url          | subtitle  | description                  |
-      | 5577006791947779410 | 3           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
+      | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
     And the table "items_items" should be:
       | parent_item_id      | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21                  | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
@@ -179,7 +179,7 @@ Feature: Add item
     {
       "type": "Course",
       "full_screen": "",
-      "language_id": "3",
+      "language_tag": "sl",
       "title": "my title",
       "parent_item_id": "21",
       "order": 100
@@ -195,14 +195,14 @@ Feature: Add item
     }
     """
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type   | url  | default_language_id | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
-      | 5577006791947779410 | Course | null | 3                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
+      | id                  | type   | url  | default_language_tag | teams_editable | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | hints_allowed | fixed_ranks | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | show_user_infos | no_score | group_code_enter | contest_participants_group_id |
+      | 5577006791947779410 | Course | null | sl                   | 0              | 0        | null    | 1                 | 0                         | 1        | 0         |             | 0             | 0           | All             | None                       | 0              | 0                     | 0            | null     | 0               | 0        | 0                | null                          |
     And the table "items_strings" should be:
-      | id                  | item_id             | language_id | title    | image_url | subtitle | description |
-      | 8674665223082153551 | 5577006791947779410 | 3           | my title | null      | null     | null        |
+      | item_id             | language_tag | title    | image_url | subtitle | description |
+      | 5577006791947779410 | sl           | my title | null      | null     | null        |
     And the table "items_items" should be:
       | id                  | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
-      | 6129484611666145821 | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
+      | 8674665223082153551 | 21             | 5577006791947779410 | 100         | as_info                  | as_is                         | 1                      | 1                 | 1                |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id       |
       | 21               | 5577006791947779410 |

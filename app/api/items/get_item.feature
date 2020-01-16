@@ -17,18 +17,18 @@ Feature: Get item view information
       | fr         | 0         | 17       | fr               |
       | info       | 0         | 22       |                  |
     And the database has the following table 'items':
-      | id  | type     | no_score | display_details_in_parent | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
-      | 200 | Category | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true            | http://someurl | true     | true          |
-      | 210 | Chapter  | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:31 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
-      | 220 | Chapter  | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:32 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
+      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | contest_entering_condition | teams_editable | contest_max_team_size | has_attempts | duration | group_code_enter | title_bar_visible | read_only | full_screen | show_user_infos | url            | uses_api | hints_allowed |
+      | 200 | Course  | en                   | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:30 | true             | true              | true      | forceYes    | true            | http://someurl | true     | true          |
+      | 210 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:31 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
+      | 220 | Chapter | en                   | true     | true                      | All             | All                        | true           | 10                    | true         | 10:20:32 | true             | true              | true      | forceYes    | true            | null           | true     | true          |
     And the database has the following table 'items_strings':
-      | id | item_id | language_id | title       | image_url                  | subtitle     | description   | edu_comment    |
-      | 53 | 200     | 1           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
-      | 54 | 210     | 1           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
-      | 55 | 220     | 1           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
-      | 63 | 200     | 2           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
-      | 64 | 210     | 2           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
-      | 66 | 220     | 2           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
+      | item_id | language_tag | title       | image_url                  | subtitle     | description   | edu_comment    |
+      | 200     | en           | Category 1  | http://example.com/my0.jpg | Subtitle 0   | Description 0 | Some comment   |
+      | 210     | en           | Chapter A   | http://example.com/my1.jpg | Subtitle 1   | Description 1 | Some comment   |
+      | 220     | en           | Chapter B   | http://example.com/my2.jpg | Subtitle 2   | Description 2 | Some comment   |
+      | 200     | fr           | Catégorie 1 | http://example.com/mf0.jpg | Sous-titre 0 | texte 0       | Un commentaire |
+      | 210     | fr           | Chapitre A  | http://example.com/mf1.jpg | Sous-titre 1 | texte 1       | Un commentaire |
+      | 220     | fr           | Chapitre B  | http://example.com/mf2.jpg | Sous-titre 2 | texte 2       | Un commentaire |
     And the database has the following table 'groups_ancestors':
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
@@ -51,8 +51,8 @@ Feature: Get item view information
       | 26       | 210     | info                     |
       | 26       | 220     | info                     |
     And the database has the following table 'languages':
-      | id | code |
-      | 2  | fr   |
+      | tag |
+      | fr  |
 
   Scenario: Full access on all items
     Given I am the user with id "11"
@@ -62,7 +62,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Category",
+      "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
       "contest_entering_condition": "All",
@@ -82,7 +82,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": "1",
+        "language_tag": "en",
         "title": "Category 1",
         "image_url": "http://example.com/my0.jpg",
         "subtitle": "Subtitle 0",
@@ -109,7 +109,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "1",
+            "language_tag": "en",
             "title": "Chapter B",
             "image_url": "http://example.com/my2.jpg",
             "subtitle": "Subtitle 2",
@@ -135,7 +135,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "1",
+            "language_tag": "en",
             "title": "Chapter A",
             "image_url": "http://example.com/my1.jpg",
             "subtitle": "Subtitle 1",
@@ -171,7 +171,7 @@ Feature: Get item view information
       "show_user_infos": true,
 
       "string": {
-        "language_id": "1",
+        "language_tag": "en",
         "title": "Chapter A",
         "image_url": "http://example.com/my1.jpg",
         "subtitle": "Subtitle 1",
@@ -208,7 +208,7 @@ Feature: Get item view information
       "show_user_infos": true,
 
       "string": {
-        "language_id": "1",
+        "language_tag": "en",
         "title": "Chapter A",
         "image_url": "http://example.com/my1.jpg",
         "subtitle": "Subtitle 1",
@@ -227,7 +227,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Category",
+      "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
       "contest_entering_condition": "All",
@@ -247,7 +247,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": "2",
+        "language_tag": "fr",
         "title": "Catégorie 1",
         "image_url": "http://example.com/mf0.jpg",
         "subtitle": "Sous-titre 0",
@@ -274,7 +274,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "2",
+            "language_tag": "fr",
             "title": "Chapitre B",
             "image_url": "http://example.com/mf2.jpg",
             "subtitle": "Sous-titre 2",
@@ -300,7 +300,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "2",
+            "language_tag": "fr",
             "title": "Chapitre A",
             "image_url": "http://example.com/mf1.jpg",
             "subtitle": "Sous-titre 1",
@@ -319,7 +319,7 @@ Feature: Get item view information
     """
     {
       "id": "200",
-      "type": "Category",
+      "type": "Course",
       "display_details_in_parent": true,
       "validation_type": "All",
       "contest_entering_condition": "All",
@@ -339,7 +339,7 @@ Feature: Get item view information
       "hints_allowed": true,
 
       "string": {
-        "language_id": "1",
+        "language_tag": "en",
         "title": "Category 1",
         "image_url": "http://example.com/my0.jpg",
         "subtitle": "Subtitle 0",
@@ -366,7 +366,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "1",
+            "language_tag": "en",
             "title": "Chapter B",
             "image_url": "http://example.com/my2.jpg"
           }
@@ -390,7 +390,7 @@ Feature: Get item view information
           "group_code_enter": true,
 
           "string": {
-            "language_id": "1",
+            "language_tag": "en",
             "title": "Chapter A",
             "image_url": "http://example.com/my1.jpg"
           }

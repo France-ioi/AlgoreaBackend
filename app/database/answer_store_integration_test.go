@@ -160,6 +160,7 @@ func TestAnswerStore_Visible(t *testing.T) {
 					- {ancestor_group_id: 102, child_group_id: 102, is_self: 1}
 					- {ancestor_group_id: 111, child_group_id: 111, is_self: 1}
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
+				languages: [{tag: fr}]
 				items:
 					- {id: 10}
 					- {id: 50}

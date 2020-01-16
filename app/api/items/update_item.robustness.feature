@@ -33,15 +33,15 @@ Feature: Update item - robustness
       | id | ancestor_group_id | child_group_id | is_self |
       | 71 | 11                | 11             | 1       |
     And the database has the following table 'languages':
-      | id |
-      | 3  |
+      | tag |
+      | sl  |
 
-  Scenario: default_language_id is not a number
+  Scenario: default_language_tag is not a string
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "sewrwer3"
+        "default_language_tag": 1234
       }
       """
     Then the response code should be 400
@@ -52,7 +52,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["decoding error: strconv.ParseInt: parsing \"sewrwer3\": invalid syntax"]
+          "default_language_tag": ["expected type 'string', got unconvertible type 'float64'"]
         }
       }
       """
@@ -62,12 +62,12 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
-  Scenario: default_language_id doesn't exist
+  Scenario: default_language_tag doesn't exist
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "404"
+        "default_language_tag": "unknown"
       }
       """
     Then the response code should be 400
@@ -78,7 +78,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["default language should exist and there should be item's strings in this language"]
+          "default_language_tag": ["default language should exist and there should be item's strings in this language"]
         }
       }
       """
@@ -88,12 +88,12 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
-  Scenario: No strings in default_language_id
+  Scenario: No strings in default_language_tag
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
-        "default_language_id": "3"
+        "default_language_tag": "sl"
       }
       """
     Then the response code should be 400
@@ -104,7 +104,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "default_language_id": ["default language should exist and there should be item's strings in this language"]
+          "default_language_tag": ["default language should exist and there should be item's strings in this language"]
         }
       }
       """
@@ -220,7 +220,7 @@ Feature: Update item - robustness
         "message": "Bad Request",
         "error_text": "Invalid input data",
         "errors":{
-          "type": ["type must be one of [Root Category Chapter Task Course]"]
+          "type": ["type must be one of [Chapter Task Course]"]
         }
       }
       """

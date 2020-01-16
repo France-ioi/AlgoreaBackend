@@ -22,18 +22,14 @@ Feature: Create an attempt for an item - robustness
       | 104               | 101            | 0       |
       | 104               | 104            | 1       |
     And the database has the following table 'items':
-      | id | url                                                                     | type     | has_attempts |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task     | 0            |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course   | 1            |
-      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Root     | 1            |
-      | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Category | 1            |
-      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter  | 1            |
+      | id | url                                                                     | type    | has_attempts |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            |
+      | 90 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Chapter | 1            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | info               |
       | 101      | 60      | content            |
-      | 101      | 70      | content            |
-      | 101      | 80      | content            |
       | 101      | 90      | content            |
 
   Scenario: Invalid item_id
@@ -73,20 +69,6 @@ Feature: Create an attempt for an item - robustness
   Scenario: No access to the item (as a team)
     Given I am the user with id "101"
     When I send a POST request to "/items/50/attempts?as_team_id=104"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
-  Scenario: No access to the item (type='Root')
-    Given I am the user with id "101"
-    When I send a POST request to "/items/70/attempts"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "attempts" should stay unchanged
-
-  Scenario: No access to the item (type='Category')
-    Given I am the user with id "101"
-    When I send a POST request to "/items/80/attempts"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should stay unchanged

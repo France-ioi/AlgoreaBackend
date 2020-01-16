@@ -8,17 +8,17 @@ Feature: Get item information for breadcrumb - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | teams_editable | no_score | type     |
-      | 21 | false          | false    | Root     |
-      | 22 | false          | false    | Category |
-      | 23 | false          | false    | Chapter  |
-      | 24 | false          | false    | Task     |
+      | id | teams_editable | no_score | type    |
+      | 21 | false          | false    | Course  |
+      | 22 | false          | false    | Course  |
+      | 23 | false          | false    | Chapter |
+      | 24 | false          | false    | Task    |
     And the database has the following table 'items_strings':
-      | id | item_id | language_id | title            |
-      | 31 | 21      | 1           | Graph: Methods   |
-      | 32 | 22      | 1           | DFS              |
-      | 33 | 23      | 1           | Reduce Graph     |
-      | 39 | 21      | 2           | Graphe: Methodes |
+      | item_id | language_tag | title            |
+      | 21      | en           | Graph: Methods   |
+      | 22      | en           | DFS              |
+      | 23      | en           | Reduce Graph     |
+      | 21      | fr           | Graphe: Methodes |
     And the database has the following table 'groups_groups':
       | id | parent_group_id | child_group_id |
       | 61 | 13              | 11             |

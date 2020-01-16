@@ -14,7 +14,7 @@ type parentTitle struct {
 	Title *string `json:"title"`
 	// Nullable
 	// required: true
-	LanguageID *int64 `json:"language_id,string"`
+	LanguageTag *string `json:"language_tag"`
 }
 
 // swagger:model
@@ -26,7 +26,7 @@ type contestAdminListRow struct {
 	Title *string `gorm:"column:title_translation" json:"title"`
 	// Nullable
 	// required: true
-	LanguageID *int64 `gorm:"column:title_language_id" json:"language_id,string"`
+	LanguageTag *string `gorm:"column:title_language_tag" json:"language_tag"`
 	// required: true
 	TeamOnlyContest bool `json:"team_only_contest"`
 	// required: true
@@ -90,7 +90,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			items.id AS item_id,
 			items.has_attempts AS team_only_contest,
 			COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS title_translation,
-			COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS title_language_id`).
+			COALESCE(MAX(user_strings.language_tag), MAX(default_strings.language_tag)) AS title_language_tag`).
 		WhereUserHasViewPermissionOnItems(user, "content_with_descendants").
 		JoinsUserAndDefaultItemStrings(user).
 		Where("items.duration IS NOT NULL").
@@ -117,9 +117,9 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			itemIDs[index] = rows[index].ItemID
 		}
 		var parents []struct {
-			ChildID          int64
-			ParentTitle      *string
-			ParentLanguageID *int64
+			ChildID           int64
+			ParentTitle       *string
+			ParentLanguageTag *string
 		}
 		service.MustNotBeError(srv.Store.Items().
 			Joins("JOIN items_items ON items_items.parent_item_id = items.id AND items_items.child_item_id IN (?)", itemIDs).
@@ -130,7 +130,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			Select(`
 				items_items.child_item_id as child_id,
 				COALESCE(MAX(user_strings.title), MAX(default_strings.title)) AS parent_title,
-				COALESCE(MAX(user_strings.language_id), MAX(default_strings.language_id)) AS parent_language_id`).
+				COALESCE(MAX(user_strings.language_tag), MAX(default_strings.language_tag)) AS parent_language_tag`).
 			Scan(&parents).Error())
 
 		parentTitlesMap := make(map[int64][]parentTitle, len(rows))
@@ -140,8 +140,8 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			}
 			parentTitlesMap[parents[index].ChildID] =
 				append(parentTitlesMap[parents[index].ChildID], parentTitle{
-					Title:      parents[index].ParentTitle,
-					LanguageID: parents[index].ParentLanguageID,
+					Title:       parents[index].ParentTitle,
+					LanguageTag: parents[index].ParentLanguageTag,
 				})
 		}
 		for index := range rows {

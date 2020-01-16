@@ -11,7 +11,7 @@ import (
 func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
-		Login: "login", DefaultLanguage: "fr", DefaultLanguageID: 12,
+		Login: "login", DefaultLanguage: "fr",
 		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: ptrInt64(4),
 		AllowSubgroups: true, NotificationsReadAt: (*Time)(&ts)}
 	userClone := user.Clone()
@@ -34,8 +34,7 @@ func (u *User) LoadByID(dataStore *DataStore, userID int64) error {
 		Select(`
 						users.login, users.is_admin, users.group_id, users.access_group_id,
 						users.temp_user, users.allow_subgroups, users.notifications_read_at,
-						users.default_language, l.id as default_language_id`).
-		Joins("LEFT JOIN languages l ON users.default_language = l.code").
+						users.default_language`).
 		Take(&u).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		u.GroupID = userID

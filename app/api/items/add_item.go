@@ -55,8 +55,8 @@ type item struct {
 type itemWithRequiredType struct {
 	item `json:"item,squash"`
 	// required: true
-	// enum: Root,Category,Chapter,Task,Course
-	Type string `json:"type" validate:"set,oneof=Root Category Chapter Task Course"`
+	// enum: Chapter,Task,Course
+	Type string `json:"type" validate:"set,oneof=Chapter Task Course"`
 }
 
 // swagger:ignore
@@ -76,9 +76,9 @@ type newItemString struct {
 type NewItemRequest struct {
 	// Nullable fields are of pointer types
 	itemWithRequiredType `json:"item,squash"`
-	// `default_language_id` of the item
+	// `default_language_tag` of the item
 	// required: true
-	LanguageID    int64 `json:"language_id" validate:"set,language_id"`
+	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
 	newItemString `json:"string,squash"`
 
 	// required: true
@@ -112,10 +112,10 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 // summary: Create an item
 // description: >
 //
-//   Creates an item with parameters from the input data with `items.default_language_id` = `language_id`.
+//   Creates an item with parameters from the input data with `items.default_language_tag` = `language_tag`.
 //   Also it
 //
-//     * inserts a row into `items_strings` with given `language_id`, `title`, `image_url`, `subtitle`, `description`,
+//     * inserts a row into `items_strings` with given `language_tag`, `title`, `image_url`, `subtitle`, `description`,
 //
 //     * gives full access to the item for the current user (creates a new `permissions_granted` row with: `item_id` = `items.id`,
 //       `group_id` = `group_id` of the current user, `source_group_id` = `users.group_id` of the current user, `origin` = 'self',
@@ -207,11 +207,11 @@ func constructParentItemIDValidator(store *database.DataStore, user *database.Us
 	})
 }
 
-// constructLanguageIDValidator constructs a validator for the LanguageID field.
+// constructLanguageTagValidator constructs a validator for the LanguageTag field.
 // The validator checks that the language exists.
-func constructLanguageIDValidator(store *database.DataStore) validator.Func {
+func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	return validator.Func(func(fl validator.FieldLevel) bool {
-		found, err := store.Languages().ByID(fl.Field().Interface().(int64)).WithWriteLock().HasRows()
+		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
 	})
@@ -246,13 +246,13 @@ func registerAddItemValidators(formData *formdata.FormData, store *database.Data
 	formData.RegisterTranslation("parent_item_id",
 		"should exist and the user should be able to manage its children")
 
-	registerLanguageIDValidator(formData, store)
+	registerLanguageTagValidator(formData, store)
 	registerChildrenValidator(formData, store, user, childrenPermissions)
 }
 
-func registerLanguageIDValidator(formData *formdata.FormData, store *database.DataStore) {
-	formData.RegisterValidation("language_id", constructLanguageIDValidator(store))
-	formData.RegisterTranslation("language_id", "no such language")
+func registerLanguageTagValidator(formData *formdata.FormData, store *database.DataStore) {
+	formData.RegisterValidation("language_tag", constructLanguageTagValidator(store))
+	formData.RegisterTranslation("language_tag", "no such language")
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
@@ -271,7 +271,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		itemID = s.NewID()
 
 		itemMap["id"] = itemID
-		itemMap["default_language_id"] = newItemRequest.LanguageID
+		itemMap["default_language_tag"] = newItemRequest.LanguageTag
 		service.MustNotBeError(s.Items().InsertMap(itemMap))
 
 		if itemMap["duration"] != nil {
@@ -289,9 +289,8 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 				"is_owner":        true,
 			}))
 
-		stringMap["id"] = s.NewID()
 		stringMap["item_id"] = itemID
-		stringMap["language_id"] = newItemRequest.LanguageID
+		stringMap["language_tag"] = newItemRequest.LanguageTag
 		service.MustNotBeError(s.ItemStrings().InsertMap(stringMap))
 
 		parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))

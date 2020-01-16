@@ -5,7 +5,6 @@ type User struct {
 	GroupID             int64
 	Login               string
 	DefaultLanguage     string
-	DefaultLanguageID   int64
 	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
 	AccessGroupID       *int64
