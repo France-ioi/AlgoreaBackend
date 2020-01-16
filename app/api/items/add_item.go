@@ -272,38 +272,39 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 
 		itemMap["id"] = itemID
 		itemMap["default_language_tag"] = newItemRequest.LanguageTag
-		service.MustNotBeError(s.Items().InsertMap(itemMap))
-
-		if itemMap["duration"] != nil {
-			participantsGroupID := createContestParticipantsGroup(s, itemID)
-			service.MustNotBeError(s.Items().ByID(itemID).
-				UpdateColumn("contest_participants_group_id", participantsGroupID).Error())
-		}
-
-		service.MustNotBeError(s.PermissionsGranted().InsertMap(
-			map[string]interface{}{
-				"item_id":         itemID,
-				"group_id":        user.GroupID,
-				"source_group_id": user.GroupID,
-				"origin":          "self",
-				"is_owner":        true,
-			}))
-
-		stringMap["item_id"] = itemID
-		stringMap["language_tag"] = newItemRequest.LanguageTag
-		service.MustNotBeError(s.ItemStrings().InsertMap(stringMap))
-
-		parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
-		parentChildSpec = append(parentChildSpec,
-			&insertItemItemsSpec{
-				ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
-				ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
-				GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
-			})
-		parentChildSpec = append(parentChildSpec,
-			constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
-		insertItemItems(s, parentChildSpec)
-		return store.ItemItems().After()
+		return s.Items().InsertMap(itemMap)
 	}))
+
+	if itemMap["duration"] != nil {
+		participantsGroupID := createContestParticipantsGroup(store, itemID)
+		service.MustNotBeError(store.Items().ByID(itemID).
+			UpdateColumn("contest_participants_group_id", participantsGroupID).Error())
+	}
+
+	service.MustNotBeError(store.PermissionsGranted().InsertMap(
+		map[string]interface{}{
+			"item_id":         itemID,
+			"group_id":        user.GroupID,
+			"source_group_id": user.GroupID,
+			"origin":          "self",
+			"is_owner":        true,
+		}))
+
+	stringMap["item_id"] = itemID
+	stringMap["language_tag"] = newItemRequest.LanguageTag
+	service.MustNotBeError(store.ItemStrings().InsertMap(stringMap))
+
+	parentChildSpec := make([]*insertItemItemsSpec, 0, 1+len(newItemRequest.Children))
+	parentChildSpec = append(parentChildSpec,
+		&insertItemItemsSpec{
+			ParentItemID: newItemRequest.ParentItemID, ChildItemID: itemID, Order: newItemRequest.Order,
+			ContentViewPropagation: "as_info", UpperViewLevelsPropagation: "as_is",
+			GrantViewPropagation: true, WatchPropagation: true, EditPropagation: true,
+		})
+	parentChildSpec = append(parentChildSpec,
+		constructItemsItemsForChildren(childrenPermissions, newItemRequest.Children, store, itemID)...)
+	insertItemItems(store, parentChildSpec)
+	service.MustNotBeError(store.ItemItems().After())
+
 	return itemID
 }
