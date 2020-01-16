@@ -120,7 +120,7 @@ jobs:
           no_output_timeout: 1h
       - run:
           name: Undo all migrations
-          command: for m in db/migrations/*.sql; do make db-migrate-undo; done
+          command: for m in db/migrations/*.sql; do if ! make db-migrate-undo; then break; fi; done
           no_output_timeout: 30m
       - run:
           name: Re-apply all migrations
