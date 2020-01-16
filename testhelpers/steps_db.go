@@ -47,14 +47,17 @@ func (ctx *TestContext) DBHasTable(tableName string, data *gherkin.DataTable) er
 			}
 			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 			_, err = tx.Exec(query, vals...)
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			if err != nil {
+				_ = tx.Rollback()
 				return err
 			}
 			err = tx.Commit()
