@@ -13,8 +13,8 @@ Feature: Add item - robustness
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 4                | 21            |
+      | ancestor_item_id | child_item_id |
+      | 4                | 21            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 4       | solution           | children           |

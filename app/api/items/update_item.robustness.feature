@@ -15,9 +15,9 @@ Feature: Update item - robustness
       | 4              | 21            | 0           |
       | 21             | 50            | 0           |
     And the database has the following table 'items_ancestors':
-      | id | ancestor_item_id | child_item_id |
-      | 1  | 4                | 21            |
-      | 2  | 21               | 50            |
+      | ancestor_item_id | child_item_id |
+      | 4                | 21            |
+      | 21               | 50            |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated | is_owner_generated |
       | 11       | 21      | solution           | none               | false              |
