@@ -3,7 +3,6 @@ package testhelpers
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/DATA-DOG/godog/gherkin"
@@ -138,7 +137,7 @@ func (ctx *TestContext) TableShouldBeEmpty(tableName string) error { // nolint
 }
 
 func (ctx *TestContext) TableShouldBe(tableName string, data *gherkin.DataTable) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, "", nil, false, data)
+	return ctx.tableAtColumnValueShouldBe(tableName, "", nil, false, data)
 }
 
 func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // nolint
@@ -148,24 +147,24 @@ func (ctx *TestContext) TableShouldStayUnchanged(tableName string) error { // no
 			{Cells: []*gherkin.TableCell{{Value: "1"}}}},
 		}
 	}
-	return ctx.tableAtIDShouldBe(tableName, "", nil, false, data)
+	return ctx.tableAtColumnValueShouldBe(tableName, "", nil, false, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithID(tableName, idColumnName, ids string) error { // nolint
+func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(tableName, columnName, columnValues string) error { // nolint
 	data := ctx.dbTableData[tableName]
 	if data == nil {
 		data = &gherkin.DataTable{Rows: []*gherkin.TableRow{}}
 	}
-	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), true, data)
+	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), true, data)
 }
 
-func (ctx *TestContext) TableAtIDShouldBe(tableName, idColumnName, ids string, data *gherkin.DataTable) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), false, data)
+func (ctx *TestContext) TableAtColumnValueShouldBe(tableName, columnName, columnValues string, data *gherkin.DataTable) error { // nolint
+	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), false, data)
 }
 
-func (ctx *TestContext) TableShouldNotContainID(tableName, idColumnName, ids string) error { // nolint
-	return ctx.tableAtIDShouldBe(tableName, idColumnName, parseMultipleIDString(ids), false,
-		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: "id"}}}}})
+func (ctx *TestContext) TableShouldNotContainColumnValue(tableName, columnName, columnValues string) error { // nolint
+	return ctx.tableAtColumnValueShouldBe(tableName, columnName, parseMultipleValuesString(columnValues), false,
+		&gherkin.DataTable{Rows: []*gherkin.TableRow{{Cells: []*gherkin.TableCell{{Value: columnName}}}}})
 }
 
 func combineGherkinTables(table1, table2 *gherkin.DataTable) *gherkin.DataTable {
@@ -218,23 +217,14 @@ func copyCellsIntoCombinedTable(sourceTable *gherkin.DataTable, combinedColumnNa
 	}
 }
 
-func parseMultipleIDString(idsString string) []int64 {
-	split := strings.Split(idsString, ",")
-	ids := make([]int64, 0, len(split))
-	for _, idString := range split {
-		id, err := strconv.ParseInt(idString, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		ids = append(ids, id)
-	}
-	return ids
+func parseMultipleValuesString(valuesString string) []string {
+	return strings.Split(valuesString, ",")
 }
 
 var columnNameRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
-func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []int64, excludeIDs bool, data *gherkin.DataTable) error { // nolint
-	// For that, we build a SQL request with only the attribute we are interested about (those
+func (ctx *TestContext) tableAtColumnValueShouldBe(tableName, columnName string, columnValues []string, excludeValues bool, data *gherkin.DataTable) error { // nolint
+	// For that, we build a SQL request with only the attributes we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
 
@@ -243,29 +233,29 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []
 	var selects []string
 	head := data.Rows[0].Cells
 	for _, cell := range head {
-		columnName := cell.Value
-		if columnNameRegexp.MatchString(columnName) {
-			columnName = database.QuoteName(columnName)
+		dataTableColumnName := cell.Value
+		if columnNameRegexp.MatchString(dataTableColumnName) {
+			dataTableColumnName = database.QuoteName(dataTableColumnName)
 		}
-		selects = append(selects, columnName)
+		selects = append(selects, dataTableColumnName)
 	}
 
-	idsMap := make(map[string]bool, len(ids))
-	for _, id := range ids {
-		idsMap[strconv.FormatInt(id, 10)] = true
+	columnValuesMap := make(map[string]bool, len(columnValues))
+	for _, value := range columnValues {
+		columnValuesMap[value] = true
 	}
-	idsStrings := make([]string, 0, len(ids))
-	for idString := range idsMap {
-		idsStrings = append(idsStrings, idString)
+	values := make([]interface{}, 0, len(columnValues))
+	for value := range columnValuesMap {
+		values = append(values, value)
 	}
-	idsString := strings.Join(idsStrings, ",")
 	// define 'where' condition if needed
 	where := ""
-	if len(ids) > 0 {
-		if excludeIDs {
-			where = fmt.Sprintf(" WHERE %s NOT IN (%s) ", idColumnName, idsString) // #nosec
+	if len(columnValues) > 0 {
+		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
+		if excludeValues {
+			where = fmt.Sprintf(" WHERE %s NOT IN (%s) ", columnName, questionMarks) // #nosec
 		} else {
-			where = fmt.Sprintf(" WHERE %s IN (%s) ", idColumnName, idsString) // #nosec
+			where = fmt.Sprintf(" WHERE %s IN (%s) ", columnName, questionMarks) // #nosec
 		}
 	}
 
@@ -273,16 +263,16 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []
 
 	// exec sql
 	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) // nolint: gosec
-	sqlRows, err := db.Query(query)
+	sqlRows, err := db.Query(query, values...)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = sqlRows.Close() }()
 	dataCols := data.Rows[0].Cells
-	idColumnIndex := -1
+	columnIndex := -1
 	for index, cell := range dataCols {
-		if cell.Value == idColumnName {
-			idColumnIndex = index
+		if cell.Value == columnName {
+			columnIndex = index
 			break
 		}
 	}
@@ -290,7 +280,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []
 	iDataRow := 1
 	sqlCols, _ := sqlRows.Columns() // nolint: gosec
 	for sqlRows.Next() {
-		for excludeIDs && iDataRow < len(data.Rows) && idsMap[data.Rows[iDataRow].Cells[idColumnIndex].Value] {
+		for excludeValues && iDataRow < len(data.Rows) && columnValuesMap[data.Rows[iDataRow].Cells[columnIndex].Value] {
 			iDataRow++
 		}
 		if iDataRow >= len(data.Rows) {
@@ -338,7 +328,7 @@ func (ctx *TestContext) tableAtIDShouldBe(tableName, idColumnName string, ids []
 		iDataRow++
 	}
 
-	for excludeIDs && iDataRow < len(data.Rows) && idsMap[data.Rows[iDataRow].Cells[idColumnIndex].Value] {
+	for excludeValues && iDataRow < len(data.Rows) && columnValuesMap[data.Rows[iDataRow].Cells[columnIndex].Value] {
 		iDataRow++
 	}
 
