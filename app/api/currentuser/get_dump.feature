@@ -72,9 +72,6 @@ Feature: Export the short version of the current user's data
       | id | author_id | attempt_id | created_at          |
       | 1  | 11        | 111        | 2019-07-09 20:02:28 |
       | 2  | 31        | 113        | 2019-07-09 20:02:28 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 11      | 404     | 111               |
 
   Scenario: Full data
     Given I am the user with id "11"

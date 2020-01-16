@@ -106,9 +106,6 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		attemptID, err = attemptStore.CreateNew(groupID, itemID, user.GroupID)
 		service.MustNotBeError(err)
 
-		// update users_items.active_attempt_id
-		service.MustNotBeError(store.UserItems().SetActiveAttempt(user.GroupID, itemID, attemptID))
-
 		return nil
 	})
 	if apiError != service.NoError {

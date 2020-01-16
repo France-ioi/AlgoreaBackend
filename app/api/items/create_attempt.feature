@@ -42,9 +42,6 @@ Feature: Create an attempt for an item
         "id": "5577006791947779410"
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 111     | 50      | 5577006791947779410 |
     And the table "attempts" should be:
       | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | score_obtained_at | validated_at | started_at |
       | 5577006791947779410 | 111      | 50      | 0              | 0           | done                     | null               | null             | null              | null         | null       |
@@ -59,9 +56,6 @@ Feature: Create an attempt for an item
         "id": "5577006791947779410"
       }
       """
-    And the table "users_items" should be:
-      | user_id | item_id | active_attempt_id   |
-      | 101     | 60      | 5577006791947779410 |
     And the table "attempts" should be:
       | id                  | group_id | item_id | score_computed | tasks_tried | result_propagation_state | latest_activity_at | latest_answer_at | score_obtained_at | validated_at | started_at |
       | 5577006791947779410 | 102      | 60      | 0              | 0           | done                     | null               | null             | null              | null         | null       |

@@ -41,29 +41,6 @@ Feature: Get item view information
       | id | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
       | 54 | 200            | 210           | 2           | Discovery | as_info                  |
       | 55 | 200            | 220           | 1           | Discovery | as_info                  |
-    And the database has the following table 'attempts':
-      | id  | group_id | item_id | order | score_computed | submissions | finished | hints_cached | started_at          | validated_at        |
-      | 101 | 11       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 102 | 11       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 103 | 11       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 104 | 14       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 105 | 17       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 106 | 17       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 107 | 17       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-      | 108 | 22       | 200     | 1     | 91             | 11          | true     | 11           | 2019-01-30 09:26:41 | 2019-01-31 09:26:41 |
-      | 109 | 22       | 210     | 1     | 92             | 12          | true     | 11           | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 |
-      | 110 | 22       | 220     | 1     | 94             | 14          | true     | 11           | 2019-01-30 09:26:44 | 2019-01-31 09:26:44 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 11      | 200     | 101               |
-      | 11      | 210     | 102               |
-      | 11      | 220     | 103               |
-      | 14      | 210     | 104               |
-      | 17      | 200     | 105               |
-      | 17      | 210     | 106               |
-      | 22      | 200     | 108               |
-      | 22      | 210     | 109               |
-      | 22      | 220     | 110               |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 200     | solution                 |
@@ -113,17 +90,6 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user_active_attempt": {
-        "attempt_id": "101",
-        "score_computed": 91,
-        "submissions": 11,
-        "validated": true,
-        "finished": true,
-        "hints_cached": 11,
-        "started_at": "2019-01-30T09:26:41Z",
-        "validated_at": "2019-01-31T09:26:41Z"
-      },
-
       "children": [
         {
           "id": "220",
@@ -148,17 +114,6 @@ Feature: Get item view information
             "image_url": "http://example.com/my2.jpg",
             "subtitle": "Subtitle 2",
             "description": "Description 2"
-          },
-
-          "user_active_attempt": {
-            "attempt_id": "103",
-            "score_computed": 94,
-            "submissions": 14,
-            "validated": true,
-            "finished": true,
-            "hints_cached": 11,
-            "started_at": "2019-01-30T09:26:44Z",
-            "validated_at": "2019-01-31T09:26:44Z"
           }
         },
         {
@@ -185,17 +140,6 @@ Feature: Get item view information
             "image_url": "http://example.com/my1.jpg",
             "subtitle": "Subtitle 1",
             "description": "Description 1"
-          },
-
-          "user_active_attempt": {
-            "attempt_id": "102",
-            "score_computed": 92,
-            "submissions": 12,
-            "validated": true,
-            "finished": true,
-            "hints_cached": 11,
-            "started_at": "2019-01-30T09:26:42Z",
-            "validated_at": "2019-01-31T09:26:42Z"
           }
         }
       ]
@@ -235,17 +179,6 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user_active_attempt": {
-        "attempt_id": "102",
-        "score_computed": 92,
-        "submissions": 12,
-        "validated": true,
-        "finished": true,
-        "hints_cached": 11,
-        "started_at": "2019-01-30T09:26:42Z",
-        "validated_at": "2019-01-31T09:26:42Z"
-      },
-
       "children": []
     }
     """
@@ -280,17 +213,6 @@ Feature: Get item view information
         "image_url": "http://example.com/my1.jpg",
         "subtitle": "Subtitle 1",
         "description": "Description 1"
-      },
-
-      "user_active_attempt": {
-        "attempt_id": "104",
-        "score_computed": 92,
-        "submissions": 12,
-        "validated": true,
-        "finished": true,
-        "hints_cached": 11,
-        "started_at": "2019-01-30T09:26:42Z",
-        "validated_at": "2019-01-31T09:26:42Z"
       },
 
       "children": []
@@ -333,17 +255,6 @@ Feature: Get item view information
         "edu_comment": "Un commentaire"
       },
 
-      "user_active_attempt": {
-        "attempt_id": "105",
-        "score_computed": 91,
-        "submissions": 11,
-        "validated": true,
-        "finished": true,
-        "hints_cached": 11,
-        "started_at": "2019-01-30T09:26:41Z",
-        "validated_at": "2019-01-31T09:26:41Z"
-      },
-
       "children": [
         {
           "id": "220",
@@ -368,9 +279,7 @@ Feature: Get item view information
             "image_url": "http://example.com/mf2.jpg",
             "subtitle": "Sous-titre 2",
             "description": "texte 2"
-          },
-
-          "user_active_attempt": null
+          }
         },
         {
           "id": "210",
@@ -396,17 +305,6 @@ Feature: Get item view information
             "image_url": "http://example.com/mf1.jpg",
             "subtitle": "Sous-titre 1",
             "description": "texte 1"
-          },
-
-          "user_active_attempt": {
-            "attempt_id": "106",
-            "score_computed": 92,
-            "submissions": 12,
-            "validated": true,
-            "finished": true,
-            "hints_cached": 11,
-            "started_at": "2019-01-30T09:26:42Z",
-            "validated_at": "2019-01-31T09:26:42Z"
           }
         }
       ]
@@ -449,17 +347,6 @@ Feature: Get item view information
         "edu_comment": "Some comment"
       },
 
-      "user_active_attempt": {
-        "attempt_id": "108",
-        "score_computed": 91,
-        "submissions": 11,
-        "validated": true,
-        "finished": true,
-        "hints_cached": 11,
-        "started_at": "2019-01-30T09:26:41Z",
-        "validated_at": "2019-01-31T09:26:41Z"
-      },
-
       "children": [
         {
           "id": "220",
@@ -482,9 +369,7 @@ Feature: Get item view information
             "language_id": "1",
             "title": "Chapter B",
             "image_url": "http://example.com/my2.jpg"
-          },
-
-          "user_active_attempt": null
+          }
         },
         {
           "id": "210",
@@ -508,9 +393,7 @@ Feature: Get item view information
             "language_id": "1",
             "title": "Chapter A",
             "image_url": "http://example.com/my1.jpg"
-          },
-
-          "user_active_attempt": null
+          }
         }
       ]
     }

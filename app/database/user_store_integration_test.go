@@ -40,7 +40,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5001})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5001, 5002})
-	for _, table := range []string{"users_threads", "users_items", "filters", "refresh_tokens"} {
+	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
 		assertTableColumn(t, db, table, "user_id", []int64{5001, 5002})
 	}
 
@@ -78,7 +78,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	}
 	assertTableColumn(t, db, "sessions", "user_id", []int64{5000})
 	assertTableColumn(t, db, "answers", "author_id", []int64{5000, 5002})
-	for _, table := range []string{"users_threads", "users_items", "filters", "refresh_tokens"} {
+	for _, table := range []string{"users_threads", "filters", "refresh_tokens"} {
 		assertTableColumn(t, db, table, "user_id", []int64{5000, 5002})
 	}
 
@@ -108,10 +108,6 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {author_id: 5000, attempt_id: 2000, created_at: 2019-05-30 11:00:00}
 				- {author_id: 5001, attempt_id: 2001, created_at: 2019-05-30 11:00:00}
 				- {author_id: 5002, attempt_id: 2002, created_at: 2019-05-30 11:00:00}
-			users_items:
-				- {user_id: 5000, item_id: 1, active_attempt_id: 2000}
-				- {user_id: 5001, item_id: 1, active_attempt_id: 2001}
-				- {user_id: 5002, item_id: 1, active_attempt_id: 2002}
 			filters: [{user_id: 5000}, {user_id: 5001}, {user_id: 5002}]
 			refresh_tokens: [{user_id: 5000, refresh_token: token}, {user_id: 5001, refresh_token: token2},
 			                 {user_id: 5002, refresh_token: token3}]

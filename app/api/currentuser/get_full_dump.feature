@@ -78,10 +78,6 @@ Feature: Export the current user's data
       | id | author_id | attempt_id | created_at          |
       | 1  | 11        | 111        | 2019-07-09 21:02:28 |
       | 2  | 21        | 113        | 2019-07-09 21:02:28 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 11      | 404     | 111               |
-      | 21      | 405     | 112               |
 
   Scenario: Full data
     Given I am the user with id "11"
@@ -235,11 +231,6 @@ Feature: Export the current user's data
           "id": "1", "attempt_id": "111", "author_id": "11", "answer": null,
           "state": null, "created_at": "2019-07-09T21:02:28Z", "type": "Submission"
         }
-      ],
-      "users_items": [
-        {
-          "active_attempt_id": "111", "item_id": "404", "user_id": "11"
-        }
       ]
     }
     """
@@ -279,7 +270,6 @@ Feature: Export the current user's data
           "issued_at": "2019-07-16T22:02:28Z", "issuer": null
         }
       ],
-      "answers": [],
-      "users_items": []
+      "answers": []
     }
     """

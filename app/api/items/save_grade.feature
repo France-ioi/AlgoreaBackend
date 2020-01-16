@@ -48,10 +48,6 @@ Feature: Save grading result
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
       | 124 | 101       | 101        | 2017-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -105,10 +101,6 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "users_items" should be:
-      | user_id | item_id |
-      | 101     | 50      |
-      | 101     | 60      |
     And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at        |
       | 100 | 100            | 1           | 1         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
@@ -126,10 +118,6 @@ Feature: Save grading result
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
       | 124 | 101       | 101        | 2017-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -182,10 +170,6 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | <score> | 1                                                |
-    And the table "users_items" should be:
-      | user_id | item_id |
-      | 101     | 50      |
-      | 101     | 60      |
     And the table "attempts" should be:
       | id  | score_computed   | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
       | 100 | <score_computed> | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
@@ -210,10 +194,6 @@ Feature: Save grading result
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
       | 124 | 101       | 101        | 2017-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -266,10 +246,6 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
-    And the table "users_items" should be:
-      | user_id | item_id |
-      | 101     | 50      |
-      | 101     | 60      |
     And the table "attempts" should be:
       | id  | score_computed | tasks_tried | validated | result_propagation_state | latest_activity_at | latest_answer_at    | score_obtained_at   | validated_at |
       | 100 | 99             | 1           | 0         | done                     | null               | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 | null         |
@@ -290,10 +266,6 @@ Feature: Save grading result
       | id  | group_id | item_id | score_computed | score_obtained_at   | order | score_edit_rule   | score_edit_value   |
       | 100 | 101      | 50      | 20             | 2018-05-29 06:38:38 | 1     | <score_edit_rule> | <score_edit_value> |
       | 101 | 101      | 60      | 20             | 2018-05-29 06:38:38 | 2     | null              | null               |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -348,10 +320,6 @@ Feature: Save grading result
       | 123       | 5       | 0                                                |
       | 124       | <score> | 1                                                |
       | 125       | 20      | 0                                                |
-    And the table "users_items" should be:
-      | user_id | item_id |
-      | 101     | 50      |
-      | 101     | 60      |
     And the table "attempts" should stay unchanged
     Examples:
       | score | score_edit_rule | score_edit_value |
@@ -371,10 +339,6 @@ Feature: Save grading result
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
       | 124 | 101       | 101        | 2017-05-29 06:38:38 |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
-      | 101     | 60      | 101               |
     And the following token "priorUserTaskToken" signed by the app is distributed:
       """
       {
@@ -427,10 +391,6 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 100   | 1                                                |
-    And the table "users_items" should be:
-      | user_id | item_id |
-      | 101     | 50      |
-      | 101     | 60      |
     And the table "attempts" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated

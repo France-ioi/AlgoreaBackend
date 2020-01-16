@@ -33,9 +33,6 @@ Feature: Save grading result - robustness
     And the database has the following table 'attempts':
       | id  | group_id | item_id | hints_requested        | order |
       | 100 | 101      | 50      | [0,  1, "hint" , null] | 0     |
-    And the database has the following table 'users_items':
-      | user_id | item_id | active_attempt_id |
-      | 101     | 50      | 100               |
     And the database has the following table 'answers':
       | id  | author_id | attempt_id | created_at          |
       | 123 | 101       | 100        | 2017-05-29 06:38:38 |
@@ -50,7 +47,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: User not found
@@ -86,7 +82,6 @@ Feature: Save grading result - robustness
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: idUser in task_token doesn't match the user's id
@@ -122,7 +117,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Token in task_token doesn't correspond to user session: got idUser=20, expected 10"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: idUser in score_token doesn't match the user's id
@@ -158,7 +152,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Token in score_token doesn't correspond to user session: got idUser=20, expected 10"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: idAttempt in score_token and task_token don't match
@@ -194,7 +187,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in score_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: idItemLocal in score_token and task_token don't match
@@ -230,7 +222,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idItemLocal in score_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: itemUrl of score_token doesn't match itemUrl of task_token
@@ -266,7 +257,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong itemUrl in score_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Missing task_token
@@ -291,7 +281,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Missing task_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Invalid task_token
@@ -317,7 +306,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Invalid task_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Invalid score_token
@@ -342,7 +330,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Invalid score_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Scenario: No submission rights
@@ -378,7 +365,6 @@ Feature: Save grading result - robustness
     Then the response code should be 403
     And the response error message should contain "Item is read-only"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is missing
@@ -403,7 +389,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Missing answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
@@ -429,7 +414,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUser in answer_token is wrong
@@ -466,7 +450,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idUser in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idItemLocal in answer_token is wrong
@@ -503,7 +486,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idItemLocal in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and itemUrl in answer_token is wrong
@@ -540,7 +522,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong itemUrl in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
@@ -576,7 +557,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should be equal)
@@ -613,7 +593,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong idAttempt in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and score is missing
@@ -649,7 +628,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Missing score"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
@@ -686,7 +664,6 @@ Feature: Save grading result - robustness
     Then the response code should be 400
     And the response error message should contain "Invalid idUserAnswer in answer_token"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: The answer has been already graded
@@ -736,7 +713,6 @@ Feature: Save grading result - robustness
     A user tries to replay a score token with a different score value ({"idAttempt":105,"idItem":80,"idUser":101,"idUserAnswer":124,"newScore":100,"oldScore":0})
     """
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
 
   Scenario: The answer is not found
@@ -773,5 +749,4 @@ Feature: Save grading result - robustness
     Then the response code should be 403
     And the response error message should contain "The answer has been already graded or is not found"
     And the table "answers" should stay unchanged
-    And the table "users_items" should stay unchanged
     And the table "attempts" should stay unchanged
