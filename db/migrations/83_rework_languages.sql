@@ -2,8 +2,6 @@
 ALTER TABLE `languages`
     DROP INDEX `code`,
     CHANGE COLUMN `code` `tag` VARCHAR(6) NOT NULL COMMENT 'Language tag as defined in RFC5646' FIRST,
-    DROP PRIMARY KEY,
-    ADD PRIMARY KEY (`tag`),
     COMMENT 'Languages supported for content';
 
 ALTER TABLE `items`
