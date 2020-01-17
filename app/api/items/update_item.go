@@ -163,11 +163,8 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 				return apiError.Error // rollback
 			}
 
-			service.MustNotBeError(lockedStore.RetryOnDuplicatePrimaryKeyError(func(retryStore *database.DataStore) error {
-				parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, retryStore, itemID)
-				insertItemItems(retryStore, parentChildSpec)
-				return nil
-			}))
+			parentChildSpec := constructItemsItemsForChildren(childrenPermissions, input.Children, lockedStore, itemID)
+			insertItemItems(lockedStore, parentChildSpec)
 			return lockedStore.ItemItems().After()
 		})
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
