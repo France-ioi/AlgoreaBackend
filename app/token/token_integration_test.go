@@ -45,7 +45,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			fixtures: []string{
 				`platforms: [{id: 11, uses_tokens: 1, regexp: "http://taskplatform1.mblockelet.info/task.html.*",
 						public_key: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
-				`items: [{id: 50, platform_id: 11, url: "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+				`items: [{id: 50, platform_id: 11, url: "http://taskplatform1.mblockelet.info/task.html?taskId=403449543672183936",
+				          default_language_tag: fr}]`,
 			},
 			token:          nil,
 			tokenFieldName: "hint_requested",
@@ -59,7 +60,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			fixtures: []string{
 				`platforms: [{id: 10, uses_tokens: 1, regexp: "http://taskplatform2.mblockelet.info/task.html\\.*",
 						public_key: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
-				`items: [{id: 50, platform_id: 10, url: "http://taskplatform2.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+				`items: [{id: 50, platform_id: 10, url: "http://taskplatform2.mblockelet.info/task.html?taskId=403449543672183936",
+				          default_language_tag: fr}]`,
 			},
 			token:          []byte(""),
 			tokenFieldName: "hint_requested",
@@ -73,7 +75,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			fixtures: []string{
 				`platforms: [{id: 10, uses_tokens: 1, regexp: "^http://taskplatform3\\.mblockelet\\.info/task\\.html\\.*",
 						public_key: dasdfa}]`,
-				`items: [{id: 50, platform_id: 10, url: "http://taskplatform3.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+				`items: [{id: 50, platform_id: 10, url: "http://taskplatform3.mblockelet.info/task.html?taskId=403449543672183936",
+				          default_language_tag: fr}]`,
 			},
 			token:          []byte("dsafafd"),
 			tokenFieldName: "score_token",
@@ -87,7 +90,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			fixtures: []string{
 				`platforms: [{id: 10, uses_tokens: 1, regexp: "^http://taskplatform4\\.mblockelet.info/task.html.*$",
 						public_key: ` + fmt.Sprintf("%q", tokentest.TaskPlatformPublicKey) + `}]`,
-				`items: [{id: 50, platform_id: 10, url: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+				`items: [{id: 50, platform_id: 10, url: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936",
+				          default_language_tag: fr}]`,
 			},
 			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform,
 				tokentest.TaskPlatformPrivateKeyParsed))),
@@ -101,7 +105,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			itemID: 50,
 			fixtures: []string{
 				`platforms: [{id: 10, uses_tokens: 0, regexp: "^http://taskplatform5\\.mblockelet\\.info/task.html.*$"}]`,
-				`items: [{id: 50, platform_id: 10, url: "http://taskplatform5.mblockelet.info/task.html?taskId=403449543672183936"}]`,
+				`items: [{id: 50, platform_id: 10, url: "http://taskplatform5.mblockelet.info/task.html?taskId=403449543672183936",
+				          default_language_tag: fr}]`,
 			},
 			token:          []byte(`{}`),
 			tokenFieldName: "hint_requested",

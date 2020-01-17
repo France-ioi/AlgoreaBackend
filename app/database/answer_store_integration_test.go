@@ -162,9 +162,9 @@ func TestAnswerStore_Visible(t *testing.T) {
 					- {ancestor_group_id: 121, child_group_id: 121, is_self: 1}
 				languages: [{tag: fr}]
 				items:
-					- {id: 10}
-					- {id: 50}
-					- {id: 60}
+					- {id: 10, default_language_tag: fr}
+					- {id: 50, default_language_tag: fr}
+					- {id: 60, default_language_tag: fr}
 				permissions_generated:
 					- {group_id: 101, item_id: 50, can_view_generated: content}
 					- {group_id: 101, item_id: 60, can_view_generated: content}

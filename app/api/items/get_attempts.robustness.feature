@@ -25,8 +25,8 @@ Feature: Get groups attempts for current user and item_id - robustness
       | 15                | 12             | 0       |
       | 15                | 15             | 1       |
     And the database has the following table 'items':
-      | id  | has_attempts |
-      | 210 | 1            |
+      | id  | has_attempts | default_language_tag |
+      | 210 | 1            | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 11       | 210     | content            |

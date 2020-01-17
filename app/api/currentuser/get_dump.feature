@@ -61,8 +61,8 @@ Feature: Export the short version of the current user's data
       | 9                 | 11             | false   |
       | 11                | 11             | true    |
     And the database has the following table 'items':
-      | id  |
-      | 404 |
+      | id  | default_language_tag |
+      | 404 | fr                   |
     And the database has the following table 'attempts':
       | id  | group_id | item_id | order |
       | 111 | 11       | 404     | 0     |

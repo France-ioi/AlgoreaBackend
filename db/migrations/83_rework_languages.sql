@@ -55,7 +55,7 @@ ALTER TABLE `languages`
     DROP COLUMN `id`;
 
 ALTER TABLE `items`
-    MODIFY COLUMN `default_language_tag` VARCHAR(6) NOT NULL DEFAULT 'fr'
+    MODIFY COLUMN `default_language_tag` VARCHAR(6) NOT NULL
         COMMENT 'Default language tag of this task (the reference, used when comparing translations)',
     DROP COLUMN `default_language_id`,
     ADD CONSTRAINT `fk_items_default_language_tag_languages_tag`

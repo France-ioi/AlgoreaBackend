@@ -36,8 +36,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter an individual contest
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id |
-      | 50 | 01:01:01 | 0            | None                       | 99                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | 0            | None                       | 99                            | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |
@@ -85,8 +85,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a team-only contest
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 60 | 05:05:05 | 1            | Half                       | 3                     | 98                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 05:05:05 | 1            | Half                       | 3                     | 98                            | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | content                  |
@@ -138,8 +138,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Reenter a contest as a team
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 60 | 01:01:01 | 1            | None                       | 10                    | 99                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1            | None                       | 10                    | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at          |
       | 99              | 11             | 2019-05-30 11:00:00 |
@@ -196,8 +196,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
 
   Scenario: Enter a contest that don't have items.contest_participants_group_id set
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition |
-      | 50 | 01:01:01 | 0            | None                       |
+      | id | duration | has_attempts | contest_entering_condition | default_language_tag |
+      | 50 | 01:01:01 | 0            | None                       | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 50      | none                     |

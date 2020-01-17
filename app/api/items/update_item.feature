@@ -71,9 +71,9 @@ Background:
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
     And the database has the following table 'items':
-      | id  |
-      | 112 |
-      | 134 |
+      | id  | default_language_tag |
+      | 112 | fr                   |
+      | 134 | fr                   |
     And the database has the following table 'items_strings':
       | language_tag | item_id |
       | sl           | 50      |

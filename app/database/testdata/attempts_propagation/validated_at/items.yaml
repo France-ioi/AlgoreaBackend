@@ -1,2 +1,2 @@
-- { id: 3}
-- { id: 4}
+- { id: 3, default_language_tag: fr}
+- { id: 4, default_language_tag: fr}

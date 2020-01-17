@@ -76,8 +76,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is not visible (can_view = none)
     Given the database has the following table 'items':
-      | id | duration |
-      | 50 | 00:00:01 |
+      | id | duration | default_language_tag |
+      | 50 | 00:00:01 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 31       | 50      | none               |
@@ -91,8 +91,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
-      | id |
-      | 50 |
+      | id | default_language_tag |
+      | 50 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
@@ -107,8 +107,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: group_id is not a self group of the current user while the item's has_attempts = false
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 50 | 00:00:00 | false        |
+      | id | duration | has_attempts | default_language_tag |
+      | 50 | 00:00:00 | false        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 50      | solution                 |
@@ -123,8 +123,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: group_id is not a team related to the item while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -139,8 +139,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: group_id is a user self group while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -154,8 +154,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The current user is not a member of group_id while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -170,8 +170,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: The contest is not ready
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size |
-      | 60 | 00:00:00 | 1            | All                        | 3                     |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | default_language_tag |
+      | 60 | 00:00:00 | 1            | All                        | 3                     | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -191,8 +191,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario Outline: Reenter a non-team contest
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id |
-      | 50 | 01:01:01 | 0            | None                       | 99                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_participants_group_id | default_language_tag |
+      | 50 | 01:01:01 | 0            | None                       | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id | expires_at   |
       | 99              | 31             | <expires_at> |
@@ -221,8 +221,8 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
 
   Scenario: Reenter an already entered (not expired) contest as a team
     Given the database has the following table 'items':
-      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id |
-      | 60 | 01:01:01 | 1            | None                       | 10                    | 99                            |
+      | id | duration | has_attempts | contest_entering_condition | contest_max_team_size | contest_participants_group_id | default_language_tag |
+      | 60 | 01:01:01 | 1            | None                       | 10                    | 99                            | fr                   |
     And the database table 'groups_groups' has also the following row:
       | parent_group_id | child_group_id |
       | 99              | 11             |

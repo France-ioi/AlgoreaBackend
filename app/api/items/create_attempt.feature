@@ -19,10 +19,10 @@ Feature: Create an attempt for an item
       | 102               | 102            | 1       |
       | 111               | 111            | 1       |
     And the database has the following table 'items':
-      | id | url                                                                     | type    | has_attempts |
-      | 10 | null                                                                    | Chapter | 0            |
-      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            |
-      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            |
+      | id | url                                                                     | type    | has_attempts | default_language_tag |
+      | 10 | null                                                                    | Chapter | 0            | fr                   |
+      | 50 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 0            | fr                   |
+      | 60 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Course  | 1            | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 60            |

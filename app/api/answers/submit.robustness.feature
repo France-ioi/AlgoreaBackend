@@ -10,8 +10,8 @@ Feature: Submit a new answer - robustness
       | id | parent_group_id | child_group_id |
       | 15 | 22              | 13             |
     And the database has the following table 'items':
-      | id | read_only |
-      | 50 | 1         |
+      | id | read_only | default_language_tag |
+      | 50 | 1         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 101      | 50      | content            |

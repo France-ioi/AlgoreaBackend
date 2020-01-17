@@ -14,11 +14,11 @@ Feature: Save grading result - robustness
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
-      | id | platform_id | url                                                                     | read_only | validation_type |
-      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         | All             |
-      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         | All             |
-      | 80 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         | All             |
-      | 10 | null        | null                                                                    | 0         | AllButOne       |
+      | id | platform_id | url                                                                     | read_only | validation_type | default_language_tag |
+      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | 1         | All             | fr                   |
+      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | 0         | All             | fr                   |
+      | 80 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | 0         | All             | fr                   |
+      | 10 | null        | null                                                                    | 0         | AllButOne       | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 10             | 50            | 0           |

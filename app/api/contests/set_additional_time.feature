@@ -55,11 +55,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 36                | 31             | 0       | 9999-12-31 23:59:59 |
       | 36                | 36             | 1       | 9999-12-31 23:59:59 |
     And the database has the following table 'items':
-      | id | duration | contest_participants_group_id |
-      | 10 | 00:00:02 | 33                            |
-      | 50 | 00:00:00 | 34                            |
-      | 60 | 00:00:01 | 35                            |
-      | 70 | 00:00:03 | 36                            |
+      | id | duration | contest_participants_group_id | default_language_tag |
+      | 10 | 00:00:02 | 33                            | fr                   |
+      | 50 | 00:00:00 | 34                            | fr                   |
+      | 60 | 00:00:01 | 35                            | fr                   |
+      | 70 | 00:00:03 | 36                            | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | none                     |

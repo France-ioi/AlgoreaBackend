@@ -8,8 +8,8 @@ Feature: Add item
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | teams_editable | no_score |
-      | 21 | false          | false    |
+      | id | teams_editable | no_score | default_language_tag |
+      | 21 | false          | false    | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated | can_edit_generated |
       | 11       | 21      | solution           | children           |
@@ -78,9 +78,9 @@ Feature: Add item
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
     And the database table 'items' has also the following rows:
-      | id |
-      | 12 |
-      | 34 |
+      | id | default_language_tag |
+      | 12 | fr                   |
+      | 34 | fr                   |
     And the database table 'permissions_generated' has also the following rows:
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 12      | content_with_descendants | solution                 | answer              | all                | 0                  |

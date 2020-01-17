@@ -24,9 +24,9 @@ Background:
     | 76 | 23                | 21             | 0       |
     | 77 | 23                | 23             | 1       |
   And the database has the following table 'items':
-    | id  |
-    | 200 |
-    | 210 |
+    | id  | default_language_tag |
+    | 200 | fr                   |
+    | 210 | fr                   |
   And the database has the following table 'permissions_generated':
     | group_id | item_id | can_view_generated       |
     | 13       | 200     | content                  |

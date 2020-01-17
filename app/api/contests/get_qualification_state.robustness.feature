@@ -52,8 +52,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
   Scenario: The item is not visible to the current user (can_view = none)
     Given I am the user with id "21"
     And the database has the following table 'items':
-      | id | duration |
-      | 50 | 00:00:01 |
+      | id | duration | default_language_tag |
+      | 50 | 00:00:01 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 50      | none               |
@@ -64,16 +64,16 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
   Scenario: The item is not visible to the current user (no permissions)
     Given I am the user with id "21"
     And the database has the following table 'items':
-      | id | duration |
-      | 50 | 00:00:01 |
+      | id | duration | default_language_tag |
+      | 50 | 00:00:01 | fr                   |
     When I send a GET request to "/contests/50/groups/21/qualification-state"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The item is visible, but it's not a contest
     Given the database has the following table 'items':
-      | id |
-      | 50 |
+      | id | default_language_tag |
+      | 50 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated |
       | 21       | 50      | info               |
@@ -84,8 +84,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: group_id is not a self group of the current user while the item's has_attempts = false
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 50 | 00:00:00 | false        |
+      | id | duration | has_attempts | default_language_tag |
+      | 50 | 00:00:00 | false        | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 10       | 50      | content                  |
@@ -99,8 +99,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: group_id is not a team related to the item while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -112,8 +112,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: group_id is a user self group while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
@@ -125,8 +125,8 @@ Feature: Get qualification state (contestGetQualificationState) - robustness
 
   Scenario: The current user is not a member of group_id while the item's has_attempts = true
     Given the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 60 | 00:00:00 | true         |
+      | id | duration | has_attempts | default_language_tag |
+      | 60 | 00:00:00 | true         | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |

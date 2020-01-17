@@ -24,11 +24,11 @@ Feature: Change item access rights for a group
       | 25                | 31             | 0       |
       | 31                | 31             | 1       |
     And the database has the following table 'items':
-      | id  |
-      | 100 |
-      | 101 |
-      | 102 |
-      | 103 |
+      | id  | default_language_tag |
+      | 100 | fr                   |
+      | 101 | fr                   |
+      | 102 | fr                   |
+      | 103 | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | content_view_propagation | child_order |
       | 100            | 101           | as_info                  | 0           |

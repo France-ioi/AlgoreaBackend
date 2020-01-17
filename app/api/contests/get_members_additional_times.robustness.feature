@@ -17,11 +17,11 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 13                | 13             | 1       |
       | 21                | 21             | 1       |
     And the database has the following table 'items':
-      | id | duration |
-      | 50 | 00:00:00 |
-      | 60 | null     |
-      | 10 | 00:00:02 |
-      | 70 | 00:00:03 |
+      | id | duration | default_language_tag |
+      | 50 | 00:00:00 | fr                   |
+      | 60 | null     | fr                   |
+      | 10 | 00:00:02 | fr                   |
+      | 70 | 00:00:03 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 13       | 50      | content                  |

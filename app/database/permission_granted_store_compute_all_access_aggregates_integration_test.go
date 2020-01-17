@@ -296,7 +296,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(`
-				items: [{id: 1}, {id: 2}]
+				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 				groups: [{id: 1}]
 				items_items:
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,
@@ -318,7 +318,11 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
 		groups: [{id: 1}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 4, child_order: 1, content_view_propagation: as_content,
@@ -341,7 +345,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}]
+		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, content_view_propagation: as_content,
@@ -363,7 +367,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
@@ -381,7 +385,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
@@ -399,7 +403,12 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForO
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
+			- {id: 5, default_language_tag: fr}
 		groups: [{id: 1}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 5, child_order: 1, grant_view_propagation: 1}
@@ -423,7 +432,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantV
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanGrantView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}]
+		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, grant_view_propagation: 1}
@@ -444,7 +453,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantView(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 1, origin: self, can_grant_view: content}
@@ -462,7 +471,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_grant_view: content}
@@ -480,7 +489,12 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsTransfe
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
+			- {id: 5, default_language_tag: fr}
 		groups: [{id: 1}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 5, child_order: 1, watch_propagation: 1}
@@ -504,7 +518,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanWatch(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}]
+		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, watch_propagation: 1}
@@ -525,7 +539,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
@@ -543,7 +557,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
@@ -561,7 +575,12 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsTransferFor
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
+		items:
+			- {id: 1, default_language_tag: fr}
+			- {id: 2, default_language_tag: fr}
+			- {id: 3, default_language_tag: fr}
+			- {id: 4, default_language_tag: fr}
+			- {id: 5, default_language_tag: fr}
 		groups: [{id: 1}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 5, child_order: 1, edit_propagation: 1}
@@ -585,7 +604,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanEdit(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}, {id: 2}]
+		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1, edit_propagation: 1}
@@ -606,7 +625,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
@@ -624,7 +643,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanEditAsTransferForOwners(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
-		items: [{id: 1}]
+		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
@@ -705,7 +724,7 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
 		grantViewPropagationString := fmt.Sprint(propagationMode)
 		db := testhelpers.SetupDBWithFixtureString(`
-				items: [{id: 1}, {id: 2}]
+				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 				groups: [{id: 1}]
 				items_items:
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,

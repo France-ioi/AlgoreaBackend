@@ -14,11 +14,11 @@ Feature: Save grading result
       | 10 | 1           | http://taskplatform.mblockelet.info/task.html\?.*  | {{taskPlatformPublicKey}} |
       | 20 | 0           | http://taskplatform1.mblockelet.info/task.html\?.* |                           |
     And the database has the following table 'items':
-      | id | platform_id | url                                                                     | validation_type |
-      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | All             |
-      | 60 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | All             |
-      | 10 | null        | null                                                                    | AllButOne       |
-      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | All             |
+      | id | platform_id | url                                                                     | validation_type | default_language_tag |
+      | 50 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | All             | fr                   |
+      | 60 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | All             | fr                   |
+      | 10 | null        | null                                                                    | AllButOne       | fr                   |
+      | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | All             | fr                   |
     And the database has the following table 'item_unlocking_rules':
       | unlocking_item_id | unlocked_item_id | score |
       | 60                | 50               | 98    |

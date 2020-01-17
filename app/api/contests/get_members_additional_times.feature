@@ -68,11 +68,11 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 31                | 31             | 1       |
       | 41                | 41             | 1       |
     And the database has the following table 'items':
-      | id | duration | has_attempts |
-      | 50 | 00:00:00 | 0            |
-      | 60 | 00:00:01 | 1            |
-      | 10 | 00:00:02 | 0            |
-      | 70 | 00:00:03 | 1            |
+      | id | duration | has_attempts | default_language_tag |
+      | 50 | 00:00:00 | 0            | fr                   |
+      | 60 | 00:00:01 | 1            | fr                   |
+      | 10 | 00:00:02 | 0            | fr                   |
+      | 70 | 00:00:03 | 1            | fr                   |
     And the database has the following table 'items_ancestors':
       | ancestor_item_id | child_item_id |
       | 10               | 60            |

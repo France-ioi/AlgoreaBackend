@@ -19,10 +19,10 @@ Feature: Create a group (groupCreate) - robustness
       | 31                | 31             | 1       |
       | 51                | 51             | 1       |
     And the database has the following table 'items':
-      | id |
-      | 10 |
-      | 11 |
-      | 12 |
+      | id | default_language_tag |
+      | 10 | fr                   |
+      | 11 | fr                   |
+      | 12 | fr                   |
     And the database has the following table 'permissions_generated':
       | group_id | item_id | can_view_generated       |
       | 21       | 10      | content_with_descendants |

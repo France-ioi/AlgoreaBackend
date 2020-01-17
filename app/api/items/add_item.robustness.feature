@@ -4,11 +4,11 @@ Feature: Add item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id | teams_editable | no_score |
-      | 4  | false          | false    |
-      | 21 | false          | false    |
-      | 22 | false          | false    |
-      | 23 | false          | false    |
+      | id | teams_editable | no_score | default_language_tag |
+      | 4  | false          | false    | fr                   |
+      | 21 | false          | false    | fr                   |
+      | 22 | false          | false    | fr                   |
+      | 23 | false          | false    | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |

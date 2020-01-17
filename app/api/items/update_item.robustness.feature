@@ -4,12 +4,12 @@ Feature: Update item - robustness
       | login | temp_user | group_id |
       | jdoe  | 0         | 11       |
     And the database has the following table 'items':
-      | id |
-      | 4  |
-      | 21 |
-      | 22 |
-      | 50 |
-      | 60 |
+      | id | default_language_tag |
+      | 4  | fr                   |
+      | 21 | fr                   |
+      | 22 | fr                   |
+      | 50 | fr                   |
+      | 60 | fr                   |
     And the database has the following table 'items_items':
       | parent_item_id | child_item_id | child_order |
       | 4              | 21            | 0           |

@@ -98,7 +98,7 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 				- {temp_user: 1, login: 500, group_id: 5000} # should be deleted
 				- {login: 501, temp_user: 1, group_id: 5001}
 				- {login: 502, group_id: 5002}
-			items: [{id: 1}]`, `
+			items: [{id: 1, default_language_tag: fr}]`, `
 			sessions:
 				- {user_id: 5000, expires_at: "`+currentTime.Format("2006-01-02 15:04:05")+`"}
 				- {user_id: 5001, expires_at: "`+currentTime.Add(1*time.Second).Format("2006-01-02 15:04:05")+`"}
