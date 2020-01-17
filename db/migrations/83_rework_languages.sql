@@ -58,8 +58,6 @@ ALTER TABLE `items`
     MODIFY COLUMN `default_language_tag` VARCHAR(6) NOT NULL
         COMMENT 'Default language tag of this task (the reference, used when comparing translations)',
     DROP COLUMN `default_language_id`,
-    ADD CONSTRAINT `fk_items_default_language_tag_languages_tag`
-        FOREIGN KEY (`default_language_tag`) REFERENCES `languages`(`tag`),
     DROP COLUMN `display_children_as_tabs`,
     MODIFY COLUMN `type` ENUM('Chapter','Task','Course') NOT NULL;
 
@@ -94,6 +92,10 @@ ALTER TABLE `items_strings`
         FOREIGN KEY (`language_tag`) REFERENCES `languages`(`tag`),
     DROP COLUMN `ranking_comment`;
 
+ALTER TABLE `items`
+    ADD CONSTRAINT `fk_items_id_default_language_tag_items_strings_item_language_tag`
+        FOREIGN KEY (`id`, `default_language_tag`) REFERENCES `items_strings`(`item_id`, `language_tag`);
+
 -- +migrate Down
 ALTER TABLE `languages`
     ADD COLUMN `id` BIGINT(20) FIRST,
@@ -122,7 +124,7 @@ UPDATE `items` JOIN `languages` ON `languages`.`tag`
 SET `default_language_id` = `languages`.`id`;
 
 ALTER TABLE `items`
-    DROP FOREIGN KEY `fk_items_default_language_tag_languages_tag`,
+    DROP FOREIGN KEY `fk_items_id_default_language_tag_items_strings_item_language_tag`,
     DROP COLUMN `default_language_tag`,
     DROP COLUMN `is_root`,
     ADD COLUMN `display_children_as_tabs` TINYINT(3) UNSIGNED NOT NULL DEFAULT '0'
