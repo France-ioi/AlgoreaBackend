@@ -76,19 +76,9 @@ DROP TRIGGER `before_insert_items_strings`;
 
 # 5 rows
 DELETE `items_strings` FROM `items_strings`
-    JOIN (
-        SELECT `id`, ROW_NUMBER() OVER (PARTITION BY `items_strings`.`item_id`, `items_strings`.`language_tag` ORDER BY `title` DESC) as number
-        FROM `items_strings`
-            JOIN (
-                SELECT `item_id`, `language_tag`, COUNT(*) AS cnt
-                FROM `items_strings`
-                GROUP BY `item_id`, `language_tag`
-                HAVING cnt > 1
-            ) AS `duplicates` -- not unique (item_id, language_tag) pairs
-                ON `duplicates`.`item_id` = `items_strings`.`item_id` AND
-                   `duplicates`.`language_tag` = `items_strings`.`language_tag`
-    ) AS `duplicated_rows` -- ids of duplicated row with row numbers within (item_id, language_tag) group, ordered by title DESC
-        ON `duplicated_rows`.`id` = `items_strings`.`id` AND `duplicated_rows`.`number` > 1; -- remove duplicates keeping first rows
+  JOIN `items_strings` AS `orig` USING (`item_id`, `language_tag`)
+WHERE IFNULL(`items_strings`.`title`, '') < IFNULL(`orig`.`title`, '') OR
+      IFNULL(`items_strings`.`title`, '') = IFNULL(`orig`.`title`, '') AND `items_strings`.`id` > `orig`.`id`;
 
 ALTER TABLE `items_strings`
     MODIFY COLUMN `language_tag` VARCHAR(6) NOT NULL COMMENT 'Language tag of this content',

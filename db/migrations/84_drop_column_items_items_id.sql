@@ -1,17 +1,9 @@
 -- +migrate Up
+# 13 rows
 DELETE `items_items` FROM `items_items`
-    JOIN (
-        SELECT `id`, ROW_NUMBER() OVER (PARTITION BY `items_items`.`parent_item_id`, `items_items`.`child_item_id` ORDER BY `items_items`.`child_order`) AS number
-        FROM `items_items`
-            JOIN (
-                SELECT `parent_item_id`, `child_item_id`, count(*) AS cnt
-                FROM `items_items`
-                GROUP BY `parent_item_id`, `child_item_id` HAVING cnt > 1
-            ) AS `duplicates` -- not unique (parent_item_id, child_item_id) pairs
-                ON `duplicates`.`parent_item_id` = `items_items`.`parent_item_id` AND
-                 `duplicates`.`child_item_id` = `items_items`.`child_item_id`
-    ) AS `duplicated_rows` -- ids of duplicated row with row numbers within (parent_item_id, child_item_id) group, ordered by child_order
-        ON `duplicated_rows`.`id` = `items_items`.`id` AND `duplicated_rows`.`number` > 1;  -- remove duplicates keeping first rows
+  JOIN `items_items` AS `orig` USING(`parent_item_id`, `child_item_id`)
+WHERE `items_items`.`child_order` > `orig`.`child_order` OR
+      `items_items`.`child_order` = `orig`.`child_order` AND `items_items`.`id` > `orig`.`id`;
 
 ALTER TABLE `items_items`
     DROP PRIMARY KEY,
