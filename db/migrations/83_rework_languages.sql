@@ -46,6 +46,17 @@ UPDATE `items` SET `items`.`default_language_tag` = (
     LIMIT 1
 ) WHERE `items`.`default_language_tag` IS NULL;
 
+# 2 rows
+UPDATE `items`
+  LEFT JOIN `items_strings` ON `items_strings`.`item_id` = `items`.`id` AND
+            `items_strings`.`language_tag` = `items`.`default_language_tag`
+SET `items`.`default_language_tag` = (
+    SELECT `language_tag` FROM `items_strings`
+    WHERE `items_strings`.`item_id` = `items`.`id` AND `items_strings`.`language_tag` IS NOT NULL
+    ORDER BY `items_strings`.`language_tag` = 'fr' DESC, `items_strings`.`language_tag` = 'en' DESC
+    LIMIT 1
+) WHERE `items_strings`.`item_id` IS NULL;
+
 UPDATE `items` SET `is_root` = 1, `type` = 'Chapter' WHERE `type` IN ('Root', 'Category');
 
 DROP TRIGGER `before_insert_languages`;
