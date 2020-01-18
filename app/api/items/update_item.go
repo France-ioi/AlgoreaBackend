@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-
-	"github.com/France-ioi/validator"
 
 	"github.com/France-ioi/AlgoreaBackend/app/database"
 	"github.com/France-ioi/AlgoreaBackend/app/formdata"
@@ -19,7 +18,9 @@ type itemWithDefaultLanguageTagAndOptionalType struct {
 	item `json:"item,squash"`
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
-	DefaultLanguageTag string `json:"default_language_tag" validate:"default_language_tag"`
+	// minLength: 1
+	// maxLength: 6
+	DefaultLanguageTag string `json:"default_language_tag" validate:"min=1,max=6"`
 	// enum: Chapter,Task,Course
 	Type string `json:"type" validate:"oneof=Chapter Task Course"`
 }
@@ -109,7 +110,6 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 	err = srv.Store.InTransaction(func(store *database.DataStore) error {
 		var childrenPermissions []permission
 		registerChildrenValidator(formData, store, user, &childrenPermissions)
-		registerDefaultLanguageTagValidator(formData, store, itemID)
 
 		err = formData.ParseJSONRequestData(r)
 		if err != nil {
@@ -137,7 +137,17 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 			itemData["contest_participants_group_id"] = createdParticipantsGroupID
 		}
 
-		service.MustNotBeError(store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error())
+		err = store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
+		// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails
+		// (no items_strings for the new default_language_tag)
+		if e, ok := err.(*mysql.MySQLError); ok && e.Number == 1452 {
+			apiError = service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
+				"default language should exist and there should be item's strings in this language",
+			}})
+			return apiError.Error
+		}
+		service.MustNotBeError(err)
+
 		apiError, err = updateChildrenAndRunListeners(formData, store, itemID, &input, childrenPermissions)
 		return err
 	})
@@ -175,25 +185,4 @@ func updateChildrenAndRunListeners(formData *formdata.FormData, store *database.
 		service.MustNotBeError(attemptStore.ComputeAllAttempts())
 	}
 	return apiError, err
-}
-
-func registerDefaultLanguageTagValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) {
-	formData.RegisterValidation("default_language_tag", constructDefaultLanguageTagValidator(formData, store, itemID))
-	formData.RegisterTranslation("default_language_tag",
-		"default language should exist and there should be item's strings in this language")
-}
-
-// constructDefaultLanguageTagValidator constructs a validator for the DefaultLanguageTag field.
-// The validator checks that the language exists and there is an items_strings row in this language for the item.
-func constructDefaultLanguageTagValidator(formData *formdata.FormData, store *database.DataStore, itemID int64) validator.Func {
-	return validator.Func(func(fl validator.FieldLevel) bool {
-		if !formData.IsValid("default_language_tag") {
-			return true
-		}
-		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithWriteLock().
-			Joins("JOIN items_strings ON items_strings.language_tag = languages.tag AND items_strings.item_id = ?", itemID).
-			HasRows()
-		service.MustNotBeError(err)
-		return found
-	})
 }

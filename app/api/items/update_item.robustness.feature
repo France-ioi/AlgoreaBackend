@@ -62,12 +62,64 @@ Feature: Update item - robustness
     And the table "items_ancestors" should stay unchanged
     And the table "permissions_granted" should stay unchanged
 
-  Scenario: default_language_tag doesn't exist
+  Scenario: default_language_tag is too long
     Given I am the user with id "11"
     When I send a PUT request to "/items/50" with the following body:
       """
       {
         "default_language_tag": "unknown"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "default_language_tag": ["default_language_tag must be a maximum of 6 characters in length"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: default_language_tag is too short
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50" with the following body:
+      """
+      {
+        "default_language_tag": ""
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "default_language_tag": ["default_language_tag must be at least 1 character in length"]
+        }
+      }
+      """
+    And the table "items" should stay unchanged
+    And the table "items_strings" should stay unchanged
+    And the table "items_items" should stay unchanged
+    And the table "items_ancestors" should stay unchanged
+    And the table "permissions_granted" should stay unchanged
+
+  Scenario: default_language_tag doesn't exist
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50" with the following body:
+      """
+      {
+        "default_language_tag": "unknow"
       }
       """
     Then the response code should be 400
